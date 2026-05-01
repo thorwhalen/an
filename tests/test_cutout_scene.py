@@ -6,8 +6,8 @@ import math
 
 import pytest
 
-from anima.adapters.cutout.scene import Node, SceneGraph, Slot, Visual
-from anima.adapters.cutout.transform import TransformParams
+from an.adapters.cutout.scene import Node, SceneGraph, Slot, Visual
+from an.adapters.cutout.transform import TransformParams
 
 
 def _build_charlie() -> SceneGraph:

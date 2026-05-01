@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from anima.base import SCHEMA_VERSION
-from anima.ir.migrate import MIGRATIONS, migrate, register_migration
+from an.base import SCHEMA_VERSION
+from an.ir.migrate import MIGRATIONS, migrate, register_migration
 
 
 def test_identity_migration_runs():

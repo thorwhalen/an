@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from anima.adapters.cutout.compile import compile_shot
-from anima.adapters.cutout.serialize import from_dict, to_dict
-from anima.ir.compose import sequence, tween, set_, delay
-from anima.ir.schema import AssetRef, Shot
+from an.adapters.cutout.compile import compile_shot
+from an.adapters.cutout.serialize import from_dict, to_dict
+from an.ir.compose import sequence, tween, set_, delay
+from an.ir.schema import AssetRef, Shot
 
 
 def test_empty_shot_compiles_to_minimal_scene():

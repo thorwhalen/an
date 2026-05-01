@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from anima.ir.schema import AssetRef, SceneIR, Shot
-from anima.ir.sync import ir_to_markdown, markdown_to_ir
+from an.ir.schema import AssetRef, SceneIR, Shot
+from an.ir.sync import ir_to_markdown, markdown_to_ir
 
 
 _MD_WITH_ENTITIES = """# Demo

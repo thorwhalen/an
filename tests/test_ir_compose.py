@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from anima import (
+from an import (
     delay,
     flatten,
     loop,
@@ -11,7 +11,7 @@ from anima import (
     set_,
     tween,
 )
-from anima.ir.compose import duration_of
+from an.ir.compose import duration_of
 
 
 def test_tween_flat():
@@ -90,7 +90,7 @@ def test_duration_of_matches_flatten_extent():
 
 def test_nested_round_trip_through_schema():
     """Composition tree should serialize and reload as a schema object."""
-    from anima.ir.schema import SequenceAction
+    from an.ir.schema import SequenceAction
     a = sequence(
         tween("a", "x", to=1.0, duration=1.0),
         parallel(

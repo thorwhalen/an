@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from anima.adapters.cutout.runtime_files import (
+from an.adapters.cutout.runtime_files import (
     runtime_dir,
     runtime_index_html,
     runtime_js,
@@ -27,5 +27,5 @@ def test_runtime_js_present_with_public_api():
     assert p.is_file()
     text = p.read_text(encoding="utf-8")
     # The four documented globals
-    for fn in ("animaLoadScene", "animaSetTime", "animaCanvasReady", "animaRuntimeVersion"):
+    for fn in ("anLoadScene", "anSetTime", "anCanvasReady", "anRuntimeVersion"):
         assert fn in text, f"runtime.js missing {fn!r}"

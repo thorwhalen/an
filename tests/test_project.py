@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from anima import init, load, save
-from anima.ir.schema import Meta, SceneIR, Shot
+from an import init, load, save
+from an.ir.schema import Meta, SceneIR, Shot
 
 
 def test_init_creates_full_layout():
@@ -17,7 +17,7 @@ def test_init_creates_full_layout():
         for sub in (
             "scene.md",
             "ir/scene.json",
-            "anima.toml",
+            "an.toml",
             "assets/characters",
             "assets/environments",
             "assets/voices",
@@ -27,8 +27,8 @@ def test_init_creates_full_layout():
             "artifacts/shots",
             "artifacts/previews",
             "output",
-            ".anima",
-            ".anima/memory.md",
+            ".an",
+            ".an/memory.md",
         ):
             assert (root / sub).exists(), f"missing {sub}"
 
@@ -56,7 +56,7 @@ def test_init_force_overwrites():
         root = Path(d) / "demo"
         init(root, name="orig")
         init(root, name="new", force=True)
-        assert "new" in (root / "anima.toml").read_text()
+        assert "new" in (root / "an.toml").read_text()
 
 
 def test_load_returns_project_with_mall_and_scene():

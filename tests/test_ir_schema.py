@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 
-from anima import COMPATIBLE_VERSION, SCHEMA_VERSION
-from anima.ir.schema import (
+from an import COMPATIBLE_VERSION, SCHEMA_VERSION
+from an.ir.schema import (
     Camera,
     Dialogue,
     Meta,
@@ -66,7 +66,7 @@ def test_action_discriminated_union():
     assert blob["kind"] == "sequence"
     assert blob["children"][0]["kind"] == "tween"
     # Round-trip through the union type.
-    from anima.ir.schema import Shot
+    from an.ir.schema import Shot
     shot = Shot(id="s", duration=2.0, actions=[seq])
     reloaded = Shot.model_validate(json.loads(shot.model_dump_json()))
     assert reloaded.actions[0].kind == "sequence"

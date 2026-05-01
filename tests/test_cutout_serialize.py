@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from anima.adapters.cutout.serialize import (
+from an.adapters.cutout.serialize import (
     AnimationClipJSON,
     AssetJSON,
     AssetsJSON,

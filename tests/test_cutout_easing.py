@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from anima.adapters.cutout.easing import (
+from an.adapters.cutout.easing import (
     EASING_FUNCS,
     apply_easing,
     cubic_bezier,

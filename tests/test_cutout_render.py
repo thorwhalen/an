@@ -13,11 +13,11 @@ from pathlib import Path
 
 import pytest
 
-from anima import build_project_mall
-from anima.adapters.cutout import CutoutRenderer
-from anima.adapters._base import RenderContext
-from anima.ir.compose import tween
-from anima.ir.schema import Shot
+from an import build_project_mall
+from an.adapters.cutout import CutoutRenderer
+from an.adapters._base import RenderContext
+from an.ir.compose import tween
+from an.ir.schema import Shot
 
 
 _FFMPEG = shutil.which("ffmpeg")

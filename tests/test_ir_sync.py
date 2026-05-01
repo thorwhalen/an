@@ -6,8 +6,8 @@ import json
 import tempfile
 from pathlib import Path
 
-from anima.ir.schema import SceneIR
-from anima.ir.sync import ir_to_markdown, markdown_to_ir, sync
+from an.ir.schema import SceneIR
+from an.ir.sync import ir_to_markdown, markdown_to_ir, sync
 
 
 def test_md_to_ir_extracts_meta_and_dialogue():

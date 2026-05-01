@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from anima.adapters.cutout.pose import apply_pose, merge_poses
-from anima.adapters.cutout.scene import Node, SceneGraph
+from an.adapters.cutout.pose import apply_pose, merge_poses
+from an.adapters.cutout.scene import Node, SceneGraph
 
 
 def _two_node_graph() -> SceneGraph:

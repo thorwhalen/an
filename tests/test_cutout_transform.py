@@ -6,7 +6,7 @@ import math
 
 import pytest
 
-from anima.adapters.cutout.transform import Matrix3x3, TransformParams
+from an.adapters.cutout.transform import Matrix3x3, TransformParams
 
 
 def _approx_eq(m1: Matrix3x3, m2: Matrix3x3, tol: float = 1e-9) -> bool:

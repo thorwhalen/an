@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from anima import init
-from anima.ir.schema import AssetRef, Meta, Resolution, SceneIR, Shot
-from anima.orchestrate import render_project
-from anima.project import load
+from an import init
+from an.ir.schema import AssetRef, Meta, Resolution, SceneIR, Shot
+from an.orchestrate import render_project
+from an.project import load
 
 
 _FFMPEG = shutil.which("ffmpeg")

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from anima.adapters.cutout.channel import Channel, Keyframe
-from anima.adapters.cutout.clip import Clip, LoopMode, evaluate
+from an.adapters.cutout.channel import Channel, Keyframe
+from an.adapters.cutout.clip import Clip, LoopMode, evaluate
 
 
 def _two_channel_clip(duration=1.0, loop_mode=LoopMode.ONCE) -> Clip:

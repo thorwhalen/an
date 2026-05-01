@@ -1,4 +1,4 @@
-"""End-to-end project render: anima init demo && render → mp4 on disk.
+"""End-to-end project render: an init demo && render → mp4 on disk.
 
 Skipped automatically when ffmpeg / playwright / chromium aren't available.
 """
@@ -11,10 +11,10 @@ from pathlib import Path
 
 import pytest
 
-from anima import init
-from anima.ir.compose import tween
-from anima.orchestrate import render_project
-from anima.project import load
+from an import init
+from an.ir.compose import tween
+from an.orchestrate import render_project
+from an.project import load
 
 
 _FFMPEG = shutil.which("ffmpeg")
@@ -40,12 +40,12 @@ pytestmark = pytest.mark.skipif(
 
 
 def test_init_then_render_produces_mp4():
-    """The Phase-2D demo path: anima init demo → write a tiny scene → render → mp4 exists."""
+    """The Phase-2D demo path: an init demo → write a tiny scene → render → mp4 exists."""
     with tempfile.TemporaryDirectory() as d:
         root = init(Path(d) / "demo")
         proj = load(root)
         # Override the seeded scene with one that has a renderable shot.
-        from anima.ir.schema import Meta, Resolution, SceneIR, Shot
+        from an.ir.schema import Meta, Resolution, SceneIR, Shot
 
         proj.scene = SceneIR(
             meta=Meta(
@@ -78,7 +78,7 @@ def test_render_concatenates_multiple_shots():
     with tempfile.TemporaryDirectory() as d:
         root = init(Path(d) / "demo2")
         proj = load(root)
-        from anima.ir.schema import Meta, Resolution, SceneIR, Shot
+        from an.ir.schema import Meta, Resolution, SceneIR, Shot
 
         proj.scene = SceneIR(
             meta=Meta(

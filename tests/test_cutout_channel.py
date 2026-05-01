@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from anima.adapters.cutout.channel import Channel, Keyframe, evaluate
+from an.adapters.cutout.channel import Channel, Keyframe, evaluate
 
 
 def test_single_keyframe_returns_constant():

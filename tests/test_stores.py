@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from anima import build_project_mall
-from anima.ir.schema import Meta, SceneIR, Shot
-from anima.stores.characters import CharactersStore
-from anima.stores.decisions import DecisionLogStore
-from anima.stores.scenes import ScenesStore
-from anima.stores.voices import VoicesStore
+from an import build_project_mall
+from an.ir.schema import Meta, SceneIR, Shot
+from an.stores.characters import CharactersStore
+from an.stores.decisions import DecisionLogStore
+from an.stores.scenes import ScenesStore
+from an.stores.voices import VoicesStore
 
 
 def test_voices_store_basic_crud():

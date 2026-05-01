@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from anima.adapters.cutout.channel import Channel, Keyframe
-from anima.adapters.cutout.clip import Clip
-from anima.adapters.cutout.timeline import (
+from an.adapters.cutout.channel import Channel, Keyframe
+from an.adapters.cutout.clip import Clip
+from an.adapters.cutout.timeline import (
     PlacedClip,
     Timeline,
     Track,

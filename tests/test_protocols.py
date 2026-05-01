@@ -8,15 +8,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from anima.adapters import (
+from an.adapters import (
     Renderer,
     RenderContext,
     RenderResult,
     RendererRegistry,
 )
-from anima.audio import AudioClip, LipSyncProvider, TTSProvider, Viseme, VisemeTrack
-from anima.ir.schema import Shot
-from anima.verify import Finding, VerificationReport, Verifier
+from an.audio import AudioClip, LipSyncProvider, TTSProvider, Viseme, VisemeTrack
+from an.ir.schema import Shot
+from an.verify import Finding, VerificationReport, Verifier
 
 
 def test_render_result_dataclass():

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from anima.ir.schema import Dialogue, Meta, SceneIR, Shot
-from anima.ir.validate import validate_schema, validate_semantic
+from an.ir.schema import Dialogue, Meta, SceneIR, Shot
+from an.ir.validate import validate_schema, validate_semantic
 
 
 def test_schema_validation_clean_doc():

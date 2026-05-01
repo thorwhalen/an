@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from anima.check_requirements import (
+from an.check_requirements import (
     check_requirements,
     format_report,
 )
