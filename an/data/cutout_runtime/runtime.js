@@ -104,7 +104,8 @@
         if (typeof a.value === 'number' && typeof b.value === 'number') {
             return a.value + (b.value - a.value) * eased;
         }
-        return eased >= 0.5 ? b.value : a.value;
+        // Non-numeric (e.g. viseme codes): snap at the keyframe boundary.
+        return eased >= 1.0 ? b.value : a.value;
     }
 
     // ------------------------------------------------------------------------
@@ -186,6 +187,31 @@
         }
     }
 
+    // Mouth-shape table for viseme rendering. Width × height in pixels.
+    // Keep this in sync with the layout used by an.adapters.cutout.compile.
+    const VISEME_SHAPES = {
+        X: { w: 20, h: 4,  color: 0x552222 },
+        A: { w: 18, h: 6,  color: 0x552222 },
+        B: { w: 22, h: 10, color: 0x552222 },
+        C: { w: 24, h: 16, color: 0x331111 },
+        D: { w: 26, h: 22, color: 0x331111 },
+        E: { w: 22, h: 18, color: 0x331111 },
+        F: { w: 14, h: 14, color: 0x331111 },
+        G: { w: 22, h: 8,  color: 0x552222 },
+        H: { w: 16, h: 6,  color: 0x552222 },
+    };
+
+    function setVisemeOnMouth(node, visemeCode) {
+        const shape = VISEME_SHAPES[visemeCode] || VISEME_SHAPES.X;
+        // Find the child Graphics (the mouth visual) on this node.
+        const g = node.children && node.children.find(c => c instanceof PIXI.Graphics);
+        if (!g) return;
+        g.clear();
+        g.beginFill(shape.color, 1.0);
+        g.drawRect(-shape.w / 2, -shape.h / 2, shape.w, shape.h);
+        g.endFill();
+    }
+
     function applyProperty(node, prop, value) {
         switch (prop) {
             case 'x': node.x = value; break;
@@ -198,6 +224,7 @@
             case 'skew_y': node.skew.y = value; break;
             case 'pivot_x': node.pivot.x = value; break;
             case 'pivot_y': node.pivot.y = value; break;
+            case 'viseme': setVisemeOnMouth(node, value); break;
             default:
                 // unknown property — ignore silently for forward compat
                 break;

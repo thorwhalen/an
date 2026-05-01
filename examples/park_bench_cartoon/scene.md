@@ -3,49 +3,72 @@
 ```yaml meta
 title: Park Bench Cartoon
 author: Thor Whalen
-duration: 45
-fps: 30
+duration: 12.0
+fps: 24
 resolution:
-  width: 1920
-  height: 1080
+  width: 640
+  height: 360
 default_style: cutout
 ```
 
-A short two-character cartoon: Charlie and Maya on a park bench. Phase-1 skeleton
-(IR only — rendering arrives in Phase 2).
-
 ## Shot s1 (cutout)
 
-Wide establishing shot. The two of them sit, light wind, pigeons in the foreground.
-
 ```yaml shot
-duration: 8
+duration: 6.0
 camera:
+  position:
+  - 0.0
+  - 0.0
+  - 0.0
+  target:
+  - 0.0
+  - 0.0
+  - 0.0
+  focal_length: 50.0
   move: hold
 ```
 
-## Shot s2 (cutout)
-
-Charlie turns toward Maya and asks his question.
-
-```yaml shot
-duration: 12
-camera:
-  move: hold
+```yaml entities
+- kind: character
+  id: charlie
+  store: characters
+  ref: charlie-v1
+- kind: character
+  id: maya
+  store: characters
+  ref: maya-v1
 ```
 
 ```dialogue
 charlie: Did you ever wonder why we always meet here?
 ```
 
-## Shot s3 (cutout)
-
-Maya laughs, then answers. Slow camera push-in on her at the end.
+## Shot s2 (cutout)
 
 ```yaml shot
-duration: 25
+duration: 6.0
 camera:
+  position:
+  - 0.0
+  - 0.0
+  - 0.0
+  target:
+  - 0.0
+  - 0.0
+  - 0.0
+  focal_length: 50.0
   move: push_in
+```
+
+```yaml entities
+- kind: character
+  id: charlie
+  store: characters
+  ref: charlie-v1
+- kind: character
+  id: maya
+  store: characters
+  ref: maya-v1
 ```
 
 ```dialogue

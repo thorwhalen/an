@@ -311,15 +311,18 @@ def sync(project_dir: str | Path) -> SyncResult:
         _write_text(md_path, ir_to_markdown(scene))
         result.wrote_md = True
     elif md_exists and json_exists:
-        # Markdown is the SSOT. Warn if JSON is newer.
+        # Use the newer file as source of truth. Markdown is the *human* SSOT,
+        # but pipeline stages (audio, lip-sync) write rich state into the JSON
+        # that the Markdown can't represent — so when JSON is newer, prefer it.
         md_mtime = md_path.stat().st_mtime
         json_mtime = json_path.stat().st_mtime
-        if json_mtime > md_mtime + 1.0:
-            result.drift_warning = (
-                "ir/scene.json is newer than scene.md — direct JSON edits are "
-                "discouraged. Markdown will overwrite JSON."
-            )
-        scene = markdown_to_ir(_read_text(md_path))
-        _write_json(json_path, json.loads(scene.model_dump_json()))
-        result.wrote_json = True
+        if json_mtime > md_mtime:
+            data = json.loads(_read_text(json_path))
+            scene = SceneIR.model_validate(data)
+            _write_text(md_path, ir_to_markdown(scene))
+            result.wrote_md = True
+        else:
+            scene = markdown_to_ir(_read_text(md_path))
+            _write_json(json_path, json.loads(scene.model_dump_json()))
+            result.wrote_json = True
     return result

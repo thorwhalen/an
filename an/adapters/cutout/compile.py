@@ -91,6 +91,8 @@ def compile_shot(
 
     scene_root = _build_scene_root(shot, mall)
     animations, tracks = _compile_actions(shot.actions, shot.duration)
+    # Phase 4: emit a viseme channel per dialogue line that has a viseme_track.
+    _add_viseme_clips(shot, animations, tracks)
 
     timeline = TimelineJSON(duration=shot.duration, tracks=tracks)
 
@@ -168,11 +170,24 @@ def _build_character_subtree(
         children=children,
     )
     if "head" in parts:
-        # Pre-create the mouth slot on the head sub-node so lip-sync (Phase 4)
-        # has somewhere to write.
+        # Phase 4: head gets a real mouth child node (rendered as a small rect),
+        # plus a "mouth" slot for any future attachment overrides. The viseme
+        # channel below targets <speaker>/head/mouth and drives its shape.
         for child in char_node.children:
             if child.name == "head":
                 child.slots["mouth"] = SlotJSON(name="mouth", x=0, y=15)
+                child.children.append(
+                    NodeJSON(
+                        name="mouth",
+                        transform=TransformJSON(x=0.0, y=15.0),
+                        visual=VisualJSON(
+                            kind="rect",
+                            width=20.0,
+                            height=4.0,
+                            color="#552222",
+                        ),
+                    )
+                )
     return char_node
 
 
@@ -307,3 +322,62 @@ def _easing_to_json(spec: Any) -> Any:
 def _track_root_of(target: str) -> str:
     """The first segment of a target path is the track root (the entity name)."""
     return target.split("/", 1)[0] if target else ""
+
+
+# -----------------------------------------------------------------------------
+# Phase 4: dialogue → viseme channels on the speaker's mouth node
+# -----------------------------------------------------------------------------
+
+
+def _add_viseme_clips(
+    shot: Shot,
+    animations: dict[str, AnimationClipJSON],
+    tracks: list[TrackJSON],
+) -> None:
+    """For each dialogue line with a viseme_track, emit a step-channel that
+    drives ``<speaker>/head/mouth:viseme`` over the line's time span.
+
+    Side-effects ``animations`` (adds named clips) and ``tracks`` (appends to
+    or creates the speaker's track).
+    """
+    track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
+    for i, line in enumerate(shot.dialogue):
+        if line.viseme_track is None or not line.viseme_track.keyframes:
+            continue
+        if line.start is None or line.duration is None:
+            # No timing assigned (audio pipeline didn't run); skip silently.
+            continue
+        speaker = line.speaker
+        target = f"{speaker}/head/mouth"
+        anim_id = f"__viseme__{shot.id}_{i}"
+
+        # Build keyframes: every viseme keyframe with step easing.
+        # Pin the first keyframe at time 0 (channel-local) and the last at the
+        # line's duration so the channel covers the full window.
+        kfs: list[KeyframeJSON] = []
+        for j, kf in enumerate(line.viseme_track.keyframes):
+            t = max(0.0, min(line.duration, float(kf.time)))
+            kfs.append(KeyframeJSON(time=t, value=kf.viseme, easing="step"))
+        # Always end with rest so the mouth closes when the line stops.
+        if kfs and kfs[-1].time < line.duration:
+            kfs.append(KeyframeJSON(time=line.duration, value="X", easing="step"))
+
+        animations[anim_id] = AnimationClipJSON(
+            name=anim_id,
+            duration=line.duration,
+            channels=[
+                ChannelJSON(target=target, property="viseme", keyframes=kfs),
+            ],
+        )
+
+        placed = PlacedClipJSON(
+            animation_id=anim_id,
+            start_time=float(line.start),
+            duration=float(line.duration),
+        )
+        track = track_lookup.get(speaker)
+        if track is None:
+            track = TrackJSON(target_root=speaker, clips=[])
+            tracks.append(track)
+            track_lookup[speaker] = track
+        track.clips.append(placed)

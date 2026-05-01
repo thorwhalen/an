@@ -92,10 +92,11 @@ def evaluate(channel: Channel, t: float) -> Any:
 def _lerp(a: Any, b: Any, t: float) -> Any:
     """Linear interpolation between ``a`` and ``b`` at parameter ``t``.
 
-    Numeric only in Phase 2A. Step interpolation is achieved via
-    ``easing="step"``, which makes ``t`` either 0 or 1.
+    Numeric values get true interpolation. Non-numeric values (strings, enums
+    used by viseme channels) snap: stay at ``a`` until ``t`` reaches the next
+    keyframe (``t >= 1.0``). Pair non-numeric channels with ``easing="step"``
+    so the snap happens at the keyframe boundary.
     """
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):
         return a + (b - a) * t
-    # Fallback: treat as discrete (return ``b`` once we've crossed the midpoint).
-    return b if t >= 0.5 else a
+    return b if t >= 1.0 else a

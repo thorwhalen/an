@@ -53,6 +53,16 @@ class ScenesStore(MutableMapping):
         scene = value if isinstance(value, SceneIR) else SceneIR.model_validate(value)
         _write_json(self.json_path, json.loads(scene.model_dump_json()))
         _write_text(self.md_path, ir_to_markdown(scene))
+        # Equalize mtimes so the JSON wins ties on subsequent sync()s. Pipeline
+        # stages (audio, lip-sync) inject rich state into the JSON that the
+        # Markdown can't represent — without this, sync() would round-trip
+        # md → json and lose them on the next load.
+        import os
+        import time
+
+        now = time.time()
+        os.utime(self.json_path, (now, now + 0.001))
+        os.utime(self.md_path, (now, now))
 
     def __delitem__(self, key: str) -> None:
         if key != self.SCENE_KEY:

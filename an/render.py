@@ -26,6 +26,15 @@ class RenderError(RuntimeError):
     """Raised on render-pipeline failures with actionable detail."""
 
 
+def _scene_has_pending_dialogue(scene) -> bool:
+    """Return True if any dialogue line lacks a viseme_track or timing."""
+    for shot in scene.timeline:
+        for line in shot.dialogue:
+            if line.viseme_track is None or line.duration is None:
+                return True
+    return False
+
+
 def render_project(
     project_dir: str | Path,
     *,
@@ -52,11 +61,25 @@ def render(
     output_name: str = "main",
     fps: int | None = None,
     resolution: tuple[int, int] | None = None,
+    auto_audio: bool = True,
 ) -> Path:
-    """Lower-level: render a loaded ``Project`` to mp4."""
+    """Lower-level: render a loaded ``Project`` to mp4.
+
+    When ``auto_audio`` is True (the default) and any shot has dialogue
+    without a viseme_track, the audio pipeline is run first so visemes are
+    available to the renderer.
+    """
     scene = project.scene
     if not scene.timeline:
         raise RenderError("scene has no shots to render")
+
+    if auto_audio and _scene_has_pending_dialogue(scene):
+        # Lazy import to keep render.py importable without audio extras.
+        from an.audio.pipeline import produce_audio_for_scene
+
+        produce_audio_for_scene(scene, project.mall)
+        # Persist the now-stamped scene back to disk so subsequent loads see it.
+        project.mall["scenes"]["main"] = scene
 
     work_dir = project.root / ".an" / "render_work"
     work_dir.mkdir(parents=True, exist_ok=True)
