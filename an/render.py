@@ -85,9 +85,13 @@ def render(
     work_dir.mkdir(parents=True, exist_ok=True)
 
     effective_fps = fps if fps is not None else scene.meta.fps or DEFAULT_FPS
-    effective_res = resolution if resolution is not None else (
-        scene.meta.resolution.width or DEFAULT_RESOLUTION[0],
-        scene.meta.resolution.height or DEFAULT_RESOLUTION[1],
+    effective_res = (
+        resolution
+        if resolution is not None
+        else (
+            scene.meta.resolution.width or DEFAULT_RESOLUTION[0],
+            scene.meta.resolution.height or DEFAULT_RESOLUTION[1],
+        )
     )
 
     ctx = RenderContext(

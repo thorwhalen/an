@@ -48,7 +48,9 @@ def _identity(doc: dict[str, Any]) -> dict[str, Any]:
     return doc
 
 
-def migrate(doc: dict[str, Any], target_version: str = SCHEMA_VERSION) -> dict[str, Any]:
+def migrate(
+    doc: dict[str, Any], target_version: str = SCHEMA_VERSION
+) -> dict[str, Any]:
     """Migrate an IR dict to ``target_version``.
 
     Walks the migration registry one step at a time. Raises ``ValueError`` if

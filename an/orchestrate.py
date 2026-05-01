@@ -131,7 +131,9 @@ def orchestrate(
             report.merge_verification(vr)
         except Exception as e:
             partial = VerificationReport()
-            partial.add("warning", f"<{v.name}>", f"verifier crashed post-render: {e!r}")
+            partial.add(
+                "warning", f"<{v.name}>", f"verifier crashed post-render: {e!r}"
+            )
             report.merge_verification(partial)
 
     return report

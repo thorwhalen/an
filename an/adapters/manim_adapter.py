@@ -57,16 +57,16 @@ class ManimRenderer:
 
         cmd = [
             "manim",
-            "-ql",                    # low quality for speed
-            "--media_dir", str(out_dir / "media"),
-            "-o", out_mp4.name,
+            "-ql",  # low quality for speed
+            "--media_dir",
+            str(out_dir / "media"),
+            "-o",
+            out_mp4.name,
             str(script_path),
             "GeneratedScene",
         ]
         try:
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, check=False
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, check=False)
         except OSError as e:
             raise ManimRenderError(f"manim failed to launch: {e}") from e
 
@@ -91,8 +91,9 @@ class ManimRenderer:
 def _render_script(shot: Shot) -> str:
     """Produce a minimal Manim scene that holds the right duration."""
     title = (shot.options.get("title") if shot.options else None) or shot.id
-    return dedent(
-        f'''
+    return (
+        dedent(
+            f"""
         from manim import Scene, Text
 
         class GeneratedScene(Scene):
@@ -100,5 +101,7 @@ def _render_script(shot: Shot) -> str:
                 title = Text({title!r}, font_size=48)
                 self.add(title)
                 self.wait({shot.duration})
-        '''
-    ).strip() + "\n"
+        """
+        ).strip()
+        + "\n"
+    )

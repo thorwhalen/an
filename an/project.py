@@ -51,7 +51,9 @@ class Project:
     scene: SceneIR
 
 
-def init(project_dir: str | Path, *, name: str | None = None, force: bool = False) -> Path:
+def init(
+    project_dir: str | Path, *, name: str | None = None, force: bool = False
+) -> Path:
     """Create a fresh an project at ``project_dir``.
 
     Idempotent unless the directory already contains a non-empty ``scene.md``;

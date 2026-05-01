@@ -32,7 +32,9 @@ def _read_json(path: str | Path) -> Any:
 
 def _write_json(path: str | Path, obj: Any, *, indent: int = 2) -> None:
     """Dump JSON to disk with stable formatting (sorted keys, fixed indent)."""
-    _write_text(path, json.dumps(obj, indent=indent, sort_keys=True, default=str) + "\n")
+    _write_text(
+        path, json.dumps(obj, indent=indent, sort_keys=True, default=str) + "\n"
+    )
 
 
 def _stable_hash(obj: Any) -> str:

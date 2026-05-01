@@ -115,9 +115,7 @@ def produce_audio_for_scene(
 def _to_ir_viseme_track(track: VisemeTrack) -> IRVisemeTrack:
     """Translate the audio-side dataclass to the IR's Pydantic model."""
     return IRVisemeTrack(
-        keyframes=[
-            VisemeKeyframe(time=v.time, viseme=v.code) for v in track.visemes
-        ]
+        keyframes=[VisemeKeyframe(time=v.time, viseme=v.code) for v in track.visemes]
     )
 
 
@@ -154,7 +152,9 @@ def _load_or_align(
             return VisemeTrack(
                 visemes=[
                     __import__("an.audio.lipsync", fromlist=["Viseme"]).Viseme(
-                        time=v["time"], code=v["code"], intensity=v.get("intensity", 1.0)
+                        time=v["time"],
+                        code=v["code"],
+                        intensity=v.get("intensity", 1.0),
                     )
                     for v in payload.get("visemes", [])
                 ],

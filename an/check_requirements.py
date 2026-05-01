@@ -51,7 +51,9 @@ def _check_ffmpeg() -> ToolStatus:
             installed=False,
             install_hint="brew install ffmpeg  # macOS, or apt install ffmpeg",
         )
-    return ToolStatus(name="ffmpeg", installed=True, version=_run_version(["ffmpeg", "-version"]))
+    return ToolStatus(
+        name="ffmpeg", installed=True, version=_run_version(["ffmpeg", "-version"])
+    )
 
 
 def _check_node() -> ToolStatus:
@@ -61,7 +63,9 @@ def _check_node() -> ToolStatus:
             installed=False,
             install_hint="brew install node  # required for Remotion + cutout JS runtime",
         )
-    return ToolStatus(name="node", installed=True, version=_run_version(["node", "--version"]))
+    return ToolStatus(
+        name="node", installed=True, version=_run_version(["node", "--version"])
+    )
 
 
 def _check_rhubarb() -> ToolStatus:
@@ -108,7 +112,8 @@ def _check_playwright() -> ToolStatus:
         "~/Library/Caches/ms-playwright"
     )
     has_chromium = any(
-        name.startswith("chromium") for name in (os.listdir(cache_dir) if os.path.isdir(cache_dir) else [])
+        name.startswith("chromium")
+        for name in (os.listdir(cache_dir) if os.path.isdir(cache_dir) else [])
     )
     if not has_chromium:
         py_status.detail = "playwright pkg installed but Chromium not; run: playwright install chromium"
@@ -128,7 +133,9 @@ def _check_elevenlabs() -> ToolStatus:
 
 
 def _check_manim() -> ToolStatus:
-    return _check_python_pkg("manim", "pip install manim  # plus cairo/pango system deps")
+    return _check_python_pkg(
+        "manim", "pip install manim  # plus cairo/pango system deps"
+    )
 
 
 def check_requirements() -> dict[str, dict]:

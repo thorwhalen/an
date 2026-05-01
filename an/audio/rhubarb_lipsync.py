@@ -62,10 +62,14 @@ class RhubarbLipSync:
 
             cmd = [
                 self.binary_path,
-                "-f", "json",
-                "-r", self.recognizer,
-                "--dialogFile", str(dialog_path),
-                "-o", str(out_json),
+                "-f",
+                "json",
+                "-r",
+                self.recognizer,
+                "--dialogFile",
+                str(dialog_path),
+                "-o",
+                str(out_json),
                 str(audio_path),
             ]
             try:
@@ -83,10 +87,7 @@ class RhubarbLipSync:
             data = json.loads(out_json.read_text(encoding="utf-8"))
 
         cues = data.get("mouthCues", [])
-        visemes = [
-            Viseme(time=float(c["start"]), code=str(c["value"]))
-            for c in cues
-        ]
+        visemes = [Viseme(time=float(c["start"]), code=str(c["value"])) for c in cues]
         if cues:
             # Append a final rest at the last cue's "end" so the track matches duration.
             last_end = float(cues[-1]["end"])

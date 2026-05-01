@@ -48,7 +48,9 @@ class Clip:
 
     def __post_init__(self) -> None:
         if self.duration <= 0:
-            raise ValueError(f"Clip {self.name!r} duration must be > 0; got {self.duration}")
+            raise ValueError(
+                f"Clip {self.name!r} duration must be > 0; got {self.duration}"
+            )
 
 
 def _wrap_time(t: float, duration: float, loop_mode: LoopMode) -> float:

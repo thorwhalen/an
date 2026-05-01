@@ -32,17 +32,37 @@ from an.audio.tts import AudioClip
 # E=ohh, F=ooh, G=teeth-on-lip (F/V), H=th, X=idle.
 _CHAR_TO_VISEME: dict[str, str] = {
     # closed lips
-    "p": "A", "b": "A", "m": "A",
+    "p": "A",
+    "b": "A",
+    "m": "A",
     # teeth-on-lip
-    "f": "G", "v": "G",
+    "f": "G",
+    "v": "G",
     # th-ish
     "h": "C",
     # vowel families
-    "a": "D", "e": "C", "i": "B", "o": "E", "u": "F", "y": "B",
+    "a": "D",
+    "e": "C",
+    "i": "B",
+    "o": "E",
+    "u": "F",
+    "y": "B",
     # alveolar consonants
-    "d": "B", "t": "B", "s": "B", "z": "B", "n": "B", "l": "B", "r": "B",
+    "d": "B",
+    "t": "B",
+    "s": "B",
+    "z": "B",
+    "n": "B",
+    "l": "B",
+    "r": "B",
     # remaining consonants — neutral semi-open
-    "c": "C", "g": "C", "j": "C", "k": "C", "q": "C", "w": "F", "x": "C",
+    "c": "C",
+    "g": "C",
+    "j": "C",
+    "k": "C",
+    "q": "C",
+    "w": "F",
+    "x": "C",
 }
 _REST_VISEME: str = "X"
 
@@ -57,7 +77,9 @@ class OfflineLipSync:
     convention: str = "rhubarb"
 
     def __init__(self, *, char_to_viseme: dict[str, str] | None = None) -> None:
-        self._mapping = dict(char_to_viseme) if char_to_viseme else dict(_CHAR_TO_VISEME)
+        self._mapping = (
+            dict(char_to_viseme) if char_to_viseme else dict(_CHAR_TO_VISEME)
+        )
 
     def align(self, audio: AudioClip, transcript: str) -> VisemeTrack:
         codes = list(self._codes_for(transcript))

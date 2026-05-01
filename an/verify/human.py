@@ -27,13 +27,12 @@ class HumanInTheLoopVerifier:
     def verify(self, ir: SceneIR, render: RenderResult | None) -> VerificationReport:
         report = VerificationReport()
         if render is None:
-            report.add(
-                "info", "<render>", "no render result; nothing to inspect"
-            )
+            report.add("info", "<render>", "no render result; nothing to inspect")
             return report
         if not sys.stdin.isatty() or not sys.stdout.isatty():
             report.add(
-                "info", "<terminal>",
+                "info",
+                "<terminal>",
                 "no interactive terminal — skipping human review",
             )
             return report
@@ -42,14 +41,13 @@ class HumanInTheLoopVerifier:
         try:
             answer = input(self.prompt).strip().lower()
         except (EOFError, KeyboardInterrupt):
-            report.add(
-                "info", "<input>", "no answer received; defaulting to skip"
-            )
+            report.add("info", "<input>", "no answer received; defaulting to skip")
             return report
 
         if answer.startswith("r"):
             report.add(
-                "error", "<human>",
+                "error",
+                "<human>",
                 "human rejected the render",
                 suggested_fix="ask the human what to change",
             )
@@ -57,7 +55,8 @@ class HumanInTheLoopVerifier:
             report.add("info", "<human>", "human approved the render")
         else:
             report.add(
-                "warning", "<human>",
+                "warning",
+                "<human>",
                 "human did not explicitly approve",
             )
         return report
@@ -73,6 +72,7 @@ def _open_in_default_app(path: Path) -> None:
             subprocess.Popen(["xdg-open", p])
         elif sys.platform.startswith("win"):
             import os
+
             os.startfile(p)  # type: ignore[attr-defined]
     except Exception:
         # Best-effort; if the launcher is missing, the user can open it manually.

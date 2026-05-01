@@ -53,8 +53,7 @@ class ElevenLabsTTS:
             from elevenlabs.client import ElevenLabs  # type: ignore
         except ImportError as e:
             raise RuntimeError(
-                "elevenlabs package not installed. Install with: "
-                "pip install elevenlabs"
+                "elevenlabs package not installed. Install with: pip install elevenlabs"
             ) from e
         return ElevenLabs(api_key=self.api_key)
 

@@ -40,13 +40,15 @@ class LayoutLintVerifier:
             path = f"timeline/{i}"
             if shot.id in seen_ids:
                 report.add(
-                    "error", f"{path}/id",
+                    "error",
+                    f"{path}/id",
                     f"duplicate shot id {shot.id!r}",
                 )
             seen_ids.add(shot.id)
             if shot.duration <= 0:
                 report.add(
-                    "error", f"{path}/duration",
+                    "error",
+                    f"{path}/duration",
                     f"shot duration must be > 0; got {shot.duration}",
                 )
 
@@ -64,7 +66,8 @@ class LayoutLintVerifier:
                         )
                 if not line.text.strip():
                     report.add(
-                        "warning", f"{path}/dialogue/{j}/text",
+                        "warning",
+                        f"{path}/dialogue/{j}/text",
                         "empty dialogue line",
                     )
 
@@ -72,7 +75,8 @@ class LayoutLintVerifier:
             res = ir.meta.resolution
             if res.width <= 0 or res.height <= 0:
                 report.add(
-                    "error", "meta/resolution",
+                    "error",
+                    "meta/resolution",
                     f"resolution must be positive; got {res.width}x{res.height}",
                 )
 

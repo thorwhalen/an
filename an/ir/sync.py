@@ -50,8 +50,12 @@ from an.ir.schema import AssetRef, Dialogue, Meta, SceneIR, Shot
 from an.util import _read_text, _write_json, _write_text
 
 
-_FENCE_RE = re.compile(r"^```(\w+)(?:\s+(\w+))?\s*\n(.*?)\n```", re.MULTILINE | re.DOTALL)
-_SHOT_HEADING_RE = re.compile(r"^##\s+Shot\s+(\S+)(?:\s+\(([^)]+)\))?\s*$", re.MULTILINE)
+_FENCE_RE = re.compile(
+    r"^```(\w+)(?:\s+(\w+))?\s*\n(.*?)\n```", re.MULTILINE | re.DOTALL
+)
+_SHOT_HEADING_RE = re.compile(
+    r"^##\s+Shot\s+(\S+)(?:\s+\(([^)]+)\))?\s*$", re.MULTILINE
+)
 
 
 @dataclass(slots=True)

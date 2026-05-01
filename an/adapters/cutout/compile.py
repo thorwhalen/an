@@ -66,10 +66,34 @@ _PLACEHOLDER_PARTS: tuple[str, ...] = ("head", "torso", "left_arm", "right_arm")
 _PLACEHOLDER_PART_LAYOUT: dict[str, dict[str, float | str]] = {
     "head": {"x": 0.0, "y": -55.0, "width": 50.0, "height": 50.0, "color": "#f4c89a"},
     "torso": {"x": 0.0, "y": 0.0, "width": 60.0, "height": 80.0, "color": "#3a6ea5"},
-    "left_arm": {"x": -50.0, "y": -10.0, "width": 30.0, "height": 70.0, "color": "#3a6ea5"},
-    "right_arm": {"x": 50.0, "y": -10.0, "width": 30.0, "height": 70.0, "color": "#3a6ea5"},
-    "left_leg": {"x": -18.0, "y": 65.0, "width": 30.0, "height": 70.0, "color": "#2c3e50"},
-    "right_leg": {"x": 18.0, "y": 65.0, "width": 30.0, "height": 70.0, "color": "#2c3e50"},
+    "left_arm": {
+        "x": -50.0,
+        "y": -10.0,
+        "width": 30.0,
+        "height": 70.0,
+        "color": "#3a6ea5",
+    },
+    "right_arm": {
+        "x": 50.0,
+        "y": -10.0,
+        "width": 30.0,
+        "height": 70.0,
+        "color": "#3a6ea5",
+    },
+    "left_leg": {
+        "x": -18.0,
+        "y": 65.0,
+        "width": 30.0,
+        "height": 70.0,
+        "color": "#2c3e50",
+    },
+    "right_leg": {
+        "x": 18.0,
+        "y": 65.0,
+        "width": 30.0,
+        "height": 70.0,
+        "color": "#2c3e50",
+    },
 }
 
 
@@ -84,9 +108,7 @@ def compile_shot(
 ) -> CutoutSceneJSON:
     """Compile a single cutout-style `Shot` to its JS-runtime JSON form."""
     if shot.style != "cutout":
-        raise ValueError(
-            f"compile_shot expects style='cutout'; got {shot.style!r}"
-        )
+        raise ValueError(f"compile_shot expects style='cutout'; got {shot.style!r}")
     mall = mall or {}
 
     scene_root = _build_scene_root(shot, mall)
@@ -127,9 +149,7 @@ def _build_scene_root(shot: Shot, mall: Mapping[str, Mapping]) -> NodeJSON:
     return NodeJSON(name="root", children=children)
 
 
-def _build_character_subtree(
-    entity: AssetRef, characters_store: Mapping
-) -> NodeJSON:
+def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> NodeJSON:
     """Build a NodeJSON subtree for one character, with placeholder parts.
 
     If the characters store has the character's metadata, we honor any
@@ -149,7 +169,8 @@ def _build_character_subtree(
     children: list[NodeJSON] = []
     for part in parts:
         layout = _PLACEHOLDER_PART_LAYOUT.get(
-            part, {"x": 0.0, "y": 0.0, "width": 50.0, "height": 50.0, "color": "#cccccc"}
+            part,
+            {"x": 0.0, "y": 0.0, "width": 50.0, "height": 50.0, "color": "#cccccc"},
         )
         children.append(
             NodeJSON(
@@ -211,7 +232,9 @@ def _compile_actions(
         anim_id, track_root, placed = _compile_one(flat, ordinal=i)
         if anim_id is not None:
             # Built a fresh animation; register it.
-            animations[anim_id], = (animations.get(anim_id, _build_anim_for(flat, anim_id)),)
+            (animations[anim_id],) = (
+                animations.get(anim_id, _build_anim_for(flat, anim_id)),
+            )
             if anim_id not in animations:
                 animations[anim_id] = _build_anim_for(flat, anim_id)
             else:
@@ -285,7 +308,9 @@ def _build_anim_for(flat: FlatAction, anim_id: str) -> AnimationClipJSON:
                     property=action.property,
                     keyframes=[
                         KeyframeJSON(
-                            time=0.0, value=from_value, easing=_easing_to_json(action.easing)
+                            time=0.0,
+                            value=from_value,
+                            easing=_easing_to_json(action.easing),
                         ),
                         KeyframeJSON(time=action.duration, value=action.to_value),
                     ],

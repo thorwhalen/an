@@ -45,7 +45,9 @@ class ValidationReport:
 
     def add(self, severity: Severity, ir_path: str, description: str) -> None:
         self.findings.append(
-            ValidationFinding(severity=severity, ir_path=ir_path, description=description)
+            ValidationFinding(
+                severity=severity, ir_path=ir_path, description=description
+            )
         )
         if severity == "error":
             self.passed = False
@@ -123,7 +125,10 @@ def validate_semantic(
         # Entity references resolve?
         if available_characters is not None:
             for j, entity in enumerate(shot.entities):
-                if entity.kind == "character" and entity.ref not in available_characters:
+                if (
+                    entity.kind == "character"
+                    and entity.ref not in available_characters
+                ):
                     report.add(
                         "warning",
                         f"{path}/entities/{j}",
@@ -133,7 +138,10 @@ def validate_semantic(
         # Dialogue voice refs resolve?
         if available_voices is not None:
             for k, line in enumerate(shot.dialogue):
-                if line.voice_ref is not None and line.voice_ref not in available_voices:
+                if (
+                    line.voice_ref is not None
+                    and line.voice_ref not in available_voices
+                ):
                     report.add(
                         "warning",
                         f"{path}/dialogue/{k}/voice_ref",
@@ -142,8 +150,14 @@ def validate_semantic(
 
         for k, line in enumerate(shot.dialogue):
             if not line.text.strip():
-                report.add("warning", f"{path}/dialogue/{k}/text", "empty dialogue line")
+                report.add(
+                    "warning", f"{path}/dialogue/{k}/text", "empty dialogue line"
+                )
             if not line.speaker:
-                report.add("error", f"{path}/dialogue/{k}/speaker", "dialogue requires a speaker")
+                report.add(
+                    "error",
+                    f"{path}/dialogue/{k}/speaker",
+                    "dialogue requires a speaker",
+                )
 
     return report
