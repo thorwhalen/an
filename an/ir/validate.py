@@ -109,6 +109,13 @@ def validate_semantic(
         report.add("error", "meta/duration", "duration must be non-negative")
     if scene.meta.fps <= 0:
         report.add("error", "meta/fps", "fps must be positive")
+    if not scene.timeline:
+        report.add(
+            "warning",
+            "timeline",
+            "scene has no shots — nothing to render. Add at least one "
+            "`## Shot <id> (cutout)` heading to scene.md.",
+        )
 
     seen_shot_ids: set[str] = set()
     for i, shot in enumerate(scene.timeline):
