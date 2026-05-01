@@ -330,12 +330,14 @@ def sync(project_dir: str | Path) -> SyncResult:
             # Equalize mtimes so this regen doesn't immediately flip the next
             # sync into "md is newer → regenerate json (losing pipeline state)".
             import os
+
             os.utime(md_path, (json_mtime, json_mtime))
             result.wrote_md = True
         elif skew < -0.5:
             scene = markdown_to_ir(_read_text(md_path))
             _write_json(json_path, json.loads(scene.model_dump_json()))
             import os
+
             os.utime(json_path, (md_mtime, md_mtime))
             result.wrote_json = True
         # else: within tolerance, no rewrite needed.
