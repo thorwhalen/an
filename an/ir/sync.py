@@ -318,15 +318,25 @@ def sync(project_dir: str | Path) -> SyncResult:
         # Use the newer file as source of truth. Markdown is the *human* SSOT,
         # but pipeline stages (audio, lip-sync) write rich state into the JSON
         # that the Markdown can't represent — so when JSON is newer, prefer it.
+        # Tolerance: skew within 0.5s is treated as "same" (avoid flip-flopping
+        # on every load just because of write-order in ScenesStore).
         md_mtime = md_path.stat().st_mtime
         json_mtime = json_path.stat().st_mtime
-        if json_mtime > md_mtime:
+        skew = json_mtime - md_mtime
+        if skew > 0.5:
             data = json.loads(_read_text(json_path))
             scene = SceneIR.model_validate(data)
             _write_text(md_path, ir_to_markdown(scene))
+            # Equalize mtimes so this regen doesn't immediately flip the next
+            # sync into "md is newer → regenerate json (losing pipeline state)".
+            import os
+            os.utime(md_path, (json_mtime, json_mtime))
             result.wrote_md = True
-        else:
+        elif skew < -0.5:
             scene = markdown_to_ir(_read_text(md_path))
             _write_json(json_path, json.loads(scene.model_dump_json()))
+            import os
+            os.utime(json_path, (md_mtime, md_mtime))
             result.wrote_json = True
+        # else: within tolerance, no rewrite needed.
     return result

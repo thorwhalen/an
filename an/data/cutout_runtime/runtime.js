@@ -300,7 +300,15 @@
         app.stage.addChild(root);
 
         if (scene.scene) {
-            buildSceneTree(scene.scene, root, '');
+            // The Python compiler's top-level node is a synthetic "root"
+            // container that just holds the entities. Skip indexing it (so
+            // path keys start at the entity name like 'charlie/head/mouth',
+            // matching the channel.target strings the compiler emits). Do
+            // NOT apply its transform — it's a logical container, and the
+            // outer `root` already centers the scene to canvas center.
+            for (const child of (scene.scene.children || [])) {
+                buildSceneTree(child, root, '');
+            }
         }
 
         app.render();

@@ -139,14 +139,45 @@ def compile_shot(
 
 
 def _build_scene_root(shot: Shot, mall: Mapping[str, Mapping]) -> NodeJSON:
-    """Construct the cutout scene tree under a single root from shot.entities."""
+    """Construct the cutout scene tree under a single root from shot.entities.
+
+    Multiple characters get spread along the x-axis so they don't overlap.
+    For N characters, positions are evenly distributed across a fixed band;
+    a single character lives at the center.
+    """
     children: list[NodeJSON] = []
     characters_store = mall.get("characters") or {}
+    char_entities = [e for e in shot.entities if e.kind == "character"]
+    n_chars = len(char_entities)
+    char_positions = _layout_character_positions(n_chars)
+    char_idx = 0
     for entity in shot.entities:
         if entity.kind == "character":
-            children.append(_build_character_subtree(entity, characters_store))
+            x = char_positions[char_idx]
+            char_idx += 1
+            sub = _build_character_subtree(entity, characters_store)
+            sub.transform.x = x
+            children.append(sub)
         # Other entity kinds (environment, prop) get sketched in later phases.
     return NodeJSON(name="root", children=children)
+
+
+def _layout_character_positions(n: int, *, spread: float = 220.0) -> list[float]:
+    """Return ``n`` x-positions evenly distributed about 0.
+
+    >>> _layout_character_positions(0)
+    []
+    >>> _layout_character_positions(1)
+    [0.0]
+    >>> _layout_character_positions(2, spread=200.0)
+    [-100.0, 100.0]
+    """
+    if n <= 0:
+        return []
+    if n == 1:
+        return [0.0]
+    step = spread / (n - 1)
+    return [-spread / 2 + i * step for i in range(n)]
 
 
 def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> NodeJSON:
