@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.human &mdash; an 0.1.0 documentation</title>
+  <title>an.verify.human &mdash; an 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/documentation_options.js?v=a58bc63e"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -159,13 +159,12 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ir</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">render</span><span class="p">:</span> <span class="n">RenderResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VerificationReport</span><span class="p">:</span>
         <span class="n">report</span> <span class="o">=</span> <span class="n">VerificationReport</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">render</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;render&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;no render result; nothing to inspect&quot;</span>
-            <span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;render&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;no render result; nothing to inspect&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">isatty</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">isatty</span><span class="p">():</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;terminal&gt;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;info&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&lt;terminal&gt;&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;no interactive terminal — skipping human review&quot;</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
@@ -174,14 +173,13 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">answer</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prompt</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">EOFError</span><span class="p">,</span> <span class="ne">KeyboardInterrupt</span><span class="p">):</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;input&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;no answer received; defaulting to skip&quot;</span>
-            <span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;input&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;no answer received; defaulting to skip&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
 
         <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">):</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;human&gt;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;error&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&lt;human&gt;&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;human rejected the render&quot;</span><span class="p">,</span>
                 <span class="n">suggested_fix</span><span class="o">=</span><span class="s2">&quot;ask the human what to change&quot;</span><span class="p">,</span>
             <span class="p">)</span>
@@ -189,7 +187,8 @@
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;human&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;human approved the render&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;human&gt;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;warning&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;&lt;human&gt;&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;human did not explicitly approve&quot;</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">report</span></div>
@@ -206,6 +205,7 @@
             <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;xdg-open&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">])</span>
         <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;win&quot;</span><span class="p">):</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
             <span class="n">os</span><span class="o">.</span><span class="n">startfile</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
         <span class="c1"># Best-effort; if the launcher is missing, the user can open it manually.</span>

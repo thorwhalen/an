@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.manim_adapter &mdash; an 0.1.0 documentation</title>
+  <title>an.adapters.manim_adapter &mdash; an 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/documentation_options.js?v=a58bc63e"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -192,16 +192,16 @@
 
         <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">&quot;manim&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-ql&quot;</span><span class="p">,</span>                    <span class="c1"># low quality for speed</span>
-            <span class="s2">&quot;--media_dir&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_dir</span> <span class="o">/</span> <span class="s2">&quot;media&quot;</span><span class="p">),</span>
-            <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">out_mp4</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">&quot;-ql&quot;</span><span class="p">,</span>  <span class="c1"># low quality for speed</span>
+            <span class="s2">&quot;--media_dir&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">out_dir</span> <span class="o">/</span> <span class="s2">&quot;media&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+            <span class="n">out_mp4</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">script_path</span><span class="p">),</span>
             <span class="s2">&quot;GeneratedScene&quot;</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
-            <span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ManimRenderError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;manim failed to launch: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
@@ -227,17 +227,20 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_render_script</span><span class="p">(</span><span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Produce a minimal Manim scene that holds the right duration.&quot;&quot;&quot;</span>
     <span class="n">title</span> <span class="o">=</span> <span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">shot</span><span class="o">.</span><span class="n">id</span>
-    <span class="k">return</span> <span class="n">dedent</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">        from manim import Scene, Text</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">dedent</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        from manim import Scene, Text</span>
 
-<span class="s1">        class GeneratedScene(Scene):</span>
-<span class="s1">            def construct(self):</span>
-<span class="s1">                title = Text(</span><span class="si">{</span><span class="n">title</span><span class="si">!r}</span><span class="s1">, font_size=48)</span>
-<span class="s1">                self.add(title)</span>
-<span class="s1">                self.wait(</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="si">}</span><span class="s1">)</span>
-<span class="s1">        &#39;&#39;&#39;</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="s2">        class GeneratedScene(Scene):</span>
+<span class="s2">            def construct(self):</span>
+<span class="s2">                title = Text(</span><span class="si">{</span><span class="n">title</span><span class="si">!r}</span><span class="s2">, font_size=48)</span>
+<span class="s2">                self.add(title)</span>
+<span class="s2">                self.wait(</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
 </pre></div>
 
            </div>

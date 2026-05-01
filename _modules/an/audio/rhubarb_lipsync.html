@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.rhubarb_lipsync &mdash; an 0.1.0 documentation</title>
+  <title>an.audio.rhubarb_lipsync &mdash; an 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/documentation_options.js?v=a58bc63e"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -194,10 +194,14 @@
 
             <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">binary_path</span><span class="p">,</span>
-                <span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;-r&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">recognizer</span><span class="p">,</span>
-                <span class="s2">&quot;--dialogFile&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">dialog_path</span><span class="p">),</span>
-                <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_json</span><span class="p">),</span>
+                <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;json&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-r&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">recognizer</span><span class="p">,</span>
+                <span class="s2">&quot;--dialogFile&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">dialog_path</span><span class="p">),</span>
+                <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">out_json</span><span class="p">),</span>
                 <span class="nb">str</span><span class="p">(</span><span class="n">audio_path</span><span class="p">),</span>
             <span class="p">]</span>
             <span class="k">try</span><span class="p">:</span>
@@ -215,10 +219,7 @@
             <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">out_json</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
 
         <span class="n">cues</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mouthCues&quot;</span><span class="p">,</span> <span class="p">[])</span>
-        <span class="n">visemes</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">Viseme</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]),</span> <span class="n">code</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]))</span>
-            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cues</span>
-        <span class="p">]</span>
+        <span class="n">visemes</span> <span class="o">=</span> <span class="p">[</span><span class="n">Viseme</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]),</span> <span class="n">code</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cues</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">cues</span><span class="p">:</span>
             <span class="c1"># Append a final rest at the last cue&#39;s &quot;end&quot; so the track matches duration.</span>
             <span class="n">last_end</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cues</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;end&quot;</span><span class="p">])</span>
