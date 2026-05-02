@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.render &mdash; an 0.1.4 documentation</title>
+  <title>an.render &mdash; an 0.1.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=fd825880"></script>
+      <script src="../../_static/documentation_options.js?v=59fadc99"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -71,6 +71,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/base.html">an.base</a></li>
@@ -168,6 +169,11 @@
     <span class="k">return</span> <span class="kc">False</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_any_dialogue</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if there&#39;s at least one dialogue line in the scene.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span> <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="render_project">
 <a class="viewcode-back" href="../../module_docs/an/render.html#an.render.render_project">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_project</span><span class="p">(</span>
@@ -176,8 +182,16 @@
     <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolution</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
+    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Render every shot in ``project_dir``&#39;s scene and concatenate to one mp4.</span>
+
+<span class="sd">    ``tts`` and ``lipsync`` may be provider name strings (``&quot;offline&quot;``,</span>
+<span class="sd">    ``&quot;elevenlabs&quot;``, ``&quot;rhubarb&quot;``) or provider instances. Defaults are</span>
+<span class="sd">    offline so no API keys are required. Switching providers triggers a</span>
+<span class="sd">    re-synthesis on dialogue lines whose stamped audio_ref / viseme_ref</span>
+<span class="sd">    no longer match the current configuration.</span>
 
 <span class="sd">    Returns the absolute path of the final output file (under ``output/``).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -187,6 +201,8 @@
         <span class="n">output_name</span><span class="o">=</span><span class="n">output_name</span><span class="p">,</span>
         <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
         <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+        <span class="n">tts</span><span class="o">=</span><span class="n">tts</span><span class="p">,</span>
+        <span class="n">lipsync</span><span class="o">=</span><span class="n">lipsync</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -200,22 +216,37 @@
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolution</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">auto_audio</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
+    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Lower-level: render a loaded ``Project`` to mp4.</span>
 
-<span class="sd">    When ``auto_audio`` is True (the default) and any shot has dialogue</span>
-<span class="sd">    without a viseme_track, the audio pipeline is run first so visemes are</span>
-<span class="sd">    available to the renderer.</span>
+<span class="sd">    When ``auto_audio`` is True (the default) and any shot has dialogue,</span>
+<span class="sd">    the audio pipeline is run first so visemes + audio are available to</span>
+<span class="sd">    the renderer. Re-synthesis is triggered on provider changes (the</span>
+<span class="sd">    pipeline&#39;s idempotency check compares against the current providers&#39;</span>
+<span class="sd">    expected content hashes).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">scene</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">scene</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">RenderError</span><span class="p">(</span><span class="s2">&quot;scene has no shots to render&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">auto_audio</span> <span class="ow">and</span> <span class="n">_scene_has_pending_dialogue</span><span class="p">(</span><span class="n">scene</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">auto_audio</span> <span class="ow">and</span> <span class="n">_has_any_dialogue</span><span class="p">(</span><span class="n">scene</span><span class="p">):</span>
         <span class="c1"># Lazy import to keep render.py importable without audio extras.</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">produce_audio_for_scene</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_lipsync</span><span class="p">,</span> <span class="n">make_tts</span>
 
-        <span class="n">produce_audio_for_scene</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">)</span>
+        <span class="n">tts_provider</span> <span class="o">=</span> <span class="n">make_tts</span><span class="p">(</span><span class="n">tts</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tts</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">tts</span>
+        <span class="n">lipsync_provider</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">make_lipsync</span><span class="p">(</span><span class="n">lipsync</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lipsync</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">lipsync</span>
+        <span class="p">)</span>
+
+        <span class="n">produce_audio_for_scene</span><span class="p">(</span>
+            <span class="n">scene</span><span class="p">,</span>
+            <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">,</span>
+            <span class="n">tts</span><span class="o">=</span><span class="n">tts_provider</span><span class="p">,</span>
+            <span class="n">lipsync</span><span class="o">=</span><span class="n">lipsync_provider</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="c1"># Persist the now-stamped scene back to disk so subsequent loads see it.</span>
         <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">&quot;scenes&quot;</span><span class="p">][</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scene</span>
 

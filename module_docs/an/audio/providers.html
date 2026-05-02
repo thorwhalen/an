@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.layout &mdash; an 0.1.5 documentation</title>
+  <title>an.audio.providers &mdash; an 0.1.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -24,7 +24,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="prev" title="an.verify.human" href="human.html" /> 
+    <link rel="next" title="an.audio.rhubarb_lipsync" href="rhubarb_lipsync.html" />
+    <link rel="prev" title="an.audio.pipeline" href="pipeline.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -68,14 +69,20 @@
 <li class="toctree-l1"><a class="reference internal" href="../adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/whiteboard.html">an.adapters.whiteboard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../audio.html">an.audio</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../audio/lipsync.html">an.audio.lipsync</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../audio/offline_tts.html">an.audio.offline_tts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../audio/pipeline.html">an.audio.pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../audio/providers.html">an.audio.providers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.audio.providers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.providers.known_lipsync_names"><code class="docutils literal notranslate"><span class="pre">known_lipsync_names()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.providers.known_tts_names"><code class="docutils literal notranslate"><span class="pre">known_tts_names()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.providers.make_lipsync"><code class="docutils literal notranslate"><span class="pre">make_lipsync()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.providers.make_tts"><code class="docutils literal notranslate"><span class="pre">make_tts()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tts.html">an.audio.tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../data.html">an.data</a></li>
@@ -101,12 +108,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../tools.html">an.tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../util.html">an.util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../verify.html">an.verify</a></li>
-<li class="toctree-l1"><a class="reference internal" href="_base.html">an.verify._base</a></li>
-<li class="toctree-l1"><a class="reference internal" href="human.html">an.verify.human</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.verify.layout</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#an.verify.layout.LayoutLintVerifier"><code class="docutils literal notranslate"><span class="pre">LayoutLintVerifier</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/layout.html">an.verify.layout</a></li>
 </ul>
 
         </div>
@@ -123,9 +127,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">an.verify.layout</li>
+      <li class="breadcrumb-item active">an.audio.providers</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../_sources/module_docs/an/verify/layout.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../_sources/module_docs/an/audio/providers.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -133,19 +137,42 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-an.verify.layout">
-<span id="an-verify-layout"></span><h1>an.verify.layout<a class="headerlink" href="#module-an.verify.layout" title="Link to this heading"></a></h1>
-<p>LayoutLintVerifier — cheap pre-render checks on the IR.</p>
-<p>Runs the same semantic checks as <code class="docutils literal notranslate"><span class="pre">an.ir.validate.validate_semantic</span></code> plus a
-few that need a render context (do dialogue lines fit in their shot’s
-duration? is the scene’s total duration consistent with the timeline?).</p>
-<p>Deliberately runs on the IR alone (RenderResult=None is fine), so the
-orchestrator can call it BEFORE rendering and skip a costly render if the
-IR is broken.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="an.verify.layout.LayoutLintVerifier">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">an.verify.layout.</span></span><span class="sig-name descname"><span class="pre">LayoutLintVerifier</span></span><a class="reference internal" href="../../../_modules/an/verify/layout.html#LayoutLintVerifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.verify.layout.LayoutLintVerifier" title="Link to this definition"></a></dt>
-<dd><p>Cheap IR-only verifier. Implements <code class="docutils literal notranslate"><span class="pre">Verifier</span></code>.</p>
+  <section id="module-an.audio.providers">
+<span id="an-audio-providers"></span><h1>an.audio.providers<a class="headerlink" href="#module-an.audio.providers" title="Link to this heading"></a></h1>
+<p>Provider factory: name → concrete TTS/LipSync provider instance.</p>
+<p>Used by the CLI and orchestrator to map <code class="docutils literal notranslate"><span class="pre">--tts</span> <span class="pre">elevenlabs</span></code> (and similar)
+strings into instantiated providers without callers having to import the
+specific classes.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_tts</span><span class="p">,</span> <span class="n">make_lipsync</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_tts</span><span class="p">(</span><span class="s2">&quot;offline&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;offline&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_lipsync</span><span class="p">(</span><span class="s2">&quot;offline&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;offline&#39;</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="an.audio.providers.known_lipsync_names">
+<span class="sig-prename descclassname"><span class="pre">an.audio.providers.</span></span><span class="sig-name descname"><span class="pre">known_lipsync_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/audio/providers.html#known_lipsync_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.providers.known_lipsync_names" title="Link to this definition"></a></dt>
+<dd><p>Return the registered LipSync provider names.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.audio.providers.known_tts_names">
+<span class="sig-prename descclassname"><span class="pre">an.audio.providers.</span></span><span class="sig-name descname"><span class="pre">known_tts_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/audio/providers.html#known_tts_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.providers.known_tts_names" title="Link to this definition"></a></dt>
+<dd><p>Return the registered TTS provider names.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.audio.providers.make_lipsync">
+<span class="sig-prename descclassname"><span class="pre">an.audio.providers.</span></span><span class="sig-name descname"><span class="pre">make_lipsync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="lipsync.html#an.audio.lipsync.LipSyncProvider" title="an.audio.lipsync.LipSyncProvider"><span class="pre">LipSyncProvider</span></a></span></span><a class="reference internal" href="../../../_modules/an/audio/providers.html#make_lipsync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.providers.make_lipsync" title="Link to this definition"></a></dt>
+<dd><p>Instantiate a LipSync provider by name.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.audio.providers.make_tts">
+<span class="sig-prename descclassname"><span class="pre">an.audio.providers.</span></span><span class="sig-name descname"><span class="pre">make_tts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="tts.html#an.audio.tts.TTSProvider" title="an.audio.tts.TTSProvider"><span class="pre">TTSProvider</span></a></span></span><a class="reference internal" href="../../../_modules/an/audio/providers.html#make_tts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.providers.make_tts" title="Link to this definition"></a></dt>
+<dd><p>Instantiate a TTS provider by name.</p>
+<p>Raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> for unknown names with a list of known options.</p>
 </dd></dl>
 
 </section>
@@ -154,7 +181,8 @@ IR is broken.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="human.html" class="btn btn-neutral float-left" title="an.verify.human" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pipeline.html" class="btn btn-neutral float-left" title="an.audio.pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rhubarb_lipsync.html" class="btn btn-neutral float-right" title="an.audio.rhubarb_lipsync" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

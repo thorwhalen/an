@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.tools &mdash; an 0.1.4 documentation</title>
+  <title>an.tools &mdash; an 0.1.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=fd825880"></script>
+      <script src="../../_static/documentation_options.js?v=59fadc99"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -71,6 +71,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/base.html">an.base</a></li>
@@ -201,13 +202,23 @@
 
 <div class="viewcode-block" id="render">
 <a class="viewcode-back" href="../../module_docs/an/tools.html#an.tools.render">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span>
+    <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
+    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Render the project at ``project_dir`` to a single mp4.</span>
 
 <span class="sd">    project_dir: path to an an project (must contain scene.md / ir/scene.json)</span>
 <span class="sd">    output_name: filename stem under output/ (default: &quot;main&quot;)</span>
+<span class="sd">    tts: TTS provider — &quot;offline&quot; (silent) or &quot;elevenlabs&quot; (needs ELEVEN_API_KEY)</span>
+<span class="sd">    lipsync: lip-sync provider — &quot;offline&quot; (deterministic) or &quot;rhubarb&quot;</span>
+<span class="sd">        (needs the rhubarb binary)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">output_path</span> <span class="o">=</span> <span class="n">_render_project</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">output_name</span><span class="o">=</span><span class="n">output_name</span><span class="p">)</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">_render_project</span><span class="p">(</span>
+        <span class="n">project_dir</span><span class="p">,</span> <span class="n">output_name</span><span class="o">=</span><span class="n">output_name</span><span class="p">,</span> <span class="n">tts</span><span class="o">=</span><span class="n">tts</span><span class="p">,</span> <span class="n">lipsync</span><span class="o">=</span><span class="n">lipsync</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;rendered: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
