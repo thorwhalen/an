@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 1024 1024" width="1024" height="1024"
+     data-an-character="raw_maya">
+
+  <!-- Pose Animator skeleton: one named <circle> per joint pivot.
+       The circle's (cx, cy) is the rotation/anchor pivot for the part with
+       the same name, expressed in the SVG's viewBox. -->
+  <g id="skeleton" fill="none" stroke="#cf3a8b" stroke-width="3"
+     style="display:none">
+    <circle id="root"        cx="512" cy="980" r="3"/>
+    <circle id="hip"         cx="512" cy="700" r="3"/>
+    <circle id="neck"        cx="512" cy="430" r="3"/>
+    <circle id="head"        cx="512" cy="280" r="3"/>
+    <circle id="shoulder_l"  cx="430" cy="450" r="3"/>
+    <circle id="shoulder_r"  cx="594" cy="450" r="3"/>
+    <circle id="elbow_l"     cx="370" cy="600" r="3"/>
+    <circle id="elbow_r"     cx="654" cy="600" r="3"/>
+    <circle id="hand_l"      cx="340" cy="720" r="3"/>
+    <circle id="hand_r"      cx="684" cy="720" r="3"/>
+    <circle id="hip_l"       cx="470" cy="710" r="3"/>
+    <circle id="hip_r"       cx="554" cy="710" r="3"/>
+    <circle id="knee_l"      cx="450" cy="830" r="3"/>
+    <circle id="knee_r"      cx="574" cy="830" r="3"/>
+    <circle id="foot_l"      cx="430" cy="950" r="3"/>
+    <circle id="foot_r"      cx="594" cy="950" r="3"/>
+  </g>
+
+  <!-- Illustration: each named group is a slice-able cutout part. The
+       promote step copies these out into parts/<id>.svg verbatim. Eyes are
+       intentionally omitted so the demo also shows how promote synthesizes
+       them when the source SVG doesn't ship them. -->
+  <g id="illustration">
+
+    <!-- Legs: tapered rounded rects in denim blue -->
+    <g id="leg_l">
+      <rect x="430" y="700" width="40" height="260" rx="20" ry="20"
+            fill="#4a5b8a" stroke="#2d3b63" stroke-width="3"/>
+    </g>
+    <g id="leg_r">
+      <rect x="554" y="700" width="40" height="260" rx="20" ry="20"
+            fill="#4a5b8a" stroke="#2d3b63" stroke-width="3"/>
+    </g>
+
+    <!-- Torso: warm orange tunic -->
+    <g id="torso">
+      <path d="M 430 440 Q 420 560 440 700 L 584 700 Q 604 560 594 440 Z"
+            fill="#e08a3c" stroke="#a85e1f" stroke-width="4"/>
+      <!-- A simple V-neck collar so it doesn't look like a featureless rect -->
+      <path d="M 480 442 L 512 478 L 544 442"
+            fill="none" stroke="#8a4717" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- Arms: matching tunic rounded rects -->
+    <g id="arm_l">
+      <rect x="350" y="450" width="44" height="260" rx="22" ry="22"
+            fill="#e08a3c" stroke="#a85e1f" stroke-width="3"/>
+    </g>
+    <g id="arm_r">
+      <rect x="630" y="450" width="44" height="260" rx="22" ry="22"
+            fill="#e08a3c" stroke="#a85e1f" stroke-width="3"/>
+    </g>
+
+    <!-- Head: a soft skin-toned ellipse with hair on top -->
+    <g id="head">
+      <!-- Hair (back layer) -->
+      <path d="M 410 250 Q 400 160 512 150 Q 624 160 614 250 Q 600 300 580 305 L 444 305 Q 424 300 410 250 Z"
+            fill="#3b2a1a" stroke="#1f150a" stroke-width="2"/>
+      <!-- Face -->
+      <ellipse cx="512" cy="295" rx="98" ry="115"
+               fill="#f4c89a" stroke="#a47042" stroke-width="3"/>
+      <!-- Cheeks: tiny pink ovals so it reads as a friendly face -->
+      <ellipse cx="466" cy="320" rx="14" ry="9" fill="#e88ea0" opacity="0.55"/>
+      <ellipse cx="558" cy="320" rx="14" ry="9" fill="#e88ea0" opacity="0.55"/>
+    </g>
+
+    <!-- Brows: short dark sweeps. Promote will copy these as standalone SVGs. -->
+    <g id="brow_l">
+      <path d="M 466 250 Q 480 244 494 250"
+            fill="none" stroke="#1f150a" stroke-width="6" stroke-linecap="round"/>
+    </g>
+    <g id="brow_r">
+      <path d="M 530 250 Q 544 244 558 250"
+            fill="none" stroke="#1f150a" stroke-width="6" stroke-linecap="round"/>
+    </g>
+
+  </g>
+</svg>

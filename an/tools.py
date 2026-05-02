@@ -16,6 +16,7 @@ from an.orchestrate import render_project as _render_project
 from an.orchestrate import validate_project
 from an.project import init as _init
 from an.iterate import iterate as _iterate
+from an.preview import preview_project as _preview_project
 from an.characters.cli import (
     _dispatch_funcs as _character_dispatch_funcs,
 )
@@ -133,8 +134,31 @@ def iterate(
     return "\n".join(lines)
 
 
+def preview(
+    project_dir: str,
+    shot: str = "",
+    no_browser: bool = False,
+) -> str:
+    """Live-preview the project's scene in a browser; reloads on edit.
+
+    Spins up a local HTTP server pointed at the runtime canvas. The
+    browser polls ``scene.json`` for changes and re-loads when you save
+    ``scene.md``. Lossy: visuals only, no audio. Blocks until Ctrl-C.
+
+    project_dir: path to an an project (must contain scene.md / ir/scene.json)
+    shot: shot id to preview (default: first shot in the timeline)
+    no_browser: don't auto-open the default browser
+    """
+    base_url = _preview_project(
+        project_dir,
+        shot_id=shot or None,
+        open_browser=not no_browser,
+    )
+    return f"preview: stopped (was at {base_url})"
+
+
 # SSOT for the CLI dispatcher (per the python-dispatching skill convention).
-_dispatch_funcs = [init, validate, sync, check, render, iterate]
+_dispatch_funcs = [init, validate, sync, check, render, iterate, preview]
 
 
 # Sub-namespaces. ``__main__`` mounts these via argh's ``namespace=`` arg so

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>an — live preview</title>
+    <style>
+        :root { color-scheme: dark; }
+        html, body {
+            margin: 0; padding: 0; background: #15171a;
+            color: #d8dae0;
+            font-family: -apple-system, system-ui, sans-serif;
+        }
+        #status {
+            position: fixed; top: 8px; left: 8px;
+            background: rgba(0,0,0,0.5); padding: 4px 10px;
+            border-radius: 4px; font-size: 12px;
+            pointer-events: none; z-index: 10;
+        }
+        #stage-wrap {
+            display: grid; place-items: center;
+            min-height: 100vh; padding: 16px; box-sizing: border-box;
+        }
+        #stage { display: block; max-width: 100%; max-height: 100vh; }
+        .err { color: #ff8a80; }
+        .ok { color: #80e08a; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+    <script src="runtime.js"></script>
+</head>
+<body>
+    <div id="status">starting…</div>
+    <div id="stage-wrap"><canvas id="stage"></canvas></div>
+    <script>
+        const POLL_MS = 500;
+        const status = document.getElementById('status');
+        let lastModified = null;
+        let sceneDuration = 1.0;
+        let playStartMs = performance.now();
+
+        function setStatus(text, cls) {
+            status.textContent = text;
+            status.className = cls || '';
+        }
+
+        async function loadCurrent() {
+            // Cache-bust so we always see the latest scene.
+            const r = await fetch('scene.json?_=' + Date.now(), { cache: 'no-store' });
+            if (!r.ok) throw new Error('scene.json: ' + r.status);
+            lastModified = r.headers.get('Last-Modified');
+            const scene = await r.json();
+            await window.anLoadScene(scene);
+            sceneDuration = (scene.meta && scene.meta.duration) || 1.0;
+            playStartMs = performance.now();
+            setStatus(
+                'shot: ' + (scene.meta && scene.meta.shot_id ? scene.meta.shot_id : 'main')
+                + ' · ' + sceneDuration.toFixed(2) + 's · loop',
+                'ok'
+            );
+        }
+
+        function tick() {
+            if (window.anSetTime && sceneDuration > 0) {
+                const tSec = ((performance.now() - playStartMs) / 1000) % sceneDuration;
+                window.anSetTime(tSec);
+            }
+            requestAnimationFrame(tick);
+        }
+
+        async function pollForChanges() {
+            try {
+                // HEAD with cache-bust; SimpleHTTPRequestHandler returns Last-Modified.
+                const r = await fetch('scene.json?_=' + Date.now(), {
+                    method: 'HEAD', cache: 'no-store',
+                });
+                const lm = r.headers.get('Last-Modified');
+                if (lm && lm !== lastModified) {
+                    setStatus('reloading…');
+                    await loadCurrent();
+                }
+            } catch (e) {
+                setStatus('poll error: ' + e.message, 'err');
+            }
+        }
+
+        (async function main() {
+            try {
+                await loadCurrent();
+                requestAnimationFrame(tick);
+                setInterval(pollForChanges, POLL_MS);
+            } catch (e) {
+                setStatus('load failed: ' + e.message, 'err');
+                console.error(e);
+            }
+        })();
+    </script>
+</body>
+</html>

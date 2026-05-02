@@ -126,7 +126,7 @@ def compile_shot(
     scene_root = _build_scene_root(shot, mall, textures=textures)
     animations, tracks = _compile_actions(shot.actions, shot.duration)
     # Phase 4: emit a viseme channel per dialogue line that has a viseme_track.
-    _add_viseme_clips(shot, animations, tracks)
+    _add_viseme_clips(shot, animations, tracks, mall=mall)
     # Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale
     # animation on the synthetic scene root so directors get visible camera
     # behavior without writing channels by hand.
@@ -461,9 +461,13 @@ def _build_svg_character_subtree(
         viseme_map[letter] = f"{entity.id}.{attachment}"
 
     # If the head art has its own face baked in (DiceBear / hand-drawn full
-    # avatars), don't overlay separate eye/brow sprites — they double up
-    # with the baked features. The mouth overlay still attaches because
-    # it carries the lip-sync channel.
+    # avatars), don't overlay separate eye/brow/mouth sprites — they double
+    # up with the baked features. The mouth overlay used to attach so it
+    # could carry the lip-sync channel, but it sits below the avatar's
+    # natural mouth and reads as awkward. Per SESSION_HANDOFF.md §3 we lock
+    # it off too: lip-sync stays audio-only for these characters, and
+    # production scenes with dialogue should hand-rig characters following
+    # the Pose Animator convention (see ``examples/promote_demo/``).
     metadata = desc.get("metadata") or {}
     head_has_face = metadata.get("art_provenance") in ("dicebear", "external_avatar")
 
@@ -520,19 +524,20 @@ def _build_svg_character_subtree(
                 ),
             ]
         )
-    head_children.append(
-        NodeJSON(
-            name="mouth",
-            transform=TransformJSON(x=0.0, y=22.0),
-            visual=VisualJSON(
-                kind="svg_sprite",
-                asset_id=mouth_alias,
-                width=_SVG_MOUTH_SIZE[0],
-                height=_SVG_MOUTH_SIZE[1],
-                viseme_assets=viseme_map,
-            ),
+    if not head_has_face:
+        head_children.append(
+            NodeJSON(
+                name="mouth",
+                transform=TransformJSON(x=0.0, y=22.0),
+                visual=VisualJSON(
+                    kind="svg_sprite",
+                    asset_id=mouth_alias,
+                    width=_SVG_MOUTH_SIZE[0],
+                    height=_SVG_MOUTH_SIZE[1],
+                    viseme_assets=viseme_map,
+                ),
+            )
         )
-    )
 
     head_node = NodeJSON(
         name="head",
@@ -744,17 +749,59 @@ def _track_root_of(target: str) -> str:
 # -----------------------------------------------------------------------------
 
 
+_FACE_BAKED_PROVENANCES: tuple[str, ...] = ("dicebear", "external_avatar")
+
+
+def _face_baked_speakers(
+    shot: Shot, mall: Mapping[str, Mapping] | None
+) -> set[str]:
+    """Return the entity ids whose backing descriptor has a face baked in.
+
+    Used to suppress viseme channels for characters that don't have an
+    overlay mouth node (DiceBear / external avatars). See
+    ``_build_svg_character_subtree`` for the matching scene-tree branch.
+    """
+    if not mall:
+        return set()
+    chars_store = mall.get("characters") or {}
+    out: set[str] = set()
+    for entity in shot.entities:
+        if entity.kind != "character":
+            continue
+        ref = entity.ref
+        if ref is None or ref not in chars_store:
+            continue
+        try:
+            desc = chars_store[ref]
+        except KeyError:
+            continue
+        if not isinstance(desc, dict):
+            continue
+        provenance = (desc.get("metadata") or {}).get("art_provenance")
+        if provenance in _FACE_BAKED_PROVENANCES:
+            out.add(entity.id)
+    return out
+
+
 def _add_viseme_clips(
     shot: Shot,
     animations: dict[str, AnimationClipJSON],
     tracks: list[TrackJSON],
+    *,
+    mall: Mapping[str, Mapping] | None = None,
 ) -> None:
     """For each dialogue line with a viseme_track, emit a step-channel that
     drives ``<speaker>/head/mouth:viseme`` over the line's time span.
 
     Side-effects ``animations`` (adds named clips) and ``tracks`` (appends to
     or creates the speaker's track).
+
+    Speakers backed by a face-baked descriptor (``art_provenance`` of
+    ``"dicebear"`` or ``"external_avatar"``) get no viseme channel — they
+    have no overlay mouth node, so the channel would target a missing
+    path. See SESSION_HANDOFF.md §3 for the rationale.
     """
+    face_baked = _face_baked_speakers(shot, mall)
     track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
     for i, line in enumerate(shot.dialogue):
         if line.viseme_track is None or not line.viseme_track.keyframes:
@@ -763,6 +810,8 @@ def _add_viseme_clips(
             # No timing assigned (audio pipeline didn't run); skip silently.
             continue
         speaker = line.speaker
+        if speaker in face_baked:
+            continue
         target = f"{speaker}/head/mouth"
         anim_id = f"__viseme__{shot.id}_{i}"
 

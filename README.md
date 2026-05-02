@@ -20,6 +20,7 @@ an validate my-scene                                      # schema + semantic va
 an render my-scene                                        # → output/main.mp4 (offline defaults)
 an render my-scene --tts elevenlabs --lipsync whisper     # real speech, word-aligned visemes
 an render my-scene --parallel auto                        # per-shot threads (~N× speedup on N-shot scenes)
+an preview my-scene                                       # live in-browser preview; reloads on edit
 an iterate my-scene "make Maya laugh longer and warmer"   # free-text → IR patch → invalidate caches
 an render my-scene                                        # re-renders only the affected shot
 

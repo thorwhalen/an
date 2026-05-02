@@ -108,3 +108,69 @@ def test_head_node_has_mouth_child():
     assert mouth is not None
     assert mouth.visual is not None
     assert mouth.visual.kind == "mouth"
+
+
+def test_dicebear_character_skips_mouth_overlay_and_viseme_channel():
+    """Phase-12 hardening: face-baked descriptors get no mouth overlay nor viseme channel.
+
+    The mouth overlay used to attach for DiceBear characters so the
+    viseme channel had a target. Per SESSION_HANDOFF.md §3 we lock both
+    off — the overlay sat below the avatar's natural mouth and read as
+    awkward during dialogue.
+    """
+    descriptor = {
+        "kind": "CharacterDescriptor",
+        "name": "diane",
+        "metadata": {"art_provenance": "dicebear"},
+    }
+    shot = Shot(
+        id="s1",
+        style="cutout",
+        duration=2.0,
+        entities=[
+            AssetRef(kind="character", id="diane", store="characters", ref="diane-v1")
+        ],
+        dialogue=[_line_with_visemes("diane")],
+    )
+    j = compile_shot(shot, mall={"characters": {"diane-v1": descriptor}})
+
+    # No mouth child under head.
+    char_node = j.scene.children[0]
+    head = next(c for c in char_node.children if c.name == "head")
+    assert not any(c.name == "mouth" for c in head.children), (
+        "DiceBear / external_avatar characters must not get a mouth overlay"
+    )
+
+    # No viseme channel emitted.
+    assert not any(
+        any(c.property == "viseme" for c in a.channels)
+        for a in j.animations.values()
+    ), "no viseme channel should be emitted for face-baked speakers"
+
+
+def test_offline_character_still_emits_viseme_channel():
+    """The face-baked check must not regress non-DiceBear characters."""
+    descriptor = {
+        "kind": "CharacterDescriptor",
+        "name": "rex",
+        # Either no metadata or a non-baked provenance keeps the overlay on.
+        "metadata": {"art_provenance": "offline"},
+    }
+    shot = Shot(
+        id="s1",
+        style="cutout",
+        duration=2.0,
+        entities=[
+            AssetRef(kind="character", id="rex", store="characters", ref="rex-v1")
+        ],
+        dialogue=[_line_with_visemes("rex")],
+    )
+    j = compile_shot(shot, mall={"characters": {"rex-v1": descriptor}})
+
+    char_node = j.scene.children[0]
+    head = next(c for c in char_node.children if c.name == "head")
+    assert any(c.name == "mouth" for c in head.children)
+    assert any(
+        any(c.property == "viseme" for c in a.channels)
+        for a in j.animations.values()
+    )
