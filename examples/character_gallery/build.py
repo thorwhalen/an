@@ -24,6 +24,7 @@ Idempotent: re-running rebuilds.
 
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -71,10 +72,39 @@ def _silhouette_pair(a_dir: Path, b_dir: Path) -> float:
     return compare_silhouettes(a_png, b_png)
 
 
+def _detect_providers() -> tuple[str, str]:
+    """Pick the best TTS / lip-sync providers available in the environment.
+
+    - TTS: ``elevenlabs`` if ``ELEVEN_API_KEY`` is set, else ``offline``
+      (silent placeholder). Source ``~/.keys`` before running for real audio.
+    - LipSync: ``whisper`` if ``faster-whisper`` is importable, else
+      ``offline`` (deterministic char-distributed visemes).
+    """
+    tts = "elevenlabs" if os.environ.get("ELEVEN_API_KEY") else "offline"
+    try:
+        import faster_whisper  # noqa: F401
+
+        lipsync = "whisper"
+    except ImportError:
+        lipsync = "offline"
+    return tts, lipsync
+
+
 def _render_cartoon() -> Path:
     """Render cartoon/scene.md to mp4 and copy to videos/cartoon.mp4."""
-    print(f"\nRendering cartoon at {CARTOON_PROJECT} (parallel auto):")
-    output_path = render_project(CARTOON_PROJECT, parallel="auto")
+    tts, lipsync = _detect_providers()
+    print(
+        f"\nRendering cartoon at {CARTOON_PROJECT} "
+        f"(parallel auto, tts={tts}, lipsync={lipsync}):"
+    )
+    if tts == "offline":
+        print(
+            "  note: no ELEVEN_API_KEY set — audio will be silent. "
+            "Run `source ~/.keys` before this script to get real speech."
+        )
+    output_path = render_project(
+        CARTOON_PROJECT, tts=tts, lipsync=lipsync, parallel="auto"
+    )
     VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
     target = VIDEOS_DIR / "cartoon.mp4"
     shutil.copy(output_path, target)

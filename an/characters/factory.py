@@ -17,6 +17,7 @@ False
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import textwrap
@@ -24,6 +25,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 from xml.etree import ElementTree as ET
+
+
+def _stable_hash(seed: str) -> int:
+    """Deterministic across processes (unlike Python's `hash()` for strings).
+
+    Python's built-in ``hash()`` is salt-randomized per interpreter run, so
+    using it for color derivation produces different palettes each render.
+    """
+    digest = hashlib.md5(seed.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big")
 
 from an.characters.dicebear import (
     DICEBEAR_DEFAULT_STYLE,
@@ -239,21 +250,45 @@ def validate_character(
 # -----------------------------------------------------------------------------
 
 
+#: Hand-picked skin tones in the typical illustrative cartoon range
+#: (warm pale → deep brown). Picked so any pair tends to read as distinct.
+_SKIN_TONES: tuple[str, ...] = (
+    "#fbe1c1",  # pale warm
+    "#f4c89a",  # peach
+    "#e8b687",  # tan
+    "#d8a47f",  # warm tan
+    "#c08a5a",  # brown
+    "#8b5a3b",  # deep brown
+    "#fce0c8",  # very pale
+    "#f1c9a5",  # neutral light
+)
+
+#: Hair tones (dark earth + a couple of stylized colors).
+_HAIR_TONES: tuple[str, ...] = (
+    "#1a1a1a",  # near-black
+    "#3b2a1a",  # dark brown
+    "#5e3a1f",  # brown
+    "#a8743f",  # ginger
+    "#d4a017",  # blonde
+    "#3a2a40",  # dark stylized purple
+)
+
+
 def _fallback_face_svg(seed: str) -> str:
     """Tiny fallback face SVG used when DiceBear is unavailable.
 
-    Deterministic: same seed → same face. Tints driven by hashing the seed.
+    Deterministic: same seed → same face (skin tone + hair color picked
+    from hand-curated palettes via stable hash). Crucially: NO eyes /
+    brows / mouth baked in — those are added by the overlay slots so
+    they can blink and lip-sync. Phase 11d fix for the "four eyes" bug.
     """
-    h = abs(hash(seed))
-    skin = f"#{(h & 0xCFCFCF | 0x808080):06x}"
-    hair = f"#{((h >> 24) & 0x4F4F4F | 0x202020):06x}"
+    h = _stable_hash(seed)
+    skin = _SKIN_TONES[h % len(_SKIN_TONES)]
+    hair = _HAIR_TONES[(h >> 16) % len(_HAIR_TONES)]
     return textwrap.dedent(
         f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
           <circle cx="40" cy="44" r="28" fill="{skin}"/>
           <path d="M 12 36 Q 40 4 68 36 L 60 24 L 40 14 L 20 24 Z" fill="{hair}"/>
-          <circle cx="30" cy="42" r="2.5" fill="#222"/>
-          <circle cx="50" cy="42" r="2.5" fill="#222"/>
-          <path d="M 30 56 Q 40 60 50 56" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/>
         </svg>"""
     )
 
@@ -296,7 +331,7 @@ def _palette_for_seed(seed: str) -> tuple[str, str, str]:
         ("#e8c39e", "#d97706", "#5e3a1f"),
         ("#f1c9a5", "#7a8fb5", "#3a2a20"),
     )
-    idx = sum(ord(c) for c in seed) % len(palettes)
+    idx = _stable_hash(seed) % len(palettes)
     return palettes[idx]
 
 
