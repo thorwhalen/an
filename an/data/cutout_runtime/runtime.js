@@ -298,6 +298,10 @@
         root.x = width / 2;
         root.y = height / 2;
         app.stage.addChild(root);
+        // Index the centered root under the path "root" so camera channels
+        // (compiled by Python) can target it for scale animations etc.
+        root.name = 'root';
+        nodeIndex['root'] = root;
 
         if (scene.scene) {
             // The Python compiler's top-level node is a synthetic "root"

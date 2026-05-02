@@ -58,12 +58,18 @@ class ElevenLabsTTS:
         return ElevenLabs(api_key=self.api_key)
 
     def synthesize(
-        self, text: str, voice_id: str = _DEFAULT_VOICE_ID, **kw
+        self, text: str, voice_id: str | None = None, **kw
     ) -> AudioClip:
         client = self._client()
+        # ElevenLabs has no voice named "default"; if the caller passes the
+        # canonical "default" sentinel (or None), use this provider's pinned
+        # default voice instead.
+        effective_voice = (
+            voice_id if voice_id and voice_id != "default" else _DEFAULT_VOICE_ID
+        )
         # elevenlabs SDK 1.x exposes `text_to_speech.convert`.
         audio_iter = client.text_to_speech.convert(
-            voice_id=voice_id,
+            voice_id=effective_voice,
             text=text,
             model_id=self.model_id,
             output_format=self.output_format,
@@ -86,7 +92,7 @@ class ElevenLabsTTS:
             duration=duration,
             sample_rate=44100,
             channels=1,
-            voice_id=voice_id,
+            voice_id=effective_voice,
             transcript=text,
         )
 

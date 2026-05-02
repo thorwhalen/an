@@ -60,41 +60,33 @@ from an.adapters.cutout.serialize import (
 
 # Default placeholder character: a recognizable stick-figure layout in pixel
 # space so the demo is *visible* without art assets. Each entry pins a part to
-# a (x, y) offset and gives it a distinct fill color. Used only when the
-# characters store has no rig info for the requested character.
+# a (x, y) offset; colors come from a per-character palette so multiple
+# characters look distinct. Used only when the characters store has no rig.
 _PLACEHOLDER_PARTS: tuple[str, ...] = ("head", "torso", "left_arm", "right_arm")
-_PLACEHOLDER_PART_LAYOUT: dict[str, dict[str, float | str]] = {
-    "head": {"x": 0.0, "y": -55.0, "width": 50.0, "height": 50.0, "color": "#f4c89a"},
-    "torso": {"x": 0.0, "y": 0.0, "width": 60.0, "height": 80.0, "color": "#3a6ea5"},
-    "left_arm": {
-        "x": -50.0,
-        "y": -10.0,
-        "width": 30.0,
-        "height": 70.0,
-        "color": "#3a6ea5",
-    },
-    "right_arm": {
-        "x": 50.0,
-        "y": -10.0,
-        "width": 30.0,
-        "height": 70.0,
-        "color": "#3a6ea5",
-    },
-    "left_leg": {
-        "x": -18.0,
-        "y": 65.0,
-        "width": 30.0,
-        "height": 70.0,
-        "color": "#2c3e50",
-    },
-    "right_leg": {
-        "x": 18.0,
-        "y": 65.0,
-        "width": 30.0,
-        "height": 70.0,
-        "color": "#2c3e50",
-    },
+_PLACEHOLDER_PART_GEOMETRY: dict[str, dict[str, float]] = {
+    "head": {"x": 0.0, "y": -55.0, "width": 50.0, "height": 50.0},
+    "torso": {"x": 0.0, "y": 0.0, "width": 60.0, "height": 80.0},
+    "left_arm": {"x": -50.0, "y": -10.0, "width": 30.0, "height": 70.0},
+    "right_arm": {"x": 50.0, "y": -10.0, "width": 30.0, "height": 70.0},
+    "left_leg": {"x": -18.0, "y": 65.0, "width": 30.0, "height": 70.0},
+    "right_leg": {"x": 18.0, "y": 65.0, "width": 30.0, "height": 70.0},
 }
+
+# Per-character color palettes. Each entry is (skin, clothing, hair). Picked
+# deterministically from the entity.id so re-renders are stable.
+_CHARACTER_PALETTES: tuple[tuple[str, str, str], ...] = (
+    ("#f4c89a", "#3a6ea5", "#3b2a1a"),  # peach skin, blue clothes, dark hair
+    ("#d8a47f", "#a83249", "#1a1a1a"),  # tan skin, red clothes, black hair
+    ("#fbe1c1", "#2e7d4f", "#a8743f"),  # pale skin, green clothes, ginger
+    ("#a87a5d", "#5b3a8a", "#2a2a2a"),  # darker skin, purple clothes, black
+    ("#e8c39e", "#d97706", "#5e3a1f"),  # warm skin, orange clothes, brown
+)
+
+
+def _palette_for(entity_id: str) -> tuple[str, str, str]:
+    """Deterministic (skin, clothing, hair) palette for a given entity id."""
+    idx = sum(ord(c) for c in entity_id) % len(_CHARACTER_PALETTES)
+    return _CHARACTER_PALETTES[idx]
 
 
 def compile_shot(
@@ -115,6 +107,10 @@ def compile_shot(
     animations, tracks = _compile_actions(shot.actions, shot.duration)
     # Phase 4: emit a viseme channel per dialogue line that has a viseme_track.
     _add_viseme_clips(shot, animations, tracks)
+    # Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale
+    # animation on the synthetic scene root so directors get visible camera
+    # behavior without writing channels by hand.
+    _add_camera_clips(shot, animations, tracks)
 
     timeline = TimelineJSON(duration=shot.duration, tracks=tracks)
 
@@ -197,21 +193,31 @@ def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> Nod
             char_meta = {}
 
     parts = char_meta.get("parts") or _PLACEHOLDER_PARTS
+    skin, clothing, hair = _palette_for(entity.id)
+    # Per-part color: head/limbs are skin colour, torso/arm-clothing is the
+    # clothing colour. Override via a future store.parts.colors mapping.
+    part_color: dict[str, str] = {
+        "head": skin,
+        "torso": clothing,
+        "left_arm": clothing,
+        "right_arm": clothing,
+        "left_leg": "#2c3e50",
+        "right_leg": "#2c3e50",
+    }
     children: list[NodeJSON] = []
     for part in parts:
-        layout = _PLACEHOLDER_PART_LAYOUT.get(
-            part,
-            {"x": 0.0, "y": 0.0, "width": 50.0, "height": 50.0, "color": "#cccccc"},
+        geom = _PLACEHOLDER_PART_GEOMETRY.get(
+            part, {"x": 0.0, "y": 0.0, "width": 50.0, "height": 50.0}
         )
         children.append(
             NodeJSON(
                 name=part,
-                transform=TransformJSON(x=float(layout["x"]), y=float(layout["y"])),
+                transform=TransformJSON(x=float(geom["x"]), y=float(geom["y"])),
                 visual=VisualJSON(
                     kind="rect",
-                    width=float(layout["width"]),
-                    height=float(layout["height"]),
-                    color=str(layout["color"]),
+                    width=float(geom["width"]),
+                    height=float(geom["height"]),
+                    color=part_color.get(part, "#cccccc"),
                 ),
             )
         )
@@ -222,24 +228,44 @@ def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> Nod
         children=children,
     )
     if "head" in parts:
-        # Phase 4: head gets a real mouth child node (rendered as a small rect),
-        # plus a "mouth" slot for any future attachment overrides. The viseme
-        # channel below targets <speaker>/head/mouth and drives its shape.
+        # Head children: hair patch on top, two eyes, mouth (driven by the
+        # viseme channel). All are tiny PixiJS Graphics children of the head
+        # container, so they inherit head's transform automatically.
         for child in char_node.children:
-            if child.name == "head":
-                child.slots["mouth"] = SlotJSON(name="mouth", x=0, y=15)
+            if child.name != "head":
+                continue
+            child.slots["mouth"] = SlotJSON(name="mouth", x=0, y=15)
+            # Hair: small horizontal band atop the head.
+            child.children.append(
+                NodeJSON(
+                    name="hair",
+                    transform=TransformJSON(x=0.0, y=-22.0),
+                    visual=VisualJSON(
+                        kind="rect", width=44.0, height=10.0, color=hair
+                    ),
+                )
+            )
+            # Eyes: two small dark squares.
+            for eye_name, ex in (("left_eye", -10.0), ("right_eye", 10.0)):
                 child.children.append(
                     NodeJSON(
-                        name="mouth",
-                        transform=TransformJSON(x=0.0, y=15.0),
+                        name=eye_name,
+                        transform=TransformJSON(x=ex, y=-3.0),
                         visual=VisualJSON(
-                            kind="rect",
-                            width=20.0,
-                            height=4.0,
-                            color="#552222",
+                            kind="rect", width=6.0, height=6.0, color="#1a1a1a"
                         ),
                     )
                 )
+            # Mouth (viseme target).
+            child.children.append(
+                NodeJSON(
+                    name="mouth",
+                    transform=TransformJSON(x=0.0, y=15.0),
+                    visual=VisualJSON(
+                        kind="rect", width=20.0, height=4.0, color="#552222"
+                    ),
+                )
+            )
     return char_node
 
 
@@ -437,3 +463,64 @@ def _add_viseme_clips(
             tracks.append(track)
             track_lookup[speaker] = track
         track.clips.append(placed)
+
+
+# -----------------------------------------------------------------------------
+# Phase 7: camera moves wired to root-container scale animation
+# -----------------------------------------------------------------------------
+
+
+# How much each named camera move zooms (final scale relative to start).
+_CAMERA_MOVES: dict[str, tuple[float, float]] = {
+    "hold": (1.0, 1.0),
+    "push_in": (1.0, 1.25),
+    "pull_out": (1.0, 0.8),
+    "zoom_in": (1.0, 1.5),
+    "zoom_out": (1.0, 0.7),
+}
+
+
+def _add_camera_clips(
+    shot: Shot,
+    animations: dict[str, AnimationClipJSON],
+    tracks: list[TrackJSON],
+) -> None:
+    """If shot.camera.move is a known named move, emit a scale tween on the
+    synthetic scene root over the shot's full duration.
+
+    The synthetic root container in the JS runtime sits at canvas center and
+    scales the entire scene; per-character motion remains independent.
+    """
+    if shot.camera is None or not shot.camera.move:
+        return
+    move = shot.camera.move
+    if move not in _CAMERA_MOVES or move == "hold":
+        return
+    start_scale, end_scale = _CAMERA_MOVES[move]
+    duration = max(0.001, float(shot.duration))
+    for axis in ("scale_x", "scale_y"):
+        anim_id = f"__camera__{shot.id}_{axis}"
+        animations[anim_id] = AnimationClipJSON(
+            name=anim_id,
+            duration=duration,
+            channels=[
+                ChannelJSON(
+                    target="root",
+                    property=axis,
+                    keyframes=[
+                        KeyframeJSON(time=0.0, value=start_scale, easing="ease_in_out"),
+                        KeyframeJSON(time=duration, value=end_scale),
+                    ],
+                )
+            ],
+        )
+        tracks.append(
+            TrackJSON(
+                target_root="__camera__",
+                clips=[
+                    PlacedClipJSON(
+                        animation_id=anim_id, start_time=0.0, duration=duration
+                    )
+                ],
+            )
+        )

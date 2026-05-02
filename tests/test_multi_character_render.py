@@ -100,19 +100,20 @@ def test_two_characters_render_distinct_and_mouth_animates():
         )
         im = Image.open(frame).convert("RGB")
         pixels = list(im.getdata())
-        blue = _color_count(pixels, _BLUE)
-        peach = _color_count(pixels, _PEACH)
-
-        # Single character would yield ~9000 blue pixels (1 torso + 2 arms).
-        # Two characters should roughly double that.
-        assert blue > 13000, (
-            f"only {blue} blue pixels — looks like one character "
-            f"(2 chars should give ≥14000)"
+        # Color-agnostic: count "non-background" pixels (anything not near-white).
+        # Each character draws a head + torso + 2 arms + 2 eyes + hair + mouth ≈
+        # 6500 px on a 640×360 canvas. Two characters should give ≥10000.
+        non_white = sum(
+            1 for c in pixels
+            if c[0] < 240 or c[1] < 240 or c[2] < 240
         )
-        # Two heads should give roughly double the peach of one.
-        assert peach > 1200, (
-            f"only {peach} peach pixels — second head not visible"
+        assert non_white > 10000, (
+            f"only {non_white} non-white pixels — two characters should yield more"
         )
+        # Two distinct character palettes should produce a wider color range
+        # than one (per-character palette adds variety).
+        unique = len({c for c in pixels if (c[0] < 240 or c[1] < 240 or c[2] < 240)})
+        assert unique >= 8, f"only {unique} distinct non-bg colors — palette too narrow"
 
         # Mouth animation: extract frames at fps=4 and ensure they differ.
         frame_dir = Path(d) / "frames"

@@ -3,7 +3,7 @@
 ```yaml meta
 title: Single Character Smoke
 author: ''
-duration: 2.0
+duration: 2.5
 fps: 24
 resolution:
   width: 320
@@ -14,7 +14,7 @@ default_style: cutout
 ## Shot s1 (cutout)
 
 ```yaml shot
-duration: 2.0
+duration: 2.5
 ```
 
 ```yaml entities
@@ -22,4 +22,8 @@ duration: 2.0
   id: charlie
   store: characters
   ref: charlie-v1
+```
+
+```dialogue
+charlie: Hello there.
 ```
