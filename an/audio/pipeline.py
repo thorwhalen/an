@@ -84,16 +84,24 @@ def produce_audio_for_scene(
     """Walk every dialogue line, synthesize, and stamp viseme tracks back.
 
     Mutates the ``scene`` in place AND returns it (for chaining).
-    The ``Dialogue.duration`` and ``Dialogue.viseme_track`` get filled in.
-    Lines with an existing viseme_track are skipped (idempotent).
+    Stamps ``Dialogue.duration``, ``Dialogue.start`` (if unset),
+    ``Dialogue.viseme_track``, and ``Dialogue.audio_ref`` (mall["audio"] key)
+    so the renderer can find the audio later. Lines with an existing
+    viseme_track AND audio_ref are skipped (idempotent).
     """
     tts = tts or default_tts()
     lipsync = lipsync or default_lipsync()
+    voice_default = "default"
     cursor = 0.0
     for shot in scene.timeline:
         cursor = 0.0
         for line in shot.dialogue:
-            if line.viseme_track is not None and line.duration is not None:
+            already_done = (
+                line.viseme_track is not None
+                and line.duration is not None
+                and line.audio_ref is not None
+            )
+            if already_done:
                 cursor = (line.start or cursor) + line.duration
                 continue
             audio, track = produce_audio_for_dialogue(
@@ -103,6 +111,15 @@ def produce_audio_for_scene(
             if line.start is None:
                 line.start = cursor
             line.viseme_track = _to_ir_viseme_track(track)
+            # Same content hash as in produce_audio_for_dialogue so the
+            # renderer can find the audio bytes in mall["audio"].
+            line.audio_ref = _stable_hash(
+                {
+                    "text": line.text,
+                    "voice": line.voice_ref or voice_default,
+                    "tts": tts.name,
+                }
+            )
             cursor = line.start + audio.duration
     return scene
 

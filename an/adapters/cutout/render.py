@@ -111,8 +111,13 @@ class CutoutRenderer:
             finally:
                 browser.close()
 
-        # Mux to mp4.
-        _ffmpeg_mux(job.frames_dir, ctx.fps, job.output_mp4)
+        # Mux frames → silent video, then layer (silence base + dialogue) audio on top.
+        # Every shot mp4 carries an AAC stream (silent if no dialogue) so the
+        # final ffmpeg concat across heterogeneous shots works without surprises.
+        silent_mp4 = job.work_dir / "silent.mp4"
+        _ffmpeg_mux(job.frames_dir, ctx.fps, silent_mp4)
+        audio_inputs = _stage_audio_inputs(shot, ctx, job.work_dir)
+        _ffmpeg_add_audio(silent_mp4, audio_inputs, job.output_mp4, shot.duration)
 
         return RenderResult(
             mp4_path=job.output_mp4,
@@ -124,6 +129,7 @@ class CutoutRenderer:
                 "fps": ctx.fps,
                 "resolution": ctx.resolution,
                 "frame_count": total_frames,
+                "audio_tracks": len(audio_inputs),
             },
         )
 
@@ -202,4 +208,105 @@ def _ffmpeg_mux(frames_dir: Path, fps: int, output_mp4: Path) -> None:
     if result.returncode != 0 or not output_mp4.exists():
         raise CutoutRenderError(
             "ffmpeg mux failed (rc=%d):\n%s" % (result.returncode, result.stderr)
+        )
+
+
+def _stage_audio_inputs(
+    shot: Shot, ctx: RenderContext, work_dir: Path
+) -> list[tuple[Path, float]]:
+    """Write the shot's per-dialogue audio bytes to disk and return (path, delay)s.
+
+    Looks up each ``dialogue.audio_ref`` in ``mall["audio"]``. Lines without
+    an audio_ref or duration are skipped silently. Returns ``[]`` when no
+    audio is available, so the caller can use a video-only path.
+    """
+    audio_store = ctx.mall.get("audio") if ctx.mall else None
+    if not audio_store:
+        return []
+    out: list[tuple[Path, float]] = []
+    for i, line in enumerate(shot.dialogue):
+        if not line.audio_ref or line.start is None:
+            continue
+        try:
+            audio_bytes = audio_store[line.audio_ref]
+        except KeyError:
+            continue
+        # Sniff format: WAV starts with 'RIFF', mp3 with 'ID3' or 0xFFFB.
+        if audio_bytes[:4] == b"RIFF":
+            ext = "wav"
+        elif audio_bytes[:3] == b"ID3" or audio_bytes[:1] == b"\xff":
+            ext = "mp3"
+        else:
+            ext = "wav"
+        path = work_dir / f"audio_{i}_{line.audio_ref[:8]}.{ext}"
+        path.write_bytes(audio_bytes)
+        out.append((path, float(line.start)))
+    return out
+
+
+def _ffmpeg_add_audio(
+    video_path: Path,
+    audio_inputs: list[tuple[Path, float]],
+    output_path: Path,
+    duration_s: float,
+) -> None:
+    """Mux a silence base + ``audio_inputs`` (path, delay_s) onto ``video_path``.
+
+    Always emits an audio stream. ``anullsrc`` provides the silent base track
+    of length ``duration_s`` so concat across shots is safe; dialogue lines
+    are overlaid via ``adelay`` + ``amix``.
+    """
+    sr = 44100
+    cmd = [
+        "ffmpeg", "-y", "-loglevel", "error",
+        "-i", str(video_path),
+        # Silent base (input #1)
+        "-f", "lavfi",
+        "-t", f"{duration_s:.3f}",
+        "-i", f"anullsrc=channel_layout=mono:sample_rate={sr}",
+    ]
+    for audio_path, _delay in audio_inputs:
+        cmd += ["-i", str(audio_path)]
+
+    filter_parts: list[str] = []
+    # Resample silence base to ensure consistent format with dialogue inputs.
+    filter_parts.append(f"[1:a]aformat=sample_fmts=fltp:sample_rates={sr}:channel_layouts=mono[base]")
+    overlays: list[str] = []
+    for i, (_path, delay_s) in enumerate(audio_inputs):
+        delay_ms = max(0, int(round(delay_s * 1000)))
+        # Index in command: 0=video, 1=anullsrc, 2..=user audio
+        cmd_idx = i + 2
+        label = f"a{i}"
+        filter_parts.append(
+            f"[{cmd_idx}:a]aformat=sample_fmts=fltp:sample_rates={sr}:channel_layouts=mono,"
+            f"adelay={delay_ms}|{delay_ms}[{label}]"
+        )
+        overlays.append(f"[{label}]")
+
+    # Mix [base] + all overlays (always at least 1 input for amix).
+    inputs_count = 1 + len(overlays)
+    mix_in = "[base]" + "".join(overlays)
+    filter_parts.append(
+        f"{mix_in}amix=inputs={inputs_count}:dropout_transition=0:normalize=0[aout]"
+    )
+
+    cmd += [
+        "-filter_complex", ";".join(filter_parts),
+        "-map", "0:v",
+        "-map", "[aout]",
+        "-c:v", "copy",
+        "-c:a", "aac",
+        "-b:a", "128k",
+        "-ar", str(sr),
+        "-ac", "1",
+        "-t", f"{duration_s:.3f}",
+        str(output_path),
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    except OSError as e:
+        raise CutoutRenderError(f"ffmpeg audio mux failed to launch: {e}") from e
+    if result.returncode != 0 or not output_path.exists():
+        raise CutoutRenderError(
+            "ffmpeg audio mux failed (rc=%d):\n%s" % (result.returncode, result.stderr)
         )

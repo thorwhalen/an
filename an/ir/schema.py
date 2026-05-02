@@ -233,6 +233,7 @@ class Dialogue(_IRModel):
     duration: Seconds | None = None
     emotion: str | None = None
     viseme_track: VisemeTrack | None = None
+    audio_ref: str | None = None  # mall["audio"] key, set by the audio pipeline
 
 
 class Narration(_IRModel):
@@ -243,6 +244,7 @@ class Narration(_IRModel):
     start: Seconds | None = None
     duration: Seconds | None = None
     viseme_track: VisemeTrack | None = None
+    audio_ref: str | None = None
 
 
 # -----------------------------------------------------------------------------
