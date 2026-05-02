@@ -57,13 +57,23 @@ def check() -> str:
     return format_report(_check_requirements())
 
 
-def render(project_dir: str, output_name: str = "main") -> str:
+def render(
+    project_dir: str,
+    output_name: str = "main",
+    tts: str = "offline",
+    lipsync: str = "offline",
+) -> str:
     """Render the project at ``project_dir`` to a single mp4.
 
     project_dir: path to an an project (must contain scene.md / ir/scene.json)
     output_name: filename stem under output/ (default: "main")
+    tts: TTS provider — "offline" (silent) or "elevenlabs" (needs ELEVEN_API_KEY)
+    lipsync: lip-sync provider — "offline" (deterministic) or "rhubarb"
+        (needs the rhubarb binary)
     """
-    output_path = _render_project(project_dir, output_name=output_name)
+    output_path = _render_project(
+        project_dir, output_name=output_name, tts=tts, lipsync=lipsync
+    )
     return f"rendered: {output_path}"
 
 

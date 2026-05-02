@@ -233,7 +233,8 @@ class Dialogue(_IRModel):
     duration: Seconds | None = None
     emotion: str | None = None
     viseme_track: VisemeTrack | None = None
-    audio_ref: str | None = None  # mall["audio"] key, set by the audio pipeline
+    audio_ref: str | None = None  # mall["audio"] key (content-hash of TTS input)
+    viseme_ref: str | None = None  # mall["visemes"] key (content-hash of lipsync input)
 
 
 class Narration(_IRModel):
@@ -245,6 +246,7 @@ class Narration(_IRModel):
     duration: Seconds | None = None
     viseme_track: VisemeTrack | None = None
     audio_ref: str | None = None
+    viseme_ref: str | None = None
 
 
 # -----------------------------------------------------------------------------

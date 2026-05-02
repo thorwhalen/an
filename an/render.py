@@ -35,14 +35,27 @@ def _scene_has_pending_dialogue(scene) -> bool:
     return False
 
 
+def _has_any_dialogue(scene) -> bool:
+    """Return True if there's at least one dialogue line in the scene."""
+    return any(shot.dialogue for shot in scene.timeline)
+
+
 def render_project(
     project_dir: str | Path,
     *,
     output_name: str = "main",
     fps: int | None = None,
     resolution: tuple[int, int] | None = None,
+    tts: str | object = "offline",
+    lipsync: str | object = "offline",
 ) -> Path:
     """Render every shot in ``project_dir``'s scene and concatenate to one mp4.
+
+    ``tts`` and ``lipsync`` may be provider name strings (``"offline"``,
+    ``"elevenlabs"``, ``"rhubarb"``) or provider instances. Defaults are
+    offline so no API keys are required. Switching providers triggers a
+    re-synthesis on dialogue lines whose stamped audio_ref / viseme_ref
+    no longer match the current configuration.
 
     Returns the absolute path of the final output file (under ``output/``).
     """
@@ -52,6 +65,8 @@ def render_project(
         output_name=output_name,
         fps=fps,
         resolution=resolution,
+        tts=tts,
+        lipsync=lipsync,
     )
 
 
@@ -62,22 +77,37 @@ def render(
     fps: int | None = None,
     resolution: tuple[int, int] | None = None,
     auto_audio: bool = True,
+    tts: str | object = "offline",
+    lipsync: str | object = "offline",
 ) -> Path:
     """Lower-level: render a loaded ``Project`` to mp4.
 
-    When ``auto_audio`` is True (the default) and any shot has dialogue
-    without a viseme_track, the audio pipeline is run first so visemes are
-    available to the renderer.
+    When ``auto_audio`` is True (the default) and any shot has dialogue,
+    the audio pipeline is run first so visemes + audio are available to
+    the renderer. Re-synthesis is triggered on provider changes (the
+    pipeline's idempotency check compares against the current providers'
+    expected content hashes).
     """
     scene = project.scene
     if not scene.timeline:
         raise RenderError("scene has no shots to render")
 
-    if auto_audio and _scene_has_pending_dialogue(scene):
+    if auto_audio and _has_any_dialogue(scene):
         # Lazy import to keep render.py importable without audio extras.
         from an.audio.pipeline import produce_audio_for_scene
+        from an.audio.providers import make_lipsync, make_tts
 
-        produce_audio_for_scene(scene, project.mall)
+        tts_provider = make_tts(tts) if isinstance(tts, str) else tts
+        lipsync_provider = (
+            make_lipsync(lipsync) if isinstance(lipsync, str) else lipsync
+        )
+
+        produce_audio_for_scene(
+            scene,
+            project.mall,
+            tts=tts_provider,
+            lipsync=lipsync_provider,
+        )
         # Persist the now-stamped scene back to disk so subsequent loads see it.
         project.mall["scenes"]["main"] = scene
 

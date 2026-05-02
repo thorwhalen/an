@@ -96,14 +96,27 @@ def produce_audio_for_scene(
     for shot in scene.timeline:
         cursor = 0.0
         for line in shot.dialogue:
+            voice_id = line.voice_ref or voice_default
+            expected_audio_ref = _stable_hash(
+                {"text": line.text, "voice": voice_id, "tts": tts.name}
+            )
+            expected_viseme_ref = _stable_hash(
+                {
+                    "audio_key": expected_audio_ref,
+                    "lipsync": lipsync.name,
+                    "transcript": line.text,
+                }
+            )
             already_done = (
-                line.viseme_track is not None
+                line.audio_ref == expected_audio_ref
+                and line.viseme_ref == expected_viseme_ref
+                and line.viseme_track is not None
                 and line.duration is not None
-                and line.audio_ref is not None
             )
             if already_done:
                 cursor = (line.start or cursor) + line.duration
                 continue
+            # Either never synthesized, or providers changed → full re-synth.
             audio, track = produce_audio_for_dialogue(
                 line, mall, tts=tts, lipsync=lipsync
             )
@@ -111,15 +124,8 @@ def produce_audio_for_scene(
             if line.start is None:
                 line.start = cursor
             line.viseme_track = _to_ir_viseme_track(track)
-            # Same content hash as in produce_audio_for_dialogue so the
-            # renderer can find the audio bytes in mall["audio"].
-            line.audio_ref = _stable_hash(
-                {
-                    "text": line.text,
-                    "voice": line.voice_ref or voice_default,
-                    "tts": tts.name,
-                }
-            )
+            line.audio_ref = expected_audio_ref
+            line.viseme_ref = expected_viseme_ref
             cursor = line.start + audio.duration
     return scene
 

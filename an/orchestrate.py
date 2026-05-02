@@ -58,9 +58,17 @@ def validate_project(project_dir: str | Path) -> ValidationReport:
     return schema_report.merge(semantic_report)
 
 
-def render_project(project_dir: str | Path, *, output_name: str = "main") -> Path:
+def render_project(
+    project_dir: str | Path,
+    *,
+    output_name: str = "main",
+    tts: str = "offline",
+    lipsync: str = "offline",
+) -> Path:
     """Render the project's scene to a single mp4 under ``output/``."""
-    return _render_project(project_dir, output_name=output_name)
+    return _render_project(
+        project_dir, output_name=output_name, tts=tts, lipsync=lipsync
+    )
 
 
 def orchestrate(
