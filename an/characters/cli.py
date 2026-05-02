@@ -309,6 +309,40 @@ def _write_preview_html(target: Path, *, name: str) -> Path:
     return out
 
 
+def record(
+    name: str,
+    out_dir: str = "",
+    output: str = "",
+    duration: float = 8.0,
+    width: int = 640,
+    height: int = 480,
+) -> str:
+    """Record a character's preview HTML to mp4.
+
+    Real video file showing the new SVG character art animating: cycles
+    through all 9 visemes and applies the breath/head-tilt animation.
+
+    name: character id
+    out_dir: parent directory; defaults to ./assets/characters
+    output: output mp4 path; defaults to <character_dir>/preview.mp4
+    duration: recording length in seconds (default 8)
+    width / height: video resolution (default 640x480)
+    """
+    from an.characters.record import record_character
+
+    target = _resolve_target(out_dir) / name
+    if not target.exists():
+        return f"no such character: {target}"
+    out = record_character(
+        target,
+        name=name,
+        out_mp4=output or None,
+        duration_s=duration,
+        size=(width, height),
+    )
+    return f"recorded: {out}"
+
+
 # argh-friendly dispatch list. Mounted as a nested namespace ('character')
 # by an/__main__.py so they appear as `an character new`, etc.
-_dispatch_funcs = [new, mouths, validate, silhouette, preview]
+_dispatch_funcs = [new, mouths, validate, silhouette, preview, record]

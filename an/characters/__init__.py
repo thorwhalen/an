@@ -74,6 +74,12 @@ from an.characters.dicebear import (
 )
 from an.characters.factory import new_character, validate_character
 from an.characters.promote import promote
+from an.characters.record import (
+    record_character,
+    record_preview_to_mp4,
+    DEFAULT_RECORD_DURATION_S,
+    DEFAULT_RECORD_SIZE,
+)
 
 
 __all__ = [
@@ -111,4 +117,8 @@ __all__ = [
     "new_character",
     "validate_character",
     "promote",
+    "record_character",
+    "record_preview_to_mp4",
+    "DEFAULT_RECORD_DURATION_S",
+    "DEFAULT_RECORD_SIZE",
 ]

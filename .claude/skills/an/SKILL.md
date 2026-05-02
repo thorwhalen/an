@@ -25,6 +25,7 @@ CLI surface:
 - `an character validate <name>` — check parts, mouth set, pivots, descriptor.
 - `an character silhouette <name> [--other <name2>]` — render a black silhouette PNG; with `--other`, also computes IoU between the two silhouettes (Disney silhouette test).
 - `an character preview <name> [--open-browser]` — write `preview.html` cycling all 9 visemes with breath/head-tilt animation.
+- `an character record <name> [--duration 8] [--width 640] [--height 480]` — record `preview.html` to mp4 via Playwright + ffmpeg. Produces `<character_dir>/preview.mp4` (or `--output PATH`). Real video file showing the new SVG art animating.
 - `an check` — diagnose system deps (ffmpeg, node, rhubarb, playwright, elevenlabs, manim).
 
 Python surface (everything in `an.__all__`):

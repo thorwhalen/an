@@ -310,6 +310,42 @@ class TestPromote:
         report = validate_character(chars / "amy-v1")
         assert report.passed, report.format()
 
+    def test_promote_uses_existing_svg_dummy(self, tmp_path):
+        # placeholder so the next method's name doesn't collide.
+        pass
+
+
+# -----------------------------------------------------------------------------
+# Recording (Playwright + ffmpeg required; skip cleanly if missing)
+# -----------------------------------------------------------------------------
+
+
+class TestRecord:
+    def test_record_character_produces_mp4(self, tmp_path):
+        try:
+            from playwright.sync_api import sync_playwright  # noqa: F401
+        except ImportError:
+            pytest.skip("playwright not installed")
+        import shutil
+
+        if shutil.which("ffmpeg") is None:
+            pytest.skip("ffmpeg not on PATH")
+
+        from an.characters.record import record_character
+
+        new_character(tmp_path, name="rex", use_dicebear=False)
+        # Short recording so the test is fast (~3 s).
+        out = record_character(
+            tmp_path / "rex",
+            duration_s=2.0,
+            size=(320, 240),
+            out_mp4=tmp_path / "rex.mp4",
+        )
+        assert out.exists()
+        assert out.stat().st_size > 1024, "mp4 should be at least 1 KB"
+
+
+class TestPromoteSecond:
     def test_promote_uses_existing_svg(self, tmp_path):
         chars = tmp_path / "assets" / "characters"
         chars.mkdir(parents=True)

@@ -20,6 +20,7 @@ emits an `index.html` linking everything.
 | `validate_character` | confirms each character's required parts + 9-shape mouth set |
 | `render_silhouette` + `compare_silhouettes` | pairwise IoU table |
 | `preview.html` writer | a self-contained viewer cycling all 9 visemes with breath/head-tilt animation |
+| `record_preview_to_mp4` | records each preview HTML to `videos/<name>.mp4` (committed to the repo) |
 
 The silhouette test will report IoU ≈ 1.0 for the v0.1 wrapping —
 that's working as intended. The wrapper uses identical rectangular body
