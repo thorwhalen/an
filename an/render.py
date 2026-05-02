@@ -10,8 +10,10 @@ adapters and the same flow handles them.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Iterable
 
@@ -20,6 +22,11 @@ from an.adapters._base import _DEFAULT_REGISTRY
 from an.base import DEFAULT_FPS, DEFAULT_RESOLUTION
 from an.ir.schema import Shot
 from an.project import Project, load
+
+
+# Default cap so a 20-shot scene doesn't try to spawn 20 Chromiums; the user
+# can always pass a higher number explicitly.
+DEFAULT_PARALLEL_CAP: int = 4
 
 
 class RenderError(RuntimeError):
@@ -48,6 +55,7 @@ def render_project(
     resolution: tuple[int, int] | None = None,
     tts: str | object = "offline",
     lipsync: str | object = "offline",
+    parallel: int | str | None = None,
 ) -> Path:
     """Render every shot in ``project_dir``'s scene and concatenate to one mp4.
 
@@ -56,6 +64,16 @@ def render_project(
     offline so no API keys are required. Switching providers triggers a
     re-synthesis on dialogue lines whose stamped audio_ref / viseme_ref
     no longer match the current configuration.
+
+    ``parallel`` controls per-shot concurrency:
+
+    - ``None`` or ``1`` (default): render shots serially.
+    - ``"auto"``: ``min(n_shots, cpu_count(), DEFAULT_PARALLEL_CAP)``.
+    - integer ≥ 2: cap the thread pool at that size.
+
+    Each shot's renderer runs in its own thread (the cutout backend
+    spawns a Chromium + http.server per shot, so threads release the
+    GIL during the slow parts).
 
     Returns the absolute path of the final output file (under ``output/``).
     """
@@ -67,6 +85,7 @@ def render_project(
         resolution=resolution,
         tts=tts,
         lipsync=lipsync,
+        parallel=parallel,
     )
 
 
@@ -79,6 +98,7 @@ def render(
     auto_audio: bool = True,
     tts: str | object = "offline",
     lipsync: str | object = "offline",
+    parallel: int | str | None = None,
 ) -> Path:
     """Lower-level: render a loaded ``Project`` to mp4.
 
@@ -131,19 +151,39 @@ def render(
         resolution=effective_res,
     )
 
-    shot_results: list[RenderResult] = []
-    for shot in scene.timeline:
-        renderer = _DEFAULT_REGISTRY.find_for(shot)
-        if renderer is None:
+    shots = list(scene.timeline)
+    pool_size = _resolve_parallel(parallel, n_shots=len(shots))
+
+    # Resolve renderers up front so a missing one fails fast (before we spawn
+    # workers).
+    shot_renderers = []
+    for shot in shots:
+        r = _DEFAULT_REGISTRY.find_for(shot)
+        if r is None:
             raise RenderError(
-                f"no renderer registered for shot {shot.id!r} (style={shot.style!r}); "
-                f"registered: {list(_DEFAULT_REGISTRY.names())}"
+                f"no renderer registered for shot {shot.id!r} "
+                f"(style={shot.style!r}); registered: "
+                f"{list(_DEFAULT_REGISTRY.names())}"
             )
-        result = renderer.render(shot, ctx)
-        # Persist per-shot mp4 in the artifact store.
-        with open(result.mp4_path, "rb") as f:
-            project.mall["shots"][shot.id] = f.read()
-        shot_results.append(result)
+        shot_renderers.append((shot, r))
+
+    if pool_size <= 1:
+        shot_results = [
+            _render_one(shot, renderer, ctx, project)
+            for shot, renderer in shot_renderers
+        ]
+    else:
+        results_by_id: dict[str, RenderResult] = {}
+        with ThreadPoolExecutor(max_workers=pool_size) as ex:
+            futures = {
+                ex.submit(_render_one, shot, renderer, ctx, project): shot.id
+                for shot, renderer in shot_renderers
+            }
+            for fut in as_completed(futures):
+                shot_id = futures[fut]
+                results_by_id[shot_id] = fut.result()
+        # Preserve scene-timeline order for ffmpeg concat.
+        shot_results = [results_by_id[s.id] for s in shots]
 
     # Concatenate per-shot mp4s.
     output_path = (project.root / "output" / f"{output_name}.mp4").resolve()
@@ -155,6 +195,49 @@ def render(
         project.mall["output"][output_name] = f.read()
 
     return output_path
+
+
+def _render_one(
+    shot: Shot,
+    renderer,
+    ctx: RenderContext,
+    project: Project,
+) -> RenderResult:
+    """Render one shot and persist its mp4 into ``project.mall["shots"]``.
+
+    Each call is self-contained: the cutout renderer creates a per-shot
+    work directory, its own Chromium instance, its own http server. This
+    is what makes the call thread-safe.
+    """
+    result = renderer.render(shot, ctx)
+    with open(result.mp4_path, "rb") as f:
+        project.mall["shots"][shot.id] = f.read()
+    return result
+
+
+def _resolve_parallel(parallel: int | str | None, *, n_shots: int) -> int:
+    """Resolve ``parallel`` to an integer worker count.
+
+    >>> _resolve_parallel(None, n_shots=5)
+    1
+    >>> _resolve_parallel(1, n_shots=5)
+    1
+    >>> _resolve_parallel(3, n_shots=5)
+    3
+    >>> _resolve_parallel(8, n_shots=2)  # capped to n_shots
+    2
+    """
+    if parallel is None or parallel == 1 or parallel == 0 or parallel == "":
+        return 1
+    if parallel == "auto":
+        cap = DEFAULT_PARALLEL_CAP
+        cpu = os.cpu_count() or 1
+        return max(1, min(n_shots, cpu, cap))
+    try:
+        n = int(parallel)
+    except (TypeError, ValueError):
+        return 1
+    return max(1, min(n, n_shots))
 
 
 # -----------------------------------------------------------------------------

@@ -345,6 +345,39 @@ class TestRecord:
         assert out.stat().st_size > 1024, "mp4 should be at least 1 KB"
 
 
+class TestParallelRender:
+    """Phase 11c: per-shot concurrency."""
+
+    def test_resolve_serial_default(self):
+        from an.render import _resolve_parallel
+
+        assert _resolve_parallel(None, n_shots=4) == 1
+        assert _resolve_parallel(1, n_shots=4) == 1
+        assert _resolve_parallel("", n_shots=4) == 1
+
+    def test_resolve_explicit_n(self):
+        from an.render import _resolve_parallel
+
+        assert _resolve_parallel(3, n_shots=10) == 3
+        assert _resolve_parallel("3", n_shots=10) == 3
+        # n_shots clamps the upper bound
+        assert _resolve_parallel(10, n_shots=2) == 2
+
+    def test_resolve_auto(self):
+        from an.render import _resolve_parallel, DEFAULT_PARALLEL_CAP
+
+        # auto = min(n_shots, cpu, cap)
+        assert _resolve_parallel("auto", n_shots=1) == 1
+        result = _resolve_parallel("auto", n_shots=100)
+        assert 1 <= result <= DEFAULT_PARALLEL_CAP
+
+    def test_resolve_invalid(self):
+        from an.render import _resolve_parallel
+
+        # garbage → falls back to serial
+        assert _resolve_parallel("garbage", n_shots=4) == 1
+
+
 class TestSvgCharacterCompile:
     """Phase 11b: cutout compiler emits svg_sprite visuals + asset table."""
 

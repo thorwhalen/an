@@ -65,10 +65,15 @@ def render_project(
     output_name: str = "main",
     tts: str = "offline",
     lipsync: str = "offline",
+    parallel: int | str | None = None,
 ) -> Path:
     """Render the project's scene to a single mp4 under ``output/``."""
     return _render_project(
-        project_dir, output_name=output_name, tts=tts, lipsync=lipsync
+        project_dir,
+        output_name=output_name,
+        tts=tts,
+        lipsync=lipsync,
+        parallel=parallel,
     )
 
 

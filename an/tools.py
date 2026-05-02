@@ -66,6 +66,7 @@ def render(
     output_name: str = "main",
     tts: str = "offline",
     lipsync: str = "offline",
+    parallel: str = "",
 ) -> str:
     """Render the project at ``project_dir`` to a single mp4.
 
@@ -74,9 +75,25 @@ def render(
     tts: TTS provider — "offline" (silent) or "elevenlabs" (needs ELEVEN_API_KEY)
     lipsync: lip-sync provider — "offline" (deterministic), "rhubarb"
         (needs the rhubarb binary), or "whisper" (needs faster-whisper)
+    parallel: per-shot concurrency. "" or "1" = serial (default); "auto" =
+        min(shots, cpu, 4); a number ≥ 2 caps the thread pool.
     """
+    parallel_arg: int | str | None
+    if not parallel:
+        parallel_arg = None
+    elif parallel == "auto":
+        parallel_arg = "auto"
+    else:
+        try:
+            parallel_arg = int(parallel)
+        except ValueError:
+            return f"invalid --parallel value: {parallel!r}; use a number or 'auto'"
     output_path = _render_project(
-        project_dir, output_name=output_name, tts=tts, lipsync=lipsync
+        project_dir,
+        output_name=output_name,
+        tts=tts,
+        lipsync=lipsync,
+        parallel=parallel_arg,
     )
     return f"rendered: {output_path}"
 
