@@ -232,12 +232,18 @@ def _ffprobe_duration(audio_bytes: bytes) -> float:
     try:
         result = subprocess.run(
             [
-                "ffprobe", "-v", "error",
-                "-show_entries", "format=duration",
-                "-of", "default=noprint_wrappers=1:nokey=1",
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
                 tmp_path,
             ],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         s = result.stdout.strip()
         return float(s) if s else 0.0
@@ -245,6 +251,7 @@ def _ffprobe_duration(audio_bytes: bytes) -> float:
         return 0.0
     finally:
         import os
+
         try:
             os.unlink(tmp_path)
         except OSError:

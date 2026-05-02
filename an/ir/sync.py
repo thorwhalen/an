@@ -241,17 +241,24 @@ def _extract_actions_block(text: str) -> list:
             from_ = item.get("from_") if "from_" in item else item.get("from")
             easing = item.get("easing", "ease_in_out")
             action = _compose.tween(
-                target, property_, to=to, duration=duration,
-                from_=from_, easing=easing,
+                target,
+                property_,
+                to=to,
+                duration=duration,
+                from_=from_,
+                easing=easing,
             )
         elif kind == "set":
             action = _compose.set_(
-                item["target"], item["property"], item["value"],
+                item["target"],
+                item["property"],
+                item["value"],
                 at=float(item.get("at", 0.0)),
             )
         elif kind == "play":
             action = _compose.play(
-                item["target"], item["animation"],
+                item["target"],
+                item["animation"],
                 duration=item.get("duration"),
                 speed=float(item.get("speed", 1.0)),
                 loop=bool(item.get("loop", False)),
