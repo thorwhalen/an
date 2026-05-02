@@ -28,6 +28,7 @@ from an.project import Project, load
 from an.render import render_project as _render_project
 from an.verify._base import Verifier, VerificationReport
 from an.verify.layout import LayoutLintVerifier
+from an.verify.media_quality import MediaQualityVerifier
 
 
 @dataclass(slots=True)
@@ -92,7 +93,7 @@ def orchestrate(
     """
     report = OrchestratorReport()
     if verifiers is None:
-        verifiers = [LayoutLintVerifier()]
+        verifiers = [LayoutLintVerifier(), MediaQualityVerifier()]
 
     # --- 1. validation ------------------------------------------------------
     try:

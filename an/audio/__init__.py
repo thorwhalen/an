@@ -21,6 +21,7 @@ from an.audio.offline_tts import OfflineTTS
 from an.audio.offline_lipsync import OfflineLipSync
 from an.audio.elevenlabs_tts import ElevenLabsTTS
 from an.audio.rhubarb_lipsync import RhubarbLipSync
+from an.audio.whisper_lipsync import WhisperLipSync
 from an.audio.pipeline import (
     default_tts,
     default_lipsync,
@@ -45,6 +46,7 @@ __all__ = [
     "OfflineLipSync",
     "ElevenLabsTTS",
     "RhubarbLipSync",
+    "WhisperLipSync",
     "default_tts",
     "default_lipsync",
     "produce_audio_for_dialogue",

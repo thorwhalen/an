@@ -21,6 +21,7 @@ from an.audio.offline_lipsync import OfflineLipSync
 from an.audio.offline_tts import OfflineTTS
 from an.audio.rhubarb_lipsync import RhubarbLipSync
 from an.audio.tts import TTSProvider
+from an.audio.whisper_lipsync import WhisperLipSync
 
 
 TTS_FACTORIES: dict[str, Callable[[], TTSProvider]] = {
@@ -31,6 +32,7 @@ TTS_FACTORIES: dict[str, Callable[[], TTSProvider]] = {
 LIPSYNC_FACTORIES: dict[str, Callable[[], LipSyncProvider]] = {
     "offline": lambda: OfflineLipSync(),
     "rhubarb": lambda: RhubarbLipSync(),
+    "whisper": lambda: WhisperLipSync(),
 }
 
 
