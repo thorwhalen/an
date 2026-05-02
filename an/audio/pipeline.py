@@ -199,10 +199,53 @@ def _load_or_align(
 
 
 def _wav_duration(wav_bytes: bytes) -> float:
+    """Compatibility shim: duration of cached audio bytes.
+
+    Tries the stdlib `wave` module first (fast, no subprocess). Falls back to
+    ffprobe for non-WAV containers (mp3 from ElevenLabs etc.). Returns 0.0
+    if both fail; the renderer will still mux the audio fine because ffmpeg
+    sniffs format itself.
+    """
     import io
     import wave
 
-    with wave.open(io.BytesIO(wav_bytes), "rb") as wf:
-        n = wf.getnframes()
-        rate = wf.getframerate()
-        return n / rate if rate else 0.0
+    try:
+        with wave.open(io.BytesIO(wav_bytes), "rb") as wf:
+            n = wf.getnframes()
+            rate = wf.getframerate()
+            return n / rate if rate else 0.0
+    except wave.Error:
+        return _ffprobe_duration(wav_bytes)
+
+
+def _ffprobe_duration(audio_bytes: bytes) -> float:
+    """Use ffprobe to read the duration of an arbitrary audio container."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    if shutil.which("ffprobe") is None:
+        return 0.0
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".bin") as tmp:
+        tmp.write(audio_bytes)
+        tmp_path = tmp.name
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                tmp_path,
+            ],
+            capture_output=True, text=True, check=False,
+        )
+        s = result.stdout.strip()
+        return float(s) if s else 0.0
+    except Exception:
+        return 0.0
+    finally:
+        import os
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass

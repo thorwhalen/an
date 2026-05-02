@@ -35,6 +35,57 @@ camera:
   ref: alpha-v1
 ```
 
+```yaml actions
+- kind: tween
+  target: alpha
+  property: x
+  to: 250
+  duration: 3.5
+  from: -250
+- kind: tween
+  target: alpha/torso
+  property: rotation
+  to: 0.05
+  duration: 0.5
+  from: -0.05
+- kind: tween
+  target: alpha/torso
+  property: rotation
+  to: -0.05
+  duration: 0.5
+  start: 0.5
+- kind: tween
+  target: alpha/torso
+  property: rotation
+  to: 0.05
+  duration: 0.5
+  start: 1.0
+- kind: tween
+  target: alpha/torso
+  property: rotation
+  to: -0.05
+  duration: 0.5
+  start: 1.5
+- kind: tween
+  target: alpha/torso
+  property: rotation
+  to: 0.05
+  duration: 0.5
+  start: 2.0
+- kind: tween
+  target: alpha/torso
+  property: rotation
+  to: -0.05
+  duration: 0.5
+  start: 2.5
+- kind: tween
+  target: alpha/torso
+  property: rotation
+  to: 0.0
+  duration: 0.5
+  start: 3.0
+```
+
 ```dialogue
 alpha: Off I go, on a quick stroll.
 ```

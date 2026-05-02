@@ -117,12 +117,14 @@ def markdown_to_ir(md_text: str) -> SceneIR:
         shot_yaml = _extract_yaml_block(body, "shot") or {}
         dialogue_block = _extract_dialogue_block(body)
         entities_block = _extract_entities_block(body)
+        actions_block = _extract_actions_block(body)
         shot_kwargs: dict[str, Any] = {
             "id": shot_id,
             "style": style or meta.default_style,
             "duration": shot_yaml.get("duration", DEFAULT_DURATION),
             "dialogue": dialogue_block,
             "entities": entities_block,
+            "actions": actions_block,
         }
         # Camera, options, etc., come straight from the YAML if present.
         if "camera" in shot_yaml:
@@ -205,6 +207,65 @@ def _extract_entities_block(text: str) -> list[AssetRef]:
     return out
 
 
+def _extract_actions_block(text: str) -> list:
+    """Parse a ```yaml actions block: a list of leaf-action dicts.
+
+    Supported entry shapes (one per item in the YAML list):
+      - ``{kind: tween, target, property, to, duration, [from_], [easing], [start]}``
+      - ``{kind: set,   target, property, value, [at]}``
+      - ``{kind: play,  target, animation, [duration], [speed], [loop], [start]}``
+
+    A leaf action with a ``start`` key is wrapped in ``sequence(delay(start),
+    action)`` so flatten yields the correct absolute time. ``set`` uses ``at``
+    instead (built into the schema). Returns the list of authoring Actions.
+    """
+    raw = _extract_yaml_list_block(text, "actions")
+    if not raw:
+        return []
+    # Lazy import to avoid a cycle (compose imports schema, schema imports nothing).
+    from an.ir import compose as _compose
+
+    out = []
+    for i, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise ValueError(
+                f"each entry under `yaml actions` must be a mapping; got {item!r}"
+            )
+        kind = item.get("kind")
+        start = item.pop("start", None) if kind in ("tween", "play") else None
+        if kind == "tween":
+            target = item["target"]
+            property_ = item["property"]
+            to = item["to"]
+            duration = float(item["duration"])
+            from_ = item.get("from_") if "from_" in item else item.get("from")
+            easing = item.get("easing", "ease_in_out")
+            action = _compose.tween(
+                target, property_, to=to, duration=duration,
+                from_=from_, easing=easing,
+            )
+        elif kind == "set":
+            action = _compose.set_(
+                item["target"], item["property"], item["value"],
+                at=float(item.get("at", 0.0)),
+            )
+        elif kind == "play":
+            action = _compose.play(
+                item["target"], item["animation"],
+                duration=item.get("duration"),
+                speed=float(item.get("speed", 1.0)),
+                loop=bool(item.get("loop", False)),
+            )
+        else:
+            raise ValueError(
+                f"actions[{i}].kind must be one of tween/set/play; got {kind!r}"
+            )
+        if start is not None and float(start) > 0:
+            action = _compose.sequence(_compose.delay(float(start)), action)
+        out.append(action)
+    return out
+
+
 def _extract_yaml_list_block(text: str, label: str) -> list[Any] | None:
     """Parse a ```yaml <label> block whose body is a YAML list."""
     for m in _FENCE_RE.finditer(text):
@@ -276,6 +337,12 @@ def ir_to_markdown(scene: SceneIR) -> str:
             ]
             parts.append(yaml.safe_dump(entities_dump, sort_keys=False).rstrip())
             parts.append("```\n")
+        if shot.actions:
+            actions_dump = _actions_to_yaml_list(shot.actions)
+            if actions_dump:
+                parts.append("```yaml actions")
+                parts.append(yaml.safe_dump(actions_dump, sort_keys=False).rstrip())
+                parts.append("```\n")
         if shot.dialogue:
             parts.append("```dialogue")
             for line in shot.dialogue:
@@ -283,6 +350,79 @@ def ir_to_markdown(scene: SceneIR) -> str:
             parts.append("```\n")
 
     return "\n".join(parts).rstrip() + "\n"
+
+
+def _actions_to_yaml_list(actions: list) -> list[dict]:
+    """Convert authoring Action objects back to the markdown-friendly dicts.
+
+    Only handles the leaf-action shapes that the markdown parser also accepts:
+    set, tween, play, plus the ``sequence(delay(start), <leaf>)`` wrapper that
+    the parser produces for actions with a ``start`` time. Composition trees
+    that don't fit those shapes are skipped (logged via the JSON fallback —
+    no data loss, just no markdown round-trip).
+    """
+    from an.ir.schema import (
+        DelayAction,
+        PlayAction,
+        SequenceAction,
+        SetAction,
+        TweenAction,
+    )
+
+    out: list[dict] = []
+    for action in actions:
+        # Unwrap sequence(delay(start), leaf) → leaf with start.
+        start = None
+        leaf = action
+        if (
+            isinstance(action, SequenceAction)
+            and len(action.children) == 2
+            and isinstance(action.children[0], DelayAction)
+        ):
+            start = action.children[0].duration
+            leaf = action.children[1]
+        if isinstance(leaf, TweenAction):
+            entry = {
+                "kind": "tween",
+                "target": leaf.target,
+                "property": leaf.property,
+                "to": leaf.to_value,
+                "duration": leaf.duration,
+            }
+            if leaf.from_value is not None:
+                entry["from"] = leaf.from_value
+            if leaf.easing not in (None, "ease_in_out"):
+                entry["easing"] = leaf.easing
+            if start is not None:
+                entry["start"] = start
+            out.append(entry)
+        elif isinstance(leaf, SetAction):
+            entry = {
+                "kind": "set",
+                "target": leaf.target,
+                "property": leaf.property,
+                "value": leaf.value,
+            }
+            if leaf.at:
+                entry["at"] = leaf.at
+            out.append(entry)
+        elif isinstance(leaf, PlayAction):
+            entry = {
+                "kind": "play",
+                "target": leaf.target,
+                "animation": leaf.animation,
+            }
+            if leaf.duration is not None:
+                entry["duration"] = leaf.duration
+            if leaf.speed != 1.0:
+                entry["speed"] = leaf.speed
+            if leaf.loop:
+                entry["loop"] = True
+            if start is not None:
+                entry["start"] = start
+            out.append(entry)
+        # else: skip (composition trees that don't round-trip cleanly to md).
+    return out
 
 
 # -----------------------------------------------------------------------------
