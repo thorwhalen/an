@@ -57,9 +57,7 @@ class ElevenLabsTTS:
             ) from e
         return ElevenLabs(api_key=self.api_key)
 
-    def synthesize(
-        self, text: str, voice_id: str | None = None, **kw
-    ) -> AudioClip:
+    def synthesize(self, text: str, voice_id: str | None = None, **kw) -> AudioClip:
         client = self._client()
         # ElevenLabs has no voice named "default"; if the caller passes the
         # canonical "default" sentinel (or None), use this provider's pinned

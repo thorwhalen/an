@@ -240,9 +240,7 @@ def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> Nod
                 NodeJSON(
                     name="hair",
                     transform=TransformJSON(x=0.0, y=-22.0),
-                    visual=VisualJSON(
-                        kind="rect", width=44.0, height=10.0, color=hair
-                    ),
+                    visual=VisualJSON(kind="rect", width=44.0, height=10.0, color=hair),
                 )
             )
             # Eyes: two small dark squares.
