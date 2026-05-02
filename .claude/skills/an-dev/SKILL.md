@@ -49,6 +49,7 @@ Read `misc/docs/architecture_as_built.md` for the full map. The pieces that didn
 - `an/verify/media.py` — ssim, detect_silence, audio_volume, extract_frames, transcribe (Phase 8)
 - `an/verify/media_quality.py` — MediaQualityVerifier (Phase 9)
 - `an/verify/vision.py` — VisionLMVerifier (Claude vision QA, Phase 9)
+- `an/characters/` — character authoring tools (Phase 11a): Spine-shaped `CharacterDescriptor`, SVG utils, parametric 9-shape mouth generator, DiceBear client + envelope, idle-animation factories, silhouette test, `assets.promote`. Powers `an character {new,mouths,validate,silhouette,preview}`. Renderer integration (Pixi SVG-texture path) is the next phase — characters live but `runtime.js` still draws the procedural rig.
 
 ## How to wire a new TTS / LipSync / Verifier / Renderer
 

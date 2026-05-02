@@ -1,0 +1,310 @@
+"""High-level entry points: build, validate, and inspect a character.
+
+The :func:`new_character` function wires together fetching/wrapping art,
+slicing it into per-part SVGs, generating the default mouth set, and
+writing a complete character directory + ``character.json`` descriptor.
+
+The :func:`validate_character` function checks completeness against
+:data:`an.characters.REQUIRED_PARTS` and the 9-shape mouth set.
+
+>>> import tempfile, json, pathlib
+>>> # validate_character on an empty dir gives a list of complaints:
+>>> with tempfile.TemporaryDirectory() as d:
+...     report = validate_character(d, name='nobody')
+...     report.passed
+False
+"""
+
+from __future__ import annotations
+
+import json
+import shutil
+import textwrap
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional
+from xml.etree import ElementTree as ET
+
+from an.characters.dicebear import (
+    DICEBEAR_DEFAULT_STYLE,
+    fetch_dicebear,
+    wrap_dicebear_for_an,
+)
+from an.characters.mouth_set import write_default_mouths
+from an.characters.schema import (
+    CharacterDescriptor,
+    MOUTH_SHAPES,
+    REQUIRED_PARTS,
+)
+from an.characters.svg_utils import (
+    extract_part,
+    extract_pivots,
+    normalize_svg,
+    write_svg,
+    SVG_NS,
+)
+
+
+# Parts that the on-disk slicing tries to produce. The two eye states are
+# duplicates of the static eye art for the default offline puppet — a
+# proper hand-rigged character would replace them.
+_PARTS_TO_SLICE: tuple[str, ...] = (
+    "head",
+    "torso",
+    "arm_l",
+    "arm_r",
+    "leg_l",
+    "leg_r",
+)
+_DERIVED_PARTS: dict[str, str] = {
+    "eye_l_open": "_synthesize_eye_open",
+    "eye_l_closed": "_synthesize_eye_closed",
+    "eye_r_open": "_synthesize_eye_open",
+    "eye_r_closed": "_synthesize_eye_closed",
+    "brow_l": "_synthesize_brow",
+    "brow_r": "_synthesize_brow",
+}
+
+
+@dataclass
+class ValidationReport:
+    """Result of :func:`validate_character`."""
+
+    name: str
+    directory: Path
+    passed: bool = True
+    missing_parts: list[str] = field(default_factory=list)
+    missing_mouths: list[str] = field(default_factory=list)
+    pivots_found: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+
+    def format(self) -> str:
+        """Render a short human-readable report."""
+        head = f"character '{self.name}' at {self.directory}: " + (
+            "OK" if self.passed else "FAILED"
+        )
+        lines = [head]
+        if self.missing_parts:
+            lines.append("  missing body parts: " + ", ".join(self.missing_parts))
+        if self.missing_mouths:
+            lines.append(
+                "  missing mouth shapes: " + ", ".join(self.missing_mouths)
+            )
+        if self.pivots_found:
+            lines.append("  pivots: " + ", ".join(self.pivots_found))
+        for n in self.notes:
+            lines.append(f"  note: {n}")
+        return "\n".join(lines)
+
+
+def new_character(
+    out_dir: str | Path,
+    *,
+    name: str,
+    seed: Optional[str] = None,
+    style: str = DICEBEAR_DEFAULT_STYLE,
+    voice_ref: Optional[str] = None,
+    use_dicebear: bool = True,
+    overwrite: bool = False,
+) -> Path:
+    """Build a complete character on disk.
+
+    Steps:
+
+    1. Fetch a DiceBear avatar (skip if ``use_dicebear=False`` — useful for
+       offline tests).
+    2. Wrap it into the canonical ``an`` cutout SVG (skeleton + illustration
+       groups), saved as ``<name>.svg``.
+    3. Slice each part into ``parts/<part>.svg``.
+    4. Write the 9-shape default mouth set into ``parts/mouth/``.
+    5. Synthesize a few derived parts (open/closed eyes, brows) so the
+       character is complete out of the box.
+    6. Emit a ``character.json`` descriptor.
+
+    Returns the path to the created ``character.json``.
+
+    Raises :class:`FileExistsError` if ``out_dir/name`` already exists and
+    ``overwrite=False``.
+    """
+    out = Path(out_dir) / name
+    if out.exists():
+        if not overwrite:
+            raise FileExistsError(out)
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    parts_dir = out / "parts"
+    parts_dir.mkdir()
+    mouth_dir = parts_dir / "mouth"
+    mouth_dir.mkdir()
+
+    # Step 1 & 2: source art
+    seed_used = seed or name
+    metadata: dict[str, object] = {"art_provenance": "fallback_geometric"}
+    if use_dicebear:
+        try:
+            avatar = fetch_dicebear(seed_used, style=style)
+            metadata = {
+                "art_provenance": "dicebear",
+                "dicebear_style": style,
+                "dicebear_seed": seed_used,
+            }
+        except RuntimeError as e:
+            avatar = _fallback_face_svg(seed_used)
+            metadata = {
+                "art_provenance": "fallback_geometric",
+                "dicebear_error": str(e),
+            }
+    else:
+        avatar = _fallback_face_svg(seed_used)
+
+    canonical = wrap_dicebear_for_an(avatar, name=name)
+    canonical_path = out / f"{name}.svg"
+    canonical_path.write_text(canonical, encoding="utf-8")
+
+    # Step 3: slice
+    tree = normalize_svg(canonical_path)
+    pivots = extract_pivots(tree)
+    for part_id in _PARTS_TO_SLICE:
+        try:
+            part_tree = extract_part(tree, part_id)
+        except KeyError:
+            continue
+        write_svg(part_tree, parts_dir / f"{part_id}.svg")
+
+    # Step 4: default mouths
+    write_default_mouths(mouth_dir)
+
+    # Step 5: derived parts (eyes, brows)
+    _synthesize_eye_open(parts_dir / "eye_l_open.svg", side="l")
+    _synthesize_eye_closed(parts_dir / "eye_l_closed.svg", side="l")
+    _synthesize_eye_open(parts_dir / "eye_r_open.svg", side="r")
+    _synthesize_eye_closed(parts_dir / "eye_r_closed.svg", side="r")
+    _synthesize_brow(parts_dir / "brow_l.svg", side="l")
+    _synthesize_brow(parts_dir / "brow_r.svg", side="r")
+
+    # Step 6: descriptor
+    descriptor = CharacterDescriptor(
+        name=name,
+        display_name=name.title(),
+        voice_ref=voice_ref,
+        source_svg=f"{name}.svg",
+        metadata={**metadata, "pivots_detected": list(pivots.keys())},
+    )
+    desc_path = out / "character.json"
+    desc_path.write_text(
+        descriptor.model_dump_json(indent=2), encoding="utf-8"
+    )
+    return desc_path
+
+
+def validate_character(
+    char_dir: str | Path, *, name: Optional[str] = None
+) -> ValidationReport:
+    """Check that a character directory is complete and well-formed.
+
+    Looks for: ``character.json``, all :data:`REQUIRED_PARTS` under
+    ``parts/``, all 9 mouth shapes under ``parts/mouth/``, and at least one
+    pivot in the canonical SVG (if one exists).
+    """
+    d = Path(char_dir)
+    report = ValidationReport(name=name or d.name, directory=d)
+    if not d.exists() or not d.is_dir():
+        report.passed = False
+        report.notes.append("directory does not exist")
+        return report
+
+    desc_path = d / "character.json"
+    if not desc_path.exists():
+        report.passed = False
+        report.notes.append("no character.json")
+    else:
+        try:
+            CharacterDescriptor.model_validate_json(desc_path.read_text())
+        except Exception as e:
+            report.passed = False
+            report.notes.append(f"character.json invalid: {e}")
+
+    parts = d / "parts"
+    for part in REQUIRED_PARTS:
+        if not (parts / f"{part}.svg").exists():
+            report.missing_parts.append(part)
+    mouth_dir = parts / "mouth"
+    for shape in MOUTH_SHAPES:
+        if not (mouth_dir / f"mouth_{shape}.svg").exists():
+            report.missing_mouths.append(f"mouth_{shape}")
+
+    # Pivots are nice-to-have, not required for validation pass.
+    candidate = next(d.glob("*.svg"), None)
+    if candidate is not None:
+        try:
+            pivots = extract_pivots(candidate)
+            report.pivots_found = sorted(pivots.keys())
+        except Exception as e:
+            report.notes.append(f"could not parse {candidate.name}: {e}")
+
+    if report.missing_parts or report.missing_mouths:
+        report.passed = False
+    return report
+
+
+# -----------------------------------------------------------------------------
+# Tiny SVG synthesizers for derived parts (used as offline-friendly defaults)
+# -----------------------------------------------------------------------------
+
+
+def _fallback_face_svg(seed: str) -> str:
+    """Tiny fallback face SVG used when DiceBear is unavailable.
+
+    Deterministic: same seed → same face. Tints driven by hashing the seed.
+    """
+    h = abs(hash(seed))
+    skin = f"#{(h & 0xCFCFCF | 0x808080):06x}"
+    hair = f"#{((h >> 24) & 0x4F4F4F | 0x202020):06x}"
+    return textwrap.dedent(
+        f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+          <circle cx="40" cy="44" r="28" fill="{skin}"/>
+          <path d="M 12 36 Q 40 4 68 36 L 60 24 L 40 14 L 20 24 Z" fill="{hair}"/>
+          <circle cx="30" cy="42" r="2.5" fill="#222"/>
+          <circle cx="50" cy="42" r="2.5" fill="#222"/>
+          <path d="M 30 56 Q 40 60 50 56" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>"""
+    )
+
+
+def _synthesize_eye_open(path: Path, *, side: str) -> Path:
+    svg = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<svg xmlns="{SVG_NS}" viewBox="0 0 64 32" width="64" height="32">'
+        f'<g id="eye_{side}_open">'
+        '<ellipse cx="32" cy="16" rx="14" ry="10" fill="#ffffff" stroke="#222" stroke-width="2"/>'
+        '<circle cx="32" cy="16" r="5" fill="#1a1a1a"/>'
+        "</g></svg>"
+    )
+    path.write_text(svg, encoding="utf-8")
+    return path
+
+
+def _synthesize_eye_closed(path: Path, *, side: str) -> Path:
+    svg = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<svg xmlns="{SVG_NS}" viewBox="0 0 64 32" width="64" height="32">'
+        f'<g id="eye_{side}_closed">'
+        '<path d="M 18 18 Q 32 24 46 18" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>'
+        "</g></svg>"
+    )
+    path.write_text(svg, encoding="utf-8")
+    return path
+
+
+def _synthesize_brow(path: Path, *, side: str) -> Path:
+    tilt = 4 if side == "l" else -4
+    svg = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<svg xmlns="{SVG_NS}" viewBox="0 0 80 24" width="80" height="24">'
+        f'<g id="brow_{side}">'
+        f'<path d="M 8 {12 + tilt} Q 40 4 72 {12 - tilt}" '
+        'stroke="#3a2a20" stroke-width="6" fill="none" stroke-linecap="round"/>'
+        "</g></svg>"
+    )
+    path.write_text(svg, encoding="utf-8")
+    return path

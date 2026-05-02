@@ -20,6 +20,11 @@ CLI surface:
 - `an sync <dir>` — reconcile `scene.md` ↔ `ir/scene.json` (newer file wins).
 - `an render <dir> [--tts NAME] [--lipsync NAME]` — full pipeline: validate → audio → render per shot → ffmpeg-concat → `output/main.mp4`. TTS and lip-sync providers are pluggable: `--tts elevenlabs` (needs `ELEVEN_API_KEY`) for real speech, `--lipsync whisper` (needs `faster-whisper`) for word-aligned visemes, `--lipsync rhubarb` (needs the rhubarb binary) for full phoneme alignment. Defaults are offline. Switching providers auto-re-synthesizes the affected lines.
 - `an iterate <dir> "<instruction>"` — free-text edit. Sends the current scene + instruction to Claude (Opus 4.7 + adaptive thinking), parses a structured patch list, validates against the schema, persists the new scene to disk, and invalidates affected shots' caches so the next render only redoes those shots. Needs `ANTHROPIC_API_KEY`. Pass `--no-apply-changes` for a dry run.
+- `an character new <name> [--seed S] [--style adventurer] [--offline]` — create a character at `assets/characters/<name>` with parts/, the 9-shape mouth set, and `character.json`. By default fetches a DiceBear avatar; `--offline` uses a deterministic geometric fallback (no network).
+- `an character mouths <name>` — regenerate the 9-shape default mouth set (`mouth_a` … `mouth_x`).
+- `an character validate <name>` — check parts, mouth set, pivots, descriptor.
+- `an character silhouette <name> [--other <name2>]` — render a black silhouette PNG; with `--other`, also computes IoU between the two silhouettes (Disney silhouette test).
+- `an character preview <name> [--open-browser]` — write `preview.html` cycling all 9 visemes with breath/head-tilt animation.
 - `an check` — diagnose system deps (ffmpeg, node, rhubarb, playwright, elevenlabs, manim).
 
 Python surface (everything in `an.__all__`):

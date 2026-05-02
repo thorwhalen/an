@@ -21,6 +21,14 @@ an render my-scene                                        # → output/main.mp4 
 an render my-scene --tts elevenlabs --lipsync whisper     # real speech, word-aligned visemes
 an iterate my-scene "make Maya laugh longer and warmer"   # free-text → IR patch → invalidate caches
 an render my-scene                                        # re-renders only the affected shot
+
+# Character authoring (Phase 11a)
+an character new maya --seed maya-warm                    # generate a DiceBear-backed character
+an character new bob --offline                            # offline-only: deterministic geometric fallback
+an character mouths maya                                  # regenerate the 9-shape default mouth set
+an character validate maya                                # check parts, mouth set, pivots
+an character silhouette maya --other bob                  # silhouette test (IoU score)
+an character preview maya --open-browser                  # HTML viewer cycling all 9 visemes
 ```
 
 The defaults run without any API keys: offline TTS produces silent audio of the right length, offline lip-sync deterministically generates viseme tracks. To get real audible speech, set `ELEVEN_API_KEY` and pass `--tts elevenlabs`. For word-aligned mouth shapes, `pip install faster-whisper` and pass `--lipsync whisper`. For free-text editing via `an iterate`, set `ANTHROPIC_API_KEY`.

@@ -8,7 +8,9 @@
 
 The package was renamed from `anima` to `an` (PyPI conflict). Repo: <https://github.com/thorwhalen/an>. Local dir is still `/Users/thorwhalen/Dropbox/py/proj/t/anima` — the dir name doesn't match the package name; pip looks at `pyproject.toml` so it works fine. Don't waste a session renaming the local dir.
 
-**303 tests pass, 4 conditionally skipped.** Live API tests run when `ELEVEN_API_KEY` and `ANTHROPIC_API_KEY` are set. The `/Users/thorwhalen/.keys` file the user has at home exports both via `source ~/.keys`.
+**340 tests pass, 4 conditionally skipped.** Live API tests run when `ELEVEN_API_KEY` and `ANTHROPIC_API_KEY` are set. The `/Users/thorwhalen/.keys` file the user has at home exports both via `source ~/.keys`.
+
+Phase 11a (character authoring) shipped: `an.characters` package + `an character {new,mouths,validate,silhouette,preview}` CLI. Renderer-side integration (Pixi SVG-texture path in `runtime.js`) is the next phase — characters can be authored and previewed but the existing procedural rig is still what `an render` uses.
 
 ## What works end-to-end today
 

@@ -13,12 +13,15 @@ from __future__ import annotations
 
 import argh
 
-from an.tools import _dispatch_funcs
+from an.tools import _dispatch_funcs, _dispatch_namespaces
 
 
-def _dispatch_with_completion(funcs):
+def _dispatch_with_completion(funcs, namespaces=None):
     parser = argh.ArghParser()
     parser.add_commands(funcs)
+    if namespaces:
+        for ns, ns_funcs in namespaces.items():
+            parser.add_commands(ns_funcs, group_name=ns)
     try:
         import argcomplete
 
@@ -30,7 +33,7 @@ def _dispatch_with_completion(funcs):
 
 def main() -> None:
     """Dispatch the CLI."""
-    _dispatch_with_completion(_dispatch_funcs)
+    _dispatch_with_completion(_dispatch_funcs, _dispatch_namespaces)
 
 
 if __name__ == "__main__":

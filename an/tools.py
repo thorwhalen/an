@@ -16,6 +16,9 @@ from an.orchestrate import render_project as _render_project
 from an.orchestrate import validate_project
 from an.project import init as _init
 from an.iterate import iterate as _iterate
+from an.characters.cli import (
+    _dispatch_funcs as _character_dispatch_funcs,
+)
 
 
 def init(project_dir: str, name: str | None = None, force: bool = False) -> str:
@@ -115,3 +118,10 @@ def iterate(
 
 # SSOT for the CLI dispatcher (per the python-dispatching skill convention).
 _dispatch_funcs = [init, validate, sync, check, render, iterate]
+
+
+# Sub-namespaces. ``__main__`` mounts these via argh's ``namespace=`` arg so
+# the CLI looks like ``an character new <name> ...``.
+_dispatch_namespaces: dict[str, list] = {
+    "character": _character_dispatch_funcs,
+}
