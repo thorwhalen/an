@@ -258,19 +258,28 @@ def _ffmpeg_add_audio(
     """
     sr = 44100
     cmd = [
-        "ffmpeg", "-y", "-loglevel", "error",
-        "-i", str(video_path),
+        "ffmpeg",
+        "-y",
+        "-loglevel",
+        "error",
+        "-i",
+        str(video_path),
         # Silent base (input #1)
-        "-f", "lavfi",
-        "-t", f"{duration_s:.3f}",
-        "-i", f"anullsrc=channel_layout=mono:sample_rate={sr}",
+        "-f",
+        "lavfi",
+        "-t",
+        f"{duration_s:.3f}",
+        "-i",
+        f"anullsrc=channel_layout=mono:sample_rate={sr}",
     ]
     for audio_path, _delay in audio_inputs:
         cmd += ["-i", str(audio_path)]
 
     filter_parts: list[str] = []
     # Resample silence base to ensure consistent format with dialogue inputs.
-    filter_parts.append(f"[1:a]aformat=sample_fmts=fltp:sample_rates={sr}:channel_layouts=mono[base]")
+    filter_parts.append(
+        f"[1:a]aformat=sample_fmts=fltp:sample_rates={sr}:channel_layouts=mono[base]"
+    )
     overlays: list[str] = []
     for i, (_path, delay_s) in enumerate(audio_inputs):
         delay_ms = max(0, int(round(delay_s * 1000)))
@@ -291,15 +300,24 @@ def _ffmpeg_add_audio(
     )
 
     cmd += [
-        "-filter_complex", ";".join(filter_parts),
-        "-map", "0:v",
-        "-map", "[aout]",
-        "-c:v", "copy",
-        "-c:a", "aac",
-        "-b:a", "128k",
-        "-ar", str(sr),
-        "-ac", "1",
-        "-t", f"{duration_s:.3f}",
+        "-filter_complex",
+        ";".join(filter_parts),
+        "-map",
+        "0:v",
+        "-map",
+        "[aout]",
+        "-c:v",
+        "copy",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "128k",
+        "-ar",
+        str(sr),
+        "-ac",
+        "1",
+        "-t",
+        f"{duration_s:.3f}",
         str(output_path),
     ]
     try:
