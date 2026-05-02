@@ -148,9 +148,11 @@ def orchestrate(
     return report
 
 
-def iterate(project_dir: str | Path, instruction: str) -> SceneIR:
-    """Apply a free-text edit instruction. Stub — handled by the `an` skill."""
-    raise NotImplementedError(
-        "Iterative edit loop is driven by the `an` Claude Code skill, which "
-        "edits the IR via the orchestrate primitives. No standalone implementation."
-    )
+def iterate(project_dir: str | Path, instruction: str, **kwargs):
+    """Apply a free-text edit instruction. Returns an IterateResult.
+
+    Thin re-export for consistency with the rest of the orchestrator surface;
+    the real implementation lives in ``an.iterate``.
+    """
+    from an.iterate import iterate as _iterate
+    return _iterate(project_dir, instruction, **kwargs)

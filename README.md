@@ -6,8 +6,6 @@ AI-driven structured animation in Python. The user is the **director**; the AI a
 pip install an
 ```
 
-> Renamed from `anima` (PyPI conflict). The package and CLI are now `an`. Repo: <https://github.com/thorwhalen/an>.
-
 ---
 
 ## What works today (v0.1)

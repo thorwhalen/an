@@ -80,5 +80,5 @@ camera:
 ```
 
 ```dialogue
-maya [amused]: Because the pigeons trust us.
+maya [happy]: Because the pigeons trust us, and honestly, I love our little spot.
 ```

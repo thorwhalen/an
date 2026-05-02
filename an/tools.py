@@ -15,6 +15,7 @@ from an.ir.sync import sync as _sync
 from an.orchestrate import render_project as _render_project
 from an.orchestrate import validate_project
 from an.project import init as _init
+from an.iterate import iterate as _iterate
 
 
 def init(project_dir: str, name: str | None = None, force: bool = False) -> str:
@@ -68,8 +69,8 @@ def render(
     project_dir: path to an an project (must contain scene.md / ir/scene.json)
     output_name: filename stem under output/ (default: "main")
     tts: TTS provider — "offline" (silent) or "elevenlabs" (needs ELEVEN_API_KEY)
-    lipsync: lip-sync provider — "offline" (deterministic) or "rhubarb"
-        (needs the rhubarb binary)
+    lipsync: lip-sync provider — "offline" (deterministic), "rhubarb"
+        (needs the rhubarb binary), or "whisper" (needs faster-whisper)
     """
     output_path = _render_project(
         project_dir, output_name=output_name, tts=tts, lipsync=lipsync
@@ -77,5 +78,40 @@ def render(
     return f"rendered: {output_path}"
 
 
+def iterate(
+    project_dir: str,
+    instruction: str,
+    apply_changes: bool = True,
+    model: str = "claude-opus-4-7",
+) -> str:
+    """Apply a free-text instruction to the scene. Needs ANTHROPIC_API_KEY.
+
+    project_dir: path to an an project
+    instruction: what to change in plain English (e.g. "make Maya's laugh longer and warmer")
+    apply_changes: persist the new scene to disk + invalidate affected shot caches (default True)
+    model: Anthropic model id (default claude-opus-4-7)
+    """
+    result = _iterate(
+        project_dir, instruction, apply=apply_changes, model=model
+    )
+    lines: list[str] = []
+    lines.append(f"summary: {result.summary}")
+    lines.append(f"affected shots: {', '.join(result.affected_shots) or '(none)'}")
+    lines.append(f"patches ({len(result.patches)}):")
+    for p in result.patches:
+        v = "" if p.op == "delete" else f" = {p.value!r}"
+        lines.append(f"  [{p.op}] {p.path}{v}")
+    if result.error:
+        lines.append(f"ERROR: {result.error}")
+        if result.validation:
+            for f in result.validation.findings:
+                lines.append(f"  [{f.severity}] {f.ir_path}: {f.description}")
+    elif apply_changes:
+        lines.append("status: applied + persisted; re-run `an render` to see changes")
+    else:
+        lines.append("status: dry-run (apply_changes=False); nothing persisted")
+    return "\n".join(lines)
+
+
 # SSOT for the CLI dispatcher (per the python-dispatching skill convention).
-_dispatch_funcs = [init, validate, sync, check, render]
+_dispatch_funcs = [init, validate, sync, check, render, iterate]
