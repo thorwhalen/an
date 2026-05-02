@@ -1,4 +1,4 @@
-"""Build a small character gallery showcasing the Phase 11a authoring tools.
+"""Build the character gallery + a real cartoon using the new tools.
 
 Run::
 
@@ -6,32 +6,25 @@ Run::
 
 What it does:
 
-1. Generates three characters into ``assets/characters/``:
-   - ``maya``    — DiceBear ``adventurer`` style (network)
-   - ``charlie`` — DiceBear ``lorelei`` style (network)
-   - ``robo``    — offline geometric fallback (no network)
-   The DiceBear ones gracefully fall back to the offline path if the API
-   is unreachable, so the script always finishes.
+1. Generates two **offline** characters into ``cartoon/assets/characters/``.
+   Offline because the procedural mouth animation works on those (DiceBear
+   avatars suppress the mouth overlay — see SESSION_HANDOFF.md §3).
+2. Validates each character.
+3. Runs the silhouette test pairwise.
+4. Writes a per-character ``preview.html`` for documentation.
+5. **Renders the cartoon** at ``cartoon/scene.md`` to mp4 via
+   ``an render --parallel auto``, copies the result to
+   ``videos/cartoon.mp4``. This is the real demo of the new tools — two
+   SVG-textured characters speaking with lip-sync, rendered through the
+   same Pixi runtime any production scene uses.
+6. Builds an ``index.html`` that embeds the cartoon at the top.
 
-2. Validates each character (parts present, mouth set present, pivots
-   detected).
-
-3. Runs the silhouette test pairwise. With the default v0.1 wrapping,
-   bodies share the same rectangular geometry → IoU ≈ 1.0 across pairs.
-   That's the test working as intended: it tells you you need to vary
-   body geometry / accessories before two characters are visually
-   distinct on the silhouette pass.
-
-4. Writes a ``preview.html`` for each character and emits a top-level
-   ``index.html`` linking them.
-
-5. Prints a summary table.
-
-Idempotent: re-running with ``overwrite=True`` blows away and rebuilds.
+Idempotent: re-running rebuilds.
 """
 
 from __future__ import annotations
 
+import shutil
 import sys
 from pathlib import Path
 
@@ -40,66 +33,74 @@ from an.characters import (
     validate_character,
 )
 from an.characters.cli import _write_preview_html
-from an.characters.record import record_preview_to_mp4
 from an.characters.silhouette import (
     compare_silhouettes,
     render_silhouette,
 )
+from an.render import render_project
 
 
 HERE = Path(__file__).parent.resolve()
-CHARS_DIR = HERE / "assets" / "characters"
+CARTOON_PROJECT = HERE / "cartoon"
+CARTOON_CHARS_DIR = CARTOON_PROJECT / "assets" / "characters"
 VIDEOS_DIR = HERE / "videos"
 
+# Offline characters (mouth animation works). Two distinct seeds → different
+# palettes. Names match the entity refs in ``cartoon/scene.md``.
 CHARACTERS: list[dict[str, object]] = [
-    {"name": "maya", "seed": "maya-warm", "style": "adventurer", "offline": False},
-    {"name": "charlie", "seed": "charlie-bingo", "style": "lorelei", "offline": False},
-    {"name": "robo", "seed": "robo-001", "style": "adventurer", "offline": True},
+    {"name": "maya", "seed": "maya-warm", "offline": True},
+    {"name": "charlie", "seed": "charlie-bingo", "offline": True},
 ]
 
 
-def _build_one(spec: dict[str, object]) -> Path:
+def _build_one(spec: dict[str, object], out_dir: Path) -> Path:
     name = str(spec["name"])
-    print(f"  → {name} (style={spec['style']}, offline={spec['offline']})")
+    print(f"  → {name} (offline={spec['offline']})")
     return new_character(
-        CHARS_DIR,
+        out_dir,
         name=name,
         seed=str(spec["seed"]),
-        style=str(spec["style"]),
         use_dicebear=not bool(spec["offline"]),
         overwrite=True,
     )
 
 
-def _validate_one(name: str) -> tuple[bool, str]:
-    report = validate_character(CHARS_DIR / name)
-    return report.passed, report.format()
-
-
-def _silhouette_pair(a: str, b: str) -> float:
-    a_dir = CHARS_DIR / a
-    b_dir = CHARS_DIR / b
-    a_png = render_silhouette(a_dir / f"{a}.svg", a_dir / "silhouette.png")
-    b_png = render_silhouette(b_dir / f"{b}.svg", b_dir / "silhouette.png")
+def _silhouette_pair(a_dir: Path, b_dir: Path) -> float:
+    a_png = render_silhouette(a_dir / f"{a_dir.name}.svg", a_dir / "silhouette.png")
+    b_png = render_silhouette(b_dir / f"{b_dir.name}.svg", b_dir / "silhouette.png")
     return compare_silhouettes(a_png, b_png)
 
 
-def _write_index(names: list[str], *, videos: list[Path] | None = None) -> Path:
-    videos_set = {v.stem for v in (videos or [])}
+def _render_cartoon() -> Path:
+    """Render cartoon/scene.md to mp4 and copy to videos/cartoon.mp4."""
+    print(f"\nRendering cartoon at {CARTOON_PROJECT} (parallel auto):")
+    output_path = render_project(CARTOON_PROJECT, parallel="auto")
+    VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+    target = VIDEOS_DIR / "cartoon.mp4"
+    shutil.copy(output_path, target)
+    print(f"  {target} ({target.stat().st_size // 1024} KB)")
+    return target
+
+
+def _write_index(names: list[str], cartoon_mp4: Path | None) -> Path:
+    cartoon_block = ""
+    if cartoon_mp4 is not None and cartoon_mp4.exists():
+        cartoon_block = f"""
+<div class="hero">
+  <h2>Cartoon: <em>Procedural</em></h2>
+  <p class="meta">Two offline characters speaking, rendered through the
+  Pixi SVG-texture runtime introduced in Phase 11b. The same pipeline any
+  production scene uses.</p>
+  <video src="videos/{cartoon_mp4.name}" controls autoplay loop muted
+         playsinline style="width:100%;background:#0f1115;border-radius:8px"></video>
+</div>
+"""
     cards: list[str] = []
     for n in names:
-        video_block = ""
-        if n in videos_set:
-            video_block = (
-                f'<video src="videos/{n}.mp4" '
-                'controls autoplay loop muted playsinline '
-                'style="width:100%;background:#0f1115;border-radius:8px"></video>'
-            )
         cards.append(
             f'<div class="card">'
-            f"<h2>{n}</h2>"
-            f"{video_block}"
-            f'<p><a href="assets/characters/{n}/preview.html">live preview</a></p>'
+            f"<h3>{n}</h3>"
+            f'<p><a href="cartoon/assets/characters/{n}/preview.html">live preview</a></p>'
             f"</div>"
         )
     grid = "\n".join(cards)
@@ -107,20 +108,23 @@ def _write_index(names: list[str], *, videos: list[Path] | None = None) -> Path:
 <title>an — character gallery</title>
 <style>
   body {{ font-family: -apple-system, system-ui, sans-serif;
-          background:#1a1d21; color:#d8dae0; padding:32px; }}
+          background:#1a1d21; color:#d8dae0; padding:32px; max-width:920px; margin:auto; }}
   a {{ color:#7eb6ff; }}
-  h1 {{ font-weight: 500; }}
-  .grid {{ display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-           gap: 24px; margin-top: 32px; }}
-  .card {{ background:#23262b; border:1px solid #2f333a; border-radius:8px; padding:16px; }}
-  .card h2 {{ margin: 0 0 12px; font-weight: 500; }}
+  h1, h2, h3 {{ font-weight: 500; }}
+  .hero {{ background:#23262b; border:1px solid #2f333a; border-radius:8px;
+           padding:24px; margin: 24px 0; }}
+  .grid {{ display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+           gap: 16px; }}
+  .card {{ background:#23262b; border:1px solid #2f333a; border-radius:8px; padding:12px; }}
+  .meta {{ color:#8a909a; font-size: 14px; }}
 </style></head><body>
 <h1>character gallery</h1>
-<p>Built by <code>examples/character_gallery/build.py</code>.</p>
-<p>Each video shows the new SVG character art animated by the preview HTML
-(cycling all 9 visemes + sine-wave breath/head-tilt). Until Phase 11b wires
-the SVG-texture path into the cutout runtime, this is the most honest
-demonstration of what the new character art looks like in motion.</p>
+<p>Built by <code>examples/character_gallery/build.py</code>. Demonstrates
+the Phase 11 character authoring + SVG-texture rendering pipeline.</p>
+{cartoon_block}
+<h2>Per-character previews</h2>
+<p class="meta">Click through to inspect individual characters' parts and
+the 9-shape mouth set used for lip-sync.</p>
 <div class="grid">{grid}</div>
 </body></html>"""
     out = HERE / "index.html"
@@ -129,29 +133,28 @@ demonstration of what the new character art looks like in motion.</p>
 
 
 def main() -> int:
-    print("Building characters into:", CHARS_DIR)
-    CHARS_DIR.mkdir(parents=True, exist_ok=True)
+    print("Building characters into:", CARTOON_CHARS_DIR)
+    CARTOON_CHARS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 1. Build
+    # 1. Build characters
     for spec in CHARACTERS:
-        _build_one(spec)
-
+        _build_one(spec, CARTOON_CHARS_DIR)
     names = [str(s["name"]) for s in CHARACTERS]
 
     # 2. Validate
     print("\nValidating:")
     all_ok = True
     for n in names:
-        ok, msg = _validate_one(n)
-        all_ok = all_ok and ok
-        print(textwrap_indent(msg, "  "))
+        report = validate_character(CARTOON_CHARS_DIR / n)
+        all_ok = all_ok and report.passed
+        print(_indent(report.format(), "  "))
 
-    # 3. Silhouette comparisons
+    # 3. Silhouette comparisons (informational)
     print("\nSilhouette test (pairwise IoU; lower = more visually distinct):")
     try:
         for i, a in enumerate(names):
-            for b in names[i + 1:]:
-                score = _silhouette_pair(a, b)
+            for b in names[i + 1 :]:
+                score = _silhouette_pair(CARTOON_CHARS_DIR / a, CARTOON_CHARS_DIR / b)
                 verdict = (
                     "very similar"
                     if score >= 0.75
@@ -161,42 +164,31 @@ def main() -> int:
                 )
                 print(f"  {a:>10} vs {b:<10}  IoU = {score:.3f}  ({verdict})")
     except Exception as e:
-        print(f"  silhouette comparison skipped: {e}")
-        print("  (needs Playwright with Chromium installed: `playwright install chromium`)")
+        print(f"  silhouette skipped: {e}")
 
-    # 4. Per-character previews + recordings
+    # 4. Per-character preview pages
     print("\nPreview pages:")
     for n in names:
-        path = _write_preview_html(CHARS_DIR / n, name=n)
+        path = _write_preview_html(CARTOON_CHARS_DIR / n, name=n)
         print(f"  {path}")
 
-    # 5. Record each preview to mp4 (real video, real new-SVG character art).
-    # Videos live in `videos/` (sibling of assets/) so they're outside the
-    # standard examples/*/assets/ gitignore rule and CAN be checked in.
-    VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"\nRecording previews to mp4 (~6 s each) in {VIDEOS_DIR}:")
-    videos: list[Path] = []
-    for n in names:
-        try:
-            mp4 = record_preview_to_mp4(
-                CHARS_DIR / n / "preview.html",
-                VIDEOS_DIR / f"{n}.mp4",
-                duration_s=6.0,
-                size=(480, 360),
-            )
-            videos.append(mp4)
-            print(f"  {mp4} ({mp4.stat().st_size // 1024} KB)")
-        except Exception as e:
-            print(f"  skipped {n}: {e}")
+    # 5. Render the cartoon — this is the real demo
+    cartoon_mp4: Path | None = None
+    try:
+        cartoon_mp4 = _render_cartoon()
+    except Exception as e:
+        print(f"\ncartoon render failed: {e}")
+        print("(skipping cartoon embed in index.html)")
 
-    index = _write_index(names, videos=videos)
+    # 6. Top-level gallery index
+    index = _write_index(names, cartoon_mp4)
     print(f"\nGallery index: {index}")
-    print("Open it in a browser to inspect each character.")
+    print("Open it in a browser to see the cartoon + per-character previews.")
 
     return 0 if all_ok else 1
 
 
-def textwrap_indent(text: str, prefix: str) -> str:
+def _indent(text: str, prefix: str) -> str:
     return "\n".join(prefix + line for line in text.splitlines())
 
 
