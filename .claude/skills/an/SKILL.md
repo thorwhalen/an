@@ -16,7 +16,8 @@ CLI surface:
 - `an init <dir>` — create a fresh project on disk.
 - `an validate <dir>` — schema + semantic validation.
 - `an sync <dir>` — reconcile `scene.md` ↔ `ir/scene.json` (newer file wins).
-- `an render <dir> [--tts NAME] [--lipsync NAME]` — full pipeline: validate → audio → render per shot → ffmpeg-concat → `output/main.mp4`. TTS and lip-sync providers are pluggable: `--tts elevenlabs` (needs `ELEVEN_API_KEY`) for real speech, `--lipsync rhubarb` (needs the rhubarb binary) for accurate phoneme alignment. Defaults are offline. Switching providers auto-re-synthesizes the affected lines (the IR's stamped `audio_ref` / `viseme_ref` are content-hashes that include the provider name; mismatch with the configured provider triggers fresh synthesis).
+- `an render <dir> [--tts NAME] [--lipsync NAME]` — full pipeline: validate → audio → render per shot → ffmpeg-concat → `output/main.mp4`. TTS and lip-sync providers are pluggable: `--tts elevenlabs` (needs `ELEVEN_API_KEY`) for real speech, `--lipsync whisper` (needs `faster-whisper`) for word-aligned visemes, `--lipsync rhubarb` (needs the rhubarb binary) for full phoneme alignment. Defaults are offline. Switching providers auto-re-synthesizes the affected lines.
+- `an iterate <dir> "<instruction>"` — free-text edit. Sends the current scene + instruction to Claude (Opus 4.7 + adaptive thinking), parses a structured patch list, validates against the schema, persists the new scene to disk, and invalidates affected shots' caches so the next render only redoes those shots. Needs `ANTHROPIC_API_KEY`. Pass `--no-apply-changes` for a dry run.
 - `an check` — diagnose system deps (ffmpeg, node, rhubarb, playwright, elevenlabs, manim).
 
 Python surface (everything in `an.__all__`):
