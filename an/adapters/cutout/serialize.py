@@ -50,10 +50,18 @@ class TransformJSON(_JSONModel):
 
 
 class VisualJSON(_JSONModel):
-    """Drawable content attached to a node."""
+    """Drawable content attached to a node.
 
-    kind: Literal["sprite", "rect", "ellipse", "mouth", "eye"] = "rect"
+    ``kind="svg_sprite"`` is the Phase 11b path: the runtime instantiates a
+    ``PIXI.Sprite`` from a pre-loaded SVG texture identified by ``asset_id``.
+    On a mouth visual, ``viseme_assets`` carries ``{letter: asset_id}`` so the
+    runtime can swap textures on the viseme channel without further IR plumbing.
+    """
+
+    kind: Literal["sprite", "rect", "ellipse", "mouth", "eye", "svg_sprite"] = "rect"
     texture_id: str | None = None
+    asset_id: str | None = None
+    viseme_assets: dict[str, str] | None = None
     width: float = 50.0
     height: float = 50.0
     anchor_x: float = 0.5

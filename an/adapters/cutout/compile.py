@@ -43,6 +43,7 @@ from an.ir.schema import (
 
 from an.adapters.cutout.serialize import (
     AnimationClipJSON,
+    AssetJSON,
     AssetsJSON,
     ChannelJSON,
     CutoutSceneJSON,
@@ -56,6 +57,7 @@ from an.adapters.cutout.serialize import (
     TransformJSON,
     VisualJSON,
 )
+from an.characters.schema import MOUTH_SHAPES, REQUIRED_PARTS
 
 
 # Default placeholder character: a recognizable stick-figure layout in pixel
@@ -120,7 +122,8 @@ def compile_shot(
         raise ValueError(f"compile_shot expects style='cutout'; got {shot.style!r}")
     mall = mall or {}
 
-    scene_root = _build_scene_root(shot, mall)
+    textures: dict[str, AssetJSON] = {}
+    scene_root = _build_scene_root(shot, mall, textures=textures)
     animations, tracks = _compile_actions(shot.actions, shot.duration)
     # Phase 4: emit a viseme channel per dialogue line that has a viseme_track.
     _add_viseme_clips(shot, animations, tracks)
@@ -142,7 +145,7 @@ def compile_shot(
         scene=scene_root,
         animations=animations,
         timeline=timeline,
-        assets=AssetsJSON(),  # Asset table populated in 2C when art exists
+        assets=AssetsJSON(textures=textures),
     )
 
 
@@ -151,13 +154,20 @@ def compile_shot(
 # -----------------------------------------------------------------------------
 
 
-def _build_scene_root(shot: Shot, mall: Mapping[str, Mapping]) -> NodeJSON:
+def _build_scene_root(
+    shot: Shot,
+    mall: Mapping[str, Mapping],
+    *,
+    textures: dict[str, AssetJSON] | None = None,
+) -> NodeJSON:
     """Construct the cutout scene tree under a single root from shot.entities.
 
     Multiple characters get spread along the x-axis so they don't overlap.
     For N characters, positions are evenly distributed across a fixed band;
     a single character lives at the center.
     """
+    if textures is None:
+        textures = {}
     children: list[NodeJSON] = []
     characters_store = mall.get("characters") or {}
     environments_store = mall.get("environments") or {}
@@ -173,7 +183,9 @@ def _build_scene_root(shot: Shot, mall: Mapping[str, Mapping]) -> NodeJSON:
         if entity.kind == "character":
             x = char_positions[char_idx]
             char_idx += 1
-            sub = _build_character_subtree(entity, characters_store)
+            sub = _build_character_subtree(
+                entity, characters_store, textures=textures
+            )
             sub.transform.x = x
             children.append(sub)
         # Other entity kinds (prop) get sketched in later phases.
@@ -253,12 +265,18 @@ def _layout_character_positions(n: int, *, spread: float = 220.0) -> list[float]
     return [-spread / 2 + i * step for i in range(n)]
 
 
-def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> NodeJSON:
-    """Build a NodeJSON subtree for one character, with placeholder parts.
+def _build_character_subtree(
+    entity: AssetRef,
+    characters_store: Mapping,
+    *,
+    textures: dict[str, AssetJSON] | None = None,
+) -> NodeJSON:
+    """Build a NodeJSON subtree for one character.
 
-    If the characters store has the character's metadata, we honor any
-    declared part list / visuals; otherwise we fall back to ``_PLACEHOLDER_PARTS``
-    so the rest of the pipeline can run before art exists.
+    Phase 11b: if the characters store has a Phase-11a CharacterDescriptor
+    for this entity (``kind == "CharacterDescriptor"``), build the SVG
+    rig and populate the ``textures`` accumulator. Otherwise fall back to
+    the procedural rig so legacy / asset-less characters keep rendering.
     """
     char_meta: dict[str, Any] = {}
     if entity.ref in characters_store:
@@ -268,6 +286,11 @@ def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> Nod
                 char_meta = value
         except KeyError:
             char_meta = {}
+
+    if char_meta.get("kind") == "CharacterDescriptor":
+        return _build_svg_character_subtree(
+            entity, char_meta, textures=textures if textures is not None else {}
+        )
 
     parts = char_meta.get("parts") or _PLACEHOLDER_PARTS
     skin, clothing, hair = _palette_for(entity.id)
@@ -355,6 +378,228 @@ def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> Nod
                 )
             )
     return char_node
+
+
+# -----------------------------------------------------------------------------
+# Phase 11b: SVG-textured character rig from a CharacterDescriptor
+# -----------------------------------------------------------------------------
+
+
+# Render-display sizes for the SVG rig parts (in scene-graph pixels).
+# Tuned so a 1024-px-tall character at scale 1 reads at ~360 px tall on a
+# 1080p frame — roughly head:body 1:5 per the research §6.1 default.
+_SVG_HEAD_SIZE: float = 96.0
+_SVG_TORSO_SIZE: tuple[float, float] = (110.0, 130.0)
+_SVG_ARM_SIZE: tuple[float, float] = (28.0, 110.0)
+_SVG_LEG_SIZE: tuple[float, float] = (38.0, 120.0)
+_SVG_EYE_SIZE: tuple[float, float] = (18.0, 12.0)
+_SVG_BROW_SIZE: tuple[float, float] = (24.0, 8.0)
+_SVG_MOUTH_SIZE: tuple[float, float] = (44.0, 22.0)
+
+
+def _svg_asset_src(ref: str, rel_path: str) -> str:
+    """Path used inside the runtime dir, relative to ``index.html``."""
+    return f"characters/{ref}/{rel_path}"
+
+
+def _register_texture(
+    textures: dict[str, AssetJSON],
+    alias: str,
+    src: str,
+) -> str:
+    """Add a texture entry if not already present; return ``alias``."""
+    if alias not in textures:
+        textures[alias] = AssetJSON(src=src)
+    return alias
+
+
+def _build_svg_character_subtree(
+    entity: AssetRef,
+    desc: dict[str, Any],
+    *,
+    textures: dict[str, AssetJSON],
+) -> NodeJSON:
+    """Build a Sprite-based subtree for a Phase-11a CharacterDescriptor."""
+    ref = entity.ref or entity.id
+    name = desc.get("name", ref)
+
+    # Register all the body / face / mouth parts as Pixi assets. Aliases follow
+    # ``<entity_id>.<slot>`` (instance-specific, so two scene entities backed by
+    # the same character ref get isolated alias namespaces — avoids collisions
+    # if they ever diverge.)
+    def _reg(slot: str, rel: str) -> str:
+        return _register_texture(
+            textures,
+            f"{entity.id}.{slot}",
+            _svg_asset_src(ref, rel),
+        )
+
+    head_alias = _reg("head", "parts/head.svg")
+    torso_alias = _reg("torso", "parts/torso.svg")
+    arm_l_alias = _reg("arm_l", "parts/arm_l.svg")
+    arm_r_alias = _reg("arm_r", "parts/arm_r.svg")
+    leg_l_alias = _reg("leg_l", "parts/leg_l.svg")
+    leg_r_alias = _reg("leg_r", "parts/leg_r.svg")
+    eye_l_alias = _reg("eye_l_open", "parts/eye_l_open.svg")
+    eye_r_alias = _reg("eye_r_open", "parts/eye_r_open.svg")
+    brow_l_alias = _reg("brow_l", "parts/brow_l.svg")
+    brow_r_alias = _reg("brow_r", "parts/brow_r.svg")
+    viseme_aliases: dict[str, str] = {}
+    for shape in MOUTH_SHAPES:
+        alias = _reg(f"mouth_{shape}", f"parts/mouth/mouth_{shape}.svg")
+        viseme_aliases[shape.upper()] = alias
+    # Default mouth attachment is the rest viseme (X).
+    mouth_alias = viseme_aliases["X"]
+
+    # Per-character viseme map: Rhubarb letter → asset alias. Carried on the
+    # mouth visual so the runtime can swap textures on the existing
+    # `<entity>/head/mouth:viseme` channel without IR plumbing.
+    viseme_map: dict[str, str] = {}
+    desc_map = desc.get("viseme_map") or {}
+    for letter in ("A", "B", "C", "D", "E", "F", "G", "H", "X"):
+        attachment = desc_map.get(letter, f"mouth_{letter.lower()}")
+        viseme_map[letter] = f"{entity.id}.{attachment}"
+
+    # If the head art has its own face baked in (DiceBear / hand-drawn full
+    # avatars), don't overlay separate eye/brow sprites — they double up
+    # with the baked features. The mouth overlay still attaches because
+    # it carries the lip-sync channel.
+    metadata = desc.get("metadata") or {}
+    head_has_face = metadata.get("art_provenance") in ("dicebear", "external_avatar")
+
+    leg_y = 70.0
+    arm_y = -10.0
+    head_y = -100.0
+    torso_y = 0.0
+
+    head_children: list[NodeJSON] = []
+    if not head_has_face:
+        head_children.extend(
+            [
+                # Eyes — paths match the procedural-blink regex so the
+                # existing scale.y squash works on Sprites unchanged.
+                NodeJSON(
+                    name="left_eye",
+                    transform=TransformJSON(x=-14.0, y=-6.0),
+                    visual=VisualJSON(
+                        kind="svg_sprite",
+                        asset_id=eye_l_alias,
+                        width=_SVG_EYE_SIZE[0],
+                        height=_SVG_EYE_SIZE[1],
+                    ),
+                ),
+                NodeJSON(
+                    name="right_eye",
+                    transform=TransformJSON(x=14.0, y=-6.0),
+                    visual=VisualJSON(
+                        kind="svg_sprite",
+                        asset_id=eye_r_alias,
+                        width=_SVG_EYE_SIZE[0],
+                        height=_SVG_EYE_SIZE[1],
+                    ),
+                ),
+                NodeJSON(
+                    name="left_brow",
+                    transform=TransformJSON(x=-14.0, y=-18.0),
+                    visual=VisualJSON(
+                        kind="svg_sprite",
+                        asset_id=brow_l_alias,
+                        width=_SVG_BROW_SIZE[0],
+                        height=_SVG_BROW_SIZE[1],
+                    ),
+                ),
+                NodeJSON(
+                    name="right_brow",
+                    transform=TransformJSON(x=14.0, y=-18.0),
+                    visual=VisualJSON(
+                        kind="svg_sprite",
+                        asset_id=brow_r_alias,
+                        width=_SVG_BROW_SIZE[0],
+                        height=_SVG_BROW_SIZE[1],
+                    ),
+                ),
+            ]
+        )
+    head_children.append(
+        NodeJSON(
+            name="mouth",
+            transform=TransformJSON(x=0.0, y=22.0),
+            visual=VisualJSON(
+                kind="svg_sprite",
+                asset_id=mouth_alias,
+                width=_SVG_MOUTH_SIZE[0],
+                height=_SVG_MOUTH_SIZE[1],
+                viseme_assets=viseme_map,
+            ),
+        )
+    )
+
+    head_node = NodeJSON(
+        name="head",
+        transform=TransformJSON(x=0.0, y=head_y),
+        visual=VisualJSON(
+            kind="svg_sprite",
+            asset_id=head_alias,
+            width=_SVG_HEAD_SIZE,
+            height=_SVG_HEAD_SIZE,
+        ),
+        children=head_children,
+    )
+
+    children: list[NodeJSON] = [
+        # Legs first (back of draw order)
+        NodeJSON(
+            name="leg_l",
+            transform=TransformJSON(x=-14.0, y=leg_y),
+            visual=VisualJSON(
+                kind="svg_sprite", asset_id=leg_l_alias,
+                width=_SVG_LEG_SIZE[0], height=_SVG_LEG_SIZE[1], anchor_y=0.0,
+            ),
+        ),
+        NodeJSON(
+            name="leg_r",
+            transform=TransformJSON(x=14.0, y=leg_y),
+            visual=VisualJSON(
+                kind="svg_sprite", asset_id=leg_r_alias,
+                width=_SVG_LEG_SIZE[0], height=_SVG_LEG_SIZE[1], anchor_y=0.0,
+            ),
+        ),
+        # Torso
+        NodeJSON(
+            name="torso",
+            transform=TransformJSON(x=0.0, y=torso_y),
+            visual=VisualJSON(
+                kind="svg_sprite", asset_id=torso_alias,
+                width=_SVG_TORSO_SIZE[0], height=_SVG_TORSO_SIZE[1],
+            ),
+        ),
+        # Arms (in front of torso)
+        NodeJSON(
+            name="arm_l",
+            transform=TransformJSON(x=-60.0, y=arm_y),
+            visual=VisualJSON(
+                kind="svg_sprite", asset_id=arm_l_alias,
+                width=_SVG_ARM_SIZE[0], height=_SVG_ARM_SIZE[1], anchor_y=0.0,
+            ),
+        ),
+        NodeJSON(
+            name="arm_r",
+            transform=TransformJSON(x=60.0, y=arm_y),
+            visual=VisualJSON(
+                kind="svg_sprite", asset_id=arm_r_alias,
+                width=_SVG_ARM_SIZE[0], height=_SVG_ARM_SIZE[1], anchor_y=0.0,
+            ),
+        ),
+        # Head on top
+        head_node,
+    ]
+
+    return NodeJSON(
+        name=entity.id,
+        transform=TransformJSON(),
+        slots={"root": SlotJSON(name="root")},
+        children=children,
+    )
 
 
 # -----------------------------------------------------------------------------

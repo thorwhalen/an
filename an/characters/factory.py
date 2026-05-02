@@ -45,25 +45,9 @@ from an.characters.svg_utils import (
 )
 
 
-# Parts that the on-disk slicing tries to produce. The two eye states are
-# duplicates of the static eye art for the default offline puppet — a
-# proper hand-rigged character would replace them.
-_PARTS_TO_SLICE: tuple[str, ...] = (
-    "head",
-    "torso",
-    "arm_l",
-    "arm_r",
-    "leg_l",
-    "leg_r",
-)
-_DERIVED_PARTS: dict[str, str] = {
-    "eye_l_open": "_synthesize_eye_open",
-    "eye_l_closed": "_synthesize_eye_closed",
-    "eye_r_open": "_synthesize_eye_open",
-    "eye_r_closed": "_synthesize_eye_closed",
-    "brow_l": "_synthesize_brow",
-    "brow_r": "_synthesize_brow",
-}
+# Each part SVG is a self-contained content-centered drawing. The canonical
+# `<name>.svg` (built via wrap_dicebear_for_an) is for human inspection /
+# silhouette test; the renderer uses these per-part files directly.
 
 
 @dataclass
@@ -161,15 +145,18 @@ def new_character(
     canonical_path = out / f"{name}.svg"
     canonical_path.write_text(canonical, encoding="utf-8")
 
-    # Step 3: slice
+    # Step 3: write self-contained per-part SVGs (centered, sized to fill
+    # their own canvas). Done independently of the canonical for clean
+    # texture loading in Pixi.
     tree = normalize_svg(canonical_path)
     pivots = extract_pivots(tree)
-    for part_id in _PARTS_TO_SLICE:
-        try:
-            part_tree = extract_part(tree, part_id)
-        except KeyError:
-            continue
-        write_svg(part_tree, parts_dir / f"{part_id}.svg")
+    skin, clothing, hair = _palette_for_seed(seed_used)
+    _write_head_part(parts_dir / "head.svg", avatar)
+    _write_torso_part(parts_dir / "torso.svg", clothing=clothing, accent=hair)
+    _write_arm_part(parts_dir / "arm_l.svg", side="l", color=clothing)
+    _write_arm_part(parts_dir / "arm_r.svg", side="r", color=clothing)
+    _write_leg_part(parts_dir / "leg_l.svg", side="l", color="#3a3a4a")
+    _write_leg_part(parts_dir / "leg_r.svg", side="r", color="#3a3a4a")
 
     # Step 4: default mouths
     write_default_mouths(mouth_dir)
@@ -290,6 +277,87 @@ def _synthesize_eye_closed(path: Path, *, side: str) -> Path:
         f'<svg xmlns="{SVG_NS}" viewBox="0 0 64 32" width="64" height="32">'
         f'<g id="eye_{side}_closed">'
         '<path d="M 18 18 Q 32 24 46 18" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>'
+        "</g></svg>"
+    )
+    path.write_text(svg, encoding="utf-8")
+    return path
+
+
+def _palette_for_seed(seed: str) -> tuple[str, str, str]:
+    """Return ``(skin, clothing, hair)`` deterministic from ``seed``.
+
+    Picks from a small, hand-tuned set so two characters from different
+    seeds tend to look distinct.
+    """
+    palettes = (
+        ("#f4c89a", "#3a6ea5", "#3b2a1a"),
+        ("#d8a47f", "#a83249", "#1a1a1a"),
+        ("#fbe1c1", "#2e7d4f", "#a8743f"),
+        ("#e8c39e", "#d97706", "#5e3a1f"),
+        ("#f1c9a5", "#7a8fb5", "#3a2a20"),
+    )
+    idx = sum(ord(c) for c in seed) % len(palettes)
+    return palettes[idx]
+
+
+def _write_head_part(path: Path, avatar_svg: str) -> Path:
+    """Write the avatar SVG verbatim as the head part.
+
+    The avatar's intrinsic viewBox (whether DiceBear's 762×762 or our 80×80
+    fallback) is what Pixi maps to the sprite dimensions at render time, so
+    no rewriting/rescaling is needed.
+    """
+    if not avatar_svg.lstrip().startswith("<?xml"):
+        avatar_svg = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n' + avatar_svg.lstrip()
+        )
+    path.write_text(avatar_svg, encoding="utf-8")
+    return path
+
+
+def _write_torso_part(
+    path: Path, *, clothing: str, accent: str
+) -> Path:
+    """A 256x256 torso SVG: rounded rect with a slight collar accent."""
+    svg = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<svg xmlns="{SVG_NS}" viewBox="0 0 256 256" width="256" height="256">'
+        '<g id="torso">'
+        f'<rect x="20" y="20" width="216" height="216" rx="40" ry="40" '
+        f'fill="{clothing}" stroke="#222" stroke-width="6"/>'
+        f'<path d="M 96 20 Q 128 60 160 20" stroke="{accent}" '
+        f'stroke-width="6" fill="none"/>'
+        "</g></svg>"
+    )
+    path.write_text(svg, encoding="utf-8")
+    return path
+
+
+def _write_arm_part(path: Path, *, side: str, color: str) -> Path:
+    """A 64x256 arm SVG with hand at the bottom."""
+    svg = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<svg xmlns="{SVG_NS}" viewBox="0 0 64 256" width="64" height="256">'
+        f'<g id="arm_{side}">'
+        f'<rect x="14" y="0" width="36" height="216" rx="18" ry="18" '
+        f'fill="{color}" stroke="#222" stroke-width="4"/>'
+        f'<circle cx="32" cy="232" r="20" fill="#f1c9a5" stroke="#222" '
+        f'stroke-width="4"/>'
+        "</g></svg>"
+    )
+    path.write_text(svg, encoding="utf-8")
+    return path
+
+
+def _write_leg_part(path: Path, *, side: str, color: str) -> Path:
+    """A 80x256 leg SVG with shoe at the bottom."""
+    svg = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<svg xmlns="{SVG_NS}" viewBox="0 0 80 256" width="80" height="256">'
+        f'<g id="leg_{side}">'
+        f'<rect x="20" y="0" width="40" height="220" rx="6" ry="6" '
+        f'fill="{color}"/>'
+        f'<ellipse cx="40" cy="232" rx="32" ry="18" fill="#1a1a1a"/>'
         "</g></svg>"
     )
     path.write_text(svg, encoding="utf-8")

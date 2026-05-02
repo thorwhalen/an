@@ -18,12 +18,17 @@ facade boundary.
 
 from __future__ import annotations
 
+import http.server
 import json
 import shutil
+import socketserver
 import subprocess
+import threading
+from collections.abc import Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 from an.adapters._base import RenderContext, RenderResult
 from an.adapters.cutout.compile import compile_shot
@@ -81,16 +86,19 @@ class CutoutRenderer:
             height=ctx.resolution[1],
         )
 
-        job = _stage_job(ctx.work_dir, shot.id, scene_json)
+        job = _stage_job(ctx.work_dir, shot.id, scene_json, mall=ctx.mall)
 
         # Drive Chromium → screenshot frames.
-        with sync_playwright() as p:
+        # Phase 11b: serve runtime via local HTTP because PIXI.Assets.fetch()
+        # can't load file:// URLs in headless Chromium. Same effect as a
+        # static deployment, isolated to this render.
+        with _serve_dir(job.runtime_dir) as base_url, sync_playwright() as p:
             browser = p.chromium.launch(args=["--no-sandbox"])
             try:
                 page = browser.new_page(
                     viewport={"width": ctx.resolution[0], "height": ctx.resolution[1]}
                 )
-                page.goto(job.runtime_dir.joinpath("index.html").as_uri())
+                page.goto(f"{base_url}/index.html")
 
                 # Wait for runtime + PixiJS to load.
                 page.wait_for_function(
@@ -99,7 +107,11 @@ class CutoutRenderer:
                 )
 
                 scene_dict = to_dict(scene_json)
-                page.evaluate("(s) => window.anLoadScene(s)", scene_dict)
+                # anLoadScene is async (Phase 11b: it awaits Assets.load).
+                # Playwright awaits returned Promises automatically.
+                page.evaluate(
+                    "async (s) => { await window.anLoadScene(s); }", scene_dict
+                )
 
                 if not page.evaluate("() => window.anCanvasReady()"):
                     raise CutoutRenderError(
@@ -139,6 +151,39 @@ class CutoutRenderer:
 # -----------------------------------------------------------------------------
 
 
+@contextmanager
+def _serve_dir(directory: Path) -> Iterator[str]:
+    """Run a tiny HTTP server on a free port serving ``directory``.
+
+    Yields the base URL (``http://127.0.0.1:<port>``). Tears the server
+    down on context exit. Used by the cutout renderer so PIXI.Assets can
+    fetch SVG textures (file:// URLs don't work in headless Chromium).
+    """
+
+    class _Handler(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, *a: Any, **kw: Any) -> None:
+            super().__init__(*a, directory=str(directory), **kw)
+
+        def log_message(
+            self, format: str, *args: Any
+        ) -> None:  # noqa: A002, ARG002
+            return  # silence access logs
+
+    class _Server(socketserver.ThreadingTCPServer):
+        allow_reuse_address = True
+        daemon_threads = True
+
+    server = _Server(("127.0.0.1", 0), _Handler)
+    port = server.server_address[1]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{port}"
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
 def _ensure_ffmpeg_available() -> None:
     if shutil.which("ffmpeg") is None:
         raise CutoutRenderError(
@@ -147,8 +192,14 @@ def _ensure_ffmpeg_available() -> None:
         )
 
 
-def _stage_job(work_dir: Path, shot_id: str, scene_json: Any) -> _RenderJob:
-    """Lay out per-shot directories + copy the runtime files."""
+def _stage_job(
+    work_dir: Path,
+    shot_id: str,
+    scene_json: Any,
+    *,
+    mall: Mapping[str, Any] | None = None,
+) -> _RenderJob:
+    """Lay out per-shot directories + copy the runtime files + SVG assets."""
     base = Path(work_dir) / f"shot_{shot_id}"
     runtime_target = base / "runtime"
     frames_dir = base / "frames"
@@ -157,6 +208,13 @@ def _stage_job(work_dir: Path, shot_id: str, scene_json: Any) -> _RenderJob:
     if runtime_target.exists():
         shutil.rmtree(runtime_target)
     shutil.copytree(runtime_dir(), runtime_target)
+
+    # Phase 11b: stage SVG character textures into the runtime dir at the
+    # paths declared in scene.assets.textures, so Pixi can load them by
+    # relative URL from index.html.
+    if mall is not None:
+        _stage_character_assets(scene_json, mall, runtime_target)
+
     json_path = runtime_target / "scene.json"
     json_path.write_text(
         json.dumps(to_dict(scene_json), sort_keys=True), encoding="utf-8"
@@ -168,6 +226,41 @@ def _stage_job(work_dir: Path, shot_id: str, scene_json: Any) -> _RenderJob:
         frames_dir=frames_dir,
         output_mp4=base / f"{shot_id}.mp4",
     )
+
+
+def _stage_character_assets(
+    scene_json: Any,
+    mall: Mapping[str, Any],
+    runtime_target: Path,
+) -> None:
+    """Copy each ``assets.textures`` entry from the mall into the runtime dir.
+
+    Texture src paths look like ``characters/<ref>/parts/head.svg``; the
+    source file is read from ``mall["characters"]._root/<ref>/parts/head.svg``
+    (or whichever sidecar location matches the rest of the path).
+    """
+    chars_store = mall.get("characters")
+    if chars_store is None:
+        return
+    chars_root = getattr(chars_store, "_root", None)
+    if chars_root is None:
+        return  # in-memory store, nothing to stage
+    textures = getattr(scene_json.assets, "textures", {}) if scene_json.assets else {}
+    for alias, asset in textures.items():
+        src_rel = getattr(asset, "src", None) or (
+            asset.get("src") if isinstance(asset, dict) else None
+        )
+        if not src_rel or not src_rel.startswith("characters/"):
+            continue
+        # src like "characters/<ref>/parts/head.svg" → strip "characters/"
+        # to get the path relative to the characters root.
+        rel_in_store = src_rel[len("characters/"):]
+        source = Path(chars_root) / rel_in_store
+        if not source.exists():
+            continue
+        target = runtime_target / src_rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
 
 
 def _capture_frames(page: Any, total_frames: int, fps: int, frames_dir: Path) -> None:

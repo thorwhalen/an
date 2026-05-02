@@ -1,8 +1,9 @@
-"""Characters store — JSON descriptor + sidecar folder per character.
+"""Characters store — descriptor + sidecar folder per character.
 
-A character's ``meta.json`` carries name, art-style hint, default voice ref,
-slot map (which body parts exist), and optional defaults. Binary parts (SVGs,
-PNGs) are sidecars under the same directory.
+A character's ``character.json`` is the Phase 11a CharacterDescriptor
+(slot/skin/animation graph + viseme map). Binary parts (SVGs, PNGs) are
+sidecars under the same directory at e.g. ``parts/head.svg``,
+``parts/mouth/mouth_a.svg``, etc.
 """
 
 from __future__ import annotations
@@ -20,3 +21,5 @@ class CharactersStore(JsonSidecarStore):
     ...     store['maya']['name']
     'Maya'
     """
+
+    META_NAME = "character.json"

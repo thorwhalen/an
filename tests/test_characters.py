@@ -345,6 +345,69 @@ class TestRecord:
         assert out.stat().st_size > 1024, "mp4 should be at least 1 KB"
 
 
+class TestSvgCharacterCompile:
+    """Phase 11b: cutout compiler emits svg_sprite visuals + asset table."""
+
+    def test_descriptor_drives_svg_rig(self, tmp_path):
+        from an.adapters.cutout.compile import compile_shot
+        from an.ir.schema import AssetRef, Shot
+        from an.stores.characters import CharactersStore
+
+        # Build a real character on disk.
+        new_character(tmp_path, name="maya", use_dicebear=False)
+        store = CharactersStore(tmp_path)
+        assert "maya" in store, "store should see character.json"
+
+        shot = Shot(
+            id="s1",
+            style="cutout",
+            duration=2.0,
+            entities=[AssetRef(id="maya", kind="character", store="characters", ref="maya")],
+        )
+        scene = compile_shot(shot, mall={"characters": store})
+
+        # Asset table should contain the head, mouth-X, etc.
+        assert "maya.head" in scene.assets.textures
+        assert "maya.mouth_x" in scene.assets.textures
+        # Texture src is relative to the runtime root.
+        assert scene.assets.textures["maya.head"].src == "characters/maya/parts/head.svg"
+
+        # Scene tree contains svg_sprite visuals.
+        maya_node = scene.scene.children[0]
+        assert maya_node.name == "maya"
+        kinds = {c.name: (c.visual.kind if c.visual else None) for c in maya_node.children}
+        assert kinds["head"] == "svg_sprite"
+        assert kinds["torso"] == "svg_sprite"
+        # Head has children: eyes/brows/mouth.
+        head = next(c for c in maya_node.children if c.name == "head")
+        head_kinds = {c.name: (c.visual.kind if c.visual else None) for c in head.children}
+        assert head_kinds["mouth"] == "svg_sprite"
+        # Mouth visual carries the viseme map.
+        mouth = next(c for c in head.children if c.name == "mouth")
+        assert mouth.visual.viseme_assets is not None
+        assert mouth.visual.viseme_assets["A"] == "maya.mouth_a"
+        assert mouth.visual.viseme_assets["X"] == "maya.mouth_x"
+
+    def test_no_descriptor_falls_back_to_procedural(self):
+        """Existing scenes with no character.json keep the procedural rig."""
+        from an.adapters.cutout.compile import compile_shot
+        from an.ir.schema import AssetRef, Shot
+
+        shot = Shot(
+            id="s1",
+            style="cutout",
+            duration=2.0,
+            entities=[AssetRef(id="bob", kind="character", store="characters", ref="bob")],
+        )
+        scene = compile_shot(shot, mall={"characters": {}})
+        # No textures registered — procedural rig is texture-free.
+        assert scene.assets.textures == {}
+        bob = scene.scene.children[0]
+        head = next(c for c in bob.children if c.name == "head")
+        # Old kind=ellipse is preserved (no regression).
+        assert head.visual.kind == "ellipse"
+
+
 class TestPromoteSecond:
     def test_promote_uses_existing_svg(self, tmp_path):
         chars = tmp_path / "assets" / "characters"

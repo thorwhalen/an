@@ -147,8 +147,32 @@
         if (visualSpec.kind === 'eye') {
             return makeEye(visualSpec);
         }
+        if (visualSpec.kind === 'svg_sprite') {
+            return makeSvgSprite(visualSpec);
+        }
         // sprite without textures + everything else falls back to a rect.
         return makeRect(visualSpec);
+    }
+
+    // Phase 11b: build a Sprite from a pre-loaded SVG texture. The texture
+    // is registered under `visualSpec.asset_id` by the asset preloader.
+    function makeSvgSprite(visualSpec) {
+        const tex = (PIXI.Assets && PIXI.Assets.get)
+            ? PIXI.Assets.get(visualSpec.asset_id)
+            : null;
+        const sprite = tex ? new PIXI.Sprite(tex) : new PIXI.Sprite(PIXI.Texture.WHITE);
+        sprite.width = visualSpec.width || 64;
+        sprite.height = visualSpec.height || 64;
+        const ax = visualSpec.anchor_x != null ? visualSpec.anchor_x : 0.5;
+        const ay = visualSpec.anchor_y != null ? visualSpec.anchor_y : 0.5;
+        sprite.anchor.set(ax, ay);
+        // Stash viseme map + asset_id on the sprite so setVisemeOnMouth can
+        // swap textures without re-walking the scene graph.
+        if (visualSpec.viseme_assets) {
+            sprite._anVisemeAssets = visualSpec.viseme_assets;
+        }
+        sprite._anAssetId = visualSpec.asset_id;
+        return sprite;
     }
 
     function makeRect(visualSpec) {
@@ -285,7 +309,21 @@
     }
 
     function setVisemeOnMouth(node, visemeCode) {
-        // The mouth node's first Graphics child is the mouth visual.
+        // Phase 11b first: if the mouth visual is an SVG Sprite, swap the
+        // texture by mapping the viseme code through the sprite's
+        // ``_anVisemeAssets`` map.
+        const sprite = node.children && node.children.find(
+            c => c instanceof PIXI.Sprite && c._anVisemeAssets
+        );
+        if (sprite) {
+            const assetId = sprite._anVisemeAssets[String(visemeCode).toUpperCase()];
+            if (assetId && PIXI.Assets && PIXI.Assets.get) {
+                const tex = PIXI.Assets.get(assetId);
+                if (tex) sprite.texture = tex;
+            }
+            return;
+        }
+        // Legacy procedural path: re-shape the mouth Graphics.
         const g = node.children && node.children.find(c => c instanceof PIXI.Graphics);
         if (!g) return;
         drawMouthShape(g, visemeCode);
@@ -343,10 +381,29 @@
     // Public API
     // ------------------------------------------------------------------------
 
-    NS.anLoadScene = function (sceneJson) {
+    // Phase 11b: preload SVG textures declared in scene.assets.textures.
+    // Returns a Promise that resolves once all assets are GPU-ready.
+    async function preloadAssets(sceneJson) {
+        if (!PIXI.Assets) return;
+        const textures = (sceneJson.assets && sceneJson.assets.textures) || {};
+        const aliases = Object.keys(textures);
+        if (!aliases.length) return;
+        for (const alias of aliases) {
+            const src = textures[alias].src || textures[alias];
+            try {
+                PIXI.Assets.add(alias, src);
+            } catch (e) {
+                // already-registered alias — ignore on hot reload.
+            }
+        }
+        await PIXI.Assets.load(aliases);
+    }
+
+    NS.anLoadScene = async function (sceneJson) {
         if (!window.PIXI) {
             throw new Error('PixiJS not loaded');
         }
+        await preloadAssets(sceneJson);
         scene = sceneJson;
         nodeIndex = {};
         visualIndex = {};
