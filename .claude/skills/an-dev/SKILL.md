@@ -9,16 +9,19 @@ This skill orients you for engineering work *on* an. If you're using an from a p
 
 ## Read these before designing
 
-- **The master spec** is the prompt that bootstrapped this project; if you don't have it in context, the user will paste it.
-- **The seven research docs** in `misc/docs/`. Each subsystem has a primary doc — read it before designing:
-  - `report 0 ...md` — overall architecture, IR layering, agent-tool boundary, verification (start here)
+**Always start with `misc/docs/architecture_as_built.md`** — the canonical, current-state map of the system (modules, control flows, invariants, caching strategy). Read it before any non-trivial change.
+
+For deeper subsystem design history, the seven research reports next to it cover the design space (NOT current state):
+
+  - `report 0 ...md` — overall architecture, IR layering, agent-tool boundary, verification
   - `dsl_design_patterns_report.md` — IR schema design, evolution rules
   - `report 2 ...md` — interchange formats, channel/keyframe representation
-  - `report 5 ...md` — cutout scene-graph + director architecture
+  - `report 5 ...md` — cutout scene-graph + director architecture (closest to as-built)
   - `report 1 ...md` — JS-side cutout ecosystem (PixiJS + GSAP recommended)
   - `report 3 ...md` — viseme standards, lip-sync pipeline
   - `Annotation systems ...md` — interval data structures, rational time, A/V sync
-- **The plan file** for the current phase (under `~/.claude/plans/` or surfaced by the user).
+
+**The master spec** is the prompt that bootstrapped this project; if you don't have it in context, the user will paste it. Plan files for current phases live under `~/.claude/plans/`.
 
 ## Architectural pillars (locked in — do not re-litigate)
 
@@ -32,6 +35,29 @@ This skill orients you for engineering work *on* an. If you're using an from a p
 8. All persistence via dol-backed `MutableMapping`s organized into the project mall.
 9. Dispatch to interface: business logic is plain Python; CLI (argh) is dispatch only.
 10. Verification is a swappable Protocol; same interface for human, lint, vision-LM, MoVer.
+11. Caches are content-hash keyed (audio_ref, viseme_ref). Cache invalidation is by deletion (`del mall["shots"][shot_id]`). No cache versioning — keys are deterministic so collisions across versions are impossible.
+12. **Equalize mtimes after writing both `scene.md` and `ir/scene.json`** in `ScenesStore.__setitem__`. Sync's "newer wins" tolerance band depends on this. Without it, sync flip-flops on every load and pipeline-injected state (viseme tracks, audio_refs) gets stripped.
+13. The synthetic root container in the JS runtime is **not indexed** in `nodeIndex`. `compile_shot` emits target paths starting with the entity name (`charlie/head/mouth`); the runtime's `animaLoadScene` skips the root when populating `nodeIndex`.
+
+## Module map (current state)
+
+Read `misc/docs/architecture_as_built.md` for the full map. The pieces that didn't exist in the original spec:
+
+- `an/iterate.py` — free-text → Claude (Opus 4.7) → IR patches (Phase 10)
+- `an/audio/whisper_lipsync.py` — faster-whisper word timestamps → visemes (Phase 9)
+- `an/audio/providers.py` — make_tts / make_lipsync factories (Phase 8)
+- `an/verify/media.py` — ssim, detect_silence, audio_volume, extract_frames, transcribe (Phase 8)
+- `an/verify/media_quality.py` — MediaQualityVerifier (Phase 9)
+- `an/verify/vision.py` — VisionLMVerifier (Claude vision QA, Phase 9)
+
+## How to wire a new TTS / LipSync / Verifier / Renderer
+
+The four Protocols live in `an.audio.tts.TTSProvider`, `an.audio.lipsync.LipSyncProvider`, `an.verify._base.Verifier`, and `an.adapters._base.Renderer`. To add a new one:
+
+1. Implement the Protocol in a new file under the matching subpackage.
+2. Register it in the factory: `an.audio.providers.TTS_FACTORIES` / `LIPSYNC_FACTORIES`, or for renderers via `an.adapters._base.register_renderer(MyRenderer())` at module import.
+3. Export it from the subpackage's `__init__.py`.
+4. Add skip-if-deps-missing tests under `tests/test_<my>.py`.
 
 ## Code conventions
 

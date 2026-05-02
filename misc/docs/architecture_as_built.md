@@ -1,0 +1,325 @@
+# `an` — As-Built Architecture
+
+> **What this is.** A snapshot of the system as it exists in the repo today, intended as the canonical reference for both human contributors and AI agents working in `an`. The seven research reports next to this file (`report 0...`, `report 1...`, etc.) describe the *design space*; this doc describes *what was actually built*. When the two disagree, the code is authoritative — fix this doc.
+>
+> Currency: written 2026-05-02, after Phase 10 (iterate loop). Update on each substantive change.
+
+---
+
+## 1. The story in 30 seconds
+
+You write a `scene.md`. You run `an render <dir>`. An mp4 lands in `output/main.mp4` with audible dialogue, a sky/grass background, two distinct cartoon characters, animated mouths over real ElevenLabs speech aligned by Whisper word-timestamps, eye-blinks, emotion-driven eyebrows, and a slow camera push-in.
+
+You say `an iterate <dir> "make Maya's response more affectionate"`. Claude (Opus 4.7) returns surgical JSON patches against the IR, validates them against the schema, persists, and invalidates only the affected shot's cache so the next render only redoes that shot.
+
+Both flows pass through the same Scene IR — the single source of truth.
+
+---
+
+## 2. Three-layer IR (the architectural pillar)
+
+Information flows downward. Verification feedback flows upward. Render Code is disposable.
+
+```
+Narrative Layer  scene.md                ← human-edited markdown (yaml meta, yaml shot, yaml entities, yaml actions, dialogue)
+                       ↕ (an sync — newer-mtime wins, equalize on write)
+Scene Graph      ir/scene.json           ← Pydantic-validated, the SSOT
+                       ↓ (an.adapters.cutout.compile_shot)
+Render Code      cutout JSON for JS      ← regenerated per render, never edited
+                       ↓ (an.adapters.cutout.render — Playwright + ffmpeg)
+                  output/main.mp4
+```
+
+The `iterate` loop closes the cycle: free-text → Claude → patches against `ir/scene.json` → re-render only affected shots.
+
+---
+
+## 3. Module map
+
+```
+an/
+├── __init__.py              public API (curated __all__)
+├── __main__.py              argh CLI entry point
+├── base.py                  type aliases, version constants, easing presets
+├── util.py                  internal helpers (hashing, file I/O, time math)
+├── tools.py                 user-facing CLI funcs + _dispatch_funcs
+├── project.py               init / load / save Project + on-disk layout
+├── render.py                project-level render orchestration + ffmpeg concat
+├── orchestrate.py           validate → audio → render → verify; thin re-export of iterate
+├── iterate.py               free-text → Claude (Opus 4.7) → JSON patches → IR mutation
+├── check_requirements.py    diagnose ffmpeg/node/playwright/elevenlabs/manim/rhubarb/etc.
+│
+├── ir/                      Scene IR (the SSOT)
+│   ├── schema.py            Pydantic models: SceneIR, Shot, Action, Dialogue, AssetRef, ...
+│   ├── compose.py           sequence/parallel/delay/loop/tween/set_/play + flatten
+│   ├── validate.py          schema + semantic validation, ValidationReport
+│   ├── migrate.py           versioned migration registry (chained)
+│   └── sync.py              markdown_to_ir / ir_to_markdown / sync (mtime-newer-wins)
+│
+├── stores/                  dol-backed project mall (MutableMapping facades)
+│   ├── __init__.py          build_project_mall(project_dir) factory
+│   ├── _common.py           JsonDirStore, JsonSidecarStore, _BlobStore base classes
+│   ├── characters.py        sidecar-folder store (meta.json + per-part art)
+│   ├── environments.py      sidecar-folder store
+│   ├── voices.py            JSON-only store
+│   ├── styles.py            JSON-only store
+│   ├── scenes.py            wraps scene.md + ir/scene.json pair (mtime equalization)
+│   ├── artifacts.py         BlobStore: audio (.wav), visemes (.json), shots (.mp4),
+│   │                        previews (.mp4), output (.mp4) — content-hash keyed
+│   └── decisions.py         append-only JSONL log
+│
+├── adapters/                Renderer Protocol implementations
+│   ├── _base.py             Renderer Protocol, RendererRegistry, RenderContext, RenderResult
+│   ├── cutout/              the v0.1 backend (real)
+│   │   ├── transform.py     Matrix3x3, TransformParams, decompose/compose
+│   │   ├── easing.py        named presets + cubic-Bézier + dispatcher
+│   │   ├── scene.py         Node tree as MutableMapping[str, Node], Slot, Visual
+│   │   ├── channel.py       Keyframe, Channel, binary-search evaluation
+│   │   ├── pose.py          Pose: dict[(target, prop), value] + apply_pose, merge_poses
+│   │   ├── clip.py          Clip + LoopMode, evaluate(clip, t) -> Pose
+│   │   ├── timeline.py      Track, PlacedClip, Timeline, evaluate_timeline -> Pose
+│   │   ├── serialize.py     Pydantic models for the JS-runtime JSON contract
+│   │   ├── compile.py       Shot -> CutoutSceneJSON (the bridge)
+│   │   ├── render.py        Playwright headless capture + ffmpeg mux + audio overlay
+│   │   └── runtime_files.py importlib.resources locator for the bundled JS runtime
+│   ├── manim_adapter.py     real (when manim installed) — generates a title-card scene
+│   ├── remotion_adapter.py  skeleton — clear NotImplementedError pending Phase 6+
+│   └── whiteboard.py        stub
+│
+├── audio/                   TTS + lip-sync providers
+│   ├── tts.py               TTSProvider Protocol + AudioClip, VoiceMeta
+│   ├── lipsync.py           LipSyncProvider Protocol + Viseme, VisemeTrack
+│   ├── offline_tts.py       OfflineTTS — silent WAV proportional to text length
+│   ├── elevenlabs_tts.py    ElevenLabsTTS — needs ELEVEN_API_KEY
+│   ├── offline_lipsync.py   OfflineLipSync — char→viseme distribution
+│   ├── rhubarb_lipsync.py   RhubarbLipSync — wraps the rhubarb binary
+│   ├── whisper_lipsync.py   WhisperLipSync — faster-whisper word timestamps
+│   ├── pipeline.py          produce_audio_for_dialogue / _scene; content-hash caching
+│   └── providers.py         make_tts / make_lipsync factories (string → instance)
+│
+├── verify/                  Verifier Protocol implementations
+│   ├── _base.py             Verifier Protocol, Finding, VerificationReport, Severity
+│   ├── layout.py            LayoutLintVerifier (IR-only structural checks)
+│   ├── human.py             HumanInTheLoopVerifier (opens mp4, stdin y/N/r)
+│   ├── media.py             helpers: detect_silence, audio_volume, ssim, extract_frames, transcribe
+│   ├── media_quality.py     MediaQualityVerifier (silent audio, dialogue gaps, frozen frames)
+│   └── vision.py            VisionLMVerifier (Claude vision QA)
+│
+└── data/                    bundled non-Python resources
+    └── cutout_runtime/
+        ├── index.html       loads PixiJS v7 + runtime.js
+        ├── runtime.js       drawMouthShape, applyProceduralBlinks, channel/timeline eval
+        └── README.md
+```
+
+---
+
+## 4. The six `Protocol`s and their implementations
+
+| Protocol | Purpose | Implementations |
+|---|---|---|
+| `Renderer` | per-shot mp4 production | `CutoutRenderer` (real), `ManimRenderer` (real when manim installed), `RemotionRenderer` (skeleton), `WhiteboardRenderer` (stub) |
+| `TTSProvider` | text → audio | `OfflineTTS` (silent placeholder), `ElevenLabsTTS` (real, needs `ELEVEN_API_KEY`) |
+| `LipSyncProvider` | audio → viseme track | `OfflineLipSync` (char-distribution), `WhisperLipSync` (word-aligned, needs `faster-whisper`), `RhubarbLipSync` (phoneme-aligned, needs `rhubarb` binary) |
+| `Verifier` | verify IR ± render | `LayoutLintVerifier`, `MediaQualityVerifier`, `VisionLMVerifier`, `HumanInTheLoopVerifier` |
+
+All four protocols are runtime-checkable; new implementations register via factories or `register_renderer(...)`.
+
+---
+
+## 5. The three control flows
+
+### 5.1 `an render <dir>` (validate → audio → render → verify)
+
+```
+Project.load(dir)
+├─ sync()                                        ← reconcile scene.md / ir/scene.json
+├─ load SceneIR from mall["scenes"]["main"]
+│
+└─ render() in an/render.py
+   ├─ if any dialogue & auto_audio:
+   │     produce_audio_for_scene(scene, mall, tts=…, lipsync=…)
+   │     ↳ stamps dialogue.audio_ref + dialogue.viseme_ref + dialogue.start + dialogue.duration
+   │     ↳ persists wav bytes to mall["audio"][hash], visemes JSON to mall["visemes"][hash]
+   │     ↳ writes scene back to mall["scenes"]["main"] (mtime equalized)
+   │
+   ├─ for each shot in scene.timeline:
+   │     renderer = RendererRegistry.find_for(shot)        ← matches on shot.style
+   │     result = renderer.render(shot, ctx)
+   │     ↳ cutout: compile_shot(shot, mall) → CutoutSceneJSON
+   │              → spin Chromium via Playwright
+   │              → load runtime + JSON
+   │              → for each frame: anSetTime(t) + screenshot canvas
+   │              → ffmpeg mux PNG sequence → silent.mp4
+   │              → ffmpeg overlay dialogue audio (anullsrc base + adelay+amix per line)
+   │              → shot.mp4
+   │     mall["shots"][shot.id] = mp4 bytes
+   │
+   ├─ ffmpeg concat per-shot mp4s → output/<name>.mp4
+   └─ mall["output"][name] = mp4 bytes
+```
+
+Default verifier chain (when called via `orchestrate()`): `LayoutLintVerifier` (pre + post), `MediaQualityVerifier` (post). `VisionLMVerifier` and `HumanInTheLoopVerifier` are opt-in.
+
+### 5.2 `an iterate <dir> "<instruction>"` (free-text → IR patches)
+
+```
+Project.load(dir)
+└─ iterate(dir, instruction) in an/iterate.py
+   ├─ build IterateResponse JSON schema as the reply contract
+   ├─ Anthropic.messages.create(
+   │     model="claude-opus-4-7",
+   │     thinking={"type": "adaptive"},
+   │     system=<stable IR-shape primer>,
+   │     messages=[scene_json_dump (cached), schema_hint (cached), instruction]
+   │   )
+   ├─ parse reply leniently → IterateResponse
+   ├─ apply patches to deep-copy of ir.json (set / append / delete by JSON-pointer path)
+   ├─ SceneIR.model_validate(new_dict) + validate_schema + validate_semantic
+   ├─ if valid:
+   │     for shot_id in affected_shots: del mall["shots"][shot_id]   ← cache invalidation
+   │     mall["scenes"]["main"] = new_scene
+   │     mall["decisions"].append({kind: "iterate", instruction, summary, patches})
+   └─ return IterateResult(success, summary, patches, affected_shots, new_scene, validation)
+```
+
+Then `an render` regenerates only the invalidated shots, reusing the rest from `mall["shots"]`.
+
+### 5.3 `an validate <dir>` (cheap pre-flight)
+
+`load(dir)` → `validate_schema(scene)` + `validate_semantic(scene, available_voices=…, available_characters=…)` → `ValidationReport`. No side effects.
+
+---
+
+## 6. Caching: content-hash everywhere, cache invalidation by deletion
+
+The system caches at every boundary that's expensive to recompute. Cache keys are content hashes — never timestamps, never counters.
+
+| Cache | Key | Computed by |
+|---|---|---|
+| TTS audio | `_stable_hash({text, voice_id, tts.name})` | `pipeline._load_or_synthesize` |
+| Viseme tracks | `_stable_hash({audio_key, lipsync.name, transcript})` | `pipeline._load_or_align` |
+| Per-shot mp4s | `shot.id` (the IR slice IS the input) | `render.render` |
+| Final mp4 | `output_name` | `render.render` |
+| Anthropic prompt cache | scene JSON + schema hint (`cache_control: ephemeral`) | `iterate._call_claude` |
+
+The hash is stamped onto the IR (`Dialogue.audio_ref`, `Dialogue.viseme_ref`) so the orchestrator can detect provider changes — when you swap `--tts elevenlabs` for the offline default, the new expected hash mismatches the stored one, triggering re-synthesis without an explicit force flag.
+
+Cache invalidation is by **deletion** (`del mall["shots"][shot_id]`). Re-render then misses the cache and recomputes. There is no cache versioning; the keys are deterministic so collisions across versions are impossible.
+
+---
+
+## 7. Key invariants to preserve
+
+These are load-bearing. Breaking them breaks the system in subtle ways.
+
+1. **`scene.md` and `ir/scene.json` mtimes are equalized after every store write.** Otherwise `sync` flip-flops between md and json on each load and pipeline-injected state (viseme tracks, audio_refs) gets stripped. See `ScenesStore.__setitem__` and `sync()`'s "newer wins" tolerance band.
+2. **The synthetic root container in the JS runtime is not indexed.** `compile.py` emits target paths starting with the entity name (`charlie/head/mouth`), not `root/charlie/head/mouth`. The runtime's `animaLoadScene` skips the synthetic root when populating `nodeIndex`.
+3. **Multiple characters are spread along x in `_layout_character_positions(n)`.** A previous bug placed every character at (0, 0) so they overlapped. The default spread is 220px; characters with the same `entity.id` between renders keep their position because the spread is index-based.
+4. **Composition trees flatten to canonical FlatActions for verification and rendering.** The DSL (`sequence`, `parallel`, …) is for authoring; `flatten()` produces absolute-time `FlatAction`s that downstream stages consume. Don't reason about composition nesting at render time.
+5. **`extra="allow"` on every Pydantic IR model.** Forward-compat: an older reader of a newer document survives. The cost: typos in field names don't error.
+6. **`anima*` JS API names were renamed to `an*` during the package rename.** `window.anLoadScene`, `anSetTime`, etc. The Python side calls these via `page.evaluate`; both must stay synced.
+7. **The ScenesStore's `"main"` key is the only supported key.** Multi-scene projects are a future feature.
+
+---
+
+## 8. The CLI surface
+
+```
+an init <dir>                 — create a fresh project
+an validate <dir>             — schema + semantic validation
+an sync <dir>                 — reconcile scene.md ↔ ir/scene.json
+an render <dir>               — full pipeline → output/main.mp4
+   --tts {offline,elevenlabs}
+   --lipsync {offline,whisper,rhubarb}
+   --output-name NAME
+an iterate <dir> "<instruction>"   — free-text edit via Claude (needs ANTHROPIC_API_KEY)
+   --no-apply-changes        (dry run)
+   --model claude-opus-4-7   (override)
+an check                      — diagnose system deps
+```
+
+All built via `argh` over the SSOT list `an.tools._dispatch_funcs`.
+
+---
+
+## 9. The `scene.md` markdown contract
+
+```markdown
+# <title>
+
+```yaml meta
+title: ...
+duration: 12
+fps: 24
+resolution: { width: 640, height: 360 }
+default_style: cutout
+```
+
+## Shot s1 (cutout)
+
+```yaml shot
+duration: 6
+camera:
+  move: push_in        # hold | push_in | pull_out | zoom_in | zoom_out
+```
+
+```yaml entities
+- { kind: environment, id: park_bg, store: environments, ref: park }   # park | indoor | night | sunset | default
+- { kind: character,   id: charlie, store: characters,   ref: charlie-v1 }
+- { kind: character,   id: maya,    store: characters,   ref: maya-v1 }
+```
+
+```yaml actions
+- { kind: tween, target: charlie, property: x, from: -110, to: -80, duration: 2.0, easing: ease_in_out }
+- { kind: tween, target: charlie/torso, property: rotation, to: 0.05, duration: 0.5, start: 1.0 }
+- { kind: set,   target: maya/head, property: y, value: -10, at: 3.0 }
+```
+
+```dialogue
+charlie [thinking]: Did you ever wonder why we always meet here?
+maya [amused]: Because the pigeons trust us.
+```
+```
+
+The `[emotion]` brackets on dialogue lines map to `_EMOTION_BROWS` in compile.py: `neutral / happy / sad / angry / surprised / skeptical / amused / thinking`. Other emotions silently fall through to neutral.
+
+---
+
+## 10. The four phases that haven't shipped yet
+
+The post-Phase-10 priority list (rough). Each is a meaningful jump in user-visible quality or capability.
+
+1. **Real character art pipeline.** Replace the placeholder rect rig with SVG character art loaded from `mall["characters"]/<id>/`. See `misc/docs/architecture_as_built.md` companion research prompt at `~/Downloads/an_character_art_research_prompt.md` for the open design questions.
+2. **Per-shot parallel rendering.** Currently shots render serially. Parallelizing across shots (and possibly within a shot via frame batches) could 4-8× throughput on multi-core machines.
+3. **Live preview.** A small `an preview <dir>` that opens the runtime HTML in a browser pointing at the current scene JSON, with hot-reload on `scene.md` save. Lets the director iterate visually without re-rendering for every tweak.
+4. **Asset promotion.** `an.assets.promote(scene='park.md', entity='maya', as_='maya-v1')` — copy a scene-inlined character into `mall["characters"]/maya-v1/` with a stable id so it's reusable. The descriptor shape needs to grow to support real art (mouth set, eye-blink set, hair, optional skin variants).
+
+---
+
+## 11. Test architecture
+
+303 tests passing (and growing). Layered:
+
+- **Doctests** in module docstrings cover the public API of each module (composition flatten times, transform decompose, easing endpoints, etc.).
+- **Pytest** for cross-cutting checks: store roundtrips, IR migration chaining, sync flip-flop regression, mall conformance, multi-shot concat audio, multi-character render distinct.
+- **Live API tests** (skip-if-key-missing) for `ElevenLabsTTS`, `WhisperLipSync` (skip-if-faster-whisper-missing), `VisionLMVerifier` (skip-if-anthropic-missing-or-no-key), `iterate()` (skip-if-anthropic-missing-or-no-key).
+- **End-to-end render tests** (skip-if-ffmpeg-or-chromium-missing) that produce real mp4s and assert structural properties (audio stream present, frames change, characters distinct).
+
+The project's CI runs the offline subset; a developer machine with all dependencies installed runs the full suite (~70s).
+
+---
+
+## 12. References to the design space
+
+The seven research reports next to this file describe the design space:
+
+- `report 0 - Text-to-Structured-Animation.md` — orchestrator architecture, IR layering, MoVer-style verification (the spec's spine)
+- `report 1 - The 2D cutout animation ecosystem...md` — JS-side ecosystem survey (PixiJS chosen)
+- `report 2 - Animation interchange formats...md` — schema-level analysis of 12 animation formats (informed the IR shape)
+- `report 3 - Facial Animation, Lip Sync & Expression Systems...md` — viseme conventions, Rhubarb, Cohen-Massaro
+- `report 5 - Scene Graph Architecture & Animation System Design Patterns.md` — Python sketch for the cutout backend (closest to what was actually built)
+- `dsl_design_patterns_report.md` — DSL design (informed the Pydantic IR + composition primitives)
+- `Annotation systems...md` — interval data structures, rational time, A/V sync
+
+When a subsystem is being extended, read the matching report before designing.
