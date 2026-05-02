@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.pipeline &mdash; an 0.1.6 documentation</title>
+  <title>an.audio.pipeline &mdash; an 0.1.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=6e0256f3"></script>
+      <script src="../../../_static/documentation_options.js?v=ca7ad2ea"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -342,13 +342,56 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_wav_duration</span><span class="p">(</span><span class="n">wav_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compatibility shim: duration of cached audio bytes.</span>
+
+<span class="sd">    Tries the stdlib `wave` module first (fast, no subprocess). Falls back to</span>
+<span class="sd">    ffprobe for non-WAV containers (mp3 from ElevenLabs etc.). Returns 0.0</span>
+<span class="sd">    if both fail; the renderer will still mux the audio fine because ffmpeg</span>
+<span class="sd">    sniffs format itself.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">wave</span>
 
-    <span class="k">with</span> <span class="n">wave</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">wav_bytes</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">wf</span><span class="p">:</span>
-        <span class="n">n</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">getnframes</span><span class="p">()</span>
-        <span class="n">rate</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">getframerate</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">n</span> <span class="o">/</span> <span class="n">rate</span> <span class="k">if</span> <span class="n">rate</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">wave</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">wav_bytes</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">wf</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">getnframes</span><span class="p">()</span>
+            <span class="n">rate</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">getframerate</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">n</span> <span class="o">/</span> <span class="n">rate</span> <span class="k">if</span> <span class="n">rate</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">except</span> <span class="n">wave</span><span class="o">.</span><span class="n">Error</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_ffprobe_duration</span><span class="p">(</span><span class="n">wav_bytes</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ffprobe_duration</span><span class="p">(</span><span class="n">audio_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use ffprobe to read the duration of an arbitrary audio container.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ffprobe&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.bin&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="n">tmp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">audio_bytes</span><span class="p">)</span>
+        <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;ffprobe&quot;</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-show_entries&quot;</span><span class="p">,</span> <span class="s2">&quot;format=duration&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-of&quot;</span><span class="p">,</span> <span class="s2">&quot;default=noprint_wrappers=1:nokey=1&quot;</span><span class="p">,</span>
+                <span class="n">tmp_path</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">pass</span>
 </pre></div>
 
            </div>
