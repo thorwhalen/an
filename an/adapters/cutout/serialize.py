@@ -52,7 +52,7 @@ class TransformJSON(_JSONModel):
 class VisualJSON(_JSONModel):
     """Drawable content attached to a node."""
 
-    kind: Literal["sprite", "rect"] = "rect"
+    kind: Literal["sprite", "rect", "ellipse", "mouth", "eye"] = "rect"
     texture_id: str | None = None
     width: float = 50.0
     height: float = 50.0

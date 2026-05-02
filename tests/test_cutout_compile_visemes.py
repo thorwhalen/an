@@ -107,4 +107,4 @@ def test_head_node_has_mouth_child():
     mouth = next((c for c in head.children if c.name == "mouth"), None)
     assert mouth is not None
     assert mouth.visual is not None
-    assert mouth.visual.kind == "rect"
+    assert mouth.visual.kind == "mouth"

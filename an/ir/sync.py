@@ -174,8 +174,21 @@ def _extract_yaml_block(text: str, label: str) -> dict[str, Any] | None:
     return None
 
 
+_DIALOGUE_LINE_RE = re.compile(
+    r"^\s*(?P<speaker>[\w-]+)(?:\s*\[(?P<emotion>[\w-]+)\])?\s*:\s*(?P<text>.*?)\s*$"
+)
+
+
 def _extract_dialogue_block(text: str) -> list[Dialogue]:
-    """Parse a ```dialogue block; each non-empty line is `speaker: text`."""
+    """Parse a ```dialogue block.
+
+    Each non-empty, non-comment line follows ``speaker[emotion]: text`` where
+    the bracketed emotion is optional. Examples:
+
+        charlie: Hello.
+        charlie [happy]: Hello!
+        maya [skeptical]: Sure.
+    """
     out: list[Dialogue] = []
     for m in _FENCE_RE.finditer(text):
         lang, _lbl, body = m.group(1), m.group(2), m.group(3)
@@ -185,10 +198,16 @@ def _extract_dialogue_block(text: str) -> list[Dialogue]:
             line = raw.strip()
             if not line or line.startswith("#"):
                 continue
-            if ":" not in line:
+            match = _DIALOGUE_LINE_RE.match(line)
+            if not match:
                 continue
-            speaker, text_after = line.split(":", 1)
-            out.append(Dialogue(speaker=speaker.strip(), text=text_after.strip()))
+            kwargs: dict[str, Any] = {
+                "speaker": match.group("speaker").strip(),
+                "text": match.group("text").strip(),
+            }
+            if match.group("emotion"):
+                kwargs["emotion"] = match.group("emotion").strip().lower()
+            out.append(Dialogue(**kwargs))
     return out
 
 
@@ -353,7 +372,10 @@ def ir_to_markdown(scene: SceneIR) -> str:
         if shot.dialogue:
             parts.append("```dialogue")
             for line in shot.dialogue:
-                parts.append(f"{line.speaker}: {line.text}")
+                if line.emotion:
+                    parts.append(f"{line.speaker} [{line.emotion}]: {line.text}")
+                else:
+                    parts.append(f"{line.speaker}: {line.text}")
             parts.append("```\n")
 
     return "\n".join(parts).rstrip() + "\n"

@@ -89,6 +89,23 @@ def _palette_for(entity_id: str) -> tuple[str, str, str]:
     return _CHARACTER_PALETTES[idx]
 
 
+# Cap viseme keyframe density to ~7Hz; reduces "twitchy" mouth at full speed.
+_MIN_VISEME_GAP_S: float = 0.14
+
+# Emotion → (left_brow_tilt, right_brow_tilt) in radians. Mirrored so the
+# brows look symmetric for happy/sad and asymmetric for surprise/skepticism.
+_EMOTION_BROWS: dict[str, tuple[float, float]] = {
+    "neutral": (0.0, 0.0),
+    "happy": (-0.15, 0.15),       # outer ends raised
+    "sad": (0.20, -0.20),         # inner ends raised, outer drops
+    "angry": (0.30, -0.30),       # furrowed
+    "surprised": (-0.25, 0.25),   # both up high
+    "skeptical": (-0.20, 0.10),   # one brow raised
+    "amused": (-0.10, 0.10),
+    "thinking": (0.10, 0.0),
+}
+
+
 def compile_shot(
     shot: Shot,
     mall: Mapping[str, Mapping] | None = None,
@@ -143,10 +160,15 @@ def _build_scene_root(shot: Shot, mall: Mapping[str, Mapping]) -> NodeJSON:
     """
     children: list[NodeJSON] = []
     characters_store = mall.get("characters") or {}
+    environments_store = mall.get("environments") or {}
     char_entities = [e for e in shot.entities if e.kind == "character"]
     n_chars = len(char_entities)
     char_positions = _layout_character_positions(n_chars)
     char_idx = 0
+    # Process environments first so they sit BEHIND characters in z-order.
+    for entity in shot.entities:
+        if entity.kind == "environment":
+            children.append(_build_environment_subtree(entity, environments_store))
     for entity in shot.entities:
         if entity.kind == "character":
             x = char_positions[char_idx]
@@ -154,8 +176,63 @@ def _build_scene_root(shot: Shot, mall: Mapping[str, Mapping]) -> NodeJSON:
             sub = _build_character_subtree(entity, characters_store)
             sub.transform.x = x
             children.append(sub)
-        # Other entity kinds (environment, prop) get sketched in later phases.
+        # Other entity kinds (prop) get sketched in later phases.
     return NodeJSON(name="root", children=children)
+
+
+# Environment presets — built-in named backdrops. A user-supplied environment
+# in the store can override fields by name (sky_color, ground_color, ground_y).
+_ENV_PRESETS: dict[str, dict[str, Any]] = {
+    "default": {"sky_color": "#cfe9ff", "ground_color": "#7cba6f", "ground_y": 100.0},
+    "park":    {"sky_color": "#a5d8ff", "ground_color": "#7cba6f", "ground_y": 110.0},
+    "indoor":  {"sky_color": "#f4e8c8", "ground_color": "#a07a4a", "ground_y": 120.0},
+    "night":   {"sky_color": "#1a2540", "ground_color": "#2c3e50", "ground_y": 110.0},
+    "sunset":  {"sky_color": "#f4a261", "ground_color": "#5b4b32", "ground_y": 110.0},
+}
+
+
+def _build_environment_subtree(entity: AssetRef, env_store: Mapping) -> NodeJSON:
+    """Backdrop: a sky band + a ground band, full canvas width.
+
+    Picks a preset by ``entity.ref`` (e.g. "park", "night"); the store
+    can override any of (sky_color, ground_color, ground_y) by ref.
+    """
+    preset_key = (entity.ref or "default").lower()
+    preset = dict(_ENV_PRESETS.get(preset_key, _ENV_PRESETS["default"]))
+    if entity.ref in env_store:
+        try:
+            override = env_store[entity.ref]
+            if isinstance(override, dict):
+                preset.update({k: v for k, v in override.items() if k in preset})
+        except KeyError:
+            pass
+    # Sky and ground are HUGE rects so they fill the canvas regardless of size.
+    # The runtime centers root at canvas/2 and applies camera scale, so 4000px
+    # wide rects will always cover.
+    huge = 4000.0
+    ground_y = float(preset["ground_y"])
+    sky_color = str(preset["sky_color"])
+    ground_color = str(preset["ground_color"])
+    return NodeJSON(
+        name=entity.id,
+        transform=TransformJSON(),
+        children=[
+            NodeJSON(
+                name="sky",
+                transform=TransformJSON(x=0.0, y=-huge / 2 + ground_y),
+                visual=VisualJSON(
+                    kind="rect", width=huge, height=huge, color=sky_color
+                ),
+            ),
+            NodeJSON(
+                name="ground",
+                transform=TransformJSON(x=0.0, y=huge / 2 + ground_y),
+                visual=VisualJSON(
+                    kind="rect", width=huge, height=huge, color=ground_color
+                ),
+            ),
+        ],
+    )
 
 
 def _layout_character_positions(n: int, *, spread: float = 220.0) -> list[float]:
@@ -209,12 +286,14 @@ def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> Nod
         geom = _PLACEHOLDER_PART_GEOMETRY.get(
             part, {"x": 0.0, "y": 0.0, "width": 50.0, "height": 50.0}
         )
+        # Head renders as a fleshier ellipse; everything else stays a rect.
+        kind = "ellipse" if part == "head" else "rect"
         children.append(
             NodeJSON(
                 name=part,
                 transform=TransformJSON(x=float(geom["x"]), y=float(geom["y"])),
                 visual=VisualJSON(
-                    kind="rect",
+                    kind=kind,
                     width=float(geom["width"]),
                     height=float(geom["height"]),
                     color=part_color.get(part, "#cccccc"),
@@ -228,29 +307,40 @@ def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> Nod
         children=children,
     )
     if "head" in parts:
-        # Head children: hair patch on top, two eyes, mouth (driven by the
-        # viseme channel). All are tiny PixiJS Graphics children of the head
-        # container, so they inherit head's transform automatically.
+        # Head children: hair on top, eyebrows above eyes, two eyes (white +
+        # pupil drawn together by the runtime when kind="eye"), mouth (viseme
+        # target — runtime draws curved lips per viseme code).
         for child in char_node.children:
             if child.name != "head":
                 continue
-            child.slots["mouth"] = SlotJSON(name="mouth", x=0, y=15)
-            # Hair: small horizontal band atop the head.
+            child.slots["mouth"] = SlotJSON(name="mouth", x=0, y=14)
+            # Hair: rounded band atop the head.
             child.children.append(
                 NodeJSON(
                     name="hair",
-                    transform=TransformJSON(x=0.0, y=-22.0),
-                    visual=VisualJSON(kind="rect", width=44.0, height=10.0, color=hair),
+                    transform=TransformJSON(x=0.0, y=-20.0),
+                    visual=VisualJSON(kind="ellipse", width=46.0, height=18.0, color=hair),
                 )
             )
-            # Eyes: two small dark squares.
+            # Eyebrows: small dark rects above each eye; rotation = expression.
+            for brow_name, bx in (("left_brow", -10.0), ("right_brow", 10.0)):
+                child.children.append(
+                    NodeJSON(
+                        name=brow_name,
+                        transform=TransformJSON(x=bx, y=-10.0),
+                        visual=VisualJSON(
+                            kind="rect", width=10.0, height=2.5, color=hair,
+                        ),
+                    )
+                )
+            # Eyes: white sclera + dark pupil drawn together by makeEye.
             for eye_name, ex in (("left_eye", -10.0), ("right_eye", 10.0)):
                 child.children.append(
                     NodeJSON(
                         name=eye_name,
                         transform=TransformJSON(x=ex, y=-3.0),
                         visual=VisualJSON(
-                            kind="rect", width=6.0, height=6.0, color="#1a1a1a"
+                            kind="eye", width=10.0, height=8.0, color="#1a1a1a"
                         ),
                     )
                 )
@@ -258,9 +348,9 @@ def _build_character_subtree(entity: AssetRef, characters_store: Mapping) -> Nod
             child.children.append(
                 NodeJSON(
                     name="mouth",
-                    transform=TransformJSON(x=0.0, y=15.0),
+                    transform=TransformJSON(x=0.0, y=14.0),
                     visual=VisualJSON(
-                        kind="rect", width=20.0, height=4.0, color="#552222"
+                        kind="mouth", width=22.0, height=4.0, color="#552222"
                     ),
                 )
             )
@@ -431,13 +521,19 @@ def _add_viseme_clips(
         target = f"{speaker}/head/mouth"
         anim_id = f"__viseme__{shot.id}_{i}"
 
-        # Build keyframes: every viseme keyframe with step easing.
-        # Pin the first keyframe at time 0 (channel-local) and the last at the
-        # line's duration so the channel covers the full window.
+        # Build viseme keyframes (step-easing) — but cap density so adjacent
+        # keyframes are at least _MIN_VISEME_GAP_S apart. Reduces the
+        # "twitchy" look of per-character distribution at high densities.
+        raw = [(float(kf.time), str(kf.viseme)) for kf in line.viseme_track.keyframes]
+        condensed: list[tuple[float, str]] = []
+        for t, v in raw:
+            if condensed and (t - condensed[-1][0]) < _MIN_VISEME_GAP_S:
+                continue
+            condensed.append((t, v))
         kfs: list[KeyframeJSON] = []
-        for j, kf in enumerate(line.viseme_track.keyframes):
-            t = max(0.0, min(line.duration, float(kf.time)))
-            kfs.append(KeyframeJSON(time=t, value=kf.viseme, easing="step"))
+        for t, v in condensed:
+            t = max(0.0, min(line.duration, t))
+            kfs.append(KeyframeJSON(time=t, value=v, easing="step"))
         # Always end with rest so the mouth closes when the line stops.
         if kfs and kfs[-1].time < line.duration:
             kfs.append(KeyframeJSON(time=line.duration, value="X", easing="step"))
@@ -461,6 +557,35 @@ def _add_viseme_clips(
             tracks.append(track)
             track_lookup[speaker] = track
         track.clips.append(placed)
+
+        # Emotion-driven eyebrow expression — set both brows' rotation while
+        # the line is active, restore to neutral at the end.
+        emotion = (line.emotion or "").lower().strip()
+        if emotion in _EMOTION_BROWS:
+            tilt_l, tilt_r = _EMOTION_BROWS[emotion]
+            for brow_name, tilt in (("left_brow", tilt_l), ("right_brow", tilt_r)):
+                emo_anim_id = f"__emo__{shot.id}_{i}_{brow_name}"
+                animations[emo_anim_id] = AnimationClipJSON(
+                    name=emo_anim_id,
+                    duration=line.duration,
+                    channels=[
+                        ChannelJSON(
+                            target=f"{speaker}/head/{brow_name}",
+                            property="rotation",
+                            keyframes=[
+                                KeyframeJSON(time=0.0, value=tilt, easing="step"),
+                                KeyframeJSON(time=line.duration, value=0.0, easing="step"),
+                            ],
+                        )
+                    ],
+                )
+                track.clips.append(
+                    PlacedClipJSON(
+                        animation_id=emo_anim_id,
+                        start_time=float(line.start),
+                        duration=float(line.duration),
+                    )
+                )
 
 
 # -----------------------------------------------------------------------------

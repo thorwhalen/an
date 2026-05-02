@@ -29,6 +29,10 @@ camera:
 ```
 
 ```yaml entities
+- kind: environment
+  id: park_bg
+  store: environments
+  ref: park
 - kind: character
   id: charlie
   store: characters
@@ -40,7 +44,7 @@ camera:
 ```
 
 ```dialogue
-charlie: Did you ever wonder why we always meet here?
+charlie [thinking]: Did you ever wonder why we always meet here?
 ```
 
 ## Shot s2 (cutout)
@@ -61,6 +65,10 @@ camera:
 ```
 
 ```yaml entities
+- kind: environment
+  id: park_bg
+  store: environments
+  ref: park
 - kind: character
   id: charlie
   store: characters
@@ -72,5 +80,5 @@ camera:
 ```
 
 ```dialogue
-maya: Because the pigeons trust us.
+maya [amused]: Because the pigeons trust us.
 ```
