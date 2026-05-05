@@ -107,21 +107,31 @@ def produce_audio_for_scene(
                     "transcript": line.text,
                 }
             )
+            audio_store = mall.get("audio") if mall is not None else None
+            viseme_store = mall.get("visemes") if mall is not None else None
             already_done = (
                 line.audio_ref == expected_audio_ref
                 and line.viseme_ref == expected_viseme_ref
                 and line.viseme_track is not None
                 and line.duration is not None
+                and (audio_store is None or expected_audio_ref in audio_store)
+                and (viseme_store is None or expected_viseme_ref in viseme_store)
             )
             if already_done:
                 cursor = (line.start or cursor) + line.duration
                 continue
             # Either never synthesized, or providers changed → full re-synth.
+            # If `audio_ref` was previously set (i.e. this is a re-synth, not
+            # a first-time synth), reset start to the running cursor: the
+            # stale start was computed against different audio durations and
+            # reusing it would overlap neighbours. First-time synth respects
+            # a user-supplied start.
+            was_synthesized = line.audio_ref is not None
             audio, track = produce_audio_for_dialogue(
                 line, mall, tts=tts, lipsync=lipsync
             )
             line.duration = audio.duration
-            if line.start is None:
+            if was_synthesized or line.start is None:
                 line.start = cursor
             line.viseme_track = _to_ir_viseme_track(track)
             line.audio_ref = expected_audio_ref

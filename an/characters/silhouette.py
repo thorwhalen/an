@@ -24,6 +24,22 @@ from pathlib import Path
 from typing import Any
 
 
+def _strip_xml_decl(svg: str) -> str:
+    """Strip a leading ``<?xml ...?>`` declaration so the SVG can be inlined.
+
+    >>> _strip_xml_decl('<?xml version="1.0"?>\\n<svg/>')
+    '<svg/>'
+    >>> _strip_xml_decl('<svg/>')
+    '<svg/>'
+    """
+    s = svg.lstrip()
+    if s.startswith("<?xml"):
+        end = s.find("?>")
+        if end != -1:
+            s = s[end + 2 :].lstrip()
+    return s
+
+
 def _ensure_pil() -> Any:
     try:
         from PIL import Image, ImageOps
@@ -68,20 +84,32 @@ def render_silhouette(
     out = Path(out_png)
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    html = (
-        "<!doctype html><html><head><style>"
-        "html,body{margin:0;padding:0;background:transparent;}"
-        "img{display:block;width:100%;height:100%;object-fit:contain;}"
-        "</style></head><body>"
-        f'<img src="file://{svg_path}"/>'
-        "</body></html>"
-    )
-
+    # Navigate directly to the SVG via file:// — Chromium renders SVG
+    # documents natively, including any nested <svg>, <mask>, <use>
+    # references. This sidesteps the cross-origin block that would
+    # silently empty the screenshot when loading via <img src="file://...">
+    # inside a set_content() page.
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": width, "height": height})
-        page.set_content(html)
+        page.goto(svg_path.as_uri())
         page.wait_for_load_state("networkidle")
+        # The SVG document fills its viewBox; we want the rendered art
+        # box at the requested size. Setting the root <svg> to
+        # width=100% height=100% via DOM, then screenshotting at viewport
+        # size, gives us a tight silhouette.
+        page.evaluate(
+            "() => {"
+            "const s = document.querySelector('svg');"
+            "if (s) {"
+            "  s.setAttribute('width', '100%');"
+            "  s.setAttribute('height', '100%');"
+            "}"
+            "if (document.body) document.body.style.margin = '0';"
+            "if (document.documentElement) "
+            "  document.documentElement.style.margin = '0';"
+            "}"
+        )
         png_bytes = page.screenshot(omit_background=True)
         browser.close()
 

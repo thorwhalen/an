@@ -17,6 +17,7 @@ from typing import Callable
 
 from an.audio.elevenlabs_tts import ElevenLabsTTS
 from an.audio.lipsync import LipSyncProvider
+from an.audio.mac_say_tts import MacSayTTS
 from an.audio.offline_lipsync import OfflineLipSync
 from an.audio.offline_tts import OfflineTTS
 from an.audio.rhubarb_lipsync import RhubarbLipSync
@@ -27,6 +28,7 @@ from an.audio.whisper_lipsync import WhisperLipSync
 TTS_FACTORIES: dict[str, Callable[[], TTSProvider]] = {
     "offline": lambda: OfflineTTS(),
     "elevenlabs": lambda: ElevenLabsTTS(),
+    "mac_say": lambda: MacSayTTS(),
 }
 
 LIPSYNC_FACTORIES: dict[str, Callable[[], LipSyncProvider]] = {

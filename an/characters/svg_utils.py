@@ -161,12 +161,94 @@ def extract_pivots(
     return pivots
 
 
-def extract_part(source: Any, part_id: str) -> ET.ElementTree:
+_DEFS_TAG = f"{{{SVG_NS}}}defs"
+_RECT_TAG = f"{{{SVG_NS}}}rect"
+_ELLIPSE_TAG = f"{{{SVG_NS}}}ellipse"
+_PATH_TAG = f"{{{SVG_NS}}}path"
+_PATH_NUMBER = re.compile(r"-?\d*\.?\d+(?:[eE][-+]?\d+)?")
+
+
+def _bbox_union(
+    a: tuple[float, float, float, float] | None,
+    b: tuple[float, float, float, float] | None,
+) -> tuple[float, float, float, float] | None:
+    """Union of two ``(x_min, y_min, x_max, y_max)`` bounding boxes."""
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return (min(a[0], b[0]), min(a[1], b[1]), max(a[2], b[2]), max(a[3], b[3]))
+
+
+def _element_bbox(
+    el: ET.Element,
+) -> tuple[float, float, float, float] | None:
+    """Approximate bbox of a primitive SVG element from its attributes.
+
+    Handles ``<rect>``, ``<circle>``, ``<ellipse>``, and ``<path>``. Path
+    bbox is derived from all numeric pairs in the ``d`` attribute — that
+    overestimates curves with off-curve control points, but the result is
+    safe (always contains the visible art) and sufficient for cropping.
+    Returns ``None`` for elements with no inferable bbox.
+    """
+    tag = el.tag
+
+    def _f(name: str, default: float = 0.0) -> float:
+        try:
+            return float(el.get(name, default))
+        except (TypeError, ValueError):
+            return default
+
+    if tag == _RECT_TAG:
+        x, y, w, h = _f("x"), _f("y"), _f("width"), _f("height")
+        return (x, y, x + w, y + h)
+    if tag == _CIRCLE_TAG:
+        cx, cy, r = _f("cx"), _f("cy"), _f("r")
+        return (cx - r, cy - r, cx + r, cy + r)
+    if tag == _ELLIPSE_TAG:
+        cx, cy, rx, ry = _f("cx"), _f("cy"), _f("rx"), _f("ry")
+        return (cx - rx, cy - ry, cx + rx, cy + ry)
+    if tag == _PATH_TAG:
+        d = el.get("d") or ""
+        nums = [float(n) for n in _PATH_NUMBER.findall(d)]
+        if len(nums) < 2:
+            return None
+        xs = nums[0::2]
+        ys = nums[1::2]
+        if not xs or not ys:
+            return None
+        return (min(xs), min(ys), max(xs), max(ys))
+    return None
+
+
+def _subtree_bbox(
+    el: ET.Element,
+) -> tuple[float, float, float, float] | None:
+    """Recursive bbox over all primitive descendants of ``el``."""
+    box = _element_bbox(el)
+    for child in el:
+        box = _bbox_union(box, _subtree_bbox(child))
+    return box
+
+
+def extract_part(
+    source: Any, part_id: str, *, crop_viewbox: bool = True, padding: float = 8.0
+) -> ET.ElementTree:
     """Emit a standalone SVG tree containing only the group with the given id.
 
-    The returned tree's root is a fresh ``<svg>`` whose ``viewBox`` matches
-    the source's. The matched group is appended unchanged. If no match is
-    found, raises :class:`KeyError`.
+    Any top-level ``<defs>`` from the source is copied so the part can
+    resolve gradient / pattern / filter references like
+    ``fill="url(#some_gradient)"``. The matched group is appended unchanged.
+
+    When ``crop_viewbox`` is True (the default), the new SVG's viewBox is
+    cropped to the bounding box of the part's primitive content (rect /
+    circle / ellipse / path) plus ``padding`` units on each side. This
+    ensures the part fills its display rectangle when sized by the
+    renderer; without it, a part drawn in a small region of a 1024×1024
+    character canvas would be displayed at a fraction of the available
+    pixels. Falls back to the source viewBox when no bbox can be derived.
+
+    If no match is found, raises :class:`KeyError`.
     """
     tree = _parse(source)
     root = tree.getroot()
@@ -175,23 +257,48 @@ def extract_part(source: Any, part_id: str) -> ET.ElementTree:
         raise KeyError(f"no <g id={part_id!r}> in source SVG")
 
     new_root = ET.Element(_SVG_TAG)
-    new_root.set("viewBox", root.get("viewBox") or "0 0 1024 1024")
+    src_viewbox = root.get("viewBox") or "0 0 1024 1024"
+    viewbox = src_viewbox
+    if crop_viewbox:
+        bbox = _subtree_bbox(target)
+        if bbox is not None:
+            x_min, y_min, x_max, y_max = bbox
+            x_min -= padding
+            y_min -= padding
+            x_max += padding
+            y_max += padding
+            w = max(x_max - x_min, 1.0)
+            h = max(y_max - y_min, 1.0)
+            viewbox = f"{x_min:.2f} {y_min:.2f} {w:.2f} {h:.2f}"
+    new_root.set("viewBox", viewbox)
     if root.get("width"):
         new_root.set("width", root.get("width"))
     if root.get("height"):
         new_root.set("height", root.get("height"))
-    # Deep-copy by serialize+parse so the new tree is independent.
+    for defs in root.findall(_DEFS_TAG):
+        new_root.append(ET.fromstring(ET.tostring(defs)))
     cloned = ET.fromstring(ET.tostring(target))
     new_root.append(cloned)
     return ET.ElementTree(new_root)
 
 
 def _find_by_id(root: ET.Element, target_id: str) -> ET.Element | None:
-    """Depth-first search for the first element whose ``id`` matches."""
-    for el in root.iter():
-        if el.get("id") == target_id:
+    """Depth-first search for the first element whose ``id`` matches.
+
+    A character's parts are always ``<g>`` groups; the matching ``id`` may
+    *also* appear on a skeleton pivot ``<circle>`` (e.g.
+    ``<circle id="head">``). Prefer the ``<g>`` so part extraction picks
+    up the art group, not the pivot point.
+    """
+    matches: list[ET.Element] = [
+        el for el in root.iter() if el.get("id") == target_id
+    ]
+    if not matches:
+        return None
+    for el in matches:
+        if el.tag == _G_TAG:
             return el
-    return None
+    return matches[0]
 
 
 def write_svg(

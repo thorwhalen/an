@@ -3,6 +3,48 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+## 2026-05-02
+
+- Promotion fixes (driven by building a `~/Downloads/an_examples` gallery):
+  `extract_part` now (a) preserves the source SVG's `<defs>` so promoted parts
+  can resolve `fill="url(#gradient_id)"` references, (b) prefers the
+  illustration `<g>` over a same-id skeleton `<circle>` so head / hip / etc.
+  no longer get sliced as the pivot dot, and (c) crops each part's viewBox to
+  the bounding box of its primitive content (rect / circle / ellipse / path)
+  plus a small padding, so a part drawn in a small region of a 1024×1024
+  character canvas now fills its allotted Pixi sprite rectangle.
+- `silhouette.render_silhouette` now `page.goto(file://…)` the SVG directly
+  instead of loading via `<img src="file://…">` from a `set_content()` page.
+  The latter is blocked by Chromium's cross-origin policy and silently
+  produced an empty screenshot. Hand-rigged characters now render real
+  silhouettes (DiceBear-wrapped avatars still produce body-only silhouettes
+  due to the nested-`<svg>` rasterization issue — separate follow-up).
+- `audio.pipeline.produce_audio_for_scene`: the `already_done` idempotency
+  check now also requires that the audio + viseme cache actually contain
+  the expected refs. Previously a stale `audio_ref` in `scene.json` (left
+  from a prior render) would short-circuit re-synthesis even after the
+  artifact cache had been cleared, silently leaving the rendered mp4
+  with no dialogue audio.
+- New `MacSayTTS` provider (`an.audio.mac_say_tts`) — wraps macOS's free
+  built-in `say` command into the `TTSProvider` Protocol. Registered in
+  `TTS_FACTORIES` under `"mac_say"` and re-exported from `an.audio`.
+  Audible, deterministic, fully offline, no API keys; `say -v ?` lists
+  voices; default voice is "Samantha". macOS-only — non-macOS callers
+  get a clear `MacSayTTSError`.
+- Re-rendered the full gallery with `--tts elevenlabs --lipsync whisper`
+  + a per-character voice mapping in `~/Downloads/an_examples/_lib/voices.py`
+  (Maya/Theo/Sage/etc. → distinct ElevenLabs voice IDs, stamped onto
+  each `Dialogue.voice_ref` before render). Word-aligned visemes track
+  the real speech.
+- `audio.pipeline.produce_audio_for_scene`: when a line is being
+  re-synthesized (its prior `audio_ref` was set but no longer matches),
+  reset `line.start` to the running cursor instead of keeping the stale
+  value. Stale starts were computed against different audio durations
+  and reusing them caused dialogue to overlap neighbours when a
+  provider switch produced longer speech (offline → ElevenLabs).
+  First-time synth still respects a user-supplied start.
+- All 296 tests still pass.
+
 ## 2026-05-01
 
 - Phase 1 substrate landed: Scene IR (Pydantic + composition combinators + flatten + validate + migrate + sync), dol-backed project mall (characters, environments, voices, styles, scenes, artifacts, decisions), Renderer / TTSProvider / LipSyncProvider / Verifier protocols, project init/load/save, argh-based CLI (`an init / validate / sync / check`), `check_requirements` diagnostics, three project skills (`an`, `an-spec`, `an-dev`), example `park_bench_cartoon/` skeleton, tests with doctests + pytest.
