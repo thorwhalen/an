@@ -83,6 +83,9 @@ def orchestrate(
     output_name: str = "main",
     verifiers: Sequence[Verifier] | None = None,
     skip_render: bool = False,
+    tts: str | object = "offline",
+    lipsync: str | object = "offline",
+    parallel: int | str | None = None,
 ) -> OrchestratorReport:
     """Run the full pipeline. Returns a structured outcome.
 
@@ -95,6 +98,11 @@ def orchestrate(
     ``verifiers`` defaults to ``[LayoutLintVerifier()]``. Pass an empty list
     to skip verification, or include ``HumanInTheLoopVerifier()`` to prompt.
     ``skip_render=True`` runs validation + lint only.
+
+    ``tts`` and ``lipsync`` accept either a provider name string or a
+    provider instance — useful for callers (e.g. ``muvid``) that want
+    to inject a :class:`an.audio.WordTimingsLipSync` driven by their
+    own alignment store, instead of letting ``an`` re-transcribe.
     """
     report = OrchestratorReport()
     if verifiers is None:
@@ -128,7 +136,13 @@ def orchestrate(
 
     # --- 3. render ----------------------------------------------------------
     try:
-        report.output_path = _render_project(project_dir, output_name=output_name)
+        report.output_path = _render_project(
+            project_dir,
+            output_name=output_name,
+            tts=tts,
+            lipsync=lipsync,
+            parallel=parallel,
+        )
     except Exception as e:
         report.success = False
         report.error = f"render failed: {e!r}"
