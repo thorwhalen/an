@@ -16,12 +16,21 @@ without external services.
 """
 
 from an.audio.tts import TTSProvider, AudioClip, VoiceMeta
-from an.audio.lipsync import LipSyncProvider, Viseme, VisemeTrack
+from an.audio.lipsync import (
+    LipSyncProvider,
+    Viseme,
+    VisemeTrack,
+    WordTiming,
+    WordTimingProvider,
+    word_timings_to_visemes,
+)
 from an.audio.offline_tts import OfflineTTS
 from an.audio.offline_lipsync import OfflineLipSync
 from an.audio.elevenlabs_tts import ElevenLabsTTS
+from an.audio.mac_say_tts import MacSayTTS
 from an.audio.rhubarb_lipsync import RhubarbLipSync
 from an.audio.whisper_lipsync import WhisperLipSync
+from an.audio.injectable_lipsync import StaticWordTimings, WordTimingsLipSync
 from an.audio.pipeline import (
     default_tts,
     default_lipsync,
@@ -42,11 +51,17 @@ __all__ = [
     "LipSyncProvider",
     "Viseme",
     "VisemeTrack",
+    "WordTiming",
+    "WordTimingProvider",
+    "word_timings_to_visemes",
     "OfflineTTS",
     "OfflineLipSync",
     "ElevenLabsTTS",
+    "MacSayTTS",
     "RhubarbLipSync",
     "WhisperLipSync",
+    "StaticWordTimings",
+    "WordTimingsLipSync",
     "default_tts",
     "default_lipsync",
     "produce_audio_for_dialogue",

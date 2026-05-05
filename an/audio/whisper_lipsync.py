@@ -26,7 +26,13 @@ import tempfile
 from pathlib import Path
 from typing import Iterable
 
-from an.audio.lipsync import LipSyncProvider, Viseme, VisemeTrack
+from an.audio.lipsync import (
+    LipSyncProvider,
+    Viseme,
+    VisemeTrack,
+    WordTiming,
+    word_timings_to_visemes,
+)
 from an.audio.tts import AudioClip
 
 
@@ -107,10 +113,10 @@ class WhisperLipSync:
                 # an "initial prompt" to bias decoding toward the known text.
                 initial_prompt=transcript or None,
             )
-            words: list[tuple[float, float, str]] = []
+            words: list[WordTiming] = []
             for seg in segments:
                 for w in (seg.words or []):
-                    words.append((float(w.start), float(w.end), w.word))
+                    words.append((w.word, float(w.start), float(w.end)))
         finally:
             if cleanup is not None:
                 try:
@@ -119,53 +125,13 @@ class WhisperLipSync:
                     pass
 
         return VisemeTrack(
-            visemes=list(self._visemes_for_words(words, audio.duration)),
+            visemes=word_timings_to_visemes(
+                words,
+                total_duration=audio.duration,
+                char_to_viseme=self._mapping,
+                rest_viseme=_REST_VISEME,
+                min_gap_for_rest=_MIN_WORD_GAP_FOR_REST,
+            ),
             convention=self.convention,
             duration=audio.duration,
         )
-
-    def _visemes_for_words(
-        self, words: list[tuple[float, float, str]], total_duration: float
-    ) -> Iterable[Viseme]:
-        """Distribute visemes across word boundaries, with rest in gaps.
-
-        Times are clamped to ``[0, total_duration]`` since whisper occasionally
-        rounds word ends slightly past the audio's actual length.
-        """
-        max_t = max(0.0, total_duration if total_duration > 0 else 0.0)
-
-        def clamp(t: float) -> float:
-            return max(0.0, min(t, max_t))
-
-        yield Viseme(time=0.0, code=_REST_VISEME)
-        prev_end = 0.0
-        for w_start, w_end, raw_word in words:
-            w_start = clamp(w_start)
-            w_end = clamp(w_end)
-            # Insert a rest in the silent gap before this word (if wide enough).
-            if w_start - prev_end > _MIN_WORD_GAP_FOR_REST:
-                yield Viseme(time=clamp(prev_end + 0.05), code=_REST_VISEME)
-            codes = list(self._codes_for_word(raw_word))
-            if not codes:
-                prev_end = w_end
-                continue
-            n = len(codes)
-            duration = max(0.05, w_end - w_start)
-            step = duration / n
-            for i, code in enumerate(codes):
-                yield Viseme(time=clamp(w_start + i * step), code=code)
-            prev_end = w_end
-        # Trailing rest at the end.
-        yield Viseme(time=max_t, code=_REST_VISEME)
-
-    def _codes_for_word(self, word: str) -> Iterable[str]:
-        """Per-character viseme codes inside a single word, deduped."""
-        previous: str | None = None
-        for ch in word.lower().strip():
-            if not ch.isalpha():
-                continue
-            code = self._mapping.get(ch, "C")
-            if code == previous:
-                continue
-            previous = code
-            yield code
