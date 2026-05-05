@@ -167,13 +167,36 @@ The patches are validated against the schema and persisted; affected shots' cach
 | **Cutout backend** | `an.adapters.cutout.compile_shot` → `CutoutSceneJSON` → PixiJS v7 in headless Chromium → ffmpeg mux |
 | **Character rig** | Ellipse head + per-id palette (skin/clothing/hair) + eyebrows (emotion-driven) + white-sclera eyes (procedural blinks) + bezier-curved mouth (9 viseme shapes) |
 | **TTS Protocol** | `OfflineTTS` (silent placeholder), `ElevenLabsTTS` (real, needs `ELEVEN_API_KEY`) |
-| **Lip-sync Protocol** | `OfflineLipSync` (char-distribution), `WhisperLipSync` (word-aligned via faster-whisper), `RhubarbLipSync` (phoneme-aligned) |
+| **Lip-sync Protocol** | `OfflineLipSync` (char-distribution), `WhisperLipSync` (word-aligned via faster-whisper), `RhubarbLipSync` (phoneme-aligned), `WordTimingsLipSync` (driven by an injected `WordTimingProvider` — skip transcription entirely when the caller already has authoritative word timings) |
 | **Verifier Protocol** | `LayoutLintVerifier`, `MediaQualityVerifier`, `VisionLMVerifier` (Claude vision), `HumanInTheLoopVerifier` |
 | **Persistence** | dol-backed `MutableMapping`s organized into `build_project_mall(...)` |
 | **CLI** | `argh` dispatch over `an.tools._dispatch_funcs` (init / validate / sync / check / render / iterate) |
 | **Iterate loop** | `an.iterate` — Anthropic Opus 4.7 + adaptive thinking + structured JSON patches + path-based mutation + cache invalidation |
 
 For a deeper as-built reference (module-by-module map, control flows, key invariants, content-hash caching strategy), see [`misc/docs/architecture_as_built.md`](misc/docs/architecture_as_built.md). The seven research reports next to it cover the design space the system was built against.
+
+### Injecting word timings (no whisper redundancy)
+
+When the caller already has authoritative word-level alignment data
+(e.g. from a separate lyric-alignment pipeline), `an` can skip its
+own transcription pass entirely:
+
+```python
+from an.audio import StaticWordTimings, WordTimingsLipSync
+from an.orchestrate import orchestrate
+
+timings = [("hello", 0.5, 1.0), ("world", 1.2, 1.8), ...]
+lipsync = WordTimingsLipSync(StaticWordTimings(timings, label="my-aligner"))
+
+orchestrate("my-scene", lipsync=lipsync)
+```
+
+`orchestrate(..., tts=, lipsync=, parallel=)` accepts either provider
+name strings or instances. Plug in any `WordTimingProvider`
+(structural protocol with `name: str` and `words_for(audio,
+transcript=)` returning `(text, start, end)` tuples). `muvid` uses
+this hook to feed `lacing` alignment-store timings straight into the
+cutout pipeline.
 
 ---
 

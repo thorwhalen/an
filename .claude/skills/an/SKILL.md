@@ -37,9 +37,9 @@ Python surface (everything in `an.__all__`):
 - Sync: `markdown_to_ir`, `ir_to_markdown`.
 - Validation: `validate_schema`, `validate_semantic`.
 - Diagnostics: `check_requirements`.
-- Audio (in `an.audio`): `OfflineTTS`, `ElevenLabsTTS`, `OfflineLipSync`, `WhisperLipSync`, `RhubarbLipSync`, `produce_audio_for_scene`, `make_tts`, `make_lipsync`.
+- Audio (in `an.audio`): `OfflineTTS`, `ElevenLabsTTS`, `OfflineLipSync`, `WhisperLipSync`, `RhubarbLipSync`, `WordTimingsLipSync` + `StaticWordTimings` (inject pre-computed `(text, start, end)` tuples — skips transcription entirely), `produce_audio_for_scene`, `make_tts`, `make_lipsync`. The `WordTimingProvider` protocol is the structural contract; any object exposing `name: str` + `words_for(audio, transcript=)` works as a provider.
 - Verify (in `an.verify`): `LayoutLintVerifier`, `HumanInTheLoopVerifier`, `MediaQualityVerifier`, `VisionLMVerifier`.
-- Orchestrate (in `an.orchestrate`): `orchestrate(project_dir, ...) -> OrchestratorReport`, `iterate(project_dir, instruction) -> IterateResult`.
+- Orchestrate (in `an.orchestrate`): `orchestrate(project_dir, *, tts="offline", lipsync="offline", parallel=None, ...) -> OrchestratorReport`, `iterate(project_dir, instruction) -> IterateResult`. `tts` and `lipsync` accept either provider-name strings or instances — pass a `WordTimingsLipSync(...)` to inject pre-computed timings instead of running whisper.
 
 Backends registered: `cutout` (real, with face rig + emotion-driven eyebrows + procedural blinks + bezier mouth shapes per viseme + environment backdrops), `manim` (works if `manim` installed), `remotion` (skeleton), `whiteboard` (stub).
 
