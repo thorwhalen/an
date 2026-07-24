@@ -1,0 +1,644 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.iterate &mdash; an 0.1.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=22607128"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.iterate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.iterate</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Iterative edit loop — free-text instruction → IR patch via Claude → re-render.</span>
+
+<span class="sd">Phase 10. The spec&#39;s signature user story:</span>
+
+<span class="sd">    &gt; &quot;I say &#39;make Maya&#39;s laugh longer and warmer.&#39; Claude Code edits the IR,</span>
+<span class="sd">    &gt; re-renders just the affected shot, and shows me the diff. I approve.&quot;</span>
+
+<span class="sd">This module turns a free-text instruction into a structured set of patches</span>
+<span class="sd">on the SceneIR JSON tree, validates them, applies them, persists, and (optionally)</span>
+<span class="sd">re-renders. The vision LM is Claude Opus 4.7 with adaptive thinking;</span>
+<span class="sd">``messages.parse()`` + a Pydantic schema guarantees the patches are valid</span>
+<span class="sd">JSON of the expected shape.</span>
+
+<span class="sd">Path syntax for patches: slash-delimited JSON-pointer-style. List indices</span>
+<span class="sd">are integers. Examples:</span>
+
+<span class="sd">    &quot;meta/title&quot;</span>
+<span class="sd">    &quot;timeline/0/duration&quot;</span>
+<span class="sd">    &quot;timeline/1/dialogue/0/text&quot;</span>
+<span class="sd">    &quot;timeline/1/dialogue/0/emotion&quot;</span>
+
+<span class="sd">Patch operations:</span>
+
+<span class="sd">    {&quot;op&quot;: &quot;set&quot;, &quot;path&quot;: &quot;...&quot;, &quot;value&quot;: ...}     # replace (or create) value</span>
+<span class="sd">    {&quot;op&quot;: &quot;append&quot;, &quot;path&quot;: &quot;...&quot;, &quot;value&quot;: ...}  # append to a list</span>
+<span class="sd">    {&quot;op&quot;: &quot;delete&quot;, &quot;path&quot;: &quot;...&quot;}                # remove an entry</span>
+
+<span class="sd">The orchestrator records each iteration in ``mall[&quot;decisions&quot;]`` so the</span>
+<span class="sd">agent can review what changed across runs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationReport</span><span class="p">,</span> <span class="n">validate_schema</span><span class="p">,</span> <span class="n">validate_semantic</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span><span class="p">,</span> <span class="n">load</span>
+
+
+<span class="n">_DEFAULT_MODEL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;claude-opus-4-7&quot;</span>
+<span class="n">_DEFAULT_MAX_TOKENS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span>
+
+
+<div class="viewcode-block" id="IterateError">
+<a class="viewcode-back" href="../../module_docs/an/iterate.html#an.iterate.IterateError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IterateError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when an iterate call cannot apply its proposed patches.&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Pydantic response schema — what we ask Claude to fill in.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="Patch">
+<a class="viewcode-back" href="../../module_docs/an/iterate.html#an.iterate.Patch">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Patch</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A single mutation against the SceneIR JSON tree.&quot;&quot;&quot;</span>
+
+    <span class="n">op</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;set&quot;</span><span class="p">,</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span> <span class="s2">&quot;delete&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Mutation kind: set/append a value, or delete an entry.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Slash-delimited path into the SceneIR. List indices are integers. &quot;</span>
+            <span class="s2">&quot;Examples: &#39;meta/title&#39;, &#39;timeline/0/duration&#39;, &quot;</span>
+            <span class="s2">&quot;&#39;timeline/1/dialogue/0/text&#39;, &#39;timeline/1/dialogue/0/emotion&#39;.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;New value for set/append. Omit (or use None) for delete. &quot;</span>
+            <span class="s2">&quot;Use the simplest type that fits the IR field.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="IterateResponse">
+<a class="viewcode-back" href="../../module_docs/an/iterate.html#an.iterate.IterateResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IterateResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Structured reply from Claude for a single iterate() call.&quot;&quot;&quot;</span>
+
+    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;One-sentence description of what changed and why.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">patches</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Patch</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Ordered list of patches to apply.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">affected_shots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Shot ids whose rendered output is invalidated by these patches. &quot;</span>
+            <span class="s2">&quot;Used by the caller to re-render only what changed.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># IterateResult — what iterate() returns to the caller.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="IterateResult">
+<a class="viewcode-back" href="../../module_docs/an/iterate.html#an.iterate.IterateResult">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">IterateResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Outcome of an iterate() call.&quot;&quot;&quot;</span>
+
+    <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">patches</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Patch</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">affected_shots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">new_scene</span><span class="p">:</span> <span class="n">SceneIR</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">validation</span><span class="p">:</span> <span class="n">ValidationReport</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">error</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># System prompt — stable, cacheable.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="n">_SYSTEM_PROMPT</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;You are an animation director&#39;s assistant. The user is iterating</span>
+<span class="s2">on a scene; you receive the scene&#39;s current state (a JSON-shaped IR) and a free-text</span>
+<span class="s2">instruction, and you reply with a structured patch on that JSON tree.</span>
+
+<span class="s2">The IR shape (relevant fields):</span>
+
+<span class="s2">  - meta: {title, author, duration, fps, resolution, default_style, notes}</span>
+<span class="s2">  - timeline: a list of shots, each with:</span>
+<span class="s2">      - id (string, unique)</span>
+<span class="s2">      - style (&quot;cutout&quot; | &quot;manim&quot; | &quot;motion_graphics&quot; | &quot;whiteboard&quot;)</span>
+<span class="s2">      - duration (seconds, float)</span>
+<span class="s2">      - camera: {move: &quot;hold&quot;|&quot;push_in&quot;|&quot;pull_out&quot;|&quot;zoom_in&quot;|&quot;zoom_out&quot;, ...}</span>
+<span class="s2">      - entities: list of {kind, id, store, ref, ...}</span>
+<span class="s2">      - actions: list of action dicts (kind ∈ {tween, set, play, sequence, parallel, delay, loop})</span>
+<span class="s2">      - dialogue: list of {speaker, text, emotion, voice_ref, start, duration, ...}</span>
+<span class="s2">      - narration: list (same shape as dialogue, no speaker pin)</span>
+
+<span class="s2">Path syntax for patches: slash-delimited, list indices are integers. Examples:</span>
+
+<span class="s2">  &quot;meta/title&quot;                              → top-level meta field</span>
+<span class="s2">  &quot;timeline/0/duration&quot;                     → first shot&#39;s duration</span>
+<span class="s2">  &quot;timeline/1/dialogue/0/text&quot;              → second shot, first dialogue line, text</span>
+<span class="s2">  &quot;timeline/1/dialogue/0/emotion&quot;           → set the emotion (&quot;happy&quot; | &quot;sad&quot; | &quot;angry&quot;</span>
+<span class="s2">                                              | &quot;surprised&quot; | &quot;skeptical&quot; | &quot;amused&quot;</span>
+<span class="s2">                                              | &quot;thinking&quot; | &quot;neutral&quot;)</span>
+
+<span class="s2">Patch operations:</span>
+
+<span class="s2">  {&quot;op&quot;: &quot;set&quot;, &quot;path&quot;: &quot;...&quot;, &quot;value&quot;: ...}       — replace/create a value</span>
+<span class="s2">  {&quot;op&quot;: &quot;append&quot;, &quot;path&quot;: &quot;...&quot;, &quot;value&quot;: ...}    — append to a list</span>
+<span class="s2">  {&quot;op&quot;: &quot;delete&quot;, &quot;path&quot;: &quot;...&quot;}                  — remove an entry</span>
+
+<span class="s2">Rules:</span>
+<span class="s2">  1. Make the SMALLEST set of patches that fulfills the instruction. Don&#39;t reflow</span>
+<span class="s2">     the whole scene if one field will do.</span>
+<span class="s2">  2. Preserve shot ids unless the user explicitly asks to rename one.</span>
+<span class="s2">  3. When changing a dialogue line&#39;s text, also update its `emotion` if the new</span>
+<span class="s2">     wording suggests a different mood.</span>
+<span class="s2">  4. When extending a dialogue line meaningfully, you may extend the parent shot&#39;s</span>
+<span class="s2">     duration (set timeline/N/duration) so the line fits.</span>
+<span class="s2">  5. Populate affected_shots with the ids of every shot whose render needs to be</span>
+<span class="s2">     redone (i.e. any shot you patched).</span>
+<span class="s2">  6. Do not invent new fields. Keep emotion values inside the allowed set.</span>
+<span class="s2">  7. Keep the summary short — one sentence.&quot;&quot;&quot;</span>
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># iterate() — the public entry point.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="iterate">
+<a class="viewcode-back" href="../../module_docs/an/iterate.html#an.iterate.iterate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">iterate</span><span class="p">(</span>
+    <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">instruction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">apply</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_DEFAULT_MODEL</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_DEFAULT_MAX_TOKENS</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IterateResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply a free-text instruction to the scene at ``project_dir``.</span>
+
+<span class="sd">    Steps:</span>
+<span class="sd">      1. Load the project.</span>
+<span class="sd">      2. Send the current scene + the instruction to Claude.</span>
+<span class="sd">      3. Parse the structured patch response.</span>
+<span class="sd">      4. Apply patches to a deep-copied IR; validate.</span>
+<span class="sd">      5. If valid and ``apply=True``, persist to mall[&quot;scenes&quot;][&quot;main&quot;] and</span>
+<span class="sd">         append to mall[&quot;decisions&quot;].</span>
+
+<span class="sd">    The caller is responsible for re-rendering. ``IterateResult.affected_shots``</span>
+<span class="sd">    enumerates which shots changed so the orchestrator can render only those.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ANTHROPIC_API_KEY&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span>
+            <span class="s2">&quot;iterate() requires ANTHROPIC_API_KEY in the environment. &quot;</span>
+            <span class="s2">&quot;Set it (and optionally `pip install anthropic` if not present), &quot;</span>
+            <span class="s2">&quot;then retry.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">anthropic</span>  <span class="c1"># noqa: F401  (lazy import; presence check)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span>
+            <span class="s2">&quot;iterate() requires the anthropic SDK. pip install anthropic&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="n">project</span><span class="p">:</span> <span class="n">Project</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">_call_claude</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span> <span class="n">instruction</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">)</span>
+
+    <span class="n">new_scene_dict</span> <span class="o">=</span> <span class="n">_apply_patches_to_ir</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">patches</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">new_scene</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">new_scene_dict</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">IterateResult</span><span class="p">(</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">summary</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">summary</span><span class="p">,</span>
+            <span class="n">patches</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">patches</span><span class="p">),</span>
+            <span class="n">affected_shots</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">affected_shots</span><span class="p">),</span>
+            <span class="n">error</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;patched IR failed schema validation: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">schema_report</span> <span class="o">=</span> <span class="n">validate_schema</span><span class="p">(</span><span class="n">new_scene</span><span class="p">)</span>
+    <span class="n">semantic_report</span> <span class="o">=</span> <span class="n">validate_semantic</span><span class="p">(</span>
+        <span class="n">new_scene</span><span class="p">,</span>
+        <span class="n">available_voices</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;voices&quot;</span><span class="p">),</span>
+        <span class="n">available_characters</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;characters&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">full_report</span> <span class="o">=</span> <span class="n">schema_report</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">semantic_report</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">IterateResult</span><span class="p">(</span>
+        <span class="n">success</span><span class="o">=</span><span class="n">full_report</span><span class="o">.</span><span class="n">passed</span><span class="p">,</span>
+        <span class="n">summary</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">summary</span><span class="p">,</span>
+        <span class="n">patches</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">patches</span><span class="p">),</span>
+        <span class="n">affected_shots</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">affected_shots</span><span class="p">),</span>
+        <span class="n">new_scene</span><span class="o">=</span><span class="n">new_scene</span><span class="p">,</span>
+        <span class="n">validation</span><span class="o">=</span><span class="n">full_report</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">full_report</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;validation failed on patched IR&quot;</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">if</span> <span class="n">apply</span><span class="p">:</span>
+        <span class="c1"># Invalidate any cached per-shot artifacts for affected shots so the</span>
+        <span class="c1"># next render regenerates them.</span>
+        <span class="k">for</span> <span class="n">shot_id</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">affected_shots</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">&quot;shots&quot;</span><span class="p">][</span><span class="n">shot_id</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">&quot;scenes&quot;</span><span class="p">][</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_scene</span>
+        <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">&quot;decisions&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;iterate&quot;</span><span class="p">,</span>
+            <span class="n">body</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;instruction&quot;</span><span class="p">:</span> <span class="n">instruction</span><span class="p">,</span>
+                <span class="s2">&quot;summary&quot;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">summary</span><span class="p">,</span>
+                <span class="s2">&quot;patches&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">patches</span><span class="p">],</span>
+                <span class="s2">&quot;affected_shots&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">affected_shots</span><span class="p">),</span>
+                <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Path-based patch application.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_patches_to_ir</span><span class="p">(</span>
+    <span class="n">scene</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">patches</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Patch</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply ``patches`` to a JSON-shaped copy of ``scene`` and return the dict.</span>
+
+<span class="sd">    The dict can then be re-validated via ``SceneIR.model_validate``. We</span>
+<span class="sd">    operate on the dict (not the Pydantic model) so we can freely add/remove</span>
+<span class="sd">    fields without fighting the schema&#39;s strictness on individual mutations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">patch</span> <span class="ow">in</span> <span class="n">patches</span><span class="p">:</span>
+        <span class="n">_apply_one</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">patch</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">doc</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_one</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">patch</span><span class="p">:</span> <span class="n">Patch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patch</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;empty patch path: </span><span class="si">{</span><span class="n">patch</span><span class="o">.</span><span class="n">path</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">patch</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;set&quot;</span><span class="p">:</span>
+        <span class="n">parent</span><span class="p">,</span> <span class="n">last</span> <span class="o">=</span> <span class="n">_walk_to_parent</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">parts</span><span class="p">)</span>
+        <span class="n">_set_at</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">last</span><span class="p">,</span> <span class="n">patch</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">patch</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;append&quot;</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">_walk</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">parts</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;append target </span><span class="si">{</span><span class="n">patch</span><span class="o">.</span><span class="n">path</span><span class="si">!r}</span><span class="s2"> is not a list (got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">patch</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;delete&quot;</span><span class="p">:</span>
+        <span class="n">parent</span><span class="p">,</span> <span class="n">last</span> <span class="o">=</span> <span class="n">_walk_to_parent</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">parts</span><span class="p">)</span>
+        <span class="n">_del_at</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">last</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown patch op: </span><span class="si">{</span><span class="n">patch</span><span class="o">.</span><span class="n">op</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_walk</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="n">cur</span> <span class="o">=</span> <span class="n">doc</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">_step</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cur</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_walk_to_parent</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">_walk</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">parts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">parent</span><span class="p">,</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_step</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">node</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bad list index </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;missing key </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2"> in dict&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;can&#39;t traverse into </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with key </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_at</span><span class="p">(</span><span class="n">parent</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">parent</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bad list index for set </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">parent</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;can&#39;t set into </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_del_at</span><span class="p">(</span><span class="n">parent</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">parent</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;bad list index for delete </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parent</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;can&#39;t delete missing key </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">parent</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;can&#39;t delete from </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Anthropic call.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_call_claude</span><span class="p">(</span>
+    <span class="n">scene</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">,</span>
+    <span class="n">instruction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IterateResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Send the scene + instruction to Claude. Returns a parsed IterateResponse.</span>
+
+<span class="sd">    Uses plain ``messages.create`` (SDK-version-agnostic) with a strict</span>
+<span class="sd">    &quot;reply with JSON only&quot; instruction, then parses leniently — same shape</span>
+<span class="sd">    as the VisionLMVerifier&#39;s reply parser.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">anthropic</span>
+
+    <span class="n">client</span> <span class="o">=</span> <span class="n">anthropic</span><span class="o">.</span><span class="n">Anthropic</span><span class="p">()</span>
+    <span class="n">scene_repr</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">schema_hint</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">IterateResponse</span><span class="o">.</span><span class="n">model_json_schema</span><span class="p">(),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">closing</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;Reply ONLY with a JSON object that conforms to this schema. No prose, &quot;</span>
+        <span class="s2">&quot;no markdown fences, no ```json — just the raw object:</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">schema_hint</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># The scene + schema hint are the stable, cacheable parts; the instruction</span>
+    <span class="c1"># varies per call.</span>
+    <span class="n">user_content</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Current scene IR (JSON):</span><span class="se">\n</span><span class="s2">```json</span><span class="se">\n</span><span class="si">{</span><span class="n">scene_repr</span><span class="si">}</span><span class="se">\n</span><span class="s2">```&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">closing</span><span class="p">,</span>
+            <span class="s2">&quot;cache_control&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ephemeral&quot;</span><span class="p">},</span>
+        <span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Instruction: </span><span class="si">{</span><span class="n">instruction</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">},</span>
+    <span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+            <span class="n">thinking</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;adaptive&quot;</span><span class="p">},</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">user_content</span><span class="p">}],</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">anthropic</span><span class="o">.</span><span class="n">APIStatusError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Anthropic API call failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">b</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Claude returned no text content (stop_reason=</span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">stop_reason</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_parse_iterate_response</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_iterate_response</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IterateResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lenient JSON parser — pull the IterateResponse object from a reply.</span>
+
+<span class="sd">    Strips ``` fences, finds the outermost ``{ ... }`` envelope, validates</span>
+<span class="sd">    against the Pydantic model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+    <span class="c1"># Strip fences.</span>
+    <span class="n">fence</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;```(?:json)?\s*({.*?})\s*```&quot;</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">fence</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">fence</span> <span class="k">else</span> <span class="n">body</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Claude reply contained no JSON object: </span><span class="si">{</span><span class="n">body</span><span class="p">[:</span><span class="mi">200</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;could not parse JSON from Claude reply: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">IterateResponse</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">IterateError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Claude reply did not match expected shape: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
