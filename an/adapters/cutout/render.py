@@ -164,9 +164,7 @@ def _serve_dir(directory: Path) -> Iterator[str]:
         def __init__(self, *a: Any, **kw: Any) -> None:
             super().__init__(*a, directory=str(directory), **kw)
 
-        def log_message(
-            self, format: str, *args: Any
-        ) -> None:  # noqa: A002, ARG002
+        def log_message(self, format: str, *args: Any) -> None:  # noqa: A002, ARG002
             return  # silence access logs
 
     class _Server(socketserver.ThreadingTCPServer):
@@ -254,7 +252,7 @@ def _stage_character_assets(
             continue
         # src like "characters/<ref>/parts/head.svg" → strip "characters/"
         # to get the path relative to the characters root.
-        rel_in_store = src_rel[len("characters/"):]
+        rel_in_store = src_rel[len("characters/") :]
         source = Path(chars_root) / rel_in_store
         if not source.exists():
             continue

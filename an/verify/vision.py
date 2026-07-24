@@ -76,21 +76,15 @@ class VisionLMVerifier:
     def verify(self, ir: SceneIR, render: RenderResult | None) -> VerificationReport:
         report = VerificationReport()
         if render is None or not render.mp4_path or not render.mp4_path.exists():
-            report.add(
-                "info", "<vision_lm>", "no render result; skipping vision check"
-            )
+            report.add("info", "<vision_lm>", "no render result; skipping vision check")
             return report
         if self.api_key is None:
-            report.add(
-                "info", "<vision_lm>", "ANTHROPIC_API_KEY not set; skipping"
-            )
+            report.add("info", "<vision_lm>", "ANTHROPIC_API_KEY not set; skipping")
             return report
         try:
             import anthropic  # type: ignore
         except ImportError:
-            report.add(
-                "info", "<vision_lm>", "anthropic SDK not installed; skipping"
-            )
+            report.add("info", "<vision_lm>", "anthropic SDK not installed; skipping")
             return report
 
         # Sample N frames roughly evenly distributed across the render.
@@ -102,9 +96,7 @@ class VisionLMVerifier:
                 step = len(frames) / self.frame_count
                 frames = [frames[int(i * step)] for i in range(self.frame_count)]
             if not frames:
-                report.add(
-                    "info", "<vision_lm>", "no frames extracted; skipping"
-                )
+                report.add("info", "<vision_lm>", "no frames extracted; skipping")
                 return report
 
             content_blocks: list[dict] = []

@@ -209,7 +209,9 @@ def iterate(
         ) from e
 
     project: Project = load(project_dir)
-    response = _call_claude(project.scene, instruction, model=model, max_tokens=max_tokens)
+    response = _call_claude(
+        project.scene, instruction, model=model, max_tokens=max_tokens
+    )
 
     new_scene_dict = _apply_patches_to_ir(project.scene, response.patches)
     try:
@@ -271,9 +273,7 @@ def iterate(
 # -----------------------------------------------------------------------------
 
 
-def _apply_patches_to_ir(
-    scene: SceneIR, patches: list[Patch]
-) -> dict[str, Any]:
+def _apply_patches_to_ir(scene: SceneIR, patches: list[Patch]) -> dict[str, Any]:
     """Apply ``patches`` to a JSON-shaped copy of ``scene`` and return the dict.
 
     The dict can then be re-validated via ``SceneIR.model_validate``. We

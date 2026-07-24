@@ -49,9 +49,16 @@ def detect_silence(
     (silence at the start/end of a shot when speech was expected).
     """
     cmd = [
-        "ffmpeg", "-hide_banner", "-nostats", "-i", str(media_path),
-        "-af", f"silencedetect=noise={noise_db}dB:d={min_duration_s}",
-        "-f", "null", "-",
+        "ffmpeg",
+        "-hide_banner",
+        "-nostats",
+        "-i",
+        str(media_path),
+        "-af",
+        f"silencedetect=noise={noise_db}dB:d={min_duration_s}",
+        "-f",
+        "null",
+        "-",
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     text = result.stderr
@@ -70,8 +77,16 @@ def detect_silence(
 def audio_volume(media_path: str | Path) -> dict[str, float]:
     """Return dict with mean_db and max_db of the media's audio stream."""
     cmd = [
-        "ffmpeg", "-hide_banner", "-nostats", "-i", str(media_path),
-        "-af", "volumedetect", "-f", "null", "-",
+        "ffmpeg",
+        "-hide_banner",
+        "-nostats",
+        "-i",
+        str(media_path),
+        "-af",
+        "volumedetect",
+        "-f",
+        "null",
+        "-",
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     text = result.stderr
@@ -88,8 +103,14 @@ def audio_volume(media_path: str | Path) -> dict[str, float]:
 def _media_duration(media_path: str | Path) -> float:
     """Return the media's duration in seconds via ffprobe."""
     cmd = [
-        "ffprobe", "-v", "error", "-show_entries", "format=duration",
-        "-of", "default=noprint_wrappers=1:nokey=1", str(media_path),
+        "ffprobe",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        str(media_path),
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     s = result.stdout.strip()
@@ -125,7 +146,7 @@ def ssim(a: np.ndarray, b: np.ndarray) -> float:
     c1 = (0.01) ** 2
     c2 = (0.03) ** 2
     num = (2 * mu_a * mu_b + c1) * (2 * cov + c2)
-    den = (mu_a ** 2 + mu_b ** 2 + c1) * (var_a + var_b + c2)
+    den = (mu_a**2 + mu_b**2 + c1) * (var_a + var_b + c2)
     if den == 0:
         return 1.0 if num == 0 else 0.0
     return float(num / den)
@@ -153,8 +174,15 @@ def extract_frames(
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     cmd = [
-        "ffmpeg", "-y", "-loglevel", "error", "-i", str(media_path),
-        "-vf", f"fps={fps}", str(out_dir / pattern),
+        "ffmpeg",
+        "-y",
+        "-loglevel",
+        "error",
+        "-i",
+        str(media_path),
+        "-vf",
+        f"fps={fps}",
+        str(out_dir / pattern),
     ]
     subprocess.run(cmd, check=True, capture_output=True)
     return sorted(out_dir.glob("frame_*.png"))

@@ -75,6 +75,7 @@ The two example mp4s in `examples/*/output/` (gitignored) show:
    from an.audio import ElevenLabsTTS
    from an.audio.pipeline import produce_audio_for_scene
    from an.project import load
+
    p = load("examples/park_bench_cartoon")
    produce_audio_for_scene(p.scene, p.mall, tts=ElevenLabsTTS())
    p.mall["scenes"]["main"] = p.scene

@@ -85,12 +85,14 @@ def compute_local_matrix(t: TransformParams) -> Matrix3x3:
     # 2. Rotate around pivot
     # 3. Scale around pivot
     # 4. Offset by -pivot to put the origin at the pivot
-    M = (translate(t.x, t.y)
-         @ translate(t.pivot_x, t.pivot_y)
-         @ rotate(t.angle)
-         @ scale(t.sx, t.sy)
-         @ skew(t.skew_x, t.skew_y)
-         @ translate(-t.pivot_x, -t.pivot_y))
+    M = (
+        translate(t.x, t.y)
+        @ translate(t.pivot_x, t.pivot_y)
+        @ rotate(t.angle)
+        @ scale(t.sx, t.sy)
+        @ skew(t.skew_x, t.skew_y)
+        @ translate(-t.pivot_x, -t.pivot_y)
+    )
     return M
 ```
 
@@ -133,11 +135,13 @@ def set_local_transform(self, transform):
     self._local_transform = transform
     self._invalidate()
 
+
 def _invalidate(self):
     if not self._dirty:
         self._dirty = True
         for child in self.children.values():
             child._invalidate()
+
 
 @property
 def world_transform(self):
@@ -191,9 +195,9 @@ For more advanced spatial queries (e.g., "which characters are within 100 pixels
 The scene graph can be presented as a `Mapping[str, Node]` where keys are slash-delimited paths:
 
 ```python
-scene["charlie"]                        # → Node (charlie root)
-scene["charlie/torso/left_arm/hand"]    # → Node (charlie's left hand)
-list(scene)                             # → ["charlie", "charlie/torso", ...]
+scene["charlie"]  # → Node (charlie root)
+scene["charlie/torso/left_arm/hand"]  # → Node (charlie's left hand)
+list(scene)  # → ["charlie", "charlie/torso", ...]
 ```
 
 This is a *flattened view* of the tree — it doesn't change the underlying tree structure, it just provides an alternative access pattern. This is analogous to how a filesystem can be accessed both as a tree (`os.walk`) and as a flat mapping of paths to files.
@@ -203,6 +207,7 @@ This is a *flattened view* of the tree — it doesn't change the underlying tree
 ```python
 from collections.abc import Mapping
 
+
 class SceneGraph(Mapping):
     """A Mapping view over a scene tree, keyed by slash-separated paths."""
 
@@ -211,7 +216,7 @@ class SceneGraph(Mapping):
 
     def __getitem__(self, path: str) -> Node:
         node = self._root
-        for part in path.split('/'):
+        for part in path.split("/"):
             try:
                 node = node.children[part]
             except KeyError:
@@ -220,7 +225,7 @@ class SceneGraph(Mapping):
 
     def __iter__(self):
         """Yield all paths in depth-first order."""
-        yield from self._iter_paths(self._root, prefix='')
+        yield from self._iter_paths(self._root, prefix="")
 
     def _iter_paths(self, node, prefix):
         for name, child in node.children.items():
@@ -491,13 +496,22 @@ The cubic bezier representation is powerful because it subsumes most common easi
 # Easing is just a Callable[[float], float]
 Easing = Callable[[float], float]
 
-def linear(t: float) -> float: return t
-def ease_in_quad(t: float) -> float: return t * t
+
+def linear(t: float) -> float:
+    return t
+
+
+def ease_in_quad(t: float) -> float:
+    return t * t
+
+
 def cubic_bezier(x1, y1, x2, y2) -> Easing:
     """Return an easing function for the given bezier control points."""
+
     def ease(t):
         # Solve for u, return y
         ...
+
     return ease
 ```
 
@@ -533,8 +547,7 @@ def evaluate_clip(clip, t):
     """Return a dict of {(target_path, property): value} at time t."""
     effective_t = apply_loop_mode(t, clip.duration, clip.loop_mode)
     return {
-        (ch.target_path, ch.property): evaluate(ch, effective_t)
-        for ch in clip.channels
+        (ch.target_path, ch.property): evaluate(ch, effective_t) for ch in clip.channels
     }
 ```
 
@@ -622,7 +635,7 @@ def update(state_machine, dt):
     sm = state_machine
     # Check transitions from current state
     for transition in sm.transitions:
-        if transition.from_state in (sm.current_state, '*'):
+        if transition.from_state in (sm.current_state, "*"):
             if all(evaluate_condition(c, sm.parameters) for c in transition.conditions):
                 sm.begin_transition(transition)
                 break
@@ -892,10 +905,10 @@ The **director** is a high-level API that translates narrative-level commands in
 
 ```python
 director.sequence(
-    charlie.walk_to(x=200),          # generates a walk clip + position channel
+    charlie.walk_to(x=200),  # generates a walk clip + position channel
     charlie.say("Hello, how are you?"),  # generates lip sync clip + audio event
-    bob.react("surprise"),           # generates a facial expression clip
-    parallel(                        # these happen simultaneously
+    bob.react("surprise"),  # generates a facial expression clip
+    parallel(  # these happen simultaneously
         charlie.gesture("shrug"),
         bob.say("I'm fine!"),
     ),
@@ -922,8 +935,10 @@ class Action:
     duration: float
     generate: Callable[[float], List[PlacedClip]]  # start_time → clips
 
+
 def sequence(*actions: Action) -> Action:
     total_duration = sum(a.duration for a in actions)
+
     def generate(start_time):
         clips = []
         t = start_time
@@ -931,15 +946,19 @@ def sequence(*actions: Action) -> Action:
             clips.extend(action.generate(t))
             t += action.duration
         return clips
+
     return Action(duration=total_duration, generate=generate)
+
 
 def parallel(*actions: Action) -> Action:
     max_duration = max(a.duration for a in actions)
+
     def generate(start_time):
         clips = []
         for action in actions:
             clips.extend(action.generate(start_time))
         return clips
+
     return Action(duration=max_duration, generate=generate)
 ```
 
@@ -991,6 +1010,7 @@ The core `base` and `transform` modules are leaf dependencies. `easing` is also 
 from dataclasses import dataclass
 import numpy as np
 
+
 @dataclass(frozen=True)
 class Matrix3x3:
     """2D homogeneous affine transform as a 3x3 matrix.
@@ -999,31 +1019,33 @@ class Matrix3x3:
     >>> m @ Matrix3x3.translate(10, 20)
     Matrix3x3(...)
     """
+
     data: np.ndarray  # shape (3, 3)
 
     @classmethod
-    def identity(cls) -> 'Matrix3x3': ...
+    def identity(cls) -> "Matrix3x3": ...
     @classmethod
-    def translate(cls, tx: float, ty: float) -> 'Matrix3x3': ...
+    def translate(cls, tx: float, ty: float) -> "Matrix3x3": ...
     @classmethod
-    def rotate(cls, angle: float) -> 'Matrix3x3': ...
+    def rotate(cls, angle: float) -> "Matrix3x3": ...
     @classmethod
-    def scale(cls, sx: float, sy: float) -> 'Matrix3x3': ...
+    def scale(cls, sx: float, sy: float) -> "Matrix3x3": ...
 
-    def __matmul__(self, other: 'Matrix3x3') -> 'Matrix3x3':
+    def __matmul__(self, other: "Matrix3x3") -> "Matrix3x3":
         """Compose transforms: self @ other."""
         return Matrix3x3(self.data @ other.data)
 
-    def inverse(self) -> 'Matrix3x3': ...
-    def decompose(self) -> 'TransformParams': ...
+    def inverse(self) -> "Matrix3x3": ...
+    def decompose(self) -> "TransformParams": ...
 
 
 @dataclass
 class TransformParams:
     """Decomposed human-readable transform. This is what animators see/edit."""
+
     x: float = 0.0
     y: float = 0.0
-    rotation: float = 0.0      # radians
+    rotation: float = 0.0  # radians
     scale_x: float = 1.0
     scale_y: float = 1.0
     skew_x: float = 0.0
@@ -1042,28 +1064,35 @@ from dataclasses import dataclass, field
 from typing import Optional, Protocol, Dict
 from collections import OrderedDict
 
+
 class Visual(Protocol):
     """Anything that can be drawn."""
+
     def local_aabb(self) -> AABB: ...
     def contains(self, local_point: tuple[float, float]) -> bool: ...
+
 
 @dataclass
 class Sprite:
     """A rigid 2D image region. Implements Visual."""
+
     texture_id: str
     width: float
     height: float
-    anchor_x: float = 0.5   # normalized 0–1
+    anchor_x: float = 0.5  # normalized 0–1
     anchor_y: float = 0.5
+
 
 @dataclass
 class Mesh:
     """A deformable 2D mesh. Implements Visual."""
-    vertices: np.ndarray          # (N, 2) rest positions
-    triangles: np.ndarray         # (M, 3) triangle indices
-    uvs: np.ndarray               # (N, 2) texture coordinates
+
+    vertices: np.ndarray  # (N, 2) rest positions
+    triangles: np.ndarray  # (M, 3) triangle indices
+    uvs: np.ndarray  # (N, 2) texture coordinates
     bone_weights: Dict[str, np.ndarray]  # bone_name → (N,) weights
     texture_id: str
+
 
 @dataclass
 class Node:
@@ -1074,18 +1103,19 @@ class Node:
     >>> n.children['child'].name
     'child'
     """
+
     name: str
     local_transform: TransformParams = field(default_factory=TransformParams)
     visual: Optional[Visual] = None
-    children: OrderedDict[str, 'Node'] = field(default_factory=OrderedDict)
+    children: OrderedDict[str, "Node"] = field(default_factory=OrderedDict)
     slots: Dict[str, TransformParams] = field(default_factory=dict)
-    parent: Optional['Node'] = field(default=None, repr=False)
+    parent: Optional["Node"] = field(default=None, repr=False)
 
     # Dirty flag state
     _world_matrix: Optional[Matrix3x3] = field(default=None, repr=False)
     _dirty: bool = field(default=True, repr=False)
 
-    def add_child(self, child: 'Node'):
+    def add_child(self, child: "Node"):
         child.parent = self
         self.children[child.name] = child
         child._invalidate()
@@ -1126,6 +1156,7 @@ Pose = Dict[tuple[str, str], float]
 
 from collections.abc import Mapping
 
+
 class SceneGraph(Mapping):
     """Scene tree accessible as a path-keyed Mapping.
 
@@ -1133,12 +1164,13 @@ class SceneGraph(Mapping):
     >>> scene["charlie/torso/left_arm"]
     Node(name='left_arm', ...)
     """
+
     def __init__(self, root: Node):
         self._root = root
 
     def __getitem__(self, path: str) -> Node:
         node = self._root
-        for part in path.split('/'):
+        for part in path.split("/"):
             try:
                 node = node.children[part]
             except KeyError:
@@ -1146,7 +1178,7 @@ class SceneGraph(Mapping):
         return node
 
     def __iter__(self):
-        yield from self._walk(self._root, '')
+        yield from self._walk(self._root, "")
 
     def _walk(self, node, prefix):
         for name, child in node.children.items():
@@ -1157,7 +1189,7 @@ class SceneGraph(Mapping):
     def __len__(self):
         return sum(1 for _ in self)
 
-    def subtree(self, path: str) -> 'SceneGraph':
+    def subtree(self, path: str) -> "SceneGraph":
         """Return a SceneGraph rooted at the given path."""
         return SceneGraph(self[path])
 ```
@@ -1174,26 +1206,33 @@ All functions map [0,1] → [0,1].
 >>> ease_in_quad(0.5)
 0.25
 """
+
 from typing import Callable
 
 Easing = Callable[[float], float]
+
 
 def linear(t: float) -> float:
     """Identity easing."""
     return t
 
+
 def step(t: float) -> float:
     """Snap to 1 at the end."""
     return 0.0 if t < 1.0 else 1.0
 
+
 def ease_in_quad(t: float) -> float:
     return t * t
+
 
 def ease_out_quad(t: float) -> float:
     return 1.0 - (1.0 - t) ** 2
 
+
 def ease_in_out_quad(t: float) -> float:
     return 2 * t * t if t < 0.5 else 1 - (-2 * t + 2) ** 2 / 2
+
 
 def cubic_bezier(x1: float, y1: float, x2: float, y2: float) -> Easing:
     """Return an easing function from cubic bezier control points.
@@ -1202,11 +1241,14 @@ def cubic_bezier(x1: float, y1: float, x2: float, y2: float) -> Easing:
     >>> 0.0 < ease(0.5) < 1.0
     True
     """
+
     def ease(t: float) -> float:
         # Newton-Raphson solve for parameter u where bezier_x(u) = t
         # then return bezier_y(u)
         ...
+
     return ease
+
 
 def compose_easing(outer: Easing, inner: Easing) -> Easing:
     """Compose two easing functions: outer(inner(t))."""
@@ -1220,15 +1262,18 @@ from dataclasses import dataclass
 from typing import List, Any
 from bisect import bisect_right
 
+
 @dataclass
 class Keyframe:
     """A value at a point in time.
 
     >>> kf = Keyframe(time=0.0, value=0.0)
     """
+
     time: float
     value: Any
     easing: Easing = linear  # timing curve to next keyframe
+
 
 @dataclass
 class Channel:
@@ -1238,6 +1283,7 @@ class Channel:
     >>> ch.evaluate(0.5)  # interpolated value
     ...
     """
+
     target_path: str
     property: str
     keyframes: List[Keyframe]
@@ -1264,10 +1310,12 @@ from dataclasses import dataclass
 from typing import List
 from enum import Enum
 
+
 class LoopMode(Enum):
-    ONCE = 'once'
-    LOOP = 'loop'
-    PING_PONG = 'ping_pong'
+    ONCE = "once"
+    LOOP = "loop"
+    PING_PONG = "ping_pong"
+
 
 @dataclass
 class Clip:
@@ -1276,6 +1324,7 @@ class Clip:
     >>> clip = Clip("walk", 1.0, channels=[...])
     >>> pose = clip.evaluate(0.5)
     """
+
     name: str
     duration: float
     channels: List[Channel]
@@ -1287,6 +1336,7 @@ class Clip:
             (ch.target_path, ch.property): ch.evaluate(effective_t)
             for ch in self.channels
         }
+
 
 def _apply_loop(t: float, duration: float, mode: LoopMode) -> float:
     if mode == LoopMode.ONCE:
@@ -1305,16 +1355,19 @@ from dataclasses import dataclass
 from typing import List, Optional, Set
 from enum import Enum
 
+
 class BlendMode(Enum):
-    OVERRIDE = 'override'
-    ADDITIVE = 'additive'
+    OVERRIDE = "override"
+    ADDITIVE = "additive"
+
 
 @dataclass
 class AnimationLayer:
-    source: 'AnimationSource'   # Clip, BlendTree, StateMachine — duck-typed .evaluate()
+    source: "AnimationSource"  # Clip, BlendTree, StateMachine — duck-typed .evaluate()
     weight: float = 1.0
     blend_mode: BlendMode = BlendMode.OVERRIDE
     mask: Optional[Set[str]] = None  # target paths this layer affects
+
 
 @dataclass
 class LayerStack:
@@ -1322,6 +1375,7 @@ class LayerStack:
 
     Evaluates bottom-up, merging poses.
     """
+
     layers: List[AnimationLayer]
 
     def evaluate(self, t: float, parameters: dict = None) -> Pose:
@@ -1346,41 +1400,52 @@ class LayerStack:
 from dataclasses import dataclass
 from typing import Callable, List
 
+
 @dataclass
 class Action:
     """A deferred animation action with a known duration.
 
     Actions compose via sequence() and parallel().
     """
+
     duration: float
-    generate: Callable[[float], List['PlacedClip']]  # start_time → clips
+    generate: Callable[[float], List["PlacedClip"]]  # start_time → clips
+
 
 def sequence(*actions: Action) -> Action:
     """Play actions one after another."""
     total = sum(a.duration for a in actions)
+
     def generate(start):
         clips, t = [], start
         for a in actions:
             clips.extend(a.generate(t))
             t += a.duration
         return clips
+
     return Action(duration=total, generate=generate)
+
 
 def parallel(*actions: Action) -> Action:
     """Play actions simultaneously."""
     max_dur = max(a.duration for a in actions)
+
     def generate(start):
         return [clip for a in actions for clip in a.generate(start)]
+
     return Action(duration=max_dur, generate=generate)
+
 
 def stagger(offset: float, *actions: Action) -> Action:
     """Play actions with a fixed time offset between each start."""
     total = offset * (len(actions) - 1) + max(a.duration for a in actions)
+
     def generate(start):
         clips = []
         for i, a in enumerate(actions):
             clips.extend(a.generate(start + i * offset))
         return clips
+
     return Action(duration=total, generate=generate)
 ```
 
@@ -1407,11 +1472,13 @@ The `meshed` library (declarative DAG composition from function signatures) is a
 ```python
 from meshed import DAG
 
+
 # For a simple chain: root → torso → arm → hand
 def root_transform(root_params) -> Matrix3x3: ...
 def torso_transform(root_transform, torso_params) -> Matrix3x3: ...
 def arm_transform(torso_transform, arm_params) -> Matrix3x3: ...
 def hand_transform(arm_transform, hand_params) -> Matrix3x3: ...
+
 
 transform_dag = DAG([root_transform, torso_transform, arm_transform, hand_transform])
 # Evaluates in correct order, caches intermediates
@@ -1426,10 +1493,16 @@ def apply_constraints(pose, constraints) -> Pose: ...
 def blend_layers(base_pose, overlay_pose, weights) -> Pose: ...
 def compute_world_transforms(blended_pose, scene_graph) -> Dict[str, Matrix3x3]: ...
 
-anim_pipeline = DAG([
-    evaluate_keyframes, apply_ik, apply_constraints,
-    blend_layers, compute_world_transforms
-])
+
+anim_pipeline = DAG(
+    [
+        evaluate_keyframes,
+        apply_ik,
+        apply_constraints,
+        blend_layers,
+        compute_world_transforms,
+    ]
+)
 ```
 
 3. **Constraint resolution order**: Constraints form a dependency graph. `meshed` can topologically sort them and evaluate in correct order.

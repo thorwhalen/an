@@ -73,9 +73,7 @@ def _stage_preview(
         shutil.rmtree(runtime_target)
     shutil.copytree(runtime_dir(), runtime_target)
 
-    chosen_id = _compile_scene_to(
-        project_root, runtime_target, shot_id=shot_id
-    )
+    chosen_id = _compile_scene_to(project_root, runtime_target, shot_id=shot_id)
     return PreviewStaging(
         runtime_dir=runtime_target,
         scene_json_path=runtime_target / "scene.json",
@@ -186,9 +184,7 @@ def _compile_scene_to(
     out = runtime_target / "scene.json"
     # Atomic-ish write so the HTTP server never serves a half-written file.
     tmp = out.with_suffix(".json.tmp")
-    tmp.write_text(
-        json.dumps(to_dict(scene_json), sort_keys=True), encoding="utf-8"
-    )
+    tmp.write_text(json.dumps(to_dict(scene_json), sort_keys=True), encoding="utf-8")
     tmp.replace(out)
     return shot.id
 

@@ -50,15 +50,33 @@ _DEFAULT_PALETTE: dict[str, str] = {
 #   teeth:  draw upper-teeth band (used for G/F-style "teeth on lip")
 #   tongue: draw a tongue dot (used for H "long L")
 _SHAPES: dict[str, dict[str, float | bool]] = {
-    "x": {"width": 0.30, "height": 0.05, "open": 0.0, "smile": 0.05},   # idle
+    "x": {"width": 0.30, "height": 0.05, "open": 0.0, "smile": 0.05},  # idle
     "a": {"width": 0.32, "height": 0.07, "open": 0.05, "smile": 0.10},  # M/B/P
-    "b": {"width": 0.36, "height": 0.18, "open": 0.4, "smile": 0.0, "teeth": True},  # K/S/T/EE
-    "c": {"width": 0.42, "height": 0.32, "open": 0.7, "smile": 0.0},   # EH/AE
-    "d": {"width": 0.46, "height": 0.50, "open": 1.0, "smile": 0.0},   # AA wide-open
-    "e": {"width": 0.34, "height": 0.42, "open": 0.85, "smile": -0.05}, # AO/ER rounded
-    "f": {"width": 0.22, "height": 0.34, "open": 0.9, "smile": -0.10}, # UW/OW puckered
-    "g": {"width": 0.36, "height": 0.14, "open": 0.2, "smile": 0.0, "teeth": True},  # F/V teeth-on-lip
-    "h": {"width": 0.30, "height": 0.13, "open": 0.15, "smile": 0.0, "tongue": True},  # L
+    "b": {
+        "width": 0.36,
+        "height": 0.18,
+        "open": 0.4,
+        "smile": 0.0,
+        "teeth": True,
+    },  # K/S/T/EE
+    "c": {"width": 0.42, "height": 0.32, "open": 0.7, "smile": 0.0},  # EH/AE
+    "d": {"width": 0.46, "height": 0.50, "open": 1.0, "smile": 0.0},  # AA wide-open
+    "e": {"width": 0.34, "height": 0.42, "open": 0.85, "smile": -0.05},  # AO/ER rounded
+    "f": {"width": 0.22, "height": 0.34, "open": 0.9, "smile": -0.10},  # UW/OW puckered
+    "g": {
+        "width": 0.36,
+        "height": 0.14,
+        "open": 0.2,
+        "smile": 0.0,
+        "teeth": True,
+    },  # F/V teeth-on-lip
+    "h": {
+        "width": 0.30,
+        "height": 0.13,
+        "open": 0.15,
+        "smile": 0.0,
+        "tongue": True,
+    },  # L
 }
 
 
@@ -93,7 +111,7 @@ def _shape_svg(
 
     body = (
         f'<path d="M {left_x:.2f} {cy + smile_y:.2f} '
-        f'Q {cx:.2f} {top_ctrl_y:.2f} {right_x:.2f} {cy + smile_y:.2f} '
+        f"Q {cx:.2f} {top_ctrl_y:.2f} {right_x:.2f} {cy + smile_y:.2f} "
         f'Q {cx:.2f} {bot_ctrl_y:.2f} {left_x:.2f} {cy + smile_y:.2f} Z" '
         f'fill="{fill}" stroke="{lip}" stroke-width="2" stroke-linejoin="round"/>'
     )

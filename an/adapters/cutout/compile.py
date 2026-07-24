@@ -98,11 +98,11 @@ _MIN_VISEME_GAP_S: float = 0.14
 # brows look symmetric for happy/sad and asymmetric for surprise/skepticism.
 _EMOTION_BROWS: dict[str, tuple[float, float]] = {
     "neutral": (0.0, 0.0),
-    "happy": (-0.15, 0.15),       # outer ends raised
-    "sad": (0.20, -0.20),         # inner ends raised, outer drops
-    "angry": (0.30, -0.30),       # furrowed
-    "surprised": (-0.25, 0.25),   # both up high
-    "skeptical": (-0.20, 0.10),   # one brow raised
+    "happy": (-0.15, 0.15),  # outer ends raised
+    "sad": (0.20, -0.20),  # inner ends raised, outer drops
+    "angry": (0.30, -0.30),  # furrowed
+    "surprised": (-0.25, 0.25),  # both up high
+    "skeptical": (-0.20, 0.10),  # one brow raised
     "amused": (-0.10, 0.10),
     "thinking": (0.10, 0.0),
 }
@@ -183,9 +183,7 @@ def _build_scene_root(
         if entity.kind == "character":
             x = char_positions[char_idx]
             char_idx += 1
-            sub = _build_character_subtree(
-                entity, characters_store, textures=textures
-            )
+            sub = _build_character_subtree(entity, characters_store, textures=textures)
             sub.transform.x = x
             children.append(sub)
         # Other entity kinds (prop) get sketched in later phases.
@@ -196,10 +194,10 @@ def _build_scene_root(
 # in the store can override fields by name (sky_color, ground_color, ground_y).
 _ENV_PRESETS: dict[str, dict[str, Any]] = {
     "default": {"sky_color": "#cfe9ff", "ground_color": "#7cba6f", "ground_y": 100.0},
-    "park":    {"sky_color": "#a5d8ff", "ground_color": "#7cba6f", "ground_y": 110.0},
-    "indoor":  {"sky_color": "#f4e8c8", "ground_color": "#a07a4a", "ground_y": 120.0},
-    "night":   {"sky_color": "#1a2540", "ground_color": "#2c3e50", "ground_y": 110.0},
-    "sunset":  {"sky_color": "#f4a261", "ground_color": "#5b4b32", "ground_y": 110.0},
+    "park": {"sky_color": "#a5d8ff", "ground_color": "#7cba6f", "ground_y": 110.0},
+    "indoor": {"sky_color": "#f4e8c8", "ground_color": "#a07a4a", "ground_y": 120.0},
+    "night": {"sky_color": "#1a2540", "ground_color": "#2c3e50", "ground_y": 110.0},
+    "sunset": {"sky_color": "#f4a261", "ground_color": "#5b4b32", "ground_y": 110.0},
 }
 
 
@@ -342,7 +340,9 @@ def _build_character_subtree(
                 NodeJSON(
                     name="hair",
                     transform=TransformJSON(x=0.0, y=-20.0),
-                    visual=VisualJSON(kind="ellipse", width=46.0, height=18.0, color=hair),
+                    visual=VisualJSON(
+                        kind="ellipse", width=46.0, height=18.0, color=hair
+                    ),
                 )
             )
             # Eyebrows: small dark rects above each eye; rotation = expression.
@@ -352,7 +352,10 @@ def _build_character_subtree(
                         name=brow_name,
                         transform=TransformJSON(x=bx, y=-10.0),
                         visual=VisualJSON(
-                            kind="rect", width=10.0, height=2.5, color=hair,
+                            kind="rect",
+                            width=10.0,
+                            height=2.5,
+                            color=hair,
                         ),
                     )
                 )
@@ -557,16 +560,22 @@ def _build_svg_character_subtree(
             name="leg_l",
             transform=TransformJSON(x=-14.0, y=leg_y),
             visual=VisualJSON(
-                kind="svg_sprite", asset_id=leg_l_alias,
-                width=_SVG_LEG_SIZE[0], height=_SVG_LEG_SIZE[1], anchor_y=0.0,
+                kind="svg_sprite",
+                asset_id=leg_l_alias,
+                width=_SVG_LEG_SIZE[0],
+                height=_SVG_LEG_SIZE[1],
+                anchor_y=0.0,
             ),
         ),
         NodeJSON(
             name="leg_r",
             transform=TransformJSON(x=14.0, y=leg_y),
             visual=VisualJSON(
-                kind="svg_sprite", asset_id=leg_r_alias,
-                width=_SVG_LEG_SIZE[0], height=_SVG_LEG_SIZE[1], anchor_y=0.0,
+                kind="svg_sprite",
+                asset_id=leg_r_alias,
+                width=_SVG_LEG_SIZE[0],
+                height=_SVG_LEG_SIZE[1],
+                anchor_y=0.0,
             ),
         ),
         # Torso
@@ -574,8 +583,10 @@ def _build_svg_character_subtree(
             name="torso",
             transform=TransformJSON(x=0.0, y=torso_y),
             visual=VisualJSON(
-                kind="svg_sprite", asset_id=torso_alias,
-                width=_SVG_TORSO_SIZE[0], height=_SVG_TORSO_SIZE[1],
+                kind="svg_sprite",
+                asset_id=torso_alias,
+                width=_SVG_TORSO_SIZE[0],
+                height=_SVG_TORSO_SIZE[1],
             ),
         ),
         # Arms (in front of torso)
@@ -583,16 +594,22 @@ def _build_svg_character_subtree(
             name="arm_l",
             transform=TransformJSON(x=-60.0, y=arm_y),
             visual=VisualJSON(
-                kind="svg_sprite", asset_id=arm_l_alias,
-                width=_SVG_ARM_SIZE[0], height=_SVG_ARM_SIZE[1], anchor_y=0.0,
+                kind="svg_sprite",
+                asset_id=arm_l_alias,
+                width=_SVG_ARM_SIZE[0],
+                height=_SVG_ARM_SIZE[1],
+                anchor_y=0.0,
             ),
         ),
         NodeJSON(
             name="arm_r",
             transform=TransformJSON(x=60.0, y=arm_y),
             visual=VisualJSON(
-                kind="svg_sprite", asset_id=arm_r_alias,
-                width=_SVG_ARM_SIZE[0], height=_SVG_ARM_SIZE[1], anchor_y=0.0,
+                kind="svg_sprite",
+                asset_id=arm_r_alias,
+                width=_SVG_ARM_SIZE[0],
+                height=_SVG_ARM_SIZE[1],
+                anchor_y=0.0,
             ),
         ),
         # Head on top
@@ -752,9 +769,7 @@ def _track_root_of(target: str) -> str:
 _FACE_BAKED_PROVENANCES: tuple[str, ...] = ("dicebear", "external_avatar")
 
 
-def _face_baked_speakers(
-    shot: Shot, mall: Mapping[str, Mapping] | None
-) -> set[str]:
+def _face_baked_speakers(shot: Shot, mall: Mapping[str, Mapping] | None) -> set[str]:
     """Return the entity ids whose backing descriptor has a face baked in.
 
     Used to suppress viseme channels for characters that don't have an
@@ -868,7 +883,9 @@ def _add_viseme_clips(
                             property="rotation",
                             keyframes=[
                                 KeyframeJSON(time=0.0, value=tilt, easing="step"),
-                                KeyframeJSON(time=line.duration, value=0.0, easing="step"),
+                                KeyframeJSON(
+                                    time=line.duration, value=0.0, easing="step"
+                                ),
                             ],
                         )
                     ],

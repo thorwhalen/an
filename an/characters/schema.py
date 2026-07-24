@@ -176,9 +176,7 @@ class AnimationTrack(_CharModel):
     @classmethod
     def _check_target(cls, v: str) -> str:
         if not (v.startswith("bone:") or v.startswith("slot:")):
-            raise ValueError(
-                f"target must start with 'bone:' or 'slot:'; got {v!r}"
-            )
+            raise ValueError(f"target must start with 'bone:' or 'slot:'; got {v!r}")
         return v
 
 
@@ -329,22 +327,16 @@ def _default_skin() -> Skin:
     # Eye slots have two attachments (open + closed).
     slots["eye_l"] = {
         "eye_l_open": Attachment(path="parts/eye_l_open.svg", anchor=(0.5, 0.5)),
-        "eye_l_closed": Attachment(
-            path="parts/eye_l_closed.svg", anchor=(0.5, 0.5)
-        ),
+        "eye_l_closed": Attachment(path="parts/eye_l_closed.svg", anchor=(0.5, 0.5)),
     }
     slots["eye_r"] = {
         "eye_r_open": Attachment(path="parts/eye_r_open.svg", anchor=(0.5, 0.5)),
-        "eye_r_closed": Attachment(
-            path="parts/eye_r_closed.svg", anchor=(0.5, 0.5)
-        ),
+        "eye_r_closed": Attachment(path="parts/eye_r_closed.svg", anchor=(0.5, 0.5)),
     }
 
     # Mouth slot has 9 attachments (the viseme set).
     slots["mouth"] = {
-        f"mouth_{s}": Attachment(
-            path=f"parts/mouth/mouth_{s}.svg", anchor=(0.5, 0.5)
-        )
+        f"mouth_{s}": Attachment(path=f"parts/mouth/mouth_{s}.svg", anchor=(0.5, 0.5))
         for s in MOUTH_SHAPES
     }
 

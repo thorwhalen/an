@@ -157,6 +157,7 @@ _migrations = {
     ("1.1", "2.0"): migrate_1_1_to_2_0,
 }
 
+
 def upgrade(doc, target_version="latest"):
     """Chain migrations to bring any doc to target version."""
     while doc["version"] != target_version:
@@ -177,7 +178,7 @@ class SceneSpec(BaseModel):
 
     diagram: DiagramSpec
     animation: AnimationSpec = AnimationSpec()  # sensible default
-    narration: NarrationSpec | None = None       # optional
+    narration: NarrationSpec | None = None  # optional
     # v1.1 addition: backward compatible because it has a default
     caption: CaptionSpec | None = None
 ```

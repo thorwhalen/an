@@ -62,9 +62,7 @@ class MacSayTTS:
             )
 
         effective_voice = (
-            voice_id
-            if voice_id and voice_id != "default"
-            else self.default_voice_id
+            voice_id if voice_id and voice_id != "default" else self.default_voice_id
         )
 
         out_path = kw.get("path")
@@ -78,18 +76,19 @@ class MacSayTTS:
 
         cmd = [
             "say",
-            "-v", effective_voice,
-            "-o", str(out_path),
-            "--data-format", f"LEI16@{self.sample_rate}",
+            "-v",
+            effective_voice,
+            "-o",
+            str(out_path),
+            "--data-format",
+            f"LEI16@{self.sample_rate}",
         ]
         if self.rate_wpm is not None:
             cmd.extend(["-r", str(self.rate_wpm)])
         cmd.append(text)
 
         try:
-            proc = subprocess.run(
-                cmd, capture_output=True, text=True, check=False
-            )
+            proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
         except FileNotFoundError as e:
             raise MacSayTTSError(f"failed to launch 'say': {e}") from e
         if proc.returncode != 0:

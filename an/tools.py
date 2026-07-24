@@ -112,9 +112,7 @@ def iterate(
     apply_changes: persist the new scene to disk + invalidate affected shot caches (default True)
     model: Anthropic model id (default claude-opus-4-7)
     """
-    result = _iterate(
-        project_dir, instruction, apply=apply_changes, model=model
-    )
+    result = _iterate(project_dir, instruction, apply=apply_changes, model=model)
     lines: list[str] = []
     lines.append(f"summary: {result.summary}")
     lines.append(f"affected shots: {', '.join(result.affected_shots) or '(none)'}")

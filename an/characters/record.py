@@ -123,14 +123,10 @@ def record_character(
     cname = name or cdir.name
     preview_html = _write_preview_html(cdir, name=cname)
     target = Path(out_mp4) if out_mp4 else cdir / "preview.mp4"
-    return record_preview_to_mp4(
-        preview_html, target, duration_s=duration_s, size=size
-    )
+    return record_preview_to_mp4(preview_html, target, duration_s=duration_s, size=size)
 
 
-def _ffmpeg_webm_to_mp4(
-    webm: Path, mp4: Path, *, fps: int, crf: int
-) -> None:
+def _ffmpeg_webm_to_mp4(webm: Path, mp4: Path, *, fps: int, crf: int) -> None:
     """Re-encode webm → H.264 mp4 with sane defaults for short loops."""
     cmd = [
         "ffmpeg",

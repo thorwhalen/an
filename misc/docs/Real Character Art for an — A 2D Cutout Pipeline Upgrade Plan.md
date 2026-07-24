@@ -54,8 +54,12 @@ In the canonical `maya.svg`, use **Inkscape's `inkscape:label`** for human names
 ```python
 # python: promote inkscape:label to id, then split parts
 from lxml import etree
-NS = {"svg": "http://www.w3.org/2000/svg",
-      "ink": "http://www.inkscape.org/namespaces/inkscape"}
+
+NS = {
+    "svg": "http://www.w3.org/2000/svg",
+    "ink": "http://www.inkscape.org/namespaces/inkscape",
+}
+
 
 def normalize_svg(path):
     tree = etree.parse(path)
@@ -64,6 +68,7 @@ def normalize_svg(path):
         if label and not g.get("id"):
             g.set("id", label.replace(" ", "_"))
     return tree
+
 
 def extract_part(tree, part_id):
     """Clone the root SVG but keep only the matching group."""
@@ -157,7 +162,7 @@ For `an`, lock in:
 ```python
 MOUTH_SHAPES = ["a", "b", "c", "d", "e", "f", "g", "h", "x"]
 MOUTH_FILENAME = "mouth_{shape}.svg"
-MOUTH_ATTACHMENT = "mouth_{shape}"   # name in the JSON descriptor
+MOUTH_ATTACHMENT = "mouth_{shape}"  # name in the JSON descriptor
 ```
 
 ### 2.4 Minimum spec for an LLM authoring mouth art
@@ -288,6 +293,8 @@ Ship **two** demo characters:
 1. **`maya-dicebear-adventurer`** — generated at install time by hitting DiceBear's HTTP API:
    ```python
    import urllib.request
+
+
    def fetch_dicebear(seed: str, style: str = "adventurer") -> str:
        url = f"https://api.dicebear.com/9.x/{style}/svg?seed={seed}"
        return urllib.request.urlopen(url).read().decode()
@@ -404,8 +411,8 @@ def promote(scene: str, entity: str, as_: str) -> Path:
     """
     Lift an inline character from a scene into the reusable mall.
     """
-    sd = SceneData.load(scene)                      # parse scene.md → IR
-    char = sd.find_entity(entity)                   # in-scene character node
+    sd = SceneData.load(scene)  # parse scene.md → IR
+    char = sd.find_entity(entity)  # in-scene character node
     src_svg = char.svg_path or sd.workdir / f"{entity}.svg"
 
     target = MALL["characters"] / as_
@@ -414,13 +421,13 @@ def promote(scene: str, entity: str, as_: str) -> Path:
     # 1) Copy and normalize SVG
     canonical = target / f"{as_}.svg"
     shutil.copy(src_svg, canonical)
-    tree = normalize_svg(canonical)                  # promote inkscape:label→id
+    tree = normalize_svg(canonical)  # promote inkscape:label→id
     tree.write(canonical)
 
     # 2) Slice into per-part SVGs
     parts_dir = target / "parts"
     parts_dir.mkdir()
-    pivots = extract_pivots(tree)                    # read <g id="skeleton">
+    pivots = extract_pivots(tree)  # read <g id="skeleton">
     for part_id in PARTS_REQUIRED:
         part_svg = extract_part(tree, part_id)
         (parts_dir / f"{part_id}.svg").write_bytes(etree.tostring(part_svg))
@@ -483,6 +490,7 @@ For a 2-character scene at 1080p, characters are ~300 px tall. At that size, col
 ```python
 # pyvips trick: rasterize SVG, threshold alpha, save as black-on-white PNG
 import pyvips
+
 img = pyvips.Image.svgload("maya.svg")
 alpha = img.extract_band(3) if img.bands == 4 else img
 silhouette = (alpha > 128).ifthenelse(0, 255)

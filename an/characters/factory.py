@@ -36,6 +36,7 @@ def _stable_hash(seed: str) -> int:
     digest = hashlib.md5(seed.encode("utf-8")).digest()
     return int.from_bytes(digest[:8], "big")
 
+
 from an.characters.dicebear import (
     DICEBEAR_DEFAULT_STYLE,
     fetch_dicebear,
@@ -82,9 +83,7 @@ class ValidationReport:
         if self.missing_parts:
             lines.append("  missing body parts: " + ", ".join(self.missing_parts))
         if self.missing_mouths:
-            lines.append(
-                "  missing mouth shapes: " + ", ".join(self.missing_mouths)
-            )
+            lines.append("  missing mouth shapes: " + ", ".join(self.missing_mouths))
         if self.pivots_found:
             lines.append("  pivots: " + ", ".join(self.pivots_found))
         for n in self.notes:
@@ -189,9 +188,7 @@ def new_character(
         metadata={**metadata, "pivots_detected": list(pivots.keys())},
     )
     desc_path = out / "character.json"
-    desc_path.write_text(
-        descriptor.model_dump_json(indent=2), encoding="utf-8"
-    )
+    desc_path.write_text(descriptor.model_dump_json(indent=2), encoding="utf-8")
     return desc_path
 
 
@@ -343,16 +340,12 @@ def _write_head_part(path: Path, avatar_svg: str) -> Path:
     no rewriting/rescaling is needed.
     """
     if not avatar_svg.lstrip().startswith("<?xml"):
-        avatar_svg = (
-            '<?xml version="1.0" encoding="UTF-8"?>\n' + avatar_svg.lstrip()
-        )
+        avatar_svg = '<?xml version="1.0" encoding="UTF-8"?>\n' + avatar_svg.lstrip()
     path.write_text(avatar_svg, encoding="utf-8")
     return path
 
 
-def _write_torso_part(
-    path: Path, *, clothing: str, accent: str
-) -> Path:
+def _write_torso_part(path: Path, *, clothing: str, accent: str) -> Path:
     """A 256x256 torso SVG: rounded rect with a slight collar accent."""
     svg = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'

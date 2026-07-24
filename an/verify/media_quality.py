@@ -76,9 +76,7 @@ class MediaQualityVerifier:
                     suggested_fix="check that the TTS provider returned non-empty audio",
                 )
         except Exception as e:
-            report.add(
-                "info", "<audio>", f"audio_volume probe failed: {e!r}"
-            )
+            report.add("info", "<audio>", f"audio_volume probe failed: {e!r}")
 
         # 2. Silence vs. dialogue
         has_dialogue = any(line for shot in ir.timeline for line in shot.dialogue)
@@ -93,21 +91,17 @@ class MediaQualityVerifier:
                     report.add(
                         "warning",
                         "<audio/dialogue>",
-                        f"{ratio*100:.0f}% of the render is silent but the IR has "
+                        f"{ratio * 100:.0f}% of the render is silent but the IR has "
                         f"dialogue lines — speech may be missing or cut off",
                         suggested_fix="rerun with --tts elevenlabs (offline TTS is silent)",
                     )
             except Exception as e:
-                report.add(
-                    "info", "<audio/dialogue>", f"silence probe failed: {e!r}"
-                )
+                report.add("info", "<audio/dialogue>", f"silence probe failed: {e!r}")
 
         # 3. Frame motion via mean SSIM
         try:
             with tempfile.TemporaryDirectory() as d:
-                frames = extract_frames(
-                    render.mp4_path, d, fps=self.frame_sample_fps
-                )
+                frames = extract_frames(render.mp4_path, d, fps=self.frame_sample_fps)
                 if len(frames) >= 2:
                     ssims = [
                         ssim_image_files(frames[i], frames[i + 1])
@@ -123,8 +117,6 @@ class MediaQualityVerifier:
                             suggested_fix="confirm the IR has actions/visemes that drive motion",
                         )
         except Exception as e:
-            report.add(
-                "info", "<video>", f"frame motion probe failed: {e!r}"
-            )
+            report.add("info", "<video>", f"frame motion probe failed: {e!r}")
 
         return report

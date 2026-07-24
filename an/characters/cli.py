@@ -59,10 +59,7 @@ def new(
     target = _resolve_target(out_dir)
     target.mkdir(parents=True, exist_ok=True)
     if style not in DICEBEAR_STYLES:
-        return (
-            f"unknown DiceBear style: {style!r}. "
-            f"Known: {', '.join(DICEBEAR_STYLES)}"
-        )
+        return f"unknown DiceBear style: {style!r}. Known: {', '.join(DICEBEAR_STYLES)}"
     desc = _new_character(
         target,
         name=name,
@@ -141,11 +138,7 @@ def silhouette(
         svg = cdir / f"{char_name}.svg"
         if not svg.exists():
             raise FileNotFoundError(svg)
-        out_path = (
-            Path(output)
-            if output and not other
-            else cdir / "silhouette.png"
-        )
+        out_path = Path(output) if output and not other else cdir / "silhouette.png"
         return render_silhouette(svg, out_path, size=(size, size))
 
     a_path = _render(name)

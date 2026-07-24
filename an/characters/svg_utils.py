@@ -290,9 +290,7 @@ def _find_by_id(root: ET.Element, target_id: str) -> ET.Element | None:
     ``<circle id="head">``). Prefer the ``<g>`` so part extraction picks
     up the art group, not the pivot point.
     """
-    matches: list[ET.Element] = [
-        el for el in root.iter() if el.get("id") == target_id
-    ]
+    matches: list[ET.Element] = [el for el in root.iter() if el.get("id") == target_id]
     if not matches:
         return None
     for el in matches:
@@ -301,9 +299,7 @@ def _find_by_id(root: ET.Element, target_id: str) -> ET.Element | None:
     return matches[0]
 
 
-def write_svg(
-    tree_or_element: Any, path: str | Path | None = None
-) -> bytes:
+def write_svg(tree_or_element: Any, path: str | Path | None = None) -> bytes:
     """Serialize an ``ElementTree`` or ``Element`` to bytes (and optionally disk).
 
     Always emits ``<?xml version="1.0" encoding="UTF-8"?>`` and the SVG

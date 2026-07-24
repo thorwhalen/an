@@ -126,7 +126,7 @@ from an import build_project_mall
 
 mall = build_project_mall("my-scene", ensure=True)
 mall["voices"]["maya-warm"] = {"provider": "elevenlabs", "voice_id": "..."}
-mall["scenes"]["main"]   # returns a SceneIR
+mall["scenes"]["main"]  # returns a SceneIR
 ```
 
 ### End-to-end orchestration

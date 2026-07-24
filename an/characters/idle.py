@@ -127,9 +127,7 @@ def blink_animation(
             ],
         ),
     ]
-    return IdleAnimation(
-        name=name, duration=duration_s, loop=False, tracks=tracks
-    )
+    return IdleAnimation(name=name, duration=duration_s, loop=False, tracks=tracks)
 
 
 def random_blink_schedule(

@@ -43,7 +43,9 @@ from an.audio.offline_lipsync import _CHAR_TO_VISEME, _REST_VISEME
 _DEFAULT_MODEL_SIZE: str = "tiny"  # ~75 MB; "base" gives slightly better word-timing
 _DEFAULT_DEVICE: str = "cpu"
 _DEFAULT_COMPUTE_TYPE: str = "int8"
-_MIN_WORD_GAP_FOR_REST: float = 0.20  # seconds; insert rest viseme in gaps wider than this
+_MIN_WORD_GAP_FOR_REST: float = (
+    0.20  # seconds; insert rest viseme in gaps wider than this
+)
 
 
 class WhisperLipSync:
@@ -115,7 +117,7 @@ class WhisperLipSync:
             )
             words: list[WordTiming] = []
             for seg in segments:
-                for w in (seg.words or []):
+                for w in seg.words or []:
                     words.append((w.word, float(w.start), float(w.end)))
         finally:
             if cleanup is not None:
