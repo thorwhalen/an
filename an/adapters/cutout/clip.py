@@ -61,7 +61,14 @@ def _wrap_time(t: float, duration: float, loop_mode: LoopMode) -> float:
         return min(t, duration)
     if loop_mode == LoopMode.LOOP:
         return t % duration if duration > 0 else 0.0
-    # PING_PONG: bounce between 0 and duration over period 2*duration
+    # PING_PONG: bounce between 0 and duration over period 2*duration.
+    # The duration guard mirrors LOOP's: `Clip` forbids duration <= 0, but this
+    # function is also the spec the JS runtime ports, and a hand-written or
+    # programmatically-built descriptor has no `Clip` to validate it. Without the
+    # guard this raised ZeroDivisionError where LOOP returned 0.0 — the two modes
+    # disagreeing on the same degenerate input.
+    if duration <= 0:
+        return 0.0
     period = 2.0 * duration
     phase = t % period
     return phase if phase <= duration else period - phase
