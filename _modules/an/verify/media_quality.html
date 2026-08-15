@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.media_quality &mdash; an 0.1.8 documentation</title>
+  <title>an.verify.media_quality &mdash; an 0.1.9 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=22607128"></script>
+      <script src="../../../_static/documentation_options.js?v=8618f531"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -228,9 +228,7 @@
                     <span class="n">suggested_fix</span><span class="o">=</span><span class="s2">&quot;check that the TTS provider returned non-empty audio&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;audio&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;audio_volume probe failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;audio&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;audio_volume probe failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># 2. Silence vs. dialogue</span>
         <span class="n">has_dialogue</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">line</span> <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">ir</span><span class="o">.</span><span class="n">timeline</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">)</span>
@@ -245,21 +243,17 @@
                     <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
                         <span class="s2">&quot;warning&quot;</span><span class="p">,</span>
                         <span class="s2">&quot;&lt;audio/dialogue&gt;&quot;</span><span class="p">,</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ratio</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">% of the render is silent but the IR has &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ratio</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">% of the render is silent but the IR has &quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;dialogue lines — speech may be missing or cut off&quot;</span><span class="p">,</span>
                         <span class="n">suggested_fix</span><span class="o">=</span><span class="s2">&quot;rerun with --tts elevenlabs (offline TTS is silent)&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                    <span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;audio/dialogue&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;silence probe failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;audio/dialogue&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;silence probe failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># 3. Frame motion via mean SSIM</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
-                <span class="n">frames</span> <span class="o">=</span> <span class="n">extract_frames</span><span class="p">(</span>
-                    <span class="n">render</span><span class="o">.</span><span class="n">mp4_path</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_sample_fps</span>
-                <span class="p">)</span>
+                <span class="n">frames</span> <span class="o">=</span> <span class="n">extract_frames</span><span class="p">(</span><span class="n">render</span><span class="o">.</span><span class="n">mp4_path</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_sample_fps</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
                     <span class="n">ssims</span> <span class="o">=</span> <span class="p">[</span>
                         <span class="n">ssim_image_files</span><span class="p">(</span><span class="n">frames</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">frames</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
@@ -275,9 +269,7 @@
                             <span class="n">suggested_fix</span><span class="o">=</span><span class="s2">&quot;confirm the IR has actions/visemes that drive motion&quot;</span><span class="p">,</span>
                         <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;video&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;frame motion probe failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;video&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;frame motion probe failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">report</span></div>
 
