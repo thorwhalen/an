@@ -352,19 +352,43 @@
     // Timeline evaluation
     // ------------------------------------------------------------------------
 
+    // Port of `an/adapters/cutout/clip.py::_wrap_time` — that function is the spec,
+    // and this must stay bit-identical to it. Three modes:
+    //   once      clamp; past `duration` the last frame holds
+    //   loop      t % duration  (at exactly t == duration this is 0, so the FIRST
+    //             keyframe renders at the period boundary, not the last)
+    //   ping_pong bounce over period 2*duration; t == duration is the apex, inclusive
+    function wrapTime(t, duration, mode) {
+        if (t < 0) return 0;
+        if (mode === 'loop') return duration > 0 ? t % duration : 0;
+        if (mode === 'ping_pong') {
+            if (duration <= 0) return 0;
+            const period = 2 * duration;
+            const phase = t % period;
+            return phase <= duration ? phase : period - phase;
+        }
+        return Math.min(t, duration);  // 'once', and the default for anything unknown
+    }
+
     function evaluateTimeline(t) {
         const pose = {};
         for (const track of scene.timeline.tracks || []) {
             for (const placed of track.clips || []) {
-                const naturalDur = placed.duration != null
-                    ? placed.duration
-                    : (scene.animations[placed.animation_id] || {}).duration || 0;
+                const anim = scene.animations[placed.animation_id];
+                if (!anim) continue;
+                // The window a placement occupies may be WIDENED by `placed.duration`,
+                // but the clip still loops against its OWN natural duration — that
+                // asymmetry is exactly what makes looping observable, and Python does
+                // the same (`_evaluate_clip` wraps against `clip.duration`, never the
+                // placement override). Getting it backwards silently breaks every loop.
+                const clipDur = anim.duration || 0;
+                const windowDur = placed.duration != null ? placed.duration : clipDur;
                 const speed = placed.speed != null ? placed.speed : 1;
-                const effDur = naturalDur / speed;
+                const effDur = windowDur / speed;
                 if (placed.start_time <= t && t <= placed.start_time + effDur) {
-                    const localT = (t - placed.start_time) * speed;
-                    const anim = scene.animations[placed.animation_id];
-                    if (!anim) continue;
+                    const localT = wrapTime(
+                        (t - placed.start_time) * speed, clipDur, anim.loop_mode
+                    );
                     for (const ch of anim.channels) {
                         const v = evaluateChannel(ch, localT);
                         if (v != null) {
