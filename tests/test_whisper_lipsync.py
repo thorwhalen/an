@@ -41,9 +41,20 @@ def test_align_uses_known_viseme_alphabet():
         assert v.code in {"A", "B", "C", "D", "E", "F", "G", "H", "X"}
 
 
+@pytest.mark.live_api
 def test_align_with_real_speech_via_elevenlabs():
-    """If ElevenLabs is configured, run an end-to-end real-speech test."""
+    """End-to-end real-speech path. REAL, BILLED synthesis — opt in to run it.
+
+    See ``tests/conftest.py``: this used to run whenever an ElevenLabs key was
+    merely *present*, so a plain ``pytest -q`` on any machine with a key exported
+    quietly spent money.
+    """
     import os
+
+    from .conftest import LIVE_API_ENV_VAR, live_api_enabled
+
+    if not live_api_enabled():
+        pytest.skip(f"real paid API call — set {LIVE_API_ENV_VAR}=1 to opt in")
     if not (
         os.environ.get("ELEVEN_API_KEY") or os.environ.get("ELEVENLABS_API_KEY")
     ):

@@ -16,6 +16,7 @@ from an.iterate import (
     _apply_one,
     _apply_patches_to_ir,
 )
+from .conftest import requires_live_api
 from an.ir.schema import (
     Dialogue,
     Meta,
@@ -136,6 +137,8 @@ def test_apply_patches_to_ir_round_trips_through_schema():
 # -----------------------------------------------------------------------------
 
 
+@pytest.mark.live_api
+@requires_live_api
 @pytest.mark.skipif(
     importlib.util.find_spec("anthropic") is None
     or not os.environ.get("ANTHROPIC_API_KEY"),
@@ -189,6 +192,8 @@ def test_iterate_dialogue_text_change_live():
         assert "opener" in result.affected_shots
 
 
+@pytest.mark.live_api
+@requires_live_api
 @pytest.mark.skipif(
     importlib.util.find_spec("anthropic") is None
     or not os.environ.get("ANTHROPIC_API_KEY"),
