@@ -1,4 +1,8 @@
-"""ElevenLabsTTS — only runs when ELEVEN_API_KEY is set + elevenlabs installed."""
+"""ElevenLabsTTS — REAL, BILLED synthesis. Opt in with ``AN_LIVE_API_TESTS=1``.
+
+See ``tests/conftest.py``: a key being present is not consent to spend, so these
+skip by default even on a machine that has both the SDK and the credential.
+"""
 
 from __future__ import annotations
 
@@ -9,14 +13,19 @@ import pytest
 
 from an.audio.elevenlabs_tts import ElevenLabsTTS
 
+from .conftest import requires_live_api
 
 _HAS_PKG = importlib.util.find_spec("elevenlabs") is not None
 _HAS_KEY = bool(os.environ.get("ELEVEN_API_KEY") or os.environ.get("ELEVENLABS_API_KEY"))
 
-pytestmark = pytest.mark.skipif(
-    not (_HAS_PKG and _HAS_KEY),
-    reason="needs elevenlabs package + ELEVEN_API_KEY",
-)
+pytestmark = [
+    pytest.mark.live_api,
+    requires_live_api,
+    pytest.mark.skipif(
+        not (_HAS_PKG and _HAS_KEY),
+        reason="needs elevenlabs package + ELEVEN_API_KEY",
+    ),
+]
 
 
 def test_synthesize_short_text_returns_audio_bytes():
