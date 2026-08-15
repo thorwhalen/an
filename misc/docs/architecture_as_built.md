@@ -286,20 +286,44 @@ The `[emotion]` brackets on dialogue lines map to `_EMOTION_BROWS` in compile.py
 
 ---
 
-## 10. The four phases that haven't shipped yet
+## 10. What hasn't shipped
 
-The post-Phase-10 priority list (rough). Each is a meaningful jump in user-visible quality or capability.
+This section previously listed four "phases that haven't shipped yet" — real
+character art, per-shot parallel rendering, live preview, and asset promotion.
+**All four have since shipped** (`svg_sprite` visuals in `compile.py` +
+`makeSvgSprite` in `runtime.js`; `an render --parallel auto|N` via
+`_resolve_parallel`; `an preview` via `preview_project()`; and promotion as
+`an.characters.promote` — not `an.assets.promote`, which never existed). They
+are described in their own sections above.
 
-1. **Real character art pipeline.** Replace the placeholder rect rig with SVG character art loaded from `mall["characters"]/<id>/`. See `misc/docs/architecture_as_built.md` companion research prompt at `~/Downloads/an_character_art_research_prompt.md` for the open design questions.
-2. **Per-shot parallel rendering.** Currently shots render serially. Parallelizing across shots (and possibly within a shot via frame batches) could 4-8× throughput on multi-core machines.
-3. **Live preview.** A small `an preview <dir>` that opens the runtime HTML in a browser pointing at the current scene JSON, with hot-reload on `scene.md` save. Lets the director iterate visually without re-rendering for every tweak.
-4. **Asset promotion.** `an.assets.promote(scene='park.md', entity='maya', as_='maya-v1')` — copy a scene-inlined character into `mall["characters"]/maya-v1/` with a stable id so it's reusable. The descriptor shape needs to grow to support real art (mouth set, eye-blink set, hair, optional skin variants).
+What genuinely remains, in rough priority order:
+
+1. **A real shot-to-Manim compiler.** `_render_script` in
+   `an/adapters/manim_adapter.py` emits a single `Text(title)` title card of the
+   right duration. No entity, action, dialogue or camera information from the
+   Shot reaches the generated script. Translating the flat timeline into Manim
+   constructs is unstarted design work, not a wiring job.
+2. **`loop_mode` in the JS runtime.** Python honours all three modes
+   (`an/adapters/cutout/clip.py`, `_wrap_time`) and `serialize.py` emits the
+   field, but `runtime.js` has no handling for it, so every clip plays once.
+   Currently harmless — visemes and camera clips don't loop — and a trap the
+   moment someone authors a looping idle.
+3. **Lip-sync for face-baked characters.** DiceBear / external-avatar
+   descriptors have the face baked into the head SVG, so the compiler suppresses
+   both the overlay mouth and the viseme channel. Those characters speak without
+   moving their mouths. Hand-rigging (see `examples/promote_demo/`) is the
+   production path today.
+4. **Multi-scene projects.** `"main"` is the only key the scenes store supports.
+5. **Vendored PixiJS.** `index.html` and `preview.html` load PixiJS from a CDN,
+   so a cold render needs network access — at odds with the offline-by-default
+   posture of the rest of the pipeline.
 
 ---
 
 ## 11. Test architecture
 
-303 tests passing (and growing). Layered:
+Run `pytest -q` for the current count — a number written here only goes stale.
+The suite is layered:
 
 - **Doctests** in module docstrings cover the public API of each module (composition flatten times, transform decompose, easing endpoints, etc.).
 - **Pytest** for cross-cutting checks: store roundtrips, IR migration chaining, sync flip-flop regression, mall conformance, multi-shot concat audio, multi-character render distinct.

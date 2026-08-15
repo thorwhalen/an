@@ -204,7 +204,18 @@ cutout pipeline.
 
 - 3D animation, generative video, interactive output, SaaS hosting, music/sound-effect generation, in-house GUI, or editing of pre-existing video footage. `an` synthesizes; it does not cut.
 - The Manim backend works for placeholder title cards but isn't doing real shot-to-Manim translation; Remotion + whiteboard are skeleton implementations that respond correctly to `can_render` but can't produce video yet.
-- Real character art (SVG, sprites) — characters today are stylized placeholder geometry. Real art is the next major upgrade; see the research prompt at `~/Downloads/an_character_art_research_prompt.md` for the open design questions.
+- Lip-sync for face-baked characters. Characters sourced from DiceBear (or any
+  `external_avatar` descriptor) carry their face inside the head SVG, so the
+  compiler suppresses both the overlay mouth and the viseme channel — they speak
+  without moving their mouths. Hand-rigged characters lip-sync normally; see
+  `examples/promote_demo/`.
+- Multi-scene projects — `"main"` is the only scene key supported today.
+- Fully offline rendering. The JS runtime loads PixiJS from a CDN, so a cold
+  render needs network access even though TTS and lip-sync default to offline.
+
+SVG character art *has* shipped — descriptors drive real sprites through
+`svg_sprite` visuals, not the placeholder geometry an earlier version of this
+list described.
 
 ---
 
