@@ -437,12 +437,40 @@
         const height = meta.height || 1080;
         const bg = parseColor(meta.background || '#ffffff');
 
+        // Reloading a scene (which `an preview` does on every file change) needs a
+        // FRESH canvas element, and this is fiddlier than it looks — an#6:
+        //
+        //  - `destroy(true, …)` removes <canvas id="stage"> from the document. The
+        //    lookup below then returned null and PixiJS, given `view: null`, quietly
+        //    made its own detached canvas. Nothing threw; the preview just went
+        //    blank on the first edit and never came back.
+        //  - Simply keeping the old element (`destroy(false, …)`) does not work
+        //    either: its WebGL context is gone with the renderer and cannot be
+        //    re-acquired, so the next `new PIXI.Application({view: sameCanvas})`
+        //    dies with "Invalid value of `0` passed to checkMaxIfStatementsInShader".
+        //
+        // So: destroy, then put a brand-new canvas where the old one was, keeping
+        // its id and position so the page's CSS and any external lookups still work.
+        let canvas = document.getElementById('stage');
+        if (!canvas) {
+            // Fail loudly. The original bug was invisible precisely because PixiJS
+            // treats a missing view as "make me one".
+            throw new Error(
+                'anLoadScene: no <canvas id="stage"> in the document — the runtime ' +
+                'renders into it and will not silently create a detached one.'
+            );
+        }
         if (app) {
+            const parent = canvas.parentNode;
+            const next = canvas.nextSibling;
             app.destroy(true, { children: true, texture: true, baseTexture: true });
             app = null;
+            const fresh = document.createElement('canvas');
+            fresh.id = 'stage';
+            fresh.className = canvas.className;
+            parent.insertBefore(fresh, next);
+            canvas = fresh;
         }
-
-        const canvas = document.getElementById('stage');
         app = new PIXI.Application({
             view: canvas,
             width: width,
