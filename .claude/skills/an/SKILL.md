@@ -51,6 +51,9 @@ Backends registered: `cutout` (real, with face rig + emotion-driven eyebrows + p
 - ` ```yaml shot ` — duration, camera (with `move: hold | push_in | pull_out | zoom_in | zoom_out`), options.
 - ` ```yaml entities ` — list of AssetRef-shaped dicts. `kind` ∈ `character | environment | voice | style | prop`. Environment refs: `park | indoor | night | sunset | default`.
 - ` ```yaml actions ` — list of `tween` / `set` / `play` action dicts. Optional `start` (seconds) wraps a leaf in `sequence(delay(start), action)` so flatten gives correct absolute times.
+  - **Animatable properties:** `x`, `y`, `rotation`, `scale_x`, `scale_y`, `skew_x`, `skew_y`, `pivot_x`, `pivot_y`, `alpha`. Anything else is not applied.
+  - **`alpha` is the entrance/exit primitive** — it cascades, so a tween on the character root fades every part of it. `{kind: tween, target: charlie, property: alpha, to: 0.0, duration: 1.0}`.
+  - **A `tween` with no `from` starts from the property's *rest* value**, which is `1.0` for `scale_x` / `scale_y` / `alpha` and `0.0` for the rest — not `0.0` for everything. A tween on a property with no rest value (a viseme code, a colour) is **refused at compile time** rather than silently starting from zero; give it an explicit `from`, or use `set` if you meant a discrete change.
 - ` ```dialogue ` — `speaker [emotion]: text` per line. Emotion is one of `neutral | happy | sad | angry | surprised | skeptical | amused | thinking` and drives eyebrow tilt during the line.
 
 ## When the user wants to make a video right now

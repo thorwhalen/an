@@ -3,6 +3,28 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **`alpha` is an animatable node property (#13).** Set on the node's container,
+  so it cascades — a tween on the character root fades every part of it. This is
+  the entrance/exit primitive three later waves of #9 assume. The engine was
+  never the obstacle: the pinned PixiJS 7.4.2 already supports alpha, tint,
+  blendMode and sortableChildren; the ceiling was `runtime.js`'s.
+- **`tint` was cut from that change after adversarial review, deliberately.** A
+  `tween` on it compiled to `[(0.0, 0.0), (1.0, '#ff0000')]`; the runtime's
+  mixed-type branch snaps to the first value, so the subject rendered **solid
+  black for the whole shot** and flipped to red on the last frame — silently.
+  `#f00` also parsed to a different, darker red, and `red` killed the render with
+  a raw Playwright error. Tint needs cascade semantics, colour validation and a
+  discrete-vs-interpolated decision; it lands with the shadow model that needs it.
+- **Tween rest values are derived from `TransformJSON`'s field defaults**, not
+  restated. A tween with no `from_value` used to start at 0.0 for *every*
+  property — so a fade-out began already invisible (a silent no-op) and a scale
+  tween popped in from nothing. A property with no rest value is now **refused**
+  with a typed `CutoutCompileError` naming the property and the alternative,
+  because 0.0 does not mean "unchanged", it means zero.
+- Pose application is deterministic and shallowest-target-first. Object key order
+  is insertion order, i.e. a function of channel emission order, which is not a
+  contract — and the golden-frame work downstream depends on determinism.
+
 ## 2026-08-20
 
 - **The engine ships with the package (#12).** `index.html` and `preview.html`

@@ -235,14 +235,32 @@
         displayObject.skew.y = t.skew_y || 0;
         displayObject.pivot.x = t.pivot_x || 0;
         displayObject.pivot.y = t.pivot_y || 0;
+        // Containers DO have alpha, and it cascades to children — which is the
+        // semantics wanted: fading a character fades its parts. (Per-part
+        // compositing, so overlapping parts show a seam mid-fade; a flattened
+        // group fade would need a render-to-texture pass per node per frame.)
+        displayObject.alpha = t.alpha != null ? t.alpha : 1;
     }
 
     // ------------------------------------------------------------------------
     // Pose application
     // ------------------------------------------------------------------------
 
+    // Shallowest target first, then lexicographic. Object key order is
+    // insertion order, i.e. a function of channel emission order, which is not
+    // a contract — and the golden-frame work downstream needs a frame's pose
+    // application to be deterministic. Depth-first ordering also makes the more
+    // specific target win for any property that ever cascades.
+    function poseKeysInApplicationOrder(pose) {
+        return Object.keys(pose).sort(function (a, b) {
+            const da = (a.split('::')[0].match(/\//g) || []).length;
+            const db = (b.split('::')[0].match(/\//g) || []).length;
+            return da !== db ? da - db : (a < b ? -1 : a > b ? 1 : 0);
+        });
+    }
+
     function applyPose(pose) {
-        for (const key of Object.keys(pose)) {
+        for (const key of poseKeysInApplicationOrder(pose)) {
             const [target, prop] = key.split('::');
             const node = nodeIndex[target];
             if (!node) continue;
@@ -341,6 +359,7 @@
             case 'skew_y': node.skew.y = value; break;
             case 'pivot_x': node.pivot.x = value; break;
             case 'pivot_y': node.pivot.y = value; break;
+            case 'alpha': node.alpha = value; break;
             case 'viseme': setVisemeOnMouth(node, value); break;
             default:
                 // unknown property — ignore silently for forward compat
