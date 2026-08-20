@@ -3,6 +3,23 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **Wave 1 verification record (#10)** at `misc/docs/wave1_verification.md`: the vendored
+  engine's licence and provenance with digests, the DiceBear per-style licence table (11 of
+  27 styles are CC0, the current default is CC BY 4.0), the network-guard design, and the
+  silent-discard inventory with its empirical safety result. Fact with sources, not design
+  space.
+- **Two dev skills (#11).** `an-dev-licensing` — the chip is not evidence in either
+  direction; code, weights and editor are three separate licences; vendoring is a licensing
+  act; enforce in code, not in prose. `an-dev-runtime-assets` — verify packaging by building
+  a wheel rather than reasoning about the backend, make a missing asset audible, and suspect
+  the `__pycache__` mtime trap before the code.
+- **`an-dev` truthed up.** Its pillar 13 named `animaLoadScene`, a leftover from the
+  `anima` → `an` rename (the global is `anLoadScene`), and it claimed `runtime.js` "still
+  draws the procedural rig" after the SVG-texture path had shipped. Added the testing
+  contract — offline/hermetic, paid-API opt-in plus cassette, and mutation-test every guard,
+  with the two mechanical traps that have already produced false "restores" and false
+  "not caught" results.
+
 - **`alpha` is an animatable node property (#13).** Set on the node's container,
   so it cascades — a tween on the character root fades every part of it. This is
   the entrance/exit primitive three later waves of #9 assume. The engine was
