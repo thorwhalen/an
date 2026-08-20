@@ -36,7 +36,23 @@ class _JSONModel(BaseModel):
 
 
 class TransformJSON(_JSONModel):
-    """Local transform of a scene-graph node (authoring form)."""
+    """Local transform of a scene-graph node (authoring form).
+
+    ``alpha`` is not geometry, but it lives here for the same reason the rest
+    does: this is the per-node property bag the runtime applies, and it is
+    animatable through the same channel machinery.
+
+    It is set on the node's *container*, so it **cascades** — fading a character
+    fades every part of it. Note that this is per-part compositing, not a
+    flattened group fade: where two parts of the same character overlap, the
+    seam is visible mid-fade. That is the standard behaviour of a 2D scene graph
+    and the right default; a true group fade needs the subtree rendered to a
+    texture first, which costs a render pass per node per frame.
+
+    **This class's field defaults are the single source of truth for a
+    property's rest value** — see ``compile.py``'s ``_PROPERTY_REST_VALUES``,
+    which is derived from them rather than restated.
+    """
 
     x: float = 0.0
     y: float = 0.0
@@ -47,6 +63,7 @@ class TransformJSON(_JSONModel):
     skew_y: float = 0.0
     pivot_x: float = 0.0
     pivot_y: float = 0.0
+    alpha: float = 1.0
 
 
 class VisualJSON(_JSONModel):

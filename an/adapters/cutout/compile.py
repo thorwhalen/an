@@ -94,6 +94,75 @@ def _palette_for(entity_id: str) -> tuple[str, str, str]:
 # Cap viseme keyframe density to ~7Hz; reduces "twitchy" mouth at full speed.
 _MIN_VISEME_GAP_S: float = 0.14
 
+
+def _property_rest_values() -> dict[str, float]:
+    """Rest ("identity") value per animatable property, derived from the schema.
+
+    A tween that declares no ``from_value`` starts from its property's rest
+    value. This is not cosmetic: offsets and rotations rest at 0.0, but the
+    *multiplicative* properties rest at 1.0, and defaulting all of them to 0.0
+    silently breaks the two most obvious uses of a tween — a fade-out (``alpha``
+    starting at 0 is already invisible, so the fade never happens and the
+    element simply is not there) and a scale move (the subject pops in from
+    nothing). Nothing had noticed because the camera builds its own explicit
+    keyframes and no example authors a scale or alpha tween.
+
+    **Derived, not restated.** A node's rest pose *is* ``TransformJSON``'s field
+    defaults, so reading them off the model keeps one source of truth; a
+    hand-maintained copy would be a second place to forget.
+    """
+    rest = {
+        name: float(field.default)
+        for name, field in TransformJSON.model_fields.items()
+        if isinstance(field.default, (int, float))
+        and not isinstance(field.default, bool)
+    }
+    # `rotation_rad` is an accepted alias for `rotation` in the runtime's
+    # property switch and in `pose.py`; it is not a schema field, so it has to
+    # be added here rather than derived.
+    rest["rotation_rad"] = rest["rotation"]
+    return rest
+
+
+#: See :func:`_property_rest_values`.
+_PROPERTY_REST_VALUES: dict[str, float] = _property_rest_values()
+
+
+class CutoutCompileError(ValueError):
+    """A shot cannot be compiled to a cutout scene. Carries actionable detail."""
+
+
+def _rest_value_for(prop: str, target: str) -> float:
+    """The implicit start of a tween on ``prop``, or refuse to invent one.
+
+    A property with no numeric identity — a viseme code, a colour — has no
+    meaningful "start from rest". Substituting 0.0 does not mean "unchanged", it
+    means *zero*, and the renderer will happily apply it: a colour-valued tween
+    with an implicit 0.0 start renders its subject solid black for the whole
+    shot, silently. So this raises rather than guessing.
+    """
+    if prop in _PROPERTY_REST_VALUES:
+        return _PROPERTY_REST_VALUES[prop]
+    raise CutoutCompileError(
+        f"tween on {target!r}:{prop!r} has no from_value, and {prop!r} has no "
+        f"rest value to start from (known: {sorted(_PROPERTY_REST_VALUES)}). "
+        "Give the action an explicit from_value, or use a `set` action if you "
+        "meant to change it discretely — a tween cannot interpolate from a "
+        "value that does not exist, and defaulting it to 0 would render as "
+        "'fully transparent' / 'black' / 'scaled to nothing' rather than as "
+        "'unchanged'."
+    )
+
+
+#: Fallback for a property with no declared rest value.
+#:
+#: Reachable only by a property that is neither a transform field nor an alias —
+#: i.e. a discrete one such as ``viseme``, for which no numeric identity is
+#: meaningful. Multiplying such a property by an implicit 0.0 is how a
+#: colour-valued tween would render its subject solid black, so the compiler
+#: refuses instead: see :func:`_rest_value_for`.
+_DFLT_PROPERTY_REST_VALUE: float | None = None
+
 # Emotion → (left_brow_tilt, right_brow_tilt) in radians. Mirrored so the
 # brows look symmetric for happy/sad and asymmetric for surprise/skepticism.
 _EMOTION_BROWS: dict[str, tuple[float, float]] = {
@@ -710,7 +779,11 @@ def _compile_one(
 def _build_anim_for(flat: FlatAction, anim_id: str) -> AnimationClipJSON:
     action = flat.action
     if isinstance(action, TweenAction):
-        from_value = action.from_value if action.from_value is not None else 0.0
+        from_value = (
+            action.from_value
+            if action.from_value is not None
+            else _rest_value_for(action.property, action.target)
+        )
         return AnimationClipJSON(
             name=anim_id,
             duration=action.duration,
