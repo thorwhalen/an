@@ -1,8 +1,22 @@
-"""WhisperLipSync — skip-test if faster-whisper not installed."""
+"""WhisperLipSync — needs faster-whisper AND a locally cached model.
+
+These looked like offline tests and were not: instantiating ``WhisperLipSync``
+resolves a model through the Hugging Face hub, so every run did a DNS lookup for
+``huggingface.co`` and, on a cold cache, downloaded weights. The offline guard in
+``conftest.py`` is what surfaced it — the tests passed either way, which is
+exactly the failure mode the guard's record-as-well-as-refuse design exists to
+catch.
+
+They are kept, because they cover real viseme-alphabet behaviour that a stub
+would not. They are now pinned to the local cache: ``HF_HUB_OFFLINE=1`` makes the
+hub resolve from disk only, and a machine without the model cached skips instead
+of silently fetching.
+"""
 
 from __future__ import annotations
 
 import importlib.util
+import os
 
 import pytest
 
@@ -17,10 +31,25 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+@pytest.fixture(autouse=True)
+def _hub_offline(monkeypatch):
+    """Resolve the model from the local cache only — never over the network."""
+    monkeypatch.setenv("HF_HUB_OFFLINE", "1")
+    monkeypatch.setenv("TRANSFORMERS_OFFLINE", "1")
+
+
+def _lipsync_or_skip() -> WhisperLipSync:
+    """Build the provider, skipping when the model is not cached locally."""
+    try:
+        return WhisperLipSync()
+    except Exception as e:  # noqa: BLE001 — any hub/model failure means "not cached"
+        pytest.skip(f"whisper model not available offline: {type(e).__name__}: {e}")
+
+
 def test_align_silent_audio_returns_track():
     """Silent audio should still produce a viseme track (rest only)."""
     audio = OfflineTTS().synthesize("hello world")  # silent WAV
-    track = WhisperLipSync().align(audio, "hello world")
+    track = _lipsync_or_skip().align(audio, "hello world")
     assert track.convention == "rhubarb"
     # All visemes should be rest (X) since the audio is silent and no words detected.
     codes = {v.code for v in track.visemes}
@@ -29,14 +58,14 @@ def test_align_silent_audio_returns_track():
 
 def test_align_visemes_within_audio_duration():
     audio = OfflineTTS().synthesize("a quick test of the system")
-    track = WhisperLipSync().align(audio, "a quick test of the system")
+    track = _lipsync_or_skip().align(audio, "a quick test of the system")
     for v in track.visemes:
         assert 0.0 <= v.time <= audio.duration + 1e-3
 
 
 def test_align_uses_known_viseme_alphabet():
     audio = OfflineTTS().synthesize("speak now please")
-    track = WhisperLipSync().align(audio, "speak now please")
+    track = _lipsync_or_skip().align(audio, "speak now please")
     for v in track.visemes:
         assert v.code in {"A", "B", "C", "D", "E", "F", "G", "H", "X"}
 
@@ -65,7 +94,7 @@ def test_align_with_real_speech_via_elevenlabs():
     from an.audio.elevenlabs_tts import ElevenLabsTTS
 
     audio = ElevenLabsTTS().synthesize("Hello there friend, how are you today?")
-    track = WhisperLipSync().align(audio, "Hello there friend, how are you today?")
+    track = _lipsync_or_skip().align(audio, "Hello there friend, how are you today?")
     # Real speech → multiple words → multiple non-rest visemes.
     non_rest = [v for v in track.visemes if v.code != "X"]
     assert len(non_rest) >= 3

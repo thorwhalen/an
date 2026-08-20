@@ -210,8 +210,6 @@ cutout pipeline.
   without moving their mouths. Hand-rigged characters lip-sync normally; see
   `examples/promote_demo/`.
 - Multi-scene projects — `"main"` is the only scene key supported today.
-- Fully offline rendering. The JS runtime loads PixiJS from a CDN, so a cold
-  render needs network access even though TTS and lip-sync default to offline.
 
 SVG character art *has* shipped — descriptors drive real sprites through
 `svg_sprite` visuals, not the placeholder geometry an earlier version of this

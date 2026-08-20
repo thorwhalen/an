@@ -36,6 +36,7 @@ def promote(
     *,
     source_svg: str | Path | None = None,
     voice_ref: Optional[str] = None,
+    use_dicebear: bool = True,
     overwrite: bool = False,
 ) -> Path:
     """Promote ``entity`` from ``project_dir``'s inline assets into the mall.
@@ -58,6 +59,12 @@ def promote(
         ``assets/characters/<entity>/<entity>.svg``.
     voice_ref
         Voice reference to embed in the descriptor.
+    use_dicebear
+        Forwarded to :func:`~an.characters.factory.new_character` on the
+        no-source fallback path. Pass ``False`` to keep the call offline —
+        without it that fallback always reaches the DiceBear API, and
+        ``new_character`` swallows the failure and generates geometry instead,
+        so an offline test looks like it passed rather than like it was skipped.
     overwrite
         If False and the target already exists, raises ``FileExistsError``.
 
@@ -77,6 +84,7 @@ def promote(
             name=as_,
             seed=entity,
             voice_ref=voice_ref,
+            use_dicebear=use_dicebear,
             overwrite=overwrite,
         )
 
