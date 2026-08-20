@@ -16,7 +16,7 @@ unsound: a third party could change the renderer without changing any cache key.
 from __future__ import annotations
 
 import hashlib
-import tomllib
+import re
 from pathlib import Path
 
 import pytest
@@ -98,10 +98,18 @@ def test_force_include_is_a_complete_inventory_of_the_runtime_assets():
     the wheel, which is the opposite of the truth. A runtime asset added and
     forgotten here fails this test.
     """
-    cfg = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
-    declared = set(
-        cfg["tool"]["hatch"]["build"]["targets"]["wheel"]["force-include"]
+    # Parsed by hand rather than with tomllib, which is 3.11+ while this package
+    # supports 3.10 — and adding `tomli` for one test would put a dependency in
+    # the wheel to check the wheel's own manifest.
+    text = (REPO_ROOT / "pyproject.toml").read_text()
+    block = re.search(
+        r"^\[tool\.hatch\.build\.targets\.wheel\.force-include\]\n(.*?)(?=^\[|\Z)",
+        text,
+        re.S | re.M,
     )
+    assert block, "force-include table not found in pyproject.toml"
+    declared = set(re.findall(r'^"([^"]+)"\s*=', block.group(1), re.M))
+    assert declared, "force-include table parsed as empty — the regex has drifted"
     on_disk = {
         str(p.relative_to(REPO_ROOT))
         for p in RUNTIME_DIR.rglob("*")
