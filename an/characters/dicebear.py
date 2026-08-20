@@ -28,8 +28,25 @@ import urllib.request
 from typing import Optional
 
 
+#: Pinned major. NOTE: 9.x and 10.x are both Active with End of Life "None" —
+#: the April 2028 date sometimes cited is the EOL of the DEPRECATED 5.x-8.x line,
+#: not of this one. The pin is right; the reason previously given for it was not.
 DICEBEAR_API_VERSION = "9.x"
-DICEBEAR_DEFAULT_STYLE = "adventurer"
+#: The default avatar style. CC0 1.0 — no attribution duty falls on anyone who
+#: renders with stock settings.
+#:
+#: The previous default (`adventurer`) is CC BY 4.0, so every character created
+#: with default flags carried an undischarged attribution obligation, recorded
+#: nowhere. `lorelei` is not merely "a CC0 one": it is the only CC0 *human* style
+#: shaped like a head-and-shoulders bust, which is what the rig needs —
+#: `wrap_dicebear_for_an` pastes the whole avatar in as the single `head` part,
+#: so the other CC0 human styles (`notionists`, `open-peeps`) render half-body
+#: characters and would put a torso on a torso. It is also by the same artist as
+#: `adventurer`, so the demo art barely shifts. `pixel-art` is the CC0 fallback.
+#:
+#: All 27 styles stay requestable; only the default moves. See
+#: `an/characters/licenses.py` for the per-style table.
+DICEBEAR_DEFAULT_STYLE = "lorelei"
 
 # Styles that ship with the API. Listed here so the CLI can offer a useful
 # completion / error message; not exhaustive (DiceBear adds new styles).

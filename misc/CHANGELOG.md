@@ -22,6 +22,29 @@ day per chunk of work; keep entries terse.
   in CI (#22), the Windows leg is `continue-on-error` so a green tick can hide a
   failure, and the unrendered second scene evaluator that Wave 5 must resolve
   before swap channels land.
+- **Third-party art carries its rights now (#14).** New `an/ir/assets.py`
+  `AssetSource`, with the rights field names pinned literal-for-literal to
+  `illustration.ImageResult` so an adapter is a dict copy rather than a rename
+  table — a rename table is where a field quietly stops being carried, which is
+  exactly what `illustration`'s own persistence layer does today
+  (illustration#14). `cost_usd=None` means unknown, never free.
+- **The default avatar style moved to a CC0 one.** It was `adventurer`, CC BY
+  4.0 — so `an character new <name>` with no flags produced art whose licence
+  obliged the *user* to credit an artist they had never heard of, recorded
+  nowhere and displayed nowhere. `lorelei` is not merely "a CC0 one": it is the
+  only CC0 human style shaped like a bust, which is what the rig needs, and it is
+  by the same artist so the demo art barely shifts. All 27 styles stay
+  requestable; a CC BY one now needs `acknowledge_attribution=True`, and the
+  refusal shows the exact text you would owe.
+- **`an credits <project>`** walks the recorded sources and prints what must be
+  displayed. A licence recorded and never displayed is not compliance. It keeps
+  three lists, never two: owed, UNVERIFIED, and clear — folding "unknown" into
+  either one is how an obligation goes missing.
+- `an/characters/licenses.py` is the per-style table, verified against each
+  style's own licence file. The DiceBear *software* licence (MIT) is a separate
+  fact from each *style* licence; DiceBear splits them itself.
+- Corrected a count I had pinned in `wave1_verification.md` — "11 CC0, 12 CC BY"
+  did not match the per-style rows beneath it. The rows are the fact.
 
 ### Second review round (#24)
 

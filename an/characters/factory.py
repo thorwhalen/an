@@ -37,6 +37,13 @@ def _stable_hash(seed: str) -> int:
     return int.from_bytes(digest[:8], "big")
 
 
+from an.characters.licenses import (
+    DICEBEAR_STYLE_LICENSES,
+    attribution_for,
+    dicebear_source,
+    requires_acknowledgement,
+)
+from an.ir.assets import AssetSource
 from an.characters.dicebear import (
     DICEBEAR_DEFAULT_STYLE,
     fetch_dicebear,
@@ -91,6 +98,31 @@ class ValidationReport:
         return "\n".join(lines)
 
 
+def _check_style_is_usable(style: str, *, acknowledge_attribution: bool) -> None:
+    """Refuse a style whose licence puts a duty on the user, unless acknowledged.
+
+    Not paternalism: `an` produces videos its user ships, and CC BY obliges them
+    to credit an artist they have never heard of, for art they did not know was
+    third-party. Making that an explicit flag is the difference between an
+    informed choice and an unknowing violation.
+
+    The default style is CC0, so the common path never sees this.
+    """
+    if not requires_acknowledgement(style) or acknowledge_attribution:
+        return
+    lic = DICEBEAR_STYLE_LICENSES.get(style)
+    owed = attribution_for(style) or "an attribution you must display"
+    raise ValueError(
+        f"style {style!r} is licensed {lic.license if lic else 'UNVERIFIED'}, "
+        "which obliges whoever ships the rendered video to credit the artist. "
+        "Pass acknowledge_attribution=True to accept that duty; the record is "
+        "then written to the character's `source` field and `an credits` will "
+        f"render it. What you would owe:\n  {owed}\n"
+        f"For no obligation at all, use the default style "
+        f"({DICEBEAR_DEFAULT_STYLE!r}, CC0)."
+    )
+
+
 def new_character(
     out_dir: str | Path,
     *,
@@ -99,6 +131,7 @@ def new_character(
     style: str = DICEBEAR_DEFAULT_STYLE,
     voice_ref: Optional[str] = None,
     use_dicebear: bool = True,
+    acknowledge_attribution: bool = False,
     overwrite: bool = False,
 ) -> Path:
     """Build a complete character on disk.
@@ -134,7 +167,9 @@ def new_character(
     # Step 1 & 2: source art
     seed_used = seed or name
     metadata: dict[str, object] = {"art_provenance": "fallback_geometric"}
+    source: AssetSource | None = None
     if use_dicebear:
+        _check_style_is_usable(style, acknowledge_attribution=acknowledge_attribution)
         try:
             avatar = fetch_dicebear(seed_used, style=style)
             metadata = {
@@ -142,6 +177,7 @@ def new_character(
                 "dicebear_style": style,
                 "dicebear_seed": seed_used,
             }
+            source = dicebear_source(style, seed=seed_used)
         except RuntimeError as e:
             avatar = _fallback_face_svg(seed_used)
             metadata = {
@@ -186,6 +222,7 @@ def new_character(
         voice_ref=voice_ref,
         source_svg=f"{name}.svg",
         metadata={**metadata, "pivots_detected": list(pivots.keys())},
+        source=source,
     )
     desc_path = out / "character.json"
     desc_path.write_text(descriptor.model_dump_json(indent=2), encoding="utf-8")

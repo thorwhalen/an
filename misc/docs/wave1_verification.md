@@ -113,9 +113,15 @@ the avatars are MIT is the trap.
 
 ### The table
 
-Of the 27 styles `an` can request, **11 are CC0 1.0** (no attribution duty), 12 are
-**CC BY 4.0** (real attribution duty), and the Pablo Stanley set carries bespoke
-"free for personal and commercial use" terms that are *not* a Creative Commons licence.
+The styles `an` can request split three ways: CC0 1.0 (no attribution duty), CC BY 4.0
+(a real duty), and the Pablo Stanley set, which carries bespoke "free for personal and
+commercial use" terms that are *not* a Creative Commons licence.
+
+An earlier version of this paragraph pinned counts — "11 are CC0, 12 are CC BY" — which
+did not match the per-style rows below it. The rows are the fact; the counts were a
+summary nobody had verified, and the repo's own rule is not to pin a number in prose.
+`an/characters/licenses.py` is the machine-readable table, and a test asserts every
+requestable style has a row in it.
 
 | Style | Designer | Licence |
 |---|---|---|
