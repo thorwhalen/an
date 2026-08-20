@@ -11,7 +11,17 @@ This skill orients you for engineering work *on* an. If you're using an from a p
 
 **Always start with `misc/docs/architecture_as_built.md`** — the canonical, current-state map of the system (modules, control flows, invariants, caching strategy). Read it before any non-trivial change.
 
-For deeper subsystem design history, the seven research reports next to it cover the design space (NOT current state):
+`misc/docs/wave1_verification.md` is the **verification record** for the current wave of
+work (epic #9): the vendored engine's licence and provenance, the DiceBear per-style licence
+table, the network-guard design, and the silent-discard inventory. It is fact with sources,
+not design space — prefer it over re-deriving.
+
+Two sibling skills carry rules that are easy to violate and expensive to get wrong:
+**`an-dev-licensing`** (before adding *any* dependency, model weight, font or bundle) and
+**`an-dev-runtime-assets`** (before touching anything under `an/data/`).
+
+For deeper subsystem design history, the research reports next to it cover the design space
+(NOT current state):
 
   - `report 0 ...md` — overall architecture, IR layering, agent-tool boundary, verification
   - `dsl_design_patterns_report.md` — IR schema design, evolution rules
@@ -37,7 +47,7 @@ For deeper subsystem design history, the seven research reports next to it cover
 10. Verification is a swappable Protocol; same interface for human, lint, vision-LM, MoVer.
 11. Caches are content-hash keyed (audio_ref, viseme_ref). Cache invalidation is by deletion (`del mall["shots"][shot_id]`). No cache versioning — keys are deterministic so collisions across versions are impossible.
 12. **Equalize mtimes after writing both `scene.md` and `ir/scene.json`** in `ScenesStore.__setitem__`. Sync's "newer wins" tolerance band depends on this. Without it, sync flip-flops on every load and pipeline-injected state (viseme tracks, audio_refs) gets stripped.
-13. The synthetic root container in the JS runtime is **not indexed** in `nodeIndex`. `compile_shot` emits target paths starting with the entity name (`charlie/head/mouth`); the runtime's `animaLoadScene` skips the root when populating `nodeIndex`.
+13. The synthetic root container in the JS runtime is **not indexed** in `nodeIndex`. `compile_shot` emits target paths starting with the entity name (`charlie/head/mouth`); the runtime's `anLoadScene` skips the root when populating `nodeIndex`.
 
 ## Module map (current state)
 
@@ -49,7 +59,7 @@ Read `misc/docs/architecture_as_built.md` for the full map. The pieces that didn
 - `an/verify/media.py` — ssim, detect_silence, audio_volume, extract_frames, transcribe (Phase 8)
 - `an/verify/media_quality.py` — MediaQualityVerifier (Phase 9)
 - `an/verify/vision.py` — VisionLMVerifier (Claude vision QA, Phase 9)
-- `an/characters/` — character authoring tools (Phase 11a): Spine-shaped `CharacterDescriptor`, SVG utils, parametric 9-shape mouth generator, DiceBear client + envelope, idle-animation factories, silhouette test, `assets.promote`. Powers `an character {new,mouths,validate,silhouette,preview}`. Renderer integration (Pixi SVG-texture path) is the next phase — characters live but `runtime.js` still draws the procedural rig.
+- `an/characters/` — character authoring tools (Phase 11a): Spine-shaped `CharacterDescriptor`, SVG utils, parametric 9-shape mouth generator, DiceBear client + envelope, idle-animation factories, silhouette test, `assets.promote`. Powers `an character {new,mouths,validate,silhouette,preview}`. The Pixi SVG-texture path has since shipped: `makeSvgSprite` builds a real `PIXI.Sprite` from a preloaded texture, and `preloadAssets` stages them. The procedural rig is the fallback for characters with no descriptor art, not the only path.
 
 ## How to wire a new TTS / LipSync / Verifier / Renderer
 
@@ -68,6 +78,40 @@ The four Protocols live in `an.audio.tts.TTSProvider`, `an.audio.lipsync.LipSync
 - Functional over OOP; OOP only for orchestrators and stateful sessions.
 - Errors are informative and specific. Wrap subprocess errors at the facade boundary.
 - Doctests for the public API; pytest for cross-cutting checks.
+
+## Testing rules — all three are enforced, not aspirational
+
+**The suite is offline and hermetic, and a guard proves it.** `tests/conftest.py` refuses
+*and records* every non-loopback socket use; the recording half is load-bearing, because
+this package swallows network failures in its own code (`new_character` catches the
+`RuntimeError` from `fetch_dicebear` and generates geometry instead), so a guard that only
+raised would be absorbed into a passing test. Arming it found two tests that had been
+reaching the network on every run while passing identically either way.
+
+**A Python socket guard cannot see Chromium.** It fetches from another process. Anything
+asserting the renderer does not reach out must use the `hermetic_browser` fixture, which
+aborts non-loopback requests at the Playwright layer. Nothing under `an/data/` may fetch at
+render time; `tests/test_vendored_engine.py` enforces it statically *and* by rendering.
+
+**A paid API needs an explicit positive opt-in AND a cassette.** `AN_LIVE_API_TESTS=1` plus
+the `live_api` marker. A key being present is not consent to spend — that gate exists
+because a plain `pytest -q` in this repo once made real, billed ElevenLabs calls and
+reported PASSED. A cassette miss is an ERROR, never a fallthrough to a real call.
+
+**Every regression guard is mutation-tested.** Delete the fix, confirm the test goes red.
+An unproven guard is decoration, and this is not theoretical here — a guard that tested an
+ordering *helper* in isolation passed while `applyPose` never called it, and a meta-test for
+an autouse fixture passed on the mutant because requesting the fixture by name installs it
+regardless of `autouse`. Both were caught only by mutating.
+
+Two mechanical traps when mutating:
+
+- **Clear `__pycache__` and `touch` the file after restoring.** A restore that rewinds mtime
+  (`mv`, `cp -p`) leaves a `.pyc` newer than its source, so Python keeps the stale bytecode
+  and the mutation silently stays live. This has already produced a "passing" restore that
+  was not.
+- **Run the whole test file, not a `-k` filter.** A filter that misses the one test which
+  would have caught the mutation reads as "not caught".
 
 ## Per-PR housekeeping
 
