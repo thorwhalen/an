@@ -303,20 +303,23 @@ What genuinely remains, in rough priority order:
    right duration. No entity, action, dialogue or camera information from the
    Shot reaches the generated script. Translating the flat timeline into Manim
    constructs is unstarted design work, not a wiring job.
-2. **`loop_mode` in the JS runtime.** Python honours all three modes
-   (`an/adapters/cutout/clip.py`, `_wrap_time`) and `serialize.py` emits the
-   field, but `runtime.js` has no handling for it, so every clip plays once.
-   Currently harmless — visemes and camera clips don't loop — and a trap the
-   moment someone authors a looping idle.
+2. **Nothing ever *emits* a non-default `loop_mode`.** The runtime honours all
+   three modes (`runtime.js`, `wrapTime`) and so does Python
+   (`an/adapters/cutout/clip.py`, `_wrap_time`) — that landed, and an earlier
+   version of this section claiming otherwise was stale. The remaining gap is
+   the inverse and easy to miss: no compiler code writes the field, so looping
+   is reachable only by hand-writing `CutoutSceneJSON`.
 3. **Lip-sync for face-baked characters.** DiceBear / external-avatar
    descriptors have the face baked into the head SVG, so the compiler suppresses
    both the overlay mouth and the viseme channel. Those characters speak without
    moving their mouths. Hand-rigging (see `examples/promote_demo/`) is the
    production path today.
 4. **Multi-scene projects.** `"main"` is the only key the scenes store supports.
-5. **Vendored PixiJS.** `index.html` and `preview.html` load PixiJS from a CDN,
-   so a cold render needs network access — at odds with the offline-by-default
-   posture of the rest of the pipeline.
+5. **A real `an validate` for everything the renderer refuses.** The pre-flight
+   now reports the four IR-level refusals (unknown `camera.move`, `prop`
+   entities, `narration`, `play`), but it duplicates the compiler's camera list
+   rather than sharing it, and it cannot see rig-level problems — a speaker
+   whose character has no head is only discovered at compile time.
 
 ---
 
@@ -327,7 +330,9 @@ The suite is layered:
 
 - **Doctests** in module docstrings cover the public API of each module (composition flatten times, transform decompose, easing endpoints, etc.).
 - **Pytest** for cross-cutting checks: store roundtrips, IR migration chaining, sync flip-flop regression, mall conformance, multi-shot concat audio, multi-character render distinct.
-- **Live API tests** (skip-if-key-missing) for `ElevenLabsTTS`, `WhisperLipSync` (skip-if-faster-whisper-missing), `VisionLMVerifier` (skip-if-anthropic-missing-or-no-key), `iterate()` (skip-if-anthropic-missing-or-no-key).
+- **Live API tests** are gated on an explicit positive opt-in — `AN_LIVE_API_TESTS=1` **and** `CI` unset — not on a key being present. That distinction is the whole point: the previous "skip-if-key-missing" gate was satisfied by every developer machine and every agent session that had sourced a shell profile, so a plain `pytest -q` once made real, billed ElevenLabs calls and reported PASSED.
+- **The suite is offline and hermetic, and a guard enforces it.** `tests/conftest.py` refuses *and records* non-loopback socket use; `hermetic_browser` does the same at the Playwright layer, because a socket patch cannot see Chromium.
+- **Silent discards raise.** Seven places that accepted something and produced nothing now raise typed errors; `an validate` reports the IR-level ones before any money or browser is spent. See `misc/docs/wave1_verification.md` §4.
 - **End-to-end render tests** (skip-if-ffmpeg-or-chromium-missing) that produce real mp4s and assert structural properties (audio stream present, frames change, characters distinct).
 
 The project's CI runs the offline subset; a developer machine with all dependencies installed runs the full suite (~70s).

@@ -38,7 +38,7 @@ For deeper subsystem design history, the research reports next to it cover the d
 1. Three-layer IR (Narrative `scene.md` / Scene Graph `ir/scene.json` / Render Code generated). Render Code is disposable.
 2. Top-level versioning envelope on the IR; `extra="allow"` on inbound; additive-only field changes; migration registry chained through `an.ir.migrate`.
 3. Composition primitives are Python-side combinators that flatten to a canonical timeline. The flat form is what verifiers and renderers operate on.
-4. Path-based property targeting (`"charlie/torso/left_arm:rotation"`) for renderer-portability.
+4. Path-based property targeting (`"charlie/left_arm:rotation"`) for renderer-portability. The rigs are FLAT: arms are siblings of the torso. An unknown target raises, so a path example that names nothing is now a trap.
 5. Setup pose plus deltas; slot/skin/animation separation. (Cutout adapter, Phase 2.)
 6. Time in seconds (float) at the IR boundary; rational time only inside the audio pipeline where drift matters.
 7. All external systems behind `Protocol`s (`Renderer`, `TTSProvider`, `LipSyncProvider`, `Verifier`).

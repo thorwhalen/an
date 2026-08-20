@@ -232,7 +232,10 @@ def _extract_actions_block(text: str) -> list:
     Supported entry shapes (one per item in the YAML list):
       - ``{kind: tween, target, property, to, duration, [from_], [easing], [start]}``
       - ``{kind: set,   target, property, value, [at]}``
-      - ``{kind: play,  target, animation, [duration], [speed], [loop], [start]}``
+      - ``{kind: play,  ...}`` is **rejected**: named reusable animations have
+        nowhere to be defined, so the compiler refuses every ``PlayAction``.
+        Accepting one here would let it round-trip through ``scene.md`` and fail
+        later, at render, having looked valid the whole way.
 
     A leaf action with a ``start`` key is wrapped in ``sequence(delay(start),
     action)`` so flatten yields the correct absolute time. ``set`` uses ``at``
@@ -275,16 +278,21 @@ def _extract_actions_block(text: str) -> list:
                 at=float(item.get("at", 0.0)),
             )
         elif kind == "play":
-            action = _compose.play(
-                item["target"],
-                item["animation"],
-                duration=item.get("duration"),
-                speed=float(item.get("speed", 1.0)),
-                loop=bool(item.get("loop", False)),
+            # Refused here rather than at compile time. `scene.md` is the
+            # authoring surface — the SSOT an author actually edits — so a
+            # `play` accepted here round-trips through the IR, survives
+            # `an validate`, and only dies at compile, having looked valid the
+            # entire way. The earliest layer that can see the mistake reports it.
+            raise ValueError(
+                f"actions[{i}]: `play` references a named animation, and named "
+                "reusable animations are not implemented — nothing can define "
+                "one, so the compiler refuses every `play`. Use tween / set, or "
+                "sequence / parallel to compose them. See "
+                "https://github.com/thorwhalen/an/issues/7"
             )
         else:
             raise ValueError(
-                f"actions[{i}].kind must be one of tween/set/play; got {kind!r}"
+                f"actions[{i}].kind must be one of tween/set; got {kind!r}"
             )
         if start is not None and float(start) > 0:
             action = _compose.sequence(_compose.delay(float(start)), action)

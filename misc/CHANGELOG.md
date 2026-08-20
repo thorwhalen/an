@@ -3,6 +3,105 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+### Second review round (#24)
+
+The consolidating verdict returned **merge-after-fixes** with both blockers already
+addressed, and surfaced one finding no individual lens had:
+
+- **`an/ir/sync.py` — the `scene.md` authoring surface, which CLAUDE.md calls the
+  SSOT — still documented, accepted and round-tripped `play`.** A `play` written
+  there survived the IR, survived `an validate`, and died at compile, having
+  looked valid the entire way. Refused at parse time now: the earliest layer that
+  can see the mistake reports it.
+- `charlie/torso/left_arm` — the project's own canonical targeting example — names
+  a node no rig builds (the rigs are flat; arms are siblings of the torso). It was
+  harmless while an unknown target was skipped and is a trap now that it raises.
+- `camera.move=""` was ignored while `move="  "` raised: falsiness was tested
+  before normalisation, so the same input had two behaviours.
+- `_capture_frames` labelled every browser-side failure "the JS runtime failed",
+  including a Playwright timeout or a crashed target. It now says what it can
+  actually know and names the exception type.
+
+One of my own "corrections" was itself wrong and is reverted in spirit: the
+verdict counted, and there really are exactly nine direct `RuntimeError`
+subclasses, so the doc claim was true rather than stale. The rewritten wording
+generalises it to cover `CutoutCompileError` being a `ValueError`.
+
+### Rework after adversarial review (#24)
+
+The first version of #15 put each guard where the SYMPTOM lived rather than where
+the author's mistake lived, and three independent reviewers found what that costs:
+
+- **`an preview` froze permanently and silently.** `tick()` called `anSetTime`
+  unguarded and re-armed rAF on the next statement, so the first throw killed the
+  loop for the life of the page with the status bar still reading "ok". Guarded;
+  a reload now restarts the loop it stopped.
+- **The narration guard was unreachable from `an render`** for exactly the scenes
+  it names — the audio pipeline was gated on `_has_any_dialogue`, so a
+  narration-only project skipped it and rendered silent.
+- **Widening `pose.py`'s allow-list made things worse.** `TransformParams` has no
+  `alpha` / `viseme`, so `apply_pose` accepted them and died with a raw dataclass
+  `TypeError` instead of its own informative `KeyError`. The list is now derived
+  from what it can actually apply, and the gap to the runtime is DECLARED.
+- **The off-screen-speaker fix was itself a new silence.** It could not tell a
+  narrator from a typo. It now checks the scene's real node paths and WARNS,
+  naming the actual mouths — which also covers a case entity-membership missed:
+  an on-screen character whose rig has no head.
+- **The environment perimeter was drawn in the wrong place** — it hard-failed on
+  ordinary store metadata (`name`, `description`) while an unknown environment
+  ref stayed silent. Now warns.
+- **`an validate` learns all of it.** This is where the checks belonged: every
+  scene the pipeline refuses used to report `passed`, so the author paid for TTS
+  or a Chromium launch to discover a pure-IR mistake.
+
+Three of the tests were vacuous and one guard had none at all:
+
+- the off-screen-speaker test never reached the branch it named (a missing
+  `viseme_track` short-circuits two guards earlier) — and it was the test
+  defending the change's headline claim;
+- the schema-advertisement test keyed on the literal `e.g.`, which the rewritten
+  comment removed — fixing the thing a test guards disarmed the test;
+- the "applies every known property" test asserted only that nothing threw, so a
+  mutant writing to the wrong field passed;
+- deleting the `CutoutRenderError` wrapper left all 408 tests green.
+
+Also: errors name the shot, user-facing messages link to a real issue instead of
+an internal wave number, and `iterate`'s prompt plus the `an` skill no longer
+advertise `play`, `prop` or `narration` as usable.
+
+**BEHAVIOUR CHANGE:** `apply_pose` raises on an unknown target where it used to
+skip. That reverses a pre-existing test (`test_apply_pose_skips_unknown_target`),
+deliberately — the JS runtime made the same choice for the same stated reason and
+has been changed too. Two evaluators should agree, and silence is the wrong thing
+for them to agree on.
+
+- **Seven silent discards now raise typed errors that name the wave implementing
+  them (#15).** Each had the same shape: the IR declares a capability, the
+  compiler or runtime quietly declines it, and the author gets a render missing
+  something with no diagnostic — the worst failure mode this package has, because
+  it surfaces days later as "the animation looks wrong". An unrecognised
+  `camera.move`; `PlayAction` (which used to fabricate an empty, channel-less
+  clip, so `play` looked wired while animating nothing); `Shot.narration`;
+  `prop` entities; environment-store keys the renderer never reads; the
+  runtime's unknown-property branch; and its unknown-*target* sibling.
+- `hold` is exempt — it early-returned through the same branch as an unknown
+  move and is a correct no-op. `voice` and `style` entities likewise: they
+  configure the render rather than appearing in it.
+- **The loud target guard immediately found a real bug** in a passing test: the
+  compiler emitted a viseme channel for a speaker who is not an entity in the
+  shot, aimed at a node that was never built. An off-screen speaker is the
+  standing workaround for unimplemented narration, so the fix is to emit no
+  channel — the same reasoning already applied to face-baked characters.
+- `pan_left` is no longer advertised. It was named in the IR's own comment on
+  `Camera.move` and dead in the compiler; an error that contradicts the schema is
+  worse than no error.
+- The JS throw is wrapped as `CutoutRenderError` naming the frame and time —
+  otherwise this trades a silent discard for a raw Playwright traceback.
+- `pose.py`'s allow-list had drifted (no `viseme`, no `alpha`) because nothing on
+  the render path calls `apply_pose`. It is now pinned to the runtime's switch.
+- `an iterate`'s prompt enumerates the legal property names. A hallucinated
+  `opacity` tween used to be silently inert; it is now a hard render failure.
+
 - **Wave 1 verification record (#10)** at `misc/docs/wave1_verification.md`: the vendored
   engine's licence and provenance with digests, the DiceBear per-style licence table (11 of
   27 styles are CC0, the current default is CC BY 4.0), the network-guard design, and the

@@ -32,6 +32,10 @@ from an.ir.schema import VisemeTrack as IRVisemeTrack
 from an.util import _stable_hash
 
 
+class AudioPipelineError(RuntimeError):
+    """The scene declares audio the pipeline cannot produce. Carries detail."""
+
+
 def default_tts() -> TTSProvider:
     """The default TTS provider: ``OfflineTTS``."""
     return OfflineTTS()
@@ -95,6 +99,22 @@ def produce_audio_for_scene(
     cursor = 0.0
     for shot in scene.timeline:
         cursor = 0.0
+        if shot.narration:
+            # `Shot.narration` is fully modelled in the IR — text, voice_ref,
+            # start, duration, viseme_track, audio_ref — and nothing has ever
+            # consumed it: this loop walks `shot.dialogue` only, and the cutout
+            # compiler has no narration path either. So a narrated shot produced
+            # no audio AND no picture, silently. Narrator-over-visuals is the
+            # shape of the whole explainer genre, so this is a real gap rather
+            # than an oversight, and it is tracked as such.
+            raise AudioPipelineError(
+                f"shot {shot.id!r} declares {len(shot.narration)} narration "
+                "line(s), which the audio pipeline does not synthesise — it "
+                "walks shot.dialogue only. Narration produces neither audio nor "
+                "video today. Use a dialogue line with an off-screen speaker as "
+                "the workaround; the real fix is tracked at "
+                "https://github.com/thorwhalen/an/issues/9."
+            )
         for line in shot.dialogue:
             voice_id = line.voice_ref or voice_default
             expected_audio_ref = _stable_hash(

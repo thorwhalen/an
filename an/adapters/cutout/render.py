@@ -327,7 +327,25 @@ def _capture_frames(page: Any, total_frames: int, fps: int, frames_dir: Path) ->
     """Step the JS runtime through ``total_frames`` and screenshot the canvas each time."""
     for i in range(total_frames):
         t = i / float(fps)
-        page.evaluate("(t) => window.anSetTime(t)", t)
+        try:
+            page.evaluate("(t) => window.anSetTime(t)", t)
+        except Exception as e:
+            # The runtime now raises on an unknown animated property and on an
+            # animation aimed at a node that does not exist. Those escape
+            # `page.evaluate` as a raw `playwright._impl._errors.Error`, which
+            # says nothing about which frame or which shot — and would trade one
+            # silent discard for a violation of the typed-error convention. The
+            # JS message is the informative part, so it is carried through
+            # verbatim rather than summarised.
+            # Deliberately does not assert WHAT failed: a bare `except
+            # Exception` here also catches a Playwright timeout, a closed
+            # target and a crashed browser, and labelling those "the JS runtime
+            # failed" points the reader at the wrong place. The nested message
+            # says which it was.
+            raise CutoutRenderError(
+                f"frame {i} (t={t:.4f}s) could not be evaluated:\n"
+                f"{type(e).__name__}: {e}"
+            ) from e
         # Screenshot only the canvas element (no surrounding chrome).
         canvas = page.locator("#stage")
         out_path = frames_dir / (DEFAULT_FRAME_PNG_PATTERN % i)

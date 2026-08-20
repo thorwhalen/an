@@ -28,6 +28,7 @@ mall). It reads only.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping
 from typing import Any
 
@@ -129,7 +130,25 @@ _PROPERTY_REST_VALUES: dict[str, float] = _property_rest_values()
 
 
 class CutoutCompileError(ValueError):
-    """A shot cannot be compiled to a cutout scene. Carries actionable detail."""
+    """A shot cannot be compiled to a cutout scene. Carries actionable detail.
+
+    A ``ValueError`` rather than a ``RuntimeError`` — unlike the rest of this
+    package's error tree — because every one of these is "this value is not in
+    the known set", which is the existing idiom for argument-level rejection.
+    The render-time errors stay ``RuntimeError``: they are failures of the
+    machinery, not of the input.
+    """
+
+
+class CutoutCompileWarning(UserWarning):
+    """A shot compiles, but something in it will not reach the screen.
+
+    The line between this and :class:`CutoutCompileError` is whether the author
+    could plausibly have meant it. An unknown ``camera.move`` is always a
+    mistake, so it raises. A speaker with no mouth is usually an off-screen
+    narrator and occasionally a typo — refusing it would break the documented
+    idiom, and passing in silence is what this whole change is against.
+    """
 
 
 def _rest_value_for(prop: str, target: str) -> float:
@@ -177,6 +196,26 @@ _EMOTION_BROWS: dict[str, tuple[float, float]] = {
 }
 
 
+def _runtime_node_paths(node: NodeJSON, prefix: str = "") -> set[str]:
+    """Every path the JS runtime will index for ``node``'s subtree.
+
+    Mirrors ``buildSceneTree``, including the detail that the synthetic top-level
+    ``root`` container is NOT indexed — the compiler emits target paths starting
+    at the entity name. Getting that wrong here would make every check below
+    off by one segment.
+    """
+    paths = set()
+    path = f"{prefix}/{node.name}" if prefix else node.name
+    if prefix or node.name != "root":
+        paths.add(path)
+        child_prefix = path
+    else:
+        child_prefix = ""  # skip the synthetic root, as the runtime does
+    for child in node.children:
+        paths |= _runtime_node_paths(child, child_prefix)
+    return paths
+
+
 def compile_shot(
     shot: Shot,
     mall: Mapping[str, Mapping] | None = None,
@@ -195,7 +234,13 @@ def compile_shot(
     scene_root = _build_scene_root(shot, mall, textures=textures)
     animations, tracks = _compile_actions(shot.actions, shot.duration)
     # Phase 4: emit a viseme channel per dialogue line that has a viseme_track.
-    _add_viseme_clips(shot, animations, tracks, mall=mall)
+    _add_viseme_clips(
+        shot,
+        animations,
+        tracks,
+        mall=mall,
+        node_paths=_runtime_node_paths(scene_root),
+    )
     # Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale
     # animation on the synthetic scene root so directors get visible camera
     # behavior without writing channels by hand.
@@ -255,7 +300,16 @@ def _build_scene_root(
             sub = _build_character_subtree(entity, characters_store, textures=textures)
             sub.transform.x = x
             children.append(sub)
-        # Other entity kinds (prop) get sketched in later phases.
+        elif entity.kind == "prop":
+            raise CutoutCompileError(
+                f"shot {shot.id!r}: entity {entity.id!r} is a prop, which the "
+                "cutout renderer does not draw yet. Props — images, nine-slice "
+                "panels, things a character holds — are planned; see "
+                "https://github.com/thorwhalen/an/issues/9. Until then, remove the entity rather than leaving it "
+                "in the scene, where it would be silently absent from the render."
+            )
+        # `voice` and `style` entities are legitimately not drawable: they
+        # configure the render rather than appearing in it.
     return NodeJSON(name="root", children=children)
 
 
@@ -282,6 +336,22 @@ def _build_environment_subtree(entity: AssetRef, env_store: Mapping) -> NodeJSON
         try:
             override = env_store[entity.ref]
             if isinstance(override, dict):
+                unknown = sorted(set(override) - set(preset))
+                if unknown:
+                    # A warning, not an error. EnvironmentsStore is a
+                    # JsonSidecarStore over a free-form meta.json, so `name` /
+                    # `description` / `tags` are its natural shape — raising here
+                    # would hard-fail ordinary data. The keys still do nothing,
+                    # which is the part worth saying.
+                    warnings.warn(
+                        f"environment {entity.ref!r} declares {unknown}, which the "
+                        f"cutout renderer does not read (it uses {sorted(preset)}), "
+                        "so they have no effect on the render. Layered plates "
+                        "and parallax planes are planned; see "
+                        "https://github.com/thorwhalen/an/issues/9",
+                        CutoutCompileWarning,
+                        stacklevel=2,
+                    )
                 preset.update({k: v for k, v in override.items() if k in preset})
         except KeyError:
             pass
@@ -726,15 +796,23 @@ def _compile_actions(
             animations[anim_id] = _build_anim_for(flat, anim_id)
         placed_by_track.setdefault(track_root, []).append(placed)
 
-    # Re-pass: ensure we built every named animation we referenced.
+    # Re-pass: every referenced animation must actually exist.
+    #
+    # This used to fabricate an empty, channel-less clip for anything missing,
+    # which is how `play` came to look wired up while animating nothing: the clip
+    # was present, carried the right duration, and moved not one property. The
+    # `__play__` prefix guard here was dead code — nothing ever produced that
+    # prefix — so the fabrication always fired.
     for placed_list in placed_by_track.values():
         for p in placed_list:
-            if p.animation_id not in animations and not p.animation_id.startswith(
-                "__play__"
-            ):
-                # Should not happen; defensive
-                animations[p.animation_id] = AnimationClipJSON(
-                    name=p.animation_id, duration=p.duration or 0.001
+            if p.animation_id not in animations:
+                raise CutoutCompileError(
+                    f"action references animation {p.animation_id!r}, which is "
+                    "not defined. Named reusable animations are not implemented: "
+                    "`play` has nowhere to look them up from, so it cannot be "
+                    "honoured — see https://github.com/thorwhalen/an/issues/7. "
+                    "Use `tween` / `set` actions, or `sequence` / `parallel` to "
+                    "compose them."
                 )
 
     tracks = [
@@ -877,6 +955,7 @@ def _add_viseme_clips(
     tracks: list[TrackJSON],
     *,
     mall: Mapping[str, Mapping] | None = None,
+    node_paths: set[str] | None = None,
 ) -> None:
     """For each dialogue line with a viseme_track, emit a step-channel that
     drives ``<speaker>/head/mouth:viseme`` over the line's time span.
@@ -884,12 +963,30 @@ def _add_viseme_clips(
     Side-effects ``animations`` (adds named clips) and ``tracks`` (appends to
     or creates the speaker's track).
 
-    Speakers backed by a face-baked descriptor (``art_provenance`` of
-    ``"dicebear"`` or ``"external_avatar"``) get no viseme channel — they
-    have no overlay mouth node, so the channel would target a missing
-    path. See SESSION_HANDOFF.md §3 for the rationale.
+    Two kinds of speaker get no viseme channel, for the same reason: there is no
+    mouth node for it to target.
+
+    - Speakers backed by a face-baked descriptor (``art_provenance`` of
+      ``"dicebear"`` or ``"external_avatar"``) — the face is drawn into the head
+      SVG, so there is no overlay mouth.
+    - **Speakers whose mouth node is not in the built scene.** One condition,
+      two cases that are indistinguishable from here: the off-screen-narrator
+      idiom (a speaker deliberately not an entity — the standing workaround
+      while ``Shot.narration`` is unimplemented), and a character who IS on
+      screen but whose rig has no head, which an entity-membership check misses
+      and sends to a hard render failure.
+
+    The second kind WARNS rather than passing in silence, because it cannot be
+    told apart from a typo: ``speaker="charlei"`` against an on-screen
+    ``charlie`` otherwise loses its lip-sync quietly while the audio still
+    plays. Naming the scene's actual mouths makes the typo obvious.
     """
     face_baked = _face_baked_speakers(shot, mall)
+    # `is not None`, not truthiness: a shot with no entities has an EMPTY path
+    # set, and that is precisely a scene where no speaker has a mouth. Treating
+    # empty as "cannot check" let the emptiest case through to a hard render
+    # failure — which is how this was caught.
+    paths = node_paths
     track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
     for i, line in enumerate(shot.dialogue):
         if line.viseme_track is None or not line.viseme_track.keyframes:
@@ -901,6 +998,17 @@ def _add_viseme_clips(
         if speaker in face_baked:
             continue
         target = f"{speaker}/head/mouth"
+        if paths is not None and target not in paths:
+            mouths = sorted(p for p in paths if p.endswith("/head/mouth"))
+            warnings.warn(
+                f"shot {shot.id!r} dialogue line {i} is spoken by {speaker!r}, which "
+                f"has no mouth node ({target!r} is not in the scene): it gets audio "
+                "but no lip-sync. Expected for an off-screen narrator. If it was "
+                f"not, the scene's mouths are: {mouths or 'none'}.",
+                CutoutCompileWarning,
+                stacklevel=2,
+            )
+            continue
         anim_id = f"__viseme__{shot.id}_{i}"
 
         # Build viseme keyframes (step-easing) — but cap density so adjacent
@@ -998,11 +1106,25 @@ def _add_camera_clips(
     The synthetic root container in the JS runtime sits at canvas center and
     scales the entire scene; per-character motion remains independent.
     """
-    if shot.camera is None or not shot.camera.move:
+    if shot.camera is None or shot.camera.move is None:
         return
-    move = shot.camera.move
-    if move not in _CAMERA_MOVES or move == "hold":
+    # Normalise BEFORE the emptiness test, or the guard grows an arbitrary seam:
+    # `move=""` fell through the falsiness check and was ignored, while
+    # `move="  "` reached the lookup and raised. Same input, two behaviours.
+    move = shot.camera.move.strip()
+    if not move:
         return
+    if move == "hold":
+        return  # a real, correct no-op — not an unknown move
+    if move not in _CAMERA_MOVES:
+        raise CutoutCompileError(
+            f"shot {shot.id!r} asks for camera.move={move!r}, which the cutout "
+            f"renderer does not implement (it has: {sorted(_CAMERA_MOVES)}). "
+            "A translating camera — pan, track, whip-pan — needs a real 2D "
+            "camera node with per-layer parallax, which is planned (see "
+            "https://github.com/thorwhalen/an/issues/9); today the camera is a "
+            "scale tween on the scene root and cannot move sideways."
+        )
     start_scale, end_scale = _CAMERA_MOVES[move]
     duration = max(0.001, float(shot.duration))
     for axis in ("scale_x", "scale_y"):
