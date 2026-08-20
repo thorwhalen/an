@@ -32,7 +32,7 @@ CLI surface:
 Python surface (everything in `an.__all__`):
 
 - Scene IR: `SceneIR`, `Shot`, `Dialogue`, `AssetRef`, `Camera`, `Resolution`, `Meta`.
-- Composition: `sequence`, `parallel`, `delay`, `loop`, `tween`, `set_`, `play`, `flatten`.
+- Composition: `sequence`, `parallel`, `delay`, `loop`, `tween`, `set_`, `flatten`. **`play` is exported but unusable**: named reusable animations have nowhere to be defined, so a `play` action raises at compile time rather than compiling to a clip that animates nothing (#7).
 - Project: `init`, `load`, `save`, `Project`, `build_project_mall`.
 - Sync: `markdown_to_ir`, `ir_to_markdown`.
 - Validation: `validate_schema`, `validate_semantic`.
@@ -49,7 +49,9 @@ Backends registered: `cutout` (real, with face rig + emotion-driven eyebrows + p
 
 - ` ```yaml meta ` — title, duration, fps, resolution, default_style, notes.
 - ` ```yaml shot ` — duration, camera (with `move: hold | push_in | pull_out | zoom_in | zoom_out`), options.
-- ` ```yaml entities ` — list of AssetRef-shaped dicts. `kind` ∈ `character | environment | voice | style | prop`. Environment refs: `park | indoor | night | sunset | default`.
+- ` ```yaml entities ` — list of AssetRef-shaped dicts. `kind` ∈ `character | environment | voice | style`. Environment refs: `park | indoor | night | sunset | default`.
+  - **`kind: prop` is declared by the IR but NOT rendered** — the compiler raises rather than dropping it. Props land in Wave 7 of #9. Do not put one in a scene.
+  - An environment override may only carry keys the renderer reads (`sky_color`, `ground_color`, `ground_y`); anything else raises rather than being silently discarded.
 - ` ```yaml actions ` — list of `tween` / `set` / `play` action dicts. Optional `start` (seconds) wraps a leaf in `sequence(delay(start), action)` so flatten gives correct absolute times.
   - **Animatable properties:** `x`, `y`, `rotation`, `scale_x`, `scale_y`, `skew_x`, `skew_y`, `pivot_x`, `pivot_y`, `alpha`. Anything else is not applied.
   - **`alpha` is the entrance/exit primitive** — it cascades, so a tween on the character root fades every part of it. `{kind: tween, target: charlie, property: alpha, to: 0.0, duration: 1.0}`.

@@ -363,3 +363,27 @@ def test_the_iterate_prompt_enumerates_the_legal_properties():
     for prop in ("scale_x", "alpha", "pivot_y"):
         assert prop in prompt, f"the prompt does not name {prop!r} as legal"
     assert "FAILS THE RENDER" in prompt or "fails the render" in prompt
+
+
+# ------------------------------------------- 8. the docs must not advertise them
+
+def test_no_skill_advertises_a_capability_that_now_raises():
+    """An error that contradicts the docs is worse than no error.
+
+    `pan_left` was the original instance: named in the IR's own comment and dead
+    in the compiler. The same trap applies to every doc that lists what a scene
+    may contain — the `an` skill told an agent that `kind` may be `prop` and that
+    `play` is a composition primitive, both of which now hard-fail.
+    """
+    skills = Path(__file__).resolve().parents[1] / ".claude/skills"
+    offenders = []
+    for skill in sorted(skills.glob("*/SKILL.md")):
+        text = skill.read_text()
+        for line in text.splitlines():
+            # An enumeration of legal `kind` values must not offer `prop`.
+            if "`kind`" in line and "∈" in line and "prop" in line.split("∈")[1]:
+                offenders.append(f"{skill.parent.name}: {line.strip()[:90]}")
+    assert not offenders, (
+        "a skill advertises `prop` as a usable entity kind, but the compiler "
+        f"raises on it:\n" + "\n".join(offenders)
+    )
