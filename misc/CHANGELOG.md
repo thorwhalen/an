@@ -3,6 +3,25 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+## 2026-08-20
+
+- `alpha` and `tint` are animatable node properties (#13). `alpha` is set on the
+  node's container so it cascades — fading a character fades every part — while
+  `tint` is applied by `setTint`, which walks down to a *drawable*: a PixiJS
+  `Container` has no `tint`, and assigning one succeeds silently as a dead JS
+  property that never reaches a pixel. Asserted against a live engine object
+  rather than reasoned about.
+- Pose application is now deterministic and shallowest-target-first
+  (`poseKeysInApplicationOrder`). Object key order is insertion order, i.e. a
+  function of channel emission order; with a cascading property like `tint` a
+  parent could clobber a child depending on which was emitted second.
+- Fixed a latent identity bug: a tween with no `from_value` started at 0.0 for
+  *every* property. Offsets rest at 0.0 but the multiplicative ones rest at 1.0,
+  so a fade-out began already invisible (a silent no-op) and a scale tween popped
+  in from nothing. `_PROPERTY_REST_VALUES` now carries the per-property identity.
+  Latent because the camera builds its own explicit keyframes and no example
+  authored a scale or alpha tween.
+
 ## 2026-05-02
 
 - Promotion fixes (driven by building a `~/Downloads/an_examples` gallery):

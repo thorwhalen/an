@@ -36,7 +36,28 @@ class _JSONModel(BaseModel):
 
 
 class TransformJSON(_JSONModel):
-    """Local transform of a scene-graph node (authoring form)."""
+    """Local transform of a scene-graph node (authoring form).
+
+    ``alpha`` and ``tint`` are not geometry, but they live here for the same
+    reason the rest does: this is the per-node property bag the runtime applies,
+    and both are animatable through the same channel machinery.
+
+    The two behave differently on purpose, because the renderer's own object
+    model forces it:
+
+    - ``alpha`` is set on the node's *container*, so it **cascades** — fading a
+      character fades every part of it. This is the entrance/exit primitive.
+    - ``tint`` multiplies a *drawable's* colour, and only drawables have it (a
+      bare container does not). The runtime therefore applies it to the node's
+      own visual, and for a node with no visual of its own it walks down to the
+      descendants that do.
+
+    ``tint`` is a **discrete** property: a colour string, snapped at keyframe
+    boundaries by the channel evaluator exactly as viseme codes are. Tweening it
+    does not cross-fade the colour — it jumps at the second keyframe. Nothing in
+    the roadmap needs an interpolated tint (the shadow model wants a static one),
+    so per-channel colour interpolation is deliberately not built.
+    """
 
     x: float = 0.0
     y: float = 0.0
@@ -47,6 +68,8 @@ class TransformJSON(_JSONModel):
     skew_y: float = 0.0
     pivot_x: float = 0.0
     pivot_y: float = 0.0
+    alpha: float = 1.0
+    tint: str | None = None
 
 
 class VisualJSON(_JSONModel):

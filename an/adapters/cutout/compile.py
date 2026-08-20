@@ -94,6 +94,35 @@ def _palette_for(entity_id: str) -> tuple[str, str, str]:
 # Cap viseme keyframe density to ~7Hz; reduces "twitchy" mouth at full speed.
 _MIN_VISEME_GAP_S: float = 0.14
 
+#: Rest ("identity") value per animatable property, used as the implicit start
+#: of a tween that declares no ``from_value``.
+#:
+#: This is not cosmetic. Offsets and rotations rest at 0.0, but the
+#: *multiplicative* properties rest at 1.0, and defaulting all of them to 0.0
+#: silently breaks the two most obvious uses of a tween: a fade-out
+#: (``alpha`` starting at 0 is already invisible, so the fade never happens and
+#: the element simply is not there) and a scale move (the subject pops in from
+#: nothing). Nothing had noticed because the camera builds its own explicit
+#: keyframes and no example authors a scale or alpha tween yet.
+_PROPERTY_REST_VALUES: dict[str, float] = {
+    "x": 0.0,
+    "y": 0.0,
+    "rotation": 0.0,
+    "rotation_rad": 0.0,
+    "skew_x": 0.0,
+    "skew_y": 0.0,
+    "pivot_x": 0.0,
+    "pivot_y": 0.0,
+    "scale_x": 1.0,
+    "scale_y": 1.0,
+    "alpha": 1.0,
+}
+
+#: Fallback for a property with no declared rest value. Discrete properties
+#: (``viseme``, ``tint``) have no meaningful numeric identity and should carry
+#: an explicit ``from_value``.
+_DFLT_PROPERTY_REST_VALUE: float = 0.0
+
 # Emotion → (left_brow_tilt, right_brow_tilt) in radians. Mirrored so the
 # brows look symmetric for happy/sad and asymmetric for surprise/skepticism.
 _EMOTION_BROWS: dict[str, tuple[float, float]] = {
@@ -710,7 +739,11 @@ def _compile_one(
 def _build_anim_for(flat: FlatAction, anim_id: str) -> AnimationClipJSON:
     action = flat.action
     if isinstance(action, TweenAction):
-        from_value = action.from_value if action.from_value is not None else 0.0
+        from_value = (
+            action.from_value
+            if action.from_value is not None
+            else _PROPERTY_REST_VALUES.get(action.property, _DFLT_PROPERTY_REST_VALUE)
+        )
         return AnimationClipJSON(
             name=anim_id,
             duration=action.duration,

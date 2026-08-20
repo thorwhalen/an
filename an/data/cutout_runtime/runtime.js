@@ -129,6 +129,12 @@
             buildSceneTree(child, container, path);
         }
 
+        // Tint is applied AFTER the subtree exists, because unlike every other
+        // transform field it does not live on the container — see setTint.
+        if (node.transform && node.transform.tint != null) {
+            setTint(container, node.transform.tint);
+        }
+
         parent.addChild(container);
         return container;
     }
@@ -235,14 +241,58 @@
         displayObject.skew.y = t.skew_y || 0;
         displayObject.pivot.x = t.pivot_x || 0;
         displayObject.pivot.y = t.pivot_y || 0;
+        // Containers DO have alpha, and it cascades to children — which is
+        // exactly the semantics wanted: fading a character fades its parts.
+        displayObject.alpha = t.alpha != null ? t.alpha : 1;
+        // NOTE: t.tint is deliberately NOT handled here. applyTransform runs
+        // before the node's visual and children exist, and a container has no
+        // tint to set. buildSceneTree calls setTint once the subtree is built.
+    }
+
+    // Tint a node. Only *drawables* (Sprite, Graphics) carry `tint` on this
+    // renderer — a bare Container does not, and assigning to it SILENTLY
+    // succeeds as a dead JS property that never reaches a pixel. That failure
+    // mode is why this is a function and not an assignment.
+    //
+    // So: tint the node's own visual if it has one; otherwise walk down to the
+    // descendants that do, which gives a group node the cascade a caller
+    // expects from `charlie:tint`.
+    function setTint(displayObject, value) {
+        const color = typeof value === 'number' ? value : parseColor(value);
+        let applied = 0;
+        (function walk(obj) {
+            // A drawable declares `tint` on its prototype; a Container does not.
+            if ('tint' in obj) {
+                obj.tint = color;
+                applied += 1;
+                return;  // its own children inherit the multiply
+            }
+            for (const child of obj.children || []) walk(child);
+        })(displayObject);
+        return applied;
     }
 
     // ------------------------------------------------------------------------
     // Pose application
     // ------------------------------------------------------------------------
 
+    // Shallowest target first, then lexicographic. Object key order is
+    // insertion order, which makes it a function of channel emission order —
+    // fine for the independent properties, wrong for `tint`, whose cascade
+    // means a parent's value would clobber a child's when the parent happened
+    // to be emitted second. Depth-first ordering makes the more specific target
+    // win, and makes a frame's pose application deterministic, which the
+    // golden-frame work downstream depends on.
+    function poseKeysInApplicationOrder(pose) {
+        return Object.keys(pose).sort(function (a, b) {
+            const da = (a.split('::')[0].match(/\//g) || []).length;
+            const db = (b.split('::')[0].match(/\//g) || []).length;
+            return da !== db ? da - db : (a < b ? -1 : a > b ? 1 : 0);
+        });
+    }
+
     function applyPose(pose) {
-        for (const key of Object.keys(pose)) {
+        for (const key of poseKeysInApplicationOrder(pose)) {
             const [target, prop] = key.split('::');
             const node = nodeIndex[target];
             if (!node) continue;
@@ -341,6 +391,8 @@
             case 'skew_y': node.skew.y = value; break;
             case 'pivot_x': node.pivot.x = value; break;
             case 'pivot_y': node.pivot.y = value; break;
+            case 'alpha': node.alpha = value; break;
+            case 'tint': setTint(node, value); break;
             case 'viseme': setVisemeOnMouth(node, value); break;
             default:
                 // unknown property — ignore silently for forward compat
