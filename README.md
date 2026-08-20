@@ -173,7 +173,7 @@ The patches are validated against the schema and persisted; affected shots' cach
 | **CLI** | `argh` dispatch over `an.tools._dispatch_funcs` (init / validate / sync / check / render / iterate) |
 | **Iterate loop** | `an.iterate` — Anthropic Opus 4.7 + adaptive thinking + structured JSON patches + path-based mutation + cache invalidation |
 
-For a deeper as-built reference (module-by-module map, control flows, key invariants, content-hash caching strategy), see [`misc/docs/architecture_as_built.md`](misc/docs/architecture_as_built.md). The seven research reports next to it cover the design space the system was built against.
+For a deeper as-built reference (module-by-module map, control flows, key invariants, content-hash caching strategy), see [`misc/docs/architecture_as_built.md`](misc/docs/architecture_as_built.md). The research reports next to it cover the design space the system was built against — they are not current state, and `wave1_verification.md` is (verified fact, with the URLs each licence was read at).
 
 ### Injecting word timings (no whisper redundancy)
 
@@ -220,7 +220,13 @@ list described.
 ## Reference
 
 - [`misc/docs/architecture_as_built.md`](misc/docs/architecture_as_built.md) — module map, control flows, invariants, caching strategy.
-- [`misc/docs/`](misc/docs/) — seven design-space research reports (~250 KB).
+- [`misc/docs/`](misc/docs/) — the design-space research reports, plus
+  [`wave1_verification.md`](misc/docs/wave1_verification.md), which is *verified current
+  fact* rather than design space: licences with the URLs they were read at, and the
+  silent-discard inventory.
 - [`misc/CHANGELOG.md`](misc/CHANGELOG.md) — phase-by-phase what shipped when.
-- [`.claude/skills/`](.claude/skills/) — three skills (`an`, `an-spec`, `an-dev`) the agent uses to drive the package.
-- [`examples/`](examples/) — `single_character/`, `walk_demo/`, `park_bench_cartoon/` — the canonical demo scenes.
+- [`.claude/skills/`](.claude/skills/) — the skills the agent uses to drive the package
+  (`an` to use it, `an-spec` to interview a director, `an-dev` to work on it, plus
+  `an-dev-licensing` and `an-dev-runtime-assets` for the two things that fail silently).
+- [`examples/`](examples/) — the canonical demo scenes. `single_character/` is the smallest
+  thing that renders; `character_gallery/build.py` goes end to end from character creation.

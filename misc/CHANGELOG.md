@@ -3,6 +3,26 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **Truthed up the docs (#16), and the audit found five false claims, not one.**
+  Both `CLAUDE.md` and `architecture_as_built.md` said the runtime *ignores*
+  `loop_mode` — it has honoured it since #5, and the real gap is the inverse: no
+  compiler code ever emits a non-default value, so looping is reachable only by
+  hand-writing scene JSON. The architecture doc still described live-API tests as
+  "skip-if-key-missing", which is exactly the gate replaced in #4 *because* a key
+  being present is not consent to spend. Both docs still listed the CDN
+  dependency closed in #12. And two separate places pinned "seven research
+  reports" / "three skills", counts that were right when written.
+- **Added `tests/test_docs_are_true.py`**, because a gap list that outlives its
+  gaps is worse than none — a reader trusts it and works around a problem that no
+  longer exists. It guards the two failure modes that actually recurred: a count
+  attached to a directory that grows, and a gap line that survived its gap. Both
+  of its first drafts were too broad and produced false positives; the narrowed
+  version then found a *second* "seven research reports" I had missed.
+- Recorded the gaps this session created or exposed: no browser test has ever run
+  in CI (#22), the Windows leg is `continue-on-error` so a green tick can hide a
+  failure, and the unrendered second scene evaluator that Wave 5 must resolve
+  before swap channels land.
+
 ### Second review round (#24)
 
 The consolidating verdict returned **merge-after-fixes** with both blockers already

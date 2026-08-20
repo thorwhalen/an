@@ -753,8 +753,8 @@ def test_no_doc_offers_a_targeting_example_that_no_rig_builds():
     )
     root = Path(__file__).resolve().parents[1]
     offenders = []
-    for rel in ("an/base.py", "CLAUDE.md", ".claude/skills/an-dev/SKILL.md",
-                ".claude/skills/an/SKILL.md"):
+    for rel in ("an/base.py", "CLAUDE.md", "README.md",
+                ".claude/skills/an-dev/SKILL.md", ".claude/skills/an/SKILL.md"):
         for path, prop in re.findall(r"([a-z_]+(?:/[a-z_]+)+):([a-z_]+)",
                                      (root / rel).read_text()):
             if path not in real:

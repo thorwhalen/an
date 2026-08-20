@@ -74,6 +74,9 @@ Honest list. Don't let it rot either — delete a line when you close it.
 - **Nothing ever *emits* a non-default `loop_mode`.** Both evaluators honour all three modes — `runtime.js`'s `wrapTime` and `clip.py`'s `_wrap_time`. This line used to claim the runtime ignored it, which was stale. The real gap is the inverse: no compiler code writes the field, so a looping clip is reachable only by hand-writing `CutoutSceneJSON`.
 - **DiceBear-sourced characters don't lip-sync.** When a descriptor's `metadata.art_provenance` is `"dicebear"` or `"external_avatar"`, the compiler suppresses both the overlay mouth visual and the speaker's viseme channel (the face is baked into the head SVG). Audio plays; the mouth doesn't move. DiceBear is a bootstrap path — hand-rig for production dialogue, see `examples/promote_demo/`.
 - **Multi-scene projects don't exist.** `"main"` is the only supported key in the scenes store.
+- **No browser test has ever run in CI**, so every "verified by rendering" claim in this repo is verified only on a developer machine. `playwright` lives in the `cutout` extra and CI installs `.[dev]`. Tracked as #22; it gates the golden-frame work.
+- **The Windows CI leg is `continue-on-error: true`**, so a run reports green with a failing test inside it. That is how a path-separator bug reached `main` — it was in the log of a green tick. Read the Windows log, don't trust the tick.
+- **There is a second, unrendered scene evaluator.** `an/adapters/cutout/{scene,timeline,pose,clip,channel,transform}.py` form a closed cluster that nothing on the render path imports — the path is `compile.py → serialize.py → render.py → runtime.js`. Worse, `runtime.js` cites `clip.py::_wrap_time` as "the spec … must stay bit-identical to it" about a function that never executes. Resolve this BEFORE building swap channels, or the same capability gets implemented into two or three models at once.
 
 ## What never to do
 
