@@ -25,6 +25,8 @@ import pytest
 
 from an.adapters.cutout.compile import (
     _CAMERA_MOVES,
+    _build_scene_root,
+    _runtime_node_paths,
     CutoutCompileError,
     CutoutCompileWarning,
     compile_shot,
@@ -586,6 +588,7 @@ def test_a_js_runtime_throw_arrives_as_a_typed_error_naming_the_frame():
 
     msg = str(e.value)
     assert "frame 0" in msg, "the error must name which frame failed"
+    assert "RuntimeError" in msg, "and must name what actually failed, not assert a cause"
     assert "t=0.0000s" in msg, "the error must name the time, for a long shot"
     assert "opacity" in msg, "the runtime's own message is the informative part"
 
@@ -672,4 +675,92 @@ def test_the_validators_camera_list_matches_the_compilers():
 
     assert set(_RENDERABLE_CAMERA_MOVES) == set(_CAMERA_MOVES), (
         "the validator and the compiler disagree about which camera moves exist"
+    )
+
+
+def test_an_empty_camera_move_is_treated_like_any_other_unusable_value():
+    """`move=""` used to be ignored while `move="  "` raised — same input, two
+    behaviours, purely because falsiness was tested before normalisation."""
+    for blank in ("", "   ", "\t"):
+        shot = Shot(id="s1", style="cutout", duration=1.0,
+                    entities=[_character()], camera=Camera(move=blank))
+        compile_shot(shot)  # a blank move is "no move", consistently
+
+
+# ------------------------- 11. the authoring surface refuses it first
+
+def test_scene_md_refuses_play_at_the_authoring_surface():
+    """The layer principle, applied to the surface an author actually edits.
+
+    `scene.md` is the SSOT a human writes. A `play` accepted here round-trips
+    through the IR, survives `an validate`, and dies at compile — having looked
+    valid the whole way. This was the one finding no reviewer lens caught.
+    """
+    from an.ir.sync import markdown_to_ir
+
+    md = (
+        "# Test\n\n"
+        "```yaml meta\ntitle: t\nduration: 1.0\nfps: 12\n```\n\n"
+        "## Shot s1 (cutout)\n\n"
+        "```yaml shot\nduration: 1.0\n```\n\n"
+        "```yaml actions\n"
+        "- {kind: play, target: charlie, animation: walk, duration: 1.0}\n"
+        "```\n"
+    )
+    with pytest.raises(ValueError, match="play"):
+        markdown_to_ir(md)
+
+
+def test_scene_md_still_accepts_the_actions_that_work():
+    from an.ir.sync import markdown_to_ir
+
+    md = (
+        "# Test\n\n"
+        "```yaml meta\ntitle: t\nduration: 1.0\nfps: 12\n```\n\n"
+        "## Shot s1 (cutout)\n\n"
+        "```yaml shot\nduration: 1.0\n```\n\n"
+        "```yaml actions\n"
+        "- {kind: tween, target: charlie, property: alpha, to: 0.0, duration: 1.0}\n"
+        "- {kind: set, target: charlie, property: x, value: 10.0}\n"
+        "```\n"
+    )
+    scene = markdown_to_ir(md)
+    assert len(scene.timeline[0].actions) == 2
+
+
+def test_no_doc_offers_a_targeting_example_that_no_rig_builds():
+    """`charlie/torso/left_arm:rotation` named a node nothing creates.
+
+    Harmless while an unknown target was skipped; a trap now that it raises.
+    The rigs are FLAT — arms are siblings of the torso.
+
+    Checked against the paths a real compile actually produces, not against a
+    word list. Two heuristics were tried first and both were wrong: a
+    single-line negation check flagged the sentence *explaining* the
+    deprecation, and a ±2-line window silently exonerated everything by picking
+    up prose from neighbouring bullets. A guard whose exoneration rule is fuzzy
+    is a guard that passes.
+
+    Only TARGETING examples are checked — `path:property`. Bare prose mentions
+    are how you write about the old example at all.
+    """
+    real = _runtime_node_paths(
+        _build_scene_root(
+            Shot(id="s1", style="cutout", duration=1.0, entities=[_character()]),
+            {},
+            textures={},
+        )
+    )
+    root = Path(__file__).resolve().parents[1]
+    offenders = []
+    for rel in ("an/base.py", "CLAUDE.md", ".claude/skills/an-dev/SKILL.md",
+                ".claude/skills/an/SKILL.md"):
+        for path, prop in re.findall(r"([a-z_]+(?:/[a-z_]+)+):([a-z_]+)",
+                                     (root / rel).read_text()):
+            if path not in real:
+                offenders.append(f"{rel}: {path}:{prop} — no rig builds {path!r}")
+    assert not offenders, (
+        "a doc offers a targeting example whose node does not exist, which now "
+        "raises at render:\n" + "\n".join(offenders)
+        + f"\n\nreal paths for a placeholder character: {sorted(real)}"
     )

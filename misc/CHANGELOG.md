@@ -3,6 +3,30 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+### Second review round (#24)
+
+The consolidating verdict returned **merge-after-fixes** with both blockers already
+addressed, and surfaced one finding no individual lens had:
+
+- **`an/ir/sync.py` — the `scene.md` authoring surface, which CLAUDE.md calls the
+  SSOT — still documented, accepted and round-tripped `play`.** A `play` written
+  there survived the IR, survived `an validate`, and died at compile, having
+  looked valid the entire way. Refused at parse time now: the earliest layer that
+  can see the mistake reports it.
+- `charlie/torso/left_arm` — the project's own canonical targeting example — names
+  a node no rig builds (the rigs are flat; arms are siblings of the torso). It was
+  harmless while an unknown target was skipped and is a trap now that it raises.
+- `camera.move=""` was ignored while `move="  "` raised: falsiness was tested
+  before normalisation, so the same input had two behaviours.
+- `_capture_frames` labelled every browser-side failure "the JS runtime failed",
+  including a Playwright timeout or a crashed target. It now says what it can
+  actually know and names the exception type.
+
+One of my own "corrections" was itself wrong and is reverted in spirit: the
+verdict counted, and there really are exactly nine direct `RuntimeError`
+subclasses, so the doc claim was true rather than stale. The rewritten wording
+generalises it to cover `CutoutCompileError` being a `ValueError`.
+
 ### Rework after adversarial review (#24)
 
 The first version of #15 put each guard where the SYMPTOM lived rather than where

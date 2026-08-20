@@ -337,8 +337,14 @@ def _capture_frames(page: Any, total_frames: int, fps: int, frames_dir: Path) ->
             # silent discard for a violation of the typed-error convention. The
             # JS message is the informative part, so it is carried through
             # verbatim rather than summarised.
+            # Deliberately does not assert WHAT failed: a bare `except
+            # Exception` here also catches a Playwright timeout, a closed
+            # target and a crashed browser, and labelling those "the JS runtime
+            # failed" points the reader at the wrong place. The nested message
+            # says which it was.
             raise CutoutRenderError(
-                f"the JS runtime failed at frame {i} (t={t:.4f}s):\n{e}"
+                f"frame {i} (t={t:.4f}s) could not be evaluated:\n"
+                f"{type(e).__name__}: {e}"
             ) from e
         # Screenshot only the canvas element (no surrounding chrome).
         canvas = page.locator("#stage")

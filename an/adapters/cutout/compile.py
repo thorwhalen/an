@@ -1106,9 +1106,14 @@ def _add_camera_clips(
     The synthetic root container in the JS runtime sits at canvas center and
     scales the entire scene; per-character motion remains independent.
     """
-    if shot.camera is None or not shot.camera.move:
+    if shot.camera is None or shot.camera.move is None:
         return
-    move = shot.camera.move
+    # Normalise BEFORE the emptiness test, or the guard grows an arbitrary seam:
+    # `move=""` fell through the falsiness check and was ignored, while
+    # `move="  "` reached the lookup and raised. Same input, two behaviours.
+    move = shot.camera.move.strip()
+    if not move:
+        return
     if move == "hold":
         return  # a real, correct no-op — not an unknown move
     if move not in _CAMERA_MOVES:

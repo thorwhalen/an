@@ -46,7 +46,12 @@ EASING_PRESETS: tuple[str, ...] = (
 
 # -- Type aliases -------------------------------------------------------------
 
-#: Slash-delimited node path, e.g. ``"charlie/torso/left_arm"``.
+#: Slash-delimited node path, e.g. ``"charlie/head/mouth"``.
+#:
+#: The example matters: an unknown target now RAISES rather than being skipped,
+#: and the long-standing ``"charlie/torso/left_arm"`` illustration names a node
+#: no rig actually builds — the cutout rigs are flat, so arms are siblings of
+#: the torso, not children of it.
 PathStr: TypeAlias = str
 
 #: Time in seconds. Floats at the IR boundary; rational time is used internally
