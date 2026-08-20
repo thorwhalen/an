@@ -27,12 +27,19 @@ from an.adapters.cutout.transform import TransformParams
 Pose: TypeAlias = dict[tuple[str, str], Any]
 
 
-# Properties supported by Phase 2A — anything not in this set raises.
+#: Properties this evaluator applies — anything not in this set raises.
+#:
+#: This must agree with ``applyProperty``'s switch in
+#: ``an/data/cutout_runtime/runtime.js``, which is the evaluator that actually
+#: renders; ``tests/test_loud_discards.py`` pins the two together. The list had
+#: drifted — it was missing ``viseme`` and ``alpha``, both of which the runtime
+#: has applied for some time — because nothing on the render path calls
+#: ``apply_pose``, so no failure could surface the gap.
 _ALLOWED_NODE_PROPS: frozenset[str] = frozenset(
     {
         "x",
         "y",
-        "rotation",  # alias for rotation_rad in degrees? we use radians at IR boundary
+        "rotation",  # radians at the IR boundary; rotation_rad is its alias
         "rotation_rad",
         "scale_x",
         "scale_y",
@@ -40,6 +47,8 @@ _ALLOWED_NODE_PROPS: frozenset[str] = frozenset(
         "skew_y",
         "pivot_x",
         "pivot_y",
+        "alpha",
+        "viseme",
     }
 )
 

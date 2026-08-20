@@ -255,7 +255,16 @@ def _build_scene_root(
             sub = _build_character_subtree(entity, characters_store, textures=textures)
             sub.transform.x = x
             children.append(sub)
-        # Other entity kinds (prop) get sketched in later phases.
+        elif entity.kind == "prop":
+            raise CutoutCompileError(
+                f"entity {entity.id!r} is a prop, which the cutout renderer does "
+                "not draw yet. Props — images, nine-slice panels, things a "
+                "character holds — land in Wave 7 of #9. Until then, remove the "
+                "entity rather than leaving it in the scene, where it would be "
+                "silently absent from the render."
+            )
+        # `voice` and `style` entities are legitimately not drawable: they
+        # configure the render rather than appearing in it.
     return NodeJSON(name="root", children=children)
 
 
@@ -282,7 +291,16 @@ def _build_environment_subtree(entity: AssetRef, env_store: Mapping) -> NodeJSON
         try:
             override = env_store[entity.ref]
             if isinstance(override, dict):
-                preset.update({k: v for k, v in override.items() if k in preset})
+                unknown = sorted(set(override) - set(preset))
+                if unknown:
+                    raise CutoutCompileError(
+                        f"environment {entity.ref!r} declares {unknown}, which the "
+                        f"cutout renderer does not read (it uses: {sorted(preset)}). "
+                        "The environment is two colour rects today; layered plates, "
+                        "parallax planes and set dressing land in Wave 7 of #9. "
+                        "These keys were previously accepted and discarded."
+                    )
+                preset.update(override)
         except KeyError:
             pass
     # Sky and ground are HUGE rects so they fill the canvas regardless of size.
@@ -726,15 +744,22 @@ def _compile_actions(
             animations[anim_id] = _build_anim_for(flat, anim_id)
         placed_by_track.setdefault(track_root, []).append(placed)
 
-    # Re-pass: ensure we built every named animation we referenced.
+    # Re-pass: every referenced animation must actually exist.
+    #
+    # This used to fabricate an empty, channel-less clip for anything missing,
+    # which is how `play` came to look wired up while animating nothing: the clip
+    # was present, carried the right duration, and moved not one property. The
+    # `__play__` prefix guard here was dead code — nothing ever produced that
+    # prefix — so the fabrication always fired.
     for placed_list in placed_by_track.values():
         for p in placed_list:
-            if p.animation_id not in animations and not p.animation_id.startswith(
-                "__play__"
-            ):
-                # Should not happen; defensive
-                animations[p.animation_id] = AnimationClipJSON(
-                    name=p.animation_id, duration=p.duration or 0.001
+            if p.animation_id not in animations:
+                raise CutoutCompileError(
+                    f"action references animation {p.animation_id!r}, which is not "
+                    "defined. Named reusable animations are not implemented: "
+                    "`play` has nowhere to look them up from, so it cannot be "
+                    "honoured (see #7). Use `tween` / `set` actions, or "
+                    "`sequence` / `parallel` to compose them."
                 )
 
     tracks = [
@@ -884,12 +909,20 @@ def _add_viseme_clips(
     Side-effects ``animations`` (adds named clips) and ``tracks`` (appends to
     or creates the speaker's track).
 
-    Speakers backed by a face-baked descriptor (``art_provenance`` of
-    ``"dicebear"`` or ``"external_avatar"``) get no viseme channel — they
-    have no overlay mouth node, so the channel would target a missing
-    path. See SESSION_HANDOFF.md §3 for the rationale.
+    Two kinds of speaker get no viseme channel, for the same reason: there is no
+    mouth node for it to target.
+
+    - Speakers backed by a face-baked descriptor (``art_provenance`` of
+      ``"dicebear"`` or ``"external_avatar"``) — the face is drawn into the head
+      SVG, so there is no overlay mouth.
+    - **Speakers who are not a character entity in the shot at all.** A dialogue
+      line whose speaker is not on screen is the off-screen-narrator idiom, and
+      it is the standing workaround while ``Shot.narration`` is unimplemented.
+      Emitting a channel for it produced an animation aimed at a node that was
+      never built; the runtime discarded it silently, so it looked wired.
     """
     face_baked = _face_baked_speakers(shot, mall)
+    on_screen = {e.id for e in shot.entities if e.kind == "character"}
     track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
     for i, line in enumerate(shot.dialogue):
         if line.viseme_track is None or not line.viseme_track.keyframes:
@@ -898,7 +931,7 @@ def _add_viseme_clips(
             # No timing assigned (audio pipeline didn't run); skip silently.
             continue
         speaker = line.speaker
-        if speaker in face_baked:
+        if speaker in face_baked or speaker not in on_screen:
             continue
         target = f"{speaker}/head/mouth"
         anim_id = f"__viseme__{shot.id}_{i}"
@@ -1001,8 +1034,16 @@ def _add_camera_clips(
     if shot.camera is None or not shot.camera.move:
         return
     move = shot.camera.move
-    if move not in _CAMERA_MOVES or move == "hold":
-        return
+    if move == "hold":
+        return  # a real, correct no-op — not an unknown move
+    if move not in _CAMERA_MOVES:
+        raise CutoutCompileError(
+            f"shot {shot.id!r} asks for camera.move={move!r}, which the cutout "
+            f"renderer does not implement (it has: {sorted(_CAMERA_MOVES)}). "
+            "A translating camera — pan, track, whip-pan — needs a real 2D camera "
+            "node with per-layer parallax, which lands in Wave 7 of #9; today the "
+            "camera is a scale tween on the scene root and cannot move sideways."
+        )
     start_scale, end_scale = _CAMERA_MOVES[move]
     duration = max(0.001, float(shot.duration))
     for axis in ("scale_x", "scale_y"):

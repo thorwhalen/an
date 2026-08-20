@@ -3,6 +3,33 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **Seven silent discards now raise typed errors that name the wave implementing
+  them (#15).** Each had the same shape: the IR declares a capability, the
+  compiler or runtime quietly declines it, and the author gets a render missing
+  something with no diagnostic — the worst failure mode this package has, because
+  it surfaces days later as "the animation looks wrong". An unrecognised
+  `camera.move`; `PlayAction` (which used to fabricate an empty, channel-less
+  clip, so `play` looked wired while animating nothing); `Shot.narration`;
+  `prop` entities; environment-store keys the renderer never reads; the
+  runtime's unknown-property branch; and its unknown-*target* sibling.
+- `hold` is exempt — it early-returned through the same branch as an unknown
+  move and is a correct no-op. `voice` and `style` entities likewise: they
+  configure the render rather than appearing in it.
+- **The loud target guard immediately found a real bug** in a passing test: the
+  compiler emitted a viseme channel for a speaker who is not an entity in the
+  shot, aimed at a node that was never built. An off-screen speaker is the
+  standing workaround for unimplemented narration, so the fix is to emit no
+  channel — the same reasoning already applied to face-baked characters.
+- `pan_left` is no longer advertised. It was named in the IR's own comment on
+  `Camera.move` and dead in the compiler; an error that contradicts the schema is
+  worse than no error.
+- The JS throw is wrapped as `CutoutRenderError` naming the frame and time —
+  otherwise this trades a silent discard for a raw Playwright traceback.
+- `pose.py`'s allow-list had drifted (no `viseme`, no `alpha`) because nothing on
+  the render path calls `apply_pose`. It is now pinned to the runtime's switch.
+- `an iterate`'s prompt enumerates the legal property names. A hallucinated
+  `opacity` tween used to be silently inert; it is now a hard render failure.
+
 - **Wave 1 verification record (#10)** at `misc/docs/wave1_verification.md`: the vendored
   engine's licence and provenance with digests, the DiceBear per-style licence table (11 of
   27 styles are CC0, the current default is CC BY 4.0), the network-guard design, and the

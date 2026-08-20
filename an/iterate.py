@@ -137,6 +137,16 @@ The IR shape (relevant fields):
       - camera: {move: "hold"|"push_in"|"pull_out"|"zoom_in"|"zoom_out", ...}
       - entities: list of {kind, id, store, ref, ...}
       - actions: list of action dicts (kind ∈ {tween, set, play, sequence, parallel, delay, loop})
+        A tween/set action's "property" MUST be one of:
+          x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, skew_y,
+          pivot_x, pivot_y, alpha
+        Anything else (opacity, visible, color, tint, width, ...) is NOT
+        implemented and now FAILS THE RENDER — it used to be silently ignored.
+        "alpha" is the fade primitive and cascades to a character's parts.
+        A tween with no "from" starts at the property's rest value: 1.0 for
+        scale_x / scale_y / alpha, 0.0 for the rest.
+        Do NOT emit "play" actions: named reusable animations are unimplemented
+        and a "play" now fails the compile.
       - dialogue: list of {speaker, text, emotion, voice_ref, start, duration, ...}
       - narration: list (same shape as dialogue, no speaker pin)
 

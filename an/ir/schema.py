@@ -76,7 +76,13 @@ class Camera(_IRModel):
     position: tuple[float, float, float] = (0.0, 0.0, 0.0)
     target: tuple[float, float, float] = (0.0, 0.0, 0.0)
     focal_length: float = 50.0
-    move: str | None = None  # e.g. "push_in", "pan_left" — interpreted by adapters
+    # Interpreted by the adapter. The cutout renderer implements
+    # hold | push_in | pull_out | zoom_in | zoom_out and RAISES on anything
+    # else. It deliberately does not list "pan_left": the camera is a scale
+    # tween on the scene root, so it cannot translate at all, and advertising
+    # a move nothing implements is how it came to be documented here and dead
+    # in the compiler. A translating camera lands in Wave 7 of #9.
+    move: str | None = None
 
 
 # -----------------------------------------------------------------------------

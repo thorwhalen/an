@@ -263,7 +263,16 @@
         for (const key of poseKeysInApplicationOrder(pose)) {
             const [target, prop] = key.split('::');
             const node = nodeIndex[target];
-            if (!node) continue;
+            if (!node) {
+                // The sibling silence of the one above: a mistyped target path
+                // used to animate nothing, quietly. Listing the known paths is
+                // what makes the typo obvious — they are usually one character
+                // apart.
+                throw new Error(
+                    'animation targets unknown node ' + JSON.stringify(target) +
+                    '. Known: ' + JSON.stringify(Object.keys(nodeIndex).sort())
+                );
+            }
             applyProperty(node, prop, pose[key]);
         }
     }
@@ -362,8 +371,18 @@
             case 'alpha': node.alpha = value; break;
             case 'viseme': setVisemeOnMouth(node, value); break;
             default:
-                // unknown property — ignore silently for forward compat
-                break;
+                // Loud, not silent. "Forward compat" was the stated reason for
+                // ignoring these, but the Python side already raises on an
+                // unknown pose property, so silence here was a one-sided
+                // asymmetry rather than a policy — and it meant a tween on a
+                // property this switch does not implement (`opacity`, `visible`)
+                // rendered as nothing at all, with no diagnostic anywhere.
+                throw new Error(
+                    'unknown animated property ' + JSON.stringify(prop) +
+                    ' on ' + JSON.stringify(node.name) + '. The runtime applies: ' +
+                    'x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, ' +
+                    'skew_y, pivot_x, pivot_y, alpha, viseme.'
+                );
         }
     }
 
