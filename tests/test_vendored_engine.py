@@ -111,7 +111,10 @@ def test_force_include_is_a_complete_inventory_of_the_runtime_assets():
     declared = set(re.findall(r'^"([^"]+)"\s*=', block.group(1), re.M))
     assert declared, "force-include table parsed as empty — the regex has drifted"
     on_disk = {
-        str(p.relative_to(REPO_ROOT))
+        # .as_posix(), not str(): on Windows str() yields backslashes while the
+        # TOML keys are forward-slash paths, so this compared two spellings of
+        # the same set and failed on that leg only.
+        p.relative_to(REPO_ROOT).as_posix()
         for p in RUNTIME_DIR.rglob("*")
         if p.is_file() and p.name != "__init__.py" and "__pycache__" not in p.parts
     }
