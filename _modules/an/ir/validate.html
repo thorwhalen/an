@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.validate &mdash; an 0.1.17 documentation</title>
+  <title>an.ir.validate &mdash; an 0.1.18 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71734efd"></script>
+      <script src="../../../_static/documentation_options.js?v=9969ed3f"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -252,6 +252,79 @@
 <span class="c1"># -----------------------------------------------------------------------------</span>
 
 
+<span class="c1">#: Camera moves the cutout renderer implements. `hold` is a real no-op.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Duplicated from the compiler deliberately: importing it here would make the</span>
+<span class="c1">#: IR layer depend on an adapter, which is the wrong direction. The test suite</span>
+<span class="c1">#: pins the two together instead — the same shape `artful` uses for vocabulary</span>
+<span class="c1">#: shared across packages that must not depend on each other.</span>
+<span class="n">_RENDERABLE_CAMERA_MOVES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">"hold"</span><span class="p">,</span> <span class="s2">"push_in"</span><span class="p">,</span> <span class="s2">"pull_out"</span><span class="p">,</span> <span class="s2">"zoom_in"</span><span class="p">,</span> <span class="s2">"zoom_out"</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1">#: Entity kinds the cutout renderer draws. `voice` and `style` are legitimately</span>
+<span class="c1">#: not drawable — they configure the render rather than appearing in it.</span>
+<span class="n">_DRAWABLE_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"character"</span><span class="p">,</span> <span class="s2">"environment"</span><span class="p">})</span>
+<span class="n">_CONFIGURING_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"voice"</span><span class="p">,</span> <span class="s2">"style"</span><span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_renderable</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Report, at validate time, what compile and render will refuse.</span>
+
+<span class="sd">    This is where these checks belong. The compiler and the runtime both refuse</span>
+<span class="sd">    these scenes now, which is right — but they refuse them *after* the author</span>
+<span class="sd">    has paid for TTS synthesis or a Chromium launch, and `an validate` is the</span>
+<span class="sd">    free pre-flight that `iterate()` also runs after applying a model's patches.</span>
+<span class="sd">    A validator that says "passed" about a scene that cannot render is worse</span>
+<span class="sd">    than no validator, because it is trusted.</span>
+
+<span class="sd">    Severity is `error` wherever the pipeline raises, so validate's verdict and</span>
+<span class="sd">    the pipeline's verdict agree. A validator that disagrees with the thing it</span>
+<span class="sd">    predicts is its own defect.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">move</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">move</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_RENDERABLE_CAMERA_MOVES</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="s2">"error"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/camera/move"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"camera.move=</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">move</span><span class="si">!r}</span><span class="s2"> is not implemented by the "</span>
+                <span class="sa">f</span><span class="s2">"cutout renderer (it has: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_RENDERABLE_CAMERA_MOVES</span><span class="p">)</span><span class="si">}</span><span class="s2">). "</span>
+                <span class="s2">"Rendering this shot raises."</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">entity</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_DRAWABLE_ENTITY_KINDS</span>
+            <span class="ow">and</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_CONFIGURING_ENTITY_KINDS</span>
+        <span class="p">):</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="s2">"error"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/entities/</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"entity kind </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> is declared by the IR but not drawn "</span>
+                <span class="s2">"by the cutout renderer. Rendering this shot raises."</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">narration</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="s2">"error"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/narration"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">narration</span><span class="p">)</span><span class="si">}</span><span class="s2"> narration line(s): the audio pipeline walks "</span>
+            <span class="s2">"shot.dialogue only, so narration produces neither audio nor video. "</span>
+            <span class="s2">"Rendering this shot raises. Use a dialogue line with an off-screen "</span>
+            <span class="s2">"speaker as the workaround."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"play"</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="s2">"error"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/actions/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"`play` references a named animation, which nothing can define — "</span>
+                <span class="s2">"compiling this shot raises. Use tween / set, or sequence / "</span>
+                <span class="s2">"parallel to compose them."</span><span class="p">,</span>
+            <span class="p">)</span>
+
+
 <div class="viewcode-block" id="validate_semantic">
 <a class="viewcode-back" href="../../../module_docs/an/ir/validate.html#an.validate_semantic">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_semantic</span><span class="p">(</span>
@@ -290,6 +363,8 @@
 
         <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/duration"</span><span class="p">,</span> <span class="s2">"shot duration must be &gt; 0"</span><span class="p">)</span>
+
+        <span class="n">_check_renderable</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
 
         <span class="c1"># Entity references resolve?</span>
         <span class="k">if</span> <span class="n">available_characters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

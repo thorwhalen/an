@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.pipeline &mdash; an 0.1.17 documentation</title>
+  <title>an.audio.pipeline &mdash; an 0.1.18 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=71734efd"></script>
+      <script src="../../../_static/documentation_options.js?v=9969ed3f"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -183,6 +183,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">_stable_hash</span>
 
 
+<div class="viewcode-block" id="AudioPipelineError">
+<a class="viewcode-back" href="../../../module_docs/an/audio/pipeline.html#an.audio.AudioPipelineError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AudioPipelineError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The scene declares audio the pipeline cannot produce. Carries detail."""</span></div>
+
+
+
 <div class="viewcode-block" id="default_tts">
 <a class="viewcode-back" href="../../../module_docs/an/audio/pipeline.html#an.audio.default_tts">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">default_tts</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">TTSProvider</span><span class="p">:</span>
@@ -257,6 +264,22 @@
     <span class="n">cursor</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">:</span>
         <span class="n">cursor</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">narration</span><span class="p">:</span>
+            <span class="c1"># `Shot.narration` is fully modelled in the IR — text, voice_ref,</span>
+            <span class="c1"># start, duration, viseme_track, audio_ref — and nothing has ever</span>
+            <span class="c1"># consumed it: this loop walks `shot.dialogue` only, and the cutout</span>
+            <span class="c1"># compiler has no narration path either. So a narrated shot produced</span>
+            <span class="c1"># no audio AND no picture, silently. Narrator-over-visuals is the</span>
+            <span class="c1"># shape of the whole explainer genre, so this is a real gap rather</span>
+            <span class="c1"># than an oversight, and it is tracked as such.</span>
+            <span class="k">raise</span> <span class="n">AudioPipelineError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> declares </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">narration</span><span class="p">)</span><span class="si">}</span><span class="s2"> narration "</span>
+                <span class="s2">"line(s), which the audio pipeline does not synthesise — it "</span>
+                <span class="s2">"walks shot.dialogue only. Narration produces neither audio nor "</span>
+                <span class="s2">"video today. Use a dialogue line with an off-screen speaker as "</span>
+                <span class="s2">"the workaround; the real fix is tracked at "</span>
+                <span class="s2">"https://github.com/thorwhalen/an/issues/9."</span>
+            <span class="p">)</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">:</span>
             <span class="n">voice_id</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">voice_ref</span> <span class="ow">or</span> <span class="n">voice_default</span>
             <span class="n">expected_audio_ref</span> <span class="o">=</span> <span class="n">_stable_hash</span><span class="p">(</span>
