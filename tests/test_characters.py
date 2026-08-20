@@ -303,9 +303,15 @@ class TestPromote:
     def test_promote_falls_back_to_new(self, tmp_path):
         # No source SVG → promote should still produce a working character
         # (it falls back to new_character).
+        #
+        # `use_dicebear=False` is load-bearing, not tidiness: the fallback
+        # otherwise calls the DiceBear API, and `new_character` catches the
+        # failure and generates geometry anyway — so this test passed
+        # identically whether or not the network was there, while quietly
+        # depending on it. The offline guard in conftest.py is what surfaced it.
         chars = tmp_path / "assets" / "characters"
         chars.mkdir(parents=True)
-        desc = promote(tmp_path, entity="amy", as_="amy-v1")
+        desc = promote(tmp_path, entity="amy", as_="amy-v1", use_dicebear=False)
         assert desc.exists()
         report = validate_character(chars / "amy-v1")
         assert report.passed, report.format()

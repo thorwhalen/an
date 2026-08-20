@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from an.adapters.cutout.compile import compile_shot
-from an.adapters.cutout.render import _serve_dir, _stage_character_assets
+from an.adapters.cutout.render import _serve_dir, _stage_scene_assets
 from an.adapters.cutout.runtime_files import runtime_dir
 from an.adapters.cutout.serialize import to_dict
 from an.base import DEFAULT_FPS, DEFAULT_RESOLUTION
@@ -179,7 +179,7 @@ def _compile_scene_to(
     scene_json = compile_shot(
         shot, mall=project.mall, fps=fps, width=width, height=height
     )
-    _stage_character_assets(scene_json, project.mall, runtime_target)
+    _stage_scene_assets(scene_json, project.mall, runtime_target)
 
     out = runtime_target / "scene.json"
     # Atomic-ish write so the HTTP server never serves a half-written file.

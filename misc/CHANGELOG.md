@@ -3,6 +3,44 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+## 2026-08-20
+
+- **The engine ships with the package (#12).** `index.html` and `preview.html`
+  fetched PixiJS from a CDN at render time, so a cold render needed the network
+  and the per-shot content-hash cache was unsound — a third party could change
+  the renderer without changing any cache key. PixiJS 7.4.2 is now vendored at
+  `an/data/cutout_runtime/vendor/`, taken from the npm tarball (whose sha512
+  matches the registry's published `dist.integrity`) and pinned by sha256, with
+  its MIT notice beside it: the minified banner names the licence but carries
+  neither the copyright line nor the permission text, so it does not discharge
+  the obligation alone. `.gitattributes` marks both `-text` or the Windows CI leg
+  CRLF-converts them and the digest goes red there only.
+- **The offline network guard is armed**, adapted from `illustration`'s rather
+  than invented a third time. Refusal and *recording* are separate mechanisms on
+  purpose: this package swallows network failures in its own code, so a guard
+  that only raised would be absorbed into a passing test.
+- Arming it found two real ones. `test_promote_falls_back_to_new` was calling the
+  DiceBear API on every run — and passing identically either way, because
+  `new_character` catches the failure and generates geometry instead. Three
+  whisper tests were resolving models over the network. `promote()` gained the
+  `use_dicebear` passthrough `new_character` already had, since there was no way
+  to make that fallback offline.
+- **A socket guard cannot see Chromium.** It fetches from another process, so the
+  render tests passed while the browser downloaded the engine. The new
+  `hermetic_browser` fixture aborts every non-loopback browser request, and the
+  render test that uses it is the only thing that can tell "we vendored the
+  engine" from "we vendored it and the page actually uses it".
+- **`_stage_character_assets` → `_stage_scene_assets`.** It skipped, silently, any
+  texture whose `src` did not start with `characters/` and any file not on disk.
+  Both now warn, naming the alias, the declared `src` and where it was looked
+  for. The renderer's fallback for a missing texture is a white rectangle, which
+  is indistinguishable from art. Resolution goes through a prefix→store table, so
+  environment and style textures reach the screen instead of being dropped.
+- The `force-include` list is now a complete inventory of the runtime assets, and
+  a test keeps it that way. Its previous partial version omitted `preview.html`
+  and read as though preview.html was excluded from the wheel — the opposite of
+  the truth, which a wheel build settles in seconds.
+
 ## 2026-05-02
 
 - Promotion fixes (driven by building a `~/Downloads/an_examples` gallery):

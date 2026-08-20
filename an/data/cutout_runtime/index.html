@@ -7,10 +7,15 @@
         html, body { margin: 0; padding: 0; background: transparent; }
         #stage { display: block; }
     </style>
-    <!-- PixiJS v7 (global build, exposes window.PIXI). Phase 2B uses the CDN
-         build for simplicity; for offline rendering, drop a vendored copy at
-         vendor/pixi.min.js and change the src below. -->
-    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+    <!-- PixiJS v7.4.2, vendored (global build, exposes window.PIXI).
+         MIT — the notice ships beside it at vendor/pixi.LICENSE.txt, which the
+         minified banner alone does not satisfy.
+         Vendored, not fetched: a CDN fetch makes a cold render need the network
+         and makes the shot cache unsound, since a third party could change the
+         renderer without changing any cache key.
+         Pinned by sha256 in tests/test_vendored_engine.py — replace both the
+         file and the digest together. -->
+    <script src="vendor/pixi.min.js"></script>
     <script src="runtime.js"></script>
 </head>
 <body>

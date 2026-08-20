@@ -44,10 +44,20 @@ an = "an.__main__:main"
 [tool.hatch.build.targets.wheel]
 packages = ["an"]
 
+# `packages = ["an"]` above already ships every non-ignored file under `an/`,
+# so this block is not what makes these files reach the wheel — verified by
+# building one. It is kept as an EXPLICIT INVENTORY of the runtime assets, and
+# `tests/test_vendored_engine.py` asserts it stays complete: an asset added to
+# the runtime directory and forgotten here fails the suite. The previous,
+# partial version of this list (which omitted preview.html) read as though
+# preview.html was excluded from the wheel when it was not.
 [tool.hatch.build.targets.wheel.force-include]
 "an/data/cutout_runtime/index.html" = "an/data/cutout_runtime/index.html"
+"an/data/cutout_runtime/preview.html" = "an/data/cutout_runtime/preview.html"
 "an/data/cutout_runtime/runtime.js" = "an/data/cutout_runtime/runtime.js"
 "an/data/cutout_runtime/README.md" = "an/data/cutout_runtime/README.md"
+"an/data/cutout_runtime/vendor/pixi.min.js" = "an/data/cutout_runtime/vendor/pixi.min.js"
+"an/data/cutout_runtime/vendor/pixi.LICENSE.txt" = "an/data/cutout_runtime/vendor/pixi.LICENSE.txt"
 
 
 [project.urls]

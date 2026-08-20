@@ -24,6 +24,7 @@ import shutil
 import socketserver
 import subprocess
 import threading
+import warnings
 from collections.abc import Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -211,7 +212,7 @@ def _stage_job(
     # paths declared in scene.assets.textures, so Pixi can load them by
     # relative URL from index.html.
     if mall is not None:
-        _stage_character_assets(scene_json, mall, runtime_target)
+        _stage_scene_assets(scene_json, mall, runtime_target)
 
     json_path = runtime_target / "scene.json"
     json_path.write_text(
@@ -226,36 +227,97 @@ def _stage_job(
     )
 
 
-def _stage_character_assets(
+class CutoutAssetWarning(UserWarning):
+    """A declared texture could not be staged into the runtime directory.
+
+    Deliberately a warning and not an error, for now: an art package that is
+    still being assembled is a real state, and refusing to render it would be
+    worse than rendering it incompletely. But it must be *audible* — the
+    renderer's fallback for a missing texture is a plain white rectangle, which
+    is indistinguishable from art, so a silent skip surfaces to the user as
+    "the animation looks wrong" rather than as an error.
+    """
+
+
+#: Texture ``src`` prefix → the mall store that resolves the rest of the path.
+#:
+#: A ``src`` reads ``<prefix>/<ref>/parts/head.svg`` and resolves to
+#: ``mall[store]._root/<ref>/parts/head.svg``. Only ``characters/`` is emitted
+#: by the compiler today; the other two are here because environments, styles
+#: and props all route through this same staging step as they land, and the
+#: previous hardcoded ``characters/`` test silently dropped everything else.
+ASSET_SRC_PREFIX_TO_STORE: dict[str, str] = {
+    "characters/": "characters",
+    "environments/": "environments",
+    "styles/": "styles",
+}
+
+
+def _stage_scene_assets(
     scene_json: Any,
     mall: Mapping[str, Any],
     runtime_target: Path,
 ) -> None:
-    """Copy each ``assets.textures`` entry from the mall into the runtime dir.
+    """Copy every ``assets.textures`` entry from its mall store into the runtime dir.
 
-    Texture src paths look like ``characters/<ref>/parts/head.svg``; the
-    source file is read from ``mall["characters"]._root/<ref>/parts/head.svg``
-    (or whichever sidecar location matches the rest of the path).
+    Each texture's ``src`` is resolved through
+    :data:`ASSET_SRC_PREFIX_TO_STORE`. Anything that cannot be resolved — an
+    unknown prefix, an absent store, an in-memory store, or a file that is not
+    on disk — emits a :class:`CutoutAssetWarning` naming the alias, the declared
+    ``src`` and where it was looked for, rather than being skipped in silence.
     """
-    chars_store = mall.get("characters")
-    if chars_store is None:
-        return
-    chars_root = getattr(chars_store, "_root", None)
-    if chars_root is None:
-        return  # in-memory store, nothing to stage
     textures = getattr(scene_json.assets, "textures", {}) if scene_json.assets else {}
     for alias, asset in textures.items():
         src_rel = getattr(asset, "src", None) or (
             asset.get("src") if isinstance(asset, dict) else None
         )
-        if not src_rel or not src_rel.startswith("characters/"):
+        if not src_rel:
+            warnings.warn(
+                f"texture {alias!r} declares no src; nothing to stage. "
+                "The runtime will draw a white rectangle in its place.",
+                CutoutAssetWarning,
+                stacklevel=2,
+            )
             continue
-        # src like "characters/<ref>/parts/head.svg" → strip "characters/"
-        # to get the path relative to the characters root.
-        rel_in_store = src_rel[len("characters/") :]
-        source = Path(chars_root) / rel_in_store
+
+        prefix = next(
+            (p for p in ASSET_SRC_PREFIX_TO_STORE if src_rel.startswith(p)), None
+        )
+        if prefix is None:
+            warnings.warn(
+                f"texture {alias!r} has src {src_rel!r}, whose prefix is not one of "
+                f"{sorted(ASSET_SRC_PREFIX_TO_STORE)}. It cannot be resolved to a "
+                "store and will render as a white rectangle.",
+                CutoutAssetWarning,
+                stacklevel=2,
+            )
+            continue
+
+        store_name = ASSET_SRC_PREFIX_TO_STORE[prefix]
+        store = mall.get(store_name)
+        root = getattr(store, "_root", None) if store is not None else None
+        if root is None:
+            # An in-memory store is legitimate (tests do it) and has nothing on
+            # disk to copy — but a scene that *declared* the texture still will
+            # not get it, so say so.
+            warnings.warn(
+                f"texture {alias!r} resolves to the {store_name!r} store, which has "
+                "no filesystem root (absent or in-memory); it cannot be staged.",
+                CutoutAssetWarning,
+                stacklevel=2,
+            )
+            continue
+
+        source = Path(root) / src_rel[len(prefix) :]
         if not source.exists():
+            warnings.warn(
+                f"texture {alias!r} declared as {src_rel!r} was not found at "
+                f"{source}. The runtime will draw a white rectangle in its place.",
+                CutoutAssetWarning,
+                stacklevel=2,
+            )
             continue
+
         target = runtime_target / src_rel
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)

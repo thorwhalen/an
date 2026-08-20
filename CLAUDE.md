@@ -74,7 +74,6 @@ Honest list. Don't let it rot either — delete a line when you close it.
 - **The JS runtime ignores `loop_mode`.** Python honours it (`an/adapters/cutout/clip.py` `_wrap_time`: `ONCE` / `LOOP` / `PING_PONG`) and `serialize.py` emits the field, but `an/data/cutout_runtime/runtime.js` has no handling for it — every clip plays once. Harmless while visemes and camera clips don't loop; a trap the moment someone authors a looping idle.
 - **DiceBear-sourced characters don't lip-sync.** When a descriptor's `metadata.art_provenance` is `"dicebear"` or `"external_avatar"`, the compiler suppresses both the overlay mouth visual and the speaker's viseme channel (the face is baked into the head SVG). Audio plays; the mouth doesn't move. DiceBear is a bootstrap path — hand-rig for production dialogue, see `examples/promote_demo/`.
 - **Multi-scene projects don't exist.** `"main"` is the only supported key in the scenes store.
-- **The JS runtime fetches PixiJS from a CDN**, so a cold render needs network. Vendoring it is unstarted.
 
 ## What never to do
 
