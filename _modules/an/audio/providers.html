@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.providers &mdash; an 0.1.13 documentation</title>
+  <title>an.audio.providers &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,18 +149,18 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.audio.providers</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Provider factory: name → concrete TTS/LipSync provider instance.</span>
+<span></span><span class="sd">"""Provider factory: name → concrete TTS/LipSync provider instance.</span>
 
 <span class="sd">Used by the CLI and orchestrator to map ``--tts elevenlabs`` (and similar)</span>
 <span class="sd">strings into instantiated providers without callers having to import the</span>
 <span class="sd">specific classes.</span>
 
 <span class="sd">&gt;&gt;&gt; from an.audio.providers import make_tts, make_lipsync</span>
-<span class="sd">&gt;&gt;&gt; make_tts(&quot;offline&quot;).name</span>
-<span class="sd">&#39;offline&#39;</span>
-<span class="sd">&gt;&gt;&gt; make_lipsync(&quot;offline&quot;).name</span>
-<span class="sd">&#39;offline&#39;</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">&gt;&gt;&gt; make_tts("offline").name</span>
+<span class="sd">'offline'</span>
+<span class="sd">&gt;&gt;&gt; make_lipsync("offline").name</span>
+<span class="sd">'offline'</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -177,30 +177,30 @@
 
 
 <span class="n">TTS_FACTORIES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">TTSProvider</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;offline&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">OfflineTTS</span><span class="p">(),</span>
-    <span class="s2">&quot;elevenlabs&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">ElevenLabsTTS</span><span class="p">(),</span>
-    <span class="s2">&quot;mac_say&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">MacSayTTS</span><span class="p">(),</span>
+    <span class="s2">"offline"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">OfflineTTS</span><span class="p">(),</span>
+    <span class="s2">"elevenlabs"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">ElevenLabsTTS</span><span class="p">(),</span>
+    <span class="s2">"mac_say"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">MacSayTTS</span><span class="p">(),</span>
 <span class="p">}</span>
 
 <span class="n">LIPSYNC_FACTORIES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">LipSyncProvider</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;offline&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">OfflineLipSync</span><span class="p">(),</span>
-    <span class="s2">&quot;rhubarb&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">RhubarbLipSync</span><span class="p">(),</span>
-    <span class="s2">&quot;whisper&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">WhisperLipSync</span><span class="p">(),</span>
+    <span class="s2">"offline"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">OfflineLipSync</span><span class="p">(),</span>
+    <span class="s2">"rhubarb"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">RhubarbLipSync</span><span class="p">(),</span>
+    <span class="s2">"whisper"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">WhisperLipSync</span><span class="p">(),</span>
 <span class="p">}</span>
 
 
 <div class="viewcode-block" id="make_tts">
 <a class="viewcode-back" href="../../../module_docs/an/audio/providers.html#an.audio.make_tts">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_tts</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TTSProvider</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiate a TTS provider by name.</span>
+<span class="w">    </span><span class="sd">"""Instantiate a TTS provider by name.</span>
 
 <span class="sd">    Raises ``ValueError`` for unknown names with a list of known options.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">TTS_FACTORIES</span><span class="p">[</span><span class="n">name</span><span class="p">]()</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;unknown TTS provider </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; known: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">TTS_FACTORIES</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"unknown TTS provider </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; known: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">TTS_FACTORIES</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
 
 
@@ -208,12 +208,12 @@
 <div class="viewcode-block" id="make_lipsync">
 <a class="viewcode-back" href="../../../module_docs/an/audio/providers.html#an.audio.make_lipsync">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_lipsync</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LipSyncProvider</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiate a LipSync provider by name.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Instantiate a LipSync provider by name."""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">LIPSYNC_FACTORIES</span><span class="p">[</span><span class="n">name</span><span class="p">]()</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;unknown LipSync provider </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; known: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">LIPSYNC_FACTORIES</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"unknown LipSync provider </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; known: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">LIPSYNC_FACTORIES</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
 
 
@@ -221,7 +221,7 @@
 <div class="viewcode-block" id="known_tts_names">
 <a class="viewcode-back" href="../../../module_docs/an/audio/providers.html#an.audio.known_tts_names">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">known_tts_names</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the registered TTS provider names.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the registered TTS provider names."""</span>
     <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">TTS_FACTORIES</span><span class="p">)</span></div>
 
 
@@ -229,7 +229,7 @@
 <div class="viewcode-block" id="known_lipsync_names">
 <a class="viewcode-back" href="../../../module_docs/an/audio/providers.html#an.audio.known_lipsync_names">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">known_lipsync_names</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the registered LipSync provider names.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the registered LipSync provider names."""</span>
     <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">LIPSYNC_FACTORIES</span><span class="p">)</span></div>
 
 </pre></div>

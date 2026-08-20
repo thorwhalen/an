@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.stores &mdash; an 0.1.13 documentation</title>
+  <title>an.stores &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,11 +149,11 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.stores</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Project mall: a dict of dol-backed `MutableMapping` stores.</span>
+<span></span><span class="sd">"""Project mall: a dict of dol-backed `MutableMapping` stores.</span>
 
 <span class="sd">The mall is the unit of persistence in an. Every long-lived state — assets</span>
 <span class="sd">(characters, environments, voices, styles), the scene file pair, intermediate</span>
-<span class="sd">artifacts (audio, viseme tracks, per-shot mp4s), final output, and the agent&#39;s</span>
+<span class="sd">artifacts (audio, viseme tracks, per-shot mp4s), final output, and the agent's</span>
 <span class="sd">decision log — is keyed inside a store. Stores are dol-backed so the same call</span>
 <span class="sd">sites work against filesystem, SQLite, S3, etc.</span>
 
@@ -162,12 +162,12 @@
 <span class="sd">&gt;&gt;&gt; with tempfile.TemporaryDirectory() as d:</span>
 <span class="sd">...     mall = build_project_mall(d, ensure=True)</span>
 <span class="sd">...     sorted(mall.keys()) == [</span>
-<span class="sd">...         &#39;audio&#39;, &#39;characters&#39;, &#39;decisions&#39;, &#39;environments&#39;,</span>
-<span class="sd">...         &#39;output&#39;, &#39;previews&#39;, &#39;scenes&#39;, &#39;shots&#39;, &#39;styles&#39;,</span>
-<span class="sd">...         &#39;visemes&#39;, &#39;voices&#39;,</span>
+<span class="sd">...         'audio', 'characters', 'decisions', 'environments',</span>
+<span class="sd">...         'output', 'previews', 'scenes', 'shots', 'styles',</span>
+<span class="sd">...         'visemes', 'voices',</span>
 <span class="sd">...     ]</span>
 <span class="sd">True</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -189,18 +189,18 @@
 <span class="p">)</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;CharactersStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;EnvironmentsStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;VoicesStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;StylesStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ScenesStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;AudioArtifactStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;VisemeArtifactStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ShotArtifactStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;PreviewArtifactStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;OutputStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;DecisionLogStore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;build_project_mall&quot;</span><span class="p">,</span>
+    <span class="s2">"CharactersStore"</span><span class="p">,</span>
+    <span class="s2">"EnvironmentsStore"</span><span class="p">,</span>
+    <span class="s2">"VoicesStore"</span><span class="p">,</span>
+    <span class="s2">"StylesStore"</span><span class="p">,</span>
+    <span class="s2">"ScenesStore"</span><span class="p">,</span>
+    <span class="s2">"AudioArtifactStore"</span><span class="p">,</span>
+    <span class="s2">"VisemeArtifactStore"</span><span class="p">,</span>
+    <span class="s2">"ShotArtifactStore"</span><span class="p">,</span>
+    <span class="s2">"PreviewArtifactStore"</span><span class="p">,</span>
+    <span class="s2">"OutputStore"</span><span class="p">,</span>
+    <span class="s2">"DecisionLogStore"</span><span class="p">,</span>
+    <span class="s2">"build_project_mall"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -209,41 +209,41 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">build_project_mall</span><span class="p">(</span>
     <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ensure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">MutableMapping</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the standard project mall over ``project_dir``.</span>
+<span class="w">    </span><span class="sd">"""Build the standard project mall over ``project_dir``.</span>
 
 <span class="sd">    Pass ``ensure=True`` to create the per-store directories on disk if they</span>
-<span class="sd">    don&#39;t exist. Pass keyword overrides to swap in alternate stores (e.g. an</span>
+<span class="sd">    don't exist. Pass keyword overrides to swap in alternate stores (e.g. an</span>
 <span class="sd">    in-memory `dict` for tests).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">pdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ensure</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="s2">&quot;assets/characters&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;assets/environments&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;assets/voices&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;assets/styles&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ir&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;artifacts/audio&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;artifacts/visemes&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;artifacts/shots&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;artifacts/previews&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;output&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;.an&quot;</span><span class="p">,</span>
+            <span class="s2">"assets/characters"</span><span class="p">,</span>
+            <span class="s2">"assets/environments"</span><span class="p">,</span>
+            <span class="s2">"assets/voices"</span><span class="p">,</span>
+            <span class="s2">"assets/styles"</span><span class="p">,</span>
+            <span class="s2">"ir"</span><span class="p">,</span>
+            <span class="s2">"artifacts/audio"</span><span class="p">,</span>
+            <span class="s2">"artifacts/visemes"</span><span class="p">,</span>
+            <span class="s2">"artifacts/shots"</span><span class="p">,</span>
+            <span class="s2">"artifacts/previews"</span><span class="p">,</span>
+            <span class="s2">"output"</span><span class="p">,</span>
+            <span class="s2">".an"</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="n">sub</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">mall</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;characters&quot;</span><span class="p">:</span> <span class="n">CharactersStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;assets&quot;</span> <span class="o">/</span> <span class="s2">&quot;characters&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;environments&quot;</span><span class="p">:</span> <span class="n">EnvironmentsStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;assets&quot;</span> <span class="o">/</span> <span class="s2">&quot;environments&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;voices&quot;</span><span class="p">:</span> <span class="n">VoicesStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;assets&quot;</span> <span class="o">/</span> <span class="s2">&quot;voices&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;styles&quot;</span><span class="p">:</span> <span class="n">StylesStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;assets&quot;</span> <span class="o">/</span> <span class="s2">&quot;styles&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;scenes&quot;</span><span class="p">:</span> <span class="n">ScenesStore</span><span class="p">(</span><span class="n">pdir</span><span class="p">),</span>
-        <span class="s2">&quot;audio&quot;</span><span class="p">:</span> <span class="n">AudioArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;artifacts&quot;</span> <span class="o">/</span> <span class="s2">&quot;audio&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;visemes&quot;</span><span class="p">:</span> <span class="n">VisemeArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;artifacts&quot;</span> <span class="o">/</span> <span class="s2">&quot;visemes&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;shots&quot;</span><span class="p">:</span> <span class="n">ShotArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;artifacts&quot;</span> <span class="o">/</span> <span class="s2">&quot;shots&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;previews&quot;</span><span class="p">:</span> <span class="n">PreviewArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;artifacts&quot;</span> <span class="o">/</span> <span class="s2">&quot;previews&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="n">OutputStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;output&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;decisions&quot;</span><span class="p">:</span> <span class="n">DecisionLogStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;.an&quot;</span> <span class="o">/</span> <span class="s2">&quot;decisions.jsonl&quot;</span><span class="p">),</span>
+        <span class="s2">"characters"</span><span class="p">:</span> <span class="n">CharactersStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"characters"</span><span class="p">),</span>
+        <span class="s2">"environments"</span><span class="p">:</span> <span class="n">EnvironmentsStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"environments"</span><span class="p">),</span>
+        <span class="s2">"voices"</span><span class="p">:</span> <span class="n">VoicesStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"voices"</span><span class="p">),</span>
+        <span class="s2">"styles"</span><span class="p">:</span> <span class="n">StylesStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"styles"</span><span class="p">),</span>
+        <span class="s2">"scenes"</span><span class="p">:</span> <span class="n">ScenesStore</span><span class="p">(</span><span class="n">pdir</span><span class="p">),</span>
+        <span class="s2">"audio"</span><span class="p">:</span> <span class="n">AudioArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"audio"</span><span class="p">),</span>
+        <span class="s2">"visemes"</span><span class="p">:</span> <span class="n">VisemeArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"visemes"</span><span class="p">),</span>
+        <span class="s2">"shots"</span><span class="p">:</span> <span class="n">ShotArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"shots"</span><span class="p">),</span>
+        <span class="s2">"previews"</span><span class="p">:</span> <span class="n">PreviewArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"previews"</span><span class="p">),</span>
+        <span class="s2">"output"</span><span class="p">:</span> <span class="n">OutputStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"output"</span><span class="p">),</span>
+        <span class="s2">"decisions"</span><span class="p">:</span> <span class="n">DecisionLogStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">".an"</span> <span class="o">/</span> <span class="s2">"decisions.jsonl"</span><span class="p">),</span>
     <span class="p">}</span>
     <span class="n">mall</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mall</span></div>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.project &mdash; an 0.1.13 documentation</title>
+  <title>an.project &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,7 +149,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.project</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Project init/load/save — the on-disk anatomy of an an project.</span>
+<span></span><span class="sd">"""Project init/load/save — the on-disk anatomy of an an project.</span>
 
 <span class="sd">Layout (from spec §11):</span>
 
@@ -161,7 +161,7 @@
 <span class="sd">    ├── artifacts/{audio,visemes,shots,previews}/</span>
 <span class="sd">    ├── output/</span>
 <span class="sd">    └── .an/{decisions.jsonl,verifier_runs/,memory.md}</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -178,26 +178,26 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_text</span><span class="p">,</span> <span class="n">_write_json</span><span class="p">,</span> <span class="n">_write_text</span>
 
 
-<span class="n">_ANIMA_TOML_TEMPLATE</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;# an project config</span>
+<span class="n">_ANIMA_TOML_TEMPLATE</span> <span class="o">=</span> <span class="s2">"""# an project config</span>
 <span class="s2">[project]</span>
-<span class="s2">name = &quot;</span><span class="si">{name}</span><span class="s2">&quot;</span>
-<span class="s2">default_style = &quot;cutout&quot;</span>
+<span class="s2">name = "</span><span class="si">{name}</span><span class="s2">"</span>
+<span class="s2">default_style = "cutout"</span>
 
 <span class="s2">[render]</span>
 <span class="s2">fps = </span><span class="si">{fps}</span>
 <span class="s2">resolution = [</span><span class="si">{width}</span><span class="s2">, </span><span class="si">{height}</span><span class="s2">]</span>
 
 <span class="s2">[providers]</span>
-<span class="s2">tts = &quot;elevenlabs&quot;</span>
-<span class="s2">lipsync = &quot;rhubarb&quot;</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">tts = "elevenlabs"</span>
+<span class="s2">lipsync = "rhubarb"</span>
+<span class="s2">"""</span>
 
 
 <div class="viewcode-block" id="Project">
 <a class="viewcode-back" href="../../module_docs/an/project.html#an.Project">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Project</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A loaded an project: directory + mall + current scene.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A loaded an project: directory + mall + current scene."""</span>
 
     <span class="n">root</span><span class="p">:</span> <span class="n">Path</span>
     <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]</span>
@@ -210,18 +210,18 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span>
     <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a fresh an project at ``project_dir``.</span>
+<span class="w">    </span><span class="sd">"""Create a fresh an project at ``project_dir``.</span>
 
 <span class="sd">    Idempotent unless the directory already contains a non-empty ``scene.md``;</span>
 <span class="sd">    pass ``force=True`` to overwrite. Returns the absolute project root.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">pdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
     <span class="n">proj_name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">pdir</span><span class="o">.</span><span class="n">name</span>
 
-    <span class="k">if</span> <span class="n">pdir</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;scene.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;scene.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">pdir</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"scene.md"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"scene.md"</span><span class="p">)</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pdir</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s1">&#39;scene.md&#39;</span><span class="si">}</span><span class="s2"> already exists with content; pass force=True to overwrite&quot;</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pdir</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s1">'scene.md'</span><span class="si">}</span><span class="s2"> already exists with content; pass force=True to overwrite"</span>
             <span class="p">)</span>
 
     <span class="n">pdir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -239,11 +239,11 @@
             <span class="p">),</span>
         <span class="p">)</span>
     <span class="p">)</span>
-    <span class="n">_write_text</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;scene.md&quot;</span><span class="p">,</span> <span class="n">ir_to_markdown</span><span class="p">(</span><span class="n">seed_scene</span><span class="p">))</span>
-    <span class="n">_write_json</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;ir&quot;</span> <span class="o">/</span> <span class="s2">&quot;scene.json&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">seed_scene</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">()))</span>
+    <span class="n">_write_text</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"scene.md"</span><span class="p">,</span> <span class="n">ir_to_markdown</span><span class="p">(</span><span class="n">seed_scene</span><span class="p">))</span>
+    <span class="n">_write_json</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"ir"</span> <span class="o">/</span> <span class="s2">"scene.json"</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">seed_scene</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">()))</span>
 
     <span class="c1"># Seed an.toml.</span>
-    <span class="n">toml_path</span> <span class="o">=</span> <span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;an.toml&quot;</span>
+    <span class="n">toml_path</span> <span class="o">=</span> <span class="n">pdir</span> <span class="o">/</span> <span class="s2">"an.toml"</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">toml_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="n">force</span><span class="p">:</span>
         <span class="n">toml_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
             <span class="n">_ANIMA_TOML_TEMPLATE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -252,16 +252,16 @@
                 <span class="n">width</span><span class="o">=</span><span class="n">DEFAULT_RESOLUTION</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                 <span class="n">height</span><span class="o">=</span><span class="n">DEFAULT_RESOLUTION</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
             <span class="p">),</span>
-            <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+            <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="c1"># Touch the agent-memory file so it&#39;s discoverable.</span>
-    <span class="n">memory_path</span> <span class="o">=</span> <span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;.an&quot;</span> <span class="o">/</span> <span class="s2">&quot;memory.md&quot;</span>
+    <span class="c1"># Touch the agent-memory file so it's discoverable.</span>
+    <span class="n">memory_path</span> <span class="o">=</span> <span class="n">pdir</span> <span class="o">/</span> <span class="s2">".an"</span> <span class="o">/</span> <span class="s2">"memory.md"</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">memory_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="n">memory_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;# Agent memory for </span><span class="si">{</span><span class="n">proj_name</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Append running notes here across sessions.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"# Agent memory for </span><span class="si">{</span><span class="n">proj_name</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span>
+            <span class="s2">"Append running notes here across sessions.</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">pdir</span></div>
@@ -271,16 +271,16 @@
 <div class="viewcode-block" id="load">
 <a class="viewcode-back" href="../../module_docs/an/project.html#an.load">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Project</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load an existing project. Reconciles scene.md / ir/scene.json first.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Load an existing project. Reconciles scene.md / ir/scene.json first."""</span>
     <span class="n">pdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pdir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;no such project directory: </span><span class="si">{</span><span class="n">pdir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no such project directory: </span><span class="si">{</span><span class="n">pdir</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="c1"># Sync md ↔ json so the loaded scene reflects the latest Markdown.</span>
     <span class="n">sync_files</span><span class="p">(</span><span class="n">pdir</span><span class="p">)</span>
 
     <span class="n">mall</span> <span class="o">=</span> <span class="n">build_project_mall</span><span class="p">(</span><span class="n">pdir</span><span class="p">,</span> <span class="n">ensure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">scene</span> <span class="o">=</span> <span class="n">mall</span><span class="p">[</span><span class="s2">&quot;scenes&quot;</span><span class="p">][</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+    <span class="n">scene</span> <span class="o">=</span> <span class="n">mall</span><span class="p">[</span><span class="s2">"scenes"</span><span class="p">][</span><span class="s2">"main"</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">Project</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">pdir</span><span class="p">,</span> <span class="n">mall</span><span class="o">=</span><span class="n">mall</span><span class="p">,</span> <span class="n">scene</span><span class="o">=</span><span class="n">scene</span><span class="p">)</span></div>
 
 
@@ -288,8 +288,8 @@
 <div class="viewcode-block" id="save">
 <a class="viewcode-back" href="../../module_docs/an/project.html#an.save">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Persist a Project&#39;s current scene back to disk (md + json).&quot;&quot;&quot;</span>
-    <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">&quot;scenes&quot;</span><span class="p">][</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">scene</span></div>
+<span class="w">    </span><span class="sd">"""Persist a Project's current scene back to disk (md + json)."""</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">"scenes"</span><span class="p">][</span><span class="s2">"main"</span><span class="p">]</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">scene</span></div>
 
 </pre></div>
 

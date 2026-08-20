@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.stores &mdash; an 0.1.13 documentation</title>
+  <title>an.stores &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -181,9 +181,9 @@ sites work against filesystem, SQLite, S3, etc.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">mall</span> <span class="o">=</span> <span class="n">build_project_mall</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">ensure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="nb">sorted</span><span class="p">(</span><span class="n">mall</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="p">[</span>
-<span class="gp">... </span>        <span class="s1">&#39;audio&#39;</span><span class="p">,</span> <span class="s1">&#39;characters&#39;</span><span class="p">,</span> <span class="s1">&#39;decisions&#39;</span><span class="p">,</span> <span class="s1">&#39;environments&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="s1">&#39;previews&#39;</span><span class="p">,</span> <span class="s1">&#39;scenes&#39;</span><span class="p">,</span> <span class="s1">&#39;shots&#39;</span><span class="p">,</span> <span class="s1">&#39;styles&#39;</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="s1">&#39;visemes&#39;</span><span class="p">,</span> <span class="s1">&#39;voices&#39;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'audio'</span><span class="p">,</span> <span class="s1">'characters'</span><span class="p">,</span> <span class="s1">'decisions'</span><span class="p">,</span> <span class="s1">'environments'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'output'</span><span class="p">,</span> <span class="s1">'previews'</span><span class="p">,</span> <span class="s1">'scenes'</span><span class="p">,</span> <span class="s1">'shots'</span><span class="p">,</span> <span class="s1">'styles'</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s1">'visemes'</span><span class="p">,</span> <span class="s1">'voices'</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="p">]</span>
 <span class="go">True</span>
 </pre></div>
@@ -201,9 +201,9 @@ sites work against filesystem, SQLite, S3, etc.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">store</span> <span class="o">=</span> <span class="n">CharactersStore</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="n">store</span><span class="p">[</span><span class="s1">&#39;maya&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Maya&#39;</span><span class="p">,</span> <span class="s1">&#39;voice_ref&#39;</span><span class="p">:</span> <span class="s1">&#39;maya-warm&#39;</span><span class="p">}</span>
-<span class="gp">... </span>    <span class="n">store</span><span class="p">[</span><span class="s1">&#39;maya&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
-<span class="go">&#39;Maya&#39;</span>
+<span class="gp">... </span>    <span class="n">store</span><span class="p">[</span><span class="s1">'maya'</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Maya'</span><span class="p">,</span> <span class="s1">'voice_ref'</span><span class="p">:</span> <span class="s1">'maya-warm'</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">store</span><span class="p">[</span><span class="s1">'maya'</span><span class="p">][</span><span class="s1">'name'</span><span class="p">]</span>
+<span class="go">'Maya'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -216,11 +216,11 @@ sites work against filesystem, SQLite, S3, etc.</p>
 forbidden; the log is append-only by design.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">log</span> <span class="o">=</span> <span class="n">DecisionLogStore</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s1">&#39;decisions.jsonl&#39;</span><span class="p">))</span>
-<span class="gp">... </span>    <span class="n">_</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
-<span class="gp">... </span>    <span class="n">_</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="gp">... </span>    <span class="n">log</span> <span class="o">=</span> <span class="n">DecisionLogStore</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s1">'decisions.jsonl'</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="n">_</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">'test'</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+<span class="gp">... </span>    <span class="n">_</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">'test'</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
 <span class="gp">... </span>    <span class="n">entries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-<span class="gp">... </span>    <span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;body&#39;</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">entries</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;body&#39;</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'body'</span><span class="p">][</span><span class="s1">'x'</span><span class="p">],</span> <span class="n">entries</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">'body'</span><span class="p">][</span><span class="s1">'x'</span><span class="p">]</span>
 <span class="go">(1, 2)</span>
 </pre></div>
 </div>
@@ -283,8 +283,8 @@ forbidden; the log is append-only by design.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">store</span> <span class="o">=</span> <span class="n">VoicesStore</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="n">store</span><span class="p">[</span><span class="s1">&#39;maya-warm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;provider&#39;</span><span class="p">:</span> <span class="s1">&#39;elevenlabs&#39;</span><span class="p">,</span> <span class="s1">&#39;voice_id&#39;</span><span class="p">:</span> <span class="s1">&#39;xyz&#39;</span><span class="p">}</span>
-<span class="gp">... </span>    <span class="s1">&#39;maya-warm&#39;</span> <span class="ow">in</span> <span class="n">store</span>
+<span class="gp">... </span>    <span class="n">store</span><span class="p">[</span><span class="s1">'maya-warm'</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'provider'</span><span class="p">:</span> <span class="s1">'elevenlabs'</span><span class="p">,</span> <span class="s1">'voice_id'</span><span class="p">:</span> <span class="s1">'xyz'</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="s1">'maya-warm'</span> <span class="ow">in</span> <span class="n">store</span>
 <span class="go">True</span>
 </pre></div>
 </div>

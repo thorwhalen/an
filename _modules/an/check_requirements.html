@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.check_requirements &mdash; an 0.1.13 documentation</title>
+  <title>an.check_requirements &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,15 +149,15 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.check_requirements</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Diagnose system + Python deps that the various backends need.</span>
+<span></span><span class="sd">"""Diagnose system + Python deps that the various backends need.</span>
 
 <span class="sd">Runtime-friendly: never raises; always returns structured per-tool status so</span>
 <span class="sd">the CLI (or a calling script) can decide what to do.</span>
 
 <span class="sd">&gt;&gt;&gt; result = check_requirements()</span>
-<span class="sd">&gt;&gt;&gt; isinstance(result, dict) and &#39;ffmpeg&#39; in result</span>
+<span class="sd">&gt;&gt;&gt; isinstance(result, dict) and 'ffmpeg' in result</span>
 <span class="sd">True</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -172,7 +172,7 @@
 <a class="viewcode-back" href="../../module_docs/an/check_requirements.html#an.ToolStatus">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ToolStatus</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Status of a single tool.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Status of a single tool."""</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">installed</span><span class="p">:</span> <span class="nb">bool</span>
@@ -191,7 +191,7 @@
         <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="c1"># Take the first line; many tools print multi-line --version output.</span>
         <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">out</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">):</span>
@@ -199,41 +199,41 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_ffmpeg</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ToolStatus</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">_which</span><span class="p">(</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_which</span><span class="p">(</span><span class="s2">"ffmpeg"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"ffmpeg"</span><span class="p">,</span>
             <span class="n">installed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">install_hint</span><span class="o">=</span><span class="s2">&quot;brew install ffmpeg  # macOS, or apt install ffmpeg&quot;</span><span class="p">,</span>
+            <span class="n">install_hint</span><span class="o">=</span><span class="s2">"brew install ffmpeg  # macOS, or apt install ffmpeg"</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="n">installed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">_run_version</span><span class="p">([</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;-version&quot;</span><span class="p">])</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="n">installed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">_run_version</span><span class="p">([</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"-version"</span><span class="p">])</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_node</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ToolStatus</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">_which</span><span class="p">(</span><span class="s2">&quot;node&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_which</span><span class="p">(</span><span class="s2">"node"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;node&quot;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"node"</span><span class="p">,</span>
             <span class="n">installed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">install_hint</span><span class="o">=</span><span class="s2">&quot;brew install node  # required for Remotion + cutout JS runtime&quot;</span><span class="p">,</span>
+            <span class="n">install_hint</span><span class="o">=</span><span class="s2">"brew install node  # required for Remotion + cutout JS runtime"</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;node&quot;</span><span class="p">,</span> <span class="n">installed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">_run_version</span><span class="p">([</span><span class="s2">&quot;node&quot;</span><span class="p">,</span> <span class="s2">&quot;--version&quot;</span><span class="p">])</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"node"</span><span class="p">,</span> <span class="n">installed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">_run_version</span><span class="p">([</span><span class="s2">"node"</span><span class="p">,</span> <span class="s2">"--version"</span><span class="p">])</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_rhubarb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ToolStatus</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">_which</span><span class="p">(</span><span class="s2">&quot;rhubarb&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_which</span><span class="p">(</span><span class="s2">"rhubarb"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rhubarb&quot;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"rhubarb"</span><span class="p">,</span>
             <span class="n">installed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">install_hint</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">&quot;brew install rhubarb-lipsync  # macOS; &quot;</span>
-                <span class="s2">&quot;or download from https://github.com/DanielSWolf/rhubarb-lip-sync/releases&quot;</span>
+                <span class="s2">"brew install rhubarb-lipsync  # macOS; "</span>
+                <span class="s2">"or download from https://github.com/DanielSWolf/rhubarb-lip-sync/releases"</span>
             <span class="p">),</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rhubarb&quot;</span><span class="p">,</span> <span class="n">installed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">_run_version</span><span class="p">([</span><span class="s2">&quot;rhubarb&quot;</span><span class="p">,</span> <span class="s2">&quot;--version&quot;</span><span class="p">])</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"rhubarb"</span><span class="p">,</span> <span class="n">installed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">_run_version</span><span class="p">([</span><span class="s2">"rhubarb"</span><span class="p">,</span> <span class="s2">"--version"</span><span class="p">])</span>
     <span class="p">)</span>
 
 
@@ -243,63 +243,63 @@
         <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span> <span class="n">installed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">install_hint</span><span class="o">=</span><span class="n">install_hint</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">mod</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
-        <span class="n">version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s2">&quot;__version__&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s2">"__version__"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span>
             <span class="n">installed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">install_hint</span><span class="o">=</span><span class="n">install_hint</span><span class="p">,</span>
-            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;import failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"import failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span> <span class="n">installed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_playwright</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ToolStatus</span><span class="p">:</span>
     <span class="n">py_status</span> <span class="o">=</span> <span class="n">_check_python_pkg</span><span class="p">(</span>
-        <span class="s2">&quot;playwright&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pip install playwright &amp;&amp; playwright install chromium&quot;</span><span class="p">,</span>
+        <span class="s2">"playwright"</span><span class="p">,</span>
+        <span class="s2">"pip install playwright &amp;&amp; playwright install chromium"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">py_status</span><span class="o">.</span><span class="n">installed</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">py_status</span>
     <span class="c1"># Bonus: check whether the Chromium browser binary is installed.</span>
-    <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;PLAYWRIGHT_BROWSERS_PATH&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span>
-        <span class="s2">&quot;~/Library/Caches/ms-playwright&quot;</span>
+    <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PLAYWRIGHT_BROWSERS_PATH"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span>
+        <span class="s2">"~/Library/Caches/ms-playwright"</span>
     <span class="p">)</span>
     <span class="n">has_chromium</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;chromium&quot;</span><span class="p">)</span>
+        <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"chromium"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span> <span class="k">else</span> <span class="p">[])</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">has_chromium</span><span class="p">:</span>
-        <span class="n">py_status</span><span class="o">.</span><span class="n">detail</span> <span class="o">=</span> <span class="s2">&quot;playwright pkg installed but Chromium not; run: playwright install chromium&quot;</span>
+        <span class="n">py_status</span><span class="o">.</span><span class="n">detail</span> <span class="o">=</span> <span class="s2">"playwright pkg installed but Chromium not; run: playwright install chromium"</span>
     <span class="k">return</span> <span class="n">py_status</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_elevenlabs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ToolStatus</span><span class="p">:</span>
     <span class="n">status</span> <span class="o">=</span> <span class="n">_check_python_pkg</span><span class="p">(</span>
-        <span class="s2">&quot;elevenlabs&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pip install elevenlabs  # also set ELEVEN_API_KEY env var&quot;</span><span class="p">,</span>
+        <span class="s2">"elevenlabs"</span><span class="p">,</span>
+        <span class="s2">"pip install elevenlabs  # also set ELEVEN_API_KEY env var"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">installed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ELEVEN_API_KEY&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ELEVENLABS_API_KEY&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ELEVEN_API_KEY"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ELEVENLABS_API_KEY"</span><span class="p">)</span>
     <span class="p">):</span>
-        <span class="n">status</span><span class="o">.</span><span class="n">detail</span> <span class="o">=</span> <span class="s2">&quot;package installed but ELEVEN_API_KEY env var is not set&quot;</span>
+        <span class="n">status</span><span class="o">.</span><span class="n">detail</span> <span class="o">=</span> <span class="s2">"package installed but ELEVEN_API_KEY env var is not set"</span>
     <span class="k">return</span> <span class="n">status</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_manim</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ToolStatus</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">_check_python_pkg</span><span class="p">(</span>
-        <span class="s2">&quot;manim&quot;</span><span class="p">,</span> <span class="s2">&quot;pip install manim  # plus cairo/pango system deps&quot;</span>
+        <span class="s2">"manim"</span><span class="p">,</span> <span class="s2">"pip install manim  # plus cairo/pango system deps"</span>
     <span class="p">)</span>
 
 
 <div class="viewcode-block" id="check_requirements">
 <a class="viewcode-back" href="../../module_docs/an/check_requirements.html#an.check_requirements">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_requirements</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a per-tool status dict.</span>
+<span class="w">    </span><span class="sd">"""Return a per-tool status dict.</span>
 
 <span class="sd">    The CLI subcommand ``an check`` pretty-prints this. Programmatic callers</span>
 <span class="sd">    can inspect the dict directly.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">checks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolStatus</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">_check_ffmpeg</span><span class="p">(),</span>
         <span class="n">_check_node</span><span class="p">(),</span>
@@ -315,19 +315,19 @@
 <div class="viewcode-block" id="format_report">
 <a class="viewcode-back" href="../../module_docs/an/check_requirements.html#an.format_report">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">format_report</span><span class="p">(</span><span class="n">report</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pretty-print a check_requirements() result.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Pretty-print a check_requirements() result."""</span>
     <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">mark</span> <span class="o">=</span> <span class="s2">&quot;[OK]&quot;</span> <span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;installed&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;[--]&quot;</span>
-        <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mark</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">):</span>
-            <span class="n">line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">mark</span> <span class="o">=</span> <span class="s2">"[OK]"</span> <span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="s2">"installed"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">"[--]"</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mark</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">):</span>
+            <span class="n">line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'version'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;detail&quot;</span><span class="p">):</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;     note: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;detail&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;installed&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;install_hint&quot;</span><span class="p">):</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;     install: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;install_hint&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"detail"</span><span class="p">):</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"     note: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'detail'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">info</span><span class="p">[</span><span class="s2">"installed"</span><span class="p">]</span> <span class="ow">and</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"install_hint"</span><span class="p">):</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"     install: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'install_hint'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
 
 </pre></div>
 

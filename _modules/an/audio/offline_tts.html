@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.offline_tts &mdash; an 0.1.13 documentation</title>
+  <title>an.audio.offline_tts &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,22 +149,22 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.audio.offline_tts</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;OfflineTTS — produces silent audio of plausible duration. No network, no keys.</span>
+<span></span><span class="sd">"""OfflineTTS — produces silent audio of plausible duration. No network, no keys.</span>
 
-<span class="sd">This is the **default** TTS provider for `an`. It&#39;s honest about being silent</span>
-<span class="sd">(it doesn&#39;t pretend to speak), but it produces a real WAV file with the right</span>
+<span class="sd">This is the **default** TTS provider for `an`. It's honest about being silent</span>
+<span class="sd">(it doesn't pretend to speak), but it produces a real WAV file with the right</span>
 <span class="sd">duration so the rest of the pipeline (lip-sync, rendering, mp4 muxing) runs</span>
 <span class="sd">end-to-end without any API setup.</span>
 
-<span class="sd">Use ``ElevenLabsTTS`` for real speech once you&#39;ve set ``ELEVEN_API_KEY``.</span>
+<span class="sd">Use ``ElevenLabsTTS`` for real speech once you've set ``ELEVEN_API_KEY``.</span>
 
 <span class="sd">&gt;&gt;&gt; tts = OfflineTTS()</span>
-<span class="sd">&gt;&gt;&gt; clip = tts.synthesize(&quot;Hello, world!&quot;, voice_id=&quot;default&quot;)</span>
+<span class="sd">&gt;&gt;&gt; clip = tts.synthesize("Hello, world!", voice_id="default")</span>
 <span class="sd">&gt;&gt;&gt; clip.duration &gt; 0.0</span>
 <span class="sd">True</span>
 <span class="sd">&gt;&gt;&gt; clip.transcript</span>
-<span class="sd">&#39;Hello, world!&#39;</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">'Hello, world!'</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -190,12 +190,12 @@
 <div class="viewcode-block" id="OfflineTTS">
 <a class="viewcode-back" href="../../../module_docs/an/audio/offline_tts.html#an.audio.OfflineTTS">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OfflineTTS</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Default TTS provider: silent WAV of length proportional to text.</span>
+<span class="w">    </span><span class="sd">"""Default TTS provider: silent WAV of length proportional to text.</span>
 
 <span class="sd">    Implements the ``TTSProvider`` protocol.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"offline"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -210,14 +210,14 @@
 
     <span class="c1"># -- TTSProvider interface -----------------------------------------------</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">synthesize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">voice_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AudioClip</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">synthesize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">voice_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"default"</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AudioClip</span><span class="p">:</span>
         <span class="n">target_duration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_duration</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
         <span class="n">n_frames</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">target_duration</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span><span class="p">))</span>
         <span class="c1"># Use the post-rounding duration so cache reload (which derives from</span>
         <span class="c1"># frames/rate) matches the in-memory clip.</span>
         <span class="n">duration</span> <span class="o">=</span> <span class="n">n_frames</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span> <span class="k">else</span> <span class="mf">0.0</span>
         <span class="n">wav_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_silent_wav_bytes_for_frames</span><span class="p">(</span><span class="n">n_frames</span><span class="p">)</span>
-        <span class="n">out_path</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span>
+        <span class="n">out_path</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">out_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">out_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
             <span class="n">out_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -235,32 +235,32 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">list_voices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">VoiceMeta</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="n">VoiceMeta</span><span class="p">(</span>
-                <span class="n">voice_id</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Offline (silent placeholder)&quot;</span><span class="p">,</span>
+                <span class="n">voice_id</span><span class="o">=</span><span class="s2">"default"</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"Offline (silent placeholder)"</span><span class="p">,</span>
                 <span class="n">provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="n">language</span><span class="o">=</span><span class="s2">&quot;en&quot;</span><span class="p">,</span>
-                <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;produces silent WAV of plausible duration&quot;</span><span class="p">},</span>
+                <span class="n">language</span><span class="o">=</span><span class="s2">"en"</span><span class="p">,</span>
+                <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"note"</span><span class="p">:</span> <span class="s2">"produces silent WAV of plausible duration"</span><span class="p">},</span>
             <span class="p">)</span>
         <span class="p">]</span>
 
     <span class="c1"># -- internals -----------------------------------------------------------</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_estimate_duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Approximate duration: leading pad + per-char accumulation, clamped.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Approximate duration: leading pad + per-char accumulation, clamped."""</span>
         <span class="n">meaningful</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ch</span><span class="o">.</span><span class="n">isspace</span><span class="p">())</span>
         <span class="n">raw</span> <span class="o">=</span> <span class="n">_LEADING_SILENCE_S</span> <span class="o">+</span> <span class="n">meaningful</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_char</span>
         <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">_MIN_DURATION_S</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">_MAX_DURATION_S</span><span class="p">,</span> <span class="n">raw</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_silent_wav_bytes_for_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_frames</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a valid WAV file (in-memory) of pure silence with ``n_frames`` samples.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Build a valid WAV file (in-memory) of pure silence with ``n_frames`` samples."""</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 
         <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
-        <span class="k">with</span> <span class="n">wave</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">wf</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">wave</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">wf</span><span class="p">:</span>
             <span class="n">wf</span><span class="o">.</span><span class="n">setnchannels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
             <span class="n">wf</span><span class="o">.</span><span class="n">setsampwidth</span><span class="p">(</span><span class="n">_BYTES_PER_SAMPLE</span><span class="p">)</span>
             <span class="n">wf</span><span class="o">.</span><span class="n">setframerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span><span class="p">)</span>
-            <span class="n">silent_frame</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;h&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span>
+            <span class="n">silent_frame</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">"&lt;h"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span>
             <span class="n">wf</span><span class="o">.</span><span class="n">writeframes</span><span class="p">(</span><span class="n">silent_frame</span> <span class="o">*</span> <span class="n">n_frames</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
 

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters._base &mdash; an 0.1.13 documentation</title>
+  <title>an.adapters._base &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,17 +149,17 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.adapters._base</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Renderer protocol, render context, render result, and the renderer registry.</span>
+<span></span><span class="sd">"""Renderer protocol, render context, render result, and the renderer registry.</span>
 
 <span class="sd">Every backend implements ``Renderer`` and registers itself by name. The</span>
 <span class="sd">orchestrator (or `RenderRouter` in non-agent contexts) picks a renderer per</span>
-<span class="sd">shot by inspecting ``shot.style`` and asking each registered renderer&#39;s</span>
+<span class="sd">shot by inspecting ``shot.style`` and asking each registered renderer's</span>
 <span class="sd">``can_render``.</span>
 
 <span class="sd">&gt;&gt;&gt; from an.adapters import Renderer</span>
-<span class="sd">&gt;&gt;&gt; hasattr(Renderer, &#39;__call__&#39;) or True  # Protocol attribute access works</span>
+<span class="sd">&gt;&gt;&gt; hasattr(Renderer, '__call__') or True  # Protocol attribute access works</span>
 <span class="sd">True</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -176,12 +176,12 @@
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.RenderContext">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RenderContext</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Everything a renderer needs that isn&#39;t on the Shot itself.</span>
+<span class="w">    </span><span class="sd">"""Everything a renderer needs that isn't on the Shot itself.</span>
 
-<span class="sd">    ``mall`` carries the project&#39;s stores so the renderer can resolve assets</span>
+<span class="sd">    ``mall`` carries the project's stores so the renderer can resolve assets</span>
 <span class="sd">    by reference. ``work_dir`` is a scratch space; the renderer must clean up</span>
 <span class="sd">    after itself or treat it as ephemeral.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]</span>
     <span class="n">work_dir</span><span class="p">:</span> <span class="n">Path</span>
@@ -195,12 +195,12 @@
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.RenderResult">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RenderResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Outcome of a single shot render.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Outcome of a single shot render."""</span>
 
     <span class="n">mp4_path</span><span class="p">:</span> <span class="n">Path</span>
     <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># actual rendered duration in seconds</span>
     <span class="n">frame_manifest</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">log</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">log</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 
 
@@ -209,11 +209,11 @@
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.Renderer">[docs]</a>
 <span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Renderer</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Backend renderer interface.</span>
+<span class="w">    </span><span class="sd">"""Backend renderer interface.</span>
 
 <span class="sd">    Implementations should be cheap to construct and stateless across renders;</span>
 <span class="sd">    state belongs in the ``RenderContext`` or the project mall.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">supported_styles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
@@ -221,13 +221,13 @@
 <div class="viewcode-block" id="Renderer.can_render">
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.Renderer.can_render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">can_render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if this renderer can render ``shot``.&quot;&quot;&quot;</span></div>
+<span class="w">        </span><span class="sd">"""Return True if this renderer can render ``shot``."""</span></div>
 
 
 <div class="viewcode-block" id="Renderer.render">
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.Renderer.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">RenderContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenderResult</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render a single shot to mp4. Idempotent given identical inputs.&quot;&quot;&quot;</span></div>
+<span class="w">        </span><span class="sd">"""Render a single shot to mp4. Idempotent given identical inputs."""</span></div>
 </div>
 
 
@@ -240,30 +240,30 @@
 <div class="viewcode-block" id="RendererRegistry">
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.RendererRegistry">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RendererRegistry</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name-keyed registry of renderers.</span>
+<span class="w">    </span><span class="sd">"""Name-keyed registry of renderers.</span>
 
 <span class="sd">    A module-level instance is exposed via ``register_renderer`` /</span>
 <span class="sd">    ``get_renderer`` / ``list_renderers``; callers needing isolation (tests,</span>
 <span class="sd">    multi-tenant servers) can construct their own.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Renderer</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">:</span> <span class="n">Renderer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">renderer</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;renderer must have a non-empty &#39;name&#39; attribute&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">renderer</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"renderer must have a non-empty 'name' attribute"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">[</span><span class="n">renderer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">renderer</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Renderer</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;no renderer registered with name </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no renderer registered with name </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
 
 <div class="viewcode-block" id="RendererRegistry.find_for">
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.RendererRegistry.find_for">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">find_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Renderer</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the first registered renderer that ``can_render(shot)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the first registered renderer that ``can_render(shot)``."""</span>
         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">can_render</span><span class="p">(</span><span class="n">shot</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">r</span>
@@ -281,7 +281,7 @@
 <div class="viewcode-block" id="register_renderer">
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.register_renderer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">register_renderer</span><span class="p">(</span><span class="n">renderer</span><span class="p">:</span> <span class="n">Renderer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a renderer in the default registry.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Register a renderer in the default registry."""</span>
     <span class="n">_DEFAULT_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span></div>
 
 
@@ -289,7 +289,7 @@
 <div class="viewcode-block" id="get_renderer">
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.get_renderer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_renderer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Renderer</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look up a renderer by name in the default registry.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Look up a renderer by name in the default registry."""</span>
     <span class="k">return</span> <span class="n">_DEFAULT_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
 
 
@@ -297,7 +297,7 @@
 <div class="viewcode-block" id="list_renderers">
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.list_renderers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_renderers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Names of all renderers registered in the default registry.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Names of all renderers registered in the default registry."""</span>
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_DEFAULT_REGISTRY</span><span class="o">.</span><span class="n">names</span><span class="p">())</span></div>
 
 </pre></div>

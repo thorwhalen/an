@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.render &mdash; an 0.1.13 documentation</title>
+  <title>an.render &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,15 +149,15 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.render</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Project-level rendering: per-shot mp4 → final composited mp4 via ffmpeg concat.</span>
+<span></span><span class="sd">"""Project-level rendering: per-shot mp4 → final composited mp4 via ffmpeg concat.</span>
 
 <span class="sd">The orchestrator picks a renderer per shot from the registry (matched on</span>
 <span class="sd">``shot.style``) and renders each shot in isolation, then concatenates the</span>
-<span class="sd">per-shot outputs into one final mp4 written to ``project.mall[&quot;output&quot;]``.</span>
+<span class="sd">per-shot outputs into one final mp4 written to ``project.mall["output"]``.</span>
 
 <span class="sd">Phase 2D ships the cutout path; later phases register Manim / Remotion / etc.</span>
 <span class="sd">adapters and the same flow handles them.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -175,7 +175,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span><span class="p">,</span> <span class="n">load</span>
 
 
-<span class="c1"># Default cap so a 20-shot scene doesn&#39;t try to spawn 20 Chromiums; the user</span>
+<span class="c1"># Default cap so a 20-shot scene doesn't try to spawn 20 Chromiums; the user</span>
 <span class="c1"># can always pass a higher number explicitly.</span>
 <span class="n">DEFAULT_PARALLEL_CAP</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
 
@@ -183,12 +183,12 @@
 <div class="viewcode-block" id="RenderError">
 <a class="viewcode-back" href="../../module_docs/an/render.html#an.render.RenderError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RenderError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised on render-pipeline failures with actionable detail.&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Raised on render-pipeline failures with actionable detail."""</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_scene_has_pending_dialogue</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if any dialogue line lacks a viseme_track or timing.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return True if any dialogue line lacks a viseme_track or timing."""</span>
     <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -197,7 +197,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_has_any_dialogue</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if there&#39;s at least one dialogue line in the scene.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return True if there's at least one dialogue line in the scene."""</span>
     <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span> <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">)</span>
 
 
@@ -206,17 +206,17 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">render_project</span><span class="p">(</span>
     <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"main"</span><span class="p">,</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolution</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
-    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
+    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
+    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
     <span class="n">parallel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render every shot in ``project_dir``&#39;s scene and concatenate to one mp4.</span>
+<span class="w">    </span><span class="sd">"""Render every shot in ``project_dir``'s scene and concatenate to one mp4.</span>
 
-<span class="sd">    ``tts`` and ``lipsync`` may be provider name strings (``&quot;offline&quot;``,</span>
-<span class="sd">    ``&quot;elevenlabs&quot;``, ``&quot;rhubarb&quot;``) or provider instances. Defaults are</span>
+<span class="sd">    ``tts`` and ``lipsync`` may be provider name strings (``"offline"``,</span>
+<span class="sd">    ``"elevenlabs"``, ``"rhubarb"``) or provider instances. Defaults are</span>
 <span class="sd">    offline so no API keys are required. Switching providers triggers a</span>
 <span class="sd">    re-synthesis on dialogue lines whose stamped audio_ref / viseme_ref</span>
 <span class="sd">    no longer match the current configuration.</span>
@@ -224,15 +224,15 @@
 <span class="sd">    ``parallel`` controls per-shot concurrency:</span>
 
 <span class="sd">    - ``None`` or ``1`` (default): render shots serially.</span>
-<span class="sd">    - ``&quot;auto&quot;``: ``min(n_shots, cpu_count(), DEFAULT_PARALLEL_CAP)``.</span>
+<span class="sd">    - ``"auto"``: ``min(n_shots, cpu_count(), DEFAULT_PARALLEL_CAP)``.</span>
 <span class="sd">    - integer ≥ 2: cap the thread pool at that size.</span>
 
-<span class="sd">    Each shot&#39;s renderer runs in its own thread (the cutout backend</span>
+<span class="sd">    Each shot's renderer runs in its own thread (the cutout backend</span>
 <span class="sd">    spawns a Chromium + http.server per shot, so threads release the</span>
 <span class="sd">    GIL during the slow parts).</span>
 
 <span class="sd">    Returns the absolute path of the final output file (under ``output/``).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span>
         <span class="n">project</span><span class="p">,</span>
@@ -251,25 +251,25 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"main"</span><span class="p">,</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolution</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">auto_audio</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
-    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
+    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
+    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
     <span class="n">parallel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lower-level: render a loaded ``Project`` to mp4.</span>
+<span class="w">    </span><span class="sd">"""Lower-level: render a loaded ``Project`` to mp4.</span>
 
 <span class="sd">    When ``auto_audio`` is True (the default) and any shot has dialogue,</span>
 <span class="sd">    the audio pipeline is run first so visemes + audio are available to</span>
 <span class="sd">    the renderer. Re-synthesis is triggered on provider changes (the</span>
-<span class="sd">    pipeline&#39;s idempotency check compares against the current providers&#39;</span>
+<span class="sd">    pipeline's idempotency check compares against the current providers'</span>
 <span class="sd">    expected content hashes).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">scene</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">scene</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">RenderError</span><span class="p">(</span><span class="s2">&quot;scene has no shots to render&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">RenderError</span><span class="p">(</span><span class="s2">"scene has no shots to render"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">auto_audio</span> <span class="ow">and</span> <span class="n">_has_any_dialogue</span><span class="p">(</span><span class="n">scene</span><span class="p">):</span>
         <span class="c1"># Lazy import to keep render.py importable without audio extras.</span>
@@ -288,9 +288,9 @@
             <span class="n">lipsync</span><span class="o">=</span><span class="n">lipsync_provider</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># Persist the now-stamped scene back to disk so subsequent loads see it.</span>
-        <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">&quot;scenes&quot;</span><span class="p">][</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scene</span>
+        <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">"scenes"</span><span class="p">][</span><span class="s2">"main"</span><span class="p">]</span> <span class="o">=</span> <span class="n">scene</span>
 
-    <span class="n">work_dir</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;.an&quot;</span> <span class="o">/</span> <span class="s2">&quot;render_work&quot;</span>
+    <span class="n">work_dir</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">root</span> <span class="o">/</span> <span class="s2">".an"</span> <span class="o">/</span> <span class="s2">"render_work"</span>
     <span class="n">work_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">effective_fps</span> <span class="o">=</span> <span class="n">fps</span> <span class="k">if</span> <span class="n">fps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">fps</span> <span class="ow">or</span> <span class="n">DEFAULT_FPS</span>
@@ -320,9 +320,9 @@
         <span class="n">r</span> <span class="o">=</span> <span class="n">_DEFAULT_REGISTRY</span><span class="o">.</span><span class="n">find_for</span><span class="p">(</span><span class="n">shot</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">RenderError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;no renderer registered for shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(style=</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">style</span><span class="si">!r}</span><span class="s2">); registered: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">_DEFAULT_REGISTRY</span><span class="o">.</span><span class="n">names</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"no renderer registered for shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"(style=</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">style</span><span class="si">!r}</span><span class="s2">); registered: "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">_DEFAULT_REGISTRY</span><span class="o">.</span><span class="n">names</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
         <span class="n">shot_renderers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">shot</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
 
@@ -345,13 +345,13 @@
         <span class="n">shot_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">results_by_id</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shots</span><span class="p">]</span>
 
     <span class="c1"># Concatenate per-shot mp4s.</span>
-    <span class="n">output_path</span> <span class="o">=</span> <span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">root</span> <span class="o">/</span> <span class="s2">&quot;output&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">.mp4&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">root</span> <span class="o">/</span> <span class="s2">"output"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s2">.mp4"</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
     <span class="n">output_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">_ffmpeg_concat</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">mp4_path</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">shot_results</span><span class="p">],</span> <span class="n">output_path</span><span class="p">)</span>
 
     <span class="c1"># Also write to the output store for parity with other artifacts.</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">][</span><span class="n">output_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">"output"</span><span class="p">][</span><span class="n">output_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">output_path</span></div>
 
@@ -363,20 +363,20 @@
     <span class="n">ctx</span><span class="p">:</span> <span class="n">RenderContext</span><span class="p">,</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenderResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render one shot and persist its mp4 into ``project.mall[&quot;shots&quot;]``.</span>
+<span class="w">    </span><span class="sd">"""Render one shot and persist its mp4 into ``project.mall["shots"]``.</span>
 
 <span class="sd">    Each call is self-contained: the cutout renderer creates a per-shot</span>
 <span class="sd">    work directory, its own Chromium instance, its own http server. This</span>
 <span class="sd">    is what makes the call thread-safe.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">renderer</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">ctx</span><span class="p">)</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">mp4_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">&quot;shots&quot;</span><span class="p">][</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">mp4_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="p">[</span><span class="s2">"shots"</span><span class="p">][</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">result</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_parallel</span><span class="p">(</span><span class="n">parallel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_shots</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve ``parallel`` to an integer worker count.</span>
+<span class="w">    </span><span class="sd">"""Resolve ``parallel`` to an integer worker count.</span>
 
 <span class="sd">    &gt;&gt;&gt; _resolve_parallel(None, n_shots=5)</span>
 <span class="sd">    1</span>
@@ -386,10 +386,10 @@
 <span class="sd">    3</span>
 <span class="sd">    &gt;&gt;&gt; _resolve_parallel(8, n_shots=2)  # capped to n_shots</span>
 <span class="sd">    2</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">parallel</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">parallel</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">parallel</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">parallel</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">parallel</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">parallel</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">parallel</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">parallel</span> <span class="o">==</span> <span class="s2">""</span><span class="p">:</span>
         <span class="k">return</span> <span class="mi">1</span>
-    <span class="k">if</span> <span class="n">parallel</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">parallel</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
         <span class="n">cap</span> <span class="o">=</span> <span class="n">DEFAULT_PARALLEL_CAP</span>
         <span class="n">cpu</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_shots</span><span class="p">,</span> <span class="n">cpu</span><span class="p">,</span> <span class="n">cap</span><span class="p">))</span>
@@ -406,11 +406,11 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_ffmpeg_concat</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span> <span class="n">output</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenate mp4 files using ffmpeg&#39;s concat demuxer.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Concatenate mp4 files using ffmpeg's concat demuxer."""</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"ffmpeg"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">RenderError</span><span class="p">(</span>
-            <span class="s2">&quot;ffmpeg not found on PATH. Install with: brew install ffmpeg &quot;</span>
-            <span class="s2">&quot;(macOS) or apt install ffmpeg (Linux).&quot;</span>
+            <span class="s2">"ffmpeg not found on PATH. Install with: brew install ffmpeg "</span>
+            <span class="s2">"(macOS) or apt install ffmpeg (Linux)."</span>
         <span class="p">)</span>
     <span class="n">inputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -418,31 +418,31 @@
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">output</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="c1"># Build a concat list file: ffmpeg&#39;s concat demuxer wants a `file &#39;&lt;path&gt;&#39;\n` list.</span>
-    <span class="n">list_path</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.concat.txt&quot;</span><span class="p">)</span>
+    <span class="c1"># Build a concat list file: ffmpeg's concat demuxer wants a `file '&lt;path&gt;'\n` list.</span>
+    <span class="n">list_path</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".concat.txt"</span><span class="p">)</span>
     <span class="n">list_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
-        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;file &#39;</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+        <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"file '</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="si">}</span><span class="s2">'"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-y&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-loglevel&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;error&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;concat&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-safe&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;0&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+        <span class="s2">"ffmpeg"</span><span class="p">,</span>
+        <span class="s2">"-y"</span><span class="p">,</span>
+        <span class="s2">"-loglevel"</span><span class="p">,</span>
+        <span class="s2">"error"</span><span class="p">,</span>
+        <span class="s2">"-f"</span><span class="p">,</span>
+        <span class="s2">"concat"</span><span class="p">,</span>
+        <span class="s2">"-safe"</span><span class="p">,</span>
+        <span class="s2">"0"</span><span class="p">,</span>
+        <span class="s2">"-i"</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">list_path</span><span class="p">),</span>
-        <span class="s2">&quot;-c&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;copy&quot;</span><span class="p">,</span>
+        <span class="s2">"-c"</span><span class="p">,</span>
+        <span class="s2">"copy"</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">),</span>
     <span class="p">]</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">output</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">raise</span> <span class="n">RenderError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;ffmpeg concat failed (rc=</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">):</span><span class="se">\n</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"ffmpeg concat failed (rc=</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">):</span><span class="se">\n</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
     <span class="n">list_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.pipeline &mdash; an 0.1.13 documentation</title>
+  <title>an.audio.pipeline &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,12 +149,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.audio.pipeline</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Audio pipeline orchestration: dialogue → audio → visemes → IR mutation.</span>
+<span></span><span class="sd">"""Audio pipeline orchestration: dialogue → audio → visemes → IR mutation.</span>
 
 <span class="sd">Phase 3 wires the pieces together. ``produce_audio_for_scene`` walks every</span>
 <span class="sd">``Dialogue`` in the scene, synthesizes its audio + viseme track via the</span>
-<span class="sd">configured providers, persists artifacts to ``mall[&quot;audio&quot;]`` /</span>
-<span class="sd">``mall[&quot;visemes&quot;]``, and stamps the resulting ``VisemeTrack`` and timing</span>
+<span class="sd">configured providers, persists artifacts to ``mall["audio"]`` /</span>
+<span class="sd">``mall["visemes"]``, and stamps the resulting ``VisemeTrack`` and timing</span>
 <span class="sd">back onto the ``Dialogue`` line so renderers can find it.</span>
 
 <span class="sd">Defaults are the offline providers (silent WAV + deterministic visemes), so</span>
@@ -162,10 +162,10 @@
 
 <span class="sd">&gt;&gt;&gt; from an.audio.pipeline import default_tts, default_lipsync</span>
 <span class="sd">&gt;&gt;&gt; default_tts().name</span>
-<span class="sd">&#39;offline&#39;</span>
+<span class="sd">'offline'</span>
 <span class="sd">&gt;&gt;&gt; default_lipsync().name</span>
-<span class="sd">&#39;offline&#39;</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">'offline'</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -186,7 +186,7 @@
 <div class="viewcode-block" id="default_tts">
 <a class="viewcode-back" href="../../../module_docs/an/audio/pipeline.html#an.audio.default_tts">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">default_tts</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">TTSProvider</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The default TTS provider: ``OfflineTTS``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The default TTS provider: ``OfflineTTS``."""</span>
     <span class="k">return</span> <span class="n">OfflineTTS</span><span class="p">()</span></div>
 
 
@@ -194,7 +194,7 @@
 <div class="viewcode-block" id="default_lipsync">
 <a class="viewcode-back" href="../../../module_docs/an/audio/pipeline.html#an.audio.default_lipsync">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">default_lipsync</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">LipSyncProvider</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The default lip-sync provider: ``OfflineLipSync``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The default lip-sync provider: ``OfflineLipSync``."""</span>
     <span class="k">return</span> <span class="n">OfflineLipSync</span><span class="p">()</span></div>
 
 
@@ -208,26 +208,26 @@
     <span class="n">tts</span><span class="p">:</span> <span class="n">TTSProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">lipsync</span><span class="p">:</span> <span class="n">LipSyncProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">AudioClip</span><span class="p">,</span> <span class="n">VisemeTrack</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Synthesize audio + visemes for one dialogue line.</span>
+<span class="w">    </span><span class="sd">"""Synthesize audio + visemes for one dialogue line.</span>
 
 <span class="sd">    Side effects: when ``mall`` is provided, persists the WAV to</span>
-<span class="sd">    ``mall[&quot;audio&quot;]`` keyed by the content-hash of the dialogue, and persists</span>
-<span class="sd">    the viseme JSON to ``mall[&quot;visemes&quot;]`` similarly. Cache-friendly: a</span>
+<span class="sd">    ``mall["audio"]`` keyed by the content-hash of the dialogue, and persists</span>
+<span class="sd">    the viseme JSON to ``mall["visemes"]`` similarly. Cache-friendly: a</span>
 <span class="sd">    second call with identical inputs returns the cached versions.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">tts</span> <span class="o">=</span> <span class="n">tts</span> <span class="ow">or</span> <span class="n">default_tts</span><span class="p">()</span>
     <span class="n">lipsync</span> <span class="o">=</span> <span class="n">lipsync</span> <span class="ow">or</span> <span class="n">default_lipsync</span><span class="p">()</span>
-    <span class="n">voice_id</span> <span class="o">=</span> <span class="n">dialogue</span><span class="o">.</span><span class="n">voice_ref</span> <span class="ow">or</span> <span class="s2">&quot;default&quot;</span>
+    <span class="n">voice_id</span> <span class="o">=</span> <span class="n">dialogue</span><span class="o">.</span><span class="n">voice_ref</span> <span class="ow">or</span> <span class="s2">"default"</span>
 
     <span class="c1"># Content hash governs caching.</span>
     <span class="n">cache_key</span> <span class="o">=</span> <span class="n">_stable_hash</span><span class="p">(</span>
-        <span class="p">{</span><span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">dialogue</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;voice&quot;</span><span class="p">:</span> <span class="n">voice_id</span><span class="p">,</span> <span class="s2">&quot;tts&quot;</span><span class="p">:</span> <span class="n">tts</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+        <span class="p">{</span><span class="s2">"text"</span><span class="p">:</span> <span class="n">dialogue</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">"voice"</span><span class="p">:</span> <span class="n">voice_id</span><span class="p">,</span> <span class="s2">"tts"</span><span class="p">:</span> <span class="n">tts</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
     <span class="p">)</span>
 
     <span class="n">audio_clip</span> <span class="o">=</span> <span class="n">_load_or_synthesize</span><span class="p">(</span><span class="n">tts</span><span class="p">,</span> <span class="n">dialogue</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">voice_id</span><span class="p">,</span> <span class="n">mall</span><span class="p">,</span> <span class="n">cache_key</span><span class="p">)</span>
 
     <span class="n">viseme_cache_key</span> <span class="o">=</span> <span class="n">_stable_hash</span><span class="p">(</span>
-        <span class="p">{</span><span class="s2">&quot;audio_key&quot;</span><span class="p">:</span> <span class="n">cache_key</span><span class="p">,</span> <span class="s2">&quot;lipsync&quot;</span><span class="p">:</span> <span class="n">lipsync</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;transcript&quot;</span><span class="p">:</span> <span class="n">dialogue</span><span class="o">.</span><span class="n">text</span><span class="p">}</span>
+        <span class="p">{</span><span class="s2">"audio_key"</span><span class="p">:</span> <span class="n">cache_key</span><span class="p">,</span> <span class="s2">"lipsync"</span><span class="p">:</span> <span class="n">lipsync</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"transcript"</span><span class="p">:</span> <span class="n">dialogue</span><span class="o">.</span><span class="n">text</span><span class="p">}</span>
     <span class="p">)</span>
     <span class="n">track</span> <span class="o">=</span> <span class="n">_load_or_align</span><span class="p">(</span><span class="n">lipsync</span><span class="p">,</span> <span class="n">audio_clip</span><span class="p">,</span> <span class="n">dialogue</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">mall</span><span class="p">,</span> <span class="n">viseme_cache_key</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">audio_clip</span><span class="p">,</span> <span class="n">track</span></div>
@@ -243,34 +243,34 @@
     <span class="n">tts</span><span class="p">:</span> <span class="n">TTSProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">lipsync</span><span class="p">:</span> <span class="n">LipSyncProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SceneIR</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Walk every dialogue line, synthesize, and stamp viseme tracks back.</span>
+<span class="w">    </span><span class="sd">"""Walk every dialogue line, synthesize, and stamp viseme tracks back.</span>
 
 <span class="sd">    Mutates the ``scene`` in place AND returns it (for chaining).</span>
 <span class="sd">    Stamps ``Dialogue.duration``, ``Dialogue.start`` (if unset),</span>
-<span class="sd">    ``Dialogue.viseme_track``, and ``Dialogue.audio_ref`` (mall[&quot;audio&quot;] key)</span>
+<span class="sd">    ``Dialogue.viseme_track``, and ``Dialogue.audio_ref`` (mall["audio"] key)</span>
 <span class="sd">    so the renderer can find the audio later. Lines with an existing</span>
 <span class="sd">    viseme_track AND audio_ref are skipped (idempotent).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">tts</span> <span class="o">=</span> <span class="n">tts</span> <span class="ow">or</span> <span class="n">default_tts</span><span class="p">()</span>
     <span class="n">lipsync</span> <span class="o">=</span> <span class="n">lipsync</span> <span class="ow">or</span> <span class="n">default_lipsync</span><span class="p">()</span>
-    <span class="n">voice_default</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
+    <span class="n">voice_default</span> <span class="o">=</span> <span class="s2">"default"</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">:</span>
         <span class="n">cursor</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">:</span>
             <span class="n">voice_id</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">voice_ref</span> <span class="ow">or</span> <span class="n">voice_default</span>
             <span class="n">expected_audio_ref</span> <span class="o">=</span> <span class="n">_stable_hash</span><span class="p">(</span>
-                <span class="p">{</span><span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;voice&quot;</span><span class="p">:</span> <span class="n">voice_id</span><span class="p">,</span> <span class="s2">&quot;tts&quot;</span><span class="p">:</span> <span class="n">tts</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+                <span class="p">{</span><span class="s2">"text"</span><span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">"voice"</span><span class="p">:</span> <span class="n">voice_id</span><span class="p">,</span> <span class="s2">"tts"</span><span class="p">:</span> <span class="n">tts</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
             <span class="p">)</span>
             <span class="n">expected_viseme_ref</span> <span class="o">=</span> <span class="n">_stable_hash</span><span class="p">(</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;audio_key&quot;</span><span class="p">:</span> <span class="n">expected_audio_ref</span><span class="p">,</span>
-                    <span class="s2">&quot;lipsync&quot;</span><span class="p">:</span> <span class="n">lipsync</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                    <span class="s2">&quot;transcript&quot;</span><span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+                    <span class="s2">"audio_key"</span><span class="p">:</span> <span class="n">expected_audio_ref</span><span class="p">,</span>
+                    <span class="s2">"lipsync"</span><span class="p">:</span> <span class="n">lipsync</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="s2">"transcript"</span><span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
                 <span class="p">}</span>
             <span class="p">)</span>
-            <span class="n">audio_store</span> <span class="o">=</span> <span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;audio&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="n">viseme_store</span> <span class="o">=</span> <span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;visemes&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">audio_store</span> <span class="o">=</span> <span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"audio"</span><span class="p">)</span> <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">viseme_store</span> <span class="o">=</span> <span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"visemes"</span><span class="p">)</span> <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="n">already_done</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">line</span><span class="o">.</span><span class="n">audio_ref</span> <span class="o">==</span> <span class="n">expected_audio_ref</span>
                 <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_ref</span> <span class="o">==</span> <span class="n">expected_viseme_ref</span>
@@ -309,7 +309,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_to_ir_viseme_track</span><span class="p">(</span><span class="n">track</span><span class="p">:</span> <span class="n">VisemeTrack</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IRVisemeTrack</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Translate the audio-side dataclass to the IR&#39;s Pydantic model.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Translate the audio-side dataclass to the IR's Pydantic model."""</span>
     <span class="k">return</span> <span class="n">IRVisemeTrack</span><span class="p">(</span>
         <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span><span class="n">VisemeKeyframe</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">viseme</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">track</span><span class="o">.</span><span class="n">visemes</span><span class="p">]</span>
     <span class="p">)</span>
@@ -322,16 +322,16 @@
     <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">cache_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AudioClip</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;audio&quot;</span> <span class="ow">in</span> <span class="n">mall</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">mall</span><span class="p">[</span><span class="s2">&quot;audio&quot;</span><span class="p">]:</span>
-        <span class="n">wav_bytes</span> <span class="o">=</span> <span class="n">mall</span><span class="p">[</span><span class="s2">&quot;audio&quot;</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"audio"</span> <span class="ow">in</span> <span class="n">mall</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">mall</span><span class="p">[</span><span class="s2">"audio"</span><span class="p">]:</span>
+        <span class="n">wav_bytes</span> <span class="o">=</span> <span class="n">mall</span><span class="p">[</span><span class="s2">"audio"</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span>
         <span class="c1"># Re-derive duration from WAV header for fidelity.</span>
         <span class="n">duration</span> <span class="o">=</span> <span class="n">_wav_duration</span><span class="p">(</span><span class="n">wav_bytes</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">AudioClip</span><span class="p">(</span>
             <span class="n">bytes_</span><span class="o">=</span><span class="n">wav_bytes</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span> <span class="n">voice_id</span><span class="o">=</span><span class="n">voice_id</span><span class="p">,</span> <span class="n">transcript</span><span class="o">=</span><span class="n">text</span>
         <span class="p">)</span>
     <span class="n">clip</span> <span class="o">=</span> <span class="n">tts</span><span class="o">.</span><span class="n">synthesize</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">voice_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;audio&quot;</span> <span class="ow">in</span> <span class="n">mall</span> <span class="ow">and</span> <span class="n">clip</span><span class="o">.</span><span class="n">bytes_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">mall</span><span class="p">[</span><span class="s2">&quot;audio&quot;</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">clip</span><span class="o">.</span><span class="n">bytes_</span>
+    <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"audio"</span> <span class="ow">in</span> <span class="n">mall</span> <span class="ow">and</span> <span class="n">clip</span><span class="o">.</span><span class="n">bytes_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mall</span><span class="p">[</span><span class="s2">"audio"</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">clip</span><span class="o">.</span><span class="n">bytes_</span>
     <span class="k">return</span> <span class="n">clip</span>
 
 
@@ -342,48 +342,48 @@
     <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">cache_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VisemeTrack</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;visemes&quot;</span> <span class="ow">in</span> <span class="n">mall</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">mall</span><span class="p">[</span><span class="s2">&quot;visemes&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"visemes"</span> <span class="ow">in</span> <span class="n">mall</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">mall</span><span class="p">[</span><span class="s2">"visemes"</span><span class="p">]:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">mall</span><span class="p">[</span><span class="s2">&quot;visemes&quot;</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">mall</span><span class="p">[</span><span class="s2">"visemes"</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">VisemeTrack</span><span class="p">(</span>
                 <span class="n">visemes</span><span class="o">=</span><span class="p">[</span>
-                    <span class="nb">__import__</span><span class="p">(</span><span class="s2">&quot;an.audio.lipsync&quot;</span><span class="p">,</span> <span class="n">fromlist</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Viseme&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">Viseme</span><span class="p">(</span>
-                        <span class="n">time</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">],</span>
-                        <span class="n">code</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">],</span>
-                        <span class="n">intensity</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;intensity&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                    <span class="nb">__import__</span><span class="p">(</span><span class="s2">"an.audio.lipsync"</span><span class="p">,</span> <span class="n">fromlist</span><span class="o">=</span><span class="p">[</span><span class="s2">"Viseme"</span><span class="p">])</span><span class="o">.</span><span class="n">Viseme</span><span class="p">(</span>
+                        <span class="n">time</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s2">"time"</span><span class="p">],</span>
+                        <span class="n">code</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s2">"code"</span><span class="p">],</span>
+                        <span class="n">intensity</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"intensity"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
                     <span class="p">)</span>
-                    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;visemes&quot;</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"visemes"</span><span class="p">,</span> <span class="p">[])</span>
                 <span class="p">],</span>
-                <span class="n">convention</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;convention&quot;</span><span class="p">,</span> <span class="n">lipsync</span><span class="o">.</span><span class="n">convention</span><span class="p">),</span>
-                <span class="n">duration</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;duration&quot;</span><span class="p">,</span> <span class="n">audio</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
+                <span class="n">convention</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"convention"</span><span class="p">,</span> <span class="n">lipsync</span><span class="o">.</span><span class="n">convention</span><span class="p">),</span>
+                <span class="n">duration</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">,</span> <span class="n">audio</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="c1"># Fall through to recompute; cache content was malformed.</span>
             <span class="k">pass</span>
     <span class="n">track</span> <span class="o">=</span> <span class="n">lipsync</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="n">audio</span><span class="p">,</span> <span class="n">transcript</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;visemes&quot;</span> <span class="ow">in</span> <span class="n">mall</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"visemes"</span> <span class="ow">in</span> <span class="n">mall</span><span class="p">:</span>
         <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;visemes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">asdict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">track</span><span class="o">.</span><span class="n">visemes</span><span class="p">],</span>
-            <span class="s2">&quot;convention&quot;</span><span class="p">:</span> <span class="n">track</span><span class="o">.</span><span class="n">convention</span><span class="p">,</span>
-            <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="n">track</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+            <span class="s2">"visemes"</span><span class="p">:</span> <span class="p">[</span><span class="n">asdict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">track</span><span class="o">.</span><span class="n">visemes</span><span class="p">],</span>
+            <span class="s2">"convention"</span><span class="p">:</span> <span class="n">track</span><span class="o">.</span><span class="n">convention</span><span class="p">,</span>
+            <span class="s2">"duration"</span><span class="p">:</span> <span class="n">track</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
         <span class="p">}</span>
-        <span class="n">mall</span><span class="p">[</span><span class="s2">&quot;visemes&quot;</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">mall</span><span class="p">[</span><span class="s2">"visemes"</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">track</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_wav_duration</span><span class="p">(</span><span class="n">wav_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compatibility shim: duration of cached audio bytes.</span>
+<span class="w">    </span><span class="sd">"""Compatibility shim: duration of cached audio bytes.</span>
 
 <span class="sd">    Tries the stdlib `wave` module first (fast, no subprocess). Falls back to</span>
 <span class="sd">    ffprobe for non-WAV containers (mp3 from ElevenLabs etc.). Returns 0.0</span>
 <span class="sd">    if both fail; the renderer will still mux the audio fine because ffmpeg</span>
 <span class="sd">    sniffs format itself.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">wave</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">wave</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">wav_bytes</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">wf</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">wave</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">wav_bytes</span><span class="p">),</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">wf</span><span class="p">:</span>
             <span class="n">n</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">getnframes</span><span class="p">()</span>
             <span class="n">rate</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">getframerate</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">n</span> <span class="o">/</span> <span class="n">rate</span> <span class="k">if</span> <span class="n">rate</span> <span class="k">else</span> <span class="mf">0.0</span>
@@ -392,26 +392,26 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_ffprobe_duration</span><span class="p">(</span><span class="n">audio_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use ffprobe to read the duration of an arbitrary audio container.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Use ffprobe to read the duration of an arbitrary audio container."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 
-    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ffprobe&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"ffprobe"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="mf">0.0</span>
-    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.bin&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">".bin"</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
         <span class="n">tmp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">audio_bytes</span><span class="p">)</span>
         <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">name</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="p">[</span>
-                <span class="s2">&quot;ffprobe&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;-v&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;error&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;-show_entries&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;format=duration&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;-of&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;default=noprint_wrappers=1:nokey=1&quot;</span><span class="p">,</span>
+                <span class="s2">"ffprobe"</span><span class="p">,</span>
+                <span class="s2">"-v"</span><span class="p">,</span>
+                <span class="s2">"error"</span><span class="p">,</span>
+                <span class="s2">"-show_entries"</span><span class="p">,</span>
+                <span class="s2">"format=duration"</span><span class="p">,</span>
+                <span class="s2">"-of"</span><span class="p">,</span>
+                <span class="s2">"default=noprint_wrappers=1:nokey=1"</span><span class="p">,</span>
                 <span class="n">tmp_path</span><span class="p">,</span>
             <span class="p">],</span>
             <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.stores.scenes &mdash; an 0.1.13 documentation</title>
+  <title>an.stores.scenes &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -150,15 +150,15 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.stores.scenes</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Scenes store — wraps the project&#39;s ``scene.md`` + ``ir/scene.json`` pair.</span>
+<span></span><span class="sd">"""Scenes store — wraps the project's ``scene.md`` + ``ir/scene.json`` pair.</span>
 
-<span class="sd">Right now an an project contains exactly one scene (&quot;main&quot;), so this store</span>
-<span class="sd">exposes only the ``&quot;main&quot;`` key. Future versions can support multi-scene</span>
+<span class="sd">Right now an an project contains exactly one scene ("main"), so this store</span>
+<span class="sd">exposes only the ``"main"`` key. Future versions can support multi-scene</span>
 <span class="sd">projects by promoting siblings inside a ``scenes/`` directory.</span>
 
 <span class="sd">Reading returns a ``SceneIR``. Writing accepts a ``SceneIR`` (or a dict that</span>
 <span class="sd">validates as one) and persists both the JSON and the regenerated Markdown.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -175,24 +175,24 @@
 <div class="viewcode-block" id="ScenesStore">
 <a class="viewcode-back" href="../../../module_docs/an/stores/scenes.html#an.stores.ScenesStore">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ScenesStore</span><span class="p">(</span><span class="n">MutableMapping</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;`MutableMapping` exposing the scene file pair under a project root.</span>
+<span class="w">    </span><span class="sd">"""`MutableMapping` exposing the scene file pair under a project root.</span>
 
-<span class="sd">    Keys: currently always ``&quot;main&quot;``. The store enforces this by raising</span>
+<span class="sd">    Keys: currently always ``"main"``. The store enforces this by raising</span>
 <span class="sd">    ``KeyError`` for other keys.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">SCENE_KEY</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span>
+    <span class="n">SCENE_KEY</span> <span class="o">=</span> <span class="s2">"main"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">md_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">/</span> <span class="s2">&quot;scene.md&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">/</span> <span class="s2">"scene.md"</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">json_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">/</span> <span class="s2">&quot;ir&quot;</span> <span class="o">/</span> <span class="s2">&quot;scene.json&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">/</span> <span class="s2">"ir"</span> <span class="o">/</span> <span class="s2">"scene.json"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SceneIR</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SCENE_KEY</span><span class="p">:</span>
@@ -203,13 +203,13 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">SceneIR</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SCENE_KEY</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;only the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">SCENE_KEY</span><span class="si">!r}</span><span class="s2"> key is supported&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"only the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">SCENE_KEY</span><span class="si">!r}</span><span class="s2"> key is supported"</span><span class="p">)</span>
         <span class="n">scene</span> <span class="o">=</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">SceneIR</span><span class="p">)</span> <span class="k">else</span> <span class="n">SceneIR</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="n">_write_json</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">()))</span>
         <span class="n">_write_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">md_path</span><span class="p">,</span> <span class="n">ir_to_markdown</span><span class="p">(</span><span class="n">scene</span><span class="p">))</span>
         <span class="c1"># Equalize mtimes so the JSON wins ties on subsequent sync()s. Pipeline</span>
         <span class="c1"># stages (audio, lip-sync) inject rich state into the JSON that the</span>
-        <span class="c1"># Markdown can&#39;t represent — without this, sync() would round-trip</span>
+        <span class="c1"># Markdown can't represent — without this, sync() would round-trip</span>
         <span class="c1"># md → json and lose them on the next load.</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
@@ -233,7 +233,7 @@
         <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="mi">0</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;ScenesStore(</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">)</span><span class="si">!r}</span><span class="s2">)&quot;</span></div>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"ScenesStore(</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">)</span><span class="si">!r}</span><span class="s2">)"</span></div>
 
 </pre></div>
 

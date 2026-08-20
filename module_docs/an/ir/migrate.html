@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.migrate &mdash; an 0.1.13 documentation</title>
+  <title>an.ir.migrate &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -181,8 +181,8 @@ get added when fields change.</p>
 <dd><p>Migrate an IR dict to <code class="docutils literal notranslate"><span class="pre">target_version</span></code>.</p>
 <p>Walks the migration registry one step at a time. Raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if
 no path exists between the source and target versions.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">migrate</span><span class="p">({</span><span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;SceneIR&quot;</span><span class="p">})[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
-<span class="go">&#39;0.1.0&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">migrate</span><span class="p">({</span><span class="s2">"version"</span><span class="p">:</span> <span class="s2">"0.1.0"</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"SceneIR"</span><span class="p">})[</span><span class="s2">"version"</span><span class="p">]</span>
+<span class="go">'0.1.0'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -191,11 +191,11 @@ no path exists between the source and target versions.</p>
 <dt class="sig sig-object py" id="an.ir.migrate.register_migration">
 <span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">register_migration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/ir/migrate.html#register_migration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.migrate.register_migration" title="Link to this definition"></a></dt>
 <dd><p>Decorator: register a migration in MIGRATIONS.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_migration</span><span class="p">(</span><span class="s2">&quot;0.0.99&quot;</span><span class="p">,</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_migration</span><span class="p">(</span><span class="s2">"0.0.99"</span><span class="p">,</span> <span class="s2">"0.1.0"</span><span class="p">)</span>
 <span class="gp">... </span><span class="k">def</span><span class="w"> </span><span class="nf">_bump</span><span class="p">(</span><span class="n">doc</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">doc</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0.1.0&quot;</span>
+<span class="gp">... </span>    <span class="n">doc</span><span class="p">[</span><span class="s2">"version"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"0.1.0"</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">doc</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="s2">&quot;0.0.99&quot;</span><span class="p">,</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">MIGRATIONS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="s2">"0.0.99"</span><span class="p">,</span> <span class="s2">"0.1.0"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">MIGRATIONS</span>
 <span class="go">True</span>
 </pre></div>
 </div>

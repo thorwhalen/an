@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.orchestrate &mdash; an 0.1.13 documentation</title>
+  <title>an.orchestrate &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,11 +149,11 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.orchestrate</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Orchestrator: validate → audio → render → verify.</span>
+<span></span><span class="sd">"""Orchestrator: validate → audio → render → verify.</span>
 
 <span class="sd">Phase 5 ships ``orchestrate(project_dir, ...)`` — the high-level flow that</span>
 <span class="sd">ties together validation, audio synthesis, rendering, and verification.</span>
-<span class="sd">The full iterative edit loop (free-text &quot;make Maya&#39;s laugh longer&quot; →</span>
+<span class="sd">The full iterative edit loop (free-text "make Maya's laugh longer" →</span>
 <span class="sd">re-render only the affected shot) lives in the ``an`` skill, which calls</span>
 <span class="sd">into these primitives.</span>
 
@@ -161,7 +161,7 @@
 <span class="sd">&gt;&gt;&gt; r = OrchestratorReport()</span>
 <span class="sd">&gt;&gt;&gt; r.success</span>
 <span class="sd">True</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -186,7 +186,7 @@
 <a class="viewcode-back" href="../../module_docs/an/orchestrate.html#an.orchestrate.OrchestratorReport">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">OrchestratorReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Outcome of an end-to-end orchestrated run.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Outcome of an end-to-end orchestrated run."""</span>
 
     <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -204,13 +204,13 @@
 <div class="viewcode-block" id="validate_project">
 <a class="viewcode-back" href="../../module_docs/an/orchestrate.html#an.orchestrate.validate_project">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_project</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Schema + semantic validation of the scene at ``project_dir``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Schema + semantic validation of the scene at ``project_dir``."""</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
     <span class="n">schema_report</span> <span class="o">=</span> <span class="n">validate_schema</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">scene</span><span class="p">)</span>
     <span class="n">semantic_report</span> <span class="o">=</span> <span class="n">validate_semantic</span><span class="p">(</span>
         <span class="n">project</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span>
-        <span class="n">available_voices</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;voices&quot;</span><span class="p">),</span>
-        <span class="n">available_characters</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;characters&quot;</span><span class="p">),</span>
+        <span class="n">available_voices</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"voices"</span><span class="p">),</span>
+        <span class="n">available_characters</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"characters"</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">schema_report</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">semantic_report</span><span class="p">)</span></div>
 
@@ -221,12 +221,12 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">render_project</span><span class="p">(</span>
     <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
-    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
-    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
+    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"main"</span><span class="p">,</span>
+    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
+    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
     <span class="n">parallel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render the project&#39;s scene to a single mp4 under ``output/``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Render the project's scene to a single mp4 under ``output/``."""</span>
     <span class="k">return</span> <span class="n">_render_project</span><span class="p">(</span>
         <span class="n">project_dir</span><span class="p">,</span>
         <span class="n">output_name</span><span class="o">=</span><span class="n">output_name</span><span class="p">,</span>
@@ -242,14 +242,14 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">orchestrate</span><span class="p">(</span>
     <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"main"</span><span class="p">,</span>
     <span class="n">verifiers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Verifier</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">skip_render</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
-    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">&quot;offline&quot;</span><span class="p">,</span>
+    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
+    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
     <span class="n">parallel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrchestratorReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the full pipeline. Returns a structured outcome.</span>
+<span class="w">    </span><span class="sd">"""Run the full pipeline. Returns a structured outcome.</span>
 
 <span class="sd">    Phases:</span>
 <span class="sd">      1. Validate (schema + semantic). Hard fail if the schema is broken.</span>
@@ -265,7 +265,7 @@
 <span class="sd">    provider instance — useful for callers (e.g. ``muvid``) that want</span>
 <span class="sd">    to inject a :class:`an.audio.WordTimingsLipSync` driven by their</span>
 <span class="sd">    own alignment store, instead of letting ``an`` re-transcribe.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">OrchestratorReport</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">verifiers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">verifiers</span> <span class="o">=</span> <span class="p">[</span><span class="n">LayoutLintVerifier</span><span class="p">(),</span> <span class="n">MediaQualityVerifier</span><span class="p">()]</span>
@@ -275,11 +275,11 @@
         <span class="n">report</span><span class="o">.</span><span class="n">validation</span> <span class="o">=</span> <span class="n">validate_project</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">report</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">report</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;validation crashed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"validation crashed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">"</span>
         <span class="k">return</span> <span class="n">report</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">report</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
         <span class="n">report</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">report</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;schema/semantic validation failed&quot;</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="s2">"schema/semantic validation failed"</span>
         <span class="k">return</span> <span class="n">report</span>
 
     <span class="c1"># --- 2. pre-render verifiers (run on IR alone) --------------------------</span>
@@ -290,7 +290,7 @@
             <span class="n">report</span><span class="o">.</span><span class="n">merge_verification</span><span class="p">(</span><span class="n">vr</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">partial</span> <span class="o">=</span> <span class="n">VerificationReport</span><span class="p">()</span>
-            <span class="n">partial</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;verifier crashed pre-render: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">partial</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"warning"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"verifier crashed pre-render: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">report</span><span class="o">.</span><span class="n">merge_verification</span><span class="p">(</span><span class="n">partial</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">skip_render</span> <span class="ow">or</span> <span class="n">report</span><span class="o">.</span><span class="n">success</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
@@ -307,7 +307,7 @@
         <span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">report</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">report</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;render failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"render failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">"</span>
         <span class="k">return</span> <span class="n">report</span>
 
     <span class="c1"># --- 4. post-render verifiers (with the actual mp4) ---------------------</span>
@@ -322,7 +322,7 @@
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">partial</span> <span class="o">=</span> <span class="n">VerificationReport</span><span class="p">()</span>
             <span class="n">partial</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;verifier crashed post-render: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span>
+                <span class="s2">"warning"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"verifier crashed post-render: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="n">report</span><span class="o">.</span><span class="n">merge_verification</span><span class="p">(</span><span class="n">partial</span><span class="p">)</span>
 
@@ -333,11 +333,11 @@
 <div class="viewcode-block" id="iterate">
 <a class="viewcode-back" href="../../module_docs/an/orchestrate.html#an.orchestrate.iterate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">iterate</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply a free-text edit instruction. Returns an IterateResult.</span>
+<span class="w">    </span><span class="sd">"""Apply a free-text edit instruction. Returns an IterateResult.</span>
 
 <span class="sd">    Thin re-export for consistency with the rest of the orchestrator surface;</span>
 <span class="sd">    the real implementation lives in ``an.iterate``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">an.iterate</span><span class="w"> </span><span class="kn">import</span> <span class="n">iterate</span> <span class="k">as</span> <span class="n">_iterate</span>
 
     <span class="k">return</span> <span class="n">_iterate</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">instruction</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>

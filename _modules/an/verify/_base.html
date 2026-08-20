@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify._base &mdash; an 0.1.13 documentation</title>
+  <title>an.verify._base &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,12 +149,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.verify._base</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Verifier protocol + Finding/VerificationReport dataclasses.</span>
+<span></span><span class="sd">"""Verifier protocol + Finding/VerificationReport dataclasses.</span>
 
 <span class="sd">Same shape as `an.ir.validate.ValidationReport` but lives here because</span>
 <span class="sd">verification operates on a (IR + render) pair while validation operates on</span>
 <span class="sd">the IR alone. Keeping them separate types lets us evolve them independently.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -165,18 +165,18 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span>
 
 
-<span class="n">Severity</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">]</span>
+<span class="n">Severity</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"error"</span><span class="p">,</span> <span class="s2">"warning"</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="Finding">
 <a class="viewcode-back" href="../../../module_docs/an/verify/_base.html#an.verify.Finding">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Finding</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A single verification issue.</span>
+<span class="w">    </span><span class="sd">"""A single verification issue.</span>
 
 <span class="sd">    ``ir_path`` lets the orchestrator route the fix to the correct layer of</span>
-<span class="sd">    the IR — e.g. ``&quot;timeline/0/dialogue/1&quot;``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    the IR — e.g. ``"timeline/0/dialogue/1"``.</span>
+<span class="sd">    """</span>
 
     <span class="n">severity</span><span class="p">:</span> <span class="n">Severity</span>
     <span class="n">ir_path</span><span class="p">:</span> <span class="nb">str</span>
@@ -189,7 +189,7 @@
 <a class="viewcode-back" href="../../../module_docs/an/verify/_base.html#an.verify.VerificationReport">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">VerificationReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of running one or more verifiers.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Result of running one or more verifiers."""</span>
 
     <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">findings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Finding</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
@@ -209,10 +209,10 @@
                 <span class="n">suggested_fix</span><span class="o">=</span><span class="n">suggested_fix</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">severity</span> <span class="o">==</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">severity</span> <span class="o">==</span> <span class="s2">"error"</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;VerificationReport&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;VerificationReport&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"VerificationReport"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"VerificationReport"</span><span class="p">:</span>
         <span class="n">merged</span> <span class="o">=</span> <span class="n">VerificationReport</span><span class="p">(</span><span class="n">passed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">passed</span><span class="p">)</span>
         <span class="n">merged</span><span class="o">.</span><span class="n">findings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findings</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">findings</span>
         <span class="k">return</span> <span class="n">merged</span></div>
@@ -223,15 +223,15 @@
 <a class="viewcode-back" href="../../../module_docs/an/verify/_base.html#an.verify.Verifier">[docs]</a>
 <span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Verifier</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pluggable verifier. Same interface for human, lint, vision-LM, MoVer.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Pluggable verifier. Same interface for human, lint, vision-LM, MoVer."""</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 
 <div class="viewcode-block" id="Verifier.verify">
 <a class="viewcode-back" href="../../../module_docs/an/verify/_base.html#an.verify.Verifier.verify">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ir</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">render</span><span class="p">:</span> <span class="n">RenderResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VerificationReport</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Verify a scene + (optional) render result. ``render`` may be None</span>
-<span class="sd">        for pre-render lint passes.&quot;&quot;&quot;</span></div>
+<span class="w">        </span><span class="sd">"""Verify a scene + (optional) render result. ``render`` may be None</span>
+<span class="sd">        for pre-render lint passes."""</span></div>
 </div>
 
 </pre></div>

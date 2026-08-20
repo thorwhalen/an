@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.elevenlabs_tts &mdash; an 0.1.13 documentation</title>
+  <title>an.audio.elevenlabs_tts &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,12 +149,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.audio.elevenlabs_tts</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;ElevenLabsTTS — real speech via the ElevenLabs API. Requires ELEVEN_API_KEY.</span>
+<span></span><span class="sd">"""ElevenLabsTTS — real speech via the ElevenLabs API. Requires ELEVEN_API_KEY.</span>
 
 <span class="sd">Lazily imports the elevenlabs SDK so the rest of `an` works without it.</span>
 <span class="sd">If you want real speech, ``pip install elevenlabs`` and set</span>
 <span class="sd">``ELEVEN_API_KEY`` (or ``ELEVENLABS_API_KEY``) in your environment.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -165,21 +165,21 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">AudioClip</span><span class="p">,</span> <span class="n">VoiceMeta</span>
 
 
-<span class="n">_DEFAULT_MODEL_ID</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;eleven_turbo_v2_5&quot;</span>
-<span class="n">_DEFAULT_VOICE_ID</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;21m00Tcm4TlvDq8ikWAM&quot;</span>  <span class="c1"># ElevenLabs&#39;s &quot;Rachel&quot;</span>
-<span class="n">_DEFAULT_OUTPUT_FORMAT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mp3_44100_128&quot;</span>
+<span class="n">_DEFAULT_MODEL_ID</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eleven_turbo_v2_5"</span>
+<span class="n">_DEFAULT_VOICE_ID</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"21m00Tcm4TlvDq8ikWAM"</span>  <span class="c1"># ElevenLabs's "Rachel"</span>
+<span class="n">_DEFAULT_OUTPUT_FORMAT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mp3_44100_128"</span>
 
 
 <div class="viewcode-block" id="ElevenLabsTTS">
 <a class="viewcode-back" href="../../../module_docs/an/audio/elevenlabs_tts.html#an.audio.ElevenLabsTTS">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ElevenLabsTTS</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;ElevenLabs-backed TTSProvider. Constructor takes an optional api_key</span>
+<span class="w">    </span><span class="sd">"""ElevenLabs-backed TTSProvider. Constructor takes an optional api_key</span>
 <span class="sd">    (falls back to ``ELEVEN_API_KEY`` / ``ELEVENLABS_API_KEY``).</span>
 
 <span class="sd">    Implements the ``TTSProvider`` protocol.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;elevenlabs&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"elevenlabs"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -190,8 +190,8 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">api_key</span>
-            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ELEVEN_API_KEY&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ELEVENLABS_API_KEY&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ELEVEN_API_KEY"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ELEVENLABS_API_KEY"</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">model_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_format</span> <span class="o">=</span> <span class="n">output_format</span>
@@ -199,24 +199,24 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;ElevenLabsTTS requires an API key. Set ELEVEN_API_KEY in your &quot;</span>
-                <span class="s2">&quot;environment or pass api_key= to the constructor.&quot;</span>
+                <span class="s2">"ElevenLabsTTS requires an API key. Set ELEVEN_API_KEY in your "</span>
+                <span class="s2">"environment or pass api_key= to the constructor."</span>
             <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">elevenlabs.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElevenLabs</span>  <span class="c1"># type: ignore</span>
         <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;elevenlabs package not installed. Install with: pip install elevenlabs&quot;</span>
+                <span class="s2">"elevenlabs package not installed. Install with: pip install elevenlabs"</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
         <span class="k">return</span> <span class="n">ElevenLabs</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">synthesize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">voice_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AudioClip</span><span class="p">:</span>
         <span class="n">client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">()</span>
-        <span class="c1"># ElevenLabs has no voice named &quot;default&quot;; if the caller passes the</span>
-        <span class="c1"># canonical &quot;default&quot; sentinel (or None), use this provider&#39;s pinned</span>
+        <span class="c1"># ElevenLabs has no voice named "default"; if the caller passes the</span>
+        <span class="c1"># canonical "default" sentinel (or None), use this provider's pinned</span>
         <span class="c1"># default voice instead.</span>
         <span class="n">effective_voice</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">voice_id</span> <span class="k">if</span> <span class="n">voice_id</span> <span class="ow">and</span> <span class="n">voice_id</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span> <span class="k">else</span> <span class="n">_DEFAULT_VOICE_ID</span>
+            <span class="n">voice_id</span> <span class="k">if</span> <span class="n">voice_id</span> <span class="ow">and</span> <span class="n">voice_id</span> <span class="o">!=</span> <span class="s2">"default"</span> <span class="k">else</span> <span class="n">_DEFAULT_VOICE_ID</span>
         <span class="p">)</span>
         <span class="c1"># elevenlabs SDK 1.x exposes `text_to_speech.convert`.</span>
         <span class="n">audio_iter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">text_to_speech</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
@@ -225,16 +225,16 @@
             <span class="n">model_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
             <span class="n">output_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_format</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">audio_bytes</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">audio_iter</span><span class="p">)</span>
+        <span class="n">audio_bytes</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">audio_iter</span><span class="p">)</span>
 
-        <span class="n">out_path</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span>
+        <span class="n">out_path</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">out_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">out_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
             <span class="n">out_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">out_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">audio_bytes</span><span class="p">)</span>
 
         <span class="c1"># Estimate duration: mp3_44100_128 is 128kbps → 16 KB/s.</span>
-        <span class="n">bitrate_bytes_per_s</span> <span class="o">=</span> <span class="mi">128</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">8</span> <span class="k">if</span> <span class="s2">&quot;128&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_format</span> <span class="k">else</span> <span class="mi">16_000</span>
+        <span class="n">bitrate_bytes_per_s</span> <span class="o">=</span> <span class="mi">128</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">8</span> <span class="k">if</span> <span class="s2">"128"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_format</span> <span class="k">else</span> <span class="mi">16_000</span>
         <span class="n">duration</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">audio_bytes</span><span class="p">)</span> <span class="o">/</span> <span class="n">bitrate_bytes_per_s</span> <span class="k">if</span> <span class="n">audio_bytes</span> <span class="k">else</span> <span class="mf">0.0</span>
 
         <span class="k">return</span> <span class="n">AudioClip</span><span class="p">(</span>
@@ -260,10 +260,10 @@
         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">voices</span><span class="p">:</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">VoiceMeta</span><span class="p">(</span>
-                    <span class="n">voice_id</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">&quot;voice_id&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+                    <span class="n">voice_id</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">"voice_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+                    <span class="n">name</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
                     <span class="n">provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                    <span class="n">language</span><span class="o">=</span><span class="s2">&quot;en&quot;</span><span class="p">,</span>
+                    <span class="n">language</span><span class="o">=</span><span class="s2">"en"</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span></div>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.13 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,7 +149,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.ir.schema</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Pydantic v2 models for the Scene IR.</span>
+<span></span><span class="sd">"""Pydantic v2 models for the Scene IR.</span>
 
 <span class="sd">Design principles (locked in from the architectural plan):</span>
 
@@ -158,8 +158,8 @@
 <span class="sd">  what every shot has in common.</span>
 <span class="sd">- **Versioned envelope.** Every IR document carries `version` and</span>
 <span class="sd">  `compatible_version`. Migrations live in `an.ir.migrate`.</span>
-<span class="sd">- **Forward-compatible reads.** Top-level model has ``extra=&quot;allow&quot;`` so a future</span>
-<span class="sd">  field doesn&#39;t crash an older reader.</span>
+<span class="sd">- **Forward-compatible reads.** Top-level model has ``extra="allow"`` so a future</span>
+<span class="sd">  field doesn't crash an older reader.</span>
 <span class="sd">- **Discriminated `Action` union.** All authoring-time and flattened actions</span>
 <span class="sd">  carry a `kind` literal so Pydantic dispatches to the right validator.</span>
 <span class="sd">- **Time in seconds (float).** Always.</span>
@@ -168,16 +168,16 @@
 
 <span class="sd">&gt;&gt;&gt; from an.ir.schema import SceneIR, Meta, Shot</span>
 <span class="sd">&gt;&gt;&gt; scene = SceneIR(</span>
-<span class="sd">...     meta=Meta(title=&quot;Park Bench&quot;, duration=45.0),</span>
-<span class="sd">...     timeline=[Shot(id=&quot;s1&quot;, style=&quot;cutout&quot;, duration=45.0)],</span>
+<span class="sd">...     meta=Meta(title="Park Bench", duration=45.0),</span>
+<span class="sd">...     timeline=[Shot(id="s1", style="cutout", duration=45.0)],</span>
 <span class="sd">... )</span>
 <span class="sd">&gt;&gt;&gt; scene.version</span>
-<span class="sd">&#39;0.1.0&#39;</span>
+<span class="sd">'0.1.0'</span>
 <span class="sd">&gt;&gt;&gt; scene.kind</span>
-<span class="sd">&#39;SceneIR&#39;</span>
+<span class="sd">'SceneIR'</span>
 <span class="sd">&gt;&gt;&gt; scene.timeline[0].style</span>
-<span class="sd">&#39;cutout&#39;</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">'cutout'</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -204,9 +204,9 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_IRModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Common config: allow unknown fields on read so newer documents survive.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Common config: allow unknown fields on read so newer documents survive."""</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="n">populate_by_name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"allow"</span><span class="p">,</span> <span class="n">populate_by_name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
 <span class="c1"># -----------------------------------------------------------------------------</span>
@@ -217,7 +217,7 @@
 <div class="viewcode-block" id="Resolution">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.Resolution">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Resolution</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pixel dimensions of the rendered output.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Pixel dimensions of the rendered output."""</span>
 
     <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_RESOLUTION</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_RESOLUTION</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
@@ -227,12 +227,12 @@
 <div class="viewcode-block" id="Camera">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.Camera">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Camera state for a shot. Minimal placeholder; expanded in P2.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Camera state for a shot. Minimal placeholder; expanded in P2."""</span>
 
     <span class="n">position</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
     <span class="n">target</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
     <span class="n">focal_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">50.0</span>
-    <span class="n">move</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># e.g. &quot;push_in&quot;, &quot;pan_left&quot; — interpreted by adapters</span></div>
+    <span class="n">move</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># e.g. "push_in", "pan_left" — interpreted by adapters</span></div>
 
 
 
@@ -244,18 +244,18 @@
 <div class="viewcode-block" id="AssetRef">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.AssetRef">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AssetRef</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reference to an entry in a project store.</span>
+<span class="w">    </span><span class="sd">"""Reference to an entry in a project store.</span>
 
 <span class="sd">    The IR never inlines large assets. Instead it references them by store</span>
 <span class="sd">    name + key, so the same character/voice/environment is reusable across</span>
 <span class="sd">    scenes. ``overrides`` lets a single shot tweak presentation without</span>
 <span class="sd">    forking the asset.</span>
 
-<span class="sd">    &gt;&gt;&gt; AssetRef(kind=&quot;character&quot;, id=&quot;maya&quot;, store=&quot;characters&quot;, ref=&quot;maya-v1&quot;).id</span>
-<span class="sd">    &#39;maya&#39;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; AssetRef(kind="character", id="maya", store="characters", ref="maya-v1").id</span>
+<span class="sd">    'maya'</span>
+<span class="sd">    """</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;character&quot;</span><span class="p">,</span> <span class="s2">&quot;environment&quot;</span><span class="p">,</span> <span class="s2">&quot;voice&quot;</span><span class="p">,</span> <span class="s2">&quot;style&quot;</span><span class="p">,</span> <span class="s2">&quot;prop&quot;</span><span class="p">]</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"character"</span><span class="p">,</span> <span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"voice"</span><span class="p">,</span> <span class="s2">"style"</span><span class="p">,</span> <span class="s2">"prop"</span><span class="p">]</span>
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">store</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># which store in the project mall</span>
     <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># key inside that store</span>
@@ -271,7 +271,7 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_ActionBase</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Common fields for all action variants.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Common fields for all action variants."""</span>
 
     <span class="c1"># Name optional; helpful for editing/debugging but not required.</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -280,9 +280,9 @@
 <div class="viewcode-block" id="SetAction">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.SetAction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SetAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set a property to a value at a specific time. Discrete, no tween.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Set a property to a value at a specific time. Discrete, no tween."""</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;set&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;set&quot;</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"set"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"set"</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">PathStr</span>
     <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">value</span><span class="p">:</span> <span class="n">Any</span>
@@ -293,27 +293,27 @@
 <div class="viewcode-block" id="TweenAction">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.TweenAction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TweenAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Animate a property from a start value to an end value over a duration.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Animate a property from a start value to an end value over a duration."""</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;tween&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tween&quot;</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"tween"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"tween"</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">PathStr</span>
     <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">to_value</span><span class="p">:</span> <span class="n">Any</span>
     <span class="n">from_value</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">easing</span><span class="p">:</span> <span class="n">EasingSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;ease_in_out&quot;</span></div>
+    <span class="n">easing</span><span class="p">:</span> <span class="n">EasingSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">"ease_in_out"</span></div>
 
 
 
 <div class="viewcode-block" id="PlayAction">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.PlayAction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PlayAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Play a named animation clip on a target.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Play a named animation clip on a target."""</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;play&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;play&quot;</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"play"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"play"</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">PathStr</span>
     <span class="n">animation</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># animation id</span>
-    <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># None = use clip&#39;s natural duration</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># None = use clip's natural duration</span>
     <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
     <span class="n">loop</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
 
@@ -322,29 +322,29 @@
 <div class="viewcode-block" id="SequenceAction">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.SequenceAction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SequenceAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Composition: run children one after the other.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Composition: run children one after the other."""</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sequence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sequence&quot;</span>
-    <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Action&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"sequence"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"sequence"</span>
+    <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">"Action"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="ParallelAction">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.ParallelAction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ParallelAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Composition: run all children simultaneously starting at the same time.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Composition: run all children simultaneously starting at the same time."""</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;parallel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;parallel&quot;</span>
-    <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Action&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"parallel"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"parallel"</span>
+    <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">"Action"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="DelayAction">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.DelayAction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DelayAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Composition: an empty span that consumes time.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Composition: an empty span that consumes time."""</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;delay&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;delay&quot;</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"delay"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"delay"</span>
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span></div>
 
 
@@ -352,10 +352,10 @@
 <div class="viewcode-block" id="LoopAction">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.LoopAction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LoopAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Composition: repeat ``child`` ``count`` times.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Composition: repeat ``child`` ``count`` times."""</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;loop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;loop&quot;</span>
-    <span class="n">child</span><span class="p">:</span> <span class="s2">&quot;Action&quot;</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"loop"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"loop"</span>
+    <span class="n">child</span><span class="p">:</span> <span class="s2">"Action"</span>
     <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span></div>
 
 
@@ -371,7 +371,7 @@
         <span class="n">DelayAction</span><span class="p">,</span>
         <span class="n">LoopAction</span><span class="p">,</span>
     <span class="p">],</span>
-    <span class="n">Field</span><span class="p">(</span><span class="n">discriminator</span><span class="o">=</span><span class="s2">&quot;kind&quot;</span><span class="p">),</span>
+    <span class="n">Field</span><span class="p">(</span><span class="n">discriminator</span><span class="o">=</span><span class="s2">"kind"</span><span class="p">),</span>
 <span class="p">]</span>
 
 
@@ -389,7 +389,7 @@
 <div class="viewcode-block" id="VisemeKeyframe">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.VisemeKeyframe">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VisemeKeyframe</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A single mouth-shape keyframe in a viseme track.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A single mouth-shape keyframe in a viseme track."""</span>
 
     <span class="n">time</span><span class="p">:</span> <span class="n">Seconds</span>
     <span class="n">viseme</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># Rhubarb letter A-H/X, MPEG-4 viseme number, or Azure name</span></div>
@@ -399,7 +399,7 @@
 <div class="viewcode-block" id="VisemeTrack">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.VisemeTrack">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VisemeTrack</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aligned viseme track produced by the lip-sync stage. Optional in P1.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Aligned viseme track produced by the lip-sync stage. Optional in P1."""</span>
 
     <span class="n">fps_hint</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">keyframes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">VisemeKeyframe</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
@@ -409,11 +409,11 @@
 <div class="viewcode-block" id="Dialogue">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.Dialogue">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Dialogue</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;One line of spoken dialogue.</span>
+<span class="w">    </span><span class="sd">"""One line of spoken dialogue.</span>
 
 <span class="sd">    ``timing`` is None until the audio pipeline runs (TTS gives us a real</span>
 <span class="sd">    duration); the orchestrator fills it in then.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">speaker</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># the entity id this line belongs to</span>
     <span class="n">text</span><span class="p">:</span> <span class="nb">str</span>
@@ -422,15 +422,15 @@
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">emotion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">viseme_track</span><span class="p">:</span> <span class="n">VisemeTrack</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">audio_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># mall[&quot;audio&quot;] key (content-hash of TTS input)</span>
-    <span class="n">viseme_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># mall[&quot;visemes&quot;] key (content-hash of lipsync input)</span></div>
+    <span class="n">audio_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># mall["audio"] key (content-hash of TTS input)</span>
+    <span class="n">viseme_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># mall["visemes"] key (content-hash of lipsync input)</span></div>
 
 
 
 <div class="viewcode-block" id="Narration">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.Narration">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Narration</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Off-screen narration. Same shape as Dialogue minus the speaker pin.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Off-screen narration. Same shape as Dialogue minus the speaker pin."""</span>
 
     <span class="n">text</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">voice_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -450,14 +450,14 @@
 <div class="viewcode-block" id="Shot">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.Shot">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Shot</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A single rendered unit. A scene is a sequence of shots.</span>
+<span class="w">    </span><span class="sd">"""A single rendered unit. A scene is a sequence of shots.</span>
 
-<span class="sd">    A shot&#39;s ``style`` selects the renderer. Every renderer must accept the</span>
+<span class="sd">    A shot's ``style`` selects the renderer. Every renderer must accept the</span>
 <span class="sd">    same Shot fields; renderer-specific options go under ``options``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">style</span><span class="p">:</span> <span class="n">StyleName</span> <span class="o">=</span> <span class="s2">&quot;cutout&quot;</span>
+    <span class="n">style</span><span class="p">:</span> <span class="n">StyleName</span> <span class="o">=</span> <span class="s2">"cutout"</span>
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="n">DEFAULT_DURATION</span>
     <span class="n">camera</span><span class="p">:</span> <span class="n">Camera</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">entities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetRef</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
@@ -476,37 +476,37 @@
 <div class="viewcode-block" id="Meta">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.Meta">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Meta</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scene metadata.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Scene metadata."""</span>
 
-    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">author</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">author</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_FPS</span>
     <span class="n">resolution</span><span class="p">:</span> <span class="n">Resolution</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Resolution</span><span class="p">)</span>
-    <span class="n">default_style</span><span class="p">:</span> <span class="n">StyleName</span> <span class="o">=</span> <span class="s2">&quot;cutout&quot;</span>
-    <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+    <span class="n">default_style</span><span class="p">:</span> <span class="n">StyleName</span> <span class="o">=</span> <span class="s2">"cutout"</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
 
 
 
 <div class="viewcode-block" id="SceneIR">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.SceneIR">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SceneIR</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Top-level Scene IR document. The SSOT.</span>
+<span class="w">    </span><span class="sd">"""Top-level Scene IR document. The SSOT.</span>
 
 <span class="sd">    A document is portable, diffable, and renderer-agnostic. Persisted as JSON</span>
 <span class="sd">    at ``ir/scene.json`` inside an an project.</span>
 
-<span class="sd">    &gt;&gt;&gt; doc = SceneIR(meta=Meta(title=&quot;Hello&quot;))</span>
-<span class="sd">    &gt;&gt;&gt; doc.version == &#39;0.1.0&#39;</span>
+<span class="sd">    &gt;&gt;&gt; doc = SceneIR(meta=Meta(title="Hello"))</span>
+<span class="sd">    &gt;&gt;&gt; doc.version == '0.1.0'</span>
 <span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; round_tripped = SceneIR.model_validate_json(doc.model_dump_json())</span>
 <span class="sd">    &gt;&gt;&gt; round_tripped.meta.title</span>
-<span class="sd">    &#39;Hello&#39;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    'Hello'</span>
+<span class="sd">    """</span>
 
     <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">SCHEMA_VERSION</span>
     <span class="n">compatible_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">COMPATIBLE_VERSION</span>
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;SceneIR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;SceneIR&quot;</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"SceneIR"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"SceneIR"</span>
     <span class="n">meta</span><span class="p">:</span> <span class="n">Meta</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Meta</span><span class="p">)</span>
     <span class="n">assets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetRef</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">timeline</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Shot</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>

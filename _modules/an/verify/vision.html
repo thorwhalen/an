@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.vision &mdash; an 0.1.13 documentation</title>
+  <title>an.verify.vision &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,7 +149,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.verify.vision</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;VisionLMVerifier — Claude vision looks at sampled frames + reports issues.</span>
+<span></span><span class="sd">"""VisionLMVerifier — Claude vision looks at sampled frames + reports issues.</span>
 
 <span class="sd">Phase 9 closes the loop the architectural spec called out from day one:</span>
 <span class="sd">a Verifier that uses a vision LM to inspect rendered frames and produce</span>
@@ -162,7 +162,7 @@
 
 <span class="sd">Cost: a single verify() sends 3-4 frames + a short prompt. Pricing rounds</span>
 <span class="sd">to ≈ $0.005 per call with claude-haiku, more with sonnet.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -177,11 +177,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.verify.media</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_frames</span>
 
 
-<span class="n">_DEFAULT_MODEL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;claude-haiku-4-5-20251001&quot;</span>  <span class="c1"># cheap, vision-capable</span>
+<span class="n">_DEFAULT_MODEL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"claude-haiku-4-5-20251001"</span>  <span class="c1"># cheap, vision-capable</span>
 <span class="n">_DEFAULT_FRAME_COUNT</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="n">_DEFAULT_MAX_TOKENS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">800</span>
 
-<span class="n">_PROMPT</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;You are reviewing frames from a short animated cartoon. The character</span>
+<span class="n">_PROMPT</span> <span class="o">=</span> <span class="s2">"""You are reviewing frames from a short animated cartoon. The character</span>
 <span class="s2">art is intentionally simple (placeholder geometry: ellipse heads, rect</span>
 <span class="s2">torsos/limbs, curved bezier mouths, eyes drawn as white-sclera + dark</span>
 <span class="s2">pupils). DO NOT comment on the simplicity of the art itself — that is by</span>
@@ -190,28 +190,28 @@
 <span class="s2">- Characters that are clipped off-screen or overlap badly.</span>
 <span class="s2">- Faces that are missing parts (no eyes, mouth not visible, head occluded).</span>
 <span class="s2">- Motion that looks broken (limbs detached, character flying off-canvas).</span>
-<span class="s2">- Mouth shape that obviously doesn&#39;t match active speech (e.g. closed lips</span>
+<span class="s2">- Mouth shape that obviously doesn't match active speech (e.g. closed lips</span>
 <span class="s2">  during a long word).</span>
 <span class="s2">- Background obscuring a character.</span>
 
 <span class="s2">Reply in JSON only, with this shape:</span>
 
 <span class="s2">{</span>
-<span class="s2">  &quot;issues&quot;: [</span>
-<span class="s2">    {&quot;severity&quot;: &quot;warning&quot;|&quot;error&quot;, &quot;where&quot;: &quot;&lt;short location hint&gt;&quot;, &quot;what&quot;: &quot;&lt;one sentence&gt;&quot;}</span>
+<span class="s2">  "issues": [</span>
+<span class="s2">    {"severity": "warning"|"error", "where": "&lt;short location hint&gt;", "what": "&lt;one sentence&gt;"}</span>
 <span class="s2">  ]</span>
 <span class="s2">}</span>
 
-<span class="s2">If everything looks fine, return ``{&quot;issues&quot;: []}``.</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">If everything looks fine, return ``{"issues": []}``.</span>
+<span class="s2">"""</span>
 
 
 <div class="viewcode-block" id="VisionLMVerifier">
 <a class="viewcode-back" href="../../../module_docs/an/verify/vision.html#an.verify.VisionLMVerifier">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VisionLMVerifier</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Claude vision Verifier (skip-if-missing-deps).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Claude vision Verifier (skip-if-missing-deps)."""</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;vision_lm&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"vision_lm"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -224,20 +224,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame_count</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">frame_count</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_tokens</span> <span class="o">=</span> <span class="n">max_tokens</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ANTHROPIC_API_KEY&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_API_KEY"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ir</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">render</span><span class="p">:</span> <span class="n">RenderResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VerificationReport</span><span class="p">:</span>
         <span class="n">report</span> <span class="o">=</span> <span class="n">VerificationReport</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">render</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">render</span><span class="o">.</span><span class="n">mp4_path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">render</span><span class="o">.</span><span class="n">mp4_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;vision_lm&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;no render result; skipping vision check&quot;</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"no render result; skipping vision check"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;vision_lm&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;ANTHROPIC_API_KEY not set; skipping&quot;</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"ANTHROPIC_API_KEY not set; skipping"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">anthropic</span>  <span class="c1"># type: ignore</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;vision_lm&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;anthropic SDK not installed; skipping&quot;</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"anthropic SDK not installed; skipping"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
 
         <span class="c1"># Sample N frames roughly evenly distributed across the render.</span>
@@ -249,84 +249,84 @@
                 <span class="n">step</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_count</span>
                 <span class="n">frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">frames</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">step</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_count</span><span class="p">)]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">frames</span><span class="p">:</span>
-                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;vision_lm&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;no frames extracted; skipping&quot;</span><span class="p">)</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"no frames extracted; skipping"</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">report</span>
 
             <span class="n">content_blocks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">:</span>
                 <span class="n">content_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;image&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span>
-                            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;base64&quot;</span><span class="p">,</span>
-                            <span class="s2">&quot;media_type&quot;</span><span class="p">:</span> <span class="s2">&quot;image/png&quot;</span><span class="p">,</span>
-                            <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">),</span>
+                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"image"</span><span class="p">,</span>
+                        <span class="s2">"source"</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"base64"</span><span class="p">,</span>
+                            <span class="s2">"media_type"</span><span class="p">:</span> <span class="s2">"image/png"</span><span class="p">,</span>
+                            <span class="s2">"data"</span><span class="p">:</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">),</span>
                         <span class="p">},</span>
                     <span class="p">}</span>
                 <span class="p">)</span>
-            <span class="n">content_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">_PROMPT</span><span class="p">})</span>
+            <span class="n">content_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="n">_PROMPT</span><span class="p">})</span>
 
             <span class="n">client</span> <span class="o">=</span> <span class="n">anthropic</span><span class="o">.</span><span class="n">Anthropic</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
                     <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
                     <span class="n">max_tokens</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">,</span>
-                    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">content_blocks</span><span class="p">}],</span>
+                    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content_blocks</span><span class="p">}],</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                    <span class="s2">&quot;info&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;&lt;vision_lm&gt;&quot;</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">&quot;anthropic API call failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">"info"</span><span class="p">,</span>
+                    <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"anthropic API call failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">return</span> <span class="n">report</span>
 
-        <span class="c1"># Parse the model&#39;s JSON reply. Be lenient — strip surrounding prose.</span>
-        <span class="n">body</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># Parse the model's JSON reply. Be lenient — strip surrounding prose.</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="s2">""</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">body</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="n">blk</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">blk</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">blk</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">blk</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">blk</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">blk</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"text"</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="n">body</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="s2">""</span>
         <span class="n">issues</span> <span class="o">=</span> <span class="n">_parse_issues</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">issues</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;vision_lm&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;vision LM reported no issues&quot;</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"vision LM reported no issues"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">issues</span><span class="p">:</span>
-            <span class="n">severity</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;severity&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">severity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">):</span>
-                <span class="n">severity</span> <span class="o">=</span> <span class="s2">&quot;warning&quot;</span>
+            <span class="n">severity</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"severity"</span><span class="p">,</span> <span class="s2">"warning"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">severity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="s2">"warning"</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">):</span>
+                <span class="n">severity</span> <span class="o">=</span> <span class="s2">"warning"</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
                 <span class="n">severity</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;&lt;vision_lm:</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;where&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&gt;&quot;</span><span class="p">,</span>
-                <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;what&quot;</span><span class="p">,</span> <span class="s2">&quot;vision LM finding&quot;</span><span class="p">),</span>
-                <span class="n">suggested_fix</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fix&quot;</span><span class="p">),</span>
+                <span class="sa">f</span><span class="s2">"&lt;vision_lm:</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'where'</span><span class="p">,</span><span class="w"> </span><span class="s1">''</span><span class="p">)</span><span class="si">}</span><span class="s2">&gt;"</span><span class="p">,</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"what"</span><span class="p">,</span> <span class="s2">"vision LM finding"</span><span class="p">),</span>
+                <span class="n">suggested_fix</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fix"</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">report</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse_issues</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pull the issues JSON out of a possibly-wrapped reply. Lenient parser.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Pull the issues JSON out of a possibly-wrapped reply. Lenient parser."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">body</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="c1"># Strip ```json fences if present.</span>
-    <span class="n">fenced</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;```(?:json)?\s*({.*?})\s*```&quot;</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+    <span class="n">fenced</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"```(?:json)?\s*({.*?})\s*```"</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
     <span class="n">raw</span> <span class="o">=</span> <span class="n">fenced</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">fenced</span> <span class="k">else</span> <span class="n">body</span>
-    <span class="c1"># Find first { ... last } so prose around the JSON doesn&#39;t break parsing.</span>
-    <span class="n">start</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span>
-    <span class="n">end</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
+    <span class="c1"># Find first { ... last } so prose around the JSON doesn't break parsing.</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
     <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
-    <span class="n">issues</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;issues&quot;</span><span class="p">)</span>
+    <span class="n">issues</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"issues"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">issues</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">issues</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]</span>
 </pre></div>
 

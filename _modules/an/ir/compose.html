@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.compose &mdash; an 0.1.13 documentation</title>
+  <title>an.ir.compose &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,7 +149,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.ir.compose</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Composition combinators for authoring action trees, plus a flattener.</span>
+<span></span><span class="sd">"""Composition combinators for authoring action trees, plus a flattener.</span>
 
 <span class="sd">The composition tree is the *authoring* form. The flat list of `FlatAction`s</span>
 <span class="sd">with absolute start times is the *canonical* form that gets verified, cached,</span>
@@ -158,9 +158,9 @@
 
 <span class="sd">&gt;&gt;&gt; from an.ir.compose import sequence, parallel, tween, delay, flatten</span>
 <span class="sd">&gt;&gt;&gt; action = sequence(</span>
-<span class="sd">...     tween(&quot;charlie/torso&quot;, &quot;rotation&quot;, to=10.0, duration=1.0),</span>
+<span class="sd">...     tween("charlie/torso", "rotation", to=10.0, duration=1.0),</span>
 <span class="sd">...     delay(0.5),</span>
-<span class="sd">...     tween(&quot;charlie/torso&quot;, &quot;rotation&quot;, to=0.0, duration=1.0),</span>
+<span class="sd">...     tween("charlie/torso", "rotation", to=0.0, duration=1.0),</span>
 <span class="sd">... )</span>
 <span class="sd">&gt;&gt;&gt; flat = flatten(action)</span>
 <span class="sd">&gt;&gt;&gt; [round(f.start, 3) for f in flat]</span>
@@ -168,13 +168,13 @@
 <span class="sd">&gt;&gt;&gt; [round(f.end, 3) for f in flat]</span>
 <span class="sd">[1.0, 2.5]</span>
 <span class="sd">&gt;&gt;&gt; action2 = parallel(</span>
-<span class="sd">...     tween(&quot;a&quot;, &quot;x&quot;, to=1.0, duration=2.0),</span>
-<span class="sd">...     tween(&quot;b&quot;, &quot;y&quot;, to=1.0, duration=3.0),</span>
+<span class="sd">...     tween("a", "x", to=1.0, duration=2.0),</span>
+<span class="sd">...     tween("b", "y", to=1.0, duration=3.0),</span>
 <span class="sd">... )</span>
 <span class="sd">&gt;&gt;&gt; flat2 = flatten(action2)</span>
 <span class="sd">&gt;&gt;&gt; [(round(f.start, 2), round(f.end, 2)) for f in flat2]</span>
 <span class="sd">[(0.0, 2.0), (0.0, 3.0)]</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -202,7 +202,7 @@
 <div class="viewcode-block" id="set_">
 <a class="viewcode-back" href="../../../module_docs/an/ir/compose.html#an.set_">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">set_</span><span class="p">(</span><span class="n">target</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span> <span class="nb">property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SetAction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Discrete property set at time ``at`` (relative to its enclosing scope).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Discrete property set at time ``at`` (relative to its enclosing scope)."""</span>
     <span class="k">return</span> <span class="n">SetAction</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="n">at</span><span class="p">)</span></div>
 
 
@@ -216,9 +216,9 @@
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">from_</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">easing</span><span class="p">:</span> <span class="n">EasingSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;ease_in_out&quot;</span><span class="p">,</span>
+    <span class="n">easing</span><span class="p">:</span> <span class="n">EasingSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">"ease_in_out"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TweenAction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Animate a property from ``from_`` (or its current value) to ``to``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Animate a property from ``from_`` (or its current value) to ``to``."""</span>
     <span class="k">return</span> <span class="n">TweenAction</span><span class="p">(</span>
         <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
         <span class="nb">property</span><span class="o">=</span><span class="nb">property</span><span class="p">,</span>
@@ -240,7 +240,7 @@
     <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="n">loop</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlayAction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Play a named animation clip on a target.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Play a named animation clip on a target."""</span>
     <span class="k">return</span> <span class="n">PlayAction</span><span class="p">(</span>
         <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
         <span class="n">animation</span><span class="o">=</span><span class="n">animation</span><span class="p">,</span>
@@ -259,7 +259,7 @@
 <div class="viewcode-block" id="sequence">
 <a class="viewcode-back" href="../../../module_docs/an/ir/compose.html#an.sequence">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">sequence</span><span class="p">(</span><span class="o">*</span><span class="n">actions</span><span class="p">:</span> <span class="n">Action</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SequenceAction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run children one after the other. Total duration = sum of child durations.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Run children one after the other. Total duration = sum of child durations."""</span>
     <span class="k">return</span> <span class="n">SequenceAction</span><span class="p">(</span><span class="n">children</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">actions</span><span class="p">))</span></div>
 
 
@@ -267,7 +267,7 @@
 <div class="viewcode-block" id="parallel">
 <a class="viewcode-back" href="../../../module_docs/an/ir/compose.html#an.parallel">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">parallel</span><span class="p">(</span><span class="o">*</span><span class="n">actions</span><span class="p">:</span> <span class="n">Action</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParallelAction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run all children at once. Total duration = max of child durations.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Run all children at once. Total duration = max of child durations."""</span>
     <span class="k">return</span> <span class="n">ParallelAction</span><span class="p">(</span><span class="n">children</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">actions</span><span class="p">))</span></div>
 
 
@@ -275,7 +275,7 @@
 <div class="viewcode-block" id="delay">
 <a class="viewcode-back" href="../../../module_docs/an/ir/compose.html#an.delay">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">delay</span><span class="p">(</span><span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DelayAction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;An empty span that consumes time. Useful inside `sequence`.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""An empty span that consumes time. Useful inside `sequence`."""</span>
     <span class="k">return</span> <span class="n">DelayAction</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">)</span></div>
 
 
@@ -283,9 +283,9 @@
 <div class="viewcode-block" id="loop">
 <a class="viewcode-back" href="../../../module_docs/an/ir/compose.html#an.loop">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">loop</span><span class="p">(</span><span class="n">action</span><span class="p">:</span> <span class="n">Action</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LoopAction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Repeat ``action`` ``count`` times.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Repeat ``action`` ``count`` times."""</span>
     <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;loop count must be &gt;= 1, got </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"loop count must be &gt;= 1, got </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">LoopAction</span><span class="p">(</span><span class="n">child</span><span class="o">=</span><span class="n">action</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">)</span></div>
 
 
@@ -298,19 +298,19 @@
 <div class="viewcode-block" id="duration_of">
 <a class="viewcode-back" href="../../../module_docs/an/ir/compose.html#an.duration_of">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">duration_of</span><span class="p">(</span><span class="n">action</span><span class="p">:</span> <span class="n">Action</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Seconds</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the total duration of an action tree without evaluating it.</span>
+<span class="w">    </span><span class="sd">"""Compute the total duration of an action tree without evaluating it.</span>
 
-<span class="sd">    &gt;&gt;&gt; duration_of(tween(&quot;a&quot;, &quot;x&quot;, to=1.0, duration=2.0))</span>
+<span class="sd">    &gt;&gt;&gt; duration_of(tween("a", "x", to=1.0, duration=2.0))</span>
 <span class="sd">    2.0</span>
-<span class="sd">    &gt;&gt;&gt; duration_of(sequence(delay(0.5), tween(&quot;a&quot;, &quot;x&quot;, to=1.0, duration=1.5)))</span>
+<span class="sd">    &gt;&gt;&gt; duration_of(sequence(delay(0.5), tween("a", "x", to=1.0, duration=1.5)))</span>
 <span class="sd">    2.0</span>
 <span class="sd">    &gt;&gt;&gt; duration_of(parallel(delay(0.5), delay(2.5)))</span>
 <span class="sd">    2.5</span>
 <span class="sd">    &gt;&gt;&gt; duration_of(loop(delay(0.25), 4))</span>
 <span class="sd">    1.0</span>
-<span class="sd">    &gt;&gt;&gt; duration_of(set_(&quot;a&quot;, &quot;x&quot;, 1.0))</span>
+<span class="sd">    &gt;&gt;&gt; duration_of(set_("a", "x", 1.0))</span>
 <span class="sd">    0.0</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">SetAction</span><span class="p">):</span>
         <span class="k">return</span> <span class="mf">0.0</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">TweenAction</span><span class="p">):</span>
@@ -325,7 +325,7 @@
         <span class="k">return</span> <span class="nb">max</span><span class="p">((</span><span class="n">duration_of</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">children</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">LoopAction</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">duration_of</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">child</span><span class="p">)</span> <span class="o">*</span> <span class="n">action</span><span class="o">.</span><span class="n">count</span>
-    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown action type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown action type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
 
 
@@ -338,12 +338,12 @@
 <a class="viewcode-back" href="../../../module_docs/an/ir/compose.html#an.FlatAction">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FlatAction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A leaf action with its absolute start and end times.</span>
+<span class="w">    </span><span class="sd">"""A leaf action with its absolute start and end times.</span>
 
 <span class="sd">    The flat-form list is the canonical representation passed to renderers</span>
 <span class="sd">    and verifiers. Composition nodes (sequence/parallel/delay/loop) do not</span>
-<span class="sd">    appear in the flat form — they&#39;re collapsed into time offsets.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    appear in the flat form — they're collapsed into time offsets.</span>
+<span class="sd">    """</span>
 
     <span class="n">start</span><span class="p">:</span> <span class="n">Seconds</span>
     <span class="n">end</span><span class="p">:</span> <span class="n">Seconds</span>
@@ -354,12 +354,12 @@
 <div class="viewcode-block" id="flatten">
 <a class="viewcode-back" href="../../../module_docs/an/ir/compose.html#an.flatten">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">flatten</span><span class="p">(</span><span class="n">action</span><span class="p">:</span> <span class="n">Action</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Walk a composition tree, emitting leaf actions with absolute times.</span>
+<span class="w">    </span><span class="sd">"""Walk a composition tree, emitting leaf actions with absolute times.</span>
 
-<span class="sd">    Delays are absorbed into the timeline (they don&#39;t appear in the output).</span>
+<span class="sd">    Delays are absorbed into the timeline (they don't appear in the output).</span>
 <span class="sd">    Loops are unrolled by simple repetition — appropriate at v0.1; the cutout</span>
 <span class="sd">    runtime can re-roll for efficiency later.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_flatten_into</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span></div>
@@ -367,7 +367,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_flatten_into</span><span class="p">(</span><span class="n">action</span><span class="p">:</span> <span class="n">Action</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">Seconds</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Seconds</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Append leaf actions to ``out`` and return the new cursor time.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Append leaf actions to ``out`` and return the new cursor time."""</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">SetAction</span><span class="p">):</span>
         <span class="c1"># `at` is relative to enclosing scope; absolute start is t + at.</span>
         <span class="n">abs_t</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="n">action</span><span class="o">.</span><span class="n">at</span>
@@ -399,7 +399,7 @@
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">count</span><span class="p">):</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">_flatten_into</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">child</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cursor</span>
-    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown action type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown action type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 
            </div>

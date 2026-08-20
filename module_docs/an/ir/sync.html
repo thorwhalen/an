@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.13 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -199,12 +199,12 @@ agent extensions don’t get clobbered on round-trip.</p>
 <span class="sig-prename descclassname"><span class="pre">an.ir.sync.</span></span><span class="sig-name descname"><span class="pre">ir_to_markdown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="schema.html#an.ir.schema.SceneIR" title="an.ir.schema.SceneIR"><span class="pre">SceneIR</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/ir/sync.html#ir_to_markdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.sync.ir_to_markdown" title="Link to this definition"></a></dt>
 <dd><p>Render a SceneIR back into the structured Markdown form.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">Meta</span><span class="p">,</span> <span class="n">Shot</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="n">Meta</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Demo&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">5.0</span><span class="p">),</span>
-<span class="gp">... </span>                <span class="n">timeline</span><span class="o">=</span><span class="p">[</span><span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;s1&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;cutout&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="n">Meta</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Demo"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">5.0</span><span class="p">),</span>
+<span class="gp">... </span>                <span class="n">timeline</span><span class="o">=</span><span class="p">[</span><span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s1"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">"cutout"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">md</span> <span class="o">=</span> <span class="n">ir_to_markdown</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s2">&quot;# Demo&quot;</span> <span class="ow">in</span> <span class="n">md</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s2">"# Demo"</span> <span class="ow">in</span> <span class="n">md</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s2">&quot;## Shot s1 (cutout)&quot;</span> <span class="ow">in</span> <span class="n">md</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s2">"## Shot s1 (cutout)"</span> <span class="ow">in</span> <span class="n">md</span>
 <span class="go">True</span>
 </pre></div>
 </div>
@@ -214,7 +214,7 @@ agent extensions don’t get clobbered on round-trip.</p>
 <dt class="sig sig-object py" id="an.ir.sync.markdown_to_ir">
 <span class="sig-prename descclassname"><span class="pre">an.ir.sync.</span></span><span class="sig-name descname"><span class="pre">markdown_to_ir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">md_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="schema.html#an.ir.schema.SceneIR" title="an.ir.schema.SceneIR"><span class="pre">SceneIR</span></a></span></span><a class="reference internal" href="../../../_modules/an/ir/sync.html#markdown_to_ir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.sync.markdown_to_ir" title="Link to this definition"></a></dt>
 <dd><p>Parse the structured Markdown form of a scene into a SceneIR.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">md</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;# Demo</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">md</span> <span class="o">=</span> <span class="s1">'''# Demo</span>
 <span class="gp">...</span>
 <span class="gp">... </span><span class="s1">```yaml meta</span>
 <span class="gp">... </span><span class="s1">title: Demo</span>
@@ -230,14 +230,14 @@ agent extensions don’t get clobbered on round-trip.</p>
 <span class="gp">... </span><span class="s1">```dialogue</span>
 <span class="gp">... </span><span class="s1">charlie: hi</span>
 <span class="gp">... </span><span class="s1">```</span>
-<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">'''</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span> <span class="o">=</span> <span class="n">markdown_to_ir</span><span class="p">(</span><span class="n">md</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">title</span>
-<span class="go">&#39;Demo&#39;</span>
+<span class="go">'Demo'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span>
-<span class="go">&#39;s1&#39;</span>
+<span class="go">'s1'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dialogue</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
-<span class="go">&#39;hi&#39;</span>
+<span class="go">'hi'</span>
 </pre></div>
 </div>
 </dd></dl>

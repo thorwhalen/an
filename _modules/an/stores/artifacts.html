@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.stores.artifacts &mdash; an 0.1.13 documentation</title>
+  <title>an.stores.artifacts &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -150,15 +150,15 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.stores.artifacts</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Artifact stores — derived, regeneratable products of the pipeline.</span>
+<span></span><span class="sd">"""Artifact stores — derived, regeneratable products of the pipeline.</span>
 
 <span class="sd">All artifact stores are content-addressed: the key is meant to be a hash of</span>
 <span class="sd">the IR slice that produced the artifact. This lets later phases skip re-render</span>
-<span class="sd">when the inputs haven&#39;t changed.</span>
+<span class="sd">when the inputs haven't changed.</span>
 
 <span class="sd">In Phase 1 these are simple file-backed stores; the content-hash convention is</span>
 <span class="sd">enforced by the caller (orchestrator), not the store.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -168,21 +168,21 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_BlobStore</span><span class="p">(</span><span class="n">MutableMapping</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic file-as-bytes store with a fixed extension.</span>
+<span class="w">    </span><span class="sd">"""Generic file-as-bytes store with a fixed extension.</span>
 
 <span class="sd">    Subclasses set ``EXT`` to the file extension (without the dot).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">EXT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bin&quot;</span>
+    <span class="n">EXT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"bin"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root_dir</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid key: </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">EXT</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="s2">"/"</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"invalid key: </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">EXT</span><span class="si">}</span><span class="s2">"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
         <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -202,63 +202,63 @@
         <span class="n">p</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="n">suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">EXT</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)):</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">".</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">EXT</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">"*</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">)):</span>
             <span class="k">yield</span> <span class="n">child</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">suffix</span><span class="p">)]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">path_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the on-disk path for a key (whether it exists or not).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the on-disk path for a key (whether it exists or not)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">)</span><span class="si">!r}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">)</span><span class="si">!r}</span><span class="s2">)"</span>
 
 
 <div class="viewcode-block" id="AudioArtifactStore">
 <a class="viewcode-back" href="../../../module_docs/an/stores/artifacts.html#an.stores.AudioArtifactStore">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AudioArtifactStore</span><span class="p">(</span><span class="n">_BlobStore</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;TTS-rendered audio clips (.wav).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""TTS-rendered audio clips (.wav)."""</span>
 
-    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">&quot;wav&quot;</span></div>
+    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">"wav"</span></div>
 
 
 
 <div class="viewcode-block" id="VisemeArtifactStore">
 <a class="viewcode-back" href="../../../module_docs/an/stores/artifacts.html#an.stores.VisemeArtifactStore">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VisemeArtifactStore</span><span class="p">(</span><span class="n">_BlobStore</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lip-sync viseme tracks (.json) — stored as bytes for cache uniformity.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Lip-sync viseme tracks (.json) — stored as bytes for cache uniformity."""</span>
 
-    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">&quot;json&quot;</span></div>
+    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">"json"</span></div>
 
 
 
 <div class="viewcode-block" id="ShotArtifactStore">
 <a class="viewcode-back" href="../../../module_docs/an/stores/artifacts.html#an.stores.ShotArtifactStore">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ShotArtifactStore</span><span class="p">(</span><span class="n">_BlobStore</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-shot rendered mp4s.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Per-shot rendered mp4s."""</span>
 
-    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">&quot;mp4&quot;</span></div>
+    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">"mp4"</span></div>
 
 
 
 <div class="viewcode-block" id="PreviewArtifactStore">
 <a class="viewcode-back" href="../../../module_docs/an/stores/artifacts.html#an.stores.PreviewArtifactStore">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PreviewArtifactStore</span><span class="p">(</span><span class="n">_BlobStore</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Low-res preview renders (mp4 or png sequence wrapper).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Low-res preview renders (mp4 or png sequence wrapper)."""</span>
 
-    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">&quot;mp4&quot;</span></div>
+    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">"mp4"</span></div>
 
 
 
 <div class="viewcode-block" id="OutputStore">
 <a class="viewcode-back" href="../../../module_docs/an/stores/artifacts.html#an.stores.OutputStore">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OutputStore</span><span class="p">(</span><span class="n">_BlobStore</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Final composited renders.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Final composited renders."""</span>
 
-    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">&quot;mp4&quot;</span></div>
+    <span class="n">EXT</span> <span class="o">=</span> <span class="s2">"mp4"</span></div>
 
 </pre></div>
 

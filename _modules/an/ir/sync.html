@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.13 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,7 +149,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.ir.sync</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Bidirectional sync between ``scene.md`` (Narrative Layer) and ``ir/scene.json`` (Scene Graph Layer).</span>
+<span></span><span class="sd">"""Bidirectional sync between ``scene.md`` (Narrative Layer) and ``ir/scene.json`` (Scene Graph Layer).</span>
 
 <span class="sd">The Markdown form is what humans edit. The JSON form is what the agent and</span>
 <span class="sd">verifiers operate on. They must round-trip cleanly.</span>
@@ -183,8 +183,8 @@
 
 <span class="sd">A shot heading is ``## Shot &lt;id&gt; (&lt;style&gt;)``. Fenced blocks attach to the</span>
 <span class="sd">nearest enclosing scope. Unknown blocks are preserved as ``options`` so</span>
-<span class="sd">agent extensions don&#39;t get clobbered on round-trip.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">agent extensions don't get clobbered on round-trip.</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -202,10 +202,10 @@
 
 
 <span class="n">_FENCE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="sa">r</span><span class="s2">&quot;^```(\w+)(?:\s+(\w+))?\s*\n(.*?)\n```&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span>
+    <span class="sa">r</span><span class="s2">"^```(\w+)(?:\s+(\w+))?\s*\n(.*?)\n```"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span>
 <span class="p">)</span>
 <span class="n">_SHOT_HEADING_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="sa">r</span><span class="s2">&quot;^##\s+Shot\s+(\S+)(?:\s+\(([^)]+)\))?\s*$&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span>
+    <span class="sa">r</span><span class="s2">"^##\s+Shot\s+(\S+)(?:\s+\(([^)]+)\))?\s*$"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span>
 <span class="p">)</span>
 
 
@@ -213,7 +213,7 @@
 <a class="viewcode-back" href="../../../module_docs/an/ir/sync.html#an.SyncResult">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">SyncResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Outcome of a sync operation.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Outcome of a sync operation."""</span>
 
     <span class="n">wrote_json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">wrote_md</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -229,9 +229,9 @@
 <div class="viewcode-block" id="markdown_to_ir">
 <a class="viewcode-back" href="../../../module_docs/an/ir/sync.html#an.markdown_to_ir">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">markdown_to_ir</span><span class="p">(</span><span class="n">md_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SceneIR</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse the structured Markdown form of a scene into a SceneIR.</span>
+<span class="w">    </span><span class="sd">"""Parse the structured Markdown form of a scene into a SceneIR.</span>
 
-<span class="sd">    &gt;&gt;&gt; md = &#39;&#39;&#39;# Demo</span>
+<span class="sd">    &gt;&gt;&gt; md = '''# Demo</span>
 <span class="sd">    ...</span>
 <span class="sd">    ... ```yaml meta</span>
 <span class="sd">    ... title: Demo</span>
@@ -247,46 +247,46 @@
 <span class="sd">    ... ```dialogue</span>
 <span class="sd">    ... charlie: hi</span>
 <span class="sd">    ... ```</span>
-<span class="sd">    ... &#39;&#39;&#39;</span>
+<span class="sd">    ... '''</span>
 <span class="sd">    &gt;&gt;&gt; scene = markdown_to_ir(md)</span>
 <span class="sd">    &gt;&gt;&gt; scene.meta.title</span>
-<span class="sd">    &#39;Demo&#39;</span>
+<span class="sd">    'Demo'</span>
 <span class="sd">    &gt;&gt;&gt; scene.timeline[0].id</span>
-<span class="sd">    &#39;s1&#39;</span>
+<span class="sd">    's1'</span>
 <span class="sd">    &gt;&gt;&gt; scene.timeline[0].dialogue[0].text</span>
-<span class="sd">    &#39;hi&#39;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    'hi'</span>
+<span class="sd">    """</span>
     <span class="n">title</span> <span class="o">=</span> <span class="n">_extract_title</span><span class="p">(</span><span class="n">md_text</span><span class="p">)</span>
 
-    <span class="c1"># Split into segments: a &quot;global&quot; segment (before any ## Shot heading) and</span>
+    <span class="c1"># Split into segments: a "global" segment (before any ## Shot heading) and</span>
     <span class="c1"># one segment per shot heading.</span>
     <span class="n">parts</span> <span class="o">=</span> <span class="n">_split_by_shots</span><span class="p">(</span><span class="n">md_text</span><span class="p">)</span>
-    <span class="n">global_text</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="s2">&quot;__global__&quot;</span><span class="p">]</span>
+    <span class="n">global_text</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="s2">"__global__"</span><span class="p">]</span>
 
-    <span class="n">meta_data</span> <span class="o">=</span> <span class="n">_extract_yaml_block</span><span class="p">(</span><span class="n">global_text</span><span class="p">,</span> <span class="s2">&quot;meta&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="n">title</span> <span class="ow">and</span> <span class="s2">&quot;title&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="p">:</span>
-        <span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span>
+    <span class="n">meta_data</span> <span class="o">=</span> <span class="n">_extract_yaml_block</span><span class="p">(</span><span class="n">global_text</span><span class="p">,</span> <span class="s2">"meta"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">title</span> <span class="ow">and</span> <span class="s2">"title"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="p">:</span>
+        <span class="n">meta_data</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span>
     <span class="n">meta</span> <span class="o">=</span> <span class="n">Meta</span><span class="p">(</span><span class="o">**</span><span class="n">meta_data</span><span class="p">)</span>
 
     <span class="n">shots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Shot</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">shot_id</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">[</span><span class="s2">&quot;__shots__&quot;</span><span class="p">]:</span>
-        <span class="n">shot_yaml</span> <span class="o">=</span> <span class="n">_extract_yaml_block</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="s2">&quot;shot&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">shot_id</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">[</span><span class="s2">"__shots__"</span><span class="p">]:</span>
+        <span class="n">shot_yaml</span> <span class="o">=</span> <span class="n">_extract_yaml_block</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="s2">"shot"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">dialogue_block</span> <span class="o">=</span> <span class="n">_extract_dialogue_block</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
         <span class="n">entities_block</span> <span class="o">=</span> <span class="n">_extract_entities_block</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
         <span class="n">actions_block</span> <span class="o">=</span> <span class="n">_extract_actions_block</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
         <span class="n">shot_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">shot_id</span><span class="p">,</span>
-            <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="n">style</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_style</span><span class="p">,</span>
-            <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="n">shot_yaml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;duration&quot;</span><span class="p">,</span> <span class="n">DEFAULT_DURATION</span><span class="p">),</span>
-            <span class="s2">&quot;dialogue&quot;</span><span class="p">:</span> <span class="n">dialogue_block</span><span class="p">,</span>
-            <span class="s2">&quot;entities&quot;</span><span class="p">:</span> <span class="n">entities_block</span><span class="p">,</span>
-            <span class="s2">&quot;actions&quot;</span><span class="p">:</span> <span class="n">actions_block</span><span class="p">,</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">shot_id</span><span class="p">,</span>
+            <span class="s2">"style"</span><span class="p">:</span> <span class="n">style</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_style</span><span class="p">,</span>
+            <span class="s2">"duration"</span><span class="p">:</span> <span class="n">shot_yaml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">,</span> <span class="n">DEFAULT_DURATION</span><span class="p">),</span>
+            <span class="s2">"dialogue"</span><span class="p">:</span> <span class="n">dialogue_block</span><span class="p">,</span>
+            <span class="s2">"entities"</span><span class="p">:</span> <span class="n">entities_block</span><span class="p">,</span>
+            <span class="s2">"actions"</span><span class="p">:</span> <span class="n">actions_block</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="c1"># Camera, options, etc., come straight from the YAML if present.</span>
-        <span class="k">if</span> <span class="s2">&quot;camera&quot;</span> <span class="ow">in</span> <span class="n">shot_yaml</span><span class="p">:</span>
-            <span class="n">shot_kwargs</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="s2">&quot;options&quot;</span> <span class="ow">in</span> <span class="n">shot_yaml</span><span class="p">:</span>
-            <span class="n">shot_kwargs</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">"camera"</span> <span class="ow">in</span> <span class="n">shot_yaml</span><span class="p">:</span>
+            <span class="n">shot_kwargs</span><span class="p">[</span><span class="s2">"camera"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"camera"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">"options"</span> <span class="ow">in</span> <span class="n">shot_yaml</span><span class="p">:</span>
+            <span class="n">shot_kwargs</span><span class="p">[</span><span class="s2">"options"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"options"</span><span class="p">]</span>
         <span class="n">shots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Shot</span><span class="p">(</span><span class="o">**</span><span class="n">shot_kwargs</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">duration</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -299,16 +299,16 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_extract_title</span><span class="p">(</span><span class="n">md_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">md_text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
         <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;# &quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;## &quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"# "</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"## "</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-    <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">return</span> <span class="s2">""</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_split_by_shots</span><span class="p">(</span><span class="n">md_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Slice text into a global pre-section and per-shot sections.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Slice text into a global pre-section and per-shot sections."""</span>
     <span class="n">matches</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_SHOT_HEADING_RE</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">md_text</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;__global__&quot;</span><span class="p">:</span> <span class="n">md_text</span><span class="p">,</span> <span class="s2">&quot;__shots__&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"__global__"</span><span class="p">:</span> <span class="n">md_text</span><span class="p">,</span> <span class="s2">"__shots__"</span><span class="p">:</span> <span class="p">[]}</span>
     <span class="n">global_text</span> <span class="o">=</span> <span class="n">md_text</span><span class="p">[:</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span>
     <span class="n">shots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">matches</span><span class="p">):</span>
@@ -317,27 +317,27 @@
         <span class="n">body_start</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
         <span class="n">body_end</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">md_text</span><span class="p">)</span>
         <span class="n">shots</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">shot_id</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">md_text</span><span class="p">[</span><span class="n">body_start</span><span class="p">:</span><span class="n">body_end</span><span class="p">]))</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;__global__&quot;</span><span class="p">:</span> <span class="n">global_text</span><span class="p">,</span> <span class="s2">&quot;__shots__&quot;</span><span class="p">:</span> <span class="n">shots</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"__global__"</span><span class="p">:</span> <span class="n">global_text</span><span class="p">,</span> <span class="s2">"__shots__"</span><span class="p">:</span> <span class="n">shots</span><span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_extract_yaml_block</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_FENCE_RE</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
         <span class="n">lang</span><span class="p">,</span> <span class="n">lbl</span><span class="p">,</span> <span class="n">body</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">lang</span> <span class="o">==</span> <span class="s2">&quot;yaml&quot;</span> <span class="ow">and</span> <span class="n">lbl</span> <span class="o">==</span> <span class="n">label</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lang</span> <span class="o">==</span> <span class="s2">"yaml"</span> <span class="ow">and</span> <span class="n">lbl</span> <span class="o">==</span> <span class="n">label</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;YAML block </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> must be a mapping&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"YAML block </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> must be a mapping"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">data</span>
     <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="n">_DIALOGUE_LINE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="sa">r</span><span class="s2">&quot;^\s*(?P&lt;speaker&gt;[\w-]+)(?:\s*\[(?P&lt;emotion&gt;[\w-]+)\])?\s*:\s*(?P&lt;text&gt;.*?)\s*$&quot;</span>
+    <span class="sa">r</span><span class="s2">"^\s*(?P&lt;speaker&gt;[\w-]+)(?:\s*\[(?P&lt;emotion&gt;[\w-]+)\])?\s*:\s*(?P&lt;text&gt;.*?)\s*$"</span>
 <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_extract_dialogue_block</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dialogue</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a ```dialogue block.</span>
+<span class="w">    </span><span class="sd">"""Parse a ```dialogue block.</span>
 
 <span class="sd">    Each non-empty, non-comment line follows ``speaker[emotion]: text`` where</span>
 <span class="sd">    the bracketed emotion is optional. Examples:</span>
@@ -345,46 +345,46 @@
 <span class="sd">        charlie: Hello.</span>
 <span class="sd">        charlie [happy]: Hello!</span>
 <span class="sd">        maya [skeptical]: Sure.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dialogue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_FENCE_RE</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
         <span class="n">lang</span><span class="p">,</span> <span class="n">_lbl</span><span class="p">,</span> <span class="n">body</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">lang</span> <span class="o">!=</span> <span class="s2">&quot;dialogue&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lang</span> <span class="o">!=</span> <span class="s2">"dialogue"</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="k">for</span> <span class="n">raw</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
             <span class="n">line</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"#"</span><span class="p">):</span>
                 <span class="k">continue</span>
             <span class="n">match</span> <span class="o">=</span> <span class="n">_DIALOGUE_LINE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;speaker&quot;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;speaker&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
-                <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+                <span class="s2">"speaker"</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">"speaker"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+                <span class="s2">"text"</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">"text"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
             <span class="p">}</span>
-            <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;emotion&quot;</span><span class="p">):</span>
-                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;emotion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;emotion&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">"emotion"</span><span class="p">):</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">"emotion"</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">"emotion"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Dialogue</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">out</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_extract_entities_block</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetRef</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a ```yaml entities block: a list of AssetRef-shaped dicts.&quot;&quot;&quot;</span>
-    <span class="n">raw</span> <span class="o">=</span> <span class="n">_extract_yaml_list_block</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;entities&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Parse a ```yaml entities block: a list of AssetRef-shaped dicts."""</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">_extract_yaml_list_block</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s2">"entities"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetRef</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;each entry under `yaml entities` must be a mapping; got </span><span class="si">{</span><span class="n">item</span><span class="si">!r}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"each entry under `yaml entities` must be a mapping; got </span><span class="si">{</span><span class="n">item</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
         <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AssetRef</span><span class="p">(</span><span class="o">**</span><span class="n">item</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">out</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_extract_actions_block</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a ```yaml actions block: a list of leaf-action dicts.</span>
+<span class="w">    </span><span class="sd">"""Parse a ```yaml actions block: a list of leaf-action dicts.</span>
 
 <span class="sd">    Supported entry shapes (one per item in the YAML list):</span>
 <span class="sd">      - ``{kind: tween, target, property, to, duration, [from_], [easing], [start]}``</span>
@@ -394,8 +394,8 @@
 <span class="sd">    A leaf action with a ``start`` key is wrapped in ``sequence(delay(start),</span>
 <span class="sd">    action)`` so flatten yields the correct absolute time. ``set`` uses ``at``</span>
 <span class="sd">    instead (built into the schema). Returns the list of authoring Actions.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">raw</span> <span class="o">=</span> <span class="n">_extract_yaml_list_block</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;actions&quot;</span><span class="p">)</span>
+<span class="sd">    """</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">_extract_yaml_list_block</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s2">"actions"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="c1"># Lazy import to avoid a cycle (compose imports schema, schema imports nothing).</span>
@@ -405,17 +405,17 @@
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">raw</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;each entry under `yaml actions` must be a mapping; got </span><span class="si">{</span><span class="n">item</span><span class="si">!r}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"each entry under `yaml actions` must be a mapping; got </span><span class="si">{</span><span class="n">item</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
-        <span class="n">kind</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kind&quot;</span><span class="p">)</span>
-        <span class="n">start</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;tween&quot;</span><span class="p">,</span> <span class="s2">&quot;play&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;tween&quot;</span><span class="p">:</span>
-            <span class="n">target</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span>
-            <span class="n">property_</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;property&quot;</span><span class="p">]</span>
-            <span class="n">to</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span>
-            <span class="n">duration</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">])</span>
-            <span class="n">from_</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;from_&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="s2">&quot;from_&quot;</span> <span class="ow">in</span> <span class="n">item</span> <span class="k">else</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;from&quot;</span><span class="p">)</span>
-            <span class="n">easing</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;easing&quot;</span><span class="p">,</span> <span class="s2">&quot;ease_in_out&quot;</span><span class="p">)</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"start"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"tween"</span><span class="p">,</span> <span class="s2">"play"</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"tween"</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"target"</span><span class="p">]</span>
+            <span class="n">property_</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"property"</span><span class="p">]</span>
+            <span class="n">to</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"to"</span><span class="p">]</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"duration"</span><span class="p">])</span>
+            <span class="n">from_</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"from_"</span><span class="p">)</span> <span class="k">if</span> <span class="s2">"from_"</span> <span class="ow">in</span> <span class="n">item</span> <span class="k">else</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"from"</span><span class="p">)</span>
+            <span class="n">easing</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"easing"</span><span class="p">,</span> <span class="s2">"ease_in_out"</span><span class="p">)</span>
             <span class="n">action</span> <span class="o">=</span> <span class="n">_compose</span><span class="o">.</span><span class="n">tween</span><span class="p">(</span>
                 <span class="n">target</span><span class="p">,</span>
                 <span class="n">property_</span><span class="p">,</span>
@@ -424,24 +424,24 @@
                 <span class="n">from_</span><span class="o">=</span><span class="n">from_</span><span class="p">,</span>
                 <span class="n">easing</span><span class="o">=</span><span class="n">easing</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;set&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"set"</span><span class="p">:</span>
             <span class="n">action</span> <span class="o">=</span> <span class="n">_compose</span><span class="o">.</span><span class="n">set_</span><span class="p">(</span>
-                <span class="n">item</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">],</span>
-                <span class="n">item</span><span class="p">[</span><span class="s2">&quot;property&quot;</span><span class="p">],</span>
-                <span class="n">item</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
-                <span class="n">at</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;at&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+                <span class="n">item</span><span class="p">[</span><span class="s2">"target"</span><span class="p">],</span>
+                <span class="n">item</span><span class="p">[</span><span class="s2">"property"</span><span class="p">],</span>
+                <span class="n">item</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span>
+                <span class="n">at</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"at"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
             <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;play&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"play"</span><span class="p">:</span>
             <span class="n">action</span> <span class="o">=</span> <span class="n">_compose</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
-                <span class="n">item</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">],</span>
-                <span class="n">item</span><span class="p">[</span><span class="s2">&quot;animation&quot;</span><span class="p">],</span>
-                <span class="n">duration</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;duration&quot;</span><span class="p">),</span>
-                <span class="n">speed</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;speed&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
-                <span class="n">loop</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;loop&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+                <span class="n">item</span><span class="p">[</span><span class="s2">"target"</span><span class="p">],</span>
+                <span class="n">item</span><span class="p">[</span><span class="s2">"animation"</span><span class="p">],</span>
+                <span class="n">duration</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">),</span>
+                <span class="n">speed</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"speed"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+                <span class="n">loop</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"loop"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;actions[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">].kind must be one of tween/set/play; got </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"actions[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">].kind must be one of tween/set/play; got </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="n">start</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">action</span> <span class="o">=</span> <span class="n">_compose</span><span class="o">.</span><span class="n">sequence</span><span class="p">(</span><span class="n">_compose</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">start</span><span class="p">)),</span> <span class="n">action</span><span class="p">)</span>
@@ -450,15 +450,15 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_extract_yaml_list_block</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a ```yaml &lt;label&gt; block whose body is a YAML list.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Parse a ```yaml &lt;label&gt; block whose body is a YAML list."""</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_FENCE_RE</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
         <span class="n">lang</span><span class="p">,</span> <span class="n">lbl</span><span class="p">,</span> <span class="n">body</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">lang</span> <span class="o">==</span> <span class="s2">&quot;yaml&quot;</span> <span class="ow">and</span> <span class="n">lbl</span> <span class="o">==</span> <span class="n">label</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lang</span> <span class="o">==</span> <span class="s2">"yaml"</span> <span class="ow">and</span> <span class="n">lbl</span> <span class="o">==</span> <span class="n">label</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;YAML block </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> must be a list&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"YAML block </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> must be a list"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">data</span>
     <span class="k">return</span> <span class="kc">None</span>
 
@@ -471,85 +471,85 @@
 <div class="viewcode-block" id="ir_to_markdown">
 <a class="viewcode-back" href="../../../module_docs/an/ir/sync.html#an.ir_to_markdown">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ir_to_markdown</span><span class="p">(</span><span class="n">scene</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render a SceneIR back into the structured Markdown form.</span>
+<span class="w">    </span><span class="sd">"""Render a SceneIR back into the structured Markdown form.</span>
 
 <span class="sd">    &gt;&gt;&gt; from an.ir.schema import SceneIR, Meta, Shot</span>
-<span class="sd">    &gt;&gt;&gt; scene = SceneIR(meta=Meta(title=&quot;Demo&quot;, duration=5.0),</span>
-<span class="sd">    ...                 timeline=[Shot(id=&quot;s1&quot;, style=&quot;cutout&quot;, duration=5.0)])</span>
+<span class="sd">    &gt;&gt;&gt; scene = SceneIR(meta=Meta(title="Demo", duration=5.0),</span>
+<span class="sd">    ...                 timeline=[Shot(id="s1", style="cutout", duration=5.0)])</span>
 <span class="sd">    &gt;&gt;&gt; md = ir_to_markdown(scene)</span>
-<span class="sd">    &gt;&gt;&gt; &quot;# Demo&quot; in md</span>
+<span class="sd">    &gt;&gt;&gt; "# Demo" in md</span>
 <span class="sd">    True</span>
-<span class="sd">    &gt;&gt;&gt; &quot;## Shot s1 (cutout)&quot; in md</span>
+<span class="sd">    &gt;&gt;&gt; "## Shot s1 (cutout)" in md</span>
 <span class="sd">    True</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">title</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;Untitled&quot;</span>
-    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">"Untitled"</span>
+    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"# </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="n">meta_dict</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
-        <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">author</span><span class="p">,</span>
-        <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
-        <span class="s2">&quot;fps&quot;</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span>
-        <span class="s2">&quot;resolution&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">resolution</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
-            <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">resolution</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+        <span class="s2">"title"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="s2">"author"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">author</span><span class="p">,</span>
+        <span class="s2">"duration"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+        <span class="s2">"fps"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span>
+        <span class="s2">"resolution"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"width"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">resolution</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+            <span class="s2">"height"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">resolution</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">&quot;default_style&quot;</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">default_style</span><span class="p">,</span>
+        <span class="s2">"default_style"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">default_style</span><span class="p">,</span>
     <span class="p">}</span>
-    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```yaml meta&quot;</span><span class="p">)</span>
+    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```yaml meta"</span><span class="p">)</span>
     <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">notes</span><span class="p">:</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">:</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;## Shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">style</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">shot_yaml</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">}</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"## Shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">style</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">shot_yaml</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"duration"</span><span class="p">:</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">&quot;camera&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"camera"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
-            <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">options</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```yaml shot&quot;</span><span class="p">)</span>
+            <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"options"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">options</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```yaml shot"</span><span class="p">)</span>
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">shot_yaml</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
-            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```yaml entities&quot;</span><span class="p">)</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```yaml entities"</span><span class="p">)</span>
             <span class="n">entities_dump</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">e</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span>
             <span class="p">]</span>
             <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">entities_dump</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">:</span>
             <span class="n">actions_dump</span> <span class="o">=</span> <span class="n">_actions_to_yaml_list</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">actions_dump</span><span class="p">:</span>
-                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```yaml actions&quot;</span><span class="p">)</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```yaml actions"</span><span class="p">)</span>
                 <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">actions_dump</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">:</span>
-            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```dialogue&quot;</span><span class="p">)</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```dialogue"</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">emotion</span><span class="p">:</span>
-                    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">speaker</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">emotion</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">speaker</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">emotion</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">speaker</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;```</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">speaker</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span></div>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_actions_to_yaml_list</span><span class="p">(</span><span class="n">actions</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert authoring Action objects back to the markdown-friendly dicts.</span>
+<span class="w">    </span><span class="sd">"""Convert authoring Action objects back to the markdown-friendly dicts.</span>
 
 <span class="sd">    Only handles the leaf-action shapes that the markdown parser also accepts:</span>
 <span class="sd">    set, tween, play, plus the ``sequence(delay(start), &lt;leaf&gt;)`` wrapper that</span>
 <span class="sd">    the parser produces for actions with a ``start`` time. Composition trees</span>
-<span class="sd">    that don&#39;t fit those shapes are skipped (logged via the JSON fallback —</span>
+<span class="sd">    that don't fit those shapes are skipped (logged via the JSON fallback —</span>
 <span class="sd">    no data loss, just no markdown round-trip).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">DelayAction</span><span class="p">,</span>
         <span class="n">PlayAction</span><span class="p">,</span>
@@ -572,45 +572,45 @@
             <span class="n">leaf</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">leaf</span><span class="p">,</span> <span class="n">TweenAction</span><span class="p">):</span>
             <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;tween&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
-                <span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">property</span><span class="p">,</span>
-                <span class="s2">&quot;to&quot;</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">to_value</span><span class="p">,</span>
-                <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"tween"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+                <span class="s2">"property"</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">property</span><span class="p">,</span>
+                <span class="s2">"to"</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">to_value</span><span class="p">,</span>
+                <span class="s2">"duration"</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
             <span class="p">}</span>
             <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">from_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">from_value</span>
-            <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">easing</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;ease_in_out&quot;</span><span class="p">):</span>
-                <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;easing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">easing</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"from"</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">from_value</span>
+            <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">easing</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"ease_in_out"</span><span class="p">):</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"easing"</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">easing</span>
             <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"start"</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">leaf</span><span class="p">,</span> <span class="n">SetAction</span><span class="p">):</span>
             <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;set&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
-                <span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">property</span><span class="p">,</span>
-                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"set"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+                <span class="s2">"property"</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">property</span><span class="p">,</span>
+                <span class="s2">"value"</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
             <span class="p">}</span>
             <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">at</span><span class="p">:</span>
-                <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;at&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">at</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"at"</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">at</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">leaf</span><span class="p">,</span> <span class="n">PlayAction</span><span class="p">):</span>
             <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;play&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
-                <span class="s2">&quot;animation&quot;</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">animation</span><span class="p">,</span>
+                <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"play"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+                <span class="s2">"animation"</span><span class="p">:</span> <span class="n">leaf</span><span class="o">.</span><span class="n">animation</span><span class="p">,</span>
             <span class="p">}</span>
             <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">duration</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"duration"</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">duration</span>
             <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">speed</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
-                <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;speed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">speed</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"speed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">speed</span>
             <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">loop</span><span class="p">:</span>
-                <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;loop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"loop"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"start"</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
-        <span class="c1"># else: skip (composition trees that don&#39;t round-trip cleanly to md).</span>
+        <span class="c1"># else: skip (composition trees that don't round-trip cleanly to md).</span>
     <span class="k">return</span> <span class="n">out</span>
 
 
@@ -622,15 +622,15 @@
 <div class="viewcode-block" id="sync">
 <a class="viewcode-back" href="../../../module_docs/an/ir/sync.html#an.sync">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">sync</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SyncResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reconcile ``scene.md`` and ``ir/scene.json`` inside a project directory.</span>
+<span class="w">    </span><span class="sd">"""Reconcile ``scene.md`` and ``ir/scene.json`` inside a project directory.</span>
 
 <span class="sd">    Strategy in v0.1: Markdown is the human SSOT; if both exist, the JSON is</span>
 <span class="sd">    regenerated from the Markdown unless mtimes show JSON is newer (which the</span>
 <span class="sd">    user is told never to do — but we warn instead of silently overwriting).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">pdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
-    <span class="n">md_path</span> <span class="o">=</span> <span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;scene.md&quot;</span>
-    <span class="n">json_path</span> <span class="o">=</span> <span class="n">pdir</span> <span class="o">/</span> <span class="s2">&quot;ir&quot;</span> <span class="o">/</span> <span class="s2">&quot;scene.json&quot;</span>
+    <span class="n">md_path</span> <span class="o">=</span> <span class="n">pdir</span> <span class="o">/</span> <span class="s2">"scene.md"</span>
+    <span class="n">json_path</span> <span class="o">=</span> <span class="n">pdir</span> <span class="o">/</span> <span class="s2">"ir"</span> <span class="o">/</span> <span class="s2">"scene.json"</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">SyncResult</span><span class="p">()</span>
 
     <span class="n">md_exists</span> <span class="o">=</span> <span class="n">md_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
@@ -648,8 +648,8 @@
     <span class="k">elif</span> <span class="n">md_exists</span> <span class="ow">and</span> <span class="n">json_exists</span><span class="p">:</span>
         <span class="c1"># Use the newer file as source of truth. Markdown is the *human* SSOT,</span>
         <span class="c1"># but pipeline stages (audio, lip-sync) write rich state into the JSON</span>
-        <span class="c1"># that the Markdown can&#39;t represent — so when JSON is newer, prefer it.</span>
-        <span class="c1"># Tolerance: skew within 0.5s is treated as &quot;same&quot; (avoid flip-flopping</span>
+        <span class="c1"># that the Markdown can't represent — so when JSON is newer, prefer it.</span>
+        <span class="c1"># Tolerance: skew within 0.5s is treated as "same" (avoid flip-flopping</span>
         <span class="c1"># on every load just because of write-order in ScenesStore).</span>
         <span class="n">md_mtime</span> <span class="o">=</span> <span class="n">md_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span>
         <span class="n">json_mtime</span> <span class="o">=</span> <span class="n">json_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span>
@@ -658,8 +658,8 @@
             <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">_read_text</span><span class="p">(</span><span class="n">json_path</span><span class="p">))</span>
             <span class="n">scene</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="n">_write_text</span><span class="p">(</span><span class="n">md_path</span><span class="p">,</span> <span class="n">ir_to_markdown</span><span class="p">(</span><span class="n">scene</span><span class="p">))</span>
-            <span class="c1"># Equalize mtimes so this regen doesn&#39;t immediately flip the next</span>
-            <span class="c1"># sync into &quot;md is newer → regenerate json (losing pipeline state)&quot;.</span>
+            <span class="c1"># Equalize mtimes so this regen doesn't immediately flip the next</span>
+            <span class="c1"># sync into "md is newer → regenerate json (losing pipeline state)".</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
             <span class="n">os</span><span class="o">.</span><span class="n">utime</span><span class="p">(</span><span class="n">md_path</span><span class="p">,</span> <span class="p">(</span><span class="n">json_mtime</span><span class="p">,</span> <span class="n">json_mtime</span><span class="p">))</span>

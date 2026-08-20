@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.tts &mdash; an 0.1.13 documentation</title>
+  <title>an.audio.tts &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,7 +149,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.audio.tts</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;TTS provider protocol + supporting dataclasses.&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""TTS provider protocol + supporting dataclasses."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -162,12 +162,12 @@
 <a class="viewcode-back" href="../../../module_docs/an/audio/tts.html#an.audio.VoiceMeta">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">VoiceMeta</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Metadata for a TTS voice as exposed by a provider.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Metadata for a TTS voice as exposed by a provider."""</span>
 
     <span class="n">voice_id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;en&quot;</span>
+    <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"en"</span>
     <span class="n">gender</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 
@@ -177,7 +177,7 @@
 <a class="viewcode-back" href="../../../module_docs/an/audio/tts.html#an.audio.AudioClip">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">AudioClip</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A rendered audio clip, on disk or in memory.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A rendered audio clip, on disk or in memory."""</span>
 
     <span class="n">path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">bytes_</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -193,20 +193,20 @@
 <a class="viewcode-back" href="../../../module_docs/an/audio/tts.html#an.audio.TTSProvider">[docs]</a>
 <span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TTSProvider</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Text-to-speech provider.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Text-to-speech provider."""</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 
 <div class="viewcode-block" id="TTSProvider.synthesize">
 <a class="viewcode-back" href="../../../module_docs/an/audio/tts.html#an.audio.TTSProvider.synthesize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">synthesize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">voice_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AudioClip</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render ``text`` in ``voice_id``&#39;s voice. Returns an AudioClip.&quot;&quot;&quot;</span></div>
+<span class="w">        </span><span class="sd">"""Render ``text`` in ``voice_id``'s voice. Returns an AudioClip."""</span></div>
 
 
 <div class="viewcode-block" id="TTSProvider.list_voices">
 <a class="viewcode-back" href="../../../module_docs/an/audio/tts.html#an.audio.TTSProvider.list_voices">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">list_voices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">VoiceMeta</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all voices the provider exposes.&quot;&quot;&quot;</span></div>
+<span class="w">        </span><span class="sd">"""Return all voices the provider exposes."""</span></div>
 </div>
 
 </pre></div>

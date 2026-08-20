@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.human &mdash; an 0.1.13 documentation</title>
+  <title>an.verify.human &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,12 +149,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.verify.human</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;HumanInTheLoopVerifier — opens the rendered mp4 and asks for approval.</span>
+<span></span><span class="sd">"""HumanInTheLoopVerifier — opens the rendered mp4 and asks for approval.</span>
 
-<span class="sd">Only useful in interactive sessions. Skips silently when there&#39;s no TTY (CI,</span>
-<span class="sd">agent contexts). The orchestrator can detect the skip via the report&#39;s</span>
+<span class="sd">Only useful in interactive sessions. Skips silently when there's no TTY (CI,</span>
+<span class="sd">agent contexts). The orchestrator can detect the skip via the report's</span>
 <span class="sd">informational finding.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -170,23 +170,23 @@
 <div class="viewcode-block" id="HumanInTheLoopVerifier">
 <a class="viewcode-back" href="../../../module_docs/an/verify/human.html#an.verify.HumanInTheLoopVerifier">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">HumanInTheLoopVerifier</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open the mp4, prompt the user to approve. Implements ``Verifier``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Open the mp4, prompt the user to approve. Implements ``Verifier``."""</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;human&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"human"</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Approve render? [y/N/r=reject]: &quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Approve render? [y/N/r=reject]: "</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span> <span class="o">=</span> <span class="n">prompt</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ir</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">render</span><span class="p">:</span> <span class="n">RenderResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VerificationReport</span><span class="p">:</span>
         <span class="n">report</span> <span class="o">=</span> <span class="n">VerificationReport</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">render</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;render&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;no render result; nothing to inspect&quot;</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;render&gt;"</span><span class="p">,</span> <span class="s2">"no render result; nothing to inspect"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">isatty</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">isatty</span><span class="p">():</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;info&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;&lt;terminal&gt;&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;no interactive terminal — skipping human review&quot;</span><span class="p">,</span>
+                <span class="s2">"info"</span><span class="p">,</span>
+                <span class="s2">"&lt;terminal&gt;"</span><span class="p">,</span>
+                <span class="s2">"no interactive terminal — skipping human review"</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
 
@@ -194,37 +194,37 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">answer</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prompt</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">EOFError</span><span class="p">,</span> <span class="ne">KeyboardInterrupt</span><span class="p">):</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;input&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;no answer received; defaulting to skip&quot;</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;input&gt;"</span><span class="p">,</span> <span class="s2">"no answer received; defaulting to skip"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
 
-        <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">answer</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"r"</span><span class="p">):</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;error&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;&lt;human&gt;&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;human rejected the render&quot;</span><span class="p">,</span>
-                <span class="n">suggested_fix</span><span class="o">=</span><span class="s2">&quot;ask the human what to change&quot;</span><span class="p">,</span>
+                <span class="s2">"error"</span><span class="p">,</span>
+                <span class="s2">"&lt;human&gt;"</span><span class="p">,</span>
+                <span class="s2">"human rejected the render"</span><span class="p">,</span>
+                <span class="n">suggested_fix</span><span class="o">=</span><span class="s2">"ask the human what to change"</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">answer</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">):</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;human&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;human approved the render&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">answer</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"y"</span><span class="p">):</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;human&gt;"</span><span class="p">,</span> <span class="s2">"human approved the render"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">&quot;warning&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;&lt;human&gt;&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;human did not explicitly approve&quot;</span><span class="p">,</span>
+                <span class="s2">"warning"</span><span class="p">,</span>
+                <span class="s2">"&lt;human&gt;"</span><span class="p">,</span>
+                <span class="s2">"human did not explicitly approve"</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">report</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_open_in_default_app</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open ``path`` in the OS&#39;s default application for its file type.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Open ``path`` in the OS's default application for its file type."""</span>
     <span class="n">p</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span><span class="p">:</span>
-            <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;open&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">])</span>
-        <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;linux&quot;</span><span class="p">):</span>
-            <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;xdg-open&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">])</span>
-        <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;win&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"darwin"</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">"open"</span><span class="p">,</span> <span class="n">p</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"linux"</span><span class="p">):</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">"xdg-open"</span><span class="p">,</span> <span class="n">p</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"win"</span><span class="p">):</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
             <span class="n">os</span><span class="o">.</span><span class="n">startfile</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>

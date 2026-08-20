@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.13 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -241,15 +241,15 @@ carry a <cite>kind</cite> literal so Pydantic dispatches to the right validator.
 <p>Doctest:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">Meta</span><span class="p">,</span> <span class="n">Shot</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">meta</span><span class="o">=</span><span class="n">Meta</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Park Bench&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">45.0</span><span class="p">),</span>
-<span class="gp">... </span>    <span class="n">timeline</span><span class="o">=</span><span class="p">[</span><span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;s1&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;cutout&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">45.0</span><span class="p">)],</span>
+<span class="gp">... </span>    <span class="n">meta</span><span class="o">=</span><span class="n">Meta</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Park Bench"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">45.0</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">timeline</span><span class="o">=</span><span class="p">[</span><span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s1"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">"cutout"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">45.0</span><span class="p">)],</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span><span class="o">.</span><span class="n">version</span>
-<span class="go">&#39;0.1.0&#39;</span>
+<span class="go">'0.1.0'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span><span class="o">.</span><span class="n">kind</span>
-<span class="go">&#39;SceneIR&#39;</span>
+<span class="go">'SceneIR'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">style</span>
-<span class="go">&#39;cutout&#39;</span>
+<span class="go">'cutout'</span>
 </pre></div>
 </div>
 <dl class="py data">
@@ -267,8 +267,8 @@ carry a <cite>kind</cite> literal so Pydantic dispatches to the right validator.
 name + key, so the same character/voice/environment is reusable across
 scenes. <code class="docutils literal notranslate"><span class="pre">overrides</span></code> lets a single shot tweak presentation without
 forking the asset.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">AssetRef</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;character&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;maya&quot;</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="s2">&quot;characters&quot;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s2">&quot;maya-v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">id</span>
-<span class="go">&#39;maya&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">AssetRef</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"character"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"maya"</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="s2">"characters"</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s2">"maya-v1"</span><span class="p">)</span><span class="o">.</span><span class="n">id</span>
+<span class="go">'maya'</span>
 </pre></div>
 </div>
 <dl class="py attribute">
@@ -395,12 +395,12 @@ duration); the orchestrator fills it in then.</p>
 <dd><p>Top-level Scene IR document. The SSOT.</p>
 <p>A document is portable, diffable, and renderer-agnostic. Persisted as JSON
 at <code class="docutils literal notranslate"><span class="pre">ir/scene.json</span></code> inside an an project.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="n">Meta</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Hello&quot;</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s1">&#39;0.1.0&#39;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="n">Meta</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Hello"</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="s1">'0.1.0'</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">round_tripped</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="o">.</span><span class="n">model_validate_json</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">round_tripped</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">title</span>
-<span class="go">&#39;Hello&#39;</span>
+<span class="go">'Hello'</span>
 </pre></div>
 </div>
 <dl class="py attribute">

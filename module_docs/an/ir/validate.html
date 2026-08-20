@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.validate &mdash; an 0.1.13 documentation</title>
+  <title>an.ir.validate &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -186,9 +186,9 @@ zero-duration shots, voice refs missing from a voices store.</p></li>
 <dt class="sig sig-object py" id="an.ir.validate.validate_schema">
 <span class="sig-prename descclassname"><span class="pre">an.ir.validate.</span></span><span class="sig-name descname"><span class="pre">validate_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.ir.validate.ValidationReport" title="an.ir.validate.ValidationReport"><span class="pre">ValidationReport</span></a></span></span><a class="reference internal" href="../../../_modules/an/ir/validate.html#validate_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.validate.validate_schema" title="Link to this definition"></a></dt>
 <dd><p>Validate that <code class="docutils literal notranslate"><span class="pre">doc</span></code> (dict, JSON string, or SceneIR) conforms to the schema.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">validate_schema</span><span class="p">({</span><span class="s2">&quot;meta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">},</span> <span class="s2">&quot;timeline&quot;</span><span class="p">:</span> <span class="p">[]})</span><span class="o">.</span><span class="n">passed</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">validate_schema</span><span class="p">({</span><span class="s2">"meta"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"title"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">},</span> <span class="s2">"timeline"</span><span class="p">:</span> <span class="p">[]})</span><span class="o">.</span><span class="n">passed</span>
 <span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">validate_schema</span><span class="p">({</span><span class="s2">&quot;meta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">},</span> <span class="s2">&quot;timeline&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="s2">&quot;not-a-number&quot;</span><span class="p">}]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">validate_schema</span><span class="p">({</span><span class="s2">"meta"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"title"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">},</span> <span class="s2">"timeline"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s"</span><span class="p">,</span> <span class="s2">"duration"</span><span class="p">:</span> <span class="s2">"not-a-number"</span><span class="p">}]})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">passed</span>
 <span class="go">False</span>
 </pre></div>

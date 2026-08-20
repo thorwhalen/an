@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.media &mdash; an 0.1.13 documentation</title>
+  <title>an.verify.media &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,16 +149,16 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.verify.media</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Media verification helpers — audio + frame quality checks for rendered mp4s.</span>
+<span></span><span class="sd">"""Media verification helpers — audio + frame quality checks for rendered mp4s.</span>
 
 <span class="sd">Phase 8 Tier 2. These complement the existing IR-only ``LayoutLintVerifier``</span>
 <span class="sd">by inspecting actual mp4 output: silence detection (catches cutoff dialogue),</span>
 <span class="sd">audio level (catches missing audio), and per-frame perceptual diff via SSIM</span>
-<span class="sd">(catches &quot;all frames are identical&quot; or &quot;scene drifted between frames&quot;).</span>
+<span class="sd">(catches "all frames are identical" or "scene drifted between frames").</span>
 
 <span class="sd">Designed to depend only on ``ffmpeg`` / ``ffprobe`` and ``numpy`` (Pillow when</span>
 <span class="sd">loading frames). No scikit-image, no opencv.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -179,7 +179,7 @@
 <a class="viewcode-back" href="../../../module_docs/an/verify/media.html#an.verify.media.SilenceSpan">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">SilenceSpan</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A contiguous run of near-silence inside an audio stream.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A contiguous run of near-silence inside an audio stream."""</span>
 
     <span class="n">start</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">end</span><span class="p">:</span> <span class="nb">float</span>
@@ -198,33 +198,33 @@
     <span class="n">noise_db</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">30.0</span><span class="p">,</span>
     <span class="n">min_duration_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SilenceSpan</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``SilenceSpan``s in the audio of ``media_path`` via ffmpeg.</span>
+<span class="w">    </span><span class="sd">"""Return ``SilenceSpan``s in the audio of ``media_path`` via ffmpeg.</span>
 
-<span class="sd">    Wraps ``ffmpeg -af silencedetect=...`` and parses the stderr &quot;silence_start&quot;</span>
-<span class="sd">    / &quot;silence_end&quot; lines. Useful for catching dialogue that got cut off</span>
+<span class="sd">    Wraps ``ffmpeg -af silencedetect=...`` and parses the stderr "silence_start"</span>
+<span class="sd">    / "silence_end" lines. Useful for catching dialogue that got cut off</span>
 <span class="sd">    (silence at the start/end of a shot when speech was expected).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-hide_banner&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-nostats&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+        <span class="s2">"ffmpeg"</span><span class="p">,</span>
+        <span class="s2">"-hide_banner"</span><span class="p">,</span>
+        <span class="s2">"-nostats"</span><span class="p">,</span>
+        <span class="s2">"-i"</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">media_path</span><span class="p">),</span>
-        <span class="s2">&quot;-af&quot;</span><span class="p">,</span>
-        <span class="sa">f</span><span class="s2">&quot;silencedetect=noise=</span><span class="si">{</span><span class="n">noise_db</span><span class="si">}</span><span class="s2">dB:d=</span><span class="si">{</span><span class="n">min_duration_s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;null&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-&quot;</span><span class="p">,</span>
+        <span class="s2">"-af"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"silencedetect=noise=</span><span class="si">{</span><span class="n">noise_db</span><span class="si">}</span><span class="s2">dB:d=</span><span class="si">{</span><span class="n">min_duration_s</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"-f"</span><span class="p">,</span>
+        <span class="s2">"null"</span><span class="p">,</span>
+        <span class="s2">"-"</span><span class="p">,</span>
     <span class="p">]</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">text</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span>
-    <span class="n">starts</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;silence_start: ([0-9.]+)&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)]</span>
-    <span class="n">ends</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;silence_end: ([0-9.]+) &quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)]</span>
+    <span class="n">starts</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"silence_start: ([0-9.]+)"</span><span class="p">,</span> <span class="n">text</span><span class="p">)]</span>
+    <span class="n">ends</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"silence_end: ([0-9.]+) "</span><span class="p">,</span> <span class="n">text</span><span class="p">)]</span>
     <span class="n">spans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SilenceSpan</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">starts</span><span class="p">,</span> <span class="n">ends</span><span class="p">):</span>
         <span class="n">spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SilenceSpan</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">e</span><span class="p">))</span>
     <span class="c1"># Trailing silence with no end — ffmpeg sometimes omits it; pad with a</span>
-    <span class="c1"># synthetic span to media duration so callers can detect &quot;ran out of audio&quot;.</span>
+    <span class="c1"># synthetic span to media duration so callers can detect "ran out of audio".</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">starts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ends</span><span class="p">):</span>
         <span class="n">spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SilenceSpan</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">starts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">end</span><span class="o">=</span><span class="n">_media_duration</span><span class="p">(</span><span class="n">media_path</span><span class="p">)))</span>
     <span class="k">return</span> <span class="n">spans</span></div>
@@ -234,42 +234,42 @@
 <div class="viewcode-block" id="audio_volume">
 <a class="viewcode-back" href="../../../module_docs/an/verify/media.html#an.verify.media.audio_volume">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">audio_volume</span><span class="p">(</span><span class="n">media_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return dict with mean_db and max_db of the media&#39;s audio stream.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return dict with mean_db and max_db of the media's audio stream."""</span>
     <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-hide_banner&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-nostats&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+        <span class="s2">"ffmpeg"</span><span class="p">,</span>
+        <span class="s2">"-hide_banner"</span><span class="p">,</span>
+        <span class="s2">"-nostats"</span><span class="p">,</span>
+        <span class="s2">"-i"</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">media_path</span><span class="p">),</span>
-        <span class="s2">&quot;-af&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;volumedetect&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;null&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-&quot;</span><span class="p">,</span>
+        <span class="s2">"-af"</span><span class="p">,</span>
+        <span class="s2">"volumedetect"</span><span class="p">,</span>
+        <span class="s2">"-f"</span><span class="p">,</span>
+        <span class="s2">"null"</span><span class="p">,</span>
+        <span class="s2">"-"</span><span class="p">,</span>
     <span class="p">]</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">text</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span>
-    <span class="n">mean</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;mean_volume: (-?[0-9.]+) dB&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
-    <span class="n">mx</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;max_volume: (-?[0-9.]+) dB&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"mean_volume: (-?[0-9.]+) dB"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="n">mx</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"max_volume: (-?[0-9.]+) dB"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
     <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">mean</span><span class="p">:</span>
-        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;mean_db&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mean</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"mean_db"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mean</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">mx</span><span class="p">:</span>
-        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;max_db&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mx</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"max_db"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mx</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">out</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_media_duration</span><span class="p">(</span><span class="n">media_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the media&#39;s duration in seconds via ffprobe.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the media's duration in seconds via ffprobe."""</span>
     <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;ffprobe&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-v&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;error&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-show_entries&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;format=duration&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-of&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;default=noprint_wrappers=1:nokey=1&quot;</span><span class="p">,</span>
+        <span class="s2">"ffprobe"</span><span class="p">,</span>
+        <span class="s2">"-v"</span><span class="p">,</span>
+        <span class="s2">"error"</span><span class="p">,</span>
+        <span class="s2">"-show_entries"</span><span class="p">,</span>
+        <span class="s2">"format=duration"</span><span class="p">,</span>
+        <span class="s2">"-of"</span><span class="p">,</span>
+        <span class="s2">"default=noprint_wrappers=1:nokey=1"</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">media_path</span><span class="p">),</span>
     <span class="p">]</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -285,11 +285,11 @@
 <div class="viewcode-block" id="ssim">
 <a class="viewcode-back" href="../../../module_docs/an/verify/media.html#an.verify.media.ssim">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ssim</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mean SSIM between two single-channel images (float arrays in [0, 1]).</span>
+<span class="w">    </span><span class="sd">"""Mean SSIM between two single-channel images (float arrays in [0, 1]).</span>
 
-<span class="sd">    Numpy-only implementation of Wang et al.&#39;s SSIM. Computes on luminance,</span>
+<span class="sd">    Numpy-only implementation of Wang et al.'s SSIM. Computes on luminance,</span>
 <span class="sd">    no per-window sliding (uses global means/variances) — fast and robust</span>
-<span class="sd">    enough for &quot;are these two frames structurally similar&quot; checks.</span>
+<span class="sd">    enough for "are these two frames structurally similar" checks.</span>
 
 <span class="sd">    Returns a float in roughly ``[-1, 1]``; 1 means identical.</span>
 
@@ -297,7 +297,7 @@
 <span class="sd">    &gt;&gt;&gt; x = np.zeros((8, 8), dtype=np.float32)</span>
 <span class="sd">    &gt;&gt;&gt; ssim(x, x)</span>
 <span class="sd">    1.0</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     <span class="n">mu_a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
@@ -318,13 +318,13 @@
 <div class="viewcode-block" id="ssim_image_files">
 <a class="viewcode-back" href="../../../module_docs/an/verify/media.html#an.verify.media.ssim_image_files">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ssim_image_files</span><span class="p">(</span><span class="n">path_a</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">path_b</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;SSIM between two image files (any format Pillow can read).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""SSIM between two image files (any format Pillow can read)."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 
-    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path_a</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;L&quot;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path_b</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;L&quot;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path_a</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">"L"</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path_b</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">"L"</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
     <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;frame size mismatch: </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"frame size mismatch: </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ssim</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></div>
 
 
@@ -336,24 +336,24 @@
     <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4.0</span><span class="p">,</span>
-    <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;frame_</span><span class="si">%04d</span><span class="s2">.png&quot;</span><span class="p">,</span>
+    <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"frame_</span><span class="si">%04d</span><span class="s2">.png"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract frames from ``media_path`` at ``fps`` to ``out_dir``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Extract frames from ``media_path`` at ``fps`` to ``out_dir``."""</span>
     <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
     <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-y&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-loglevel&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;error&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+        <span class="s2">"ffmpeg"</span><span class="p">,</span>
+        <span class="s2">"-y"</span><span class="p">,</span>
+        <span class="s2">"-loglevel"</span><span class="p">,</span>
+        <span class="s2">"error"</span><span class="p">,</span>
+        <span class="s2">"-i"</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">media_path</span><span class="p">),</span>
-        <span class="s2">&quot;-vf&quot;</span><span class="p">,</span>
-        <span class="sa">f</span><span class="s2">&quot;fps=</span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">"-vf"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"fps=</span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">out_dir</span> <span class="o">/</span> <span class="n">pattern</span><span class="p">),</span>
     <span class="p">]</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">out_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;frame_*.png&quot;</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">out_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"frame_*.png"</span><span class="p">))</span></div>
 
 
 
@@ -364,22 +364,22 @@
 
 <div class="viewcode-block" id="transcribe">
 <a class="viewcode-back" href="../../../module_docs/an/verify/media.html#an.verify.media.transcribe">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">transcribe</span><span class="p">(</span><span class="n">media_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">model_size</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;tiny&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the transcribed speech in ``media_path``.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">transcribe</span><span class="p">(</span><span class="n">media_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">model_size</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"tiny"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the transcribed speech in ``media_path``.</span>
 
 <span class="sd">    Lazily imports faster-whisper. Raises ``RuntimeError`` with a clear</span>
-<span class="sd">    message when the package isn&#39;t installed.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    message when the package isn't installed.</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">faster_whisper</span><span class="w"> </span><span class="kn">import</span> <span class="n">WhisperModel</span>  <span class="c1"># type: ignore</span>
     <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-            <span class="s2">&quot;faster-whisper not installed. pip install faster-whisper &quot;</span>
-            <span class="s2">&quot;(or skip transcript checks).&quot;</span>
+            <span class="s2">"faster-whisper not installed. pip install faster-whisper "</span>
+            <span class="s2">"(or skip transcript checks)."</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">WhisperModel</span><span class="p">(</span><span class="n">model_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span> <span class="n">compute_type</span><span class="o">=</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">WhisperModel</span><span class="p">(</span><span class="n">model_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span> <span class="n">compute_type</span><span class="o">=</span><span class="s2">"int8"</span><span class="p">)</span>
     <span class="n">segments</span><span class="p">,</span> <span class="n">_info</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">transcribe</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">media_path</span><span class="p">))</span>
-    <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
 
 </pre></div>
 

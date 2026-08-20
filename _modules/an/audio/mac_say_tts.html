@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.mac_say_tts &mdash; an 0.1.13 documentation</title>
+  <title>an.audio.mac_say_tts &mdash; an 0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d02545a"></script>
+      <script src="../../../_static/documentation_options.js?v=468bc497"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -149,20 +149,20 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.audio.mac_say_tts</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;MacSayTTS — audible offline speech via macOS&#39;s built-in ``say`` command.</span>
+<span></span><span class="sd">"""MacSayTTS — audible offline speech via macOS's built-in ``say`` command.</span>
 
 <span class="sd">Free, local, no API keys, no Python deps. macOS-only. The ``say`` binary</span>
 <span class="sd">ships with every macOS install since at least 10.4. Voices are listed</span>
-<span class="sd">by ``say -v &#39;?&#39;`` and can be passed as ``voice_id``; common defaults:</span>
-<span class="sd">``&quot;Samantha&quot;``, ``&quot;Daniel&quot;``, ``&quot;Karen&quot;``, ``&quot;Alex&quot;``.</span>
+<span class="sd">by ``say -v '?'`` and can be passed as ``voice_id``; common defaults:</span>
+<span class="sd">``"Samantha"``, ``"Daniel"``, ``"Karen"``, ``"Alex"``.</span>
 
 <span class="sd">Output is 16-bit little-endian PCM WAV at 22050 Hz so the rest of the</span>
 <span class="sd">audio pipeline (which prefers WAV) can read frames + duration directly.</span>
 
 <span class="sd">&gt;&gt;&gt; tts = MacSayTTS()</span>
 <span class="sd">&gt;&gt;&gt; tts.name</span>
-<span class="sd">&#39;mac_say&#39;</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">'mac_say'</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -176,28 +176,28 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">AudioClip</span><span class="p">,</span> <span class="n">VoiceMeta</span>
 
 
-<span class="n">_DEFAULT_VOICE_ID</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Samantha&quot;</span>
+<span class="n">_DEFAULT_VOICE_ID</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Samantha"</span>
 <span class="n">_DEFAULT_SAMPLE_RATE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">22050</span>
-<span class="n">_DEFAULT_DATA_FORMAT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;LEI16@</span><span class="si">{</span><span class="n">_DEFAULT_SAMPLE_RATE</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">_DEFAULT_DATA_FORMAT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"LEI16@</span><span class="si">{</span><span class="n">_DEFAULT_SAMPLE_RATE</span><span class="si">}</span><span class="s2">"</span>
 
 
 <div class="viewcode-block" id="MacSayTTSError">
 <a class="viewcode-back" href="../../../module_docs/an/audio/mac_say_tts.html#an.audio.MacSayTTSError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MacSayTTSError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when the ``say`` subprocess fails.&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Raised when the ``say`` subprocess fails."""</span></div>
 
 
 
 <div class="viewcode-block" id="MacSayTTS">
 <a class="viewcode-back" href="../../../module_docs/an/audio/mac_say_tts.html#an.audio.MacSayTTS">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MacSayTTS</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;macOS ``say``-backed TTSProvider.</span>
+<span class="w">    </span><span class="sd">"""macOS ``say``-backed TTSProvider.</span>
 
 <span class="sd">    Implements the ``TTSProvider`` protocol. Audible, deterministic, and</span>
-<span class="sd">    fully offline — uses Apple&#39;s voice synthesis bundled with the OS.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    fully offline — uses Apple's voice synthesis bundled with the OS.</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mac_say&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mac_say"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -211,19 +211,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">rate_wpm</span> <span class="o">=</span> <span class="n">rate_wpm</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">synthesize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">voice_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AudioClip</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;say&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"say"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">MacSayTTSError</span><span class="p">(</span>
-                <span class="s2">&quot;macOS &#39;say&#39; command not found on PATH. MacSayTTS only works on &quot;</span>
-                <span class="s2">&quot;macOS — for cross-platform audible TTS use ElevenLabsTTS.&quot;</span>
+                <span class="s2">"macOS 'say' command not found on PATH. MacSayTTS only works on "</span>
+                <span class="s2">"macOS — for cross-platform audible TTS use ElevenLabsTTS."</span>
             <span class="p">)</span>
 
         <span class="n">effective_voice</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">voice_id</span> <span class="k">if</span> <span class="n">voice_id</span> <span class="ow">and</span> <span class="n">voice_id</span> <span class="o">!=</span> <span class="s2">&quot;default&quot;</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_voice_id</span>
+            <span class="n">voice_id</span> <span class="k">if</span> <span class="n">voice_id</span> <span class="ow">and</span> <span class="n">voice_id</span> <span class="o">!=</span> <span class="s2">"default"</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_voice_id</span>
         <span class="p">)</span>
 
-        <span class="n">out_path</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span>
+        <span class="n">out_path</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">out_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">tmp</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.wav&quot;</span><span class="p">)</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">".wav"</span><span class="p">)</span>
             <span class="n">tmp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="n">out_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -231,34 +231,34 @@
             <span class="n">out_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;say&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-v&quot;</span><span class="p">,</span>
+            <span class="s2">"say"</span><span class="p">,</span>
+            <span class="s2">"-v"</span><span class="p">,</span>
             <span class="n">effective_voice</span><span class="p">,</span>
-            <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+            <span class="s2">"-o"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">out_path</span><span class="p">),</span>
-            <span class="s2">&quot;--data-format&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;LEI16@</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">"--data-format"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"LEI16@</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate_wpm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;-r&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_wpm</span><span class="p">)])</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">"-r"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_wpm</span><span class="p">)])</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">MacSayTTSError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;failed to launch &#39;say&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+            <span class="k">raise</span> <span class="n">MacSayTTSError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"failed to launch 'say': </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
         <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">MacSayTTSError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;&#39;say&#39; exited with code </span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;  cmd: </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2"> &lt;text&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;  stderr: </span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;  hint: voice &#39;</span><span class="si">{</span><span class="n">effective_voice</span><span class="si">}</span><span class="s2">&#39; may not be installed; &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;list voices with: say -v &#39;?&#39;&quot;</span>
+                <span class="sa">f</span><span class="s2">"'say' exited with code </span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"  cmd: </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2"> &lt;text&gt;</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"  stderr: </span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"  hint: voice '</span><span class="si">{</span><span class="n">effective_voice</span><span class="si">}</span><span class="s2">' may not be installed; "</span>
+                <span class="sa">f</span><span class="s2">"list voices with: say -v '?'"</span>
             <span class="p">)</span>
 
         <span class="n">wav_bytes</span> <span class="o">=</span> <span class="n">out_path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">wave</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">out_path</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">wf</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">wave</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">out_path</span><span class="p">),</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">wf</span><span class="p">:</span>
                 <span class="n">duration</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">getnframes</span><span class="p">()</span> <span class="o">/</span> <span class="n">wf</span><span class="o">.</span><span class="n">getframerate</span><span class="p">()</span>
                 <span class="n">channels</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">getnchannels</span><span class="p">()</span>
         <span class="k">except</span> <span class="n">wave</span><span class="o">.</span><span class="n">Error</span><span class="p">:</span>
@@ -266,7 +266,7 @@
             <span class="n">channels</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="k">return</span> <span class="n">AudioClip</span><span class="p">(</span>
-            <span class="n">path</span><span class="o">=</span><span class="n">out_path</span> <span class="k">if</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">out_path</span> <span class="k">if</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">bytes_</span><span class="o">=</span><span class="n">wav_bytes</span><span class="p">,</span>
             <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
             <span class="n">sample_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_rate</span><span class="p">,</span>
@@ -276,17 +276,17 @@
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">list_voices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">VoiceMeta</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;say&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"say"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="p">[</span><span class="s2">&quot;say&quot;</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">[</span><span class="s2">"say"</span><span class="p">,</span> <span class="s2">"-v"</span><span class="p">,</span> <span class="s2">"?"</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
         <span class="n">voices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">VoiceMeta</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
-            <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"#"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">head</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">head</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -294,13 +294,13 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">language</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tokens</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tokens</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">voices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">VoiceMeta</span><span class="p">(</span>
                     <span class="n">voice_id</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
                     <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
                     <span class="n">provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                    <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">),</span>
+                    <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">voices</span></div>
