@@ -42,9 +42,17 @@ def _scene_has_pending_dialogue(scene) -> bool:
     return False
 
 
-def _has_any_dialogue(scene) -> bool:
-    """Return True if there's at least one dialogue line in the scene."""
-    return any(shot.dialogue for shot in scene.timeline)
+def _has_any_audio_content(scene) -> bool:
+    """True if any shot carries something the audio pipeline should look at.
+
+    Narration counts even though the pipeline cannot synthesise it yet, and that
+    is the point: this predicate is the ONLY thing that decides whether
+    ``produce_audio_for_scene`` is called at all, so gating it on dialogue alone
+    made the narration guard unreachable for exactly the scenes it names — a
+    narration-only project skipped the pipeline entirely and rendered a silent
+    mp4 with no diagnostic anywhere.
+    """
+    return any(shot.dialogue or shot.narration for shot in scene.timeline)
 
 
 def render_project(
@@ -112,7 +120,7 @@ def render(
     if not scene.timeline:
         raise RenderError("scene has no shots to render")
 
-    if auto_audio and _has_any_dialogue(scene):
+    if auto_audio and _has_any_audio_content(scene):
         # Lazy import to keep render.py importable without audio extras.
         from an.audio.pipeline import produce_audio_for_scene
         from an.audio.providers import make_lipsync, make_tts

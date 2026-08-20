@@ -52,10 +52,11 @@ Backends registered: `cutout` (real, with face rig + emotion-driven eyebrows + p
 - ` ```yaml entities ` — list of AssetRef-shaped dicts. `kind` ∈ `character | environment | voice | style`. Environment refs: `park | indoor | night | sunset | default`.
   - **`kind: prop` is declared by the IR but NOT rendered** — the compiler raises rather than dropping it. Props land in Wave 7 of #9. Do not put one in a scene.
   - An environment override may only carry keys the renderer reads (`sky_color`, `ground_color`, `ground_y`); anything else raises rather than being silently discarded.
-- ` ```yaml actions ` — list of `tween` / `set` / `play` action dicts. Optional `start` (seconds) wraps a leaf in `sequence(delay(start), action)` so flatten gives correct absolute times.
-  - **Animatable properties:** `x`, `y`, `rotation`, `scale_x`, `scale_y`, `skew_x`, `skew_y`, `pivot_x`, `pivot_y`, `alpha`. Anything else is not applied.
+- ` ```yaml actions ` — list of `tween` / `set` action dicts (**not `play`** — see below). Optional `start` (seconds) wraps a leaf in `sequence(delay(start), action)` so flatten gives correct absolute times.
+  - **Animatable properties:** `x`, `y`, `rotation`, `rotation_rad`, `scale_x`, `scale_y`, `skew_x`, `skew_y`, `pivot_x`, `pivot_y`, `alpha`. Anything else **fails the render** — it used to be silently ignored.
   - **`alpha` is the entrance/exit primitive** — it cascades, so a tween on the character root fades every part of it. `{kind: tween, target: charlie, property: alpha, to: 0.0, duration: 1.0}`.
   - **A `tween` with no `from` starts from the property's *rest* value**, which is `1.0` for `scale_x` / `scale_y` / `alpha` and `0.0` for the rest — not `0.0` for everything. A tween on a property with no rest value (a viseme code, a colour) is **refused at compile time** rather than silently starting from zero; give it an explicit `from`, or use `set` if you meant a discrete change.
+- **`Shot.narration` is declared by the IR and NOT implemented** — a shot carrying it raises. For a narrator, use a dialogue line whose speaker is not an entity in the shot: it gets audio and no lip-sync, and warns to say so.
 - ` ```dialogue ` — `speaker [emotion]: text` per line. Emotion is one of `neutral | happy | sad | angry | surprised | skeptical | amused | thinking` and drives eyebrow tilt during the line.
 
 ## When the user wants to make a video right now

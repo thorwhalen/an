@@ -71,7 +71,7 @@ What exists, and where. This replaces the old phase table on purpose — phase t
 Honest list. Don't let it rot either — delete a line when you close it.
 
 - **The Manim adapter is not a compiler.** `_render_script` in `an/adapters/manim_adapter.py` emits a single `Text(title)` title card of the right duration and shells out to `manim -ql`. Nothing in the Shot — entities, actions, dialogue, camera — reaches the generated script. A real shot-to-Manim compiler is unbuilt design work.
-- **The JS runtime ignores `loop_mode`.** Python honours it (`an/adapters/cutout/clip.py` `_wrap_time`: `ONCE` / `LOOP` / `PING_PONG`) and `serialize.py` emits the field, but `an/data/cutout_runtime/runtime.js` has no handling for it — every clip plays once. Harmless while visemes and camera clips don't loop; a trap the moment someone authors a looping idle.
+- **Nothing ever *emits* a non-default `loop_mode`.** Both evaluators honour all three modes — `runtime.js`'s `wrapTime` and `clip.py`'s `_wrap_time`. This line used to claim the runtime ignored it, which was stale. The real gap is the inverse: no compiler code writes the field, so a looping clip is reachable only by hand-writing `CutoutSceneJSON`.
 - **DiceBear-sourced characters don't lip-sync.** When a descriptor's `metadata.art_provenance` is `"dicebear"` or `"external_avatar"`, the compiler suppresses both the overlay mouth visual and the speaker's viseme channel (the face is baked into the head SVG). Audio plays; the mouth doesn't move. DiceBear is a bootstrap path — hand-rig for production dialogue, see `examples/promote_demo/`.
 - **Multi-scene projects don't exist.** `"main"` is the only supported key in the scenes store.
 

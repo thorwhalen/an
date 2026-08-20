@@ -36,10 +36,20 @@
         let lastModified = null;
         let sceneDuration = 1.0;
         let playStartMs = performance.now();
+        // The tick loop stops itself on a runtime error (see tick()). This is
+        // how a successful reload knows to start it again — without it, fixing
+        // scene.md would reload the scene into a frozen page.
+        let ticking = false;
 
         function setStatus(text, cls) {
             status.textContent = text;
             status.className = cls || '';
+        }
+
+        function startTicking() {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(tick);
         }
 
         async function loadCurrent() {
@@ -51,6 +61,7 @@
             await window.anLoadScene(scene);
             sceneDuration = (scene.meta && scene.meta.duration) || 1.0;
             playStartMs = performance.now();
+            startTicking();
             setStatus(
                 'shot: ' + (scene.meta && scene.meta.shot_id ? scene.meta.shot_id : 'main')
                 + ' · ' + sceneDuration.toFixed(2) + 's · loop',
@@ -61,7 +72,26 @@
         function tick() {
             if (window.anSetTime && sceneDuration > 0) {
                 const tSec = ((performance.now() - playStartMs) / 1000) % sceneDuration;
-                window.anSetTime(tSec);
+                try {
+                    window.anSetTime(tSec);
+                } catch (e) {
+                    // The runtime raises on an unknown animated property and on
+                    // an animation aimed at a node that does not exist. The
+                    // render path wraps those as CutoutRenderError; this path
+                    // had no handling at all, so the FIRST throw killed the
+                    // animation loop for the life of the page — silently, with
+                    // the status bar still reading "ok".
+                    //
+                    // Stop ticking rather than re-arming: the same frame would
+                    // throw ~60x/second. The file poller stays alive, so fixing
+                    // scene.md reloads and restarts the loop with no manual
+                    // refresh.
+                    setStatus('render error: ' + e.message
+                        + ' — fix scene.md and the preview will reload', 'err');
+                    console.error(e);
+                    ticking = false;
+                    return;
+                }
             }
             requestAnimationFrame(tick);
         }
@@ -84,8 +114,7 @@
 
         (async function main() {
             try {
-                await loadCurrent();
-                requestAnimationFrame(tick);
+                await loadCurrent();  // starts the tick loop
                 setInterval(pollForChanges, POLL_MS);
             } catch (e) {
                 setStatus('load failed: ' + e.message, 'err');

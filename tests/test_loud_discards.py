@@ -17,13 +17,19 @@ roadmap.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
 import pytest
 
-from an.adapters.cutout.compile import _CAMERA_MOVES, CutoutCompileError, compile_shot
-from an.adapters.cutout.pose import _ALLOWED_NODE_PROPS
+from an.adapters.cutout.compile import (
+    _CAMERA_MOVES,
+    CutoutCompileError,
+    CutoutCompileWarning,
+    compile_shot,
+)
+from an.adapters.cutout.pose import _ALLOWED_NODE_PROPS, UNRENDERED_PROPS
 from an.audio.pipeline import AudioPipelineError, produce_audio_for_scene
 from an.ir.schema import (
     AssetRef,
@@ -35,6 +41,8 @@ from an.ir.schema import (
     Resolution,
     SceneIR,
     Shot,
+    VisemeKeyframe,
+    VisemeTrack,
 )
 
 RUNTIME_JS = Path(__file__).resolve().parents[1] / "an/data/cutout_runtime/runtime.js"
@@ -99,16 +107,25 @@ def test_the_schema_no_longer_advertises_a_move_the_compiler_lacks():
     camera = re.search(r"class Camera\(.*?\n\n\nclass ", src, re.S)
     assert camera, "Camera model not found"
 
-    # The failure mode was an `e.g.`-style example list presenting move names as
-    # usable. Checking for the whole word anywhere is too broad — the comment now
-    # names `pan_left` precisely in order to say it is NOT implemented.
-    examples = re.findall(r"e\.g\.\s*((?:\"\w+\"[,\s]*)+)", camera.group(0))
-    advertised = {m for group in examples for m in re.findall(r'"(\w+)"', group)}
+    # Every quoted move-ish name in the Camera block must either be implemented
+    # or appear in a sentence that says it is NOT. An earlier version keyed on
+    # the literal "e.g.", which the rewritten comment no longer contains — so
+    # the match set was always empty and the test passed on any regression.
+    # Fixing the thing a test guards must not be able to disarm the test.
+    block = camera.group(0)
+    quoted = set(re.findall(r'"(\w+)"', block))
+    # A name is exonerated only if the SAME line disclaims it.
+    disclaimed = set()
+    for line in block.splitlines():
+        if re.search(r"not implement|does not|RAISES|raises|NOT\b", line):
+            disclaimed |= set(re.findall(r'"(\w+)"', line))
+    advertised = quoted - disclaimed
     unimplemented = sorted(advertised - set(_CAMERA_MOVES) - {"hold"})
     assert not unimplemented, (
-        f"Camera's docs offer {unimplemented} as example move names, but the "
+        f"Camera's docs present {unimplemented} as usable move names, but the "
         "cutout compiler does not implement them and now raises"
     )
+    assert quoted, "the regex matched nothing at all — it has drifted"
 
 
 # --------------------------------------------------------------- 2. PlayAction
@@ -150,41 +167,116 @@ def test_narration_raises_rather_than_producing_neither_audio_nor_video():
         produce_audio_for_scene(scene)
 
 
-def test_an_off_screen_speaker_is_still_the_supported_workaround():
-    """The narration error recommends it, so it must keep working.
+def _spoken_line(speaker: str) -> Dialogue:
+    """A dialogue line that actually reaches the viseme branch.
 
-    A dialogue line whose speaker is not an entity gets audio and no mouth —
-    which is exactly what an off-screen narrator is. Compiling it must not raise,
-    and must not emit a viseme channel aimed at a node that was never built.
+    Load-bearing: `_add_viseme_clips` `continue`s on a missing `viseme_track`
+    and on missing timing, two guards BEFORE the mouth-node check. An earlier
+    version of the test below passed a bare `Dialogue(speaker=..., text=...)`
+    and so never reached the branch it claimed to cover — it was vacuous, and it
+    was the test defending this change's headline claim.
+    """
+    return Dialogue(
+        speaker=speaker,
+        text="hi",
+        start=0.0,
+        duration=1.0,
+        viseme_track=VisemeTrack(
+            convention="rhubarb",
+            keyframes=[VisemeKeyframe(time=0.0, viseme="A")],
+        ),
+    )
+
+
+def test_the_helper_actually_reaches_the_viseme_branch():
+    """Guards the guard: prove `_spoken_line` gets past the earlier `continue`s.
+
+    Without this, a future change to `Dialogue`'s defaults could silently make
+    every test below vacuous again, in exactly the way the first version was.
     """
     shot = Shot(
         id="s1",
         style="cutout",
         duration=1.0,
-        dialogue=[Dialogue(speaker="narrator", text="hi")],
+        entities=[_character()],
+        dialogue=[_spoken_line("charlie")],
     )
     scene = compile_shot(shot)
-    targets = {
-        ch.target for anim in scene.animations.values() for ch in anim.channels
-    }
+    targets = {ch.target for a in scene.animations.values() for ch in a.channels}
+    assert "charlie/head/mouth" in targets, (
+        "an on-screen speaker produced no viseme channel, so every off-screen "
+        "test below is testing nothing"
+    )
+
+
+def test_an_off_screen_speaker_warns_and_emits_no_channel():
+    """The narration error recommends this idiom, so it must keep working.
+
+    It must ALSO be audible: an off-screen narrator and a typo are
+    indistinguishable here, and the first fix for this simply `continue`d —
+    trading one silent discard for another.
+    """
+    shot = Shot(
+        id="s1",
+        style="cutout",
+        duration=1.0,
+        dialogue=[_spoken_line("narrator")],
+    )
+    with pytest.warns(CutoutCompileWarning, match="no mouth node"):
+        scene = compile_shot(shot)
+    targets = {ch.target for a in scene.animations.values() for ch in a.channels}
     assert not any(t.startswith("narrator") for t in targets), (
-        "a viseme channel was emitted for an off-screen speaker; the runtime "
+        "a viseme channel was emitted for a speaker with no mouth; the runtime "
         "would raise on the missing node"
     )
+
+
+def test_a_typo_speaker_names_the_scenes_actual_mouths():
+    """The whole reason the skip warns instead of passing silently."""
+    shot = Shot(
+        id="s1",
+        style="cutout",
+        duration=1.0,
+        entities=[_character("charlie")],
+        dialogue=[_spoken_line("charlei")],
+    )
+    with pytest.warns(CutoutCompileWarning, match="charlie/head/mouth"):
+        compile_shot(shot)
 
 
 # -------------------------------------------------------------------- 4. props
 
 
-def test_a_prop_entity_raises_and_names_the_wave():
+def test_a_prop_entity_raises_naming_the_shot_and_a_reachable_issue():
+    """`an` is on PyPI, so an internal wave number means nothing to a user.
+
+    Every error a pip-install user can hit must name WHERE (the shot) and point
+    somewhere they can actually read.
+    """
     shot = Shot(
         id="s1",
         style="cutout",
         duration=1.0,
         entities=[AssetRef(kind="prop", id="banner", store="characters", ref="b-v1")],
     )
-    with pytest.raises(CutoutCompileError, match="Wave 7"):
+    with pytest.raises(CutoutCompileError) as e:
         compile_shot(shot)
+    msg = str(e.value)
+    assert "'s1'" in msg, "the error must name the shot"
+    assert "github.com/thorwhalen/an/issues" in msg, "and point at something readable"
+
+
+def test_no_user_facing_error_cites_an_internal_wave_number():
+    """Wave numbering is roadmap vocabulary; it is not in the package."""
+    import re as _re
+
+    for mod in ("an/adapters/cutout/compile.py", "an/audio/pipeline.py"):
+        src = Path(__file__).resolve().parents[1].joinpath(mod).read_text()
+        for m in _re.finditer(r'"[^"]*Wave \d[^"]*"', src):
+            raise AssertionError(
+                f"{mod} puts an internal wave reference in a user-facing string: "
+                f"{m.group(0)}"
+            )
 
 
 @pytest.mark.parametrize("kind", ["voice", "style"])
@@ -206,7 +298,14 @@ def test_non_drawable_entity_kinds_are_legitimately_ignored(kind):
 # ---------------------------------------------------- 5. environment overrides
 
 
-def test_an_unread_environment_key_raises():
+def test_an_unread_environment_key_warns_rather_than_raising():
+    """Warn, not raise — the perimeter was drawn in the wrong place at first.
+
+    `EnvironmentsStore` is a `JsonSidecarStore` over a free-form meta.json, so
+    `name` / `description` / `tags` are its natural shape. Raising on any
+    non-preset key hard-fails ordinary data. The keys still do nothing, which is
+    the part worth saying out loud.
+    """
     shot = Shot(
         id="s1",
         style="cutout",
@@ -214,8 +313,24 @@ def test_an_unread_environment_key_raises():
         entities=[AssetRef(kind="environment", id="env", store="environments", ref="park")],
     )
     mall = {"environments": {"park": {"sky_color": "#001122", "parallax_layers": 3}}}
-    with pytest.raises(CutoutCompileError, match="parallax_layers"):
+    with pytest.warns(CutoutCompileWarning, match="parallax_layers"):
         compile_shot(shot, mall=mall)
+
+
+def test_ordinary_store_metadata_does_not_break_a_render():
+    """The regression the raise-version would have shipped."""
+    shot = Shot(
+        id="s1",
+        style="cutout",
+        duration=1.0,
+        entities=[AssetRef(kind="environment", id="env", store="environments", ref="park")],
+    )
+    mall = {"environments": {"park": {"name": "Park at dusk", "sky_color": "#001122"}}}
+    with pytest.warns(CutoutCompileWarning):
+        scene = compile_shot(shot, mall=mall)
+    assert "#001122" in _visual_colors(scene.scene), (
+        "the render-relevant key must still be applied while the metadata is ignored"
+    )
 
 
 def test_a_known_environment_key_still_overrides():
@@ -297,20 +412,52 @@ def test_the_runtime_raises_on_an_unknown_property():
 
 
 def test_the_runtime_still_applies_every_known_property():
-    """The other half: the loud default must not swallow a legal property."""
+    """The other half: the loud default must not swallow a legal property.
+
+    Asserts WHERE each value lands, not merely that nothing threw. The first
+    version only checked for the absence of an exception, so a mutant writing
+    `case 'x': node.y = value` passed it unnoticed.
+    """
     fn = _extract("applyProperty", r"function applyProperty\([^)]*\)\s*\{.*?\n    \}")
     props = sorted(_runtime_switch_cases() - {"viseme"})
     script = "\n".join(
         [
             "function setVisemeOnMouth() {}",
             fn,
-            "const node = {name: 'c', scale: {}, skew: {}, pivot: {}};",
             f"const props = {props!r};".replace("'", '"'),
-            "for (const p of props) { applyProperty(node, p, 1); }",
-            "console.log('OK');",
+            "const out = {};",
+            # A fresh node per property, so a value landing on the wrong field
+            # cannot be masked by another property having written there.
+            "for (const p of props) {",
+            "  const node = {scale: {}, skew: {}, pivot: {}};",
+            "  applyProperty(node, p, 7);",
+            "  out[p] = node;",
+            "}",
+            "console.log(JSON.stringify(out));",
         ]
     )
-    assert _run_node(script) == "OK"
+    landed = json.loads(_run_node(script))
+    where = {
+        "x": ("x", None),
+        "y": ("y", None),
+        "rotation": ("rotation", None),
+        "rotation_rad": ("rotation", None),
+        "alpha": ("alpha", None),
+        "scale_x": ("scale", "x"),
+        "scale_y": ("scale", "y"),
+        "skew_x": ("skew", "x"),
+        "skew_y": ("skew", "y"),
+        "pivot_x": ("pivot", "x"),
+        "pivot_y": ("pivot", "y"),
+    }
+    unmapped = sorted(set(props) - set(where))
+    assert not unmapped, f"runtime.js gained properties this test does not check: {unmapped}"
+    for prop, node in landed.items():
+        outer, inner = where[prop]
+        got = node.get(outer) if inner is None else (node.get(outer) or {}).get(inner)
+        assert got == 7, (
+            f"{prop!r} did not land on {outer}{'.' + inner if inner else ''}: {node}"
+        )
 
 
 def test_the_runtime_raises_on_an_unknown_target():
@@ -338,15 +485,37 @@ def test_the_runtime_raises_on_an_unknown_target():
     )
 
 
-def test_the_python_allow_list_agrees_with_the_runtime():
-    """`pose.py`'s allow-list had drifted — it lacked `viseme` and `alpha`.
+def test_the_python_allow_list_is_a_subset_with_a_declared_gap():
+    """SUBSET, not equality — and the gap must be exactly what is declared.
 
-    Nothing on the render path calls `apply_pose`, so no failure could surface
-    the gap. Pinning them together is what keeps a second evaluator honest.
+    An earlier version asserted equality, and "fixing" the failure by widening
+    `_ALLOWED_NODE_PROPS` made things worse: `apply_pose` routes every allowed
+    property into `TransformParams`, which has no `alpha` and no `viseme` field,
+    so it accepted them and then died with a raw dataclass `TypeError` instead
+    of its own informative `KeyError`. Advertising a capability you do not have
+    is the same defect class as discarding one you do.
     """
-    assert set(_ALLOWED_NODE_PROPS) == _runtime_switch_cases(), (
-        'pose.py and runtime.js disagree about which properties are animatable'
+    allowed = set(_ALLOWED_NODE_PROPS)
+    runtime = _runtime_switch_cases()
+    assert allowed - {"rotation_rad", "rotation"} <= runtime, (
+        f"pose.py claims properties the runtime does not apply: "
+        f"{sorted(allowed - {'rotation_rad', 'rotation'} - runtime)}"
     )
+    assert runtime - allowed == set(UNRENDERED_PROPS), (
+        "the gap between the two evaluators changed and is no longer what "
+        f"UNRENDERED_PROPS declares: {sorted(runtime - allowed)}"
+    )
+
+
+def test_apply_pose_cannot_be_asked_for_a_property_it_would_crash_on():
+    """The concrete failure the subset relationship prevents."""
+    from an.adapters.cutout.pose import apply_pose
+    from an.adapters.cutout.scene import Node, SceneGraph
+
+    g = SceneGraph(Node("r"))
+    for prop in sorted(UNRENDERED_PROPS):
+        with pytest.raises(KeyError, match="unknown pose property"):
+            apply_pose(g, {("r", prop): 0.5})
 
 
 def test_the_iterate_prompt_enumerates_the_legal_properties():
@@ -386,4 +555,121 @@ def test_no_skill_advertises_a_capability_that_now_raises():
     assert not offenders, (
         "a skill advertises `prop` as a usable entity kind, but the compiler "
         f"raises on it:\n" + "\n".join(offenders)
+    )
+
+
+# ------------------------------------- 9. the wrapper that had no test at all
+
+def test_a_js_runtime_throw_arrives_as_a_typed_error_naming_the_frame():
+    """The ninth mutation: this wrapper had ZERO coverage.
+
+    Deleting it left all 408 tests green, even though the PR body called it one
+    of four supporting changes "without which this would trade one defect for
+    another" — trading a silent discard for a raw
+    `playwright._impl._errors.Error` with no shot, no frame and no time in it.
+
+    Driven through a fake page rather than a browser, so it runs everywhere
+    including CI, where no browser test runs at all (#22).
+    """
+    from an.adapters.cutout.render import CutoutRenderError, _capture_frames
+
+    class _ThrowingPage:
+        """Stands in for Playwright's Page; throws the way the runtime does."""
+
+        def evaluate(self, *_a, **_kw):
+            raise RuntimeError(
+                'Error: unknown animated property "opacity" on "charlie"'
+            )
+
+    with pytest.raises(CutoutRenderError) as e:
+        _capture_frames(_ThrowingPage(), total_frames=3, fps=12, frames_dir=Path("/tmp"))
+
+    msg = str(e.value)
+    assert "frame 0" in msg, "the error must name which frame failed"
+    assert "t=0.0000s" in msg, "the error must name the time, for a long shot"
+    assert "opacity" in msg, "the runtime's own message is the informative part"
+
+
+# ------------------ 10. validate must agree with the pipeline it predicts
+
+_UNRENDERABLE_SHOTS = {
+    "camera": lambda: Shot(id="s1", style="cutout", duration=1.0,
+                           entities=[_character()], camera=Camera(move="pan_left")),
+    "prop": lambda: Shot(id="s1", style="cutout", duration=1.0,
+                         entities=[AssetRef(kind="prop", id="b", store="characters", ref="b-v1")]),
+    "narration": lambda: Shot(id="s1", style="cutout", duration=1.0,
+                              narration=[Narration(text="once")]),
+    "play": lambda: Shot(id="s1", style="cutout", duration=1.0, entities=[_character()],
+                         actions=[PlayAction(target="charlie", animation="walk", duration=1.0)]),
+}
+
+
+@pytest.mark.parametrize("name", sorted(_UNRENDERABLE_SHOTS))
+def test_validate_reports_every_scene_the_pipeline_refuses(name):
+    """The structural fix, and the point of this whole change.
+
+    Before, each guard sat where the SYMPTOM was — in the compiler, in the audio
+    pipeline, in the JS runtime — so `an validate` said "passed" about a scene
+    that could not render, and the author only found out after paying for TTS
+    synthesis or a Chromium launch. `iterate()` runs validate after applying a
+    model's patches, so it was equally blind.
+
+    Severity must be `error`, not `warning`: validate's verdict has to match the
+    pipeline's, or it is confidently wrong rather than merely quiet.
+    """
+    from an.ir.schema import Meta, Resolution
+    from an.ir.validate import validate_semantic
+
+    scene = SceneIR(
+        meta=Meta(title="t", duration=1.0, fps=12,
+                  resolution=Resolution(width=64, height=48)),
+        timeline=[_UNRENDERABLE_SHOTS[name]()],
+    )
+    report = validate_semantic(scene)
+    assert not report.passed, f"validate says a {name} scene is fine; it cannot render"
+    assert any(f.severity == "error" for f in report.findings), (
+        "must be an error — the pipeline raises, so a warning understates it"
+    )
+
+
+def test_validate_still_passes_a_scene_that_renders():
+    """The other half: the pre-flight must not reject working scenes.
+
+    `voice` and `style` entities configure the render rather than appearing in
+    it, and `hold` is a real no-op — all three would be easy to sweep up here.
+    """
+    from an.ir.schema import Meta, Resolution
+    from an.ir.validate import validate_semantic
+
+    scene = SceneIR(
+        meta=Meta(title="t", duration=1.0, fps=12,
+                  resolution=Resolution(width=64, height=48)),
+        timeline=[
+            Shot(
+                id="s1", style="cutout", duration=1.0,
+                camera=Camera(move="hold"),
+                entities=[
+                    _character(),
+                    AssetRef(kind="voice", id="v", store="voices", ref="v-v1"),
+                    AssetRef(kind="style", id="s", store="styles", ref="s-v1"),
+                ],
+                dialogue=[Dialogue(speaker="charlie", text="hi")],
+            )
+        ],
+    )
+    report = validate_semantic(scene)
+    errors = [f for f in report.findings if f.severity == "error"]
+    assert not errors, f"the pre-flight rejects a renderable scene: {errors}"
+
+
+def test_the_validators_camera_list_matches_the_compilers():
+    """Two copies, deliberately — the IR must not import an adapter.
+
+    So they are pinned together here instead, the same way `artful` pins shared
+    vocabulary across packages that must not depend on each other.
+    """
+    from an.ir.validate import _RENDERABLE_CAMERA_MOVES
+
+    assert set(_RENDERABLE_CAMERA_MOVES) == set(_CAMERA_MOVES), (
+        "the validator and the compiler disagree about which camera moves exist"
     )

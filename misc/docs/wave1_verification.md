@@ -266,10 +266,11 @@ deliberately or incidentally.
 - **A seventh site, not in #15's table:** `applyPose` silently skips an unknown *target*.
   It is the sibling of `applyProperty` and is why a mistyped target path — or a viseme
   channel aimed at a face-baked character's absent mouth node — produces nothing at all.
-- **The typed-error convention**, for whoever implements this: nine error classes, every one
-  a direct `RuntimeError` subclass, each defined in the module that raises it, each carrying
-  actionable text. No shared base, no error module. `ValueError` is the existing idiom for
-  "this value is not in the known set". The "zero bare `NotImplementedError`" claim in
+- **The typed-error convention**, for whoever implements this: an error class per module,
+  defined where it is raised, each carrying actionable text. No shared base, no error module.
+  Most subclass `RuntimeError`; `ValueError` is the existing idiom for "this value is not in
+  the known set", which is why `CutoutCompileError` is one — every compile-time refusal is an
+  argument-level rejection, while the render-time errors are failures of the machinery. The "zero bare `NotImplementedError`" claim in
   `CLAUDE.md` is true and was re-verified.
 - **A near miss worth knowing:** a test authors `set_("a", "visible", True)`, a property the
   switch does not handle. It survives only because that test flattens in pure Python and

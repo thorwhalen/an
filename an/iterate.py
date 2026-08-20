@@ -136,6 +136,8 @@ The IR shape (relevant fields):
       - duration (seconds, float)
       - camera: {move: "hold"|"push_in"|"pull_out"|"zoom_in"|"zoom_out", ...}
       - entities: list of {kind, id, store, ref, ...}
+        "kind" MUST be one of: character, environment, voice, style.
+        "prop" is declared by the IR but NOT rendered — it raises. Do not emit one.
       - actions: list of action dicts (kind ∈ {tween, set, play, sequence, parallel, delay, loop})
         A tween/set action's "property" MUST be one of:
           x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, skew_y,
@@ -148,7 +150,10 @@ The IR shape (relevant fields):
         Do NOT emit "play" actions: named reusable animations are unimplemented
         and a "play" now fails the compile.
       - dialogue: list of {speaker, text, emotion, voice_ref, start, duration, ...}
-      - narration: list (same shape as dialogue, no speaker pin)
+      - narration: list (same shape as dialogue, no speaker pin).
+        NOT IMPLEMENTED — the audio pipeline walks dialogue only, and a shot with
+        narration now RAISES. To add a narrator, emit a dialogue line whose
+        speaker is not an entity in the shot; it gets audio and no lip-sync.
 
 Path syntax for patches: slash-delimited, list indices are integers. Examples:
 

@@ -109,10 +109,11 @@ def produce_audio_for_scene(
             # than an oversight, and it is tracked as such.
             raise AudioPipelineError(
                 f"shot {shot.id!r} declares {len(shot.narration)} narration "
-                "line(s), which the audio pipeline does not synthesise — it walks "
-                "shot.dialogue only. Narration produces neither audio nor video "
-                "today. Use a dialogue line with an off-screen speaker as the "
-                "workaround, and track the real fix against #9."
+                "line(s), which the audio pipeline does not synthesise — it "
+                "walks shot.dialogue only. Narration produces neither audio nor "
+                "video today. Use a dialogue line with an off-screen speaker as "
+                "the workaround; the real fix is tracked at "
+                "https://github.com/thorwhalen/an/issues/9."
             )
         for line in shot.dialogue:
             voice_id = line.voice_ref or voice_default

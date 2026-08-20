@@ -30,10 +30,21 @@ def test_apply_pose_marks_dirty():
     assert g["r/c"]._world_dirty is True
 
 
-def test_apply_pose_skips_unknown_target():
-    """Unknown targets are tolerated, not errors (channels may target absent nodes)."""
+def test_apply_pose_raises_on_an_unknown_target():
+    """BEHAVIOUR CHANGE (#15): unknown targets used to be tolerated.
+
+    The old contract was "channels may target absent nodes", which sounds
+    permissive and in practice meant a mistyped path animated nothing with no
+    diagnostic. The JS runtime made the same choice for the same stated reason
+    and has now been changed too; these two evaluators must agree, and silence
+    is the wrong thing for them to agree on.
+
+    Listing the known nodes is the point — a typo is usually one character away
+    from a real path.
+    """
     g = _two_node_graph()
-    apply_pose(g, {("r/missing", "x"): 9.0})  # no raise
+    with pytest.raises(KeyError, match="unknown node"):
+        apply_pose(g, {("r/missing", "x"): 9.0})
     apply_pose(g, {("r/c", "x"): 7.0})
     assert g["r/c"].params.x == 7.0
 

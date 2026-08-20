@@ -17,6 +17,8 @@ graph.
 
 from __future__ import annotations
 
+import dataclasses as _dataclasses
+
 from typing import Any, TypeAlias
 
 from an.adapters.cutout.scene import SceneGraph
@@ -27,38 +29,43 @@ from an.adapters.cutout.transform import TransformParams
 Pose: TypeAlias = dict[tuple[str, str], Any]
 
 
-#: Properties this evaluator applies — anything not in this set raises.
+#: Properties this evaluator can apply — anything else raises an informative
+#: ``KeyError`` naming the known set.
 #:
-#: This must agree with ``applyProperty``'s switch in
-#: ``an/data/cutout_runtime/runtime.js``, which is the evaluator that actually
-#: renders; ``tests/test_loud_discards.py`` pins the two together. The list had
-#: drifted — it was missing ``viseme`` and ``alpha``, both of which the runtime
-#: has applied for some time — because nothing on the render path calls
-#: ``apply_pose``, so no failure could surface the gap.
+#: **Derived from what it can actually do**, not from what the JS runtime does.
+#: An earlier pass widened this to match ``applyProperty``'s switch, on the
+#: theory that two evaluators should agree. They should — but this one routes
+#: every allowed property into ``TransformParams``, which has no ``alpha`` and
+#: no ``viseme`` field, so "agreeing" turned a typed, actionable ``KeyError``
+#: into a raw ``TypeError`` from a dataclass constructor. Advertising a
+#: capability you do not have is the same defect class as discarding one you do.
+#:
+#: ``rotation`` is accepted as an alias for ``rotation_rad`` at the IR boundary.
+#:
+#: The honest relationship is a SUBSET, and ``tests/test_loud_discards.py``
+#: asserts it as one, with the gap named. Closing the gap means giving
+#: ``TransformParams`` the fields — which is a Wave 5 question, since this whole
+#: module is off the render path (see ``UNRENDERED_PROPS``).
 _ALLOWED_NODE_PROPS: frozenset[str] = frozenset(
-    {
-        "x",
-        "y",
-        "rotation",  # radians at the IR boundary; rotation_rad is its alias
-        "rotation_rad",
-        "scale_x",
-        "scale_y",
-        "skew_x",
-        "skew_y",
-        "pivot_x",
-        "pivot_y",
-        "alpha",
-        "viseme",
-    }
+    {f.name for f in _dataclasses.fields(TransformParams)} | {"rotation"}
 )
+
+#: Properties the JS runtime applies that this in-memory evaluator cannot.
+#:
+#: Declared rather than implied, so the parity test can assert the gap is
+#: exactly this and not something that crept in.
+UNRENDERED_PROPS: frozenset[str] = frozenset({"alpha", "viseme"})
 
 
 def apply_pose(graph: SceneGraph, pose: Pose) -> None:
     """Apply ``pose`` to ``graph`` in place. Marks affected subtrees dirty.
 
-    Unknown targets are silently skipped (so optional channels don't crash a
-    render of an early-state scene). Unknown properties on a known target
-    raise ``KeyError``.
+    Unknown targets AND unknown properties both raise ``KeyError``.
+
+    The target half used to be a silent skip, justified as "so optional channels
+    don't crash a render of an early-state scene" — the same reasoning the JS
+    runtime used, and the same outcome: a mistyped path animated nothing, with no
+    diagnostic, and looked wired. The two evaluators now behave alike.
     """
     if not pose:
         return
@@ -68,7 +75,9 @@ def apply_pose(graph: SceneGraph, pose: Pose) -> None:
         by_target.setdefault(target, {})[prop] = value
     for target, props in by_target.items():
         if target not in graph:
-            continue
+            raise KeyError(
+                f"pose targets unknown node {target!r}; known: {sorted(graph)}"
+            )
         node = graph[target]
         # Translate "rotation" alias to "rotation_rad" for convenience.
         normalized: dict[str, Any] = {}

@@ -92,6 +92,79 @@ def validate_schema(doc: Any) -> ValidationReport:
 # -----------------------------------------------------------------------------
 
 
+#: Camera moves the cutout renderer implements. `hold` is a real no-op.
+#:
+#: Duplicated from the compiler deliberately: importing it here would make the
+#: IR layer depend on an adapter, which is the wrong direction. The test suite
+#: pins the two together instead — the same shape `artful` uses for vocabulary
+#: shared across packages that must not depend on each other.
+_RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(
+    {"hold", "push_in", "pull_out", "zoom_in", "zoom_out"}
+)
+
+#: Entity kinds the cutout renderer draws. `voice` and `style` are legitimately
+#: not drawable — they configure the render rather than appearing in it.
+_DRAWABLE_ENTITY_KINDS: frozenset[str] = frozenset({"character", "environment"})
+_CONFIGURING_ENTITY_KINDS: frozenset[str] = frozenset({"voice", "style"})
+
+
+def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
+    """Report, at validate time, what compile and render will refuse.
+
+    This is where these checks belong. The compiler and the runtime both refuse
+    these scenes now, which is right — but they refuse them *after* the author
+    has paid for TTS synthesis or a Chromium launch, and `an validate` is the
+    free pre-flight that `iterate()` also runs after applying a model's patches.
+    A validator that says "passed" about a scene that cannot render is worse
+    than no validator, because it is trusted.
+
+    Severity is `error` wherever the pipeline raises, so validate's verdict and
+    the pipeline's verdict agree. A validator that disagrees with the thing it
+    predicts is its own defect.
+    """
+    if shot.camera is not None and shot.camera.move:
+        if shot.camera.move not in _RENDERABLE_CAMERA_MOVES:
+            report.add(
+                "error",
+                f"{path}/camera/move",
+                f"camera.move={shot.camera.move!r} is not implemented by the "
+                f"cutout renderer (it has: {sorted(_RENDERABLE_CAMERA_MOVES)}). "
+                "Rendering this shot raises.",
+            )
+
+    for j, entity in enumerate(shot.entities):
+        if (
+            entity.kind not in _DRAWABLE_ENTITY_KINDS
+            and entity.kind not in _CONFIGURING_ENTITY_KINDS
+        ):
+            report.add(
+                "error",
+                f"{path}/entities/{j}",
+                f"entity kind {entity.kind!r} is declared by the IR but not drawn "
+                "by the cutout renderer. Rendering this shot raises.",
+            )
+
+    if shot.narration:
+        report.add(
+            "error",
+            f"{path}/narration",
+            f"{len(shot.narration)} narration line(s): the audio pipeline walks "
+            "shot.dialogue only, so narration produces neither audio nor video. "
+            "Rendering this shot raises. Use a dialogue line with an off-screen "
+            "speaker as the workaround.",
+        )
+
+    for k, action in enumerate(shot.actions):
+        if getattr(action, "kind", None) == "play":
+            report.add(
+                "error",
+                f"{path}/actions/{k}",
+                "`play` references a named animation, which nothing can define — "
+                "compiling this shot raises. Use tween / set, or sequence / "
+                "parallel to compose them.",
+            )
+
+
 def validate_semantic(
     scene: SceneIR,
     *,
@@ -128,6 +201,8 @@ def validate_semantic(
 
         if shot.duration <= 0:
             report.add("error", f"{path}/duration", "shot duration must be > 0")
+
+        _check_renderable(shot, path, report)
 
         # Entity references resolve?
         if available_characters is not None:
