@@ -1,0 +1,151 @@
+# The cross-architecture determinism experiment (an#31) — Wave 2's first task.
+#
+# WHAT IT ANSWERS
+#
+# Every pixel measurement in `misc/docs/wave2_research.md` was taken on one
+# macOS arm64 machine. SwiftShader's Reactor JIT specialises per ISA and
+# Chromium's docs make no determinism claim, so "pin, do not band" is unproven
+# for exactly the case the wave is about: does the same commit render the same
+# pixels on a Linux x86-64 CI runner?
+#
+# The answer decides whether the Wave 2 golden corpus is a CI GATE or a
+# LOCAL-ONLY INSTRUMENT, and therefore whether the ledger schema needs a
+# cross-machine band column at all — which has to be settled before the first
+# ledger row is written, because retrofitting a schema field invalidates every
+# prior entry.
+#
+# WHY THREE RUNNERS
+#
+# Two variables are confounded in the obvious one-runner version of this
+# experiment, and separating them costs nothing on a public repo:
+#
+#   ubuntu-latest    x86-64 Linux   <- different ISA *and* different OS
+#   ubuntu-24.04-arm arm64  Linux   <- same ISA as the Mac, different OS
+#   macos-latest     arm64  macOS   <- same ISA and OS as the local capture
+#
+# So a difference can be attributed: arm-Linux matching the Mac while x86-Linux
+# does not is the JIT specialising per ISA; both Linux runners agreeing with
+# each other but not with macOS is the OS/driver stack. One runner would have
+# told us "differs" and nothing else.
+#
+# HOW TO RUN IT — dispatch it, or put the `run-crossarch-capture` label on a PR:
+#
+#     gh workflow run crossarch-capture.yml
+#     gh api -X POST repos/<owner>/<repo>/issues/<N>/labels \
+#         -f 'labels[]=run-crossarch-capture'
+#
+# NOT `gh pr edit --add-label`: on this owner's repos that goes through GraphQL,
+# dies on the projects-classic deprecation, prints an error, EXITS 0 and applies
+# no label. Read the labels back afterwards.
+#
+# Then download the captures and compare them against a local one:
+#
+#     gh run download <run-id> -D /tmp/crossarch
+#     python misc/bench/crossarch.py capture --out /tmp/crossarch/local
+#     python misc/bench/crossarch.py compare /tmp/crossarch/local \
+#         /tmp/crossarch/crossarch-ubuntu-latest
+#
+# NOT ON EVERY PUSH, deliberately: this is an experiment with a verdict, not a
+# gate. It becomes a gate only if the verdict says the pixels match — and that
+# promotion is a separate, argued change.
+
+name: Cross-architecture capture (an#31)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+concurrency:
+  group: crossarch-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    name: Capture (${{ matrix.os }})
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'run-crossarch-capture')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Every runner's answer is wanted even when another one fails: a missing
+      # arm-Linux row would leave the ISA-vs-OS question open, which is the
+      # question this matrix exists to answer.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install package with the cutout extra
+        run: |
+          uv venv --python 3.12
+          uv pip install -e '.[dev,cutout]'
+
+      - name: Resolve the pinned Playwright version
+        id: pw
+        run: |
+          source .venv/bin/activate
+          echo "version=$(python -c 'import importlib.metadata as m; print(m.version("playwright"))')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the Playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ matrix.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Chromium
+        run: |
+          source .venv/bin/activate
+          playwright install --with-deps chromium
+
+      - name: Install ffmpeg
+        run: |
+          command -v ffmpeg >/dev/null 2>&1 && { ffmpeg -version | head -1; exit 0; }
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            brew install ffmpeg
+          else
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
+
+      - name: Capture
+        run: |
+          source .venv/bin/activate
+          python misc/bench/crossarch.py capture --out capture
+
+      # Printed as well as uploaded: the scene-level digests and the environment
+      # tuple are the whole answer for the identical case, and reading them off
+      # the log beats downloading an artifact to run `jq`.
+      - name: Report the capture's identity
+        run: |
+          python - <<'PY'
+          import json
+          m = json.load(open("capture/manifest.json"))
+          env = m["environment"]
+          b = env["browser"]
+          print(f"platform : {env['platform']}")
+          print(f"machine  : {env['machine']}  python {env['python']}")
+          print(f"playwright {env['playwright']}  browser {b.get('browser_version')}")
+          print(f"launch   : {b.get('launch_args')}")
+          print(f"webgl    : {(b.get('webgl') or {}).get('renderer')}")
+          print(f"samples  : {(b.get('webgl') or {}).get('samples')}")
+          print(f"ffmpeg   : {env['ffmpeg'].get('banner')}")
+          for name, s in sorted(m["scenes"].items()):
+              print(f"{name:>20}: {s['frame_count']} frames  pixels_sha256={s['pixels_sha256']}")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crossarch-${{ matrix.os }}
+          path: capture/
+          retention-days: 14

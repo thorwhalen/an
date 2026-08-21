@@ -81,6 +81,7 @@ an/
 │   │   ├── serialize.py     Pydantic models for the JS-runtime JSON contract
 │   │   ├── compile.py       Shot -> CutoutSceneJSON (the bridge)
 │   │   ├── render.py        Playwright headless capture + ffmpeg mux + audio overlay
+│   │   │                    (rasteriser PINNED — `DETERMINISTIC_CHROMIUM_ARGS`, an#31)
 │   │   └── runtime_files.py importlib.resources locator for the bundled JS runtime
 │   ├── manim_adapter.py     real (when manim installed) — generates a title-card scene
 │   ├── remotion_adapter.py  skeleton — clear NotImplementedError pending Phase 6+
@@ -199,13 +200,15 @@ The system caches at every boundary that's expensive to recompute. Cache keys ar
 |---|---|---|
 | TTS audio | `_stable_hash({text, voice_id, tts.name})` | `pipeline._load_or_synthesize` |
 | Viseme tracks | `_stable_hash({audio_key, lipsync.name, transcript})` | `pipeline._load_or_align` |
-| Per-shot mp4s | `shot.id` (the IR slice IS the input) | `render.render` |
+| Per-shot mp4s | `shot.id` (the IR slice IS the input) | `render.render` — **write-only, see below** |
 | Final mp4 | `output_name` | `render.render` |
 | Anthropic prompt cache | scene JSON + schema hint (`cache_control: ephemeral`) | `iterate._call_claude` |
 
 The hash is stamped onto the IR (`Dialogue.audio_ref`, `Dialogue.viseme_ref`) so the orchestrator can detect provider changes — when you swap `--tts elevenlabs` for the offline default, the new expected hash mismatches the stored one, triggering re-synthesis without an explicit force flag.
 
-Cache invalidation is by **deletion** (`del mall["shots"][shot_id]`). Re-render then misses the cache and recomputes. There is no cache versioning; the keys are deterministic so collisions across versions are impossible.
+Cache invalidation is by **deletion** (`del mall["shots"][shot_id]`). There is no cache versioning; the keys are deterministic so collisions across versions are impossible.
+
+**Correction (an#31): the per-shot mp4 cache has no read path.** `mall["shots"]` is written at `an/render.py:222` and deleted at `an/iterate.py:268`, and nothing in the package reads it — so "re-render misses the cache and recomputes" describes a miss that every render already takes. This paragraph previously said otherwise, and the consequence is load-bearing for Wave 2: a benchmark harness needs **no cache-busting machinery for pixel metrics**, because every render is already cold. Either wire the read or drop the store — but do not build against the cache described here until one of those happens. (The *audio* caches two rows above are real, are read, and do warm between runs, so they affect wall-time measurements.)
 
 ---
 
