@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.check_requirements &mdash; an 0.1.27 documentation</title>
+  <title>an.check_requirements &mdash; an 0.1.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=dc233e31"></script>
+      <script src="../../_static/documentation_options.js?v=34399df3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -94,14 +94,17 @@
 <li class="toctree-l1"><a class="reference internal" href="characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/svg_utils.html">an.characters.svg_utils</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.check_requirements</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.check_requirements.PLAYWRIGHT_CACHE_BY_PLATFORM"><code class="docutils literal notranslate"><span class="pre">PLAYWRIGHT_CACHE_BY_PLATFORM</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.check_requirements.ToolStatus"><code class="docutils literal notranslate"><span class="pre">ToolStatus</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.check_requirements.check_requirements"><code class="docutils literal notranslate"><span class="pre">check_requirements()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.check_requirements.format_report"><code class="docutils literal notranslate"><span class="pre">format_report()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.check_requirements.playwright_browser_dirs"><code class="docutils literal notranslate"><span class="pre">playwright_browser_dirs()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="credits.html">an.credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="determinism.html">an.determinism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ir/assets.html">an.ir.assets</a></li>
@@ -169,6 +172,17 @@ the CLI (or a calling script) can decide what to do.</p>
 <span class="go">True</span>
 </pre></div>
 </div>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.check_requirements.PLAYWRIGHT_CACHE_BY_PLATFORM">
+<span class="sig-prename descclassname"><span class="pre">an.check_requirements.</span></span><span class="sig-name descname"><span class="pre">PLAYWRIGHT_CACHE_BY_PLATFORM</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'darwin':</span> <span class="pre">'~/Library/Caches/ms-playwright',</span> <span class="pre">'linux':</span> <span class="pre">'~/.cache/ms-playwright',</span> <span class="pre">'win32':</span> <span class="pre">'~/AppData/Local/ms-playwright'}</span></span><a class="headerlink" href="#an.check_requirements.PLAYWRIGHT_CACHE_BY_PLATFORM" title="Link to this definition"></a></dt>
+<dd><p>Playwright’s per-platform default browser cache, keyed by <code class="docutils literal notranslate"><span class="pre">sys.platform</span></code>.</p>
+<p>Checking only the macOS path was a macOS-only bug that mattered the moment CI
+first launched a browser (an#37): on Linux it reported “Chromium not
+installed” on a machine where it was, i.e. an instruction to run a command
+that would change nothing. <code class="docutils literal notranslate"><span class="pre">PLAYWRIGHT_BROWSERS_PATH</span></code> overrides all of
+them, and Playwright reads it the same way.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="an.check_requirements.ToolStatus">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.check_requirements.</span></span><span class="sig-name descname"><span class="pre">ToolStatus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">installed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">install_hint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/check_requirements.html#ToolStatus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.check_requirements.ToolStatus" title="Link to this definition"></a></dt>
@@ -187,6 +201,21 @@ can inspect the dict directly.</p>
 <dt class="sig sig-object py" id="an.check_requirements.format_report">
 <span class="sig-prename descclassname"><span class="pre">an.check_requirements.</span></span><span class="sig-name descname"><span class="pre">format_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/check_requirements.html#format_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.check_requirements.format_report" title="Link to this definition"></a></dt>
 <dd><p>Pretty-print a check_requirements() result.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.check_requirements.playwright_browser_dirs">
+<span class="sig-prename descclassname"><span class="pre">an.check_requirements.</span></span><span class="sig-name descname"><span class="pre">playwright_browser_dirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/an/check_requirements.html#playwright_browser_dirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.check_requirements.playwright_browser_dirs" title="Link to this definition"></a></dt>
+<dd><p>Where Playwright’s browser binaries could live on this machine.</p>
+<p>A list rather than one path, and all of them are checked, because
+<code class="docutils literal notranslate"><span class="pre">sys.platform</span></code> is not always the whole story (WSL, a Linux venv on a
+macOS-mounted home). Checking a directory that does not exist costs an
+<code class="docutils literal notranslate"><span class="pre">os.path.isdir</span></code>. <code class="docutils literal notranslate"><span class="pre">platform</span></code> is injectable so the per-OS behaviour is
+testable without monkeypatching <code class="docutils literal notranslate"><span class="pre">sys</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">playwright_browser_dirs</span><span class="p">(</span><span class="n">platform</span><span class="o">=</span><span class="s2">"linux"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".cache/ms-playwright"</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

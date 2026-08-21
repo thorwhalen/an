@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.check_requirements &mdash; an 0.1.27 documentation</title>
+  <title>an.check_requirements &mdash; an 0.1.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=dc233e31"></script>
+      <script src="../../_static/documentation_options.js?v=34399df3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -94,6 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/credits.html">an.credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/determinism.html">an.determinism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -168,6 +169,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
 
 
@@ -257,6 +259,45 @@
     <span class="k">return</span> <span class="n">ToolStatus</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span> <span class="n">installed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
 
 
+<span class="c1">#: Playwright's per-platform default browser cache, keyed by ``sys.platform``.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Checking only the macOS path was a macOS-only bug that mattered the moment CI</span>
+<span class="c1">#: first launched a browser (an#37): on Linux it reported "Chromium not</span>
+<span class="c1">#: installed" on a machine where it was, i.e. an instruction to run a command</span>
+<span class="c1">#: that would change nothing. ``PLAYWRIGHT_BROWSERS_PATH`` overrides all of</span>
+<span class="c1">#: them, and Playwright reads it the same way.</span>
+<span class="n">PLAYWRIGHT_CACHE_BY_PLATFORM</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"darwin"</span><span class="p">:</span> <span class="s2">"~/Library/Caches/ms-playwright"</span><span class="p">,</span>
+    <span class="s2">"linux"</span><span class="p">:</span> <span class="s2">"~/.cache/ms-playwright"</span><span class="p">,</span>
+    <span class="s2">"win32"</span><span class="p">:</span> <span class="s2">"~/AppData/Local/ms-playwright"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="playwright_browser_dirs">
+<a class="viewcode-back" href="../../module_docs/an/check_requirements.html#an.playwright_browser_dirs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">playwright_browser_dirs</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">platform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Where Playwright's browser binaries could live on this machine.</span>
+
+<span class="sd">    A list rather than one path, and all of them are checked, because</span>
+<span class="sd">    ``sys.platform`` is not always the whole story (WSL, a Linux venv on a</span>
+<span class="sd">    macOS-mounted home). Checking a directory that does not exist costs an</span>
+<span class="sd">    ``os.path.isdir``. ``platform`` is injectable so the per-OS behaviour is</span>
+<span class="sd">    testable without monkeypatching ``sys``.</span>
+
+<span class="sd">    &gt;&gt;&gt; playwright_browser_dirs(platform="linux")[0].endswith(".cache/ms-playwright")</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">override</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PLAYWRIGHT_BROWSERS_PATH"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">override</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">override</span><span class="p">)]</span>
+    <span class="n">preferred</span> <span class="o">=</span> <span class="n">PLAYWRIGHT_CACHE_BY_PLATFORM</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">platform</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">)</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="p">([</span><span class="n">preferred</span><span class="p">]</span> <span class="k">if</span> <span class="n">preferred</span> <span class="k">else</span> <span class="p">[])</span> <span class="o">+</span> <span class="p">[</span>
+        <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">PLAYWRIGHT_CACHE_BY_PLATFORM</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="n">preferred</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">]</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_playwright</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ToolStatus</span><span class="p">:</span>
     <span class="n">py_status</span> <span class="o">=</span> <span class="n">_check_python_pkg</span><span class="p">(</span>
         <span class="s2">"playwright"</span><span class="p">,</span>
@@ -265,12 +306,10 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">py_status</span><span class="o">.</span><span class="n">installed</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">py_status</span>
     <span class="c1"># Bonus: check whether the Chromium browser binary is installed.</span>
-    <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PLAYWRIGHT_BROWSERS_PATH"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span>
-        <span class="s2">"~/Library/Caches/ms-playwright"</span>
-    <span class="p">)</span>
     <span class="n">has_chromium</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
         <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"chromium"</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span> <span class="k">else</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="n">playwright_browser_dirs</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="k">else</span> <span class="p">[])</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">has_chromium</span><span class="p">:</span>
         <span class="n">py_status</span><span class="o">.</span><span class="n">detail</span> <span class="o">=</span> <span class="s2">"playwright pkg installed but Chromium not; run: playwright install chromium"</span>
