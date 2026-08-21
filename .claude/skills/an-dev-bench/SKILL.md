@@ -200,6 +200,42 @@ reporting anti-aliasing correctly; a non-blend near the top means the palette
 missed a literal and the number is inflated. That is a recorded field rather
 than an eyeball check, on purpose.
 
+## Comparing rows (an#40)
+
+`an bench-compare` reads two rows. **Refusing is the feature** — two rows
+measured on different scenes, resolutions or x264 builds are not "one better and
+one worse"; every number in them is uninterpretable relative to the other.
+
+Five things about it that are easy to get wrong:
+
+1. **The two sides are scoped oppositely, and both are measured.** An x264 or
+   ISA change refuses the **encode-side** metrics and leaves the render side
+   comparable. A Chromium or Playwright change refuses the **render-side**
+   metrics and leaves the encode side comparable. Refusing everything on either
+   piece of evidence throws away the half of the panel that can still be read.
+2. **A key absent from one row is unknown, not different.** The ledger grows
+   additively (an#38 added `shot_order` without bumping `SCHEMA_VERSION`,
+   correctly), so refusing on an absent field would make every future addition
+   retroactively destroy comparability with every row already written. Absences
+   are caveats; `schema_version` guards a genuinely unreadable row.
+3. **Comparability keys are PARAMETERS, never measurements.** `masks.edge.threshold`
+   is a key; `masks.edge.edge_px` is not — it changes precisely when the render
+   changes, which is when the rows are most worth comparing. Same reason
+   `today_sha256` sits in the golden diagnostics rather than in a key.
+4. **A metric's own declaration is a comparability key.** If `family` or
+   `optimum` moved between the rows, the metric means something different in
+   each — refused for that metric alone. This is why every row carries its full
+   `metric_declarations` block instead of trusting the installed registry.
+5. **There is no tolerance band and none is needed.** Two consecutive runs on
+   one machine are bit-identical across all six scenes. The report prints the
+   relative delta so magnitude is visible without one.
+
+Five per-metric verdicts under a mutation: `as_declared`, `contrary`,
+`did_not_move` (the lever never reached it — a different fix from `contrary`),
+`gated`, `unexpected_movement` (a metric declared orthogonal that moved).
+The criterion is **families, not metrics**: two witnesses from one family count
+once.
+
 ## Two measured facts that change what counts as a witness
 
 Both found while building an#38, both by running the levers rather than by
@@ -212,16 +248,26 @@ reading the research:
   and the picture gets cheaper). So family F is an honest witness for that lever
   only on a scene with non-axis-aligned edges, and an#41's criterion has to be
   evaluated **per scene**, which `ledger.witnesses` already is.
-- **`encode_flicker_on_held_pixels` under `high_crf` is falsified on the real
-  corpus.** Declared `increase`, and the research's synthetic reference is
-  0.0321 / 0.0394 / 0.0848 at crf18/23/51. Measured on `single_character`:
-  0.000648 → 0.007018 (crf23) → 0.000985 → 0.000916 → 0.001137 → 0.001685 —
-  non-monotone, peaking at crf23, and three orders of magnitude smaller. Same
-  shape on `promote_demo`. The mechanism is the one the registry already
-  documents for the half-res-upscale case: at high CRF the whole frame flattens
-  into large uniform skip regions, so held pixels stop moving. C, D and F are
-  monotone across the whole ladder on both scenes, so the criterion still holds
-  with three families — but family E must be demoted rather than counted.
+- **`encode_flicker_on_held_pixels` under `high_crf` is non-monotone on the
+  ladder, and scene-dependent at the step the lever uses.** Declared `increase`;
+  the research's synthetic reference is 0.0321 / 0.0394 / 0.0848 at crf18/23/51.
+  Measured on `single_character` across crf 18/23/28/33/40/51: 0.000648 /
+  0.007018 / 0.000985 / 0.000916 / 0.001137 / 0.001685 — it **peaks at crf23**
+  and is three orders of magnitude smaller than the reference. The mechanism is
+  the one the registry already documents for the half-res-upscale case: at high
+  CRF the whole frame flattens into large uniform skip regions, so held pixels
+  stop moving.
+
+  **But at the crf23 → crf40 step the lever actually uses, it moves as declared
+  on five of six scenes** and contrary only on `single_character` (aa_probe
+  +115%, graded_field +114%, multi_shot +103%, promote_demo +446%,
+  saturated_outline +48%, single_character −84%). So E is **not** to be demoted
+  — a first, two-scene reading of this said "falsified on the real corpus" and
+  that was too strong, corrected once `an bench-compare` could evaluate the
+  encode lever across the whole corpus. Record the non-monotonicity, do not
+  count on E carrying a scene, and note that the criterion never needs it: C, D
+  and F are monotone across the whole ladder and satisfy it on all six scenes
+  alone.
 
 Also measured: the **descriptor path is nearly blind to the AA lever** (96
 differing pixels of 12.4M on `promote_demo`), because MSAA applies to WebGL

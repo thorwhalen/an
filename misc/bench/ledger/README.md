@@ -89,8 +89,48 @@ same expression on different references — and that is why both are in the row.
 an bench                       # the whole corpus
 an bench --scenes single_character
 an bench --bless "<reason>"    # re-write the golden frames, recording why
+an bench-compare               # the two newest committed rows
+an bench-compare --before A.json --after B.json
+an bench-compare --mutation high_crf --strict   # for CI: nonzero when unmet
 ```
 
 `misc/docs/wave2_research.md` §1 is the authority for what each metric is;
 `misc/docs/wave2_crossarch_verdict.md` is the authority for the comparison
 rules above.
+
+## Comparing two rows
+
+`an bench-compare` reads two rows and **refuses when they are not comparable**.
+Refusing is the feature: two rows measured on different scenes, at different
+resolutions, or on different x264 builds are not "one better and one worse" —
+every number in them is uninterpretable relative to the other.
+
+Two questions, and they are different:
+
+- **without `--mutation`** — is the second row worse? Only the one-sided metrics
+  can answer that. `edge_transition_width`'s optimum is *interior* (under 1 is a
+  staircase, 3+ is soft), so it reports `changed` and never `regression`; no row
+  carries a target value, and manufacturing one from the baseline is how a
+  comparison starts asserting more than it knows.
+- **with `--mutation`** — did the declared witnesses move in the declared
+  direction, and did **three distinct causal families** do so? That is an#41's
+  criterion, and the per-metric per-mutation signs come from the row itself.
+
+Five verdicts per metric under a mutation, and the last three are the useful
+ones: `as_declared`, `contrary` (moved the other way), `did_not_move` (the lever
+never reached it — a different diagnosis, calling for a different fix), `gated`
+(the reference moves with the mutation, so the delta is uninterpretable), and
+`unexpected_movement` (a metric declared orthogonal that moved — news, not a
+pass).
+
+**There is no tolerance band, and none is needed.** Two consecutive `an bench`
+runs on one machine produce bit-identical numbers for every metric on all six
+scenes. Zero is the normal delta; anything else is real. The report prints the
+relative delta beside each movement so a 0.0% wobble on a scene the mutation does
+not reach is visibly not a 30% move on one it does.
+
+**A key absent from one row is unknown, not different.** The ledger grows
+additively, so refusing on an absent field would make every future addition
+retroactively destroy comparability with every row already written. Absences are
+recorded as caveats and printed; `schema_version` is what guards a genuinely
+unreadable row.

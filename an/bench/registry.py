@@ -41,6 +41,29 @@ from typing import Literal
 #: that failure would be misdiagnosed as the harness being wrong.
 MUTATIONS: tuple[str, ...] = ("high_crf", "disabled_aa")
 
+#: What each lever is EXPECTED to change about the recorded environment.
+#:
+#: Load-bearing, and not obvious: `an bench-compare` refuses two rows whose
+#: encode command differs, because a crf23 row and a crf40 row are not "one
+#: better and one worse". But the `high_crf` lever's whole method is to change
+#: that command — so without this declaration, mutation mode refuses every
+#: encode-side metric and the encoder lever, which is half of an#41's
+#: deliverable, can never be evaluated at all.
+#:
+#: So the exemption is DECLARED per lever rather than inferred, it applies only
+#: in mutation mode, and it names exact paths — a blanket "ignore the
+#: environment when a mutation is given" would silently let a row from another
+#: machine in through the same door.
+#:
+#: `disabled_aa` touches nothing the row records: it patches `runtime.js`, and
+#: the runtime is the code under test rather than a comparability key. Whether
+#: THAT lever applied is checked by the harness that pulls it, not by reading
+#: the row back.
+MUTATION_TOUCHES: dict[str, tuple[tuple[str, ...], ...]] = {
+    "high_crf": (("environment", "encode_side", "x264_argv"),),
+    "disabled_aa": (),
+}
+
 Side = Literal["render", "encode"]
 Family = Literal["A", "B", "C", "D", "E", "F", "G"]
 Expect = Literal["increase", "decrease", "no_change", "not_applicable"]
