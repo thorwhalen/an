@@ -20,28 +20,16 @@ from an.ir.compose import tween
 from an.ir.schema import Shot
 
 
-_FFMPEG = shutil.which("ffmpeg")
-playwright = pytest.importorskip("playwright.sync_api", reason="playwright not installed")
 
 
-def _chromium_installed() -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-
-        with sync_playwright() as p:
-            b = p.chromium.launch()
-            b.close()
-        return True
-    except Exception:
-        return False
+# Gated per test, not per module: this file mixes pure-Python checks with
+# ones that drive a real render.
+# `test_renderer_rejects_non_cutout_shot` only asks `can_render`; it never
+# renders anything.
 
 
-pytestmark = pytest.mark.skipif(
-    not _FFMPEG or not _chromium_installed(),
-    reason="needs ffmpeg + playwright chromium",
-)
-
-
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_renderer_basic_smoke():
     """Render a 1-second cutout shot to mp4."""
     shot = Shot(
@@ -91,6 +79,8 @@ def test_renderer_rejects_non_cutout_shot():
     assert renderer.can_render(Shot(id="x", style="cutout", duration=1.0))
 
 
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_renderer_carries_provenance():
     """Render result should describe what produced it."""
     shot = Shot(id="prov", style="cutout", duration=0.25)

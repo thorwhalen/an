@@ -4,6 +4,11 @@ Four tiers, cheapest first. **Tiers 1-3 must run everywhere**, including CI,
 which does not install a browser — an earlier version of this file put
 ``pytest.importorskip("playwright...")`` at module level and so skipped its own
 pure-Python guards in CI, where the collected-test count did not move at all.
+That mistake was repeated in ten other modules and is now structurally
+impossible: the gate is the ``browser`` / ``ffmpeg`` markers in
+``tests/conftest.py``, applied after collection, and
+``tests/test_browser_gate.py`` fails if any module goes back to skipping at
+import time.
 
 Tier 4 is the only part that needs a browser, and it is the only part that can
 see a pixel.
@@ -223,22 +228,6 @@ def test_applypose_applies_shallowest_target_first():
 # ------------------------------------------------------------- tier 4: pixels
 
 
-def _chromium_available() -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        return False
-    try:
-        with sync_playwright() as p:
-            p.chromium.launch(args=["--no-sandbox"]).close()
-        return True
-    except Exception:
-        return False
-
-
-_HAS_CHROMIUM = _chromium_available()
-_FFMPEG = shutil.which("ffmpeg")
-
 #: alpha runs 1.0 -> 0.0 over the shot, and ink is a linear blend toward the
 #: white background, so the ratio tracks alpha. Sampled at 90% through, the
 #: expected ratio is ~0.1; this bound is generous but still fails outright
@@ -246,9 +235,8 @@ _FFMPEG = shutil.which("ffmpeg")
 MAX_FADED_INK_RATIO = 0.35
 
 
-@pytest.mark.skipif(
-    not _HAS_CHROMIUM or not _FFMPEG, reason="needs ffmpeg + playwright chromium"
-)
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_an_alpha_tween_changes_the_rendered_pixels(hermetic_browser, tmp_path):
     """The done-when, asserted on frames rather than on the pose dict.
 
@@ -328,7 +316,7 @@ def _ink(png: Path) -> float:
     lands below any sensible "is it white" threshold and a counting metric
     barely moves — it would pass a broken implementation.
     """
-    PIL = pytest.importorskip("PIL.Image")
+    from PIL import Image as PIL
     im = PIL.open(png).convert("RGB")
     px = list(im.getdata())
     total = sum((255 - r) + (255 - g) + (255 - b) for r, g, b in px)

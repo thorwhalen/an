@@ -5,18 +5,26 @@ Both properties are load-bearing for hosts that catalog the federation's genres:
 the declared genre must not claim an engine it does not have.
 """
 
+import importlib.util
 import subprocess
 import sys
 
 import pytest
 
-nw = pytest.importorskip("nw")
+#: Only the registry lookup at the bottom of this file needs nw. The gate is on
+#: that test, not on the module: an `importorskip` here would abort the import
+#: and take the other two tests with it — including the one that guards the
+#: optional-dependency boundary, which is precisely the test a host without nw
+#: most needs to have been run. See tests/test_browser_gate.py (an#22).
+needs_nw = pytest.mark.skipif(
+    importlib.util.find_spec("nw") is None, reason="nw not installed"
+)
 
 
 def test_importing_an_does_not_import_nw():
     """``an`` gains no hard nw dependency from the genre module.
 
-    Checked in a subprocess because the rest of this file imports nw, so an
+    Checked in a subprocess because another test in this file imports nw, so an
     in-process ``sys.modules`` check would pass for the wrong reason.
     """
     code = "import an, sys; assert 'nw' not in sys.modules"
@@ -33,7 +41,10 @@ def test_genre_is_planned_and_claims_no_engine():
     assert CUTOUT_ANIMATION.strategy_names == ()
 
 
+@needs_nw
 def test_genre_registers_under_its_slug():
+    import nw
+
     from an.genre import CUTOUT_ANIMATION, CUTOUT_ANIMATION_SLUG
 
     assert nw.get_genre(CUTOUT_ANIMATION_SLUG) is CUTOUT_ANIMATION

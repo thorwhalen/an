@@ -3,6 +3,39 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **Browser tests were not being skipped in CI — they were not being collected
+  (#22).** Eleven modules opened with a module-level
+  `pytest.importorskip("playwright.sync_api")`, which aborts the module import
+  rather than skipping a test. Measured: 472 tests collected with Playwright
+  installed, 438 without. **Fourteen of the thirty-four casualties needed no
+  browser at all** — every `an.verify.media` SSIM test (the primitives Wave 2's
+  ledger is built on), the guard that `import an` does not drag in `nw`, two
+  `skip_render=True` orchestrator tests, and a paid Anthropic call gated on
+  nothing but "is a key set", a `live_api` violation that was invisible rather
+  than absent. A test that is not collected appears in neither the pass count
+  nor the skip count, so nothing reported the hole.
+- **The gate is now a marker applied after collection**, so collection is
+  invariant: `browser` and `ffmpeg` in `tests/conftest.py`, one cached Chromium
+  probe instead of eleven browser launches at import time (collection 5.6s →
+  1.1s), and a run-summary line — `browser tests: 24 collected, 0 ran, 24
+  skipped — …` — so a green run is never silent about having checked zero
+  pixels. **An explicit `AN_BROWSER_TESTS=1` that cannot be honoured is an
+  ERROR, not a skip**: a CI job whose `playwright install` failed must go red,
+  not green with 24 skips. `tests/test_browser_gate.py` holds all of it; its
+  seven guards are mutation-tested 7/7. The rendering lane itself lives in
+  `.github/workflows/browser-tests.yml`, dispatched on demand.
+- **The Windows CI leg can fail the build again.** Its job-level
+  `continue-on-error: true` made GitHub report `success` with failing steps
+  inside — how #21's path-separator bug and an unpinned `read_text()` encoding
+  both reached `main`. 5 of the 30 runs before this change record
+  `Run Tests: failure` under a job reporting success. Windows was green on
+  `main` when the flag was removed. Deviation from the wads template is
+  commented in place; upstream knob filed as i2mint/wads#66.
+- **Pillow is a declared `cutout` dependency.** `an.verify.media.ssim` and
+  `an/characters/silhouette.py` import it, and the only two tests in this repo
+  that assert on *pixels* were doing `importorskip("PIL.Image")` in their
+  bodies — the rendering-verification version of the same silent hole.
+
 - **Truthed up the docs (#16), and the audit found five false claims, not one.**
   Both `CLAUDE.md` and `architecture_as_built.md` said the runtime *ignores*
   `loop_mode` — it has honoured it since #5, and the real gap is the inverse: no

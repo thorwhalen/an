@@ -327,16 +327,9 @@ class TestPromote:
 
 
 class TestRecord:
+    @pytest.mark.browser
+    @pytest.mark.ffmpeg
     def test_record_character_produces_mp4(self, tmp_path):
-        try:
-            from playwright.sync_api import sync_playwright  # noqa: F401
-        except ImportError:
-            pytest.skip("playwright not installed")
-        import shutil
-
-        if shutil.which("ffmpeg") is None:
-            pytest.skip("ffmpeg not on PATH")
-
         from an.characters.record import record_character
 
         new_character(tmp_path, name="rex", use_dicebear=False)

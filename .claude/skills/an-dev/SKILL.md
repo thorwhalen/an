@@ -98,6 +98,51 @@ the `live_api` marker. A key being present is not consent to spend — that gate
 because a plain `pytest -q` in this repo once made real, billed ElevenLabs calls and
 reported PASSED. A cassette miss is an ERROR, never a fallthrough to a real call.
 
+**Never skip at module level. Gate the TEST, with a marker.** This is the rule that #22
+was, and it is not about browsers — it is about the difference between a test that is
+*skipped* and a test that does not *exist*.
+
+```python
+# WRONG — aborts the module import, so NONE of its tests are collected. They are
+# absent from the pass count AND from the skip count, so nothing reports the hole.
+playwright = pytest.importorskip("playwright.sync_api")
+
+# RIGHT — collection always succeeds; the gate is applied afterwards, by marker.
+pytestmark = [pytest.mark.browser, pytest.mark.ffmpeg]   # whole module needs it
+@pytest.mark.browser                                      # or just this test
+```
+
+Measured cost of getting it wrong here: 472 tests collected with Playwright installed,
+438 without — and **fourteen of the thirty-four casualties needed no browser at all**,
+because they merely lived below an `importorskip` aimed at something else. Among them:
+every SSIM test for `an.verify.media` (the primitives Wave 2's ledger is built on), the
+test that `import an` does not drag in `nw`, and a paid Anthropic call whose only gate
+was "is a key set" — a `live_api` violation that was invisible rather than absent.
+
+The available markers and what they mean:
+
+| Marker | Requires | Gated by |
+|---|---|---|
+| `browser` | headless Chromium via Playwright | `AN_BROWSER_TESTS`; off in CI |
+| `ffmpeg` | the `ffmpeg` binary | same |
+| `live_api` | a real, billed call | `AN_LIVE_API_TESTS`; never in CI |
+| `live` | the network, but free | skipped in CI |
+
+Three properties of the browser gate worth knowing before you touch it
+(`tests/conftest.py`, and `tests/test_browser_gate.py` mutation-tests all seven guards):
+
+1. **Collection is invariant.** Which tests exist must not depend on what is installed.
+   A static AST scan rejects any module-level `importorskip` or browser `launch()`, and a
+   subprocess imports every test module with Playwright shadowed to prove it.
+2. **A gated run says so out loud** — `browser tests: 24 collected, 0 ran, 24 skipped — …`
+   in the run summary. A green run must never be silent about having checked zero pixels.
+3. **An explicit opt-in that cannot be honoured is an ERROR, not a skip.**
+   `AN_BROWSER_TESTS=1` with no browser aborts the run. A CI job whose `playwright install`
+   quietly failed has to go red; green-with-24-skips is the exact failure #22 existed to end.
+
+To actually run them: `pytest -q` on a machine with the `cutout` extra (they are on by
+default there), or dispatch `.github/workflows/browser-tests.yml`.
+
 **Every regression guard is mutation-tested.** Delete the fix, confirm the test goes red.
 An unproven guard is decoration, and this is not theoretical here — a guard that tested an
 ordering *helper* in isolation passed while `applyPose` never called it, and a meta-test for

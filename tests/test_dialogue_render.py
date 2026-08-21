@@ -18,26 +18,9 @@ from an.orchestrate import render_project
 from an.project import load
 
 
-_FFMPEG = shutil.which("ffmpeg")
-playwright = pytest.importorskip("playwright.sync_api", reason="playwright not installed")
 
 
-def _chromium_installed() -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-
-        with sync_playwright() as p:
-            b = p.chromium.launch()
-            b.close()
-        return True
-    except Exception:
-        return False
-
-
-pytestmark = pytest.mark.skipif(
-    not _FFMPEG or not _chromium_installed(),
-    reason="needs ffmpeg + playwright chromium",
-)
+pytestmark = [pytest.mark.browser, pytest.mark.ffmpeg]
 
 
 def test_dialogue_scene_renders_to_mp4():

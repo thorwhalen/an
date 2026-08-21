@@ -23,26 +23,12 @@ from an.project import load
 from an.verify.media_quality import MediaQualityVerifier
 
 
-_FFMPEG = shutil.which("ffmpeg")
-playwright = pytest.importorskip("playwright.sync_api", reason="playwright not installed")
 
 
-def _chromium_installed() -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-
-        with sync_playwright() as p:
-            b = p.chromium.launch()
-            b.close()
-        return True
-    except Exception:
-        return False
-
-
-pytestmark = pytest.mark.skipif(
-    not _FFMPEG or not _chromium_installed(),
-    reason="needs ffmpeg + playwright chromium",
-)
+# Gated per test, not per module: this file mixes pure-Python checks with
+# ones that drive a real render.
+# `test_no_render_returns_info` passes `None` for the render result, so it
+# needs neither a browser nor ffmpeg.
 
 
 def test_no_render_returns_info():
@@ -53,6 +39,8 @@ def test_no_render_returns_info():
     assert any("no render result" in f.description for f in rep.findings)
 
 
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_default_orchestrator_uses_media_quality():
     """orchestrate() with no explicit verifiers should include media_quality."""
     with tempfile.TemporaryDirectory() as d:
@@ -72,6 +60,8 @@ def test_default_orchestrator_uses_media_quality():
         assert len(report.verifications) >= 3
 
 
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_dialogue_render_with_offline_tts_flagged_as_silent():
     """A render with dialogue but offline (silent) TTS gets flagged."""
     with tempfile.TemporaryDirectory() as d:

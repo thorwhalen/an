@@ -96,13 +96,35 @@ jobs:
           python-version: ${{ needs.setup.outputs.metrics-python-version }}
           force-run: ${{ needs.setup.outputs.metrics-force-run }}
 
-  # Optional Windows testing (if enabled in config)
+  # Windows testing (enabled in config).
+  #
+  # DELIBERATE DEVIATION FROM THE WADS TEMPLATE (an#22): the generated template
+  # puts `continue-on-error: true` on this job, which makes GitHub report the job
+  # — and the whole run — as SUCCESS even when tests inside it failed. That is not
+  # a Windows leg; it is a Windows leg-shaped decoration. Two Windows-only defects
+  # reached `main` through a green tick that way:
+  #
+  #   * a path-separator bug (an#21) — `str(Path.relative_to(...))` yields
+  #     backslashes on Windows while the TOML keys it was compared against are
+  #     forward-slash paths, so a completeness guard compared two spellings of the
+  #     same set;
+  #   * an unpinned text encoding — `Path.read_text()` decodes with the LOCALE
+  #     codec, cp1252 on Windows, and every doc in this repo contains non-ASCII.
+  #     Three tests added in an#16 failed on Windows and merged anyway.
+  #
+  # The step conclusions were honest in both cases (5 of the 30 runs before this
+  # change record `Run Tests: failure` under a job reporting success) — only the
+  # job-level flag hid them. So removing it costs nothing but attention, and
+  # Windows was green on `main` when it was removed.
+  #
+  # If a future `wads populate` regenerates this file, this deviation is the thing
+  # to re-apply. The upstream fix is a `[tool.wads.ci.testing] windows_blocking`
+  # knob, filed as i2mint/wads#66.
   windows-validation:
     name: Windows Tests
     if: "!contains(github.event.head_commit.message, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true'"
     needs: setup
     runs-on: windows-latest
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v6

@@ -1,0 +1,107 @@
+# The rendering lane — everything that needs a headless browser (an#22).
+#
+# WHY THIS IS A SEPARATE, MANUALLY-DISPATCHED WORKFLOW
+#
+# `an` renders through headless Chromium, so its rendering tests need Playwright
+# (in the `cutout` extra, which CI does not install) and ffmpeg (not on the
+# runner image). Adding both to the main CI would put a ~200 MB browser download
+# and an apt install on every push, on every leg of the Python matrix, to run a
+# lane that takes well under a minute. Against a main CI run of about a minute,
+# that is the wrong trade for a repo whose renderer changes in bursts.
+#
+# So the decision (an#22) is: the rendering lane exists, is real, and runs on
+# demand — not on every push. What is NOT acceptable is the previous state, where
+# the lane silently did not exist: the tests were dropped at COLLECTION time by a
+# module-level `pytest.importorskip`, so nothing counted them, and the deficit was
+# invisible in the pass count and the skip count alike. That is now structurally
+# impossible; see `tests/conftest.py`'s browser-gate section and
+# `tests/test_browser_gate.py`.
+#
+# TURNING IT ON LATER IS A TWO-LINE CHANGE. Whichever is wanted:
+#
+#   * nightly ->        schedule:
+#                         - cron: "0 4 * * *"
+#   * per-PR opt-in ->  pull_request:
+#                         types: [labeled, synchronize]
+#                       plus `if: contains(github.event.pull_request.labels.*.name,
+#                       'run-browser-tests')` on the job.
+#   * a dev -> prod gate -> pull_request: {branches: [prod]}
+#
+# The gate itself needs no change for any of these: it keys on AN_BROWSER_TESTS,
+# and an opt-in that cannot be honoured is an ERROR rather than a skip — so a run
+# whose `playwright install` failed goes red instead of green with 24 skips.
+
+name: Rendering tests (browser)
+
+on:
+  workflow_dispatch:
+    inputs:
+      python-version:
+        description: "Python version to run the rendering lane on"
+        required: false
+        default: "3.12"
+
+concurrency:
+  group: browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    name: Rendering lane (Linux)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ inputs.python-version || '3.12' }}
+
+      - name: Install package with the cutout extra
+        run: |
+          uv venv --python ${{ inputs.python-version || '3.12' }}
+          uv pip install -e '.[dev,cutout]'
+
+      # Cached so a repeat dispatch measures the WARM cost too — the cold cost is
+      # what the first run reports, and both matter to any decision to promote
+      # this lane into the main workflow.
+      - name: Resolve the pinned Chromium build
+        id: pw
+        run: |
+          source .venv/bin/activate
+          echo "version=$(python -c 'import importlib.metadata as m; print(m.version("playwright"))')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the Playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Chromium
+        run: |
+          source .venv/bin/activate
+          playwright install --with-deps chromium
+
+      - name: Install ffmpeg
+        run: |
+          command -v ffmpeg >/dev/null 2>&1 && { ffmpeg -version | head -1; exit 0; }
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+
+      # Two steps, so GitHub's own step timings answer "what would adding this
+      # lane to the main workflow actually cost?" without anyone timing by hand.
+      - name: Non-rendering tests (baseline timing)
+        run: |
+          source .venv/bin/activate
+          python -m pytest -q -p no:cacheprovider -m "not browser"
+
+      - name: Rendering tests
+        env:
+          AN_BROWSER_TESTS: "1"
+        run: |
+          source .venv/bin/activate
+          python -m pytest -q -p no:cacheprovider -m browser --durations=30

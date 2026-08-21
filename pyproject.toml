@@ -79,6 +79,12 @@ cutout = [
     "playwright",
     "ffmpeg-python",
     "numpy",
+    # `an.verify.media.ssim` and `an/characters/silhouette.py` import PIL. It was
+    # undeclared, so the only two tests in this repo that assert on PIXELS did
+    # `pytest.importorskip("PIL.Image")` inside their bodies and skipped in
+    # silence when it was absent — the rendering-verification equivalent of the
+    # collection hole in an#22.
+    "pillow",
 ]
 manim = [
     "manim",

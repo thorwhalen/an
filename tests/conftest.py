@@ -88,6 +88,15 @@ def pytest_configure(config):
         "live: reaches the network but costs nothing; exempt from the offline "
         "guard, and skipped in CI",
     )
+    config.addinivalue_line(
+        "markers",
+        "browser: needs a headless Chromium via Playwright; gated by the browser "
+        f"gate below ({BROWSER_ENV_VAR})",
+    )
+    config.addinivalue_line(
+        "markers",
+        "ffmpeg: needs the ffmpeg binary on PATH; gated by the browser gate below",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -270,7 +279,10 @@ def hermetic_browser(monkeypatch):
     assert on *what* was requested, not merely that nothing failed — the same
     record-as-well-as-refuse discipline as the Python guard.
     """
-    playwright_api = pytest.importorskip("playwright.sync_api")
+    # A plain import, not `importorskip`: every test that requests this fixture is
+    # `browser`-marked, so the gate has already established Playwright is present.
+    # An importorskip here could only turn an inconsistent state into a silent skip.
+    import playwright.sync_api as playwright_api
 
     record = {"allowed": [], "blocked": []}
     real_new_page = playwright_api.Browser.new_page
@@ -291,3 +303,212 @@ def hermetic_browser(monkeypatch):
 
     monkeypatch.setattr(playwright_api.Browser, "new_page", new_page)
     yield record
+
+
+# ---------------------------------------------------------------------------
+# The browser gate.
+#
+# Rendering tests need a headless Chromium (via Playwright) and ffmpeg. Neither
+# is installed in CI: `playwright` lives in the `cutout` extra and CI installs
+# `.[dev]`. So these tests have never run there — every "verified by rendering"
+# claim in this repo is verified on a developer machine (an#22).
+#
+# That is a deliberate choice, not an oversight: the tests take ~45 s locally,
+# but making them run in CI costs a ~200 MB browser download plus an ffmpeg
+# install on every push. The decision is to keep PR CI fast and run them
+# on demand — `.github/workflows/browser-tests.yml`, dispatched manually.
+#
+# What is NOT acceptable is how that used to be implemented. Eleven test modules
+# each opened with
+#
+#     playwright = pytest.importorskip("playwright.sync_api", ...)
+#
+# at MODULE level, which does not skip a browser test — it aborts the module
+# import, so the tests are never COLLECTED at all. Measured on this commit's
+# parent: 472 tests collected with Playwright installed, 438 without. Of the 34
+# that vanished, roughly half need no browser whatsoever — the whole of
+# `test_vision_verifier.py`'s JSON-parser suite, `an.verify.media`'s pure-numpy
+# SSIM tests (the very primitives Wave 2's ledger is built on), and two
+# `skip_render=True` orchestrator tests. They were collateral damage of a skip
+# aimed at something else, and nothing reported it, because a test that is not
+# collected does not appear in the skip count either.
+#
+# So the contract here is:
+#
+#   1. WHICH TESTS EXIST MUST NOT DEPEND ON WHAT IS INSTALLED. Collection always
+#      succeeds. Playwright is imported inside test bodies and fixtures, never
+#      at module scope. `tests/test_browser_gate.py` asserts the collected node
+#      id set is identical with and without Playwright.
+#   2. THE GATE IS A MARKER, and it is applied at `pytest_collection_modifyitems`
+#      so every gated test is counted and carries a precise reason.
+#   3. SKIPPING IS ANNOUNCED. `pytest_terminal_summary` prints one line saying
+#      how many rendering tests ran and how many did not, so a green run never
+#      quietly means "zero pixels were checked".
+#   4. AN EXPLICIT OPT-IN THAT CANNOT BE HONOURED IS AN ERROR, NOT A SKIP. If
+#      AN_BROWSER_TESTS is truthy and there is no Chromium, the run aborts. A CI
+#      job whose `playwright install` silently failed must go red, not green
+#      with 31 skips — that is the same failure this whole section exists to end.
+# ---------------------------------------------------------------------------
+
+import functools
+import shutil
+
+#: Set truthy to run the browser/rendering tests where they would otherwise be
+#: skipped (this is what `.github/workflows/browser-tests.yml` sets); set falsy
+#: to force them off on a machine that could run them.
+BROWSER_ENV_VAR = "AN_BROWSER_TESTS"
+
+#: How to get a browser, quoted verbatim in the skip reason so it is actionable.
+_INSTALL_HINT = "pip install -e '.[cutout]' && playwright install chromium"
+
+
+def _env_flag(env, name):
+    """Return True/False for an explicitly-set flag, or None when unset.
+
+    Tri-state on purpose: "unset" and "set to 0" are different instructions.
+
+    >>> _env_flag({}, "X") is None
+    True
+    >>> _env_flag({"X": "1"}, "X")
+    True
+    >>> _env_flag({"X": "0"}, "X")
+    False
+    >>> _env_flag({"X": ""}, "X") is None
+    True
+    """
+    raw = env.get(name)
+    if raw is None or not raw.strip():
+        return None
+    return raw.strip().lower() in _TRUTHY
+
+
+@functools.lru_cache(maxsize=1)
+def chromium_available() -> bool:
+    """Whether a Playwright Chromium can actually be launched.
+
+    Cached: this launches a real browser, and eleven modules used to ask
+    independently at import time.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return False
+    try:
+        with sync_playwright() as p:
+            p.chromium.launch(args=["--no-sandbox"]).close()
+        return True
+    except Exception:
+        return False
+
+
+@functools.lru_cache(maxsize=1)
+def ffmpeg_available() -> bool:
+    """Whether the ffmpeg binary is on PATH."""
+    return shutil.which("ffmpeg") is not None
+
+
+def requirement_verdict(name, *, opt_in, available, ci, install_hint):
+    """Decide what to do about one external requirement.
+
+    Returns ``(action, message)`` where action is one of ``"run"``, ``"skip"``
+    or ``"error"``. Pure, so the whole decision matrix is testable without
+    touching the environment — see ``tests/test_browser_gate.py``.
+
+    ``opt_in`` is tri-state: True (explicitly requested), False (explicitly
+    disabled), None (no instruction).
+
+    >>> requirement_verdict("x", opt_in=None, available=True, ci=False, install_hint="h")[0]
+    'run'
+    >>> requirement_verdict("x", opt_in=None, available=True, ci=True, install_hint="h")[0]
+    'skip'
+    >>> requirement_verdict("x", opt_in=True, available=False, ci=True, install_hint="h")[0]
+    'error'
+    >>> requirement_verdict("x", opt_in=False, available=True, ci=False, install_hint="h")[0]
+    'skip'
+    """
+    if opt_in is False:
+        return "skip", f"{name} tests disabled by {BROWSER_ENV_VAR}"
+    if opt_in is True:
+        if available:
+            return "run", ""
+        return (
+            "error",
+            f"{BROWSER_ENV_VAR} asked for {name} tests but {name} is unavailable. "
+            f"This is an error rather than a skip on purpose: an explicit request "
+            f"that silently degrades to a skip is how a green run comes to mean "
+            f"nothing. Install it ({install_hint}) or unset {BROWSER_ENV_VAR}.",
+        )
+    if ci:
+        return (
+            "skip",
+            f"CI installs no {name} (an#22). Set {BROWSER_ENV_VAR}=1 to opt in, or "
+            f"dispatch .github/workflows/browser-tests.yml",
+        )
+    if not available:
+        return "skip", f"no {name} — {install_hint}"
+    return "run", ""
+
+
+#: Populated at collection so `pytest_terminal_summary` can report honestly.
+_GATE_REPORT: dict = {}
+
+
+def _gate_verdicts(env=None):
+    """The (action, message) verdict for each gated requirement."""
+    env = os.environ if env is None else env
+    opt_in = _env_flag(env, BROWSER_ENV_VAR)
+    ci = bool(env.get("CI"))
+    return {
+        "browser": requirement_verdict(
+            "headless browser",
+            opt_in=opt_in,
+            available=chromium_available(),
+            ci=ci,
+            install_hint=_INSTALL_HINT,
+        ),
+        "ffmpeg": requirement_verdict(
+            "ffmpeg",
+            opt_in=opt_in,
+            available=ffmpeg_available(),
+            ci=ci,
+            install_hint="e.g. `brew install ffmpeg` / `apt-get install ffmpeg`",
+        ),
+    }
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip gated tests by marker — never by refusing to collect them."""
+    verdicts = _gate_verdicts()
+    for name, (action, message) in verdicts.items():
+        if action == "error":
+            raise pytest.UsageError(message)
+    counts = {name: {"total": 0, "skipped": 0} for name in verdicts}
+    for item in items:
+        for name, (action, message) in verdicts.items():
+            if item.get_closest_marker(name) is None:
+                continue
+            counts[name]["total"] += 1
+            if action == "skip":
+                counts[name]["skipped"] += 1
+                item.add_marker(pytest.mark.skip(reason=message))
+    _GATE_REPORT.clear()
+    _GATE_REPORT.update(
+        {name: dict(counts[name], reason=verdicts[name][1]) for name in verdicts}
+    )
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    """Say out loud how many rendering tests actually ran.
+
+    Without this, "N passed" is silent about whether any pixel was ever looked
+    at, which is exactly how this repo came to believe its renders were tested.
+    """
+    for name, info in sorted(_GATE_REPORT.items()):
+        total, skipped = info["total"], info["skipped"]
+        if not total:
+            continue
+        ran = total - skipped
+        line = f"{name} tests: {total} collected, {ran} ran"
+        if skipped:
+            line += f", {skipped} skipped — {info['reason']}"
+        terminalreporter.write_line(line)

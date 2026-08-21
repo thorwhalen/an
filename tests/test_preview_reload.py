@@ -18,24 +18,9 @@ import pytest
 from an.adapters.cutout.render import _serve_dir
 from an.adapters.cutout.runtime_files import runtime_dir
 
-playwright = pytest.importorskip("playwright.sync_api", reason="playwright not installed")
 
 
-def _chromium_installed() -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-
-        with sync_playwright() as p:
-            b = p.chromium.launch(args=["--no-sandbox"])
-            b.close()
-        return True
-    except Exception:
-        return False
-
-
-pytestmark = pytest.mark.skipif(
-    not _chromium_installed(), reason="needs playwright chromium"
-)
+pytestmark = pytest.mark.browser
 
 
 def _scene(bg: str) -> dict:
