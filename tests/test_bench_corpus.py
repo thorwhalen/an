@@ -208,6 +208,7 @@ def test_every_corpus_fixture_is_committed_whole():
     about a picture that was not the picture.
     """
     import subprocess
+    from pathlib import Path
 
     from an.bench.corpus import CORPUS_DIRNAME
     from an.bench.paths import repo_root
@@ -222,8 +223,13 @@ def test_every_corpus_fixture_is_committed_whole():
             ["git", "ls-files", "--", fixture.path],
             cwd=root, capture_output=True, text=True, check=False,
         ).stdout.split()
+        tracked = [Path(t).as_posix() for t in tracked]
+        # `.as_posix()` on both sides: `git ls-files` always prints forward
+        # slashes and `Path.relative_to` yields the platform separator, so on
+        # Windows every path "differed" and the whole corpus read as untracked.
+        # Caught by the Windows leg on the first run of this test.
         on_disk = {
-            str(p.relative_to(root))
+            p.relative_to(root).as_posix()
             for p in directory.rglob("*")
             if p.is_file() and ".an" not in p.parts and "output" not in p.parts
         }
@@ -323,18 +329,48 @@ def test_the_golden_corpus_is_not_excluded_from_the_sdist():
     excludes both already. The decision is recorded in `pyproject.toml`; this
     pins it against a well-meaning slimming pass.
     """
-    import tomllib
-
     from an.bench.paths import repo_root
 
-    config = tomllib.loads((repo_root() / "pyproject.toml").read_text(encoding="utf-8"))
-    sdist = config.get("tool", {}).get("hatch", {}).get("build", {}).get("targets", {}).get("sdist", {})
-    excluded = list(sdist.get("exclude", []))
-    assert not any("misc" in pattern for pattern in excluded), (
-        f"the sdist excludes {excluded}, which would drop the bench corpus"
+    # Scanned as text rather than parsed: `tomllib` is Python 3.11+, this repo
+    # supports 3.10, and the assertion is about whether a SECTION exists at all
+    # — which a text scan answers directly. (Caught by the 3.10 leg on the first
+    # run of this test.)
+    lines = (repo_root() / "pyproject.toml").read_text(encoding="utf-8").splitlines()
+    section: str | None = None
+    offending: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section = stripped
+            continue
+        if section == "[tool.hatch.build.targets.sdist]" and "misc" in stripped:
+            offending.append(stripped)
+    assert not offending, (
+        f"[tool.hatch.build.targets.sdist] mentions misc/ ({offending}). Whatever "
+        "it says, it now decides whether the bench corpus reaches the sdist — "
+        "and `an bench` needs a source checkout by construction. Re-read the "
+        "decision recorded above that section before changing this."
     )
-    include = sdist.get("include")
-    if include is not None:
-        assert any("misc" in pattern for pattern in include), (
-            f"the sdist include list {include} does not carry the bench corpus"
-        )
+
+
+def test_no_corpus_fixture_ships_an_an_toml():
+    """MUTATION: restore any `misc/bench/corpus/*/an.toml`.
+
+    `an.project.load` never reads `an.toml` — only `init` writes one — so a
+    committed one is not configuration, it is a second place for a scene's fps
+    and resolution to be written down. The four the corpus first shipped all
+    declared `fps = 30` and `resolution = [1920, 1080]` against every
+    `scene.md`'s 24 and 320x240, so the only thing they could ever do was tell a
+    reader the wrong thing about what the bench renders.
+    """
+    from an.bench.corpus import CORPUS_DIRNAME
+    from an.bench.paths import repo_root
+
+    root = repo_root()
+    strays = sorted(
+        str(p.relative_to(root))
+        for fixture in DFLT_FIXTURES.values()
+        if fixture.path.startswith(CORPUS_DIRNAME)
+        for p in (root / fixture.path).glob("an.toml")
+    )
+    assert not strays, f"{strays} contradict their own scene.md and are read by nothing"

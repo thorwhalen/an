@@ -629,6 +629,42 @@ def run_bench(
     return ledger
 
 
+def _golden_failure_lines(name: str, block: dict) -> list[str]:
+    """The loud block a fired golden gets, and nothing at all otherwise.
+
+    A tripwire that fired is the one line in the panel a reader must not scroll
+    past, and a lone ``False`` in a column of floats is not that. What a
+    reviewer needs next is the magnitude, which file to look at, what was
+    supposed to move, and the command — so the panel prints all four rather
+    than leaving them to be derived.
+    """
+    row = (block.get("tripwires") or {}).get(GOLDEN_TRIPWIRE_KEY) or {}
+    if row.get("state") != "measured" or row.get("value") is not False:
+        return []
+    golden = (block.get("provenance") or {}).get("golden") or {}
+    lines = [
+        f"  GOLDEN MISMATCH in {name}: {row.get('changed_px')} px changed, "
+        f"max delta {row.get('max_delta')}"
+    ]
+    for frame in golden.get("frames") or []:
+        if frame.get("state") == "compared" and not frame.get("identical"):
+            lines.append(
+                f"    {frame['frame_key']}  t={frame['time']}s  "
+                f"{frame.get('changed_px')} px  "
+                f"min_ssim_win8 {frame.get('min_ssim_win8')}  {frame.get('golden')}"
+            )
+    lines.append(
+        f"    what should move between the two blessed frames: "
+        f"{golden.get('what_moves') or '(unrecorded)'}"
+    )
+    lines.append(
+        "    if this change is intended, look at the PNG diff FIRST (GitHub "
+        "renders 2-up, swipe and onion skin), then:"
+    )
+    lines.append(f'      an bench --scenes {name} --bless "<why this picture changed>"')
+    return lines
+
+
 def format_panel(ledger: dict) -> str:
     """A human-readable digest of a row — the thing `an bench` prints."""
     lines: list[str] = []
@@ -646,7 +682,16 @@ def format_panel(ledger: dict) -> str:
             shown = row["value"] if state == "measured" else f"{state}({row.get('gate') or row.get('detail','')[:40]})"
             lines.append(f"    [{row['side'][:3]}/{row['family']}] {key:32s} {shown}")
         for key, row in block["tripwires"].items():
-            lines.append(f"    [tripwire] {key:32s} {row['state']}({row.get('gate')})")
+            # NOT `f"{row['state']}({row.get('gate')})"`. A measured tripwire
+            # carries no gate, so that spelling printed `measured(None)` — the
+            # same eight characters whether the gate held or fired, in the one
+            # place a human actually looks after `an bench`.
+            if row["state"] != "measured":
+                shown = f"{row['state']}({row.get('gate')})"
+            else:
+                shown = "ok" if row["value"] else "FIRED"
+            lines.append(f"    [tripwire] {key:32s} {shown}")
+        lines.extend(_golden_failure_lines(name, block))
     if "_written_to" in ledger:
         lines.append(f"\nwrote {ledger['_written_to']}")
     return "\n".join(lines)

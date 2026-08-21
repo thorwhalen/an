@@ -574,3 +574,99 @@ def test_a_golden_blessed_at_another_resolution_does_not_crash_the_row(tmp_path)
     metric, tripwire = _golden_values(result)
     assert metric.state == "unavailable" and metric.value is None
     assert tripwire.state == "measured" and tripwire.value is False
+
+
+def test_a_retired_gate_name_names_its_live_replacement():
+    """MUTATION: delete the `golden_absent` entry from `RETIRED_GATES`.
+
+    `an bench --compare` reads rows written before this module existed as fact,
+    and the committed an#36 row carries `gated("golden_absent")` on both
+    family-B keys. A spelling that simply disappears leaves that reader nowhere
+    to look up what it meant; a spelling silently REUSED for a different fact is
+    worse. So a retired name stays retired and points at what replaced it.
+    """
+    live = {G.GATE_UNDECLARED, G.GATE_ABSENT, G.GATE_BUILD_UNKNOWN, G.GATE_JUST_BLESSED}
+    assert len(live) == 4, "two gate constants collapsed onto one spelling"
+
+    row = json.loads(
+        (repo_root() / "misc/bench/ledger/2026-08-21-07e4e61.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    gates = {
+        value.get("gate")
+        for block in row["scenes"].values()
+        for section in ("metrics", "tripwires")
+        for value in block[section].values()
+        if value.get("gate")
+    }
+    assert "golden_absent" in gates, (
+        "this test asserts nothing unless the committed row really does carry a "
+        "retired gate name"
+    )
+    unknown = gates - live - set(G.RETIRED_GATES)
+    assert not unknown, (
+        f"the committed row carries gate name(s) {sorted(unknown)} that are "
+        "neither live nor recorded as retired"
+    )
+    for old, new in G.RETIRED_GATES.items():
+        assert old not in live, f"{old} was retired; do not resurrect the spelling"
+        assert new in live, f"{old}'s replacement {new} is not a live gate"
+
+
+def test_the_panel_distinguishes_a_fired_golden_from_a_passing_one():
+    """MUTATION: restore `f"{row['state']}({row.get('gate')})"` for the tripwire line.
+
+    Second mutation: drop the `_golden_failure_lines(...)` call from
+    `format_panel`.
+
+    A measured tripwire carries no gate, so that spelling printed
+    `measured(None)` — the same eight characters whether the gate held or fired.
+    The panel is what a human reads after `an bench`; if a fired gate is
+    indistinguishable there, the gate is only as good as whoever remembers to
+    grep the JSON.
+    """
+    from an.bench.ledger import build_scene_block, measured
+    from an.bench.registry import METRICS
+    from an.bench.run import format_panel
+
+    provenance = {
+        "scene_contract_sha256": "0" * 64,
+        "resolution": [320, 240],
+        "fps": 24,
+        "n_frames": 12,
+        "visual_kinds": ["rect"],
+        "golden": {
+            "what_moves": "the marker sweeping across the field",
+            "frames": [
+                {
+                    "state": "compared",
+                    "frame_key": "f0004",
+                    "time": 0.1667,
+                    "identical": False,
+                    "changed_px": 431,
+                    "min_ssim_win8": 0.12,
+                    "golden": "misc/bench/golden/scene/f0004-chromium99.0.0.0.png",
+                }
+            ],
+        },
+    }
+    metrics = {key: measured(1.0) for key in METRICS}
+
+    def panel(value):
+        block = build_scene_block(
+            provenance=provenance,
+            metrics=metrics,
+            tripwires={"golden_identity": measured(value, changed_px=431, max_delta=99)},
+        )
+        return format_panel({"scenes": {"aa_probe": block}})
+
+    fired, held = panel(False), panel(True)
+    assert "FIRED" in fired and "FIRED" not in held
+    assert "GOLDEN MISMATCH in aa_probe" in fired
+    assert "GOLDEN MISMATCH" not in held, (
+        "a passing gate must print nothing extra, or the loud block is noise"
+    )
+    for expected in ("431 px changed", "f0004", "the marker sweeping", "--bless"):
+        assert expected in fired, f"the failure block does not mention {expected!r}"
+    assert "measured(None)" not in fired and "measured(None)" not in held

@@ -24,6 +24,7 @@ from an.bench.ledger import (
     unavailable,
     witnesses,
 )
+from an.bench.golden import GATE_ABSENT
 from an.bench.registry import (
     FAMILY_SIDE,
     METRICS,
@@ -48,7 +49,7 @@ def _full_metrics(**overrides) -> dict:
 
 
 def _full_tripwires() -> dict:
-    return {k: gated("golden_absent") for k in TRIPWIRES}
+    return {k: gated(GATE_ABSENT) for k in TRIPWIRES}
 
 
 def _block(**kwargs) -> dict:

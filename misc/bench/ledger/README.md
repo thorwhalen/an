@@ -88,7 +88,7 @@ same expression on different references — and that is why both are in the row.
 ```bash
 an bench                       # the whole corpus
 an bench --scenes single_character
-an bench --no-ringing          # skips one extra lossless encode per scene
+an bench --bless "<reason>"    # re-write the golden frames, recording why
 ```
 
 `misc/docs/wave2_research.md` §1 is the authority for what each metric is;
