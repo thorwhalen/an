@@ -49,6 +49,31 @@ def _group_commands(app, group: str) -> list[str]:
     return [c.name for c in info.typer_instance.registered_commands]
 
 
+def _flags(app, *path: str) -> set[str]:
+    """Every option spelling a command accepts, read off the click command.
+
+    Structural for the same reason as `_registered`, and for a second one CI
+    found: typer renders help through Rich, which on a terminal-less runner
+    still emits ANSI codes — `--width` arrives as
+    ``\x1b[1;36m-\x1b[0m\x1b[1;36m-width\x1b[0m``, so a substring assertion on
+    the help text passes locally and fails on CI. It is the flag TABLE that
+    matters anyway, not how it is drawn.
+    """
+    import typer.main
+
+    command = typer.main.get_command(app)
+    for name in path:
+        command = command.commands[name]
+    return {opt for param in command.params for opt in param.opts}
+
+
+def _plain(text: str) -> str:
+    """Help text with ANSI escapes stripped and whitespace flattened."""
+    import re as _re
+
+    return " ".join(_re.sub(r"\x1b\[[0-9;]*m", "", text).split())
+
+
 # ------------------------------------------------------------- the projection
 
 
@@ -116,7 +141,7 @@ def test_every_command_has_help_derived_from_its_docstring(func):
     # Typer wraps at the terminal width, so compare on the first few words
     # rather than the whole line.
     opening = " ".join(first_line.split()[:4])
-    assert opening in " ".join(result.output.split()), (
+    assert opening in _plain(result.output), (
         f"{func.__name__}'s help does not come from its docstring"
     )
 
@@ -140,7 +165,7 @@ def test_the_wrapper_preserves_the_signature_that_is_the_command_line():
     result = runner.invoke(app, ["sized", "--width", "7", "--label", "wide"])
     assert result.exit_code == 0, result.output
     assert "wide:7" in result.output
-    assert "--width" in " ".join(runner.invoke(app, ["sized", "--help"]).output.split())
+    assert {"--width", "--label"} <= _flags(app, "sized")
 
 
 # ---------------------------------------------------- the three argh behaviours
@@ -234,10 +259,14 @@ def test_flags_keep_their_hyphenated_long_form():
     argh exposed `keep_render` as `--keep-render`; typer does the same, and this
     says so out loud because it is the one thing a reader would want confirmed
     before trusting a documented invocation.
+
+    Read off the click command rather than the help text. The first version
+    scraped `--help` and passed locally and failed on **all three** CI legs at
+    once: typer renders through Rich, which on a terminal-less runner still
+    emits ANSI, so `--scenes` arrives split across escape sequences. Reproduce
+    with `FORCE_COLOR=1 COLUMNS=40 pytest`.
     """
-    result = runner.invoke(_app(), ["bench", "--help"])
-    assert result.exit_code == 0
-    flattened = " ".join(result.output.split())
+    accepted = _flags(_app(), "bench")
     for flag in (
         "--scenes",
         "--out",
@@ -246,7 +275,9 @@ def test_flags_keep_their_hyphenated_long_form():
         "--bless",
         "--compare",
     ):
-        assert flag in flattened, f"{flag} is gone from `an bench`"
+        assert flag in accepted, (
+            f"{flag} is gone from `an bench`; it accepts {sorted(accepted)}"
+        )
 
 
 def test_a_real_command_runs_end_to_end(tmp_path):
