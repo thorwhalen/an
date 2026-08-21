@@ -11,10 +11,17 @@ This skill orients you for engineering work *on* an. If you're using an from a p
 
 **Always start with `misc/docs/architecture_as_built.md`** — the canonical, current-state map of the system (modules, control flows, invariants, caching strategy). Read it before any non-trivial change.
 
-`misc/docs/wave1_verification.md` is the **verification record** for the current wave of
-work (epic #9): the vendored engine's licence and provenance, the DiceBear per-style licence
-table, the network-guard design, and the silent-discard inventory. It is fact with sources,
-not design space — prefer it over re-deriving.
+`misc/docs/wave1_verification.md` is the **verification record** for Wave 1 of epic #9:
+the vendored engine's licence and provenance, the DiceBear per-style licence table, the
+network-guard design, and the silent-discard inventory.
+
+`misc/docs/wave2_research.md` is the **research record for Wave 2** — the metric ledger,
+the determinism audit, the golden-corpus rules and the vision-verifier cassette design.
+Read it before touching `an/bench/`, the corpus, `AN_DETERMINISTIC`, or
+`an/verify/vision.py`. It contradicts the epic in six places and says so up front; where
+they disagree, it measured and the epic did not.
+
+Both are fact with sources, not design space — prefer them over re-deriving.
 
 Two sibling skills carry rules that are easy to violate and expensive to get wrong:
 **`an-dev-licensing`** (before adding *any* dependency, model weight, font or bundle) and
