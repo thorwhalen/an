@@ -314,6 +314,49 @@ def bench_compare(
     return text
 
 
+def bench_mutants(names: str = "", quiet: bool = False) -> str:
+    """Break each guard on purpose and check the test that names it goes red.
+
+    names: comma-separated mutant names (default: every declared one)
+    quiet: print only the tally
+
+    "N mutants, all caught" is unfalsifiable after the fact when the mutations
+    lived in a scratch script. These are declared data, so the proof is
+    re-runnable — which matters because Wave 1 shipped three guards that stayed
+    green while the bug they guarded was present.
+
+    The WHOLE guard file runs for each mutant, never a `-k` filter: a filter that
+    happens to exclude the catching test reports "not caught" and sends you to
+    write a test that already exists. Takes about forty seconds.
+    """
+    import sys as _sys
+
+    from an.bench.mutants import MUTANTS, MutantError, format_results, run_mutants
+
+    wanted = [n.strip() for n in names.split(",") if n.strip()] or None
+    if wanted:
+        unknown = sorted(set(wanted) - {m.name for m in MUTANTS})
+        if unknown:
+            return (
+                f"unknown mutant(s) {unknown}; declared: "
+                f"{sorted(m.name for m in MUTANTS)}"
+            )
+    try:
+        results = run_mutants(wanted)
+    except MutantError as e:
+        return str(e)
+    survivors = [r for r in results if not r["caught"]]
+    text = (
+        f"{len(results) - len(survivors)}/{len(results)} caught"
+        if quiet
+        else format_results(results)
+    )
+    if survivors:
+        print(text)
+        _sys.exit(1)
+    return text
+
+
 _dispatch_funcs = [
     init,
     validate,
@@ -325,6 +368,7 @@ _dispatch_funcs = [
     credits,
     bench,
     bench_compare,
+    bench_mutants,
 ]
 
 

@@ -236,6 +236,58 @@ Five per-metric verdicts under a mutation: `as_declared`, `contrary`,
 The criterion is **families, not metrics**: two witnesses from one family count
 once.
 
+## Pulling a lever (an#41)
+
+`an/bench/mutations.py` holds the two levers. **No production knob exists for
+either, deliberately** — a knob would have to be documented, defended, and kept
+from being switched on by accident. Each reaches an existing seam from outside:
+
+- `high_crf` rebinds `render.DETERMINISTIC_X264_ARGS`. `_ffmpeg_mux` reads that
+  name as a module global at call time so the rebinding reaches the delivered
+  encode — and it does **not** reach `imageio.lossless_encode_command`, which
+  bound the tuple at import. That is exactly right: the lossless reference must
+  stay lossless, or every encode-side metric is measured against a moving target
+  and the lever produces beautiful numbers about nothing.
+- `disabled_aa` copies the staged runtime, flips PixiJS's `antialias` in the
+  copy, and rebinds `render.runtime_dir`. The shipped `runtime.js` is untouched.
+
+**Each lever verifies that it applied.** A lever that silently failed to take
+produces a run in which nothing moved — indistinguishable from an instrument
+that cannot see it, and it sends you to fix the wrong thing. The encode lever
+checks the row (`x264_argv` is recorded); the AA lever cannot, because the
+runtime is the code under test rather than a comparability key, so it pins the
+literal it flips and raises if it is not there exactly once.
+
+**Measured, both levers, all six scenes:**
+
+| lever | criterion met on | why not everywhere |
+|---|---|---|
+| `high_crf` | all six (4/3 on five, 3/3 on `single_character`) | family E inverts on `single_character` only |
+| `disabled_aa` | `aa_probe`, `multi_shot`, `saturated_outline` | family F's sign is scene-dependent; MSAA cannot reach axis-aligned art or an SVG sprite |
+
+So the criterion is **per scene, met on at least one**, and the corpus has to
+contain a scene the lever can reach. That is what makes `aa_probe` load-bearing
+rather than decorative.
+
+## Mutation-testing the guards, as a runnable artifact
+
+`an bench-mutants` (registry in `an/bench/mutants.py`). "N mutants, all caught"
+is unfalsifiable after the fact when the mutations lived in a scratch script;
+these are declared data, so the proof re-runs. ~40 s for the full sweep.
+
+Three properties of the declaration, each earned:
+
+- **Each mutant names the guard it must break.** A mutation nobody expected to
+  be caught is a fact about the code; one with a named catcher is a claim about
+  a *test*.
+- **The whole file runs, never `-k`.** A filter that happens to exclude the
+  catching test reports "not caught".
+- **The `old` text is pinned exactly**, and a default-leg test asserts every
+  site still occurs exactly once — because a mutant whose source moved has
+  silently stopped proving anything and nothing else would notice.
+
+Add one whenever you add a guard. If it survives, the guard is decoration.
+
 ## Two measured facts that change what counts as a witness
 
 Both found while building an#38, both by running the levers rather than by

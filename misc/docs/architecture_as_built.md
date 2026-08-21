@@ -63,6 +63,8 @@ an/
 │   ├── png.py               filter-0 writer + full-filter reader; numpy + stdlib only
 │   ├── golden.py            the golden gate and `--bless`; compares DECODED pixels
 │   ├── compare.py           two rows in, a verdict or a REFUSAL out (an#40)
+│   ├── mutations.py         the two levers, through seams the shipped code has
+│   ├── mutants.py           guard mutants as DATA, so the proof re-runs
 │   ├── environment.py       the environment tuple, split by comparison scope
 │   └── run.py               capture -> panel -> row
 │
@@ -275,6 +277,9 @@ an bench-compare              — two ledger rows in, a verdict or a REFUSAL out
    --mutation NAME           (evaluate the per-mutation predictions instead)
    --strict                  (exit nonzero on a regression / unmet criterion)
    --raw                     (JSON instead of the human digest)
+an bench-mutants              — break each guard on purpose; the named test must go red
+   --names A,B
+   --quiet
 ```
 
 All built via `argh` over the SSOT list `an.tools._dispatch_funcs`.
