@@ -24,7 +24,14 @@ eggs/
 .eggs/
 lib/
 lib64/
-parts/
+# ANCHORED. Unanchored, `parts/` matches at any depth — and this repo's
+# character rigs keep their SVGs in `assets/characters/<ref>/parts/`, so the
+# template's buildout rule silently excluded every one of them (measured:
+# `git ls-files | grep parts/` returned ZERO). That is the an#33 failure shape
+# exactly: a fixture that renders from a build product nobody tracks, and a
+# clean checkout that draws a different picture with no error. Buildout's
+# directory is at the repo root, so anchoring loses nothing.
+/parts/
 sdist/
 var/
 wheels/
@@ -142,3 +149,12 @@ examples/promote_demo/assets/characters/maya-promoted/
 # Session-boundary handoffs. Local working notes, not project docs — anything
 # that should outlive a session belongs in an issue or misc/docs/ instead.
 .claude/handoffs/
+
+# an bench corpus (an#38): the fixtures are COMMITTED WHOLE — their pixels have
+# to be a function of the repo alone — so only the per-render ephemera is
+# ignored here. Note there is deliberately no `assets/` rule: that is what
+# `examples/*/assets/` has, and it is why the corpus does not live there.
+misc/bench/corpus/*/output/
+misc/bench/corpus/*/artifacts/
+misc/bench/corpus/*/.an/
+misc/bench/corpus/*/ir/

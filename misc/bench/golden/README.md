@@ -1,0 +1,103 @@
+# The golden corpus
+
+Committed frames, compared on **decoded pixels**. Family B of the `an bench`
+panel, and the only part of it that can catch a change nobody predicted.
+
+```
+misc/bench/golden/<scene>/f0006-chromium140.0.7339.16.png
+misc/bench/golden/<scene>/bless-chromium140.0.7339.16.json
+```
+
+Twelve PNGs, two per scene, 43 KB in total.
+
+## The criterion is `sha256` of the decoded array, never the file bytes
+
+Chromium 1187 → 1223 changed **144 of 144** PNG files and **zero** pixels. A
+file-byte gate goes red on the first Playwright bump for a reason unrelated to
+animation quality — and, worse, trains people to re-bless without looking.
+
+So the frames are written through `an.bench.png`'s own encoder, filter type 0 on
+every row, rather than by copying Chromium's bytes. That makes a committed
+golden a function of the **pixel data alone**: a change to Chromium's filter
+heuristic produces no diff at all when the picture has not moved. Measured on
+the five real frames in this repo, filter-0 is also smaller every time, by
+between 5.2% and 22.3%.
+
+## The path keys on the Chromium build alone
+
+No platform segment, no arch segment. Measured across arm64 macOS, x86-64 Linux
+and arm64 Linux, across two different SwiftShader JIT backends: zero differing
+pixels *and* zero differing PNG bytes. Carrying the platform would force one
+committed copy per platform for no information.
+
+What the convention keeps is its real benefit: **a Playwright bump becomes a new
+path requiring a deliberate re-bless**, not a red test with no explanation.
+
+## Three absences, three gates
+
+A row that is not `measured` says which of these it is, because they call for
+different actions:
+
+| gate | means |
+|---|---|
+| `golden_frames_undeclared` | the fixture pins no times — declare two and bless |
+| `golden_absent_for_chromium_build` | the frames exist, but not for this build — look at the diff, then re-bless |
+| `chromium_build_unknown` | the browser could not be probed, so no golden could be looked up |
+| `blessed_this_run` | this run wrote these goldens; comparing against them would be a tautology |
+
+`unavailable` is separate again: a committed golden that would not decode. A
+check that crashed is not evidence that anything is fine.
+
+## Re-blessing
+
+```bash
+an bench --scenes <scene> --bless "why this picture changed"
+```
+
+The reason is the flag's **value**, not a second flag, so a bless with no
+recorded reason cannot be typed. A re-bless with no recorded reason is the same
+failure as a silently widened threshold — the named failure this wave exists to
+prevent. Look at the PNG diff first: GitHub renders 2-up, swipe and **onion
+skin**, which is the single strongest argument for committing images rather than
+hashes.
+
+A bless refuses:
+
+- a blank or whitespace-only reason;
+- fewer than two frames — one cannot notice a scene that renders its first
+  instant correctly and then stops;
+- a **pixel-identical pair**. Not hypothetical: on `promote_demo`, frame 0 and
+  the `duration/2` frame differ by exactly zero pixels, so the obvious second
+  time blesses one picture twice;
+- a pinned time past the end of the scene;
+- an unknown Chromium build.
+
+Moving a pinned time writes a new filename, so the bless also **removes** the
+frame it no longer blesses and names the removal in the record. Without that, a
+PNG nothing reads stays committed forever, indistinguishable from one that is
+still a gate.
+
+## Choosing the second time
+
+Pin it where something has actually moved, and record what. Two traps, both met
+while building this corpus:
+
+- **`duration/2` is not a safe default.** Blinks occupy 3.5% of frames, so on
+  `single_character` frame 0 and frame 30 are the same picture.
+- **A pair can be blind to a mutation the scene is not.** `graded_field`'s
+  marker advances by a sub-pixel step, so on frames 0, 1, 6, 8 and 11 it lands
+  on an exact pixel boundary and turning anti-aliasing off changes **zero**
+  pixels there. Its second golden moved from f0006 to f0004 for that reason. A
+  blessed pair that no available mutation can move is a gate that cannot go red.
+
+## The fixtures
+
+The four bench-owned scenes live in `../corpus/` and are **committed whole** —
+no `prepare` step, no build products. A metrics fixture has to hold still: if
+its pixels depended on a generator elsewhere in the repo, every change to that
+generator would force a re-bless. (`promote_demo` legitimately has a prepare
+step; exercising `an.characters.promote` is part of what that scene is for.)
+
+They are not under `examples/` because `.gitignore` excludes every
+`examples/*/assets/`. That is the same rule that, before an#33, let three CI
+runners agree perfectly about a picture that was never rendered.

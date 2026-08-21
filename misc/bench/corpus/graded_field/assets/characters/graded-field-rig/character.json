@@ -1,0 +1,465 @@
+{
+  "animations": {
+    "blink": {
+      "duration": 0.18,
+      "loop": false,
+      "name": "blink",
+      "tracks": [
+        {
+          "amplitude": 0.0,
+          "frames": [
+            [
+              0.0,
+              "eye_l_open"
+            ],
+            [
+              0.024999999999999994,
+              "eye_l_closed"
+            ],
+            [
+              0.155,
+              "eye_l_open"
+            ]
+          ],
+          "phase": 0.0,
+          "target": "slot:eye_l.attachment",
+          "type": "step"
+        },
+        {
+          "amplitude": 0.0,
+          "frames": [
+            [
+              0.0,
+              "eye_r_open"
+            ],
+            [
+              0.024999999999999994,
+              "eye_r_closed"
+            ],
+            [
+              0.155,
+              "eye_r_open"
+            ]
+          ],
+          "phase": 0.0,
+          "target": "slot:eye_r.attachment",
+          "type": "step"
+        }
+      ]
+    },
+    "idle_breath": {
+      "duration": 6.0,
+      "loop": true,
+      "name": "idle_breath",
+      "tracks": [
+        {
+          "amplitude": 2.0,
+          "frames": [],
+          "phase": 0.0,
+          "target": "bone:torso.y",
+          "type": "sine"
+        },
+        {
+          "amplitude": 0.5,
+          "frames": [],
+          "phase": 0.25,
+          "target": "bone:head.rotation_deg",
+          "type": "sine"
+        },
+        {
+          "amplitude": 1.5,
+          "frames": [],
+          "phase": 0.5,
+          "target": "bone:torso.x",
+          "type": "sine"
+        }
+      ]
+    }
+  },
+  "bones": [
+    {
+      "name": "root",
+      "parent": null,
+      "pivot": null,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "x": 512.0,
+      "y": 980.0
+    },
+    {
+      "name": "torso",
+      "parent": "root",
+      "pivot": null,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "x": 0.0,
+      "y": -300.0
+    },
+    {
+      "name": "head",
+      "parent": "torso",
+      "pivot": "neck",
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "x": 0.0,
+      "y": -260.0
+    },
+    {
+      "name": "arm_l",
+      "parent": "torso",
+      "pivot": "shoulder_l",
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "x": -90.0,
+      "y": -240.0
+    },
+    {
+      "name": "arm_r",
+      "parent": "torso",
+      "pivot": "shoulder_r",
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "x": 90.0,
+      "y": -240.0
+    },
+    {
+      "name": "leg_l",
+      "parent": "root",
+      "pivot": null,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "x": -50.0,
+      "y": -10.0
+    },
+    {
+      "name": "leg_r",
+      "parent": "root",
+      "pivot": null,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "x": 50.0,
+      "y": -10.0
+    }
+  ],
+  "display_name": "Graded Field Rig",
+  "kind": "CharacterDescriptor",
+  "metadata": {
+    "art_provenance": "bench_corpus",
+    "note": "a vertical linear gradient scaled to overfill the canvas, plus one small opaque marker that sweeps across it. The gradient is the subject: banding has no edge in it, so no edge-masked metric can see it."
+  },
+  "name": "graded-field-rig",
+  "schema_version": "0.1.0",
+  "skins": {
+    "default": {
+      "name": "default",
+      "slots": {
+        "arm_l": {
+          "arm_l": {
+            "anchor": [
+              0.5,
+              0.0
+            ],
+            "height": null,
+            "path": "parts/arm_l.svg",
+            "width": null
+          }
+        },
+        "arm_r": {
+          "arm_r": {
+            "anchor": [
+              0.5,
+              0.0
+            ],
+            "height": null,
+            "path": "parts/arm_r.svg",
+            "width": null
+          }
+        },
+        "brow_l": {
+          "brow_l": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/brow_l.svg",
+            "width": null
+          }
+        },
+        "brow_r": {
+          "brow_r": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/brow_r.svg",
+            "width": null
+          }
+        },
+        "eye_l": {
+          "eye_l_closed": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/eye_l_closed.svg",
+            "width": null
+          },
+          "eye_l_open": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/eye_l_open.svg",
+            "width": null
+          }
+        },
+        "eye_r": {
+          "eye_r_closed": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/eye_r_closed.svg",
+            "width": null
+          },
+          "eye_r_open": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/eye_r_open.svg",
+            "width": null
+          }
+        },
+        "head": {
+          "head": {
+            "anchor": [
+              0.5,
+              0.78
+            ],
+            "height": null,
+            "path": "parts/head.svg",
+            "width": null
+          }
+        },
+        "leg_l": {
+          "leg_l": {
+            "anchor": [
+              0.5,
+              0.0
+            ],
+            "height": null,
+            "path": "parts/leg_l.svg",
+            "width": null
+          }
+        },
+        "leg_r": {
+          "leg_r": {
+            "anchor": [
+              0.5,
+              0.0
+            ],
+            "height": null,
+            "path": "parts/leg_r.svg",
+            "width": null
+          }
+        },
+        "mouth": {
+          "mouth_a": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/mouth/mouth_a.svg",
+            "width": null
+          },
+          "mouth_b": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/mouth/mouth_b.svg",
+            "width": null
+          },
+          "mouth_c": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/mouth/mouth_c.svg",
+            "width": null
+          },
+          "mouth_d": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/mouth/mouth_d.svg",
+            "width": null
+          },
+          "mouth_e": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/mouth/mouth_e.svg",
+            "width": null
+          },
+          "mouth_f": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/mouth/mouth_f.svg",
+            "width": null
+          },
+          "mouth_g": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/mouth/mouth_g.svg",
+            "width": null
+          },
+          "mouth_h": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/mouth/mouth_h.svg",
+            "width": null
+          },
+          "mouth_x": {
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "height": null,
+            "path": "parts/mouth/mouth_x.svg",
+            "width": null
+          }
+        },
+        "torso": {
+          "torso": {
+            "anchor": [
+              0.5,
+              0.0
+            ],
+            "height": null,
+            "path": "parts/torso.svg",
+            "width": null
+          }
+        }
+      }
+    }
+  },
+  "slots": [
+    {
+      "attachment": "leg_l",
+      "bone": "leg_l",
+      "draw_order": 0,
+      "name": "leg_l"
+    },
+    {
+      "attachment": "leg_r",
+      "bone": "leg_r",
+      "draw_order": 0,
+      "name": "leg_r"
+    },
+    {
+      "attachment": "torso",
+      "bone": "torso",
+      "draw_order": 1,
+      "name": "torso"
+    },
+    {
+      "attachment": "arm_l",
+      "bone": "arm_l",
+      "draw_order": 2,
+      "name": "arm_l"
+    },
+    {
+      "attachment": "arm_r",
+      "bone": "arm_r",
+      "draw_order": 2,
+      "name": "arm_r"
+    },
+    {
+      "attachment": "head",
+      "bone": "head",
+      "draw_order": 4,
+      "name": "head"
+    },
+    {
+      "attachment": "eye_l_open",
+      "bone": "head",
+      "draw_order": 6,
+      "name": "eye_l"
+    },
+    {
+      "attachment": "eye_r_open",
+      "bone": "head",
+      "draw_order": 6,
+      "name": "eye_r"
+    },
+    {
+      "attachment": "mouth_x",
+      "bone": "head",
+      "draw_order": 7,
+      "name": "mouth"
+    },
+    {
+      "attachment": "brow_l",
+      "bone": "head",
+      "draw_order": 8,
+      "name": "brow_l"
+    },
+    {
+      "attachment": "brow_r",
+      "bone": "head",
+      "draw_order": 8,
+      "name": "brow_r"
+    }
+  ],
+  "source": null,
+  "source_svg": null,
+  "view_box": [
+    0,
+    0,
+    1024,
+    1024
+  ],
+  "viseme_map": {
+    "A": "mouth_a",
+    "B": "mouth_b",
+    "C": "mouth_c",
+    "D": "mouth_d",
+    "E": "mouth_e",
+    "F": "mouth_f",
+    "G": "mouth_g",
+    "H": "mouth_h",
+    "X": "mouth_x"
+  },
+  "voice_ref": null
+}

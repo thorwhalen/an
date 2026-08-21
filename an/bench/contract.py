@@ -71,6 +71,32 @@ def scene_contract_sha256(scene_json: dict) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def scenes_contract_sha256(scene_jsons: Any) -> str:
+    """The contract digest for a whole scene, across every shot in timeline order.
+
+    A single-shot scene returns **exactly** :func:`scene_contract_sha256` of its
+    one staged scene, so every row written before the corpus grew a multi-shot
+    fixture stays comparable — ``an bench --compare`` refuses rows whose
+    contract hash differs, and a gratuitous change here would retire the only
+    committed row as evidence.
+
+    A multi-shot scene hashes the ordered list of per-shot digests, because
+    hashing only the first shot would let a change to the second one pass as
+    "the same scene" — which is precisely the claim this digest exists to deny.
+
+    >>> a = {"scene": {"children": []}}
+    >>> scenes_contract_sha256([a]) == scene_contract_sha256(a)
+    True
+    >>> scenes_contract_sha256([a, a]) == scene_contract_sha256(a)
+    False
+    """
+    digests = [scene_contract_sha256(js) for js in scene_jsons]
+    if len(digests) == 1:
+        return digests[0]
+    payload = json.dumps(digests, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def frames_sha256(frame_paths: Any) -> str:
     """``sha256`` over the DECODED pixels of a frame sequence, never file bytes.
 

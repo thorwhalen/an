@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Iterator, Sequence
 
 #: Per-shot subdirectory naming inside `.an/render_work`, and the staged scene
 #: filename. Mirrored from the renderer rather than restated as literals at
@@ -107,44 +107,165 @@ class Fixture:
     prepare: Callable[[Path], None] | None = None
     #: Visual kinds the staged scene MUST contain — see the module docstring.
     expect_visual_kinds: frozenset = frozenset()
-    #: Times (seconds) at which an#38 blesses a golden frame. Empty here on
-    #: purpose: the field ships now so the corpus work can pin per-scene times
-    #: without a schema change, and `--bless` refuses a pair whose two frames
-    #: are byte-identical.
+    #: Times (seconds, into the scene's CONCATENATED timeline) at which a
+    #: golden frame is blessed. Two per scene, the second chosen so something
+    #: has actually moved — `--bless` refuses a pair whose two frames are
+    #: pixel-identical, which is not hypothetical: `promote_demo`'s frame 0 and
+    #: its `duration/2` frame differ by exactly **zero** pixels.
     golden_frames: tuple[float, ...] = field(default_factory=tuple)
+    #: One line saying what moves between the two golden times. Carried as data
+    #: because "pick a time where something moved" is a rule that decays into a
+    #: habit, and the reason is what a reviewer needs when a golden goes red.
+    golden_note: str = ""
 
 
-#: One fixture per render path, deliberately both: the descriptor (SVG-sprite)
-#: path is 12x more sensitive to a rasteriser flip than the procedural one
-#: (2.94% vs 0.24% of pixels under GPU-vs-software), so a procedural-only
-#: corpus under-reports the case that matters.
+#: Where the bench-owned fixtures live. NOT under `examples/`, and the reason
+#: is mechanical rather than tidiness: `.gitignore` excludes every
+#: `examples/*/assets/`, so a corpus scene that needs committed art cannot live
+#: there without a carve-out per scene. `misc/` is not ignored at all.
 #:
-#: Four scenes the research says this corpus still lacks — a large flat or
-#: gently-graded field, a saturated fill under a black outline, a multi-shot
-#: project (a single-shot render short-circuits the concat to `shutil.copy`, so
-#: `_ffmpeg_concat` is never exercised), and an `aa_probe` with edges at
-#: non-axis angles (axis-aligned `drawRect` edges are bit-identical with MSAA
-#: on or off, so a corpus of axis-aligned art cannot validate an AA metric at
-#: all) — belong to an#38, which builds them rather than borrowing them from
-#: `examples/`.
+#: The second reason is that a metrics fixture must **hold still**. These four
+#: carry their whole rig as committed files and have no ``prepare`` step, so
+#: their pixels are a function of the repo alone — where `promote_demo`'s are a
+#: function of `an.characters.promote`, and would need re-blessing whenever that
+#: changes.
+CORPUS_DIRNAME: str = "misc/bench/corpus"
+
+
+#: The corpus. One fixture per render path, deliberately both: the descriptor
+#: (SVG-sprite) path is 12x more sensitive to a rasteriser flip than the
+#: procedural one (2.94% vs 0.24% of pixels under GPU-vs-software), so a
+#: procedural-only corpus under-reports the case that matters.
+#:
+#: The four scenes an#38 adds, each for a **measured** reason:
+#:
+#: - ``graded_field`` — a real gradient (98 distinct luma levels down the centre
+#:   column) over a large flat block. Banding has no edge in it, so every
+#:   edge-masked metric is blind to it; and the gradient itself sits OUTSIDE the
+#:   flat mask by construction (``flat_mask`` demands a zero 4-neighbour delta),
+#:   which is why the scene carries a flat block too — measured 0.2795 of the
+#:   frame, against 0.0341 for a gradient alone.
+#: - ``saturated_outline`` — maximally saturated fills under a pure-black 12px
+#:   outline. The shipped examples are 31 colours on white and their measured
+#:   4:2:0 edge error is ~3x smaller, so the chroma metric under-reports exactly
+#:   the artefact class the epic cares about. Highest edge-mask fraction in the
+#:   corpus (0.0566).
+#: - ``aa_probe`` — three bars pinned at 7, 23 and 45 degrees. Axis-aligned
+#:   ``drawRect`` edges are bit-identical with MSAA on or off, so a corpus of
+#:   axis-aligned art cannot validate an AA metric at all. Measured under the
+#:   real AA lever (PixiJS ``antialias: false``): ``edge_transition_width``
+#:   2.9866 -> 2.0000 and ``video_stream_bytes`` **+6.1%**. That last number is
+#:   why this scene is load-bearing rather than decorative — on
+#:   ``single_character`` the same lever moves the bytes **-6.1%**, the opposite
+#:   of the declared direction, because AA-off on axis-aligned art removes
+#:   intermediate colours instead of creating a staircase. Family F is only an
+#:   honest witness for ``disabled_aa`` on a scene with non-axis-aligned edges.
+#: - ``multi_shot`` — two shots, so ``an/render.py``'s ``_ffmpeg_concat`` is
+#:   exercised at all (a single-shot render short-circuits it to
+#:   ``shutil.copy``) and ``file_bytes`` stops meaning two different things
+#:   depending on shot count. Its shot ids are ``intro`` then ``beat``
+#:   **deliberately**: they sort the other way, so any code that recovers shot
+#:   order from the directory name instead of the timeline pairs source frames
+#:   against the wrong half of the concatenated video, and this fixture is what
+#:   notices.
+#:
+#: One measured fact that shapes the set: the **descriptor path is nearly blind
+#: to the AA lever** (96 differing pixels out of 12.4M on ``promote_demo``),
+#: because MSAA applies to WebGL geometry and an SVG sprite is a pre-rasterised
+#: texture. So the descriptor scenes are in the corpus for the rasteriser
+#: sensitivity the cross-arch work measured, not as AA witnesses.
 DFLT_FIXTURES: dict[str, Fixture] = {
     "single_character": Fixture(
         path="examples/single_character",
         prepare=_declare_procedural_rig("charlie-v1"),
         expect_visual_kinds=frozenset({"rect", "ellipse"}),
+        golden_frames=(0.0, 1.0),
+        golden_note=(
+            "a blink. Only 253 pixels differ, and that is the point: blinks "
+            "occupy 3.5% of frames, so frame 0 against duration/2 is a "
+            "pixel-identical pair on this scene."
+        ),
     ),
     "promote_demo": Fixture(
         path="examples/promote_demo",
         prepare=_prepare_promote_demo,
         expect_visual_kinds=frozenset({"svg_sprite"}),
+        golden_frames=(0.0, 2.9167),
+        golden_note=(
+            "the idle animation near the end of the shot (224 px). Measured: "
+            "frame 0 against duration/2 differs by exactly ZERO pixels here, "
+            "so the obvious second time would have blessed one image twice."
+        ),
+    ),
+    "graded_field": Fixture(
+        path=f"{CORPUS_DIRNAME}/graded_field",
+        expect_visual_kinds=frozenset({"svg_sprite"}),
+        golden_frames=(0.0, 0.1667),
+        golden_note=(
+            "the white marker sweeping across the gradient (6,270 px). Frame 4, "
+            "not the obvious mid-scene frame 6: the marker advances by a "
+            "sub-pixel step, so on frames 0, 1, 6, 8 and 11 it lands on an exact "
+            "pixel boundary and AA-off changes ZERO pixels there. A blessed pair "
+            "that no available mutation can move is a gate that cannot go red."
+        ),
+    ),
+    "saturated_outline": Fixture(
+        path=f"{CORPUS_DIRNAME}/saturated_outline",
+        expect_visual_kinds=frozenset({"svg_sprite"}),
+        golden_frames=(0.0, 0.25),
+        golden_note="the head plate rotating through 0.3 rad (1,187 px).",
+    ),
+    "aa_probe": Fixture(
+        path=f"{CORPUS_DIRNAME}/aa_probe",
+        expect_visual_kinds=frozenset({"rect"}),
+        golden_frames=(0.0, 0.25),
+        golden_note=(
+            "the fourth bar sweeping horizontally (4,200 px). The three angled "
+            "bars are pinned and do not move — they are the AA subject."
+        ),
+    ),
+    "multi_shot": Fixture(
+        path=f"{CORPUS_DIRNAME}/multi_shot",
+        expect_visual_kinds=frozenset({"rect", "ellipse"}),
+        golden_frames=(0.0, 0.25),
+        golden_note=(
+            "the whole picture: 0.25s is the FIRST frame of the second shot, so "
+            "the pair spans the concat boundary (75,050 px). A golden pair "
+            "inside one shot would not notice a shot rendered in the wrong order."
+        ),
     ),
 }
 
 
-def iter_shot_dirs(work_dir: Path) -> Iterator[tuple[str, Path]]:
-    """``(shot_id, shot_dir)`` for every rendered shot, in sorted order."""
-    for shot_dir in sorted(Path(work_dir).glob(SHOT_DIR_GLOB)):
-        yield shot_dir.name[len("shot_") :], shot_dir
+def iter_shot_dirs(work_dir: Path, *, order: Sequence[str]) -> Iterator[tuple[str, Path]]:
+    """``(shot_id, shot_dir)`` for every rendered shot, in **timeline** order.
+
+    ``order`` is mandatory, and that is the whole point of this signature.
+    ``an/render.py`` concatenates ``[r.mp4_path for r in shot_results]`` built
+    from ``list(scene.timeline)``, while this function's previous form returned
+    ``sorted(work_dir.glob("shot_*"))`` — directory-name order. The two agree
+    only when the shot ids happen to sort into timeline order, and when they do
+    not, every encode-side metric pairs source frame *i* of one shot against
+    decoded frame *i* of another. The ``multi_shot`` fixture's ids (``intro``
+    then ``beat``) are chosen so they disagree.
+
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> d = Path(tempfile.mkdtemp())
+    >>> for name in ("shot_intro", "shot_beat"): (d / name).mkdir()
+    >>> [i for i, _ in iter_shot_dirs(d, order=["intro", "beat"])]
+    ['intro', 'beat']
+    """
+    root = Path(work_dir)
+    for shot_id in order:
+        shot_dir = root / f"shot_{shot_id}"
+        if not shot_dir.is_dir():
+            raise CorpusError(
+                f"the timeline declares shot {shot_id!r} but {shot_dir} does not "
+                "exist. The renderer names each shot directory after the shot id, "
+                "so a missing one means the render and the timeline disagree."
+            )
+        yield shot_id, shot_dir
 
 
 def staged_scene(shot_dir: Path) -> dict:

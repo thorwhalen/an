@@ -188,6 +188,7 @@ def bench(
     out: str = "",
     keep_render: str = "",
     quiet: bool = False,
+    bless: str = "",
 ) -> str:
     """Render the fixed bench corpus and write a metrics ledger.
 
@@ -199,10 +200,18 @@ def bench(
     out: ledger path (default: misc/bench/ledger/<date>-<sha>[-dirty].json)
     keep_render: keep the throwaway render tree here instead of deleting it
     quiet: print only the ledger path
+    bless: (re)write the golden frames, recording THIS STRING as the reason
 
     Rendering knobs are deliberately NOT flags: a bench whose render knobs vary
     per invocation produces incomparable rows, so they are a module constant
     recorded verbatim into the ledger.
+
+    ``--bless`` takes the reason as its value rather than pairing with a
+    separate ``--reason``, so a bless with no recorded reason cannot be typed.
+    A re-bless with no recorded reason is the same failure as a silently
+    widened threshold, and it is the failure this wave exists to prevent — so
+    look at the PNG diff (GitHub renders 2-up, swipe and onion-skin) before
+    writing one.
     """
     from an.bench.corpus import DFLT_FIXTURES
     from an.bench.run import format_panel, run_bench
@@ -222,6 +231,7 @@ def bench(
         scenes=chosen,
         out=Path(out) if out else None,
         keep_render=Path(keep_render) if keep_render else None,
+        bless=bless,
     )
     if quiet:
         return str(ledger.get("_written_to", ""))

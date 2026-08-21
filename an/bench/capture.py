@@ -51,6 +51,10 @@ class ShotCapture:
     scene_json: dict
     runtime_dir: Path
     frame_count: int
+    #: The shot's declared duration, from the IR rather than from the staged
+    #: scene, so the expected frame count is derived from the same number the
+    #: renderer used.
+    duration: float = 0.0
 
 
 @dataclass(slots=True)
@@ -72,12 +76,6 @@ class SceneCapture:
     audio_cache: str
     wall_seconds: float
     determinism: dict = field(default_factory=dict)
-
-    @property
-    def frames_dir(self) -> Path:
-        """The single-shot frames dir; multi-shot corpora measure per shot."""
-        return self.shots[0].frames_dir
-
 
 class CaptureError(RuntimeError):
     """A capture could not produce something the metrics need."""
@@ -144,7 +142,12 @@ def capture_fixture(
     shots: list[ShotCapture] = []
     all_kinds: set[str] = set()
     resolutions: set[tuple[int, int]] = set()
-    for shot_id, shot_dir in iter_shot_dirs(work_dir):
+    # TIMELINE order, never directory order — `an/render.py` concatenates the
+    # per-shot mp4s in `scene.timeline` order, and pairing source frames against
+    # the decoded concat in any other order silently measures inter-shot motion.
+    timeline_order = [s.id for s in scene.timeline]
+    durations = {s.id: float(s.duration) for s in scene.timeline}
+    for shot_id, shot_dir in iter_shot_dirs(work_dir, order=timeline_order):
         frames = shot_dir / "frames"
         pngs = sorted(frames.glob("frame_*.png"))
         js = staged_scene(shot_dir)
@@ -158,6 +161,7 @@ def capture_fixture(
                 scene_json=js,
                 runtime_dir=shot_dir / "runtime",
                 frame_count=len(pngs),
+                duration=durations.get(shot_id, 0.0),
             )
         )
 

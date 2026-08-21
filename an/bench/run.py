@@ -18,10 +18,13 @@ dependence, and it belongs in provenance rather than inside a gate.
 from __future__ import annotations
 
 import shutil
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-from an.bench import contract, imageio, masks, metrics as M, palette as P
+from an.bench import contract, golden as G, imageio, masks, metrics as M, palette as P
+from an.bench import png
 from an.bench.capture import SceneCapture, capture_fixture, cleanup, expected_frame_count
 from an.bench.corpus import BENCH_RENDER_KWARGS, DFLT_FIXTURES, Fixture
 from an.bench import environment
@@ -36,7 +39,7 @@ from an.bench.ledger import (
     write_ledger,
 )
 from an.bench.paths import git_state, ledger_path, repo_root
-from an.bench.registry import METRICS, TRIPWIRES
+from an.bench.registry import METRICS
 
 class BenchError(RuntimeError):
     """The bench could not produce a row it would be honest to file."""
@@ -91,32 +94,165 @@ def conversion_distance(
     }
 
 
-def _shot_metrics(
-    capture: SceneCapture,
-    shot,
-) -> tuple[dict[str, Value], dict[str, Any]]:
-    """The whole panel for one shot, plus the provenance the panel needs recorded."""
+def _png_source_rgb(frames_dir: Path, *, height: int, width: int):
+    """Decode a shot's PNG sequence with the package's own reader, no ffmpeg.
+
+    Byte-for-byte the same array ``imageio.source_rgb`` returns — asserted
+    against it on every rendered frame in the repo — but reachable on a machine
+    with no ffmpeg, which is what makes family A honestly render-side.
+    """
+    import numpy as np
+
+    from an.adapters.cutout.render import DEFAULT_FRAME_PNG_PATTERN
+
+    frames = sorted(Path(frames_dir).glob("frame_*.png"))
+    if not frames:
+        raise BenchError(f"no {DEFAULT_FRAME_PNG_PATTERN} frames under {frames_dir}")
+    stacked = np.stack([png.read_png(p) for p in frames])
+    if stacked.shape[1:3] != (height, width):
+        raise BenchError(
+            f"{frames_dir} holds {stacked.shape[2]}x{stacked.shape[1]} frames but "
+            f"the scene declares {width}x{height}"
+        )
+    return stacked
+
+
+@contextmanager
+def _timeline_frames_dir(capture: SceneCapture):
+    """A single directory holding every frame of the scene, in timeline order.
+
+    A one-shot scene yields its own frames directory **unchanged**, so nothing
+    is copied and the existing corpus's numbers are bit-identical to what they
+    were before multi-shot support existed.
+
+    A multi-shot scene gets a temporary directory of symlinks renumbered
+    ``0..N-1``, because ffmpeg's image2 demuxer reads the contiguous
+    ``frame_%06d.png`` run from 0 and each shot restarts its own numbering at 0.
+    Encoding the shots separately and concatenating would not do: the lossless
+    reference has to be the same sequence, in the same order, that the delivered
+    mp4 shows.
+    """
+    from an.adapters.cutout.render import DEFAULT_FRAME_PNG_PATTERN
+
+    if len(capture.shots) == 1:
+        yield capture.shots[0].frames_dir
+        return
+    staged = Path(tempfile.mkdtemp(prefix=f"an-bench-timeline-{capture.name}-"))
+    try:
+        index = 0
+        for shot in capture.shots:
+            for src in sorted(shot.frames_dir.glob("frame_*.png")):
+                (staged / (DEFAULT_FRAME_PNG_PATTERN % index)).symlink_to(src)
+                index += 1
+        yield staged
+    finally:
+        shutil.rmtree(staged, ignore_errors=True)
+
+
+def _render_side_values(src_rgb, packed, palette_uint32) -> dict[str, Value]:
+    """Family A. Computed on the pre-encode pixels; blind to the encoder by construction."""
+    width_mean, width_median = M.edge_transition_width(src_rgb)
+    return {
+        "edge_transition_width": measured(
+            round(width_mean, 4), median=round(width_median, 4)
+        ),
+        "off_palette_pixel_fraction": measured(
+            round(M.off_palette_pixel_fraction(packed, palette_uint32), 6)
+        ),
+        "frame_distinct_colours": measured(round(M.frame_distinct_colours(packed), 4)),
+    }
+
+
+def _stack(loader, capture: SceneCapture, *, height: int, width: int):
+    """Decode every shot's frames in **timeline order** and concatenate them.
+
+    The delivered mp4 is the concatenation of the per-shot renders in
+    ``scene.timeline`` order (``an/render.py``'s ``_ffmpeg_concat``), so the
+    reference leg of every encode-side metric has to be built the same way.
+    ``capture.shots`` is already in timeline order — see
+    :func:`an.bench.corpus.iter_shot_dirs`, whose ``order`` argument is
+    mandatory for exactly this reason.
+    """
+    import numpy as np
+
+    parts = [loader(s.frames_dir, height=height, width=width) for s in capture.shots]
+    return parts[0] if len(parts) == 1 else np.concatenate(parts)
+
+
+def _merged_palette(capture: SceneCapture) -> dict:
+    """The union of every shot's declared palette, plus per-shot provenance.
+
+    A union rather than the first shot's: ``off_palette_pixel_fraction`` is
+    computed over the concatenated frames, so a colour declared only by the
+    second shot would otherwise be counted as off-palette for the whole scene.
+    """
+    per_shot = [
+        (s.shot_id, P.palette_for_scene(s.scene_json, runtime_dir=s.runtime_dir))
+        for s in capture.shots
+    ]
+    palette: set = set()
+    hexes: set = set()
+    sources: dict[str, Any] = {}
+    unresolved: list = []
+    superset = False
+    for shot_id, pal in per_shot:
+        palette |= set(pal["palette"])
+        hexes |= set(pal.get("palette_hex") or ())
+        sources[shot_id] = pal.get("palette_sources")
+        unresolved.extend(pal.get("unresolved_svg_colour_tokens") or ())
+        superset = superset or bool(pal.get("palette_is_superset"))
+    return {
+        "palette": sorted(palette),
+        "palette_hex": sorted(hexes),
+        "palette_sources": sources,
+        "palette_is_superset": superset,
+        "unresolved_svg_colour_tokens": sorted(set(unresolved)),
+    }
+
+
+def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, Any]]:
+    """The whole panel for one scene, plus the provenance the panel needs recorded.
+
+    Computed over the scene's **concatenated** frames, not over its first shot.
+    A single-shot scene is the same thing with one part, so the numbers for the
+    existing corpus are unchanged; a multi-shot scene is the reason this is not
+    ``_shot_metrics``, because the delivered mp4 it is compared against covers
+    every shot.
+    """
     import numpy as np
 
     h, w = capture.resolution[1], capture.resolution[0]
     values: dict[str, Value] = {}
 
-    src_rgb = imageio.source_rgb(shot.frames_dir, height=h, width=w)
+    if not _ffmpeg_available():
+        # Checked BEFORE the first decode, not after it. The check used to sit
+        # below `source_rgb`, which runs ffmpeg — so on a machine without it the
+        # bench raised `BenchDecodeError` and this whole degradation branch was
+        # unreachable. Render-side metrics still need the frames, so they are
+        # decoded with the package's own PNG reader instead: family A is
+        # render-side and has no business depending on the encoder's toolchain.
+        src_rgb = _stack(_png_source_rgb, capture, height=h, width=w)
+        packed = M.pack_rgb(src_rgb)
+        pal = _merged_palette(capture)
+        values.update(_render_side_values(src_rgb, packed, pal["palette"]))
+        reason = "ffmpeg/ffprobe not on PATH; every encode-side metric needs both"
+        for key in METRICS:
+            values.setdefault(key, unavailable(reason))
+        return values, {
+            **{k: v for k, v in pal.items() if k != "palette"},
+            "decoder": "an.bench.png (ffmpeg absent)",
+            "source_pixels_sha256": contract.frames_sha256(src_rgb),
+            "frames_on_disk": sum(s.frame_count for s in capture.shots),
+            "decoded_source_frames": int(len(src_rgb)),
+        }
+
+    src_rgb = _stack(imageio.source_rgb, capture, height=h, width=w)
     packed = M.pack_rgb(src_rgb)
 
-    pal = P.palette_for_scene(shot.scene_json, runtime_dir=shot.runtime_dir)
+    pal = _merged_palette(capture)
     palette_uint32 = pal["palette"]
 
-    width_mean, width_median = M.edge_transition_width(src_rgb)
-    values["edge_transition_width"] = measured(
-        round(width_mean, 4), median=round(width_median, 4)
-    )
-    values["off_palette_pixel_fraction"] = measured(
-        round(M.off_palette_pixel_fraction(packed, palette_uint32), 6)
-    )
-    values["frame_distinct_colours"] = measured(
-        round(M.frame_distinct_colours(packed), 4)
-    )
+    values.update(_render_side_values(src_rgb, packed, palette_uint32))
 
     prov: dict[str, Any] = {
         **{k: v for k, v in pal.items() if k != "palette"},
@@ -129,8 +265,9 @@ def _shot_metrics(
             "a non-blend near the top means the palette derivation missed a "
             "literal and the number is inflated with no error anywhere."
         ),
+        "decoder": "ffmpeg",
         "source_pixels_sha256": contract.frames_sha256(src_rgb),
-        "frames_on_disk": shot.frame_count,
+        "frames_on_disk": sum(s.frame_count for s in capture.shots),
         "decoded_source_frames": int(len(src_rgb)),
         "tolerances": {
             "edge_flat_tol": M.EDGE_FLAT_TOL,
@@ -141,39 +278,34 @@ def _shot_metrics(
         },
     }
 
-    if not _ffmpeg_available():
-        reason = "ffmpeg/ffprobe not on PATH; every encode-side metric needs both"
-        for key, spec in METRICS.items():
-            values.setdefault(key, unavailable(reason))
-        return values, prov
-
     # The reference. `-qp 0` is lossless, so this IS the plane libx264 received
     # — on any build, without assuming that our own PNG->YUV conversion matches
     # ffmpeg's internal one. It does on ffmpeg 8.1 and does not on the Linux
     # runner's older build (see the module docstring), which is exactly why the
     # metrics no longer depend on it.
-    qp0_mp4 = shot.frames_dir.parent / "_bench_qp0.mp4"
-    lossless_reference(shot.frames_dir, capture.fps, qp0_mp4)
-    try:
-        ref_yuv = imageio.decoded_yuv(qp0_mp4, height=h, width=w)
-        ref_rgb = imageio.decoded_rgb(qp0_mp4, height=h, width=w)
-        distance = conversion_distance(shot.frames_dir, qp0_mp4, height=h, width=w)
-        prov["png_to_encoder_input_luma"] = distance
-        # Derived so a reader does not have to. When it is True,
-        # `coded_luma_edge_error` (lossless-referenced) and `chroma_edge_dY`
-        # (PNG-referenced) are numerically identical on this build — which
-        # looks like a duplicate and is not: they differ by exactly this
-        # residual, and on a build where it is nonzero they diverge.
-        prov["references_coincide"] = distance.get("luma_residual_max") == 0
-        # The direct RGB->444 conversion, kept for ONE metric: the chroma one,
-        # whose subject IS the 4:2:0 subsampling that happens during the
-        # conversion. A qp0 file's chroma is already subsampled, so referencing
-        # it there would read ~0 and measure nothing.
-        src_yuv = imageio.source_yuv(shot.frames_dir, height=h, width=w)
-        dec_yuv = imageio.decoded_yuv(capture.mp4, height=h, width=w)
-        dec_rgb = imageio.decoded_rgb(capture.mp4, height=h, width=w)
-    finally:
-        qp0_mp4.unlink(missing_ok=True)
+    with _timeline_frames_dir(capture) as frames_dir:
+        qp0_mp4 = frames_dir.parent / "_bench_qp0.mp4"
+        lossless_reference(frames_dir, capture.fps, qp0_mp4)
+        try:
+            ref_yuv = imageio.decoded_yuv(qp0_mp4, height=h, width=w)
+            ref_rgb = imageio.decoded_rgb(qp0_mp4, height=h, width=w)
+            distance = conversion_distance(frames_dir, qp0_mp4, height=h, width=w)
+            prov["png_to_encoder_input_luma"] = distance
+            # Derived so a reader does not have to. When it is True,
+            # `coded_luma_edge_error` (lossless-referenced) and `chroma_edge_dY`
+            # (PNG-referenced) are numerically identical on this build — which
+            # looks like a duplicate and is not: they differ by exactly this
+            # residual, and on a build where it is nonzero they diverge.
+            prov["references_coincide"] = distance.get("luma_residual_max") == 0
+            # The direct RGB->444 conversion, kept for ONE metric: the chroma one,
+            # whose subject IS the 4:2:0 subsampling that happens during the
+            # conversion. A qp0 file's chroma is already subsampled, so referencing
+            # it there would read ~0 and measure nothing.
+            src_yuv = imageio.source_yuv(frames_dir, height=h, width=w)
+            dec_yuv = imageio.decoded_yuv(capture.mp4, height=h, width=w)
+            dec_rgb = imageio.decoded_rgb(capture.mp4, height=h, width=w)
+        finally:
+            qp0_mp4.unlink(missing_ok=True)
 
     n = min(len(src_yuv), len(dec_yuv), len(dec_rgb), len(src_rgb), len(ref_yuv))
     if n != len(src_rgb) or n != len(dec_rgb):
@@ -272,20 +404,53 @@ def _shot_metrics(
     return values, prov
 
 
-#: Why family B is null in every row this PR can write. an#38 supplies the
-#: frames; the row ships fully shaped so filling it needs no schema change —
-#: and a schema change would invalidate every row written before it.
-GOLDEN_ABSENT_DETAIL: str = (
-    "no golden frames are committed yet; an#38 builds the corpus. The row ships "
-    "fully shaped, so filling it needs no schema change."
+#: Family B's two rows, one in each block. Named here because the golden result
+#: fills both from one comparison, and a reader has to be able to see that the
+#: boolean and the number are the same evidence read two ways.
+GOLDEN_METRIC_KEY: str = "min_ssim_win8_vs_golden"
+GOLDEN_TRIPWIRE_KEY: str = "golden_identity"
+
+#: Said when a run blessed the goldens it would otherwise have compared against.
+JUST_BLESSED_DETAIL: str = (
+    "this run WROTE these goldens, so comparing against them is a tautology: "
+    "the identity holds by construction and no code could have failed it. Run "
+    "`an bench` again, without --bless, for a comparison that can fail."
 )
 
 
-def _tripwire_values(capture: SceneCapture, shot) -> dict[str, Value]:
-    """The golden block. Gated until an#38 supplies the frames."""
-    return {
-        key: gated("golden_absent", detail=GOLDEN_ABSENT_DETAIL) for key in TRIPWIRES
-    }
+def _golden_values(result: dict) -> tuple[Value, Value]:
+    """``(metric, tripwire)`` for one scene's golden result.
+
+    Both come from the same comparison. ``golden_identity`` is a change
+    detector and counts zero toward any criterion; ``min_ssim_win8_vs_golden``
+    is the magnitude beside it. Splitting them across the two blocks is what
+    keeps a boolean from being counted as a measurement.
+    """
+    state = result["state"]
+    if state == "gated":
+        value = gated(result["gate"], detail=result["detail"])
+        return value, value
+    if state == "unavailable":
+        value = unavailable(result["detail"])
+        return value, value
+    extra = {"changed_px": result["changed_px"], "max_delta": result["max_delta"]}
+    mismatch = result.get("shape_mismatch")
+    if mismatch:
+        # The golden was blessed at a different resolution, so there is no
+        # windowed SSIM to report — but the identity IS knowable, and it is
+        # False. Reporting the boolean and withholding the number is the split
+        # the two blocks exist for; substituting 0.0 would be a measurement
+        # nobody took, which is the unknown-is-not-zero failure this schema
+        # exists to prevent.
+        metric = unavailable(
+            "the committed golden has a different shape from today's frame "
+            f"({mismatch}); a windowed SSIM between them has no value. The "
+            "scene's resolution changed — re-bless deliberately."
+        )
+        return metric, measured(False, **extra, shape_mismatch=mismatch)
+    metric = measured(round(float(result["min_ssim_win8"]), 6), **extra)
+    tripwire = measured(bool(result["identical"]), **extra)
+    return metric, tripwire
 
 
 def run_bench(
@@ -294,14 +459,36 @@ def run_bench(
     out: Path | None = None,
     keep_render: Path | None = None,
     write: bool = True,
+    bless: str = "",
+    golden_root: Path | None = None,
 ) -> dict:
-    """Render the corpus, compute the panel, and (by default) write the row."""
+    """Render the corpus, compute the panel, and (by default) write the row.
+
+    ``bless`` is the **reason** a re-bless is being made, and passing it is what
+    turns the run into a bless. One argument rather than a ``--bless`` flag plus
+    a ``--reason`` string, so "blessed with no recorded reason" — the failure
+    this rule exists to prevent — is not expressible.
+
+    ``golden_root`` redirects where goldens are read and written, and it exists
+    because without it a test of the bless path has no choice but to overwrite
+    the committed corpus. That is not hypothetical: the first version of an#38's
+    bless test did exactly that, replacing a real bless record's reason with the
+    test's own.
+    """
     root = repo_root()
+    goldens = Path(golden_root) if golden_root is not None else root
     fixtures = scenes if scenes is not None else DFLT_FIXTURES
     git = git_state(root)
+    # Probed ONCE, before the loop: the golden path keys on the Chromium build,
+    # so the gate needs it per scene, and probing again at the end would launch
+    # a second browser that could in principle report a different build from the
+    # one that actually rendered.
+    browser = environment.probe_browser()
+    chromium_build = G.chromium_build_of({"render_side": browser})
 
     scene_blocks: dict[str, dict] = {}
     captures: list[SceneCapture] = []
+    blessed: dict[str, dict] = {}
     # Read while the throwaway tree still exists: the SEI is the field that
     # decides whether two rows may be compared at all, and the tree is deleted
     # before the run-level provenance is assembled.
@@ -315,38 +502,90 @@ def run_bench(
             captures.append(capture)
             if sei is None:
                 sei = environment.x264_sei(capture.mp4)
-            shot = capture.shots[0]
 
-            values, shot_prov = _shot_metrics(capture, shot)
-            # Family B is golden-referenced, so it is GATED rather than absent:
-            # an absent row and a null row look the same to a reader and mean
-            # opposite things.
-            values["min_ssim_win8_vs_golden"] = gated(
-                "golden_absent", detail=GOLDEN_ABSENT_DETAIL
+            values, scene_prov = _scene_metrics(capture)
+            scene_contract = contract.scenes_contract_sha256(
+                [s.scene_json for s in capture.shots]
             )
-            expected = expected_frame_count(
-                float((shot.scene_json.get("meta") or {}).get("duration", 0.0)),
-                capture.fps,
+            expected = sum(
+                expected_frame_count(s.duration, capture.fps) for s in capture.shots
             )
+
+            if bless:
+                blessed[name] = G.bless_scene(
+                    capture,
+                    times=fixture.golden_frames,
+                    chromium_build=chromium_build,
+                    reason=bless,
+                    git=git,
+                    scene_contract_sha256=scene_contract,
+                    golden_note=fixture.golden_note,
+                    root=goldens,
+                )
+                golden = {"state": "gated", "gate": G.GATE_JUST_BLESSED,
+                          "detail": JUST_BLESSED_DETAIL}
+            elif chromium_build is None:
+                golden = {
+                    "state": "gated",
+                    "gate": G.GATE_BUILD_UNKNOWN,
+                    "detail": (
+                        "the Chromium build could not be determined, and every "
+                        "golden path keys on it, so no golden could be looked up. "
+                        f"probe: {browser.get('error', 'no chromium_build field')}"
+                    ),
+                }
+            else:
+                golden = G.compare_scene(
+                    capture,
+                    times=fixture.golden_frames,
+                    chromium_build=chromium_build,
+                    root=goldens,
+                )
+            metric_value, tripwire_value = _golden_values(golden)
+            values[GOLDEN_METRIC_KEY] = metric_value
+            scene_prov["golden"] = {
+                **golden,
+                "chromium_build": chromium_build,
+                "declared_times": list(fixture.golden_frames),
+                "what_moves": fixture.golden_note,
+                "note": (
+                    "DIAGNOSTICS, not comparability keys. `an bench --compare` "
+                    "keys on named provenance fields — the scene contract hash, "
+                    "the resolution, the mask parameters, the encode command, "
+                    "the x264 SEI and the ISA — never on this block's equality. "
+                    "`today_sha256` here is a per-run MEASUREMENT and changes "
+                    "exactly when the render changes, which is when two rows are "
+                    "most worth comparing."
+                ),
+            }
+
             provenance = {
                 "source": capture.source,
                 "prepared": capture.prepared,
-                "scene_contract_sha256": contract.scene_contract_sha256(shot.scene_json),
-                "n_drawable_entities": contract.count_drawable_entities(shot.scene_json),
+                "scene_contract_sha256": scene_contract,
+                "shot_contract_sha256": {
+                    s.shot_id: contract.scene_contract_sha256(s.scene_json)
+                    for s in capture.shots
+                },
+                "n_drawable_entities": sum(
+                    contract.count_drawable_entities(s.scene_json) for s in capture.shots
+                ),
                 "n_declared_entity_refs": capture.n_declared_entity_refs,
-                "n_nodes": contract.count_nodes(shot.scene_json),
+                "n_nodes": sum(contract.count_nodes(s.scene_json) for s in capture.shots),
                 "n_frames": expected,
                 "resolution": list(capture.resolution),
                 "fps": capture.fps,
                 "shot_count": len(capture.shots),
+                "shot_order": [s.shot_id for s in capture.shots],
                 "shots": [
-                    {"id": s.shot_id, "frames": s.frame_count} for s in capture.shots
+                    {"id": s.shot_id, "frames": s.frame_count, "duration": s.duration}
+                    for s in capture.shots
                 ],
                 "visual_kinds": sorted(capture.visual_kinds),
                 "asset_resolution": capture.asset_resolution,
                 "audio_cache": capture.audio_cache,
                 "wall_seconds": capture.wall_seconds,
-                **shot_prov,
+                **scene_prov,
             }
             if provenance["frames_on_disk"] != expected:
                 raise BenchError(
@@ -358,7 +597,7 @@ def run_bench(
             scene_blocks[name] = build_scene_block(
                 provenance=provenance,
                 metrics=values,
-                tripwires=_tripwire_values(capture, shot),
+                tripwires={GOLDEN_TRIPWIRE_KEY: tripwire_value},
             )
     finally:
         if keep_render is None:
@@ -369,7 +608,8 @@ def run_bench(
         provenance={
             "git": git,
             "render_kwargs": dict(BENCH_RENDER_KWARGS),
-            "environment": environment_record(x264_sei=sei),
+            "environment": environment_record(x264_sei=sei, browser=browser),
+            **({"blessed": blessed} if blessed else {}),
             "encode_command_source": (
                 "an.adapters.cutout.render._ffmpeg_mux + DETERMINISTIC_X264_ARGS"
             ),

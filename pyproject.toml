@@ -60,6 +60,17 @@ packages = ["an"]
 "an/data/cutout_runtime/vendor/pixi.LICENSE.txt" = "an/data/cutout_runtime/vendor/pixi.LICENSE.txt"
 
 
+# SDIST: `misc/` and `examples/` are deliberately IN, and there is deliberately
+# no `[tool.hatch.build.targets.sdist]` section. Research §3 asked for this to
+# be a decision rather than an oversight, so: `an bench` needs a source
+# checkout by construction (`an.bench.paths.repo_root` refuses to run against a
+# wheel, because the corpus lives outside the package), so an sdist without
+# `misc/bench/` would be a source tree the bench cannot run in. Measured on
+# 0.1.29: the golden corpus is 52,532 B and the fixtures 28,005 B — together
+# 1.0% of the sdist, against `examples/` at 69.6%. The WHEEL already excludes
+# both, via `packages = ["an"]` above; verified by building one.
+# Revisit at a corpus over 20 MB, or a single re-bless over 5 MB.
+
 [project.urls]
 Homepage = "https://github.com/thorwhalen/an"
 Repository = "https://github.com/thorwhalen/an"

@@ -115,14 +115,22 @@ def probe_browser() -> dict[str, Any]:
         return {"error": f"{type(e).__name__}: {e}"}
 
 
-def environment_record(*, x264_sei: str | None = None) -> dict[str, Any]:
-    """Everything about this machine that could plausibly move a number."""
+def environment_record(
+    *, x264_sei: str | None = None, browser: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Everything about this machine that could plausibly move a number.
+
+    ``browser`` lets the caller supply an already-taken probe. The golden gate
+    needs the Chromium build *before* the run-level provenance is assembled —
+    the path keys on it — and probing twice would launch a second browser and
+    could, in principle, report a different build from the one that rendered.
+    """
     from an.adapters.cutout.render import DETERMINISTIC_X264_ARGS
 
     return {
         "render_side": {
             "playwright": tool_version("playwright"),
-            **probe_browser(),
+            **(probe_browser() if browser is None else browser),
             # The verdict's finding, carried as data rather than a comment so a
             # future reader does not have to know it.
             "comparison_scope": "any_machine",

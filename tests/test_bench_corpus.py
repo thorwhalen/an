@@ -138,3 +138,203 @@ def test_the_copy_leaves_the_previous_render_behind(tmp_path):
         "the audio cache IS kept — its warm/cold state is recorded rather than "
         "destroyed, because it affects wall-time and nothing else"
     )
+
+
+# --------------------------------------------------------------- an#38 additions
+
+
+def test_every_fixture_declares_two_golden_frames_and_says_what_moves():
+    """MUTATION: drop `golden_frames` (or `golden_note`) from any one fixture.
+
+    Two frames, because one cannot notice a scene that renders its first instant
+    correctly and then stops. And a recorded reason, because "pick a time where
+    something moved" is a rule that decays into a habit — measured on
+    `promote_demo`, frame 0 and the `duration/2` frame differ by exactly ZERO
+    pixels, so the obvious choice blesses one picture twice.
+    """
+    from an.bench.golden import REQUIRED_GOLDEN_FRAMES
+
+    for name, fixture in DFLT_FIXTURES.items():
+        assert len(fixture.golden_frames) == REQUIRED_GOLDEN_FRAMES, (
+            f"{name} declares {len(fixture.golden_frames)} golden frames"
+        )
+        assert fixture.golden_note.strip(), f"{name} does not say what moves"
+        assert fixture.golden_frames[0] != fixture.golden_frames[1], (
+            f"{name} pins the same time twice"
+        )
+
+
+def test_the_corpus_covers_the_four_scenes_the_research_says_it_lacked():
+    """MUTATION: delete any one of the four an#38 fixtures.
+
+    Pinned by NAME rather than by counting, because a count is satisfied by any
+    four scenes and each of these four exists for its own measured reason:
+    banding has no edge in it; the shipped examples' 4:2:0 edge error is ~3x
+    smaller than a saturated pattern's; a single-shot render short-circuits
+    `_ffmpeg_concat` to `shutil.copy`; and axis-aligned `drawRect` edges are
+    bit-identical with MSAA on or off.
+    """
+    assert {"graded_field", "saturated_outline", "multi_shot", "aa_probe"} <= set(
+        DFLT_FIXTURES
+    )
+
+
+def test_the_bench_owned_fixtures_need_no_prepare_step():
+    """A metrics fixture must hold still.
+
+    MUTATION: give one of the four a `prepare` that regenerates its art.
+
+    `promote_demo` legitimately has one — its rig is a gitignored build product,
+    and exercising `an.characters.promote` is part of what that scene is for.
+    The four bench-owned scenes must not: their pixels have to be a function of
+    the repo alone, or every change to an unrelated generator forces a re-bless.
+    """
+    from an.bench.corpus import CORPUS_DIRNAME
+
+    for name, fixture in DFLT_FIXTURES.items():
+        if fixture.path.startswith(CORPUS_DIRNAME):
+            assert fixture.prepare is None, (
+                f"{name} lives in the bench-owned corpus but has a prepare step, "
+                "so its pixels depend on code outside its own directory"
+            )
+
+
+def test_every_corpus_fixture_is_committed_whole():
+    """MUTATION: add `misc/bench/corpus/*/assets/` to .gitignore.
+
+    The failure this repeats: every `examples/*/assets/` IS gitignored, and
+    before an#33 a missing descriptor made the compiler fall back to the
+    procedural rig with zero warnings — so three CI runners agreed perfectly
+    about a picture that was not the picture.
+    """
+    import subprocess
+
+    from an.bench.corpus import CORPUS_DIRNAME
+    from an.bench.paths import repo_root
+
+    root = repo_root()
+    for name, fixture in DFLT_FIXTURES.items():
+        if not fixture.path.startswith(CORPUS_DIRNAME):
+            continue
+        directory = root / fixture.path
+        assert directory.is_dir(), f"{name}: {directory} does not exist"
+        tracked = subprocess.run(
+            ["git", "ls-files", "--", fixture.path],
+            cwd=root, capture_output=True, text=True, check=False,
+        ).stdout.split()
+        on_disk = {
+            str(p.relative_to(root))
+            for p in directory.rglob("*")
+            if p.is_file() and ".an" not in p.parts and "output" not in p.parts
+        }
+        untracked = sorted(on_disk - set(tracked))
+        assert not untracked, f"{name} has untracked fixture files: {untracked}"
+
+
+def test_the_multi_shot_fixture_ids_do_not_sort_into_timeline_order():
+    """The ordering trap has to stay armed.
+
+    MUTATION: rename `multi_shot`'s shots to `s1` and `s2`.
+
+    `an/render.py` concatenates in `scene.timeline` order; a directory-name sort
+    agrees only by luck. This fixture is the thing that notices when it does
+    not, and it can only do that while its ids disagree with their own sort.
+    """
+    from an.bench.paths import repo_root
+
+    scene_md = (repo_root() / DFLT_FIXTURES["multi_shot"].path / "scene.md").read_text(
+        encoding="utf-8"
+    )
+    ids = [
+        line.split()[2] for line in scene_md.splitlines() if line.startswith("## Shot ")
+    ]
+    assert len(ids) >= 2, "the multi-shot fixture must have more than one shot"
+    assert ids != sorted(ids), (
+        f"shot ids {ids} sort into timeline order, so a directory-name sort would "
+        "agree with the timeline and this fixture would stop catching the bug"
+    )
+
+
+def test_iter_shot_dirs_follows_the_timeline_not_the_directory_name(tmp_path):
+    """MUTATION: `for shot_id in order` -> `for shot_dir in sorted(root.glob(...))`.
+
+    Directory order and timeline order agree only when the ids happen to sort
+    that way. When they do not, every encode-side metric pairs source frame *i*
+    of one shot against decoded frame *i* of another, and reports plausible
+    numbers for a comparison that never happened.
+    """
+    from an.bench.corpus import iter_shot_dirs
+
+    for shot_id in ("intro", "beat"):
+        (tmp_path / f"shot_{shot_id}").mkdir()
+    assert [i for i, _ in iter_shot_dirs(tmp_path, order=["intro", "beat"])] == [
+        "intro",
+        "beat",
+    ]
+    assert sorted(["intro", "beat"]) == ["beat", "intro"], (
+        "the two orders must disagree, or this test asserts nothing"
+    )
+
+
+def test_a_shot_the_timeline_names_but_the_render_did_not_produce_is_refused(tmp_path):
+    """MUTATION: `if not shot_dir.is_dir(): raise` -> `continue`.
+
+    Skipping would silently shorten the source leg, which is the same defect as
+    pairing it out of order.
+    """
+    from an.bench.corpus import iter_shot_dirs
+
+    (tmp_path / "shot_intro").mkdir()
+    with pytest.raises(CorpusError, match="beat"):
+        list(iter_shot_dirs(tmp_path, order=["intro", "beat"]))
+
+
+def test_corpus_entity_ids_are_pinned_by_literal():
+    """A rename silently re-phases every blink and moves every metric.
+
+    MUTATION: rename an entity in any corpus `scene.md`.
+    """
+    from an.bench.paths import repo_root
+
+    expected = {
+        "graded_field": ["field"],
+        "saturated_outline": ["plates"],
+        "aa_probe": ["probe"],
+        "multi_shot": ["back", "ada", "back", "ada"],
+    }
+    root = repo_root()
+    for name, ids in expected.items():
+        text = (root / DFLT_FIXTURES[name].path / "scene.md").read_text(encoding="utf-8")
+        found = [
+            line.split("id:", 1)[1].strip()
+            for line in text.splitlines()
+            if line.strip().startswith("id:")
+        ]
+        assert found == ids, f"{name}: entity ids are {found}, expected {ids}"
+
+
+def test_the_golden_corpus_is_not_excluded_from_the_sdist():
+    """MUTATION: add `[tool.hatch.build.targets.sdist] exclude = ["misc"]`.
+
+    `an bench` needs a source checkout by construction — `repo_root()` refuses
+    to run against a wheel — so an sdist that dropped `misc/bench/` would be a
+    source tree the bench cannot run in. Measured on 0.1.29, the corpus and its
+    goldens are 1.0% of the sdist against `examples/` at 69.6%, and the wheel
+    excludes both already. The decision is recorded in `pyproject.toml`; this
+    pins it against a well-meaning slimming pass.
+    """
+    import tomllib
+
+    from an.bench.paths import repo_root
+
+    config = tomllib.loads((repo_root() / "pyproject.toml").read_text(encoding="utf-8"))
+    sdist = config.get("tool", {}).get("hatch", {}).get("build", {}).get("targets", {}).get("sdist", {})
+    excluded = list(sdist.get("exclude", []))
+    assert not any("misc" in pattern for pattern in excluded), (
+        f"the sdist excludes {excluded}, which would drop the bench corpus"
+    )
+    include = sdist.get("include")
+    if include is not None:
+        assert any("misc" in pattern for pattern in include), (
+            f"the sdist include list {include} does not carry the bench corpus"
+        )
