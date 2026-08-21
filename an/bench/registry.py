@@ -288,8 +288,18 @@ METRICS: dict[str, MetricSpec] = {
                 "disabled_aa": Prediction(
                     "decrease",
                     counts=True,
-                    reason="family A's single witness",
-                    reference="3.07 -> 1.65 on the synthetic flat-cutout fixture; ORDINAL evidence only",
+                    reason=(
+                        "family A's single witness. Holds on five of six corpus "
+                        "scenes; on `promote_demo` it moves +0.0001 the OTHER way, "
+                        "because the descriptor path is nearly blind to MSAA (96 "
+                        "differing pixels of 12.4M — an SVG sprite is a "
+                        "pre-rasterised texture, and multisampling applies to "
+                        "WebGL geometry). A `contrary` verdict at that magnitude "
+                        "is the lever not reaching the scene, which is why the "
+                        "comparison reports the relative delta beside the "
+                        "direction (an#41)."
+                    ),
+                    reference="2.88 -> 2.00 on `aa_probe`; 5.6368 -> 5.6369 on `promote_demo`",
                 ),
             },
         ),
@@ -471,11 +481,20 @@ METRICS: dict[str, MetricSpec] = {
                     reference="0.0003 / 0.0005 / 0.0035 / 0.0127 / 0.0399 (crf18->51)",
                 ),
                 "disabled_aa": Prediction(
-                    "no_change",
+                    None,
+                    gate=_GATED_SOURCE_HASH,
                     reason=(
-                        "measured flat across the AA matrix. This ORTHOGONALITY is "
-                        "the metric's whole value — it is not a free witness, and "
-                        "counting it would be counting a tautology."
+                        "The research measured this flat across a SIMULATED AA "
+                        "matrix and called the orthogonality 'the metric's whole "
+                        "value'. Run against the real MSAA lever it moves on ALL "
+                        "SIX corpus scenes, in both directions (an#41). The "
+                        "mechanism is structural rather than surprising: the flat "
+                        "mask is derived from the SOURCE frames, which this lever "
+                        "changes, so the mask itself moves and the comparison has "
+                        "no fixed reference. That is the definition of gated — "
+                        "uninterpretable, not good or bad — and it is the same "
+                        "gate `encode_flicker_on_held_pixels` already carries for "
+                        "every renderer mutation, for the same reason."
                     ),
                 ),
             },
@@ -496,7 +515,17 @@ METRICS: dict[str, MetricSpec] = {
                 "high_crf": Prediction(
                     "increase", reason="companion to the rate above"
                 ),
-                "disabled_aa": Prediction("no_change"),
+                "disabled_aa": Prediction(
+                    None,
+                    gate=_GATED_SOURCE_HASH,
+                    reason=(
+                        "gated for the same structural reason as the rate above: "
+                        "the flat mask moves with the source. Measured moving on "
+                        "one of six scenes and holding on five, which is what a "
+                        "metric with no fixed reference looks like — not evidence "
+                        "of orthogonality (an#41)."
+                    ),
+                ),
             },
         ),
         _spec(
@@ -513,8 +542,22 @@ METRICS: dict[str, MetricSpec] = {
                 "high_crf": Prediction(
                     "increase",
                     counts=True,
-                    reason="family E's witness",
-                    reference="0.0321 / 0.0394 / 0.0848 (crf18/23/51)",
+                    reason=(
+                        "family E's witness — and the least reliable of the four. "
+                        "It is NON-MONOTONE across the CRF ladder on the real "
+                        "corpus (0.000648 / 0.007018 / 0.000985 / 0.000916 / "
+                        "0.001137 / 0.001685 over crf 18/23/28/33/40/51 on "
+                        "`single_character`, peaking at crf23), because at high "
+                        "CRF the whole frame flattens into large uniform skip "
+                        "regions and held pixels stop moving — the same mechanism "
+                        "the `disabled_aa` gate below documents. At the crf23 -> "
+                        "crf40 step the lever uses it holds on five of six scenes "
+                        "and inverts on `single_character`, so it is kept and not "
+                        "leaned on: C, D and F are monotone across the whole "
+                        "ladder and satisfy the criterion on all six scenes "
+                        "without it (an#41)."
+                    ),
+                    reference="0.0113 -> 0.0243 on aa_probe; 0.0070 -> 0.0011 on single_character",
                 ),
                 "disabled_aa": Prediction(
                     None,
@@ -546,7 +589,16 @@ METRICS: dict[str, MetricSpec] = {
                     reason="provisional; kept out of the witness count until open question 4 is settled",
                 ),
                 "disabled_aa": Prediction(
-                    "no_change", reason="both legs rise together by construction"
+                    None,
+                    gate=_GATED_SOURCE_HASH,
+                    reason=(
+                        "declared 'both legs rise together by construction'; "
+                        "measured moving on ALL SIX corpus scenes under the real "
+                        "MSAA lever (an#41). The cancellation is exact only when "
+                        "both legs share a FIXED source, and a renderer mutation "
+                        "moves the source — so what is left is uninterpretable "
+                        "rather than zero."
+                    ),
                 ),
             },
             notes=(
@@ -648,8 +700,21 @@ METRICS: dict[str, MetricSpec] = {
                 "disabled_aa": Prediction(
                     "increase",
                     counts=True,
-                    reason="hard edges cost more to code. THE WEAKEST of this mutation's three witnesses, and the only unreviewed metric in the set.",
-                    reference="+5.5%",
+                    reason=(
+                        "hard edges cost more to code. THE WEAKEST of this "
+                        "mutation's three witnesses, the only unreviewed metric in "
+                        "the set — and SCENE-DEPENDENT, measured. It holds where "
+                        "the lever has non-axis-aligned edges to change (aa_probe "
+                        "+6.6%, multi_shot +9.7%, saturated_outline +6.9%) and "
+                        "INVERTS where it does not (single_character -6.1%, "
+                        "graded_field -5.7%, promote_demo -0.1%), because AA-off "
+                        "on axis-aligned art removes intermediate colours and the "
+                        "picture gets CHEAPER instead of harder. So this "
+                        "mutation's criterion is met per scene, on the scenes the "
+                        "lever can reach — which is the measured reason `aa_probe` "
+                        "is in the corpus at all (an#38, an#41)."
+                    ),
+                    reference="+6.6% / -6.1%, scene-dependent",
                 ),
             },
             notes=(
@@ -695,8 +760,16 @@ TRIPWIRES: dict[str, MetricSpec] = {
                     reason="the corpus is UPSTREAM of the encoder; no encode change can reach it",
                 ),
                 "disabled_aa": Prediction(
-                    "no_change",
-                    reason="it FAILS, which is a change detector firing, not a quality measurement",
+                    "decrease",
+                    reason=(
+                        "it FAILS — a change detector firing, not a quality "
+                        "measurement, which is why it counts ZERO. Spelled "
+                        "`decrease` (True -> False) rather than `no_change`: the "
+                        "prediction was `no_change` while this very sentence said "
+                        "it fails, so the row reported `unexpected_movement` on "
+                        "every scene for a tripwire doing exactly its job. Found "
+                        "by `an bench-compare` (an#41)."
+                    ),
                 ),
             },
             notes=(
