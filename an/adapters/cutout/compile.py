@@ -245,15 +245,13 @@ def _raise_or_warn_on_asset_fallbacks(
     )
     if strict:
         raise CutoutCompileError(
-            body
-            + "\n\nstrict_assets=True refuses this because the render would be a "
+            body + "\n\nstrict_assets=True refuses this because the render would be a "
             "DIFFERENT picture that looks like a successful one. Either commit / "
             "regenerate the missing asset, or drop strict_assets if a stand-in "
             "is what you meant."
         )
     warnings.warn(
-        body
-        + "\n\nThe render will succeed and look plausible, which is exactly why "
+        body + "\n\nThe render will succeed and look plausible, which is exactly why "
         "this is said out loud. Pass strict_assets=True to make it fatal.",
         CutoutCompileWarning,
         stacklevel=3,
