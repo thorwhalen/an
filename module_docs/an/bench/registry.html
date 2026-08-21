@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.30 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.31 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=73657eb8"></script>
+      <script src="../../../_static/documentation_options.js?v=d71dfaa1"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -83,6 +83,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bench.html">an.bench</a></li>
 <li class="toctree-l1"><a class="reference internal" href="capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare.html">an.bench.compare</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contract.html">an.bench.contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corpus.html">an.bench.corpus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environment.html">an.bench.environment</a></li>
@@ -98,6 +99,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.registry.FAMILY_SIDE"><code class="docutils literal notranslate"><span class="pre">FAMILY_SIDE</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.registry.METRICS"><code class="docutils literal notranslate"><span class="pre">METRICS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.registry.MUTATIONS"><code class="docutils literal notranslate"><span class="pre">MUTATIONS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.registry.MUTATION_TOUCHES"><code class="docutils literal notranslate"><span class="pre">MUTATION_TOUCHES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.registry.MetricSpec"><code class="docutils literal notranslate"><span class="pre">MetricSpec</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.registry.Optimum"><code class="docutils literal notranslate"><span class="pre">Optimum</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.registry.Prediction"><code class="docutils literal notranslate"><span class="pre">Prediction</span></code></a></li>
@@ -239,6 +241,26 @@ that failure would be misdiagnosed as the harness being wrong.</p>
 <dd class="field-odd"><p>The two disjoint levers an#41 uses. Both are mandatory</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.registry.MUTATION_TOUCHES">
+<span class="sig-prename descclassname"><span class="pre">an.bench.registry.</span></span><span class="sig-name descname"><span class="pre">MUTATION_TOUCHES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'disabled_aa':</span> <span class="pre">(),</span> <span class="pre">'high_crf':</span> <span class="pre">(('environment',</span> <span class="pre">'encode_side',</span> <span class="pre">'x264_argv'),)}</span></span><a class="headerlink" href="#an.bench.registry.MUTATION_TOUCHES" title="Link to this definition"></a></dt>
+<dd><p>What each lever is EXPECTED to change about the recorded environment.</p>
+<p>Load-bearing, and not obvious: <cite>an bench-compare</cite> refuses two rows whose
+encode command differs, because a crf23 row and a crf40 row are not “one
+better and one worse”. But the <cite>high_crf</cite> lever’s whole method is to change
+that command — so without this declaration, mutation mode refuses every
+encode-side metric and the encoder lever, which is half of an#41’s
+deliverable, can never be evaluated at all.</p>
+<p>So the exemption is DECLARED per lever rather than inferred, it applies only
+in mutation mode, and it names exact paths — a blanket “ignore the
+environment when a mutation is given” would silently let a row from another
+machine in through the same door.</p>
+<p><cite>disabled_aa</cite> touches nothing the row records: it patches <cite>runtime.js</cite>, and
+the runtime is the code under test rather than a comparability key. Whether
+THAT lever applied is checked by the harness that pulls it, not by reading
+the row back.</p>
 </dd></dl>
 
 <dl class="py class">

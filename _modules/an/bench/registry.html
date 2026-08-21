@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.30 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.31 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=73657eb8"></script>
+      <script src="../../../_static/documentation_options.js?v=d71dfaa1"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -80,6 +80,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
@@ -210,6 +211,29 @@
 <span class="c1">#: because of where the corpus sits, not because the instrument is blind — and</span>
 <span class="c1">#: that failure would be misdiagnosed as the harness being wrong.</span>
 <span class="n">MUTATIONS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"high_crf"</span><span class="p">,</span> <span class="s2">"disabled_aa"</span><span class="p">)</span>
+
+<span class="c1">#: What each lever is EXPECTED to change about the recorded environment.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Load-bearing, and not obvious: `an bench-compare` refuses two rows whose</span>
+<span class="c1">#: encode command differs, because a crf23 row and a crf40 row are not "one</span>
+<span class="c1">#: better and one worse". But the `high_crf` lever's whole method is to change</span>
+<span class="c1">#: that command — so without this declaration, mutation mode refuses every</span>
+<span class="c1">#: encode-side metric and the encoder lever, which is half of an#41's</span>
+<span class="c1">#: deliverable, can never be evaluated at all.</span>
+<span class="c1">#:</span>
+<span class="c1">#: So the exemption is DECLARED per lever rather than inferred, it applies only</span>
+<span class="c1">#: in mutation mode, and it names exact paths — a blanket "ignore the</span>
+<span class="c1">#: environment when a mutation is given" would silently let a row from another</span>
+<span class="c1">#: machine in through the same door.</span>
+<span class="c1">#:</span>
+<span class="c1">#: `disabled_aa` touches nothing the row records: it patches `runtime.js`, and</span>
+<span class="c1">#: the runtime is the code under test rather than a comparability key. Whether</span>
+<span class="c1">#: THAT lever applied is checked by the harness that pulls it, not by reading</span>
+<span class="c1">#: the row back.</span>
+<span class="n">MUTATION_TOUCHES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"high_crf"</span><span class="p">:</span> <span class="p">((</span><span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"encode_side"</span><span class="p">,</span> <span class="s2">"x264_argv"</span><span class="p">),),</span>
+    <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="p">(),</span>
+<span class="p">}</span>
 
 <span class="n">Side</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"render"</span><span class="p">,</span> <span class="s2">"encode"</span><span class="p">]</span>
 <span class="n">Family</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"A"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">,</span> <span class="s2">"E"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">,</span> <span class="s2">"G"</span><span class="p">]</span>
