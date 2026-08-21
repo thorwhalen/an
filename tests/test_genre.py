@@ -11,11 +11,15 @@ import sys
 
 import pytest
 
-#: Only the registry lookup at the bottom of this file needs nw. The gate is on
-#: that test, not on the module: an `importorskip` here would abort the import
-#: and take the other two tests with it — including the one that guards the
-#: optional-dependency boundary, which is precisely the test a host without nw
-#: most needs to have been run. See tests/test_browser_gate.py (an#22).
+#: Two of the three tests here need nw — `an/genre.py` builds an `nw.Genre`, so
+#: even importing `an.genre` requires it. Exactly ONE does not, and it is the one
+#: that matters most to a host *without* nw: the subprocess check that `import an`
+#: gains no hard nw dependency.
+#:
+#: So the gate goes on the tests, not on the module. A module-level
+#: `importorskip("nw")` — which is what this file used to have — would abort the
+#: import and take the boundary guard down with it, which is how it came never to
+#: have run in CI. See tests/test_browser_gate.py (an#22).
 needs_nw = pytest.mark.skipif(
     importlib.util.find_spec("nw") is None, reason="nw not installed"
 )
@@ -31,6 +35,7 @@ def test_importing_an_does_not_import_nw():
     assert subprocess.run([sys.executable, "-c", code]).returncode == 0
 
 
+@needs_nw
 def test_genre_is_planned_and_claims_no_engine():
     from an.genre import CUTOUT_ANIMATION
 
