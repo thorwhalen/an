@@ -1,0 +1,434 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.bench.golden &mdash; an 0.1.30 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=73657eb8"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="an.bench.imageio" href="imageio.html" />
+    <link rel="prev" title="an.bench.environment" href="environment.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environment.html">an.bench.environment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.golden</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.BLESS_MANIFEST_TEMPLATE"><code class="docutils literal notranslate"><span class="pre">BLESS_MANIFEST_TEMPLATE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.FrameRef"><code class="docutils literal notranslate"><span class="pre">FrameRef</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.golden.FrameRef.local_index"><code class="docutils literal notranslate"><span class="pre">FrameRef.local_index</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.GATE_UNDECLARED"><code class="docutils literal notranslate"><span class="pre">GATE_UNDECLARED</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.GoldenError"><code class="docutils literal notranslate"><span class="pre">GoldenError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.REQUIRED_GOLDEN_FRAMES"><code class="docutils literal notranslate"><span class="pre">REQUIRED_GOLDEN_FRAMES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.RETIRED_GATES"><code class="docutils literal notranslate"><span class="pre">RETIRED_GATES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.bless_scene"><code class="docutils literal notranslate"><span class="pre">bless_scene()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.chromium_build_of"><code class="docutils literal notranslate"><span class="pre">chromium_build_of()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.compare_scene"><code class="docutils literal notranslate"><span class="pre">compare_scene()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.frame_index_for"><code class="docutils literal notranslate"><span class="pre">frame_index_for()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.frame_key"><code class="docutils literal notranslate"><span class="pre">frame_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.frame_png_path"><code class="docutils literal notranslate"><span class="pre">frame_png_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.iter_committed"><code class="docutils literal notranslate"><span class="pre">iter_committed()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.load_manifest"><code class="docutils literal notranslate"><span class="pre">load_manifest()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.manifest_path"><code class="docutils literal notranslate"><span class="pre">manifest_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.pixels_sha256"><code class="docutils literal notranslate"><span class="pre">pixels_sha256()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.golden.resolve_frames"><code class="docutils literal notranslate"><span class="pre">resolve_frames()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">an.bench.golden</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/an/bench/golden.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-an.bench.golden">
+<span id="an-bench-golden"></span><h1>an.bench.golden<a class="headerlink" href="#module-an.bench.golden" title="Link to this heading"></a></h1>
+<p>The golden gate: committed frames, compared on <strong>decoded pixels</strong>.</p>
+<p>Family B of the panel. Everything else in <code class="xref py py-mod docutils literal notranslate"><span class="pre">an.bench</span></code> measures a property
+of one render; this compares today’s render against a picture a human looked at
+and blessed, so it is the only part that can catch a change nobody predicted.</p>
+<p>Four decisions here that are easy to get wrong in a way that still looks like
+it works:</p>
+<p><strong>The criterion is ``sha256`` of the decoded RGB array, never the file bytes.</strong>
+Chromium 1187 -&gt; 1223 changed 144 of 144 PNG files and <strong>zero</strong> pixels. A
+file-byte gate goes red on the first Playwright bump for a reason that has
+nothing to do with animation quality — and, worse, trains people to re-bless
+without looking.</p>
+<p><strong>The path keys on the Chromium build ALONE</strong> — no platform, no arch. Measured
+across arm64 macOS, x86-64 Linux and arm64 Linux, across two different
+SwiftShader JIT backends: zero differing pixels <em>and</em> zero differing PNG bytes.
+Carrying the platform would force one committed copy per platform for no
+information. What the convention keeps is its real benefit: a Playwright bump
+becomes a <strong>new path requiring a deliberate re-bless</strong>, not a red test with no
+explanation.</p>
+<p><strong>Three different absences get three different gates.</strong> “This scene declares no
+golden frames”, “goldens exist but not for this Chromium build” and “the
+Chromium build could not be determined at all” are three different facts, and a
+reader who cannot tell them apart cannot act on any of them. The last one
+matters most: <code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.environment.probe_browser()</span></code> never raises, it
+returns <code class="docutils literal notranslate"><span class="pre">{&quot;error&quot;:</span> <span class="pre">...}</span></code> — so without a distinct gate an un-probeable browser
+reads exactly like a scene nobody has blessed yet.</p>
+<p><strong>A comparison against a golden written in the same run is a tautology</strong>, so a
+<code class="docutils literal notranslate"><span class="pre">--bless</span></code> run records family B as gated rather than as a pass. The row would
+otherwise carry a perfect score that no code could ever have failed.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.golden.BLESS_MANIFEST_TEMPLATE">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">BLESS_MANIFEST_TEMPLATE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'bless-chromium{chromium_build}.json'</span></span><a class="headerlink" href="#an.bench.golden.BLESS_MANIFEST_TEMPLATE" title="Link to this definition"></a></dt>
+<dd><p>Per-scene, per-build bless record, committed beside the frames. Per build
+rather than per scene: a Playwright bump adds a new set of frames under new
+names, and the old set stays valid for anyone still on the old build.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.golden.FrameRef">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">FrameRef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/golden.html#FrameRef"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.FrameRef" title="Link to this definition"></a></dt>
+<dd><p>One pinned golden frame, resolved against the render that just happened.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.golden.FrameRef.local_index">
+<span class="sig-name descname"><span class="pre">local_index</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#an.bench.golden.FrameRef.local_index" title="Link to this definition"></a></dt>
+<dd><p>Index WITHIN that shot’s frame directory.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.golden.GATE_UNDECLARED">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">GATE_UNDECLARED</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'golden_frames_undeclared'</span></span><a class="headerlink" href="#an.bench.golden.GATE_UNDECLARED" title="Link to this definition"></a></dt>
+<dd><p>Gate names. Literals rather than an enum because they are written into the
+ledger and read back by <cite>an bench –compare</cite> from rows written by older
+registries, so their spelling is a wire format.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.golden.GoldenError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">GoldenError</span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#GoldenError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.GoldenError" title="Link to this definition"></a></dt>
+<dd><p>A bless was refused, or a committed golden is unusable.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.golden.REQUIRED_GOLDEN_FRAMES">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">REQUIRED_GOLDEN_FRAMES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#an.bench.golden.REQUIRED_GOLDEN_FRAMES" title="Link to this definition"></a></dt>
+<dd><p>How many golden frames a scene must declare. Two, because one frame tests a
+single instant and cannot notice a scene that renders its first frame
+correctly and then stops.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.golden.RETIRED_GATES">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">RETIRED_GATES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'golden_absent':</span> <span class="pre">'golden_absent_for_chromium_build'}</span></span><a class="headerlink" href="#an.bench.golden.RETIRED_GATES" title="Link to this definition"></a></dt>
+<dd><p>Gate names that appear in rows written BEFORE this module existed, and what
+they meant. <cite>an bench –compare</cite> (an#40) reads old rows as fact, so the one
+place a reader has to look is here rather than in a commit message. The
+an#36 row carried a single <cite>golden_absent</cite> for both family-B keys, at a time
+when the corpus had no goldens for ANY build — which is this module’s
+<cite>GATE_ABSENT</cite>, not its <cite>GATE_UNDECLARED</cite> (the fixtures did declare no times,
+but the gate was not distinguishing the two).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.bless_scene">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">bless_scene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">capture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chromium_build</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_contract_sha256</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">golden_note</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#bless_scene"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.bless_scene" title="Link to this definition"></a></dt>
+<dd><p>Write one scene’s golden frames and its bless record. Refuses, loudly.</p>
+<p>Every refusal here is a case where writing the file would produce a gate
+that cannot fail:</p>
+<ul class="simple">
+<li><p><strong>no reason</strong> — a re-bless with no recorded reason is the same failure as
+a silently widened threshold, which is the named failure mode this whole
+wave exists to prevent;</p></li>
+<li><p><strong>fewer than two frames</strong> — one frame cannot notice a scene that renders
+its first instant correctly and then stops;</p></li>
+<li><p><strong>a pixel-identical pair</strong> — measured on <code class="docutils literal notranslate"><span class="pre">promote_demo</span></code>: frame 0 and the
+<code class="docutils literal notranslate"><span class="pre">duration/2</span></code> frame differ by exactly zero pixels, so the obvious choice
+blesses one picture twice and the second golden tests nothing;</p></li>
+<li><p><strong>an unknown Chromium build</strong> — the path keys on it, so without it the
+frames would be written under a name no future run could look up.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.chromium_build_of">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">chromium_build_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#chromium_build_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.chromium_build_of" title="Link to this definition"></a></dt>
+<dd><p>The Chromium build from an environment record, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if unknown.</p>
+<p><code class="docutils literal notranslate"><span class="pre">probe_browser</span></code> never raises — it reports an <code class="docutils literal notranslate"><span class="pre">error</span></code> key — so “we could
+not ask the browser” arrives here as a missing field rather than as an
+exception, and must not be confused with “nobody has blessed this scene”.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.compare_scene">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">compare_scene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">capture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chromium_build</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#compare_scene"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.compare_scene" title="Link to this definition"></a></dt>
+<dd><p>Compare today’s render against the committed goldens for one scene.</p>
+<p>Returns a dict with <code class="docutils literal notranslate"><span class="pre">state</span></code> in <code class="docutils literal notranslate"><span class="pre">{&quot;measured&quot;,</span> <span class="pre">&quot;gated&quot;,</span> <span class="pre">&quot;unavailable&quot;}</span></code>,
+the reduced numbers the ledger carries, and a per-frame record for
+provenance. The reduction is <strong>worst frame wins</strong>: <code class="docutils literal notranslate"><span class="pre">identical</span></code> is the
+conjunction and <code class="docutils literal notranslate"><span class="pre">min_ssim_win8</span></code> is the minimum, because a maximum or a
+mean lets one clean frame hide a broken one, and this metric’s own name is
+“the worst small window”.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.frame_index_for">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">frame_index_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#frame_index_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.frame_index_for" title="Link to this definition"></a></dt>
+<dd><p>The frame a pinned time names, snapped to the nearest one.</p>
+<p><code class="docutils literal notranslate"><span class="pre">int(time</span> <span class="pre">*</span> <span class="pre">fps)</span></code> is the trap: <code class="docutils literal notranslate"><span class="pre">0.25</span> <span class="pre">*</span> <span class="pre">24</span></code> is <code class="docutils literal notranslate"><span class="pre">5.999999999999999</span></code> in
+binary floating point, so the obvious spelling silently picks frame 5.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">frame_index_for</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">n_frames</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame_index_for</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">n_frames</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.frame_key">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">frame_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#frame_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.frame_key" title="Link to this definition"></a></dt>
+<dd><p>The filename stem for a frame, zero-padded so a directory listing sorts.</p>
+<p>Keyed on the frame <strong>index</strong>, not the pinned time: the index is what names
+the picture. A change to <code class="docutils literal notranslate"><span class="pre">fps</span></code> moves the index, which changes the path,
+which makes the golden absent and therefore <em>gated</em> — loud, and pointing at
+the right cause.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">frame_key</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">'f0007'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.frame_png_path">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">frame_png_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">capture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.bench.golden.FrameRef" title="an.bench.golden.FrameRef"><span class="pre">FrameRef</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#frame_png_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.frame_png_path" title="Link to this definition"></a></dt>
+<dd><p>Where the renderer left the PNG for one resolved frame.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.iter_committed">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">iter_committed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chromium_build</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#iter_committed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.iter_committed" title="Link to this definition"></a></dt>
+<dd><p>Every committed golden PNG for one scene and build, in sorted order.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.load_manifest">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">load_manifest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chromium_build</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#load_manifest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.load_manifest" title="Link to this definition"></a></dt>
+<dd><p>The committed bless record, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when this scene has never been blessed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.manifest_path">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">manifest_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chromium_build</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#manifest_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.manifest_path" title="Link to this definition"></a></dt>
+<dd><p>Where one scene’s bless record for one Chromium build lives.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.pixels_sha256">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">pixels_sha256</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#pixels_sha256"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.pixels_sha256" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">sha256</span></code> over the decoded pixels — <strong>shape and dtype included</strong>.</p>
+<p>Never over file bytes, for the reason in the module docstring. And never
+over the raw buffer alone either: <code class="docutils literal notranslate"><span class="pre">tobytes()</span></code> carries no shape, so a
+320x240 frame and a 240x320 one holding the same bytes hash identically,
+and issue #38’s literal “the criterion is <code class="docutils literal notranslate"><span class="pre">sha256(decoded</span> <span class="pre">RGB</span> <span class="pre">array)</span></code>”
+would report PASS on a transposed frame. Both orientations are live in this
+corpus. <code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.metrics.golden_comparison()</span></code> catches it separately via
+its <code class="docutils literal notranslate"><span class="pre">shape_mismatch</span></code> branch; this makes the digest agree with the gate
+rather than quietly disagreeing with it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pixels_sha256</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="o">==</span> <span class="n">pixels_sha256</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.golden.resolve_frames">
+<span class="sig-prename descclassname"><span class="pre">an.bench.golden.</span></span><span class="sig-name descname"><span class="pre">resolve_frames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">capture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.bench.golden.FrameRef" title="an.bench.golden.FrameRef"><span class="pre">FrameRef</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/golden.html#resolve_frames"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.golden.resolve_frames" title="Link to this definition"></a></dt>
+<dd><p>Map each pinned time onto <code class="docutils literal notranslate"><span class="pre">(global</span> <span class="pre">index,</span> <span class="pre">shot,</span> <span class="pre">index</span> <span class="pre">within</span> <span class="pre">that</span> <span class="pre">shot)</span></code>.</p>
+<p>Indices run over the scene’s <strong>concatenated</strong> timeline — what the delivered
+mp4 shows — so a pinned time can land in the second shot, which is exactly
+what <code class="docutils literal notranslate"><span class="pre">multi_shot</span></code>’s second golden does.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="environment.html" class="btn btn-neutral float-left" title="an.bench.environment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="imageio.html" class="btn btn-neutral float-right" title="an.bench.imageio" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

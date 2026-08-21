@@ -1,0 +1,701 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.bench.golden &mdash; an 0.1.30 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=73657eb8"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.bench.golden</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.bench.golden</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The golden gate: committed frames, compared on **decoded pixels**.</span>
+
+<span class="sd">Family B of the panel. Everything else in :mod:`an.bench` measures a property</span>
+<span class="sd">of one render; this compares today's render against a picture a human looked at</span>
+<span class="sd">and blessed, so it is the only part that can catch a change nobody predicted.</span>
+
+<span class="sd">Four decisions here that are easy to get wrong in a way that still looks like</span>
+<span class="sd">it works:</span>
+
+<span class="sd">**The criterion is ``sha256`` of the decoded RGB array, never the file bytes.**</span>
+<span class="sd">Chromium 1187 -&gt; 1223 changed 144 of 144 PNG files and **zero** pixels. A</span>
+<span class="sd">file-byte gate goes red on the first Playwright bump for a reason that has</span>
+<span class="sd">nothing to do with animation quality — and, worse, trains people to re-bless</span>
+<span class="sd">without looking.</span>
+
+<span class="sd">**The path keys on the Chromium build ALONE** — no platform, no arch. Measured</span>
+<span class="sd">across arm64 macOS, x86-64 Linux and arm64 Linux, across two different</span>
+<span class="sd">SwiftShader JIT backends: zero differing pixels *and* zero differing PNG bytes.</span>
+<span class="sd">Carrying the platform would force one committed copy per platform for no</span>
+<span class="sd">information. What the convention keeps is its real benefit: a Playwright bump</span>
+<span class="sd">becomes a **new path requiring a deliberate re-bless**, not a red test with no</span>
+<span class="sd">explanation.</span>
+
+<span class="sd">**Three different absences get three different gates.** "This scene declares no</span>
+<span class="sd">golden frames", "goldens exist but not for this Chromium build" and "the</span>
+<span class="sd">Chromium build could not be determined at all" are three different facts, and a</span>
+<span class="sd">reader who cannot tell them apart cannot act on any of them. The last one</span>
+<span class="sd">matters most: :func:`an.bench.environment.probe_browser` never raises, it</span>
+<span class="sd">returns ``{"error": ...}`` — so without a distinct gate an un-probeable browser</span>
+<span class="sd">reads exactly like a scene nobody has blessed yet.</span>
+
+<span class="sd">**A comparison against a golden written in the same run is a tautology**, so a</span>
+<span class="sd">``--bless`` run records family B as gated rather than as a pass. The row would</span>
+<span class="sd">otherwise carry a perfect score that no code could ever have failed.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.bench</span><span class="w"> </span><span class="kn">import</span> <span class="n">png</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">golden_dir</span><span class="p">,</span> <span class="n">golden_path</span>
+
+<span class="c1">#: Per-scene, per-build bless record, committed beside the frames. Per build</span>
+<span class="c1">#: rather than per scene: a Playwright bump adds a new set of frames under new</span>
+<span class="c1">#: names, and the old set stays valid for anyone still on the old build.</span>
+<span class="n">BLESS_MANIFEST_TEMPLATE</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"bless-chromium</span><span class="si">{chromium_build}</span><span class="s2">.json"</span>
+
+<span class="c1">#: How many golden frames a scene must declare. Two, because one frame tests a</span>
+<span class="c1">#: single instant and cannot notice a scene that renders its first frame</span>
+<span class="c1">#: correctly and then stops.</span>
+<span class="n">REQUIRED_GOLDEN_FRAMES</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1">#: Gate names. Literals rather than an enum because they are written into the</span>
+<span class="c1">#: ledger and read back by `an bench --compare` from rows written by older</span>
+<span class="c1">#: registries, so their spelling is a wire format.</span>
+<span class="n">GATE_UNDECLARED</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"golden_frames_undeclared"</span>
+<span class="n">GATE_ABSENT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"golden_absent_for_chromium_build"</span>
+<span class="n">GATE_BUILD_UNKNOWN</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"chromium_build_unknown"</span>
+<span class="n">GATE_JUST_BLESSED</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"blessed_this_run"</span>
+
+<span class="c1">#: Gate names that appear in rows written BEFORE this module existed, and what</span>
+<span class="c1">#: they meant. `an bench --compare` (an#40) reads old rows as fact, so the one</span>
+<span class="c1">#: place a reader has to look is here rather than in a commit message. The</span>
+<span class="c1">#: an#36 row carried a single `golden_absent` for both family-B keys, at a time</span>
+<span class="c1">#: when the corpus had no goldens for ANY build — which is this module's</span>
+<span class="c1">#: `GATE_ABSENT`, not its `GATE_UNDECLARED` (the fixtures did declare no times,</span>
+<span class="c1">#: but the gate was not distinguishing the two).</span>
+<span class="n">RETIRED_GATES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"golden_absent"</span><span class="p">:</span> <span class="n">GATE_ABSENT</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="GoldenError">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.GoldenError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GoldenError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A bless was refused, or a committed golden is unusable."""</span></div>
+
+
+
+<div class="viewcode-block" id="FrameRef">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.FrameRef">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FrameRef</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One pinned golden frame, resolved against the render that just happened."""</span>
+
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">time</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">shot_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="c1">#: Index WITHIN that shot's frame directory.</span>
+    <span class="n">local_index</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+
+<div class="viewcode-block" id="frame_key">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.frame_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">frame_key</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The filename stem for a frame, zero-padded so a directory listing sorts.</span>
+
+<span class="sd">    Keyed on the frame **index**, not the pinned time: the index is what names</span>
+<span class="sd">    the picture. A change to ``fps`` moves the index, which changes the path,</span>
+<span class="sd">    which makes the golden absent and therefore *gated* — loud, and pointing at</span>
+<span class="sd">    the right cause.</span>
+
+<span class="sd">    &gt;&gt;&gt; frame_key(7)</span>
+<span class="sd">    'f0007'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"f</span><span class="si">{</span><span class="n">index</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<div class="viewcode-block" id="frame_index_for">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.frame_index_for">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">frame_index_for</span><span class="p">(</span><span class="n">time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_frames</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The frame a pinned time names, snapped to the nearest one.</span>
+
+<span class="sd">    ``int(time * fps)`` is the trap: ``0.25 * 24`` is ``5.999999999999999`` in</span>
+<span class="sd">    binary floating point, so the obvious spelling silently picks frame 5.</span>
+
+<span class="sd">    &gt;&gt;&gt; frame_index_for(0.25, fps=24, n_frames=12)</span>
+<span class="sd">    6</span>
+<span class="sd">    &gt;&gt;&gt; frame_index_for(0.0, fps=24, n_frames=12)</span>
+<span class="sd">    0</span>
+<span class="sd">    """</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">time</span> <span class="o">*</span> <span class="n">fps</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">n_frames</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GoldenError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"pinned golden time </span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">s resolves to frame </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">fps, "</span>
+            <span class="sa">f</span><span class="s2">"but the scene rendered </span><span class="si">{</span><span class="n">n_frames</span><span class="si">}</span><span class="s2"> frames (0..</span><span class="si">{</span><span class="n">n_frames</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">). "</span>
+            <span class="s2">"A time past the end of the scene names no picture."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">index</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_frames">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.resolve_frames">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_frames</span><span class="p">(</span><span class="n">capture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">times</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FrameRef</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Map each pinned time onto ``(global index, shot, index within that shot)``.</span>
+
+<span class="sd">    Indices run over the scene's **concatenated** timeline — what the delivered</span>
+<span class="sd">    mp4 shows — so a pinned time can land in the second shot, which is exactly</span>
+<span class="sd">    what ``multi_shot``'s second golden does.</span>
+<span class="sd">    """</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">frame_count</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">capture</span><span class="o">.</span><span class="n">shots</span><span class="p">]</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+    <span class="n">refs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FrameRef</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">times</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">frame_index_for</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">capture</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span> <span class="n">n_frames</span><span class="o">=</span><span class="n">total</span><span class="p">)</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="k">for</span> <span class="n">shot</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">shots</span><span class="p">,</span> <span class="n">counts</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">remaining</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
+                <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">FrameRef</span><span class="p">(</span>
+                        <span class="n">key</span><span class="o">=</span><span class="n">frame_key</span><span class="p">(</span><span class="n">index</span><span class="p">),</span>
+                        <span class="n">time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">time</span><span class="p">),</span>
+                        <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+                        <span class="n">shot_id</span><span class="o">=</span><span class="n">shot</span><span class="o">.</span><span class="n">shot_id</span><span class="p">,</span>
+                        <span class="n">local_index</span><span class="o">=</span><span class="n">remaining</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">break</span>
+            <span class="n">remaining</span> <span class="o">-=</span> <span class="n">count</span>
+    <span class="k">return</span> <span class="n">refs</span></div>
+
+
+
+<div class="viewcode-block" id="frame_png_path">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.frame_png_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">frame_png_path</span><span class="p">(</span><span class="n">capture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="n">FrameRef</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Where the renderer left the PNG for one resolved frame."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_FRAME_PNG_PATTERN</span>
+
+    <span class="n">shot</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">capture</span><span class="o">.</span><span class="n">shots</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">shot_id</span> <span class="o">==</span> <span class="n">ref</span><span class="o">.</span><span class="n">shot_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">shot</span><span class="o">.</span><span class="n">frames_dir</span> <span class="o">/</span> <span class="p">(</span><span class="n">DEFAULT_FRAME_PNG_PATTERN</span> <span class="o">%</span> <span class="n">ref</span><span class="o">.</span><span class="n">local_index</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="pixels_sha256">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.pixels_sha256">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pixels_sha256</span><span class="p">(</span><span class="n">rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``sha256`` over the decoded pixels — **shape and dtype included**.</span>
+
+<span class="sd">    Never over file bytes, for the reason in the module docstring. And never</span>
+<span class="sd">    over the raw buffer alone either: ``tobytes()`` carries no shape, so a</span>
+<span class="sd">    320x240 frame and a 240x320 one holding the same bytes hash identically,</span>
+<span class="sd">    and issue #38's literal "the criterion is ``sha256(decoded RGB array)``"</span>
+<span class="sd">    would report PASS on a transposed frame. Both orientations are live in this</span>
+<span class="sd">    corpus. :func:`an.bench.metrics.golden_comparison` catches it separately via</span>
+<span class="sd">    its ``shape_mismatch`` branch; this makes the digest agree with the gate</span>
+<span class="sd">    rather than quietly disagreeing with it.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; a = np.arange(24, dtype=np.uint8)</span>
+<span class="sd">    &gt;&gt;&gt; pixels_sha256(a.reshape(2, 4, 3)) == pixels_sha256(a.reshape(4, 2, 3))</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">rgb</span><span class="p">)</span>
+    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+    <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">str</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">|"</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">))</span>
+    <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">tobytes</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">digest</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="manifest_path">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.manifest_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">manifest_path</span><span class="p">(</span><span class="n">scene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Where one scene's bless record for one Chromium build lives."""</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">golden_dir</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+        <span class="o">/</span> <span class="n">scene</span>
+        <span class="o">/</span> <span class="n">BLESS_MANIFEST_TEMPLATE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chromium_build</span><span class="o">=</span><span class="n">chromium_build</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="load_manifest">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.load_manifest">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_manifest</span><span class="p">(</span>
+    <span class="n">scene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The committed bless record, or ``None`` when this scene has never been blessed."""</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">manifest_path</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="chromium_build_of">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.chromium_build_of">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">chromium_build_of</span><span class="p">(</span><span class="n">environment</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The Chromium build from an environment record, or ``None`` if unknown.</span>
+
+<span class="sd">    ``probe_browser`` never raises — it reports an ``error`` key — so "we could</span>
+<span class="sd">    not ask the browser" arrives here as a missing field rather than as an</span>
+<span class="sd">    exception, and must not be confused with "nobody has blessed this scene".</span>
+<span class="sd">    """</span>
+    <span class="n">render_side</span> <span class="o">=</span> <span class="p">(</span><span class="n">environment</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"render_side"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">build</span> <span class="o">=</span> <span class="n">render_side</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"chromium_build"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">build</span><span class="p">)</span> <span class="k">if</span> <span class="n">build</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="iter_committed">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.iter_committed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">iter_committed</span><span class="p">(</span>
+    <span class="n">scene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every committed golden PNG for one scene and build, in sorted order."""</span>
+    <span class="n">scene_dir</span> <span class="o">=</span> <span class="n">golden_dir</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="o">/</span> <span class="n">scene</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scene_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">return</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"-chromium</span><span class="si">{</span><span class="n">chromium_build</span><span class="si">}</span><span class="s2">.png"</span>
+    <span class="k">yield from</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">scene_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">"*</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="compare_scene">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.compare_scene">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_scene</span><span class="p">(</span>
+    <span class="n">capture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">times</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">chromium_build</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compare today's render against the committed goldens for one scene.</span>
+
+<span class="sd">    Returns a dict with ``state`` in ``{"measured", "gated", "unavailable"}``,</span>
+<span class="sd">    the reduced numbers the ledger carries, and a per-frame record for</span>
+<span class="sd">    provenance. The reduction is **worst frame wins**: ``identical`` is the</span>
+<span class="sd">    conjunction and ``min_ssim_win8`` is the minimum, because a maximum or a</span>
+<span class="sd">    mean lets one clean frame hide a broken one, and this metric's own name is</span>
+<span class="sd">    "the worst small window".</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench</span><span class="w"> </span><span class="kn">import</span> <span class="n">metrics</span> <span class="k">as</span> <span class="n">M</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">times</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"gated"</span><span class="p">,</span>
+            <span class="s2">"gate"</span><span class="p">:</span> <span class="n">GATE_UNDECLARED</span><span class="p">,</span>
+            <span class="s2">"detail"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"the </span><span class="si">{</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> fixture declares no golden_frames, so "</span>
+                <span class="s2">"there is nothing to compare against. Declare two times on the "</span>
+                <span class="s2">"Fixture and run `an bench --bless &lt;reason&gt;`."</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="n">frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">refs</span> <span class="o">=</span> <span class="n">resolve_frames</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">:</span>
+        <span class="n">golden</span> <span class="o">=</span> <span class="n">golden_path</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+        <span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"frame_key"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">key</span><span class="p">,</span>
+            <span class="s2">"time"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="s2">"shot_id"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">shot_id</span><span class="p">,</span>
+            <span class="s2">"golden"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">golden</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">golden_dir</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">golden</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">golden</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">record</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"absent"</span>
+            <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">today</span> <span class="o">=</span> <span class="n">png</span><span class="o">.</span><span class="n">read_png</span><span class="p">(</span><span class="n">frame_png_path</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">ref</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">blessed</span> <span class="o">=</span> <span class="n">png</span><span class="o">.</span><span class="n">read_png</span><span class="p">(</span><span class="n">golden</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">png</span><span class="o">.</span><span class="n">PngFormatError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">record</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"unreadable"</span>
+            <span class="n">record</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">record</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"compared"</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">golden_comparison</span><span class="p">(</span><span class="n">today</span><span class="p">,</span> <span class="n">blessed</span><span class="p">))</span>
+        <span class="n">record</span><span class="p">[</span><span class="s2">"today_sha256"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixels_sha256</span><span class="p">(</span><span class="n">today</span><span class="p">)</span>
+        <span class="n">record</span><span class="p">[</span><span class="s2">"golden_sha256"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixels_sha256</span><span class="p">(</span><span class="n">blessed</span><span class="p">)</span>
+        <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+    <span class="n">unreadable</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"unreadable"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">unreadable</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"unavailable"</span><span class="p">,</span>
+            <span class="s2">"detail"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">"a committed golden could not be decoded: "</span>
+                <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'frame_key'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'error'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">unreadable</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">". A check that could not run is not evidence that anything is fine."</span>
+            <span class="p">),</span>
+            <span class="s2">"frames"</span><span class="p">:</span> <span class="n">frames</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="n">absent</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"absent"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">absent</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"gated"</span><span class="p">,</span>
+            <span class="s2">"gate"</span><span class="p">:</span> <span class="n">GATE_ABSENT</span><span class="p">,</span>
+            <span class="s2">"detail"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"no committed golden for Chromium </span><span class="si">{</span><span class="n">chromium_build</span><span class="si">}</span><span class="s2"> at "</span>
+                <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"frame_key"</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">absent</span><span class="p">)</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">" (scene </span><span class="si">{</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">). A Playwright bump is a NEW path and "</span>
+                <span class="s2">"a deliberate re-bless, not a red test: run "</span>
+                <span class="s2">"`an bench --scenes &lt;scene&gt; --bless '&lt;why&gt;'` after looking at the diff."</span>
+            <span class="p">),</span>
+            <span class="s2">"frames"</span><span class="p">:</span> <span class="n">frames</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="c1"># A frame whose golden was blessed at a different resolution has NO ssim:</span>
+    <span class="c1"># `golden_comparison` returns `min_ssim_win8: None` there, and a `measured`</span>
+    <span class="c1"># ledger value refuses a null. The identity is still knowable — a</span>
+    <span class="c1"># differently-shaped picture is definitely not the same picture — so the</span>
+    <span class="c1"># boolean is reported and the number is not, which is exactly the split the</span>
+    <span class="c1"># metrics/tripwires blocks exist to express.</span>
+    <span class="n">mismatched</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"shape_mismatch"</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"measured"</span><span class="p">,</span>
+        <span class="s2">"identical"</span><span class="p">:</span> <span class="nb">all</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"identical"</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">),</span>
+        <span class="s2">"min_ssim_win8"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">mismatched</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"min_ssim_win8"</span><span class="p">])</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="s2">"shape_mismatch"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">"frame_key"</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">"frame_key"</span><span class="p">],</span> <span class="s2">"shapes"</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">"shape_mismatch"</span><span class="p">]}</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">mismatched</span>
+        <span class="p">]</span>
+        <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"changed_px"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"changed_px"</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">),</span>
+        <span class="s2">"max_delta"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"max_delta"</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">),</span>
+        <span class="s2">"frames"</span><span class="p">:</span> <span class="n">frames</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="bless_scene">
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.bless_scene">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bless_scene</span><span class="p">(</span>
+    <span class="n">capture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">times</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">chromium_build</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">git</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">scene_contract_sha256</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">golden_note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write one scene's golden frames and its bless record. Refuses, loudly.</span>
+
+<span class="sd">    Every refusal here is a case where writing the file would produce a gate</span>
+<span class="sd">    that cannot fail:</span>
+
+<span class="sd">    - **no reason** — a re-bless with no recorded reason is the same failure as</span>
+<span class="sd">      a silently widened threshold, which is the named failure mode this whole</span>
+<span class="sd">      wave exists to prevent;</span>
+<span class="sd">    - **fewer than two frames** — one frame cannot notice a scene that renders</span>
+<span class="sd">      its first instant correctly and then stops;</span>
+<span class="sd">    - **a pixel-identical pair** — measured on ``promote_demo``: frame 0 and the</span>
+<span class="sd">      ``duration/2`` frame differ by exactly zero pixels, so the obvious choice</span>
+<span class="sd">      blesses one picture twice and the second golden tests nothing;</span>
+<span class="sd">    - **an unknown Chromium build** — the path keys on it, so without it the</span>
+<span class="sd">      frames would be written under a name no future run could look up.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reason</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">GoldenError</span><span class="p">(</span>
+            <span class="s2">"`--bless` needs a reason, and a blank one does not count. It is "</span>
+            <span class="s2">"written into the bless record beside the frames, and it is the only "</span>
+            <span class="s2">"thing that distinguishes a considered re-bless from a silently "</span>
+            <span class="s2">"widened threshold."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">chromium_build</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GoldenError</span><span class="p">(</span>
+            <span class="s2">"the Chromium build could not be determined, and the golden path "</span>
+            <span class="s2">"keys on it. `an.bench.environment.probe_browser` reports an error "</span>
+            <span class="s2">"rather than raising, so check the `render_side.error` field of the "</span>
+            <span class="s2">"environment record."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">REQUIRED_GOLDEN_FRAMES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GoldenError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"scene </span><span class="si">{</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> declares </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span><span class="si">}</span><span class="s2"> golden frame(s); "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">REQUIRED_GOLDEN_FRAMES</span><span class="si">}</span><span class="s2"> are required. One frame cannot notice a "</span>
+            <span class="s2">"scene that renders its first instant correctly and then stops."</span>
+        <span class="p">)</span>
+
+    <span class="n">refs</span> <span class="o">=</span> <span class="n">resolve_frames</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+    <span class="n">decoded</span> <span class="o">=</span> <span class="p">[</span><span class="n">png</span><span class="o">.</span><span class="n">read_png</span><span class="p">(</span><span class="n">frame_png_path</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">ref</span><span class="p">))</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">decoded</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">decoded</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">decoded</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">decoded</span><span class="p">[</span><span class="n">j</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="n">GoldenError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"scene </span><span class="si">{</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: golden frames </span><span class="si">{</span><span class="n">refs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2"> "</span>
+                    <span class="sa">f</span><span class="s2">"(t=</span><span class="si">{</span><span class="n">refs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="si">}</span><span class="s2">s) and </span><span class="si">{</span><span class="n">refs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2"> (t=</span><span class="si">{</span><span class="n">refs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="si">}</span><span class="s2">s) "</span>
+                    <span class="s2">"are pixel-identical, so the second one tests nothing. Pin a "</span>
+                    <span class="s2">"time where something has actually moved — measured on "</span>
+                    <span class="s2">"`promote_demo`, frame 0 and duration/2 differ by ZERO pixels."</span>
+                <span class="p">)</span>
+
+    <span class="n">keep</span> <span class="o">=</span> <span class="p">{</span><span class="n">golden_path</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">}</span>
+    <span class="c1"># A re-bless that moves a pinned time writes a NEW filename and would</span>
+    <span class="c1"># otherwise leave the old frame committed forever — a PNG in the tree that</span>
+    <span class="c1"># nothing reads, indistinguishable from one that is still a gate. Removed</span>
+    <span class="c1"># here and named in the record, so the deletion is reviewable in the diff.</span>
+    <span class="n">removed</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">iter_committed</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">keep</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">removed</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">golden_dir</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="o">/</span> <span class="n">capture</span><span class="o">.</span><span class="n">name</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+    <span class="n">written</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">rgb</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">refs</span><span class="p">,</span> <span class="n">decoded</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">golden_path</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+        <span class="n">png</span><span class="o">.</span><span class="n">write_png</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">rgb</span><span class="p">)</span>
+        <span class="n">written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"frame_key"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">key</span><span class="p">,</span>
+                <span class="s2">"time"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                <span class="s2">"index"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                <span class="s2">"shot_id"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">shot_id</span><span class="p">,</span>
+                <span class="s2">"local_index"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">local_index</span><span class="p">,</span>
+                <span class="s2">"sha256"</span><span class="p">:</span> <span class="n">pixels_sha256</span><span class="p">(</span><span class="n">rgb</span><span class="p">),</span>
+                <span class="s2">"file"</span><span class="p">:</span> <span class="n">out</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">"bytes"</span><span class="p">:</span> <span class="n">out</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+    <span class="n">record</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"scene"</span><span class="p">:</span> <span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"source"</span><span class="p">:</span> <span class="n">capture</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+        <span class="s2">"chromium_build"</span><span class="p">:</span> <span class="n">chromium_build</span><span class="p">,</span>
+        <span class="s2">"blessed_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"+00:00"</span><span class="p">,</span> <span class="s2">"Z"</span><span class="p">),</span>
+        <span class="s2">"git"</span><span class="p">:</span> <span class="n">git</span><span class="p">,</span>
+        <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+        <span class="s2">"what_moves"</span><span class="p">:</span> <span class="n">golden_note</span><span class="p">,</span>
+        <span class="s2">"fps"</span><span class="p">:</span> <span class="n">capture</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span>
+        <span class="s2">"resolution"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">resolution</span><span class="p">),</span>
+        <span class="s2">"shot_ids"</span><span class="p">:</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">shot_id</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">capture</span><span class="o">.</span><span class="n">shots</span><span class="p">],</span>
+        <span class="s2">"scene_contract_sha256"</span><span class="p">:</span> <span class="n">scene_contract_sha256</span><span class="p">,</span>
+        <span class="s2">"criterion"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">"sha256 of the DECODED RGB array, never the file bytes: Chromium "</span>
+            <span class="s2">"1187 -&gt; 1223 changes every PNG file and zero pixels."</span>
+        <span class="p">),</span>
+        <span class="s2">"frames"</span><span class="p">:</span> <span class="n">written</span><span class="p">,</span>
+        <span class="s2">"removed"</span><span class="p">:</span> <span class="n">removed</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">manifest_path</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">record</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.29 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.30 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=904119ea"></script>
+      <script src="../../../_static/documentation_options.js?v=73657eb8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -83,12 +83,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
@@ -548,7 +550,9 @@
                 <span class="p">),</span>
             <span class="p">),</span>
             <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"control for the ratio below"</span><span class="p">),</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"control for the ratio below"</span>
+                <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
@@ -601,7 +605,10 @@
                 <span class="p">),</span>
             <span class="p">),</span>
             <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"decrease"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"the chroma claim collapses as damage becomes generic"</span><span class="p">),</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"the chroma claim collapses as damage becomes generic"</span><span class="p">,</span>
+                <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
@@ -645,7 +652,9 @@
             <span class="n">sentence</span><span class="o">=</span><span class="s2">"The 99th percentile of the same deviation, in human units."</span><span class="p">,</span>
             <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span> <span class="n">expect</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">),</span>
             <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"companion to the rate above"</span><span class="p">),</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"companion to the rate above"</span>
+                <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"no_change"</span><span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
@@ -790,7 +799,10 @@
             <span class="p">),</span>
             <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
-                    <span class="s2">"decrease"</span><span class="p">,</span> <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"free fourth cross-check"</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="s2">"8x"</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"free fourth cross-check"</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"8x"</span><span class="p">,</span>
                 <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
                     <span class="s2">"increase"</span><span class="p">,</span>
@@ -799,7 +811,9 @@
                     <span class="n">reference</span><span class="o">=</span><span class="s2">"+5.5%"</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">},</span>
-            <span class="n">notes</span><span class="o">=</span><span class="p">(</span><span class="s2">"The one metric in the panel that went through NO adversarial pass."</span><span class="p">,),</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The one metric in the panel that went through NO adversarial pass."</span><span class="p">,</span>
+            <span class="p">),</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">"file_bytes"</span><span class="p">,</span>
@@ -839,7 +853,10 @@
                     <span class="s2">"not_applicable"</span><span class="p">,</span>
                     <span class="n">reason</span><span class="o">=</span><span class="s2">"the corpus is UPSTREAM of the encoder; no encode change can reach it"</span><span class="p">,</span>
                 <span class="p">),</span>
-                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"no_change"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"it FAILS, which is a change detector firing, not a quality measurement"</span><span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"no_change"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"it FAILS, which is a change detector firing, not a quality measurement"</span><span class="p">,</span>
+                <span class="p">),</span>
             <span class="p">},</span>
             <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
                 <span class="s2">"Compare sha256 of DECODED pixels, never file bytes: Chromium "</span>
