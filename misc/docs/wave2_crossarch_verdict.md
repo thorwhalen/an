@@ -196,7 +196,18 @@ And two that belong to other issues:
 
 - **The silent fallback is a bug** in its own right (the "loud discards"
   class): a missing character descriptor should be an error, not a different
-  picture. Filed separately.
+  picture. Filed as an#33 and **fixed 2026-08-21**. The fix is not "make it an
+  error" — the fallback has to stay, because it is the only reason an
+  asset-less project renders at all, and `examples/single_character` reaches it
+  deliberately. What changed is that it is no longer *indistinguishable*: the
+  compiler warns, records one `asset_resolution` entry per drawable entity in
+  the scene JSON the browser loads, and refuses outright under
+  `strict_assets=True` — which this capture now passes. The ambiguity is real
+  and is asserted as such: a missing descriptor and a deliberately-procedural
+  character compile to the **same scene tree**, so no assertion over pixels,
+  visual kinds or node paths can separate them. `expect_visual_kinds` stays as
+  the independent second check, because it reads the staged artifact rather
+  than trusting the compiler that produced it.
 - **Wave 2's golden corpus cannot be built out of `examples/` as they stand.**
   §3's scene list assumes usable example projects; four of the five ship no
   assets at all. The corpus needs committed fixtures, or explicit prepare steps

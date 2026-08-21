@@ -45,6 +45,7 @@ from an.ir.schema import (
 from an.adapters.cutout.serialize import (
     AnimationClipJSON,
     AssetJSON,
+    AssetResolutionJSON,
     AssetsJSON,
     ChannelJSON,
     CutoutSceneJSON,
@@ -216,6 +217,49 @@ def _runtime_node_paths(node: NodeJSON, prefix: str = "") -> set[str]:
     return paths
 
 
+def _raise_or_warn_on_asset_fallbacks(
+    shot_id: str,
+    resolutions: list[AssetResolutionJSON],
+    *,
+    strict: bool,
+) -> None:
+    """Make a stand-in asset audible — and, under ``strict``, fatal (an#33).
+
+    The fallback itself is legitimate: a project with no art must still render,
+    and that is the only reason ``an`` works out of the box. What is not
+    legitimate is that it was *indistinguishable* from the real thing. A
+    corpus blessed on a machine where the assets exist and gated on one where
+    they do not blesses one picture and gates another, and every tripwire
+    reports a clean pass because both sides are internally consistent.
+
+    So: a warning by default (the render is still what the author can get
+    today), and an error for any caller that is measuring pixels.
+    """
+    fallbacks = [r for r in resolutions if r.fallback]
+    if not fallbacks:
+        return
+    lines = [f"  - {r.kind} {r.id!r}: {r.detail}" for r in fallbacks]
+    body = (
+        f"shot {shot_id!r} rendered {len(fallbacks)} stand-in asset(s):\n"
+        + "\n".join(lines)
+    )
+    if strict:
+        raise CutoutCompileError(
+            body
+            + "\n\nstrict_assets=True refuses this because the render would be a "
+            "DIFFERENT picture that looks like a successful one. Either commit / "
+            "regenerate the missing asset, or drop strict_assets if a stand-in "
+            "is what you meant."
+        )
+    warnings.warn(
+        body
+        + "\n\nThe render will succeed and look plausible, which is exactly why "
+        "this is said out loud. Pass strict_assets=True to make it fatal.",
+        CutoutCompileWarning,
+        stacklevel=3,
+    )
+
+
 def compile_shot(
     shot: Shot,
     mall: Mapping[str, Mapping] | None = None,
@@ -224,14 +268,27 @@ def compile_shot(
     width: int = 1920,
     height: int = 1080,
     background: str = "#ffffff",
+    strict_assets: bool = False,
 ) -> CutoutSceneJSON:
-    """Compile a single cutout-style `Shot` to its JS-runtime JSON form."""
+    """Compile a single cutout-style `Shot` to its JS-runtime JSON form.
+
+    ``strict_assets`` turns a stand-in asset — the placeholder rig drawn for a
+    character whose descriptor is missing, or the default backdrop drawn for an
+    unknown environment ref — from a warning into a :class:`CutoutCompileError`.
+    Off by default so an asset-less project still renders; on for anything that
+    measures pixels, where a stand-in is a wrong answer wearing a right one's
+    clothes (an#33).
+    """
     if shot.style != "cutout":
         raise ValueError(f"compile_shot expects style='cutout'; got {shot.style!r}")
     mall = mall or {}
 
     textures: dict[str, AssetJSON] = {}
-    scene_root = _build_scene_root(shot, mall, textures=textures)
+    resolutions: list[AssetResolutionJSON] = []
+    scene_root = _build_scene_root(
+        shot, mall, textures=textures, resolutions=resolutions
+    )
+    _raise_or_warn_on_asset_fallbacks(shot.id, resolutions, strict=strict_assets)
     animations, tracks = _compile_actions(shot.actions, shot.duration)
     # Phase 4: emit a viseme channel per dialogue line that has a viseme_track.
     _add_viseme_clips(
@@ -260,6 +317,7 @@ def compile_shot(
         animations=animations,
         timeline=timeline,
         assets=AssetsJSON(textures=textures),
+        asset_resolution=resolutions,
     )
 
 
@@ -273,15 +331,22 @@ def _build_scene_root(
     mall: Mapping[str, Mapping],
     *,
     textures: dict[str, AssetJSON] | None = None,
+    resolutions: list[AssetResolutionJSON] | None = None,
 ) -> NodeJSON:
     """Construct the cutout scene tree under a single root from shot.entities.
 
     Multiple characters get spread along the x-axis so they don't overlap.
     For N characters, positions are evenly distributed across a fixed band;
     a single character lives at the center.
+
+    ``resolutions`` is an out-parameter, filled the same way ``textures`` is:
+    one :class:`AssetResolutionJSON` per drawable entity, in scene order,
+    recording what each declared ref actually became.
     """
     if textures is None:
         textures = {}
+    if resolutions is None:
+        resolutions = []
     children: list[NodeJSON] = []
     characters_store = mall.get("characters") or {}
     environments_store = mall.get("environments") or {}
@@ -292,12 +357,18 @@ def _build_scene_root(
     # Process environments first so they sit BEHIND characters in z-order.
     for entity in shot.entities:
         if entity.kind == "environment":
-            children.append(_build_environment_subtree(entity, environments_store))
+            children.append(
+                _build_environment_subtree(
+                    entity, environments_store, resolutions=resolutions
+                )
+            )
     for entity in shot.entities:
         if entity.kind == "character":
             x = char_positions[char_idx]
             char_idx += 1
-            sub = _build_character_subtree(entity, characters_store, textures=textures)
+            sub = _build_character_subtree(
+                entity, characters_store, textures=textures, resolutions=resolutions
+            )
             sub.transform.x = x
             children.append(sub)
         elif entity.kind == "prop":
@@ -324,15 +395,50 @@ _ENV_PRESETS: dict[str, dict[str, Any]] = {
 }
 
 
-def _build_environment_subtree(entity: AssetRef, env_store: Mapping) -> NodeJSON:
+def _build_environment_subtree(
+    entity: AssetRef,
+    env_store: Mapping,
+    *,
+    resolutions: list[AssetResolutionJSON] | None = None,
+) -> NodeJSON:
     """Backdrop: a sky band + a ground band, full canvas width.
 
     Picks a preset by ``entity.ref`` (e.g. "park", "night"); the store
     can override any of (sky_color, ground_color, ground_y) by ref.
+
+    A ref that names neither a store entry nor a preset draws the *default*
+    backdrop, which is a different picture from the one the author asked for
+    — so it is recorded as a fallback (an#33).
     """
     preset_key = (entity.ref or "default").lower()
+    known_preset = preset_key in _ENV_PRESETS
     preset = dict(_ENV_PRESETS.get(preset_key, _ENV_PRESETS["default"]))
-    if entity.ref in env_store:
+    in_store = entity.ref in env_store
+    if resolutions is not None:
+        if in_store:
+            resolved, fallback, detail = "store", False, ""
+        elif known_preset:
+            resolved, fallback, detail = "preset", False, ""
+        else:
+            resolved, fallback, detail = (
+                "default",
+                True,
+                f"environment ref {entity.ref!r} names neither an entry in the "
+                f"{entity.store!r} store nor a built-in preset "
+                f"({sorted(_ENV_PRESETS)}), so the DEFAULT backdrop was drawn",
+            )
+        resolutions.append(
+            AssetResolutionJSON(
+                id=entity.id,
+                kind="environment",
+                store=entity.store,
+                ref=entity.ref,
+                resolved=resolved,
+                fallback=fallback,
+                detail=detail,
+            )
+        )
+    if in_store:
         try:
             override = env_store[entity.ref]
             if isinstance(override, dict):
@@ -407,6 +513,7 @@ def _build_character_subtree(
     characters_store: Mapping,
     *,
     textures: dict[str, AssetJSON] | None = None,
+    resolutions: list[AssetResolutionJSON] | None = None,
 ) -> NodeJSON:
     """Build a NodeJSON subtree for one character.
 
@@ -414,22 +521,69 @@ def _build_character_subtree(
     for this entity (``kind == "CharacterDescriptor"``), build the SVG
     rig and populate the ``textures`` accumulator. Otherwise fall back to
     the procedural rig so legacy / asset-less characters keep rendering.
+
+    That fallback is deliberate and stays — an asset-less project must render
+    — but it is no longer *silent*: what happened is appended to
+    ``resolutions`` so the compiled scene carries which rig was actually built
+    (an#33).
     """
     char_meta: dict[str, Any] = {}
-    if entity.ref in characters_store:
+    in_store = entity.ref in characters_store
+    if in_store:
         try:
             value = characters_store[entity.ref]
             if isinstance(value, dict):
                 char_meta = value
         except KeyError:
             char_meta = {}
+            in_store = False
+
+    def _record(resolved: str, *, fallback: bool = False, detail: str = "") -> None:
+        if resolutions is None:
+            return
+        resolutions.append(
+            AssetResolutionJSON(
+                id=entity.id,
+                kind="character",
+                store=entity.store,
+                ref=entity.ref,
+                resolved=resolved,
+                fallback=fallback,
+                detail=detail,
+            )
+        )
 
     if char_meta.get("kind") == "CharacterDescriptor":
+        _record("descriptor")
         return _build_svg_character_subtree(
             entity, char_meta, textures=textures if textures is not None else {}
         )
 
-    parts = char_meta.get("parts") or _PLACEHOLDER_PARTS
+    declared_parts = char_meta.get("parts")
+    if declared_parts:
+        _record("parts")
+    elif in_store:
+        _record(
+            "placeholder",
+            fallback=True,
+            detail=(
+                f"character ref {entity.ref!r} IS in the {entity.store!r} store, "
+                "but the entry is neither a CharacterDescriptor nor a rig with "
+                "'parts', so the built-in placeholder rig was drawn instead"
+            ),
+        )
+    else:
+        _record(
+            "placeholder",
+            fallback=True,
+            detail=(
+                f"character ref {entity.ref!r} is not in the {entity.store!r} "
+                "store, so the built-in placeholder rig was drawn instead of "
+                "the character the scene names"
+            ),
+        )
+
+    parts = declared_parts or _PLACEHOLDER_PARTS
     skin, clothing, hair = _palette_for(entity.id)
     # Per-part color: head/limbs are skin colour, torso/arm-clothing is the
     # clothing colour. Override via a future store.parts.colors mapping.

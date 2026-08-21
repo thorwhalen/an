@@ -208,6 +208,45 @@ class AssetsJSON(_JSONModel):
 
 
 # -----------------------------------------------------------------------------
+# Asset resolution — what the declared refs actually became
+# -----------------------------------------------------------------------------
+
+
+class AssetResolutionJSON(_JSONModel):
+    """How one scene entity's store reference actually resolved at compile time.
+
+    The IR declares every drawable entity as ``store`` + ``ref``. What the
+    compiler *builds* from that pair is not recoverable from the scene tree
+    afterwards: a character whose descriptor is missing and a character that
+    never had one produce byte-identical procedural rigs. That ambiguity is
+    an#33 — three CI runners once agreed perfectly about a picture that was not
+    the picture, and the agreement read as a clean positive result.
+
+    So the compiler records what it did, per entity, in the artifact the
+    browser actually loads. ``fallback`` is the load-bearing bit: True means
+    the declared ref supplied nothing and a stand-in was drawn in its place.
+
+    >>> AssetResolutionJSON(
+    ...     id="maya", kind="character", store="characters", ref="maya-v1",
+    ...     resolved="descriptor", fallback=False,
+    ... ).fallback
+    False
+    """
+
+    id: str
+    kind: str  # "character" | "environment"
+    store: str
+    ref: str
+    #: What was built. Characters: "descriptor" | "parts" | "placeholder".
+    #: Environments: "store" | "preset" | "default".
+    resolved: str
+    #: True when the declared ref supplied nothing and a stand-in was drawn.
+    fallback: bool = False
+    #: One human sentence saying why, when ``fallback`` is True.
+    detail: str = ""
+
+
+# -----------------------------------------------------------------------------
 # Top-level scene
 # -----------------------------------------------------------------------------
 
@@ -235,6 +274,10 @@ class CutoutSceneJSON(_JSONModel):
     animations: dict[str, AnimationClipJSON] = Field(default_factory=dict)
     timeline: TimelineJSON
     assets: AssetsJSON = Field(default_factory=AssetsJSON)
+    #: One entry per drawable entity, in scene order — see
+    #: :class:`AssetResolutionJSON`. Inert to the runtime; read by the bench
+    #: harness and the golden-corpus bless to assert WHICH render path ran.
+    asset_resolution: list[AssetResolutionJSON] = Field(default_factory=list)
 
 
 # Resolve forward refs for nested NodeJSON.children

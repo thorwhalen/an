@@ -1,10 +1,16 @@
-"""Seven places that accepted something and produced nothing, now audible (#15).
+"""Eight places that accepted something and produced nothing, now audible (#15).
 
-Each of these had the same shape: the IR declares a capability, the compiler or
+Seven of them had the same shape: the IR declares a capability, the compiler or
 the runtime quietly declines it, and the author gets a render that is missing
 something with no diagnostic anywhere. That is the worst failure mode this
 package has, because it surfaces as "the animation looks wrong" days later and
 gets attributed to whatever else shipped that day.
+
+The eighth (§8, an#33) is worse, and is why the file grew: nothing was missing.
+A declared asset the stores could not supply was **substituted** with a stand-in
+that renders happily, so the output is not incomplete — it is a different,
+plausible picture. Detecting it needs a record of what the compiler did, because
+the two renders are identical in every observable the pixels carry.
 
 Making them raise was verified safe *before* it was done — every site was patched
 independently and the whole suite stayed green, because no test exercised any of
@@ -763,4 +769,170 @@ def test_no_doc_offers_a_targeting_example_that_no_rig_builds():
         "a doc offers a targeting example whose node does not exist, which now "
         "raises at render:\n" + "\n".join(offenders)
         + f"\n\nreal paths for a placeholder character: {sorted(real)}"
+    )
+
+
+# ------------------------------------- 8. a stand-in asset, drawn without a word
+
+
+def _placeholder_rig_store(ref: str = "c-v1") -> dict:
+    """A store entry that asks for EXACTLY the built-in placeholder rig.
+
+    This is the "deliberate procedural character" case, and it is what makes
+    an#33 a real ambiguity rather than a theoretical one: it compiles to a tree
+    that is byte-identical to the tree a *missing* descriptor produces.
+    """
+    from an.adapters.cutout.compile import _PLACEHOLDER_PARTS
+
+    return {"characters": {ref: {"parts": list(_PLACEHOLDER_PARTS)}}}
+
+
+def test_a_missing_character_descriptor_is_no_longer_silent():
+    """It drew a different character and said nothing (an#33).
+
+    Verified directly at the time: `warnings raised: []`, and `svg_sprite`
+    simply absent from the compiled scene. Three CI runners then agreed
+    perfectly about a picture that was not the picture, and the agreement read
+    as a clean positive result.
+    """
+    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    with pytest.warns(CutoutCompileWarning) as record:
+        compile_shot(shot, mall={"characters": {}})
+    msg = "\n".join(str(w.message) for w in record)
+    assert "c-v1" in msg, "the warning must name the ref that resolved to nothing"
+    assert "characters" in msg, "and the store it looked in"
+    assert "placeholder" in msg, "and what got drawn instead"
+
+
+def test_strict_assets_refuses_to_draw_a_stand_in():
+    """The gate anything measuring pixels needs."""
+    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    with pytest.raises(CutoutCompileError) as e:
+        compile_shot(shot, mall={"characters": {}}, strict_assets=True)
+    msg = str(e.value)
+    assert "'s1'" in msg, "the error must name the shot"
+    assert "c-v1" in msg and "characters" in msg
+    assert "strict_assets" in msg, "and say how to opt back out deliberately"
+
+
+def test_strict_assets_is_off_by_default_so_an_assetless_project_still_renders():
+    """The fallback stays. `an` working out of the box depends on it.
+
+    `examples/single_character` reaches the placeholder rig through exactly
+    this path and must keep rendering from a clean checkout.
+    """
+    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    with pytest.warns(CutoutCompileWarning):
+        scene = compile_shot(shot, mall={"characters": {}})
+    assert scene.scene.children, "the placeholder rig must still be drawn"
+
+
+def test_the_compiled_scene_distinguishes_two_identical_pictures():
+    """The heart of an#33, asserted as the ambiguity it actually is.
+
+    A missing descriptor and a deliberately-procedural character compile to the
+    SAME scene tree — so no assertion over the rendered pixels, the visual
+    kinds, or the node paths can tell them apart. The record has to carry it.
+    """
+    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    with pytest.warns(CutoutCompileWarning):
+        missing = compile_shot(shot, mall={"characters": {}})
+    intended = compile_shot(shot, mall=_placeholder_rig_store())
+
+    assert missing.scene == intended.scene, (
+        "these two must stay indistinguishable in the scene tree — if they ever "
+        "diverge, this test is no longer testing an#33's ambiguity"
+    )
+    assert [r.fallback for r in missing.asset_resolution] == [True]
+    assert [r.fallback for r in intended.asset_resolution] == [False]
+    assert missing.asset_resolution[0].resolved == "placeholder"
+    assert intended.asset_resolution[0].resolved == "parts"
+
+
+def test_a_descriptor_backed_character_is_not_a_fallback():
+    """The guard must not fire on the case it exists to protect."""
+    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    descriptor = {
+        "kind": "CharacterDescriptor",
+        "name": "c-v1",
+        "parts": {"head": {"src": "characters/c-v1/parts/head.svg"}},
+    }
+    scene = compile_shot(
+        shot, mall={"characters": {"c-v1": descriptor}}, strict_assets=True
+    )
+    assert [r.resolved for r in scene.asset_resolution] == ["descriptor"]
+    assert not any(r.fallback for r in scene.asset_resolution)
+
+
+def test_an_environment_ref_that_names_nothing_draws_the_default_audibly():
+    """`ref: kitchen` silently rendered the generic backdrop.
+
+    Same class as the character case: a plausible picture that is not the one
+    the scene asked for.
+    """
+    shot = Shot(
+        id="s1",
+        style="cutout",
+        duration=1.0,
+        entities=[
+            AssetRef(kind="environment", id="env", store="environments", ref="kitchen")
+        ],
+    )
+    with pytest.warns(CutoutCompileWarning, match="kitchen"):
+        scene = compile_shot(shot, mall={"environments": {}})
+    assert [r.fallback for r in scene.asset_resolution] == [True]
+    with pytest.raises(CutoutCompileError):
+        compile_shot(shot, mall={"environments": {}}, strict_assets=True)
+
+
+@pytest.mark.parametrize("ref", ["park", "night", "default"])
+def test_a_built_in_environment_preset_is_not_a_fallback(ref):
+    """Presets are a documented built-in, not a stand-in for a missing asset."""
+    shot = Shot(
+        id="s1",
+        style="cutout",
+        duration=1.0,
+        entities=[
+            AssetRef(kind="environment", id="env", store="environments", ref=ref)
+        ],
+    )
+    scene = compile_shot(shot, mall={"environments": {}}, strict_assets=True)
+    assert [r.resolved for r in scene.asset_resolution] == ["preset"]
+
+
+def test_the_render_path_threads_strict_assets_to_the_compiler():
+    """A flag nothing reads is worse than no flag: it reads as protection.
+
+    Asserted at the seam rather than end-to-end so it needs neither ffmpeg nor
+    a browser — the wiring is the claim, and the compiler's own behaviour is
+    covered above.
+    """
+    from an.adapters._base import RenderContext
+    from an.adapters.cutout import render as render_mod
+
+    seen: dict = {}
+
+    class _Stop(Exception):
+        pass
+
+    def _spy(*args, **kwargs):
+        seen.update(kwargs)
+        raise _Stop
+
+    original_compile = render_mod.compile_shot
+    original_ffmpeg = render_mod._ensure_ffmpeg_available
+    render_mod.compile_shot = _spy
+    render_mod._ensure_ffmpeg_available = lambda: None
+    try:
+        shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+        ctx = RenderContext(mall={}, work_dir=Path("."), strict_assets=True)
+        with pytest.raises(_Stop):
+            render_mod.CutoutRenderer().render(shot, ctx)
+    finally:
+        render_mod.compile_shot = original_compile
+        render_mod._ensure_ffmpeg_available = original_ffmpeg
+
+    assert seen.get("strict_assets") is True, (
+        "RenderContext.strict_assets did not reach compile_shot; the flag would "
+        "silently protect nothing"
     )
