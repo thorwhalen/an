@@ -44,6 +44,32 @@ MUTATIONS: tuple[str, ...] = ("high_crf", "disabled_aa")
 Side = Literal["render", "encode"]
 Family = Literal["A", "B", "C", "D", "E", "F", "G"]
 Expect = Literal["increase", "decrease", "no_change", "not_applicable"]
+Reference = Literal["lossless", "source_png", "none"]
+
+#: What an encode-side metric is measured AGAINST. Two answers, and the choice
+#: is per metric rather than global:
+#:
+#: - ``lossless`` — the decode of a `-qp 0` encode of the same frames. That IS
+#:   the plane libx264 received, on any build, so the metric is pure quantiser
+#:   damage with no colour-conversion term. The default, and what every
+#:   counting encode-side metric uses.
+#: - ``source_png`` — an explicit RGB->YUV conversion of the pre-encode PNGs.
+#:   Required by exactly two things. The chroma metric's subject IS the 4:2:0
+#:   subsampling that happens during that conversion, so a lossless-referenced
+#:   version would read ~0 and measure nothing. And `encode_ringing_excess`
+#:   cancels a term that only exists when BOTH its legs share this reference —
+#:   against the lossless leg it degenerates to raw overshoot, which is the
+#:   refuted form.
+#:
+#: The distinction became visible when CI measured the PNG conversion to be
+#: build-dependent (exact on ffmpeg 8.1, mean 0.63 / max 5 on the Linux
+#: runner's older build). It is recorded per metric so a reader can tell which
+#: numbers carry that term.
+REFERENCE_NOTE: dict[str, str] = {
+    "lossless": "the decode of a -qp 0 encode — the plane libx264 received",
+    "source_png": "an explicit RGB->YUV conversion of the pre-encode PNGs",
+    "none": "a property of the encoded file, not a comparison",
+}
 
 #: Which side of the encoder each causal family lives on. Render-side metrics
 #: are computed on the pre-encode PNG and are blind to the encoder BY
@@ -140,6 +166,7 @@ class MetricSpec:
     predictions: dict[str, Prediction]
     sentence: str
     role: str | None = None
+    reference: Reference = "none"
     provisional: bool = False
     unreviewed: bool = False
     tripwire: bool = False
@@ -178,6 +205,9 @@ class MetricSpec:
         }
         if self.role:
             out["role"] = self.role
+        if self.side == "encode":
+            out["reference"] = self.reference
+            out["reference_note"] = REFERENCE_NOTE[self.reference]
         if self.provisional:
             out["provisional"] = True
         if self.unreviewed:
@@ -288,6 +318,7 @@ METRICS: dict[str, MetricSpec] = {
         ),
         _spec(
             key="coded_luma_edge_error",
+            reference="lossless",
             family="C",
             unit="code values (8-bit Y)",
             sentence=(
@@ -315,7 +346,35 @@ METRICS: dict[str, MetricSpec] = {
             ),
         ),
         _spec(
+            key="chroma_edge_dY",
+            family="C",
+            role="control",
+            reference="source_png",
+            unit="code values (8-bit Y)",
+            sentence=(
+                "The luma error on the SAME mask and the SAME reference as "
+                "`chroma_edge_dCr` — a control, not a quality metric."
+            ),
+            optimum=Optimum(
+                kind="guard",
+                note=(
+                    "Read only as the ratio's denominator. NOT a second name for "
+                    "`coded_luma_edge_error`: that one references the lossless "
+                    "leg and this one references the PNG conversion, so they "
+                    "differ by exactly the conversion term. They were identical "
+                    "(1.484149) while both referenced the PNG conversion, which "
+                    "is why one of them was removed and then restored when the "
+                    "references diverged."
+                ),
+            ),
+            predictions={
+                "high_crf": Prediction("increase", reason="control for the ratio below"),
+                "disabled_aa": Prediction(None, gate=_GATED_REFERENCE_MOVED),
+            },
+        ),
+        _spec(
             key="chroma_edge_dCr",
+            reference="source_png",
             family="C",
             unit="code values (8-bit Cr)",
             sentence=(
@@ -343,6 +402,7 @@ METRICS: dict[str, MetricSpec] = {
         ),
         _spec(
             key="chroma_edge_dCr_over_dY",
+            reference="source_png",
             family="C",
             role="diagnostic",
             unit="ratio",
@@ -367,6 +427,7 @@ METRICS: dict[str, MetricSpec] = {
         ),
         _spec(
             key="flat_field_deviation",
+            reference="lossless",
             family="D",
             unit="fraction of flat px with |d|>6",
             sentence=(
@@ -397,6 +458,7 @@ METRICS: dict[str, MetricSpec] = {
         ),
         _spec(
             key="flat_field_p99_dev",
+            reference="lossless",
             family="D",
             role="companion",
             unit="code values",
@@ -409,6 +471,7 @@ METRICS: dict[str, MetricSpec] = {
         ),
         _spec(
             key="encode_flicker_on_held_pixels",
+            reference="lossless",
             family="E",
             unit="fraction of held px moving >=2",
             sentence=(
@@ -438,6 +501,7 @@ METRICS: dict[str, MetricSpec] = {
         ),
         _spec(
             key="encode_ringing_excess",
+            reference="source_png",
             family="G",
             provisional=True,
             unit="code values",
@@ -463,6 +527,7 @@ METRICS: dict[str, MetricSpec] = {
         ),
         _spec(
             key="ring_band_mae",
+            reference="source_png",
             family="G",
             role="q4_comparator",
             unit="code values",

@@ -1,33 +1,38 @@
-"""The four pinned ffmpeg decodes, and the lossless re-encode.
+"""The pinned ffmpeg decodes, and the lossless leg every encode-side metric
+is measured against.
 
-**The spelling of these commands moves the numbers**, which is the single
-largest risk in the whole metrics ledger. Measured on this repo, against a
-mathematically lossless (`-qp 0`) encode of the same PNGs:
+**The reference is the lossless encode, not the PNGs — and that is a
+correction, made because CI caught the alternative.** The obvious design reads
+the source frames back with an explicit conversion
+(`-vf scale=out_range=tv:out_color_matrix=bt709 -pix_fmt yuv444p`) and compares
+the delivered mp4 against that. Measured against a mathematically lossless
+(`-qp 0`) encode of the same frames, that conversion agrees **exactly** on
+ffmpeg 8.1 (luma residual 0.0000, max 0) and **does not** on the Linux runner's
+older build (0.6290, max 5). A floor of 0.63 is 42% of `coded_luma_edge_error`'s
+whole crf23 value, so on that build every encode-side luma number would have
+been measuring a colour-conversion disagreement and reporting it as encoder
+damage.
 
-===========================================  =========================
-decode of the PNG source                     residual vs that encode
-===========================================  =========================
-``-pix_fmt yuv444p`` (the obvious form)      Y mean 5.33, max 20
-``-vf scale=out_range=tv:out_color_matrix=   **Y mean 0.0000, max 0**
-bt709 -pix_fmt yuv444p``
-===========================================  =========================
+The fix is not a tolerance. It is to stop having a second conversion at all:
+`-qp 0` is lossless, so **the qp0 decode's luma plane IS the plane libx264
+received**, on every build, by definition. Referencing the metrics to it
+removes the assumption instead of widening it, and it costs nothing extra —
+`encode_ringing_excess` already needed that leg.
 
-The unpinned form measures a full-range/limited-range and matrix mismatch and
-reports it as encoder damage. That is the exact defect the research's §1.4
-correction was written to fix, reintroduced one level down — and it produces
-plausible, monotone numbers, which is why it needs an assertion rather than a
-comment.
+Two things this does NOT change:
 
-Worse, the natural fix does not work on the natural spelling: research §1.4's
-literal pseudocode reads the luma with ``-pix_fmt gray``, and ffmpeg **silently
-ignores** the ``scale`` filter's ``out_color_matrix`` / ``out_range`` options
-for ``gray`` — verified byte-identical output with and without the filter. So
-the luma plane is read out of the pinned ``yuv444p`` decode instead, which also
-means one subprocess serves both the luma and the chroma metrics.
+- **The chroma metric still references the direct RGB->444 conversion**, because
+  its subject *is* the 4:2:0 subsampling that happens during the conversion. A
+  qp0 file's chroma is already subsampled, so referencing it there would read
+  ~0 and measure nothing.
+- **The PNG conversion is still performed and its distance from the encoder's
+  input is still recorded** (`png_to_encoder_input_luma`), because that number
+  is exactly the build-dependence that was hiding inside a hard equality. It is
+  provenance now, not a gate.
 
-``-map 0:v:0 -fps_mode passthrough`` on every mp4 decode: the delivered file
-carries an AAC track, and implicit frame-rate conversion would silently
-re-time the sequence that every encode-side metric pairs frame-for-frame.
+`-map 0:v:0 -fps_mode passthrough` on every mp4 decode: the delivered file
+carries an AAC track, and implicit frame-rate conversion would silently re-time
+the sequence that every encode-side metric pairs frame-for-frame.
 """
 
 from __future__ import annotations

@@ -30,9 +30,7 @@ SCENE = "single_character"
 @pytest.fixture(scope="module")
 def ledger(tmp_path_factory) -> dict:
     out = tmp_path_factory.mktemp("bench-ledger") / "row.json"
-    return run_bench(
-        scenes={SCENE: DFLT_FIXTURES[SCENE]}, out=out, with_ringing=True
-    )
+    return run_bench(scenes={SCENE: DFLT_FIXTURES[SCENE]}, out=out)
 
 
 def test_every_declared_metric_is_measured_or_says_why_not(ledger):
@@ -68,11 +66,48 @@ def test_the_encode_side_panel_is_fully_measured(ledger):
             assert row["state"] == "measured", (key, row.get("detail"))
 
 
-def test_the_decode_calibration_is_exactly_zero(ledger):
-    """The evidence that this row's encode-side numbers mean what they say."""
-    cal = ledger["provenance"]["decode_calibration"][SCENE]
-    assert cal["luma_residual_max"] == 0
-    assert cal["luma_residual_mean"] == 0.0
+def test_the_row_records_how_far_this_build_sits_from_the_encoders_input(ledger):
+    """Recorded, never gated — it was a gate, and it failed on Linux only.
+
+    The metrics reference the lossless decode, so they do not depend on this
+    number. It is kept because it is exactly the build dependence that was
+    hiding inside the hard equality, and because it explains why two
+    C-family metrics read identically on some machines and not on others.
+    """
+    prov = ledger["scenes"][SCENE]["provenance"]
+    distance = prov["png_to_encoder_input_luma"]
+    assert distance["luma_residual_max"] >= 0
+    assert prov["references_coincide"] == (distance["luma_residual_max"] == 0)
+
+
+def test_the_two_c_family_metrics_differ_exactly_by_the_conversion(ledger):
+    """`chroma_edge_dY` is not a second name for `coded_luma_edge_error`.
+
+    They are the same expression on different references — lossless vs the PNG
+    conversion — so they coincide on a build where the conversion is exact and
+    diverge on one where it is not. Which is which is recorded, so a reader
+    seeing two identical numbers knows why.
+    """
+    block = ledger["scenes"][SCENE]
+    rows = block["metrics"]
+    assert rows["coded_luma_edge_error"]["reference"] == "lossless"
+    assert rows["chroma_edge_dY"]["reference"] == "source_png"
+    if block["provenance"]["references_coincide"]:
+        assert rows["coded_luma_edge_error"]["value"] == rows["chroma_edge_dY"]["value"]
+
+
+def test_every_counting_encode_metric_references_the_lossless_leg(ledger):
+    """A counting witness must not carry a build-dependent conversion term."""
+    rows = ledger["scenes"][SCENE]["metrics"]
+    for key, row in rows.items():
+        if row["side"] != "encode":
+            continue
+        counts = any(p["counts"] for p in row["under_mutation"].values())
+        if counts and row["reference"] != "none":
+            assert row["reference"] == "lossless", (
+                f"{key} counts toward a mutation and references "
+                f"{row['reference']!r}, which is build-dependent"
+            )
 
 
 def test_the_frame_count_matches_what_the_scene_declares(ledger):

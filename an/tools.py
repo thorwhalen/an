@@ -186,7 +186,6 @@ def credits(project_dir: str, json_out: str | None = None) -> str:
 def bench(
     scenes: str = "",
     out: str = "",
-    no_ringing: bool = False,
     keep_render: str = "",
     quiet: bool = False,
 ) -> str:
@@ -198,8 +197,6 @@ def bench(
 
     scenes: comma-separated corpus scene names (default: all of them)
     out: ledger path (default: misc/bench/ledger/<date>-<sha>[-dirty].json)
-    no_ringing: skip encode_ringing_excess — it costs one extra lossless
-        encode per scene
     keep_render: keep the throwaway render tree here instead of deleting it
     quiet: print only the ledger path
 
@@ -224,7 +221,6 @@ def bench(
     ledger = run_bench(
         scenes=chosen,
         out=Path(out) if out else None,
-        with_ringing=not no_ringing,
         keep_render=Path(keep_render) if keep_render else None,
     )
     if quiet:

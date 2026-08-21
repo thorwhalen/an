@@ -45,28 +45,50 @@ Authorities, in order: `misc/docs/wave2_research.md` §1/§1b/§1c/§2/§3,
    test, so it can never move under a deliberate degradation. Recorded as a
    decision, not an oversight.
 
-## The single largest risk, and the assertion that closes it
+## The single largest risk, and how the answer changed
 
-Every encode-side metric is `f(source[i], decoded[i])`. If the two legs are
-decoded in different colour ranges or matrices, all of them measure that
-mismatch and report it as encoder damage — with plausible, monotone numbers.
+Every encode-side metric is `f(reference[i], decoded[i])`. Get the reference
+wrong and all of them measure something other than the encoder — with
+plausible, monotone numbers.
 
-Measured on this repo, against a `-qp 0` lossless encode of the same PNGs:
+**The reference is the lossless encode, not the PNGs.** The obvious design
+converts the source PNGs to YUV and compares against that. Two things make it
+wrong, and the second was found by CI after the first had been fixed:
 
-| source decode | luma residual |
-|---|---|
-| `-pix_fmt yuv444p` (the obvious form) | mean 5.33, max 20 |
-| `-vf scale=out_range=tv:out_color_matrix=bt709 -pix_fmt yuv444p` | **0.0000, max 0** |
+1. The conversion must be range- and matrix-pinned
+   (`-vf scale=out_range=tv:out_color_matrix=bt709`) or it is off by ~5 code
+   values. And the natural fix does not work on the natural spelling: ffmpeg
+   **silently ignores** the `scale` filter's `out_color_matrix` / `out_range`
+   options for `-pix_fmt gray`, so research §1.4's literal pseudocode applies a
+   fix that does nothing. Read the luma out of a `yuv444p` decode.
+2. **Even pinned, the conversion is build-dependent.** It reproduces the
+   encoder's input exactly on ffmpeg 8.1 (0.0000, max 0) and misses by mean
+   0.63 / max 5 on the Linux CI runner's older build — 42% of
+   `coded_luma_edge_error`'s whole crf23 value. The first design asserted the
+   agreement as a hard equality; it passed locally and failed on Linux.
 
-And the natural fix does not work on the natural spelling: ffmpeg **silently
-ignores** the `scale` filter's `out_color_matrix` / `out_range` options for
-`-pix_fmt gray`, so research §1.4's literal pseudocode reintroduces the defect
-with a fix applied that does nothing. Read the luma out of the pinned `yuv444p`
-decode instead — one subprocess serves both the luma and the chroma metrics.
+The fix is not a tolerance. `-qp 0` is lossless, so **the qp0 decode's luma
+plane IS the plane libx264 received**, on every build, by definition.
+Referencing the metrics to it removes the assumption rather than widening it.
 
-`decode_calibration()` runs on every bench invocation and **raises** on any
-nonzero residual. The recorded zero is the evidence that a row's numbers mean
-what they say.
+Two metrics still reference the PNG conversion, and each row says which:
+
+- **the chroma metric**, because its subject *is* the 4:2:0 subsampling that
+  happens during that conversion — referenced to a qp0 file, whose chroma is
+  already subsampled, it would read ~0 and measure nothing;
+- **`encode_ringing_excess`**, because it cancels a term that exists only when
+  both its legs share that reference. Against the lossless leg its second term
+  is 0 by construction and the metric degenerates into raw overshoot, which is
+  the form the research refuted.
+
+`chroma_edge_dY` exists for the same reason and is **not** a duplicate of
+`coded_luma_edge_error`: the same expression on different references. They read
+identically on a build where the conversion is exact, which the row says
+outright via `references_coincide`.
+
+**A counting encode-side witness must reference `lossless`** — a build-dependent
+conversion term has no business inside the number a mutation test reads. There
+is a test for that.
 
 ## Adding a metric
 

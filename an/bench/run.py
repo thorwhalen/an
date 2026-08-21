@@ -1,15 +1,18 @@
 """`run_bench`: render the corpus, compute the panel, write one ledger row.
 
-The order matters and is not arbitrary. The **decode calibration** runs before
-any encode-side metric, because the single largest risk in this whole
-instrument is that those metrics measure a colour-space conversion instead of
-the encoder — measured at a mean of 5-14 code values on the unpinned decode
-spelling, an order of magnitude larger than the crf18->23 signal every one of
-them is trying to see. It produces plausible, monotone numbers, so it needs an
-assertion, not a comment. The calibration is a hard equality against a
-mathematically lossless encode of the same frames, and it is recorded in every
-row so a future ffmpeg build change surfaces as a nonzero field rather than as
-quietly shifted metrics.
+**Every encode-side metric is measured against a lossless (`-qp 0`) encode of
+the same frames, not against a second conversion of the PNGs.** That is a
+correction, and CI is what made it: the PNG conversion agrees with the
+encoder's own exactly on ffmpeg 8.1 and disagrees by mean 0.63 / max 5 on the
+Linux runner's older build — 42% of `coded_luma_edge_error`'s whole crf23 value,
+which would have been measured as encoder damage on that machine and as nothing
+on this one. `-qp 0` is lossless, so its decoded luma **is** the plane libx264
+received, on any build. Referencing to it removes the assumption rather than
+widening it. See :mod:`an.bench.imageio`.
+
+The PNG conversion is still performed and its distance from the encoder's input
+is recorded as `png_to_encoder_input_luma` — that number is the build
+dependence, and it belongs in provenance rather than inside a gate.
 """
 
 from __future__ import annotations
@@ -35,13 +38,6 @@ from an.bench.ledger import (
 from an.bench.paths import git_state, ledger_path, repo_root
 from an.bench.registry import METRICS, TRIPWIRES
 
-#: The lossless residual that proves the two decode legs agree. A hard zero,
-#: not a tolerance: any nonzero value means the source and decoded colour
-#: matrix or range disagree, and every encode-side number in the row is then
-#: measuring that disagreement.
-CALIBRATION_TOLERANCE: int = 0
-
-
 class BenchError(RuntimeError):
     """The bench could not produce a row it would be honest to file."""
 
@@ -50,54 +46,54 @@ def _ffmpeg_available() -> bool:
     return shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None
 
 
-def decode_calibration(frames_dir: Path, fps: int, *, height: int, width: int) -> dict:
-    """Encode the frames losslessly, decode both legs, and assert they agree.
+def lossless_reference(frames_dir: Path, fps: int, out: Path):
+    """Encode the frames losslessly and return the decode — the encoder's input.
 
-    Returns the residual, always; raises only when it is nonzero, because a
-    recorded zero is the evidence that this run's numbers mean what they say.
+    Returned as a path rather than an array so the caller controls its
+    lifetime; every encode-side reference comes from here.
+    """
+    imageio.run_raw(imageio.lossless_encode_command(frames_dir, fps, out))
+    return out
+
+
+def conversion_distance(
+    frames_dir: Path, lossless_mp4: Path, *, height: int, width: int
+) -> dict:
+    """How far this build's PNG->YUV conversion sits from the encoder's own.
+
+    Recorded, never gated. It was a gate — a hard equality — and it failed on
+    the Linux runner while passing here, which is precisely the shape of a
+    machine-dependent fact masquerading as a universal one. Now the metrics no
+    longer depend on it, and the number is kept because it is the thing that
+    will explain a future cross-build surprise.
     """
     import numpy as np
 
-    tmp = frames_dir.parent / "_bench_lossless.mp4"
-    try:
-        imageio.run_raw(imageio.lossless_encode_command(frames_dir, fps, tmp))
-        src = imageio.source_yuv(frames_dir, height=height, width=width)
-        dec = imageio.decoded_yuv(tmp, height=height, width=width)
-        n = min(len(src), len(dec))
-        residual = np.abs(
-            dec[:n, 0].astype(np.int16) - src[:n, 0].astype(np.int16)
-        )
-        report = {
-            "luma_residual_mean": float(residual.mean()),
-            "luma_residual_max": int(residual.max()),
-            "source_command": imageio.source_yuv_command(frames_dir),
-            "decoded_command": imageio.decoded_yuv_command(tmp),
-            "note": (
-                "a nonzero value means the source and decoded colour matrix or "
-                "range disagree, and every encode-side metric in this row is "
-                "measuring that disagreement rather than the encoder"
-            ),
-        }
-    finally:
-        tmp.unlink(missing_ok=True)
-    if report["luma_residual_max"] > CALIBRATION_TOLERANCE:
-        raise BenchError(
-            "the decode calibration failed: a mathematically lossless encode "
-            f"reads back with luma residual mean {report['luma_residual_mean']:.4f}, "
-            f"max {report['luma_residual_max']}, against a required 0. The "
-            "source leg must carry "
-            f"`-vf {imageio.SOURCE_SCALE_FILTER}`; without it the encode-side "
-            "metrics measure a full-range/limited-range and matrix mismatch and "
-            "report it as encoder damage."
-        )
-    return report
+    src = imageio.source_yuv(frames_dir, height=height, width=width)
+    enc_in = imageio.decoded_yuv(lossless_mp4, height=height, width=width)
+    n = min(len(src), len(enc_in))
+    if n == 0:
+        return {"error": "one of the legs decoded to zero frames"}
+    residual = np.abs(enc_in[:n, 0].astype(np.int16) - src[:n, 0].astype(np.int16))
+    return {
+        "luma_residual_mean": round(float(residual.mean()), 6),
+        "luma_residual_max": int(residual.max()),
+        "png_command": imageio.source_yuv_command(frames_dir),
+        "encoder_input_command": imageio.decoded_yuv_command(lossless_mp4),
+        "note": (
+            "Zero means this build's explicit PNG->YUV conversion reproduces "
+            "what libx264 received. Nonzero means it does not, which is a "
+            "property of the ffmpeg build and NOT an error: the encode-side "
+            "metrics reference the lossless decode, so they do not depend on "
+            "this agreeing. Measured 0.0 on ffmpeg 8.1 (arm64 macOS) and "
+            "0.629 / max 5 on the Linux runner's older build."
+        ),
+    }
 
 
 def _shot_metrics(
     capture: SceneCapture,
     shot,
-    *,
-    with_ringing: bool,
 ) -> tuple[dict[str, Value], dict[str, Any]]:
     """The whole panel for one shot, plus the provenance the panel needs recorded."""
     import numpy as np
@@ -151,11 +147,35 @@ def _shot_metrics(
             values.setdefault(key, unavailable(reason))
         return values, prov
 
-    src_yuv = imageio.source_yuv(shot.frames_dir, height=h, width=w)
-    dec_yuv = imageio.decoded_yuv(capture.mp4, height=h, width=w)
-    dec_rgb = imageio.decoded_rgb(capture.mp4, height=h, width=w)
+    # The reference. `-qp 0` is lossless, so this IS the plane libx264 received
+    # — on any build, without assuming that our own PNG->YUV conversion matches
+    # ffmpeg's internal one. It does on ffmpeg 8.1 and does not on the Linux
+    # runner's older build (see the module docstring), which is exactly why the
+    # metrics no longer depend on it.
+    qp0_mp4 = shot.frames_dir.parent / "_bench_qp0.mp4"
+    lossless_reference(shot.frames_dir, capture.fps, qp0_mp4)
+    try:
+        ref_yuv = imageio.decoded_yuv(qp0_mp4, height=h, width=w)
+        ref_rgb = imageio.decoded_rgb(qp0_mp4, height=h, width=w)
+        distance = conversion_distance(shot.frames_dir, qp0_mp4, height=h, width=w)
+        prov["png_to_encoder_input_luma"] = distance
+        # Derived so a reader does not have to. When it is True,
+        # `coded_luma_edge_error` (lossless-referenced) and `chroma_edge_dY`
+        # (PNG-referenced) are numerically identical on this build — which
+        # looks like a duplicate and is not: they differ by exactly this
+        # residual, and on a build where it is nonzero they diverge.
+        prov["references_coincide"] = distance.get("luma_residual_max") == 0
+        # The direct RGB->444 conversion, kept for ONE metric: the chroma one,
+        # whose subject IS the 4:2:0 subsampling that happens during the
+        # conversion. A qp0 file's chroma is already subsampled, so referencing
+        # it there would read ~0 and measure nothing.
+        src_yuv = imageio.source_yuv(shot.frames_dir, height=h, width=w)
+        dec_yuv = imageio.decoded_yuv(capture.mp4, height=h, width=w)
+        dec_rgb = imageio.decoded_rgb(capture.mp4, height=h, width=w)
+    finally:
+        qp0_mp4.unlink(missing_ok=True)
 
-    n = min(len(src_yuv), len(dec_yuv), len(dec_rgb), len(src_rgb))
+    n = min(len(src_yuv), len(dec_yuv), len(dec_rgb), len(src_rgb), len(ref_yuv))
     if n != len(src_rgb) or n != len(dec_rgb):
         # Not silently truncated: every encode-side metric pairs frame i with
         # frame i, so a length disagreement means the pairing is offset and
@@ -165,6 +185,7 @@ def _shot_metrics(
             "source_yuv": int(len(src_yuv)),
             "decoded_rgb": int(len(dec_rgb)),
             "decoded_yuv": int(len(dec_yuv)),
+            "lossless_reference": int(len(ref_yuv)),
         }
 
     edge = masks.edge_mask(src_yuv[:n, 0])
@@ -194,20 +215,32 @@ def _shot_metrics(
             return unavailable("the mask selected no pixels in this scene")
         return measured(round(float(v), 6))
 
-    # `coded_luma_edge_error` IS the research's `chroma_edge_dY` control — mean
-    # |dY| over the edge mask is both definitions verbatim — so it is computed
-    # once and used as the ratio's denominator.
+    # Referenced to the LOSSLESS leg: pure quantiser damage, with no
+    # colour-conversion term and no build dependence.
+    values["coded_luma_edge_error"] = _num(
+        M.masked_mean_abs, dec_yuv[:n, 0], ref_yuv[:n, 0], edge
+    )
+
+    # Referenced to the PNG conversion, deliberately and for this metric only:
+    # the 4:2:0 subsampling it exists to see happens DURING that conversion, so
+    # a lossless-referenced version would read ~0 and measure nothing. `dY` on
+    # the same reference and the same mask is therefore NOT a second name for
+    # `coded_luma_edge_error` — the two differ by exactly the reference — and it
+    # is the only denominator for which the ratio means what it claims.
     d_y = M.masked_mean_abs(dec_yuv[:n, 0], src_yuv[:n, 0], edge)
     d_cr = M.masked_mean_abs(dec_yuv[:n, 2], src_yuv[:n, 2], edge)
-    values["coded_luma_edge_error"] = _num(lambda: d_y)
+    values["chroma_edge_dY"] = _num(lambda: d_y)
     values["chroma_edge_dCr"] = _num(lambda: d_cr)
     values["chroma_edge_dCr_over_dY"] = (
         measured(round(float(d_cr / d_y), 6))
         if d_y and d_y == d_y and d_cr == d_cr
-        else unavailable("the luma error on the edge mask is zero or undefined, so the ratio has no value")
+        else unavailable(
+            "the luma error on the edge mask is zero or undefined, so the ratio "
+            "has no value"
+        )
     )
 
-    frac, p99 = M.flat_field_deviation(src_rgb[:n], dec_rgb[:n], flat)
+    frac, p99 = M.flat_field_deviation(ref_rgb[:n], dec_rgb[:n], flat)
     values["flat_field_deviation"] = (
         unavailable("no flat field in this scene")
         if frac != frac
@@ -219,33 +252,20 @@ def _shot_metrics(
         else measured(round(float(p99), 4))
     )
     values["encode_flicker_on_held_pixels"] = _num(
-        M.encode_flicker_on_held_pixels, src_rgb[:n], dec_rgb[:n]
+        M.encode_flicker_on_held_pixels, ref_rgb[:n], dec_rgb[:n]
     )
+    # The Q4 pair, both on the PNG reference. `encode_ringing_excess` cancels a
+    # term that exists only when both its legs share that reference — against
+    # the lossless leg the second term is 0 by construction and the metric
+    # degenerates into raw overshoot, which is the form the research refuted.
+    # `ring_band_mae` is its declared rival, so it must share the reference or
+    # the comparison answers a different question.
     values["ring_band_mae"] = _num(
         M.masked_mean_abs, dec_yuv[:n, 0], src_yuv[:n, 0], ring
     )
-
-    if with_ringing:
-        tmp = shot.frames_dir.parent / "_bench_qp0.mp4"
-        try:
-            imageio.run_raw(
-                imageio.lossless_encode_command(shot.frames_dir, capture.fps, tmp)
-            )
-            lossless = imageio.decoded_yuv(tmp, height=h, width=w)
-            m = min(n, len(lossless))
-            values["encode_ringing_excess"] = _num(
-                M.encode_ringing_excess,
-                dec_yuv[:m, 0],
-                lossless[:m, 0],
-                src_yuv[:m, 0],
-                ring[:m],
-            )
-        finally:
-            tmp.unlink(missing_ok=True)
-    else:
-        values["encode_ringing_excess"] = unavailable(
-            "skipped by --no-ringing (it costs one extra lossless encode per scene)"
-        )
+    values["encode_ringing_excess"] = _num(
+        M.encode_ringing_excess, dec_yuv[:n, 0], ref_yuv[:n, 0], src_yuv[:n, 0], ring
+    )
 
     values["video_stream_bytes"] = measured(imageio.video_stream_bytes(capture.mp4))
     values["file_bytes"] = measured(int(capture.mp4.stat().st_size))
@@ -272,7 +292,6 @@ def run_bench(
     *,
     scenes: dict[str, Fixture] | None = None,
     out: Path | None = None,
-    with_ringing: bool = True,
     keep_render: Path | None = None,
     write: bool = True,
 ) -> dict:
@@ -282,7 +301,6 @@ def run_bench(
     git = git_state(root)
 
     scene_blocks: dict[str, dict] = {}
-    calibrations: dict[str, dict] = {}
     captures: list[SceneCapture] = []
     # Read while the throwaway tree still exists: the SEI is the field that
     # decides whether two rows may be compared at all, and the tree is deleted
@@ -298,14 +316,8 @@ def run_bench(
             if sei is None:
                 sei = environment.x264_sei(capture.mp4)
             shot = capture.shots[0]
-            h, w = capture.resolution[1], capture.resolution[0]
 
-            if _ffmpeg_available():
-                calibrations[name] = decode_calibration(
-                    shot.frames_dir, capture.fps, height=h, width=w
-                )
-
-            values, shot_prov = _shot_metrics(capture, shot, with_ringing=with_ringing)
+            values, shot_prov = _shot_metrics(capture, shot)
             # Family B is golden-referenced, so it is GATED rather than absent:
             # an absent row and a null row look the same to a reader and mean
             # opposite things.
@@ -367,7 +379,6 @@ def run_bench(
                 "decoded_rgb": imageio.decoded_rgb_command(Path("<mp4>")),
                 "decoded_yuv444": imageio.decoded_yuv_command(Path("<mp4>")),
             },
-            "decode_calibration": calibrations,
         },
         scenes=scene_blocks,
     )

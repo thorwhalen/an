@@ -53,6 +53,27 @@ the prose explaining what the numbers are.
 Two scenes cost ~32 KB compact. Revisit the format if a row exceeds ~250 KB, or
 if the directory passes ~20 MB — the same trigger the golden corpus uses.
 
+## What an encode-side metric is measured against
+
+Every encode-side row carries a `reference`:
+
+| `reference` | what it is |
+|---|---|
+| `lossless` | the decode of a `-qp 0` encode of the same frames — **the plane libx264 received**, on any build. Every *counting* encode-side metric uses this |
+| `source_png` | an explicit RGB→YUV conversion of the pre-encode PNGs. Two metrics need it: the chroma one, whose subject *is* the 4:2:0 subsampling that happens during that conversion; and `encode_ringing_excess`, which cancels a term that exists only when both its legs share it |
+| `none` | a property of the encoded file, not a comparison |
+
+This distinction is not decoration. The PNG conversion is **build-dependent**:
+it reproduces the encoder's input exactly on ffmpeg 8.1 and misses by mean 0.63
+/ max 5 on the Linux CI runner's older build — 42% of `coded_luma_edge_error`'s
+whole crf23 value. The first design asserted that agreement as a hard equality
+and would have measured a colour conversion as encoder damage on that machine.
+
+The distance is now recorded per scene as `png_to_encoder_input_luma`, and
+`references_coincide` says whether it is zero. When it is,
+`coded_luma_edge_error` and `chroma_edge_dY` read **identically** — they are the
+same expression on different references — and that is why both are in the row.
+
 ## Four value states, and two of them are null
 
 | state | meaning |

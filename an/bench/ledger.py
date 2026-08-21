@@ -110,7 +110,13 @@ class Value:
 #: what the numbers are. What stays inline is exactly what
 #: ``an bench --compare`` (an#40) keys on, so a comparison never has to consult
 #: a second block to decide whether two rows may be compared at all.
-INLINE_SPEC_FIELDS: tuple[str, ...] = ("side", "family", "comparison_scope", "counts")
+INLINE_SPEC_FIELDS: tuple[str, ...] = (
+    "side",
+    "family",
+    "comparison_scope",
+    "reference",
+    "counts",
+)
 
 
 def _inline(spec_dict: dict, value: Value) -> dict:
