@@ -3,6 +3,26 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **Wave 2's research record (`misc/docs/wave2_research.md`).** Twenty-one agents
+  across five surveys and four adversarial passes, plus a separate pass on §4.
+  **All twelve originally-proposed metrics were refuted** and replaced with
+  corrected forms. It contradicts epic #9 in six places, each measured:
+  `mean adjacent-frame SSIM` moves the WRONG way under degradation (0.958 at
+  crf18 → 0.977 at crf51 — a crushed video is smoother); there is no blink phase
+  to pin (already a pure function of `(entity id, t)`, and `PYTHONHASHSEED` is
+  irrelevant because palette hashing is `sum(ord(c)) % 5`); "first and mid frame"
+  is often a byte-identical duplicate (blinks occupy 3.5% of frames); the
+  ">=3 metrics move" criterion is unsatisfiable as written because the
+  pre-encode and post-encode families are disjoint; `architecture_as_built.md`
+  documents a shot-cache read path that does not exist; and four bench-prototype
+  conclusions were invalidated by Wave 1's vendoring (it measured canvas-2D; `an`
+  renders WebGL).
+- It also **un-hedges** the epic where the epic was too cautious: frames are
+  already byte-identical same-machine (144 frames x 3 renders; `parallel=4`
+  matches serial), so the determinism test is an equality assertion, not a band.
+  But goldens must key on `sha256(decoded pixels)`, never file bytes — Chromium
+  1187 → 1223 changes 144/144 PNG files and **zero** pixels.
+
 - **Browser tests were not being skipped in CI — they were not being collected
   (#22).** Eleven modules opened with a module-level
   `pytest.importorskip("playwright.sync_api")`, which aborts the module import

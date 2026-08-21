@@ -106,6 +106,12 @@ exclude = [
     "tests",
     "examples",
     "scrap",
+    # Research records under misc/docs/ are prose. Ruff formats the Python
+    # blocks inside markdown, which is right for source and wrong here: these
+    # snippets are illustrative, often deliberately aligned to be read next to
+    # a table, and several are quotations of code that does not exist yet. The
+    # rest of `misc/` (e.g. dev_sanity.py) stays formatted.
+    "misc/docs",
 ]
 
 [tool.ruff.lint]
