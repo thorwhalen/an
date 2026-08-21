@@ -99,6 +99,20 @@ remotion = []
 tts = [
     "elevenlabs",
 ]
+vision = [
+    # `an.verify.vision` lazy-imports this and it was declared nowhere, so
+    # `pip install an` gave you a verifier that could only ever skip.
+    #
+    # Pinned below 1.0: the cassette envelope records the SDK version it was
+    # made with and refuses a replay across a major bump, because a recording
+    # made against a different major version may not describe the same request.
+    #
+    # Licence closure adjudicated over the whole dependency set: anthropic is
+    # MIT, and it adds only three distributions this package does not already
+    # ship (distro Apache-2.0, docstring-parser MIT, jiter MIT) because the
+    # `tts` extra already pulls httpx/httpcore/h11/idna/anyio/sniffio/certifi.
+    "anthropic<1",
+]
 
 [tool.ruff]
 line-length = 88

@@ -91,6 +91,8 @@ Honest list. Don't let it rot either — delete a line when you close it.
 - Never claim a render produced something it didn't. `render_project()` returns the mp4 path; when it fails, surface the renderer's actual error.
 - Never use `pip install <name>` for a local-ecosystem package; this is `pip install -e <path> --no-deps`.
 - Never bump `SCHEMA_VERSION` without registering a migration in `an/ir/migrate.py`.
+- Never let a verifier report success when it failed to run. `VerificationReport.add` flips `passed` only on `"error"`, so an `info` Finding on a failure path is a clean bill of health. `info` is the *not-configured* severity; a configured-and-broken verifier reports at `an.verify.vision.FAILURE_SEVERITY` or higher (an#39).
+- Never let a cassette miss fall through to a real API call, and never rebase `CassetteMiss` on `Exception` — `except Exception` appears twice on the way out of a `verify()` call, so only a `BaseException` reaches a test asserting that a run did not spend.
 - Never introduce a bare `NotImplementedError` as a placeholder — there are currently zero in `an/`, and stubs carry typed, install-hinting errors instead. Keep it that way.
 
 ## CI: what a green tick now covers
