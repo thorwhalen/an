@@ -141,8 +141,42 @@ def test_each_recorded_exception_is_still_present_and_still_that_licence(name, r
     assert declared, f"{name} declares no licence"
 
 
-def _hard_dependencies() -> tuple[str, ...]:
-    """Every distribution a bare `pip install an` pulls in, READ FROM pyproject.
+def _declared_dependency_block(text: str) -> str:
+    """The body of ``dependencies = [ ... ]``, matched by BRACKET DEPTH, line by line.
+
+    Not ``.split("]", 1)``. A single requirement carrying an extra —
+    ``"uvicorn[standard]"`` — closes the array early on that spelling, and the
+    perimeter then silently checks only the names above it. Measured: adding
+    one such line plus a plain ``argh`` to a scratch pyproject took the file
+    from 3 failures to **10 passed**. One line disarmed the whole check.
+
+    Line-based, with comments stripped first, so a stray bracket inside a
+    comment cannot terminate the scan either.
+
+    >>> _declared_dependency_block('dependencies = [\n  "a[x]",\n  "b",\n]\n')
+    '  "a[x]",\n  "b",'
+    """
+    lines = text.splitlines()
+    start = next(
+        (i for i, line in enumerate(lines) if "dependencies = [" in line), None
+    )
+    assert start is not None, "pyproject.toml declares no `dependencies = [`"
+    depth = lines[start].split("dependencies = [", 1)[1].split("#", 1)[0]
+    body: list[str] = []
+    level = 1 + depth.count("[") - depth.count("]")
+    if level == 0:
+        return depth.rsplit("]", 1)[0]
+    for line in lines[start + 1 :]:
+        code = line.split("#", 1)[0]
+        level += code.count("[") - code.count("]")
+        if level <= 0:
+            return "\n".join(body)
+        body.append(line)
+    raise AssertionError("`dependencies = [` is never closed in pyproject.toml")
+
+
+def _hard_dependencies(text: str | None = None) -> tuple[str, ...]:
+    """Every distribution `an` DECLARES, read from pyproject.
 
     Derived rather than restated. This was a hand-maintained tuple, which is the
     second-table smell the whole bench registry exists to avoid: a dependency
@@ -152,22 +186,104 @@ def _hard_dependencies() -> tuple[str, ...]:
 
     Scanned as text rather than parsed: `tomllib` is 3.11+ and this repo
     supports 3.10, and the shape here is a flat array of requirement strings.
+
+    ``text`` is injectable so the DERIVATION can be tested against a synthetic
+    block. Asserting the real tuple's contents tests the contents, not the
+    derivation — the exact shape this repo keeps losing mutants to.
+
+    >>> _hard_dependencies('dependencies = [\n  "a[x]>=1; python_version>\'3\'",  # c\n  "b",\n]')
+    ('a', 'b')
     """
-    text = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(
-        encoding="utf-8"
-    )
-    body = text.split("dependencies = [", 1)[1].split("]", 1)[0]
+    if text is None:
+        text = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(
+            encoding="utf-8"
+        )
     names = []
-    for line in body.splitlines():
+    for line in _declared_dependency_block(text).splitlines():
         line = line.split("#", 1)[0].strip().rstrip(",").strip()
         if line.startswith(('"', "'")):
             requirement = line.strip("\"'")
-            names.append(re.split(r"[<>=!~\[; ]", requirement, 1)[0])
+            names.append(re.split(r"[<>=!~\[; ]", requirement, maxsplit=1)[0])
     return tuple(names)
 
 
-#: Every distribution a bare `pip install an` pulls in.
+def _closure(names: tuple[str, ...]) -> tuple[str, ...]:
+    """The declared names PLUS everything they pull in, as installed here.
+
+    The perimeter used to check the five declared names only, and that is a
+    smaller claim than it reads as: `pip install an` installs their transitive
+    closure, and a copyleft distribution three levels down is exactly as much a
+    part of what a downstream consumer inherits.
+
+    It is still a fact about THIS environment rather than about the package —
+    `Requires-Dist` is read from installed metadata, so a version that resolves
+    differently elsewhere is invisible here. Measured, and not hypothetically:
+    the local typer 0.19.2 requires `click`, while the typer a fresh
+    `pip install an` resolves today (0.27.1, since `pyproject.toml` pins no
+    version) requires `shellingham`, `rich`, `annotated-doc` and **no click at
+    all**. `test_the_closure_is_bigger_than_the_declared_set` says so out loud
+    rather than letting the number read as universal.
+    """
+    from importlib.metadata import PackageNotFoundError, requires
+
+    seen: set[str] = set()
+    queue = list(names)
+    while queue:
+        name = _normalise(queue.pop())
+        if name in seen:
+            continue
+        seen.add(name)
+        try:
+            declared = requires(name) or []
+        except PackageNotFoundError:
+            continue
+        for requirement in declared:
+            # Skip extras-only requirements: `pip install an` does not take
+            # them, so they are not part of what a bare install pulls in.
+            if "extra ==" in requirement:
+                continue
+            queue.append(re.split(r"[<>=!~\[; ()]", requirement, maxsplit=1)[0].strip())
+    return tuple(sorted(seen))
+
+
+def _normalise(name: str) -> str:
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+#: Everything `an` declares.
 HARD_DEPENDENCIES: tuple[str, ...] = _hard_dependencies()
+
+#: Everything a bare `pip install an` pulls in, as resolved in THIS environment.
+HARD_CLOSURE: tuple[str, ...] = _closure(HARD_DEPENDENCIES)
+
+
+def test_the_derivation_survives_the_shapes_a_requirement_can_take():
+    """MUTATION: `.split("]", 1)` instead of the bracket-depth scan.
+
+    Tests the DERIVATION against a synthetic block, not the real tuple's
+    contents — asserting the contents tests the contents, and this repo keeps
+    losing mutants to exactly that shape.
+
+    The extras case is the one that matters. `"uvicorn[standard]"` closes the
+    array early under a naive split, and everything below it stops being
+    checked: measured, one such line plus a plain `argh` took the file from 3
+    failures to 10 passed. One line disarmed the whole perimeter.
+    """
+    block = """dependencies = [
+    "plain",
+    "with-extra[standard]",
+    "pinned>=1.2",
+    "marked; python_version >= '3.10'",
+    "commented",  # a trailing note with a ] bracket in it
+    # "commented-out",
+]"""
+    assert _hard_dependencies(block) == (
+        "plain",
+        "with-extra",
+        "pinned",
+        "marked",
+        "commented",
+    )
 
 
 def test_the_hard_dependency_list_is_read_from_pyproject():
@@ -188,6 +304,55 @@ def test_the_hard_dependency_list_is_read_from_pyproject():
         )
 
 
+def test_the_licence_detector_actually_detects():
+    """MUTATION: `FORBIDDEN_PATTERNS = ()`.
+
+    The tables had NO positive case: deleting the whole forbidden tuple left the
+    file green, because every test that reads it only ever asserts that nothing
+    matched. A detector with no demonstrated true positive is a detector nobody
+    has checked, and this file's entire job is detection.
+    """
+    lgpl = (
+        "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)"
+    )
+    assert any(re.search(p, lgpl, re.I) for p in FORBIDDEN_PATTERNS), (
+        "the real classifier string argh declared is not detected as copyleft"
+    )
+    for copyleft in ("GPL-3.0-only", "AGPL-3.0", "LGPL-2.1-or-later", "BSL-1.1"):
+        assert any(re.search(p, copyleft, re.I) for p in FORBIDDEN_PATTERNS), copyleft
+    # MPL is deliberately NOT in the forbidden set — it is file-level weak
+    # copyleft, and `certifi` sits in EXCEPTIONS because it matches no ALLOWED
+    # pattern rather than because it matches a forbidden one. Asserted so the
+    # distinction is a decision rather than an omission nobody noticed.
+    assert not any(re.search(p, "MPL-2.0", re.I) for p in FORBIDDEN_PATTERNS)
+    assert "certifi" in EXCEPTIONS
+    for permissive in ("MIT", "BSD-3-Clause", "Apache-2.0", "ISC"):
+        assert not any(re.search(p, permissive, re.I) for p in FORBIDDEN_PATTERNS), (
+            f"{permissive} is flagged as copyleft"
+        )
+        assert any(re.search(p, permissive, re.I) for p in ALLOWED_PATTERNS), permissive
+
+
+def test_the_closure_is_bigger_than_the_declared_set():
+    """The perimeter checks what `pip install an` PULLS IN, not what it names.
+
+    MUTATION: `HARD_CLOSURE = HARD_DEPENDENCIES`.
+
+    A copyleft distribution three levels down is exactly as much a part of what
+    a downstream consumer inherits. And it says out loud that this is a fact
+    about THIS environment: `Requires-Dist` comes from installed metadata, so a
+    version that resolves differently elsewhere is invisible. Measured, and not
+    hypothetically — the local typer 0.19.2 requires `click`, while the typer a
+    fresh `pip install an` resolves today (0.27.1, since nothing pins a version)
+    requires `shellingham`, `rich`, `annotated-doc` and NO CLICK AT ALL.
+    """
+    assert set(_normalise(n) for n in HARD_DEPENDENCIES) <= set(HARD_CLOSURE)
+    assert len(HARD_CLOSURE) > len(HARD_DEPENDENCIES), (
+        "the closure is no bigger than the declared set, which means either "
+        "nothing is installed or the walk stopped"
+    )
+
+
 def test_no_unrecorded_hard_dependency_is_copyleft():
     """The perimeter that matters most: what every `pip install an` pulls in.
 
@@ -196,7 +361,7 @@ def test_no_unrecorded_hard_dependency_is_copyleft():
     is the thing a test can usefully hold.
     """
     offenders = []
-    for name in HARD_DEPENDENCIES:
+    for name in HARD_CLOSURE:
         if not _installed(name) or name in EXCEPTIONS:
             continue
         declared = _declared_licence(name)
@@ -218,7 +383,7 @@ def test_no_hard_dependency_is_copyleft_at_all():
     """
     copyleft = {
         name: _declared_licence(name)
-        for name in HARD_DEPENDENCIES
+        for name in HARD_CLOSURE
         if _installed(name)
         and any(re.search(p, _declared_licence(name), re.I) for p in FORBIDDEN_PATTERNS)
     }

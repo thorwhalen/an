@@ -17,10 +17,21 @@ the business layer, which is the shape this package exists not to have.
 **Typer replaced argh, and the reason is licensing rather than ergonomics**
 (an#45). `argh` declares LGPL-3.0 and was the only declared-copyleft
 distribution in `an`'s hard dependency set, against the MIT/BSD/Apache/ISC rule
-this repo and its federation state. Typer is MIT and click is BSD-3.
+this repo and its federation state. Typer is MIT.
 `argcomplete` went with it: it hooks `argparse` specifically, so once the
-argparse-based parser was gone it was a dependency that did nothing — click
-ships its own shell completion, reachable as ``an --install-completion``.
+argparse-based parser was gone it was a dependency that did nothing. Typer
+supplies the replacement itself (``typer/completion.py``), reachable as
+``an --install-completion``; verified working under a pty, emitting a correct
+``#compdef an`` block.
+
+**What typer pulls in depends on which typer resolves, and `pyproject.toml`
+pins no version.** 0.19.x requires `click` (BSD-3); 0.27.1 — what a fresh
+`pip install an` gets today — requires `shellingham`, `rich` and
+`annotated-doc`, and **no click at all**. Earlier text here said flatly that
+typer "pulls click" and that click supplied the completion; both were true of
+the locally installed version and false of the package. The licence perimeter
+now walks the installed transitive closure rather than the five declared names,
+and says out loud that its answer is about the environment it runs in.
 
 Three behaviours argh gave for free that are reproduced here on purpose, because
 each one is user-visible and none is typer's default:
@@ -40,6 +51,7 @@ each one is user-visible and none is typer's default:
 from __future__ import annotations
 
 import inspect
+import re
 from typing import Any, Callable
 
 import typer
@@ -57,6 +69,41 @@ def command_name(func: Callable[..., Any]) -> str:
     'bench-compare'
     """
     return func.__name__.replace("_", "-")
+
+
+#: A docstring line that documents one parameter, in the convention
+#: `an.tools` and `an/characters/cli.py` both already follow.
+_PARAM_DOC = re.compile(r"^[a-z_][a-z0-9_]*: ")
+
+
+def help_text(func: Callable[..., Any]) -> str | None:
+    """The docstring, with its per-parameter lines protected from rewrapping.
+
+    argh kept one line per flag; click and Rich rewrap a paragraph, so the six
+    lines documenting `an bench`'s flags arrived as a single run-on — "scenes:
+    ... (default: all of them) out: ledger path ... keep_render: keep the
+    throwaway ...". That is the entire per-flag documentation of this CLI, and
+    losing it was a silent regression that a first-four-words help assertion
+    could not see.
+
+    Click's escape for this is a line containing only ``\b`` before a block it
+    must not rewrap, so one is inserted ahead of each run of parameter lines.
+    Cheaper and less fragile than rebuilding every function's signature to
+    attach `typer.Option(help=...)` per parameter, which is the nicer shape and
+    would put CLI types where the dispatch pillar says they must not go.
+    """
+    doc = inspect.getdoc(func)
+    if not doc:
+        return None
+    out: list[str] = []
+    inside = False
+    for line in doc.splitlines():
+        documents_a_param = bool(_PARAM_DOC.match(line))
+        if documents_a_param and not inside:
+            out.append("\b")
+        inside = documents_a_param
+        out.append(line)
+    return "\n".join(out)
 
 
 def _printing(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -97,6 +144,10 @@ def build_app(
         no_args_is_help=True,
         pretty_exceptions_show_locals=False,
         help=__doc__.split("\n\n")[0],
+        # argh accepted `-h` everywhere and click does not by default, so
+        # `an render -h` exited 2 with "No such option". Restored at the root;
+        # it propagates to every command, group and nested group.
+        context_settings={"help_option_names": ["-h", "--help"]},
     )
 
     @app.callback()
@@ -111,7 +162,7 @@ def build_app(
         """
 
     for func in funcs if funcs is not None else _dispatch_funcs:
-        app.command(name=command_name(func), help=inspect.getdoc(func))(_printing(func))
+        app.command(name=command_name(func), help=help_text(func))(_printing(func))
     for group, group_funcs in (
         namespaces if namespaces is not None else _dispatch_namespaces
     ).items():
@@ -122,9 +173,7 @@ def build_app(
             # bare (`new`, `mouths`, ...) accordingly. A strip here was
             # defensive code with no live case — it survived its own mutation
             # test, which is how it was found.
-            sub.command(name=command_name(func), help=inspect.getdoc(func))(
-                _printing(func)
-            )
+            sub.command(name=command_name(func), help=help_text(func))(_printing(func))
         app.add_typer(sub, name=group)
     return app
 

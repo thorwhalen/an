@@ -178,7 +178,7 @@ def test_a_representative_mutant_is_really_caught():
 
     MUTATION: in `run_mutants`, `caught = completed.returncode != 0` -> `!= 999`.
 
-    One mutant rather than fourteen: the full sweep takes ~40s of pytest
+    One mutant rather than the whole registry: the full sweep takes ~40s of pytest
     subprocesses and belongs behind `an bench-mutants`, but a harness that
     reports "all caught" because it never actually ran anything is precisely the
     failure this module exists to end.

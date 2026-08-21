@@ -64,7 +64,14 @@ def _flags(app, *path: str) -> set[str]:
     command = typer.main.get_command(app)
     for name in path:
         command = command.commands[name]
-    return {opt for param in command.params for opt in param.opts}
+    # `secondary_opts` too: a bool option's `--no-x` lives there, not in
+    # `opts`, so a helper that reads only `opts` reports that `an iterate` does
+    # not accept `--no-apply-changes` when it plainly does. Positional argument
+    # names come through as well — this is every spelling the command accepts,
+    # which is what the assertions here are about.
+    return {
+        opt for param in command.params for opt in (*param.opts, *param.secondary_opts)
+    }
 
 
 def _plain(text: str) -> str:
@@ -137,6 +144,32 @@ def test_every_command_has_help_derived_from_its_docstring(func):
     """
     result = runner.invoke(_app(), [command_name(func), "--help"])
     assert result.exit_code == 0, result.output
+    rendered = _plain(result.output)
+    # Every `name: description` line in the docstring must survive as its own
+    # line. argh kept them apart and Rich rewraps a paragraph, so the six lines
+    # documenting `an bench`'s flags arrived as one run-on — the entire per-flag
+    # documentation of this CLI, lost silently. MUTATION: drop `help_text`'s
+    # `\b` insertion (or call `inspect.getdoc` directly at the wiring site).
+    import re as _re
+
+    documented = [
+        line.strip()
+        for line in (func.__doc__ or "").splitlines()
+        if _re.match(r"^\s*[a-z_][a-z0-9_]*: ", line)
+    ]
+    # Compared LINE BY LINE, not against the flattened text: flattening is what
+    # makes a reflowed run-on indistinguishable from six separate lines, and an
+    # assertion that cannot tell them apart is the bug it is guarding against.
+    lines = [
+        _re.sub(r"\x1b\[[0-9;]*m", "", raw).strip()
+        for raw in result.output.splitlines()
+    ]
+    for entry in documented:
+        name = entry.split(":", 1)[0]
+        assert any(line.startswith(f"{name}: ") for line in lines), (
+            f"{func.__name__}: the flag doc for {name!r} was reflowed into the "
+            "paragraph and no longer starts its own line"
+        )
     first_line = (func.__doc__ or "").strip().splitlines()[0]
     # Typer wraps at the terminal width, so compare on the first few words
     # rather than the whole line.
@@ -248,6 +281,93 @@ def test_a_single_command_app_still_needs_its_subcommand_name():
     assert runner.invoke(app, ["--help"]).exit_code == 0
     # Group mode: the bare invocation is a usage error, not a silent run.
     assert runner.invoke(app, ["--value", "y"]).exit_code != 0
+
+
+def test_the_command_set_is_pinned_by_literal():
+    """MUTATION: delete any command from `_dispatch_funcs` or `_character_dispatch_funcs`.
+
+    Measured before this test existed: **11 of the 17 commands could be deleted
+    with a fully green suite**. `test_every_dispatched_function_reaches_the_cli`
+    derives its expectation FROM the same list, and the per-command parametrised
+    tests delete their own case along with the command — the exact
+    "a guard that asserts data passes for any data" shape this wave keeps
+    losing mutants to, unapplied here until now.
+
+    So the names are spelled out, the way an#40 spells out `SCENE_KEYS`.
+    """
+    assert _registered(_app()) == [
+        "init",
+        "validate",
+        "sync",
+        "check",
+        "render",
+        "iterate",
+        "preview",
+        "credits",
+        "bench",
+        "bench-compare",
+        "bench-mutants",
+    ]
+    assert _group_commands(_app(), "character") == [
+        "new",
+        "mouths",
+        "validate",
+        "silhouette",
+        "preview",
+        "record",
+    ]
+
+
+def test_short_help_still_works_everywhere():
+    """MUTATION: drop `context_settings={"help_option_names": [...]}`.
+
+    argh accepted `-h` on every command; click does not by default, so
+    `an render -h` exited 2 with "No such option". Restored at the root, from
+    where it propagates to commands, groups and nested groups — asserted at all
+    three levels because click resolves `context_settings` per context.
+    """
+    app = _app()
+    for argv in (
+        ["-h"],
+        ["render", "-h"],
+        ["character", "-h"],
+        ["character", "new", "-h"],
+    ):
+        result = runner.invoke(app, argv)
+        assert result.exit_code == 0, f"`an {' '.join(argv)}` failed: {result.output}"
+
+
+def test_shell_completion_replaces_argcomplete():
+    """MUTATION: `add_completion=True` -> `False`.
+
+    Dropping `argcomplete` was justified by typer supplying the replacement. If
+    the replacement is switched off, the justification evaporates and nothing
+    else in the suite notices — measured: the mutation left the whole suite
+    green.
+    """
+    assert {"--install-completion", "--show-completion"} <= _flags(_app())
+
+
+def test_the_dry_run_flag_means_what_the_docs_say():
+    """`--no-apply-changes` is the dry run. Pinned because the polarity MOVED.
+
+    MUTATION: flip `apply_changes`'s default in `an.tools.iterate`.
+
+    `misc/docs/architecture_as_built.md` documented `--no-apply-changes (dry
+    run)` before an#45, and argh REJECTED that spelling (`unrecognized
+    arguments`, exit 2) — it only accepted `--apply-changes`, which under argh
+    meant *False*. So an#45 made the documented spelling work and inverted the
+    undocumented one. Both halves are pinned here so the next reader does not
+    have to reconstruct which way round it was.
+    """
+    import inspect
+
+    from an.tools import iterate
+
+    assert inspect.signature(iterate).parameters["apply_changes"].default is True
+    accepted = _flags(_app(), "iterate")
+    assert "--no-apply-changes" in accepted
+    assert "--apply-changes" in accepted
 
 
 # ------------------------------------------------------------ flags, for real
