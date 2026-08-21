@@ -76,7 +76,13 @@ docs = [
     "sphinx-rtd-theme>=1.0",
 ]
 cutout = [
-    "playwright",
+    # PINNED, not floated (an#31). The Chromium build is an input to every
+    # pixel: 1.55.0 resolves to chromium-1187 / Chrome 140.0.7339.16. Pixels did
+    # survive 1187 -> 1223 under the launch-flag pin, but PNG *file* bytes did
+    # not (144/144 files differ, 0 pixels), and an unpinned browser makes any
+    # cross-machine comparison a comparison of two variables at once. Bumping
+    # this is a deliberate act with a re-capture attached, not a `pip install -U`.
+    "playwright==1.55.0",
     "ffmpeg-python",
     "numpy",
     # `an.verify.media.ssim` and `an/characters/silhouette.py` import PIL. It was

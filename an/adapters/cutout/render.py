@@ -42,6 +42,38 @@ from an.ir.schema import Shot
 DEFAULT_RUNTIME_LOAD_TIMEOUT_MS: int = 15_000
 DEFAULT_FRAME_PNG_PATTERN: str = "frame_%06d.png"
 
+#: Chromium launch flags that pin the rasteriser (an#31, research §2).
+#:
+#: **Unconditional, deliberately** — not gated behind an env var. A render whose
+#: rasteriser depends on ``AN_DETERMINISTIC`` is non-reproducible *by default*,
+#: which is the property this work exists to remove; and the flags are a
+#: measured no-op on today's output (0 differing pixels over both fixtures,
+#: verified on this repo at the commit that introduced them), so there is no
+#: baseline to protect by making them opt-in.
+#:
+#: Unpinned, the same code renders differently in ways nobody would attribute
+#: correctly: GPU vs software rasterisation is a 1.9% / max-57 pixel difference,
+#: and a headed browser (reachable by a one-word local edit) differs by 1.91%.
+#: A band that wide hides any real regression.
+#:
+#: Two flags are deliberately NOT here. ``--use-angle=swiftshader`` — including
+#: Chromium's own documented ``--use-gl=angle --use-angle=swiftshader`` form —
+#: moves 1.55% of pixels by up to 58/255, so it would re-baseline the corpus for
+#: nothing. ``--disable-frame-rate-limit`` measured 1.05x on this WebGL runtime
+#: (the widely-cited 2.3x is a canvas-2D artefact). ``--deterministic-mode`` is a
+#: verified no-op here, because the runtime uses ``autoStart:false`` plus an
+#: explicit ``app.render()``.
+#:
+#: Record the argv **verbatim** in any provenance row: all four rasteriser
+#: configurations report the byte-identical ``UNMASKED_RENDERER_WEBGL`` string,
+#: so the renderer string cannot witness this choice.
+DETERMINISTIC_CHROMIUM_ARGS: tuple[str, ...] = (
+    "--no-sandbox",  # was already passed; also a Playwright default
+    "--disable-gpu",  # pins SOFTWARE rasterisation
+    "--enable-unsafe-swiftshader",  # Chrome 137 removed the automatic fallback
+    "--force-color-profile=srgb",  # pins the screenshot path's colour management
+)
+
 
 class CutoutRenderError(RuntimeError):
     """Raised when a cutout render fails. Carries actionable detail."""
@@ -94,7 +126,12 @@ class CutoutRenderer:
         # can't load file:// URLs in headless Chromium. Same effect as a
         # static deployment, isolated to this render.
         with _serve_dir(job.runtime_dir) as base_url, sync_playwright() as p:
-            browser = p.chromium.launch(args=["--no-sandbox"])
+            # `headless=True` explicitly: the default is headless today, but
+            # relying on it means a Playwright default change silently swaps the
+            # binary — full Chromium renders on the real GPU and differs by 1.91%.
+            browser = p.chromium.launch(
+                args=list(DETERMINISTIC_CHROMIUM_ARGS), headless=True
+            )
             try:
                 page = browser.new_page(
                     viewport={"width": ctx.resolution[0], "height": ctx.resolution[1]}

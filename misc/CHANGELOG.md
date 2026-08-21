@@ -3,6 +3,8 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **The rasteriser is pinned, unconditionally** (an#31): `--disable-gpu`, `--enable-unsafe-swiftshader`, `--force-color-profile=srgb` alongside the pre-existing `--no-sandbox`, plus an explicit `headless=True` and `playwright==1.55.0`. Not env-gated — a render whose rasteriser depends on `AN_DETERMINISTIC` is non-reproducible by default, which is the property Wave 2 exists to remove. Verified here rather than inherited from the research: a 0-pixel, 0-PNG-byte no-op across both fixtures (132 frames), with a same-machine repeat capture as the control. `--use-angle=swiftshader` and `--disable-frame-rate-limit` stay OUT and their absence is now a test. New `misc/bench/crossarch.py` captures `sha256(decoded RGBA)` per frame — never file bytes — and `.github/workflows/crossarch-capture.yml` runs it on x86-64 Linux, arm64 Linux and arm64 macOS so a difference can be attributed to ISA rather than merely observed. Also corrects `architecture_as_built.md`: the per-shot mp4 cache it documents has no read path.
+
 - **The rendering lane is now opt-in per PR, via the `run-browser-tests` label**,
   and the decision behind it is written down as
   `misc/docs/adr_ci_verification_perimeter.md` — an ADR answering the question
