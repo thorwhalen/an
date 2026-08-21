@@ -276,6 +276,39 @@ def test_an_empty_verdict_is_still_a_clean_pass(tmp_path):
     assert any("no issues" in f.description for f in report.findings)
 
 
+def test_an_injected_judge_runs_without_the_sdk_or_a_key(tmp_path):
+    """The skip conditions are about the DEFAULT judge, not about any judge.
+
+    CI taught this one: `anthropic` is installed locally and is not in CI, so
+    every injected-judge test above passed here and failed there — `verify()`
+    returned at the SDK check before the judge was ever called. A
+    cassette-backed judge needs neither the SDK nor a key, and gating it on
+    them makes it unreachable exactly where it is most useful.
+    """
+    import an.verify.vision as vision
+
+    verifier = VisionLMVerifier(
+        api_key=None, judge=lambda *a, **k: '{"issues": []}', frame_count=1
+    )
+    with _StubFrames(tmp_path), _NoAnthropicSDK():
+        report = verifier.verify(_scene(), _render(tmp_path))
+    assert any("no issues" in f.description for f in report.findings), (
+        "the injected judge was never called"
+    )
+    assert not any("not set" in f.description for f in report.findings)
+    assert not any("not installed" in f.description for f in report.findings)
+    assert vision.importlib is not None  # the module still imports it for the default path
+
+
+def test_the_default_judge_still_skips_without_the_sdk(tmp_path):
+    """And the skip it exists for still happens."""
+    verifier = VisionLMVerifier(api_key="test-key", frame_count=1)
+    with _StubFrames(tmp_path), _NoAnthropicSDK():
+        report = verifier.verify(_scene(), _render(tmp_path))
+    assert report.passed
+    assert any("not installed" in f.description for f in report.findings)
+
+
 def test_a_missing_key_is_still_a_quiet_skip(tmp_path):
     """NOT configured stays a skip. Only configured-and-broken became a failure."""
     verifier = VisionLMVerifier(api_key=None, frame_count=1)
@@ -312,11 +345,50 @@ def test_a_cassette_from_another_sdk_major_version_is_refused(tmp_path):
                     max_tokens=_DEFAULT_MAX_TOKENS)
     store[key] = _envelope(recorded_with={"anthropic": "99.0.0"})
 
+    # The current version is injected rather than read from the environment:
+    # a replay needs no SDK at all, so on a machine without one (CI) an
+    # environment-reading guard would be untestable exactly where replay lives.
     with pytest.raises(CassetteMiss, match="major version"):
-        memoized_judge(store=store)(
+        memoized_judge(store=store, sdk_version="1.2.3")(
             frames, prompt=_PROMPT, model=_DEFAULT_MODEL,
             max_tokens=_DEFAULT_MAX_TOKENS,
         )
+
+
+def test_the_injected_sdk_version_overrides_the_environment(tmp_path):
+    """Machine-independent, which the version test above cannot be alone.
+
+    On a machine WITH the SDK, a guard that reads the environment passes that
+    test for the wrong reason and then stops working in CI, where there is no
+    SDK to read. So this records the cassette with whatever version IS
+    installed and injects a different one: only an injected resolver refuses.
+    """
+    from an.verify.vision import _anthropic_version
+
+    store = VisionCassetteStore(tmp_path)
+    frames = frame_bytes()
+    key = judge_key(frames, prompt=_PROMPT, model=_DEFAULT_MODEL,
+                    max_tokens=_DEFAULT_MAX_TOKENS)
+    store[key] = _envelope(
+        recorded_with={"anthropic": _anthropic_version() or "0.75.0"}
+    )
+    with pytest.raises(CassetteMiss, match="major version"):
+        memoized_judge(store=store, sdk_version="99.0.0")(
+            frames, prompt=_PROMPT, model=_DEFAULT_MODEL,
+            max_tokens=_DEFAULT_MAX_TOKENS,
+        )
+
+
+def test_an_unknown_sdk_version_does_not_block_a_replay(tmp_path):
+    """A replay needs no SDK; refusing without one would be refusing on absence."""
+    store = VisionCassetteStore(tmp_path)
+    frames = frame_bytes()
+    key = judge_key(frames, prompt=_PROMPT, model=_DEFAULT_MODEL,
+                    max_tokens=_DEFAULT_MAX_TOKENS)
+    store[key] = _envelope(recorded_with={"anthropic": "0.75.0"})
+    judge = memoized_judge(store=store, sdk_version=None)
+    assert judge(frames, prompt=_PROMPT, model=_DEFAULT_MODEL,
+                 max_tokens=_DEFAULT_MAX_TOKENS) == SYNTHETIC_REPLY
 
 
 def test_record_and_replay_share_one_key_function():
@@ -437,3 +509,26 @@ class _StubFrames:
             p.write_bytes(data)
             out.append(p)
         return out
+
+
+class _NoAnthropicSDK:
+    """Make `importlib.util.find_spec("anthropic")` report absence.
+
+    So the CI condition — no `vision` extra installed — is reproducible on a
+    machine that has it.
+    """
+
+    def __enter__(self):
+        import an.verify.vision as vision
+
+        self._original = vision.importlib.util.find_spec
+        vision.importlib.util.find_spec = lambda name, *a, **k: (
+            None if name == "anthropic" else self._original(name, *a, **k)
+        )
+        return self
+
+    def __exit__(self, *exc):
+        import an.verify.vision as vision
+
+        vision.importlib.util.find_spec = self._original
+        return False

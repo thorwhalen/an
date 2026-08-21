@@ -79,11 +79,27 @@ def _inventory() -> str:
     ) or "    (the fixture directory is empty)"
 
 
+#: Sentinel: "read the installed version" vs "the caller supplied one,
+#: possibly None". `None` is a real value here — it means "no SDK installed".
+_UNSET: str = "<unset>"
+
+
+def _installed_sdk_version() -> str | None:
+    from an.verify.vision import _anthropic_version
+
+    return _anthropic_version()
+
+
 def _major(version: str | None) -> str | None:
     return version.split(".", 1)[0] if version else None
 
 
-def memoized_judge(*, replay_only: bool = True, store: VisionCassetteStore | None = None):
+def memoized_judge(
+    *,
+    replay_only: bool = True,
+    store: VisionCassetteStore | None = None,
+    sdk_version: str | None = _UNSET,
+):
     """A `judge_frames`-shaped callable backed by the cassette store.
 
     ``replay_only=True`` — the default, and what the free node uses — raises
@@ -91,15 +107,19 @@ def memoized_judge(*, replay_only: bool = True, store: VisionCassetteStore | Non
     test *prove* it did not spend instead of asserting it via a marker.
     """
     cassettes = store or VisionCassetteStore()
+    # Injected so the major-version check is testable on a machine WITHOUT the
+    # SDK. A replay needs no `anthropic` at all, so reading the installed
+    # version would make the guard untestable exactly where replay matters.
+    resolve_version = (
+        (lambda: sdk_version) if sdk_version is not _UNSET else _installed_sdk_version
+    )
 
     def judge(*args, **kwargs) -> str:
         key = judge_key(*args, **kwargs)
         if key in cassettes:
             envelope = cassettes[key]
             recorded = _major((envelope.get("recorded_with") or {}).get(_RECORDED_WITH))
-            from an.verify.vision import _anthropic_version
-
-            current = _major(_anthropic_version())
+            current = _major(resolve_version())
             if recorded is not None and current is not None and recorded != current:
                 raise CassetteMiss(
                     f"cassette {key} was recorded against {_RECORDED_WITH} "

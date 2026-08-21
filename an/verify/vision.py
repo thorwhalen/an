@@ -284,22 +284,32 @@ class VisionLMVerifier:
         #: recorded and replayed paths are the same call through the same
         #: object, differing only in what the store returns.
         self.judge = judge or judge_frames
+        #: Whether the skip conditions below apply. They are about the DEFAULT
+        #: judge's ability to run — an injected one may be cassette-backed, in
+        #: which case it needs neither the SDK nor a key, and gating it on them
+        #: makes it unreachable exactly where it is most useful. Learned from
+        #: CI: locally the SDK is installed, so every injected-judge test
+        #: passed for the wrong reason.
+        self._judge_is_default = judge is None
 
     def verify(self, ir: SceneIR, render: RenderResult | None) -> VerificationReport:
         report = VerificationReport()
         if render is None or not render.mp4_path or not render.mp4_path.exists():
             report.add("info", "<vision_lm>", "no render result; skipping vision check")
             return report
-        if self.api_key is None:
-            report.add("info", "<vision_lm>", "ANTHROPIC_API_KEY not set; skipping")
-            return report
-        if importlib.util.find_spec("anthropic") is None:
-            report.add(
-                "info",
-                "<vision_lm>",
-                "anthropic SDK not installed; skipping (pip install an[vision])",
-            )
-            return report
+        if self._judge_is_default:
+            if self.api_key is None:
+                report.add(
+                    "info", "<vision_lm>", "ANTHROPIC_API_KEY not set; skipping"
+                )
+                return report
+            if importlib.util.find_spec("anthropic") is None:
+                report.add(
+                    "info",
+                    "<vision_lm>",
+                    "anthropic SDK not installed; skipping (pip install an[vision])",
+                )
+                return report
 
         # Sample N frames roughly evenly distributed across the render.
         with tempfile.TemporaryDirectory() as d:
