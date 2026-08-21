@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.31 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.32 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=d71dfaa1"></script>
+      <script src="../../../_static/documentation_options.js?v=e0e570cb"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -89,6 +89,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
@@ -471,8 +473,18 @@
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
                     <span class="s2">"decrease"</span><span class="p">,</span>
                     <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">reason</span><span class="o">=</span><span class="s2">"family A's single witness"</span><span class="p">,</span>
-                    <span class="n">reference</span><span class="o">=</span><span class="s2">"3.07 -&gt; 1.65 on the synthetic flat-cutout fixture; ORDINAL evidence only"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"family A's single witness. Holds on five of six corpus "</span>
+                        <span class="s2">"scenes; on `promote_demo` it moves +0.0001 the OTHER way, "</span>
+                        <span class="s2">"because the descriptor path is nearly blind to MSAA (96 "</span>
+                        <span class="s2">"differing pixels of 12.4M — an SVG sprite is a "</span>
+                        <span class="s2">"pre-rasterised texture, and multisampling applies to "</span>
+                        <span class="s2">"WebGL geometry). A `contrary` verdict at that magnitude "</span>
+                        <span class="s2">"is the lever not reaching the scene, which is why the "</span>
+                        <span class="s2">"comparison reports the relative delta beside the "</span>
+                        <span class="s2">"direction (an#41)."</span>
+                    <span class="p">),</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"2.88 -&gt; 2.00 on `aa_probe`; 5.6368 -&gt; 5.6369 on `promote_demo`"</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
@@ -654,11 +666,20 @@
                     <span class="n">reference</span><span class="o">=</span><span class="s2">"0.0003 / 0.0005 / 0.0035 / 0.0127 / 0.0399 (crf18-&gt;51)"</span><span class="p">,</span>
                 <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
-                    <span class="s2">"no_change"</span><span class="p">,</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_SOURCE_HASH</span><span class="p">,</span>
                     <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
-                        <span class="s2">"measured flat across the AA matrix. This ORTHOGONALITY is "</span>
-                        <span class="s2">"the metric's whole value — it is not a free witness, and "</span>
-                        <span class="s2">"counting it would be counting a tautology."</span>
+                        <span class="s2">"The research measured this flat across a SIMULATED AA "</span>
+                        <span class="s2">"matrix and called the orthogonality 'the metric's whole "</span>
+                        <span class="s2">"value'. Run against the real MSAA lever it moves on ALL "</span>
+                        <span class="s2">"SIX corpus scenes, in both directions (an#41). The "</span>
+                        <span class="s2">"mechanism is structural rather than surprising: the flat "</span>
+                        <span class="s2">"mask is derived from the SOURCE frames, which this lever "</span>
+                        <span class="s2">"changes, so the mask itself moves and the comparison has "</span>
+                        <span class="s2">"no fixed reference. That is the definition of gated — "</span>
+                        <span class="s2">"uninterpretable, not good or bad — and it is the same "</span>
+                        <span class="s2">"gate `encode_flicker_on_held_pixels` already carries for "</span>
+                        <span class="s2">"every renderer mutation, for the same reason."</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>
@@ -679,7 +700,17 @@
                 <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
                     <span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"companion to the rate above"</span>
                 <span class="p">),</span>
-                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"no_change"</span><span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_SOURCE_HASH</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"gated for the same structural reason as the rate above: "</span>
+                        <span class="s2">"the flat mask moves with the source. Measured moving on "</span>
+                        <span class="s2">"one of six scenes and holding on five, which is what a "</span>
+                        <span class="s2">"metric with no fixed reference looks like — not evidence "</span>
+                        <span class="s2">"of orthogonality (an#41)."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>
@@ -696,8 +727,22 @@
                 <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
                     <span class="s2">"increase"</span><span class="p">,</span>
                     <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">reason</span><span class="o">=</span><span class="s2">"family E's witness"</span><span class="p">,</span>
-                    <span class="n">reference</span><span class="o">=</span><span class="s2">"0.0321 / 0.0394 / 0.0848 (crf18/23/51)"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"family E's witness — and the least reliable of the four. "</span>
+                        <span class="s2">"It is NON-MONOTONE across the CRF ladder on the real "</span>
+                        <span class="s2">"corpus (0.000648 / 0.007018 / 0.000985 / 0.000916 / "</span>
+                        <span class="s2">"0.001137 / 0.001685 over crf 18/23/28/33/40/51 on "</span>
+                        <span class="s2">"`single_character`, peaking at crf23), because at high "</span>
+                        <span class="s2">"CRF the whole frame flattens into large uniform skip "</span>
+                        <span class="s2">"regions and held pixels stop moving — the same mechanism "</span>
+                        <span class="s2">"the `disabled_aa` gate below documents. At the crf23 -&gt; "</span>
+                        <span class="s2">"crf40 step the lever uses it holds on five of six scenes "</span>
+                        <span class="s2">"and inverts on `single_character`, so it is kept and not "</span>
+                        <span class="s2">"leaned on: C, D and F are monotone across the whole "</span>
+                        <span class="s2">"ladder and satisfy the criterion on all six scenes "</span>
+                        <span class="s2">"without it (an#41)."</span>
+                    <span class="p">),</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"0.0113 -&gt; 0.0243 on aa_probe; 0.0070 -&gt; 0.0011 on single_character"</span><span class="p">,</span>
                 <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
                     <span class="kc">None</span><span class="p">,</span>
@@ -729,7 +774,16 @@
                     <span class="n">reason</span><span class="o">=</span><span class="s2">"provisional; kept out of the witness count until open question 4 is settled"</span><span class="p">,</span>
                 <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
-                    <span class="s2">"no_change"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"both legs rise together by construction"</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_SOURCE_HASH</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"declared 'both legs rise together by construction'; "</span>
+                        <span class="s2">"measured moving on ALL SIX corpus scenes under the real "</span>
+                        <span class="s2">"MSAA lever (an#41). The cancellation is exact only when "</span>
+                        <span class="s2">"both legs share a FIXED source, and a renderer mutation "</span>
+                        <span class="s2">"moves the source — so what is left is uninterpretable "</span>
+                        <span class="s2">"rather than zero."</span>
+                    <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>
             <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
@@ -831,8 +885,21 @@
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
                     <span class="s2">"increase"</span><span class="p">,</span>
                     <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">reason</span><span class="o">=</span><span class="s2">"hard edges cost more to code. THE WEAKEST of this mutation's three witnesses, and the only unreviewed metric in the set."</span><span class="p">,</span>
-                    <span class="n">reference</span><span class="o">=</span><span class="s2">"+5.5%"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"hard edges cost more to code. THE WEAKEST of this "</span>
+                        <span class="s2">"mutation's three witnesses, the only unreviewed metric in "</span>
+                        <span class="s2">"the set — and SCENE-DEPENDENT, measured. It holds where "</span>
+                        <span class="s2">"the lever has non-axis-aligned edges to change (aa_probe "</span>
+                        <span class="s2">"+6.6%, multi_shot +9.7%, saturated_outline +6.9%) and "</span>
+                        <span class="s2">"INVERTS where it does not (single_character -6.1%, "</span>
+                        <span class="s2">"graded_field -5.7%, promote_demo -0.1%), because AA-off "</span>
+                        <span class="s2">"on axis-aligned art removes intermediate colours and the "</span>
+                        <span class="s2">"picture gets CHEAPER instead of harder. So this "</span>
+                        <span class="s2">"mutation's criterion is met per scene, on the scenes the "</span>
+                        <span class="s2">"lever can reach — which is the measured reason `aa_probe` "</span>
+                        <span class="s2">"is in the corpus at all (an#38, an#41)."</span>
+                    <span class="p">),</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"+6.6% / -6.1%, scene-dependent"</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">},</span>
             <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
@@ -878,8 +945,16 @@
                     <span class="n">reason</span><span class="o">=</span><span class="s2">"the corpus is UPSTREAM of the encoder; no encode change can reach it"</span><span class="p">,</span>
                 <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
-                    <span class="s2">"no_change"</span><span class="p">,</span>
-                    <span class="n">reason</span><span class="o">=</span><span class="s2">"it FAILS, which is a change detector firing, not a quality measurement"</span><span class="p">,</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"it FAILS — a change detector firing, not a quality "</span>
+                        <span class="s2">"measurement, which is why it counts ZERO. Spelled "</span>
+                        <span class="s2">"`decrease` (True -&gt; False) rather than `no_change`: the "</span>
+                        <span class="s2">"prediction was `no_change` while this very sentence said "</span>
+                        <span class="s2">"it fails, so the row reported `unexpected_movement` on "</span>
+                        <span class="s2">"every scene for a tripwire doing exactly its job. Found "</span>
+                        <span class="s2">"by `an bench-compare` (an#41)."</span>
+                    <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>
             <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
