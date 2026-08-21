@@ -197,7 +197,9 @@ def manifest_path(scene: str, chromium_build: str, *, root: Path | None = None) 
     )
 
 
-def load_manifest(scene: str, chromium_build: str, *, root: Path | None = None) -> dict | None:
+def load_manifest(
+    scene: str, chromium_build: str, *, root: Path | None = None
+) -> dict | None:
     """The committed bless record, or ``None`` when this scene has never been blessed."""
     path = manifest_path(scene, chromium_build, root=root)
     if not path.is_file():
@@ -217,7 +219,9 @@ def chromium_build_of(environment: dict) -> str | None:
     return str(build) if build else None
 
 
-def iter_committed(scene: str, chromium_build: str, *, root: Path | None = None) -> Iterator[Path]:
+def iter_committed(
+    scene: str, chromium_build: str, *, root: Path | None = None
+) -> Iterator[Path]:
     """Every committed golden PNG for one scene and build, in sorted order."""
     scene_dir = golden_dir(root) / scene
     if not scene_dir.is_dir():
@@ -322,9 +326,7 @@ def compare_scene(
         "state": "measured",
         "identical": all(f["identical"] for f in frames),
         "min_ssim_win8": (
-            None
-            if mismatched
-            else min(float(f["min_ssim_win8"]) for f in frames)
+            None if mismatched else min(float(f["min_ssim_win8"]) for f in frames)
         ),
         "shape_mismatch": [
             {"frame_key": f["frame_key"], "shapes": f["shape_mismatch"]}
@@ -454,5 +456,7 @@ def bless_scene(
     }
     path = manifest_path(capture.name, chromium_build, root=root)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return record

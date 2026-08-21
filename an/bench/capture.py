@@ -77,6 +77,7 @@ class SceneCapture:
     wall_seconds: float
     determinism: dict = field(default_factory=dict)
 
+
 class CaptureError(RuntimeError):
     """A capture could not produce something the metrics need."""
 
@@ -125,7 +126,11 @@ def capture_fixture(
     if not fixture_dir.is_dir():
         raise CaptureError(f"fixture {name!r} not found at {fixture_dir}")
 
-    base = Path(keep_render) if keep_render else Path(tempfile.mkdtemp(prefix=f"an-bench-{name}-"))
+    base = (
+        Path(keep_render)
+        if keep_render
+        else Path(tempfile.mkdtemp(prefix=f"an-bench-{name}-"))
+    )
     work_copy = stage_copy(fixture_dir, base)
     if fixture.prepare is not None:
         fixture.prepare(work_copy)

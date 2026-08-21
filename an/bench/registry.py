@@ -368,7 +368,9 @@ METRICS: dict[str, MetricSpec] = {
                 ),
             ),
             predictions={
-                "high_crf": Prediction("increase", reason="control for the ratio below"),
+                "high_crf": Prediction(
+                    "increase", reason="control for the ratio below"
+                ),
                 "disabled_aa": Prediction(None, gate=_GATED_REFERENCE_MOVED),
             },
         ),
@@ -421,7 +423,10 @@ METRICS: dict[str, MetricSpec] = {
                 ),
             ),
             predictions={
-                "high_crf": Prediction("decrease", reason="the chroma claim collapses as damage becomes generic"),
+                "high_crf": Prediction(
+                    "decrease",
+                    reason="the chroma claim collapses as damage becomes generic",
+                ),
                 "disabled_aa": Prediction(None, gate=_GATED_REFERENCE_MOVED),
             },
         ),
@@ -465,7 +470,9 @@ METRICS: dict[str, MetricSpec] = {
             sentence="The 99th percentile of the same deviation, in human units.",
             optimum=Optimum(kind="one_sided", expect="minimize"),
             predictions={
-                "high_crf": Prediction("increase", reason="companion to the rate above"),
+                "high_crf": Prediction(
+                    "increase", reason="companion to the rate above"
+                ),
                 "disabled_aa": Prediction("no_change"),
             },
         ),
@@ -610,7 +617,10 @@ METRICS: dict[str, MetricSpec] = {
             ),
             predictions={
                 "high_crf": Prediction(
-                    "decrease", counts=True, reason="free fourth cross-check", reference="8x"
+                    "decrease",
+                    counts=True,
+                    reason="free fourth cross-check",
+                    reference="8x",
                 ),
                 "disabled_aa": Prediction(
                     "increase",
@@ -619,7 +629,9 @@ METRICS: dict[str, MetricSpec] = {
                     reference="+5.5%",
                 ),
             },
-            notes=("The one metric in the panel that went through NO adversarial pass.",),
+            notes=(
+                "The one metric in the panel that went through NO adversarial pass.",
+            ),
         ),
         _spec(
             key="file_bytes",
@@ -659,7 +671,10 @@ TRIPWIRES: dict[str, MetricSpec] = {
                     "not_applicable",
                     reason="the corpus is UPSTREAM of the encoder; no encode change can reach it",
                 ),
-                "disabled_aa": Prediction("no_change", reason="it FAILS, which is a change detector firing, not a quality measurement"),
+                "disabled_aa": Prediction(
+                    "no_change",
+                    reason="it FAILS, which is a change detector firing, not a quality measurement",
+                ),
             },
             notes=(
                 "Compare sha256 of DECODED pixels, never file bytes: Chromium "

@@ -237,7 +237,9 @@ DFLT_FIXTURES: dict[str, Fixture] = {
 }
 
 
-def iter_shot_dirs(work_dir: Path, *, order: Sequence[str]) -> Iterator[tuple[str, Path]]:
+def iter_shot_dirs(
+    work_dir: Path, *, order: Sequence[str]
+) -> Iterator[tuple[str, Path]]:
     """``(shot_id, shot_dir)`` for every rendered shot, in **timeline** order.
 
     ``order`` is mandatory, and that is the whole point of this signature.

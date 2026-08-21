@@ -222,8 +222,7 @@ def bench(
         unknown = [w for w in wanted if w not in DFLT_FIXTURES]
         if unknown:
             return (
-                f"unknown corpus scene(s) {unknown}; "
-                f"available: {sorted(DFLT_FIXTURES)}"
+                f"unknown corpus scene(s) {unknown}; available: {sorted(DFLT_FIXTURES)}"
             )
         chosen = {w: DFLT_FIXTURES[w] for w in wanted}
 
@@ -238,7 +237,17 @@ def bench(
     return format_panel(ledger)
 
 
-_dispatch_funcs = [init, validate, sync, check, render, iterate, preview, credits, bench]
+_dispatch_funcs = [
+    init,
+    validate,
+    sync,
+    check,
+    render,
+    iterate,
+    preview,
+    credits,
+    bench,
+]
 
 
 # Sub-namespaces. ``__main__`` mounts these via argh's ``namespace=`` arg so

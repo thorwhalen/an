@@ -113,9 +113,7 @@ def test_preview_server_starts_and_serves(monkeypatch, tmp_path):
 
     # Capture the URL that would be opened, never actually launch a browser.
     opened: list[str] = []
-    monkeypatch.setattr(
-        "an.preview.webbrowser.open", lambda url: opened.append(url)
-    )
+    monkeypatch.setattr("an.preview.webbrowser.open", lambda url: opened.append(url))
 
     # Run the server on a worker thread; signal it to stop with a
     # KeyboardInterrupt-on-the-server-thread analogue: the helper

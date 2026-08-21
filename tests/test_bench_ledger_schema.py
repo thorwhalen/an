@@ -196,7 +196,7 @@ def test_nan_is_refused_as_a_measured_value():
 
 
 def test_a_no_change_prediction_can_never_count():
-    """"No change by construction" is a tautology.
+    """ "No change by construction" is a tautology.
 
     Counting it lets any pre-encode statistic pad the witness count for free,
     which is precisely how ">=3 metrics moved" is satisfied dishonestly.

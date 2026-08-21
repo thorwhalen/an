@@ -25,7 +25,12 @@ from typing import Any
 
 from an.bench import contract, golden as G, imageio, masks, metrics as M, palette as P
 from an.bench import png
-from an.bench.capture import SceneCapture, capture_fixture, cleanup, expected_frame_count
+from an.bench.capture import (
+    SceneCapture,
+    capture_fixture,
+    cleanup,
+    expected_frame_count,
+)
 from an.bench.corpus import BENCH_RENDER_KWARGS, DFLT_FIXTURES, Fixture
 from an.bench import environment
 from an.bench.environment import environment_record
@@ -40,6 +45,7 @@ from an.bench.ledger import (
 )
 from an.bench.paths import git_state, ledger_path, repo_root
 from an.bench.registry import METRICS
+
 
 class BenchError(RuntimeError):
     """The bench could not produce a row it would be honest to file."""
@@ -522,8 +528,11 @@ def run_bench(
                     golden_note=fixture.golden_note,
                     root=goldens,
                 )
-                golden = {"state": "gated", "gate": G.GATE_JUST_BLESSED,
-                          "detail": JUST_BLESSED_DETAIL}
+                golden = {
+                    "state": "gated",
+                    "gate": G.GATE_JUST_BLESSED,
+                    "detail": JUST_BLESSED_DETAIL,
+                }
             elif chromium_build is None:
                 golden = {
                     "state": "gated",
@@ -568,10 +577,13 @@ def run_bench(
                     for s in capture.shots
                 },
                 "n_drawable_entities": sum(
-                    contract.count_drawable_entities(s.scene_json) for s in capture.shots
+                    contract.count_drawable_entities(s.scene_json)
+                    for s in capture.shots
                 ),
                 "n_declared_entity_refs": capture.n_declared_entity_refs,
-                "n_nodes": sum(contract.count_nodes(s.scene_json) for s in capture.shots),
+                "n_nodes": sum(
+                    contract.count_nodes(s.scene_json) for s in capture.shots
+                ),
                 "n_frames": expected,
                 "resolution": list(capture.resolution),
                 "fps": capture.fps,
@@ -674,12 +686,18 @@ def format_panel(ledger: dict) -> str:
             f"{name}  {prov['resolution'][0]}x{prov['resolution'][1]} @{prov['fps']}fps  "
             f"{prov['n_frames']} frames  visuals={','.join(prov['visual_kinds'])}"
         )
-        lines.append(f"  contract {prov['scene_contract_sha256'][:16]}  "
-                     f"edge {prov.get('masks', {}).get('edge', {}).get('fraction', '?')}  "
-                     f"flat {prov.get('masks', {}).get('flat', {}).get('fraction', '?')}")
+        lines.append(
+            f"  contract {prov['scene_contract_sha256'][:16]}  "
+            f"edge {prov.get('masks', {}).get('edge', {}).get('fraction', '?')}  "
+            f"flat {prov.get('masks', {}).get('flat', {}).get('fraction', '?')}"
+        )
         for key, row in block["metrics"].items():
             state = row["state"]
-            shown = row["value"] if state == "measured" else f"{state}({row.get('gate') or row.get('detail','')[:40]})"
+            shown = (
+                row["value"]
+                if state == "measured"
+                else f"{state}({row.get('gate') or row.get('detail', '')[:40]})"
+            )
             lines.append(f"    [{row['side'][:3]}/{row['family']}] {key:32s} {shown}")
         for key, row in block["tripwires"].items():
             # NOT `f"{row['state']}({row.get('gate')})"`. A measured tripwire

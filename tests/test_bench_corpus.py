@@ -69,7 +69,10 @@ def test_visual_kinds_reads_the_scene_tree_and_not_the_whole_document():
     written for.
     """
     staged = {
-        "scene": {"visual": {"kind": "rect"}, "children": [{"visual": {"kind": "eye"}}]},
+        "scene": {
+            "visual": {"kind": "rect"},
+            "children": [{"visual": {"kind": "eye"}}],
+        },
         "asset_resolution": [{"kind": "character", "resolved": "placeholder"}],
         "assets": {"textures": {"a": {"kind": "ignored"}}},
     }
@@ -93,7 +96,9 @@ def test_the_fixture_that_uses_the_placeholder_rig_declares_it(tmp_path):
         style="cutout",
         duration=1.0,
         entities=[
-            AssetRef(kind="character", id="charlie", store="characters", ref="charlie-v1")
+            AssetRef(
+                kind="character", id="charlie", store="characters", ref="charlie-v1"
+            )
         ],
     )
     with pytest.warns(Warning):
@@ -122,7 +127,9 @@ def test_the_copy_leaves_the_previous_render_behind(tmp_path):
 
     fixture = tmp_path / "proj"
     (fixture / ".an" / "render_work" / "shot_s1" / "frames").mkdir(parents=True)
-    (fixture / ".an" / "render_work" / "shot_s1" / "frames" / "frame_000099.png").write_bytes(b"stale")
+    (
+        fixture / ".an" / "render_work" / "shot_s1" / "frames" / "frame_000099.png"
+    ).write_bytes(b"stale")
     (fixture / "output").mkdir()
     (fixture / "output" / "main.mp4").write_bytes(b"stale")
     (fixture / "artifacts" / "audio").mkdir(parents=True)
@@ -221,7 +228,10 @@ def test_every_corpus_fixture_is_committed_whole():
         assert directory.is_dir(), f"{name}: {directory} does not exist"
         tracked = subprocess.run(
             ["git", "ls-files", "--", fixture.path],
-            cwd=root, capture_output=True, text=True, check=False,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
         ).stdout.split()
         tracked = [Path(t).as_posix() for t in tracked]
         # `.as_posix()` on both sides: `git ls-files` always prints forward
@@ -310,7 +320,9 @@ def test_corpus_entity_ids_are_pinned_by_literal():
     }
     root = repo_root()
     for name, ids in expected.items():
-        text = (root / DFLT_FIXTURES[name].path / "scene.md").read_text(encoding="utf-8")
+        text = (root / DFLT_FIXTURES[name].path / "scene.md").read_text(
+            encoding="utf-8"
+        )
         found = [
             line.split("id:", 1)[1].strip()
             for line in text.splitlines()

@@ -170,7 +170,12 @@ def test_an_unsupported_png_is_refused_by_name(field, value, match):
         fields["interlace"],
     )
     body = zlib.compress(b"\x00" * (fields["height"] * (fields["width"] * 3 + 1)))
-    data = PNG_SIGNATURE + _chunk(b"IHDR", header) + _chunk(b"IDAT", body) + _chunk(b"IEND", b"")
+    data = (
+        PNG_SIGNATURE
+        + _chunk(b"IHDR", header)
+        + _chunk(b"IDAT", body)
+        + _chunk(b"IEND", b"")
+    )
     with pytest.raises(PngFormatError, match=match):
         decode_png(data)
 
@@ -221,7 +226,12 @@ def test_a_truncated_idat_is_refused_rather_than_padded():
     # Rewrite IDAT with one row's worth of data missing.
     short = zlib.compress(b"\x00" * ((rgb.shape[0] - 1) * (rgb.shape[1] * 3 + 1)), 6)
     header = struct.pack(">IIBBBBB", rgb.shape[1], rgb.shape[0], 8, 2, 0, 0, 0)
-    data = PNG_SIGNATURE + _chunk(b"IHDR", header) + _chunk(b"IDAT", short) + _chunk(b"IEND", b"")
+    data = (
+        PNG_SIGNATURE
+        + _chunk(b"IHDR", header)
+        + _chunk(b"IDAT", short)
+        + _chunk(b"IEND", b"")
+    )
     with pytest.raises(PngFormatError, match="decompressed IDAT"):
         decode_png(data)
 
@@ -396,22 +406,37 @@ def test_our_decoder_agrees_with_ffmpeg_on_a_real_rendered_frame(tmp_path):
     import subprocess
     from pathlib import Path
 
-    frames = sorted(Path("examples").glob("*/.an/render_work/*/frames/frame_000000.png"))
+    frames = sorted(
+        Path("examples").glob("*/.an/render_work/*/frames/frame_000000.png")
+    )
     if not frames:
         pytest.skip("no rendered example frames in this checkout")
 
     def ffmpeg_rgb(path, height, width):
         out = subprocess.run(
-            ["ffmpeg", "-v", "error", "-i", str(path), "-pix_fmt", "rgb24",
-             "-f", "rawvideo", "-"],
-            capture_output=True, check=True,
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-i",
+                str(path),
+                "-pix_fmt",
+                "rgb24",
+                "-f",
+                "rawvideo",
+                "-",
+            ],
+            capture_output=True,
+            check=True,
         ).stdout
         return np.frombuffer(out, np.uint8).reshape(height, width, 3)
 
     for frame in frames:
         ours = read_png(frame)
         h, w, _ = ours.shape
-        assert np.array_equal(ours, ffmpeg_rgb(frame, h, w)), f"decode disagreed on {frame}"
+        assert np.array_equal(ours, ffmpeg_rgb(frame, h, w)), (
+            f"decode disagreed on {frame}"
+        )
         # And the other direction: what we WRITE must be readable by a real
         # PNG implementation, not only by our own reader.
         out = write_png(tmp_path / frame.parent.parent.name / "ours.png", ours)

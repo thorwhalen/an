@@ -117,9 +117,7 @@ def encode_png(rgb: Any, *, level: int = DFLT_ZLIB_LEVEL) -> bytes:
     # One leading filter byte per row, left at 0.
     raw = np.zeros((height, width * RGB_CHANNELS + 1), np.uint8)
     raw[:, 1:] = np.ascontiguousarray(arr).reshape(height, width * RGB_CHANNELS)
-    header = struct.pack(
-        ">IIBBBBB", width, height, SUPPORTED_BIT_DEPTH, 2, 0, 0, 0
-    )
+    header = struct.pack(">IIBBBBB", width, height, SUPPORTED_BIT_DEPTH, 2, 0, 0, 0)
     return (
         PNG_SIGNATURE
         + _chunk(b"IHDR", header)
@@ -148,7 +146,9 @@ def _parse_chunks(data: bytes) -> tuple[tuple[int, ...], bytes]:
         # text-mode checkout translating CRLF is the classic one — becomes a
         # typed error instead of silently different pixels compared against a
         # gate that then reports a regression nobody made.
-        (declared_crc,) = struct.unpack(">I", data[offset + 8 + length : offset + 12 + length])
+        (declared_crc,) = struct.unpack(
+            ">I", data[offset + 8 + length : offset + 12 + length]
+        )
         actual_crc = zlib.crc32(kind + payload) & 0xFFFFFFFF
         if declared_crc != actual_crc:
             raise PngFormatError(

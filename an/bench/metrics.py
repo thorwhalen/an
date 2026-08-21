@@ -147,9 +147,7 @@ def off_palette_top_colours(packed: Any, palette: Any, *, top: int = 10) -> list
         return []
     values, counts = np.unique(off, return_counts=True)
     order = np.argsort(counts)[::-1][:top]
-    return [
-        {"hex": "#%06x" % int(values[i]), "count": int(counts[i])} for i in order
-    ]
+    return [{"hex": "#%06x" % int(values[i]), "count": int(counts[i])} for i in order]
 
 
 #: How far off the line between two palette colours a pixel may sit and still
@@ -198,8 +196,10 @@ def classify_off_palette(entries: list[dict], palette: Any) -> list[dict]:
                 if not 0.0 <= t <= 1.0:
                     continue
                 if np.abs(a + t * ab - v).max() <= BLEND_TOLERANCE:
-                    found = ["#%02x%02x%02x" % tuple(int(x) for x in a),
-                             "#%02x%02x%02x" % tuple(int(x) for x in b)]
+                    found = [
+                        "#%02x%02x%02x" % tuple(int(x) for x in a),
+                        "#%02x%02x%02x" % tuple(int(x) for x in b),
+                    ]
                     break
             if found:
                 break

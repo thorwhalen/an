@@ -48,9 +48,7 @@ def test_the_render_side_panel_is_fully_measured(ledger):
     """Nothing render-side may be gated on a real capture — those are the only
     metrics that can see a render mutation, so a null here is a blind panel."""
     block = ledger["scenes"][SCENE]
-    render_side = {
-        k: r for k, r in block["metrics"].items() if r["side"] == "render"
-    }
+    render_side = {k: r for k, r in block["metrics"].items() if r["side"] == "render"}
     unmeasured = {
         k: r["state"] for k, r in render_side.items() if r["state"] != "measured"
     }
@@ -198,8 +196,13 @@ def test_a_capture_leaves_the_repository_untouched(tmp_path):
     before = dirty_paths(root)
     capture = capture_fixture(SCENE, DFLT_FIXTURES[SCENE], repo_root=root)
     try:
-        assert capture.project_dir.resolve() != (root / DFLT_FIXTURES[SCENE].path).resolve()
-        assert not (capture.project_dir / ".an").exists() or True  # created by the render
+        assert (
+            capture.project_dir.resolve()
+            != (root / DFLT_FIXTURES[SCENE].path).resolve()
+        )
+        assert (
+            not (capture.project_dir / ".an").exists() or True
+        )  # created by the render
     finally:
         cleanup(capture)
     assert dirty_paths(root) == before, (

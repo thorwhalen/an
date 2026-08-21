@@ -25,7 +25,9 @@ from an.bench.paths import golden_dir, repo_root
 # --------------------------------------------------------------------- fakes
 
 
-def _fake_capture(tmp_path, *, name="scene", shots=(("only", 12),), fps=24, size=(8, 6)):
+def _fake_capture(
+    tmp_path, *, name="scene", shots=(("only", 12),), fps=24, size=(8, 6)
+):
     """A capture with real PNG frames on disk and no renderer anywhere near it."""
     width, height = size
     rng = np.random.default_rng(0)
@@ -127,14 +129,21 @@ def test_the_three_absences_are_three_different_gates():
     assert G.GATE_ABSENT == "golden_absent_for_chromium_build"
     assert G.GATE_BUILD_UNKNOWN == "chromium_build_unknown"
     assert G.GATE_JUST_BLESSED == "blessed_this_run"
-    gates = [G.GATE_UNDECLARED, G.GATE_ABSENT, G.GATE_BUILD_UNKNOWN, G.GATE_JUST_BLESSED]
+    gates = [
+        G.GATE_UNDECLARED,
+        G.GATE_ABSENT,
+        G.GATE_BUILD_UNKNOWN,
+        G.GATE_JUST_BLESSED,
+    ]
     assert len(set(gates)) == len(gates), "each absence must be distinguishable"
 
 
 def test_a_scene_that_declares_no_golden_frames_is_gated_as_undeclared(tmp_path):
     """MUTATION: in `compare_scene`, `if not times:` -> `if False:`."""
     capture = _fake_capture(tmp_path)
-    result = G.compare_scene(capture, times=[], chromium_build="99.0.0.0", root=tmp_path)
+    result = G.compare_scene(
+        capture, times=[], chromium_build="99.0.0.0", root=tmp_path
+    )
     assert result["state"] == "gated"
     assert result["gate"] == "golden_frames_undeclared"
 
@@ -307,12 +316,18 @@ def test_bless_removes_a_golden_it_no_longer_blesses(tmp_path):
     """
     capture = _fake_capture(tmp_path)
     _bless(capture, [0.0, 0.25], tmp_path)
-    assert {p.name.split("-")[0] for p in G.iter_committed("scene", "99.0.0.0", root=tmp_path)} == {
+    assert {
+        p.name.split("-")[0]
+        for p in G.iter_committed("scene", "99.0.0.0", root=tmp_path)
+    } == {
         "f0000",
         "f0006",
     }
     record = _bless(capture, [0.0, 0.1667], tmp_path, reason="moved the second time")
-    assert {p.name.split("-")[0] for p in G.iter_committed("scene", "99.0.0.0", root=tmp_path)} == {
+    assert {
+        p.name.split("-")[0]
+        for p in G.iter_committed("scene", "99.0.0.0", root=tmp_path)
+    } == {
         "f0000",
         "f0004",
     }
@@ -522,8 +537,14 @@ def test_a_measured_golden_result_fills_both_blocks_from_one_comparison():
     from an.bench.run import _golden_values
 
     metric, tripwire = _golden_values(
-        {"state": "measured", "identical": False, "min_ssim_win8": 0.5,
-         "changed_px": 7, "max_delta": 40, "frames": []}
+        {
+            "state": "measured",
+            "identical": False,
+            "min_ssim_win8": 0.5,
+            "changed_px": 7,
+            "max_delta": 40,
+            "frames": [],
+        }
     )
     assert metric.value == 0.5 and isinstance(metric.value, float)
     assert tripwire.value is False and isinstance(tripwire.value, bool)
@@ -539,8 +560,12 @@ def test_the_pixel_digest_distinguishes_a_transposed_frame():
     transposed frame. Both orientations are live in this corpus.
     """
     flat = np.arange(24, dtype=np.uint8)
-    assert G.pixels_sha256(flat.reshape(2, 4, 3)) != G.pixels_sha256(flat.reshape(4, 2, 3))
-    assert G.pixels_sha256(flat.reshape(2, 4, 3)) == G.pixels_sha256(flat.reshape(2, 4, 3))
+    assert G.pixels_sha256(flat.reshape(2, 4, 3)) != G.pixels_sha256(
+        flat.reshape(4, 2, 3)
+    )
+    assert G.pixels_sha256(flat.reshape(2, 4, 3)) == G.pixels_sha256(
+        flat.reshape(2, 4, 3)
+    )
 
 
 def test_a_golden_blessed_at_another_resolution_does_not_crash_the_row(tmp_path):
@@ -657,7 +682,9 @@ def test_the_panel_distinguishes_a_fired_golden_from_a_passing_one():
         block = build_scene_block(
             provenance=provenance,
             metrics=metrics,
-            tripwires={"golden_identity": measured(value, changed_px=431, max_delta=99)},
+            tripwires={
+                "golden_identity": measured(value, changed_px=431, max_delta=99)
+            },
         )
         return format_panel({"scenes": {"aa_probe": block}})
 
