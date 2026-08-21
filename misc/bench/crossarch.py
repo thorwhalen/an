@@ -45,12 +45,57 @@ from typing import Any, Iterable, Iterator
 # Tunables — module constants per the no-magic-numbers rule.
 MANIFEST_NAME: str = "manifest.json"
 FRAMES_DIRNAME: str = "frames"
-#: The fixtures, one per render path. Keys become scene names in the manifest.
-DFLT_FIXTURES: dict[str, str] = {
-    # Procedural rig, 320x240, 2.5 s -> 60 frames.
-    "single_character": "examples/single_character",
+#: The name of the compiled scene the browser actually loaded, staged per shot.
+STAGED_SCENE_NAME: str = "scene.json"
+
+
+def _prepare_promote_demo(project_dir: Path) -> None:
+    """Regenerate the promoted character from the committed source SVG.
+
+    `examples/promote_demo` ships only `raw_maya.svg`; the promoted character it
+    references is a build product and is gitignored. Without this step the
+    fixture renders on a clean checkout, produces no error, and quietly draws a
+    **different character** — see `expect_visual_kinds` below.
+    """
+    from an.characters import promote
+
+    promote(project_dir, entity="raw_maya", as_="maya-promoted", overwrite=True)
+
+
+@dataclass(frozen=True, slots=True)
+class Fixture:
+    """A capture fixture: where it lives, how to build it, what it must render."""
+
+    path: str
+    #: Run against the throwaway copy before loading, to regenerate build
+    #: products the repo does not track.
+    prepare: Any = None
+    #: Visual kinds the staged scene MUST contain. This is not belt-and-braces:
+    #: a missing character descriptor makes the compiler fall back to the
+    #: procedural rig with **no warning** (verified: zero warnings, and
+    #: `svg_sprite` simply absent from the compiled scene). The first run of this
+    #: experiment measured that fallback on three CI runners and would have
+    #: reported "the descriptor path is deterministic" having never rendered it.
+    expect_visual_kinds: frozenset = frozenset()
+
+
+#: The fixtures, one per render path — deliberately both, because they are not
+#: equally sensitive: the descriptor path is 12x more sensitive to a rasteriser
+#: flip than the procedural one (2.94% vs 0.24% of pixels under GPU-vs-software),
+#: so a procedural-only capture under-reports the case that matters.
+DFLT_FIXTURES: dict[str, Fixture] = {
+    # Procedural rig, 320x240, 2.5 s -> 60 frames. Needs no assets at all, which
+    # is the only reason it is reproducible from a clean checkout today.
+    "single_character": Fixture(
+        path="examples/single_character",
+        expect_visual_kinds=frozenset({"rect", "ellipse"}),
+    ),
     # SVG-sprite descriptor (the sensitive path), 480x360, 3.0 s -> 72 frames.
-    "promote_demo": "examples/promote_demo",
+    "promote_demo": Fixture(
+        path="examples/promote_demo",
+        prepare=_prepare_promote_demo,
+        expect_visual_kinds=frozenset({"svg_sprite"}),
+    ),
 }
 #: Rendering knobs pinned for the capture. Audio is off because it cannot move
 #: a pixel and would otherwise make the frames depend on the audio cache's
@@ -222,15 +267,46 @@ def environment_record(repo_root: Path) -> dict[str, Any]:
     }
 
 
+def _staged_visual_kinds(work_dir: Path) -> set[str]:
+    """Every `kind` in the scene JSON the browser actually loaded.
+
+    Read from the staged file rather than re-compiled, so it reports what was
+    rendered rather than what a second compile would produce.
+    """
+    kinds: set[str] = set()
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            kind = node.get("kind")
+            if isinstance(kind, str):
+                kinds.add(kind)
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    for shot_dir in sorted(work_dir.glob("shot_*")):
+        staged = shot_dir / "runtime" / STAGED_SCENE_NAME
+        if staged.is_file():
+            walk(json.loads(staged.read_text(encoding="utf-8")))
+    return kinds
+
+
 def capture_scene(
     name: str,
-    fixture_dir: Path,
+    fixture: Fixture,
     *,
+    repo_root: Path,
     out_dir: Path,
 ) -> dict[str, Any]:
     """Render one fixture in a throwaway copy and record every frame."""
     from an.project import load
     from an.render import render
+
+    fixture_dir = repo_root / fixture.path
+    if not fixture_dir.is_dir():
+        raise FileNotFoundError(f"fixture {name!r} not found at {fixture_dir}")
 
     scene_out = out_dir / name / FRAMES_DIRNAME
     scene_out.mkdir(parents=True, exist_ok=True)
@@ -238,14 +314,27 @@ def capture_scene(
     with tempfile.TemporaryDirectory(prefix=f"an-crossarch-{name}-") as tmp:
         work_copy = Path(tmp) / fixture_dir.name
         shutil.copytree(fixture_dir, work_copy)
+        if fixture.prepare is not None:
+            fixture.prepare(work_copy)
         project = load(work_copy)
         scene = project.scene
         render(project, **CAPTURE_RENDER_KWARGS)
 
+        render_work_dir = work_copy / ".an" / "render_work"
+        visual_kinds = _staged_visual_kinds(render_work_dir)
+        missing = fixture.expect_visual_kinds - visual_kinds
+        if missing:
+            raise RuntimeError(
+                f"fixture {name!r} rendered WITHOUT {sorted(missing)} — it "
+                f"staged {sorted(visual_kinds)} instead. A missing character "
+                f"descriptor makes the compiler fall back to the procedural rig "
+                f"silently, so this capture would have measured a different "
+                f"picture and called it the same render path."
+            )
+
         shots: list[dict[str, Any]] = []
         frames: list[FrameRecord] = []
-        render_work = work_copy / ".an" / "render_work"
-        for shot_id, frames_dir in _iter_shot_frame_dirs(render_work):
+        for shot_id, frames_dir in _iter_shot_frame_dirs(render_work_dir):
             pngs = sorted(frames_dir.glob("frame_*.png"))
             shots.append({"id": shot_id, "frames": len(pngs)})
             for png in pngs:
@@ -257,11 +346,15 @@ def capture_scene(
     if not frames:
         raise RuntimeError(
             f"fixture {name!r} produced no frames — "
-            f"looked under {render_work} for shot_*/{FRAMES_DIRNAME}/frame_*.png"
+            f"looked under {render_work_dir} for shot_*/{FRAMES_DIRNAME}/frame_*.png"
         )
 
     return {
-        "source": str(fixture_dir),
+        "source": fixture.path,
+        "prepared": fixture.prepare is not None,
+        # Which render path this actually exercised — the fact whose absence
+        # made the first run of this experiment measure the wrong thing.
+        "visual_kinds": sorted(visual_kinds),
         "resolution": [scene.meta.resolution.width, scene.meta.resolution.height],
         "fps": scene.meta.fps,
         "shots": shots,
@@ -288,7 +381,7 @@ def capture_scene(
 def capture(
     out_dir: str | Path,
     *,
-    fixtures: dict[str, str] | None = None,
+    fixtures: dict[str, Fixture] | None = None,
     repo_root: str | Path | None = None,
 ) -> Path:
     """Capture every fixture into ``out_dir`` and write the manifest."""
@@ -298,14 +391,12 @@ def capture(
     chosen = fixtures if fixtures is not None else DFLT_FIXTURES
 
     scenes: dict[str, Any] = {}
-    for name, rel in chosen.items():
-        fixture_dir = root / rel
-        if not fixture_dir.is_dir():
-            raise FileNotFoundError(f"fixture {name!r} not found at {fixture_dir}")
-        print(f"[crossarch] capturing {name} from {rel} ...", flush=True)
-        scenes[name] = capture_scene(name, fixture_dir, out_dir=out)
+    for name, fixture in chosen.items():
+        print(f"[crossarch] capturing {name} from {fixture.path} ...", flush=True)
+        scenes[name] = capture_scene(name, fixture, repo_root=root, out_dir=out)
         print(
             f"[crossarch]   {scenes[name]['frame_count']} frames, "
+            f"visuals={','.join(scenes[name]['visual_kinds'])}, "
             f"pixels_sha256={scenes[name]['pixels_sha256'][:16]}",
             flush=True,
         )
