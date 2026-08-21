@@ -445,7 +445,7 @@ def requirement_verdict(name, *, opt_in, available, ci, install_hint):
             f"dispatch .github/workflows/browser-tests.yml",
         )
     if not available:
-        return "skip", f"no {name} — {install_hint}"
+        return "skip", f"no {name}: {install_hint}"
     return "run", ""
 
 
@@ -510,5 +510,5 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         ran = total - skipped
         line = f"{name} tests: {total} collected, {ran} ran"
         if skipped:
-            line += f", {skipped} skipped — {info['reason']}"
+            line += f", {skipped} skipped: {info['reason']}"
         terminalreporter.write_line(line)

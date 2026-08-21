@@ -147,9 +147,11 @@ def test_no_source_file_reads_text_without_pinning_the_encoding():
 
     Every doc in this repo contains non-ASCII (em dashes, arrows), so an
     unpinned read is a `UnicodeDecodeError` on Windows and nowhere else. It
-    reached `main` because the Windows CI leg is `continue-on-error: true` — the
-    run reported green with three failures inside it, which is the same way a
-    path-separator bug reached main earlier.
+    reached `main` because the Windows CI leg *was* `continue-on-error: true` —
+    the run reported green with three failures inside it, which is the same way a
+    path-separator bug reached main earlier. That flag was removed in #22, so a
+    third instance would now fail the build; this guard stays because catching it
+    on every platform beats catching it on one.
 
     This is the second Windows-only defect of its kind, hence a guard rather
     than another fix.

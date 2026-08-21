@@ -229,6 +229,15 @@ A render fetches only three things over HTTP: `index.html`, the engine, and `run
   claim is verified only on a developer machine. Tracked separately; it is a CI-scope
   decision, not part of #12.
 
+  > **Resolved in #22 — and the diagnosis above was half right.** CI did not *skip* those
+  > tests; it never *collected* them, because eleven modules used a module-level
+  > `pytest.importorskip`. 472 tests collected with Playwright present, 438 without, and
+  > fourteen of the thirty-four casualties needed no browser at all. The decision stands
+  > (the rendering lane is on-demand, `.github/workflows/browser-tests.yml`), so the second
+  > sentence remains true: **a "verified by rendering" claim is verified on a developer
+  > machine or an on-demand run, never on a PR.** What changed is that the lane is now
+  > counted and announced instead of silently absent.
+
 ---
 
 ## 4. The silent-discard inventory

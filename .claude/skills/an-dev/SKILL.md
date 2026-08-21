@@ -134,8 +134,11 @@ Three properties of the browser gate worth knowing before you touch it
 1. **Collection is invariant.** Which tests exist must not depend on what is installed.
    A static AST scan rejects any module-level `importorskip` or browser `launch()`, and a
    subprocess imports every test module with Playwright shadowed to prove it.
-2. **A gated run says so out loud** — `browser tests: 24 collected, 0 ran, 24 skipped — …`
+2. **A gated run says so out loud** — `browser tests: 24 collected, 0 ran, 24 skipped: …`
    in the run summary. A green run must never be silent about having checked zero pixels.
+   That line is deliberately **ASCII**: the Windows console renders an em dash as a
+   replacement character, and the one line whose whole job is to be read should be legible
+   on the platform whose leg now blocks the build.
 3. **An explicit opt-in that cannot be honoured is an ERROR, not a skip.**
    `AN_BROWSER_TESTS=1` with no browser aborts the run. A CI job whose `playwright install`
    quietly failed has to go red; green-with-24-skips is the exact failure #22 existed to end.

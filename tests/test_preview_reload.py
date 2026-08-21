@@ -6,8 +6,9 @@ detach `<canvas id="stage">` from the DOM during teardown (`app.destroy(true, �
 after which PixiJS silently rendered into an orphan canvas: the preview went blank
 on the first edit and never recovered, without an error anywhere.
 
-Skipped when playwright/chromium are unavailable — which includes CI, where the
-`cutout` extra is not installed. The always-running static guard is
+Marked `browser`, so it is collected everywhere and gated by the browser gate in
+`tests/conftest.py` — which skips it in CI, where the `cutout` extra is not
+installed (an#22). The always-running static guard is
 `test_cutout_runtime_files.py::test_load_scene_does_not_detach_the_canvas`.
 """
 
