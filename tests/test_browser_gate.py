@@ -249,12 +249,18 @@ def test_requirement_verdict_matrix(opt_in, available, ci, expected):
 
 def test_an_honoured_opt_in_is_the_only_way_to_run_in_ci():
     """CI runs a browser test only on an explicit request — never by accident."""
-    assert requirement_verdict(
-        "headless browser", opt_in=None, available=True, ci=True, install_hint="h"
-    )[0] == "skip"
-    assert requirement_verdict(
-        "headless browser", opt_in=True, available=True, ci=True, install_hint="h"
-    )[0] == "run"
+    assert (
+        requirement_verdict(
+            "headless browser", opt_in=None, available=True, ci=True, install_hint="h"
+        )[0]
+        == "skip"
+    )
+    assert (
+        requirement_verdict(
+            "headless browser", opt_in=True, available=True, ci=True, install_hint="h"
+        )[0]
+        == "run"
+    )
 
 
 # ------------------------------------------------------------ subprocess rig
@@ -320,7 +326,9 @@ def _node_ids(proc: subprocess.CompletedProcess) -> set[str]:
     stdout = proc.stdout
     ids = {line.strip() for line in stdout.splitlines() if "::" in line}
     trailer = re.search(r"(\d+)(?:/\d+)? tests? collected", stdout)
-    assert trailer, f"no collection trailer to check the parse against:\n{stdout[-2000:]}"
+    assert trailer, (
+        f"no collection trailer to check the parse against:\n{stdout[-2000:]}"
+    )
     expected = int(trailer.group(1))
     assert len(ids) == expected, (
         f"parsed {len(ids)} node ids but pytest reported {expected} collected — "
@@ -528,17 +536,46 @@ def test_the_gate_honours_an_explicit_ci_false():
 def test_the_ffmpeg_lane_is_not_reported_as_having_run(tmp_path):
     """The two lanes must not exonerate each other.
 
-    Every `ffmpeg` test is also a `browser` test, so on the commonest developer
-    configuration — ffmpeg present, no browser — the ffmpeg verdict is "run"
-    while every one of its tests is skipped by the browser verdict. The
-    per-requirement arithmetic reported "22 ran" for 22 tests that did not.
+    On the commonest developer configuration — ffmpeg present, no browser — the
+    ffmpeg verdict is "run" while every ffmpeg test that ALSO needs a browser is
+    skipped by the browser verdict. The per-requirement arithmetic reported
+    "22 ran" for 22 tests that did not.
+
+    Selected as `ffmpeg and browser` rather than bare `ffmpeg` (an#34). The
+    original spelling leaned on "every ffmpeg test is also a browser test",
+    which was an observation about the suite at the time, not a property of the
+    gate — the first ffmpeg-only test (`test_encode_pins.py`'s colour-tag check,
+    which encodes PNGs and opens no browser) made it false, and the guard failed
+    for a reason that had nothing to do with the accounting bug it exists to
+    catch. Selecting the intersection states the property directly and stays
+    true however the suite grows.
     """
     env = _env(tmp_path, shadow=("playwright",))
-    proc = _pytest(env, "-m", "ffmpeg")
+    proc = _pytest(env, "-m", "ffmpeg and browser")
     assert proc.returncode == 0, proc.stdout[-3000:]
     lines = [ln for ln in proc.stdout.splitlines() if ln.startswith("ffmpeg tests:")]
     assert lines, "no ffmpeg accounting line:\n" + proc.stdout
     assert "0 ran" in lines[0], lines[0]
+
+
+def test_an_ffmpeg_only_test_is_not_gated_on_a_browser(tmp_path):
+    """The complement of the test above, and the reason it had to be narrowed.
+
+    A test marked `ffmpeg` but not `browser` must still run when ffmpeg is
+    present and Playwright is not. If it did not, the two markers would have
+    collapsed into one and the `ffmpeg` marker would be decorative — which is
+    also the shape that would let someone "fix" the guard above by marking an
+    ffmpeg-only test `browser`.
+    """
+    env = _env(tmp_path, shadow=("playwright",))
+    proc = _pytest(env, "-m", "ffmpeg and not browser")
+    assert proc.returncode == 0, proc.stdout[-3000:]
+    lines = [ln for ln in proc.stdout.splitlines() if ln.startswith("ffmpeg tests:")]
+    assert lines, "no ffmpeg accounting line:\n" + proc.stdout
+    assert "0 ran" not in lines[0], (
+        "no ffmpeg-only test ran without a browser — either the lane has none "
+        f"(the marker is decorative) or it is gated on Chromium: {lines[0]}"
+    )
 
 
 def test_the_browser_lane_is_not_empty(tmp_path):
@@ -557,7 +594,9 @@ def test_the_browser_lane_is_not_empty(tmp_path):
     ids = _node_ids(proc)
     modules = {node.split("::")[0] for node in ids}
     assert len(ids) >= 20, f"only {len(ids)} browser-marked tests: {sorted(ids)}"
-    assert len(modules) >= 10, f"only {len(modules)} modules in the lane: {sorted(modules)}"
+    assert len(modules) >= 10, (
+        f"only {len(modules)} modules in the lane: {sorted(modules)}"
+    )
 
 
 def test_the_conftest_doctests_actually_run():
