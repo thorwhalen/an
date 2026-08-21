@@ -558,23 +558,43 @@ def test_the_ffmpeg_lane_is_not_reported_as_having_run(tmp_path):
     assert "0 ran" in lines[0], lines[0]
 
 
-def test_an_ffmpeg_only_test_is_not_gated_on_a_browser(tmp_path):
+def test_the_ffmpeg_lane_is_not_gated_on_a_browser(monkeypatch):
     """The complement of the test above, and the reason it had to be narrowed.
 
-    A test marked `ffmpeg` but not `browser` must still run when ffmpeg is
-    present and Playwright is not. If it did not, the two markers would have
-    collapsed into one and the `ffmpeg` marker would be decorative — which is
-    also the shape that would let someone "fix" the guard above by marking an
-    ffmpeg-only test `browser`.
+    With ffmpeg present and Chromium absent, the ffmpeg verdict must be "run".
+    If it were not, the two markers would have collapsed into one, the `ffmpeg`
+    marker would be decorative — and the narrowing above could be "fixed" by
+    marking an ffmpeg-only test `browser`, which is the move this forbids.
+
+    Asserted against the verdict function with both probes stubbed, rather than
+    by running a subprocess: the property is about the gate, and observing it
+    through a real run would need ffmpeg on the host — which CI does not have,
+    so the test would report "the lane is gated on Chromium" whenever it was
+    really reporting "there is no ffmpeg here".
     """
-    env = _env(tmp_path, shadow=("playwright",))
-    proc = _pytest(env, "-m", "ffmpeg and not browser")
-    assert proc.returncode == 0, proc.stdout[-3000:]
-    lines = [ln for ln in proc.stdout.splitlines() if ln.startswith("ffmpeg tests:")]
-    assert lines, "no ffmpeg accounting line:\n" + proc.stdout
-    assert "0 ran" not in lines[0], (
-        "no ffmpeg-only test ran without a browser — either the lane has none "
-        f"(the marker is decorative) or it is gated on Chromium: {lines[0]}"
+    monkeypatch.setattr(_gate, "chromium_available", lambda: False)
+    monkeypatch.setattr(_gate, "ffmpeg_available", lambda: True)
+    verdicts = _gate._gate_verdicts({})
+    assert verdicts["browser"][0] == "skip", verdicts["browser"]
+    assert verdicts["ffmpeg"][0] == "run", (
+        "the ffmpeg lane went to 'skip' with ffmpeg present and no browser, so "
+        f"it is gated on Chromium: {verdicts['ffmpeg']}"
+    )
+
+
+def test_the_suite_actually_has_an_ffmpeg_only_test(tmp_path):
+    """...and the marker is not decorative.
+
+    Collection-only, so it holds wherever it runs — which is the repo's own rule
+    that WHICH TESTS EXIST must not depend on what is installed.
+    """
+    proc = _pytest(_env(tmp_path), "--collect-only", "-m", "ffmpeg and not browser")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    ids = _node_ids(proc)
+    assert ids, (
+        "no test is marked `ffmpeg` without also being marked `browser`, so the "
+        "two lanes are indistinguishable and the narrowing of "
+        "test_the_ffmpeg_lane_is_not_reported_as_having_run has nothing to hold"
     )
 
 
