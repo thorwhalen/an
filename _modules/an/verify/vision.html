@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.vision &mdash; an 0.1.28 documentation</title>
+  <title>an.verify.vision &mdash; an 0.1.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=34399df3"></script>
+      <script src="../../../_static/documentation_options.js?v=904119ea"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -78,6 +78,19 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
@@ -153,27 +166,52 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.verify.vision</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""VisionLMVerifier — Claude vision looks at sampled frames + reports issues.</span>
+<span></span><span class="sd">"""VisionLMVerifier — Claude vision looks at sampled frames and reports issues.</span>
 
-<span class="sd">Phase 9 closes the loop the architectural spec called out from day one:</span>
-<span class="sd">a Verifier that uses a vision LM to inspect rendered frames and produce</span>
-<span class="sd">``Finding``s the orchestrator can route back into the IR.</span>
+<span class="sd">**Opt-in, not default.** `an.orchestrate.orchestrate`'s default verifier chain</span>
+<span class="sd">is `[LayoutLintVerifier(), MediaQualityVerifier()]` and this verifier is</span>
+<span class="sd">deliberately not in it: it costs money and its input is a rendered mp4. The</span>
+<span class="sd">lazy `anthropic` import and the key check therefore skip *cleanly*, so a caller</span>
+<span class="sd">without the `vision` extra gets an informational Finding rather than an</span>
+<span class="sd">`ImportError`. (The docstring here previously claimed the opposite — that the</span>
+<span class="sd">skips existed "so the orchestrator can keep this verifier in its default</span>
+<span class="sd">chain". Nothing in `an/` has ever put it in one.)</span>
 
-<span class="sd">Lazy-imports the ``anthropic`` SDK + needs ``ANTHROPIC_API_KEY`` in env.</span>
-<span class="sd">Skips with an informational ``Finding`` (passed=True) when either is</span>
-<span class="sd">missing, so the orchestrator can keep this verifier in its default chain</span>
-<span class="sd">without making it a hard dependency.</span>
+<span class="sd">**Not configured is a skip. Configured and broken is a failure.** That</span>
+<span class="sd">distinction is the whole of an#39. Every failure path used to add an `info`</span>
+<span class="sd">Finding and return, and `VerificationReport.add` flips `passed` only on</span>
+<span class="sd">`"error"` — so a dead model id, a 500, a refusal and an unparseable reply all</span>
+<span class="sd">came back byte-identical to a clean bill of health. A verifier that reports</span>
+<span class="sd">success when it failed to run is worse than no verifier, because it launders an</span>
+<span class="sd">absence of evidence into evidence of absence.</span>
 
-<span class="sd">Cost: a single verify() sends 3-4 frames + a short prompt. Pricing rounds</span>
-<span class="sd">to ≈ $0.005 per call with claude-haiku, more with sonnet.</span>
+<span class="sd">So the paid call lives behind an injectable seam, :func:`judge_frames`, which</span>
+<span class="sd">takes **frame bytes** (not paths — the real frames live in a</span>
+<span class="sd">`TemporaryDirectory`, so a cache key over paths would miss 100% of the time)</span>
+<span class="sd">and returns the model's **raw text** (so `_parse_issues` stays outside any</span>
+<span class="sd">recording and parser fixes are testable against it for free). A judge that</span>
+<span class="sd">cannot answer raises :class:`VisionJudgeError`; a cassette that has no</span>
+<span class="sd">recording for a call raises :class:`CassetteMiss`, which derives from</span>
+<span class="sd">**`BaseException`** because every other kind is swallowed twice on the way out</span>
+<span class="sd">— once by this module's own handler and once by `orchestrate`'s broad</span>
+<span class="sd">post-render `except Exception`, which guards every verifier and must stay</span>
+<span class="sd">broad.</span>
+
+<span class="sd">Cost: one Anthropic call carrying `frame_count` base64 PNGs plus a short</span>
+<span class="sd">prompt. Roughly $0.005 with Haiku.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenderResult</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span>
@@ -184,6 +222,18 @@
 <span class="n">_DEFAULT_MODEL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"claude-haiku-4-5-20251001"</span>  <span class="c1"># cheap, vision-capable</span>
 <span class="n">_DEFAULT_FRAME_COUNT</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="n">_DEFAULT_MAX_TOKENS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">800</span>
+
+<span class="c1">#: Severity for "configured, called, no verdict" — a failed call, or a reply</span>
+<span class="c1">#: that carried no verdict.</span>
+<span class="c1">#:</span>
+<span class="c1">#: `warning`, not `error`: a transient 529 must not fail a whole render. And</span>
+<span class="c1">#: not `info`, which is the NOT-CONFIGURED severity — reusing it for</span>
+<span class="c1">#: "configured and broken" is exactly what made this verifier invisible. Any</span>
+<span class="c1">#: non-`info` Finding makes a dead verifier show up in the report.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Set it to `"error"` if a refusal should fail the render; that is a policy</span>
+<span class="c1">#: choice, and it is one constant.</span>
+<span class="n">FAILURE_SEVERITY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"warning"</span>
 
 <span class="n">_PROMPT</span> <span class="o">=</span> <span class="s2">"""You are reviewing frames from a short animated cartoon. The character</span>
 <span class="s2">art is intentionally simple (placeholder geometry: ellipse heads, rect</span>
@@ -210,6 +260,190 @@
 <span class="s2">"""</span>
 
 
+<div class="viewcode-block" id="CassetteMiss">
+<a class="viewcode-back" href="../../../module_docs/an/verify/vision.html#an.verify.CassetteMiss">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CassetteMiss</span><span class="p">(</span><span class="ne">BaseException</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A recorded reply was asked for and there is none.</span>
+
+<span class="sd">    Derived from ``BaseException`` rather than ``Exception``, deliberately and</span>
+<span class="sd">    for a measured reason: an ``Exception`` raised where the API call sits is</span>
+<span class="sd">    caught by this module's own handler AND by `an.orchestrate`'s post-render</span>
+<span class="sd">    ``except Exception``, which guards every verifier and must stay broad. Both</span>
+<span class="sd">    of them report and continue, so a test asserting "this run did not spend"</span>
+<span class="sd">    would pass having verified nothing at all.</span>
+
+<span class="sd">    Same reasoning, and the same shape, as `tests/conftest.py`'s</span>
+<span class="sd">    ``OutboundNetworkAttempt`` — whose own docstring names "the verifiers' broad</span>
+<span class="sd">    handlers" as the reason.</span>
+<span class="sd">    """</span></div>
+
+
+
+<div class="viewcode-block" id="VisionJudgeError">
+<a class="viewcode-back" href="../../../module_docs/an/verify/vision.html#an.verify.VisionJudgeError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VisionJudgeError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The judge was configured, was called, and produced no verdict.</span>
+
+<span class="sd">    An `an`-owned type on purpose. Narrowing the catch site to</span>
+<span class="sd">    ``anthropic.APIError`` looks tighter and is not:</span>
+<span class="sd">    ``issubclass(anthropic.NotFoundError, anthropic.APIError)`` is True, so a</span>
+<span class="sd">    dead model id would still be swallowed into a pass — and it would put a</span>
+<span class="sd">    vendor class at a catch site in this package's own control flow.</span>
+<span class="sd">    """</span></div>
+
+
+
+<span class="c1">#: Never part of a cassette key. A cassette filename must not be a function of</span>
+<span class="c1">#: a credential.</span>
+<span class="n">_KEY_IGNORED</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"api_key"</span><span class="p">})</span>
+
+
+<div class="viewcode-block" id="judge_key">
+<a class="viewcode-back" href="../../../module_docs/an/verify/vision.html#an.verify.judge_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">judge_key</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The cache key for one :func:`judge_frames` call.</span>
+
+<span class="sd">    Derived from the seam's **signature**, not from a hand-written allowlist.</span>
+<span class="sd">    An allowlist sets the default to *exclude*, which means a parameter added</span>
+<span class="sd">    later collides with the base key and the recording is served forever for a</span>
+<span class="sd">    request that changed. A false miss is red CI; a false hit is silent and</span>
+<span class="sd">    unrecoverable, so the default has to be *include*.</span>
+
+<span class="sd">    ``apply_defaults()`` matters too: without it ``judge_frames(frames)`` and</span>
+<span class="sd">    the fully-spelled call are two different keys for one request.</span>
+
+<span class="sd">    &gt;&gt;&gt; k = judge_key([b"a"], model="m", max_tokens=1, prompt="p")</span>
+<span class="sd">    &gt;&gt;&gt; k == judge_key([b"a"], model="m", max_tokens=1, prompt="p", api_key="secret")</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; k == judge_key([b"a"], model="m", max_tokens=1, prompt="  p  ")</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; k == judge_key([b"b"], model="m", max_tokens=1, prompt="p")</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="n">bound</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">judge_frames</span><span class="p">)</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">bound</span><span class="o">.</span><span class="n">apply_defaults</span><span class="p">()</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_KEY_IGNORED</span><span class="p">}</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1"># Ordered, because frame order is semantic to the model.</span>
+        <span class="s2">"frames"</span><span class="p">:</span> <span class="p">[</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">f</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"frames"</span><span class="p">)],</span>
+        <span class="c1"># Whitespace-collapsed, so re-indenting the prompt literal is not a</span>
+        <span class="c1"># re-record. Any other edit to it is.</span>
+        <span class="s2">"prompt"</span><span class="p">:</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"prompt"</span><span class="p">))</span><span class="o">.</span><span class="n">split</span><span class="p">()),</span>
+        <span class="c1"># Everything else the signature carries — including anything added</span>
+        <span class="c1"># later, which is the point.</span>
+        <span class="o">**</span><span class="n">fields</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">blob</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">32</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="judge_envelope">
+<a class="viewcode-back" href="../../../module_docs/an/verify/vision.html#an.verify.judge_envelope">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">judge_envelope</span><span class="p">(</span>
+    <span class="n">frames</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bytes</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_PROMPT</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_DEFAULT_MODEL</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_DEFAULT_MAX_TOKENS</span><span class="p">,</span>
+    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Call the vision model and return a recordable envelope.</span>
+
+<span class="sd">    Memoized one level *in* from :func:`judge_frames` because a memoizer hands</span>
+<span class="sd">    the store only ``(key, return_value)`` — so a seam returning a bare ``str``</span>
+<span class="sd">    can record nothing beside the reply, and the provenance that makes a</span>
+<span class="sd">    cassette auditable would be unwritable.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">anthropic</span>  <span class="c1"># type: ignore</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - the caller checks first</span>
+        <span class="k">raise</span> <span class="n">VisionJudgeError</span><span class="p">(</span>
+            <span class="s2">"the `anthropic` SDK is not installed; `pip install an[vision]`"</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="n">content_blocks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"image"</span><span class="p">,</span>
+            <span class="s2">"source"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"base64"</span><span class="p">,</span>
+                <span class="s2">"media_type"</span><span class="p">:</span> <span class="s2">"image/png"</span><span class="p">,</span>
+                <span class="s2">"data"</span><span class="p">:</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">f</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span>
+    <span class="p">]</span>
+    <span class="n">content_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="n">prompt</span><span class="p">})</span>
+
+    <span class="n">client</span> <span class="o">=</span> <span class="n">anthropic</span><span class="o">.</span><span class="n">Anthropic</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+            <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content_blocks</span><span class="p">}],</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">VisionJudgeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"the vision API call failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">reply</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">blk</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">blk</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">blk</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"text"</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">VisionJudgeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"the vision reply carried no text blocks: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"reply"</span><span class="p">:</span> <span class="n">reply</span><span class="p">,</span>
+        <span class="s2">"frames"</span><span class="p">:</span> <span class="p">[</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">f</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">],</span>
+        <span class="s2">"model"</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
+        <span class="s2">"max_tokens"</span><span class="p">:</span> <span class="n">max_tokens</span><span class="p">,</span>
+        <span class="s2">"prompt"</span><span class="p">:</span> <span class="n">prompt</span><span class="p">,</span>
+        <span class="s2">"recorded_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"+00:00"</span><span class="p">,</span> <span class="s2">"Z"</span><span class="p">),</span>
+        <span class="s2">"recorded_with"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"anthropic"</span><span class="p">:</span> <span class="n">_anthropic_version</span><span class="p">()},</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_anthropic_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">PackageNotFoundError</span><span class="p">,</span> <span class="n">version</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">version</span><span class="p">(</span><span class="s2">"anthropic"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PackageNotFoundError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="judge_frames">
+<a class="viewcode-back" href="../../../module_docs/an/verify/vision.html#an.verify.judge_frames">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">judge_frames</span><span class="p">(</span>
+    <span class="n">frames</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bytes</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_PROMPT</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_DEFAULT_MODEL</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_DEFAULT_MAX_TOKENS</span><span class="p">,</span>
+    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The paid seam: frame bytes in, the model's raw text reply out.</span>
+
+<span class="sd">    ``bytes`` rather than ``Path`` because the real frames live in a</span>
+<span class="sd">    `TemporaryDirectory`, so a key over paths hashes a fresh random string and</span>
+<span class="sd">    misses every time. **Raw text** rather than parsed findings because that</span>
+<span class="sd">    keeps `_parse_issues` outside any recording — a parser fix is then testable</span>
+<span class="sd">    against the recording for free, and record-vs-replay drift is impossible.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">judge_envelope</span><span class="p">(</span>
+        <span class="n">frames</span><span class="p">,</span>
+        <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+        <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
+    <span class="p">)[</span><span class="s2">"reply"</span><span class="p">]</span></div>
+
+
+
 <div class="viewcode-block" id="VisionLMVerifier">
 <a class="viewcode-back" href="../../../module_docs/an/verify/vision.html#an.verify.VisionLMVerifier">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">VisionLMVerifier</span><span class="p">:</span>
@@ -224,25 +458,43 @@
         <span class="n">frame_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_DEFAULT_FRAME_COUNT</span><span class="p">,</span>
         <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_DEFAULT_MAX_TOKENS</span><span class="p">,</span>
         <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">judge</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">frame_count</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">frame_count</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_tokens</span> <span class="o">=</span> <span class="n">max_tokens</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_API_KEY"</span><span class="p">)</span>
+        <span class="c1">#: Injected, per "no globals, no service locators" — and because</span>
+        <span class="c1">#: injection is what makes record-vs-replay drift impossible: the</span>
+        <span class="c1">#: recorded and replayed paths are the same call through the same</span>
+        <span class="c1">#: object, differing only in what the store returns.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">judge</span> <span class="o">=</span> <span class="n">judge</span> <span class="ow">or</span> <span class="n">judge_frames</span>
+        <span class="c1">#: Whether the skip conditions below apply. They are about the DEFAULT</span>
+        <span class="c1">#: judge's ability to run — an injected one may be cassette-backed, in</span>
+        <span class="c1">#: which case it needs neither the SDK nor a key, and gating it on them</span>
+        <span class="c1">#: makes it unreachable exactly where it is most useful. Learned from</span>
+        <span class="c1">#: CI: locally the SDK is installed, so every injected-judge test</span>
+        <span class="c1">#: passed for the wrong reason.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_judge_is_default</span> <span class="o">=</span> <span class="n">judge</span> <span class="ow">is</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">verify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ir</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">render</span><span class="p">:</span> <span class="n">RenderResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VerificationReport</span><span class="p">:</span>
         <span class="n">report</span> <span class="o">=</span> <span class="n">VerificationReport</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">render</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">render</span><span class="o">.</span><span class="n">mp4_path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">render</span><span class="o">.</span><span class="n">mp4_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"no render result; skipping vision check"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"ANTHROPIC_API_KEY not set; skipping"</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">report</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">import</span><span class="w"> </span><span class="nn">anthropic</span>  <span class="c1"># type: ignore</span>
-        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"anthropic SDK not installed; skipping"</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">report</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_judge_is_default</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"ANTHROPIC_API_KEY not set; skipping"</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">report</span>
+            <span class="k">if</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">"anthropic"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"info"</span><span class="p">,</span>
+                    <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span>
+                    <span class="s2">"anthropic SDK not installed; skipping (pip install an[vision])"</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">report</span>
 
         <span class="c1"># Sample N frames roughly evenly distributed across the render.</span>
         <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
@@ -253,51 +505,50 @@
                 <span class="n">step</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_count</span>
                 <span class="n">frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">frames</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">step</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_count</span><span class="p">)]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">frames</span><span class="p">:</span>
-                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"no frames extracted; skipping"</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">report</span>
-
-            <span class="n">content_blocks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">:</span>
-                <span class="n">content_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="p">{</span>
-                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"image"</span><span class="p">,</span>
-                        <span class="s2">"source"</span><span class="p">:</span> <span class="p">{</span>
-                            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"base64"</span><span class="p">,</span>
-                            <span class="s2">"media_type"</span><span class="p">:</span> <span class="s2">"image/png"</span><span class="p">,</span>
-                            <span class="s2">"data"</span><span class="p">:</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">),</span>
-                        <span class="p">},</span>
-                    <span class="p">}</span>
-                <span class="p">)</span>
-            <span class="n">content_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="n">_PROMPT</span><span class="p">})</span>
-
-            <span class="n">client</span> <span class="o">=</span> <span class="n">anthropic</span><span class="o">.</span><span class="n">Anthropic</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-                    <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-                    <span class="n">max_tokens</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">,</span>
-                    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content_blocks</span><span class="p">}],</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                    <span class="s2">"info"</span><span class="p">,</span>
+                    <span class="s2">"warning"</span><span class="p">,</span>
                     <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">"anthropic API call failed: </span><span class="si">{</span><span class="n">e</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="s2">"the render produced no extractable frames, so nothing was "</span>
+                    <span class="s2">"reviewed. This is a failure to run, not a clean review."</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">return</span> <span class="n">report</span>
+            <span class="n">frame_bytes</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">]</span>
 
-        <span class="c1"># Parse the model's JSON reply. Be lenient — strip surrounding prose.</span>
-        <span class="n">body</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="c1"># NOTE: `CassetteMiss` derives from BaseException and is deliberately</span>
+        <span class="c1"># NOT caught here. A test asserting "this run did not spend" has to see</span>
+        <span class="c1"># it; swallowing it here would make that test pass having verified</span>
+        <span class="c1"># nothing.</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">body</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="n">blk</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">blk</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">blk</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"text"</span>
+            <span class="n">reply</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">judge</span><span class="p">(</span>
+                <span class="n">frame_bytes</span><span class="p">,</span>
+                <span class="n">prompt</span><span class="o">=</span><span class="n">_PROMPT</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">max_tokens</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">,</span>
+                <span class="n">api_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="n">body</span> <span class="o">=</span> <span class="s2">""</span>
-        <span class="n">issues</span> <span class="o">=</span> <span class="n">_parse_issues</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">issues</span><span class="p">:</span>
+        <span class="k">except</span> <span class="n">VisionJudgeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">FAILURE_SEVERITY</span><span class="p">,</span>
+                <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"the vision judge was configured and did not answer: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="s2">"Nothing was reviewed — this is not a clean pass."</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">report</span>
+
+        <span class="n">verdict</span> <span class="o">=</span> <span class="n">_parse_issues</span><span class="p">(</span><span class="n">reply</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verdict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">FAILURE_SEVERITY</span><span class="p">,</span>
+                <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span>
+                <span class="s2">"the vision judge answered, and the answer carried no verdict "</span>
+                <span class="sa">f</span><span class="s2">"(no parseable `issues` list). Reply began: </span><span class="si">{</span><span class="n">reply</span><span class="p">[:</span><span class="mi">200</span><span class="p">]</span><span class="si">!r}</span><span class="s2">. "</span>
+                <span class="s2">"Nothing was reviewed — this is not a clean pass."</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">report</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">verdict</span><span class="p">:</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"info"</span><span class="p">,</span> <span class="s2">"&lt;vision_lm&gt;"</span><span class="p">,</span> <span class="s2">"vision LM reported no issues"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">issues</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">verdict</span><span class="p">:</span>
             <span class="n">severity</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"severity"</span><span class="p">,</span> <span class="s2">"warning"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">severity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="s2">"warning"</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">):</span>
                 <span class="n">severity</span> <span class="o">=</span> <span class="s2">"warning"</span>
@@ -311,13 +562,32 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_parse_issues</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Pull the issues JSON out of a possibly-wrapped reply. Lenient parser."""</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_issues</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Pull the issues list out of a possibly-wrapped reply, or say there is none.</span>
+
+<span class="sd">    **`None` and `[]` are different answers.** `None` means the reply carried no</span>
+<span class="sd">    verdict — it was empty, or a refusal, or prose with no JSON in it. `[]`</span>
+<span class="sd">    means the model looked and found nothing.</span>
+
+<span class="sd">    Collapsing them is how a refusal came back byte-identical to a clean bill of</span>
+<span class="sd">    health: an empty reply, a refusal, and a literal `{"issues": []}` all</span>
+<span class="sd">    produced the same `"vision LM reported no issues"` Finding at `info`</span>
+<span class="sd">    severity, and `passed` stayed True through all three.</span>
+
+<span class="sd">    &gt;&gt;&gt; _parse_issues("") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; _parse_issues("I can't help with that.") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; _parse_issues('{"issues": []}')</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; _parse_issues('{"verdict": "fine"}') is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">body</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="kc">None</span>
     <span class="c1"># Strip ```json fences if present.</span>
     <span class="n">fenced</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"```(?:json)?\s*({.*?})\s*```"</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
     <span class="n">raw</span> <span class="o">=</span> <span class="n">fenced</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">fenced</span> <span class="k">else</span> <span class="n">body</span>
@@ -325,13 +595,13 @@
     <span class="n">start</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span>
     <span class="n">end</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="kc">None</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
     <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="kc">None</span>
     <span class="n">issues</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"issues"</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">issues</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">issues</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">issues</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">issues</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
 </pre></div>
 
            </div>

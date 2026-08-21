@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify &mdash; an 0.1.28 documentation</title>
+  <title>an.verify &mdash; an 0.1.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=34399df3"></script>
+      <script src="../../_static/documentation_options.js?v=904119ea"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -81,6 +81,19 @@
 <li class="toctree-l1"><a class="reference internal" href="audio/tts.html">an.audio.tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/run.html">an.bench.run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/dicebear.html">an.characters.dicebear</a></li>
@@ -132,7 +145,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#an.verify.Verifier.verify"><code class="docutils literal notranslate"><span class="pre">Verifier.verify()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#an.verify.VisionLMVerifier"><code class="docutils literal notranslate"><span class="pre">VisionLMVerifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.verify.VisionLMVerifier"><code class="docutils literal notranslate"><span class="pre">VisionLMVerifier</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.verify.VisionLMVerifier.judge"><code class="docutils literal notranslate"><span class="pre">VisionLMVerifier.judge</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="verify/_base.html">an.verify._base</a></li>
@@ -217,8 +233,17 @@ for pre-render lint passes.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="an.verify.VisionLMVerifier">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.verify.</span></span><span class="sig-name descname"><span class="pre">VisionLMVerifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'claude-haiku-4-5-20251001'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">800</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/verify/vision.html#VisionLMVerifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.verify.VisionLMVerifier" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.verify.</span></span><span class="sig-name descname"><span class="pre">VisionLMVerifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'claude-haiku-4-5-20251001'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">800</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">judge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/verify/vision.html#VisionLMVerifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.verify.VisionLMVerifier" title="Link to this definition"></a></dt>
 <dd><p>Claude vision Verifier (skip-if-missing-deps).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.verify.VisionLMVerifier.judge">
+<span class="sig-name descname"><span class="pre">judge</span></span><a class="headerlink" href="#an.verify.VisionLMVerifier.judge" title="Link to this definition"></a></dt>
+<dd><p>Injected, per “no globals, no service locators” — and because
+injection is what makes record-vs-replay drift impossible: the
+recorded and replayed paths are the same call through the same
+object, differing only in what the store returns.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>

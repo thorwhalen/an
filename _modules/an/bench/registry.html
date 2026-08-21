@@ -1,0 +1,894 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.bench.registry &mdash; an 0.1.29 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=904119ea"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.bench.registry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.bench.registry</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The metric declaration table — what each number is, and which way it should move.</span>
+
+<span class="sd">This is **data, not prose**, because an#41's criterion is a query over it:</span>
+<span class="sd">"&gt;=3 metrics from &gt;=3 distinct causal families, evaluated per mutation, with a</span>
+<span class="sd">per-metric per-mutation sign declared in advance". A second, hand-maintained</span>
+<span class="sd">table of families is how that criterion silently stops being true.</span>
+
+<span class="sd">Three things the research requires this table to carry, all three of which</span>
+<span class="sd">invalidate every prior ledger row if retrofitted:</span>
+
+<span class="sd">1. **A per-metric per-mutation direction**, two-sided where the optimum is</span>
+<span class="sd">   interior. ``edge_transition_width`` has an interior optimum — under 1 is a</span>
+<span class="sd">   staircase, 3+ is soft — and the sharpness family moves in *opposite*</span>
+<span class="sd">   directions for the two mutations, so a single per-metric sign mis-reports</span>
+<span class="sd">   one of them.</span>
+<span class="sd">2. **``null`` (gated) distinguished from "no change".** "No change by</span>
+<span class="sd">   construction" is a tautology and must never count as a satisfied</span>
+<span class="sd">   prediction, or any pre-encode statistic pads the count for free. Four</span>
+<span class="sd">   states, not two: ``gated`` (the reference moved, or the source hash</span>
+<span class="sd">   differs), ``unavailable`` (the check could not run — a crashed check is not</span>
+<span class="sd">   evidence anything is fine), ``no_change`` (tautology), ``not_applicable``</span>
+<span class="sd">   (wrong side of the encoder).</span>
+<span class="sd">3. **The family letters**, so the redundancy rule is checkable. Family C</span>
+<span class="sd">   counts as **one** until the correlation between ``coded_luma_edge_error``</span>
+<span class="sd">   and ``chroma_edge_dCr`` is measured across the encoder matrix — they were</span>
+<span class="sd">   r=0.990 in their broken forms and the corrections are *expected* to</span>
+<span class="sd">   decorrelate them, which is not the same as measured.</span>
+
+<span class="sd">The invariants are enforced in ``__post_init__``, not by convention.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="c1">#: The two disjoint levers an#41 uses. Both are mandatory: an encoder lever</span>
+<span class="c1">#: cannot touch a golden-frame metric because the corpus is UPSTREAM of the</span>
+<span class="c1">#: encoder, so requiring "&gt;=3 metrics" from a CRF change alone would fail</span>
+<span class="c1">#: because of where the corpus sits, not because the instrument is blind — and</span>
+<span class="c1">#: that failure would be misdiagnosed as the harness being wrong.</span>
+<span class="n">MUTATIONS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"high_crf"</span><span class="p">,</span> <span class="s2">"disabled_aa"</span><span class="p">)</span>
+
+<span class="n">Side</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"render"</span><span class="p">,</span> <span class="s2">"encode"</span><span class="p">]</span>
+<span class="n">Family</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"A"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">,</span> <span class="s2">"E"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">,</span> <span class="s2">"G"</span><span class="p">]</span>
+<span class="n">Expect</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"increase"</span><span class="p">,</span> <span class="s2">"decrease"</span><span class="p">,</span> <span class="s2">"no_change"</span><span class="p">,</span> <span class="s2">"not_applicable"</span><span class="p">]</span>
+<span class="n">Reference</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"lossless"</span><span class="p">,</span> <span class="s2">"source_png"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">]</span>
+
+<span class="c1">#: What an encode-side metric is measured AGAINST. Two answers, and the choice</span>
+<span class="c1">#: is per metric rather than global:</span>
+<span class="c1">#:</span>
+<span class="c1">#: - ``lossless`` — the decode of a `-qp 0` encode of the same frames. That IS</span>
+<span class="c1">#:   the plane libx264 received, on any build, so the metric is pure quantiser</span>
+<span class="c1">#:   damage with no colour-conversion term. The default, and what every</span>
+<span class="c1">#:   counting encode-side metric uses.</span>
+<span class="c1">#: - ``source_png`` — an explicit RGB-&gt;YUV conversion of the pre-encode PNGs.</span>
+<span class="c1">#:   Required by exactly two things. The chroma metric's subject IS the 4:2:0</span>
+<span class="c1">#:   subsampling that happens during that conversion, so a lossless-referenced</span>
+<span class="c1">#:   version would read ~0 and measure nothing. And `encode_ringing_excess`</span>
+<span class="c1">#:   cancels a term that only exists when BOTH its legs share this reference —</span>
+<span class="c1">#:   against the lossless leg it degenerates to raw overshoot, which is the</span>
+<span class="c1">#:   refuted form.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The distinction became visible when CI measured the PNG conversion to be</span>
+<span class="c1">#: build-dependent (exact on ffmpeg 8.1, mean 0.63 / max 5 on the Linux</span>
+<span class="c1">#: runner's older build). It is recorded per metric so a reader can tell which</span>
+<span class="c1">#: numbers carry that term.</span>
+<span class="n">REFERENCE_NOTE</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"lossless"</span><span class="p">:</span> <span class="s2">"the decode of a -qp 0 encode — the plane libx264 received"</span><span class="p">,</span>
+    <span class="s2">"source_png"</span><span class="p">:</span> <span class="s2">"an explicit RGB-&gt;YUV conversion of the pre-encode PNGs"</span><span class="p">,</span>
+    <span class="s2">"none"</span><span class="p">:</span> <span class="s2">"a property of the encoded file, not a comparison"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: Which side of the encoder each causal family lives on. Render-side metrics</span>
+<span class="c1">#: are computed on the pre-encode PNG and are blind to the encoder BY</span>
+<span class="c1">#: CONSTRUCTION; encode-side metrics compare a decoded frame to its own source</span>
+<span class="c1">#: and are structurally blind to render regressions, because the reference</span>
+<span class="c1">#: moves with the mutation. They must never be mixed.</span>
+<span class="n">FAMILY_SIDE</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"A"</span><span class="p">:</span> <span class="s2">"render"</span><span class="p">,</span>  <span class="c1"># edge geometry</span>
+    <span class="s2">"B"</span><span class="p">:</span> <span class="s2">"render"</span><span class="p">,</span>  <span class="c1"># golden change (tripwire)</span>
+    <span class="s2">"C"</span><span class="p">:</span> <span class="s2">"encode"</span><span class="p">,</span>  <span class="c1"># coded-plane edge fidelity</span>
+    <span class="s2">"D"</span><span class="p">:</span> <span class="s2">"encode"</span><span class="p">,</span>  <span class="c1"># flat-field fidelity</span>
+    <span class="s2">"E"</span><span class="p">:</span> <span class="s2">"encode"</span><span class="p">,</span>  <span class="c1"># temporal held-pixel fidelity</span>
+    <span class="s2">"F"</span><span class="p">:</span> <span class="s2">"encode"</span><span class="p">,</span>  <span class="c1"># rate cost</span>
+    <span class="s2">"G"</span><span class="p">:</span> <span class="s2">"encode"</span><span class="p">,</span>  <span class="c1"># ringing</span>
+<span class="p">}</span>
+
+<span class="n">FAMILY_NAME</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"A"</span><span class="p">:</span> <span class="s2">"edge geometry (render-side)"</span><span class="p">,</span>
+    <span class="s2">"B"</span><span class="p">:</span> <span class="s2">"golden change (render-side tripwire)"</span><span class="p">,</span>
+    <span class="s2">"C"</span><span class="p">:</span> <span class="s2">"coded-plane edge fidelity (encode-side)"</span><span class="p">,</span>
+    <span class="s2">"D"</span><span class="p">:</span> <span class="s2">"flat-field fidelity (encode-side)"</span><span class="p">,</span>
+    <span class="s2">"E"</span><span class="p">:</span> <span class="s2">"temporal held-pixel fidelity (encode-side)"</span><span class="p">,</span>
+    <span class="s2">"F"</span><span class="p">:</span> <span class="s2">"rate cost (encode-side)"</span><span class="p">,</span>
+    <span class="s2">"G"</span><span class="p">:</span> <span class="s2">"ringing (encode-side)"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="RegistryError">
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.RegistryError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RegistryError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A metric declaration violates one of the table's invariants."""</span></div>
+
+
+
+<div class="viewcode-block" id="Prediction">
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.Prediction">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Prediction</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What one metric is expected to do under one mutation, declared in advance.</span>
+
+<span class="sd">    ``expect=None`` means **gated**: the number is uninterpretable rather than</span>
+<span class="sd">    good or bad, and ``gate`` says why. It is not "no change".</span>
+<span class="sd">    """</span>
+
+    <span class="n">expect</span><span class="p">:</span> <span class="n">Expect</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">counts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">gate</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">reference</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RegistryError</span><span class="p">(</span>
+                <span class="s2">"a gated prediction must name its gate; a bare null is "</span>
+                <span class="s2">"indistinguishable from 'nobody wrote a prediction down'"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"no_change"</span><span class="p">,</span> <span class="s2">"not_applicable"</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">counts</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RegistryError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"expect=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">expect</span><span class="si">!r}</span><span class="s2"> can never count as a satisfied "</span>
+                <span class="s2">"prediction — 'no change by construction' is a tautology, and "</span>
+                <span class="s2">"counting it lets any pre-encode statistic pad the witness "</span>
+                <span class="s2">"count for free"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">counts</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RegistryError</span><span class="p">(</span><span class="s2">"a gated prediction cannot count toward anything"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"expect"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span><span class="p">,</span> <span class="s2">"counts"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">counts</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"gated"</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"gate"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"reason"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"reference"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="Optimum">
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.Optimum">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Optimum</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Which way "better" points, and whether the optimum is interior."""</span>
+
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"one_sided"</span><span class="p">,</span> <span class="s2">"interior"</span><span class="p">,</span> <span class="s2">"guard"</span><span class="p">]</span>
+    <span class="n">expect</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"minimize"</span><span class="p">,</span> <span class="s2">"maximize"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"kind"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span> <span class="s2">"expect"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span><span class="p">,</span> <span class="s2">"note"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">note</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="MetricSpec">
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.MetricSpec">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricSpec</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One row of the panel."""</span>
+
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">family</span><span class="p">:</span> <span class="n">Family</span>
+    <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">optimum</span><span class="p">:</span> <span class="n">Optimum</span>
+    <span class="n">predictions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Prediction</span><span class="p">]</span>
+    <span class="n">sentence</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">role</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reference</span><span class="p">:</span> <span class="n">Reference</span> <span class="o">=</span> <span class="s2">"none"</span>
+    <span class="n">provisional</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">unreviewed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">tripwire</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">tuple</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">family</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">FAMILY_SIDE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RegistryError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">: unknown family </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">MUTATIONS</span> <span class="k">if</span> <span class="n">m</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RegistryError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">: no prediction declared for </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">. Every metric "</span>
+                <span class="s2">"declares every mutation — an absent prediction is not the same "</span>
+                <span class="s2">"as a null one, and only one of them is honest"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tripwire</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">counts</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="n">RegistryError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">: a tripwire counts ZERO toward any criterion. It "</span>
+                <span class="s2">"fires on improvements and regressions alike, so it is a change "</span>
+                <span class="s2">"detector, not evidence of quality"</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">side</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FAMILY_SIDE</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"side"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">side</span><span class="p">,</span>
+            <span class="s2">"family"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="p">,</span>
+            <span class="s2">"family_name"</span><span class="p">:</span> <span class="n">FAMILY_NAME</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="p">],</span>
+            <span class="s2">"unit"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+            <span class="s2">"sentence"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sentence</span><span class="p">,</span>
+            <span class="s2">"optimum"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimum</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s2">"under_mutation"</span><span class="p">:</span> <span class="p">{</span><span class="n">m</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">[</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">MUTATIONS</span><span class="p">},</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">role</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"role"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">role</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">side</span> <span class="o">==</span> <span class="s2">"encode"</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"reference"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"reference_note"</span><span class="p">]</span> <span class="o">=</span> <span class="n">REFERENCE_NOTE</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">reference</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">provisional</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"provisional"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unreviewed</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"unreviewed"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tripwire</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"counts"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"notes"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="p">)</span>
+        <span class="c1"># Encode-side rows are MACHINE-SCOPED: same ISA + same x264 build is</span>
+        <span class="c1"># byte-identical, a different ISA moves the decoded stream, and a</span>
+        <span class="c1"># different x264 build moves it by two orders of magnitude. A band wide</span>
+        <span class="c1"># enough to absorb that would swallow flat_field_deviation's entire</span>
+        <span class="c1"># crf18-&gt;23 signal, so `--compare` (an#40) must REFUSE, not widen.</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"comparison_scope"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"machine"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">side</span> <span class="o">==</span> <span class="s2">"encode"</span> <span class="k">else</span> <span class="s2">"any_machine"</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="n">_GATED_REFERENCE_MOVED</span> <span class="o">=</span> <span class="s2">"reference_moved"</span>
+<span class="n">_GATED_SOURCE_HASH</span> <span class="o">=</span> <span class="s2">"source_hash_differs"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spec</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricSpec</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">MetricSpec</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="c1">#: The panel. Order is display order; the ledger sorts keys anyway.</span>
+<span class="n">METRICS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricSpec</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">m</span><span class="o">.</span><span class="n">key</span><span class="p">:</span> <span class="n">m</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"edge_transition_width"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"A"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"px"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The average thickness, in pixels, of the fuzzy band between two "</span>
+                <span class="s2">"flat colour areas — under 1 is a jagged staircase, ~1 is clean "</span>
+                <span class="s2">"AA, 3+ means the picture has gone soft."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"interior"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"Two-sided: both lost AA and accidental softening (blur, "</span>
+                    <span class="s2">"non-integer canvas scale, LINEAR texel filtering) are "</span>
+                    <span class="s2">"failures. The absolute value is scene-dependent — a "</span>
+                    <span class="s2">"deliberately 3px black outline is legitimately non-flat — "</span>
+                    <span class="s2">"so compare deltas on a fixed scene, never absolutes across "</span>
+                    <span class="s2">"scenes."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"not_applicable"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"computed on the pre-encode PNG; the encoder cannot move it"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"family A's single witness"</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"3.07 -&gt; 1.65 on the synthetic flat-cutout fixture; ORDINAL evidence only"</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"off_palette_pixel_fraction"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"A"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"fraction"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The fraction of the frame whose pixels are not exactly one of "</span>
+                <span class="s2">"the colours the compiler declared for this shot."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span>
+                <span class="n">expect</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"Honest caveat: a blur, drop shadow, gradient or sub-pixel "</span>
+                    <span class="s2">"offset moves this UP, indistinguishably from better AA. It "</span>
+                    <span class="s2">"is a change detector on that axis. Its floor is "</span>
+                    <span class="s2">"scene-dependent and is NOT zero on the SVG-sprite path."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"not_applicable"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"pre-encode. NOT MEASURED — which is not the same as 'no change'"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"family A already supplies edge_transition_width as its witness"</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"frame_distinct_colours"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"A"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"count"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="s2">"How many different colours are in the frame at all."</span><span class="p">,</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="s2">"No predicted direction on AA changes. A guard, not a dial."</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"not_applicable"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"pre-encode"</span><span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"do not count it alongside off_palette_pixel_fraction; same family"</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"coded_luma_edge_error"</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="s2">"lossless"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"C"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"code values (8-bit Y)"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"How much the encoder's quantiser roughens the brightness step "</span>
+                <span class="s2">"at a line's edge, measured on the codec's own luma plane."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span> <span class="n">expect</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"family C's witness"</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"0.419 (qp0) -&gt; 1.875 (crf23) -&gt; 41.2 (crf51)"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"the source PNG moves with the mutation, so the delta is uninterpretable"</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Read the coded luma plane; NEVER recompute Y from decoded RGB. "</span>
+                <span class="s2">"The RGB round trip clips at saturated edges, and ~83</span><span class="si">% o</span><span class="s2">f the "</span>
+                <span class="s2">"broken form's baseline was chroma leakage."</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"chroma_edge_dY"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"C"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">"control"</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="s2">"source_png"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"code values (8-bit Y)"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The luma error on the SAME mask and the SAME reference as "</span>
+                <span class="s2">"`chroma_edge_dCr` — a control, not a quality metric."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"Read only as the ratio's denominator. NOT a second name for "</span>
+                    <span class="s2">"`coded_luma_edge_error`: that one references the lossless "</span>
+                    <span class="s2">"leg and this one references the PNG conversion, so they "</span>
+                    <span class="s2">"differ by exactly the conversion term. They were identical "</span>
+                    <span class="s2">"(1.484149) while both referenced the PNG conversion, which "</span>
+                    <span class="s2">"is why one of them was removed and then restored when the "</span>
+                    <span class="s2">"references diverged."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"control for the ratio below"</span><span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"chroma_edge_dCr"</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="s2">"source_png"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"C"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"code values (8-bit Cr)"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"How much the colour shifts on the pixels straddling a hard "</span>
+                <span class="s2">"outline once the video is encoded."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span> <span class="n">expect</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"family C counts as ONE family until the correlation with "</span>
+                        <span class="s2">"coded_luma_edge_error is measured across the encoder matrix"</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"measured -0.7</span><span class="si">% o</span><span class="s2">n a faithful AA-off simulation; the "</span>
+                        <span class="s2">"claimed +10.7% was refuted. Predict no render-side direction."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"chroma_edge_dCr_over_dY"</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="s2">"source_png"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"C"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">"diagnostic"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"ratio"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="s2">"dCr/dY on the edge mask: large means real chroma bleed, ~1 means generic blocking."</span><span class="p">,</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"3.3 at qp0 yuv420p is real 4:2:0 bleed; 0.96 at crf51 is "</span>
+                    <span class="s2">"generic damage wearing the metric's name. The denominator "</span>
+                    <span class="s2">"IS `coded_luma_edge_error` — the research's `chroma_edge_dY` "</span>
+                    <span class="s2">"control is mean |dY| over the edge mask, which is that "</span>
+                    <span class="s2">"metric's definition verbatim. Measured identical (1.484149 "</span>
+                    <span class="s2">"for both on the first real row), so it is recorded once "</span>
+                    <span class="s2">"rather than twice: one signal under two names is exactly "</span>
+                    <span class="s2">"how a witness count is padded dishonestly."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"decrease"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"the chroma claim collapses as damage becomes generic"</span><span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"flat_field_deviation"</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="s2">"lossless"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"D"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"fraction of flat px with |d|&gt;6"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Of the pixels the renderer painted inside a large flat colour "</span>
+                <span class="s2">"field, what fraction came back more than 6 code values off."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span> <span class="n">expect</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"family D's witness; monotone over a 133x span"</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"0.0003 / 0.0005 / 0.0035 / 0.0127 / 0.0399 (crf18-&gt;51)"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"no_change"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"measured flat across the AA matrix. This ORTHOGONALITY is "</span>
+                        <span class="s2">"the metric's whole value — it is not a free witness, and "</span>
+                        <span class="s2">"counting it would be counting a tautology."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Covers the ~90</span><span class="si">% o</span><span class="s2">f the frame no edge metric touches. Banding "</span>
+                <span class="s2">"regressions are invisible without it."</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"flat_field_p99_dev"</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="s2">"lossless"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"D"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">"companion"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"code values"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="s2">"The 99th percentile of the same deviation, in human units."</span><span class="p">,</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span> <span class="n">expect</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"companion to the rate above"</span><span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"no_change"</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"encode_flicker_on_held_pixels"</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="s2">"lossless"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"E"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"fraction of held px moving &gt;=2"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The fraction of pixels the animator held perfectly still that "</span>
+                <span class="s2">"moved by at least 2 code values in the delivered video."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span> <span class="n">expect</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"family E's witness"</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"0.0321 / 0.0394 / 0.0848 (crf18/23/51)"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_SOURCE_HASH</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"excluded from EVERY renderer mutation's witness count: "</span>
+                        <span class="s2">"without the source gate, half-res-then-nearest-upscale — "</span>
+                        <span class="s2">"the most visible possible flat-art regression — reports a "</span>
+                        <span class="s2">"7.1x IMPROVEMENT, because a flattened render gives x264 "</span>
+                        <span class="s2">"large uniform skip regions."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"encode_ringing_excess"</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="s2">"source_png"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"G"</span><span class="p">,</span>
+            <span class="n">provisional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"code values"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"How much more the encoder overshoots around outlines than a "</span>
+                <span class="s2">"mathematically lossless encode of the same frames does."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span> <span class="n">expect</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"provisional; kept out of the witness count until open question 4 is settled"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"no_change"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"both legs rise together by construction"</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Provisional pending a cheap comparison against plain edge-band "</span>
+                <span class="s2">"MAE over the identical mask. `edge_band_mae` is recorded beside "</span>
+                <span class="s2">"it so the first ledger row answers that question."</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"ring_band_mae"</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="s2">"source_png"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"G"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">"q4_comparator"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"code values"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Plain mean absolute luma error over the RING band — the simpler "</span>
+                <span class="s2">"rival to `encode_ringing_excess`, on the same mask and with no "</span>
+                <span class="s2">"second encode."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span>
+                <span class="n">expect</span><span class="o">=</span><span class="s2">"minimize"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"Research §1.8 calls this 'plain edge-band MAE over the "</span>
+                    <span class="s2">"identical mask'. Named for the mask it actually uses, "</span>
+                    <span class="s2">"because MAE over the EDGE mask is `coded_luma_edge_error`'s "</span>
+                    <span class="s2">"definition verbatim — measured identical on the first real "</span>
+                    <span class="s2">"row — and recording it twice would answer open question 4 "</span>
+                    <span class="s2">"with a tautology."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"the comparison arm"</span><span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"min_ssim_win8_vs_golden"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"B"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">"diagnostic"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"ssim"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The worst small window in the frame, scored against the "</span>
+                <span class="s2">"committed golden — magnitude AND location of a golden failure."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"one_sided"</span><span class="p">,</span>
+                <span class="n">expect</span><span class="o">=</span><span class="s2">"maximize"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"SIGN AMBIGUITY, recorded deliberately: a supersampling "</span>
+                    <span class="s2">"IMPROVEMENT moves this away from 1.0 exactly as an AA "</span>
+                    <span class="s2">"regression does, and in changed-pixel terms reports the "</span>
+                    <span class="s2">"improvement as the LARGER change. It is a change detector, "</span>
+                    <span class="s2">"and must be paired with the no-reference family to say "</span>
+                    <span class="s2">"whether a change was good."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"not_applicable"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"the golden corpus is UPSTREAM of the encoder; no encode change can reach it"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"family B's single witness. `golden_identity` is the "</span>
+                        <span class="s2">"tripwire beside it and counts ZERO — one family, at most "</span>
+                        <span class="s2">"one witness, and a boolean change detector is not it."</span>
+                    <span class="p">),</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"0.9999 -&gt; 0.279 at 1080p / 0.063 at native for a total eye-blink"</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The metrics survey concluded SSIM should be excluded because "</span>
+                <span class="s2">"whole-frame SSIM scores a total eye-blink at 0.9989. That was "</span>
+                <span class="s2">"REFUTED: only the global-moment reduction is blind. Killing "</span>
+                <span class="s2">"SSIM outright would have discarded the best numpy-only detector "</span>
+                <span class="s2">"available."</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"video_stream_bytes"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"F"</span><span class="p">,</span>
+            <span class="n">unreviewed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"bytes"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="s2">"How large the encoded video stream is, with the audio track excluded."</span><span class="p">,</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="s2">"Not a quality dial in either direction — a cross-check that the metrics read the file they think they do."</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span> <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"free fourth cross-check"</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="s2">"8x"</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"hard edges cost more to code. THE WEAKEST of this mutation's three witnesses, and the only unreviewed metric in the set."</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"+5.5%"</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span><span class="s2">"The one metric in the panel that went through NO adversarial pass."</span><span class="p">,),</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"file_bytes"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"F"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">"companion"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"bytes"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="s2">"The whole mp4 on disk, audio track included."</span><span class="p">,</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"Contaminated by the audio cache: the renderer always emits an "</span>
+                    <span class="s2">"AAC track, silent or not. Prefer video_stream_bytes."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"decrease"</span><span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"increase"</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+
+<span class="c1">#: Tripwires. A separate block from `METRICS` because they count ZERO toward</span>
+<span class="c1">#: any criterion — they fire on improvements and regressions alike.</span>
+<span class="n">TRIPWIRES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricSpec</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">m</span><span class="o">.</span><span class="n">key</span><span class="p">:</span> <span class="n">m</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"golden_identity"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"B"</span><span class="p">,</span>
+            <span class="n">tripwire</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"boolean"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="s2">"Today's frame is pixel-for-pixel the committed golden frame."</span><span class="p">,</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span> <span class="n">note</span><span class="o">=</span><span class="s2">"Full-frame, never edge-masked."</span><span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"not_applicable"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"the corpus is UPSTREAM of the encoder; no encode change can reach it"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"no_change"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"it FAILS, which is a change detector firing, not a quality measurement"</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Compare sha256 of DECODED pixels, never file bytes: Chromium "</span>
+                <span class="s2">"1187 -&gt; 1223 changes 144/144 PNG files and zero pixels."</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+
+
+<span class="c1">#: The two blocks must not share a key. Enforced at import rather than left to</span>
+<span class="c1">#: the ledger builder, because a key that both counts and counts zero is a</span>
+<span class="c1">#: criterion nobody can evaluate — and the ledger's own overlap check is</span>
+<span class="c1">#: unreachable while this holds, which is the right place for it to be.</span>
+<span class="n">_overlap</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">METRICS</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">TRIPWIRES</span><span class="p">))</span>
+<span class="k">if</span> <span class="n">_overlap</span><span class="p">:</span>  <span class="c1"># pragma: no cover - an import-time invariant</span>
+    <span class="k">raise</span> <span class="n">RegistryError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_overlap</span><span class="si">}</span><span class="s2"> is declared as both a metric and a tripwire. A tripwire "</span>
+        <span class="s2">"counts zero and a metric may count; a key that is both cannot be "</span>
+        <span class="s2">"evaluated against any criterion."</span>
+    <span class="p">)</span>
+<span class="k">del</span> <span class="n">_overlap</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.bench.ledger &mdash; an 0.1.29 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=904119ea"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="an.bench.masks" href="masks.html" />
+    <link rel="prev" title="an.bench.imageio" href="imageio.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.ledger</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.INLINE_SPEC_FIELDS"><code class="docutils literal notranslate"><span class="pre">INLINE_SPEC_FIELDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.LedgerSchemaError"><code class="docutils literal notranslate"><span class="pre">LedgerSchemaError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.SCHEMA_VERSION"><code class="docutils literal notranslate"><span class="pre">SCHEMA_VERSION</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.Value"><code class="docutils literal notranslate"><span class="pre">Value</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.build_ledger"><code class="docutils literal notranslate"><span class="pre">build_ledger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.build_scene_block"><code class="docutils literal notranslate"><span class="pre">build_scene_block()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.gated"><code class="docutils literal notranslate"><span class="pre">gated()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.measured"><code class="docutils literal notranslate"><span class="pre">measured()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.metric_declarations"><code class="docutils literal notranslate"><span class="pre">metric_declarations()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.unavailable"><code class="docutils literal notranslate"><span class="pre">unavailable()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.witnesses"><code class="docutils literal notranslate"><span class="pre">witnesses()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.ledger.write_ledger"><code class="docutils literal notranslate"><span class="pre">write_ledger()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">an.bench.ledger</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/an/bench/ledger.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-an.bench.ledger">
+<span id="an-bench-ledger"></span><h1>an.bench.ledger<a class="headerlink" href="#module-an.bench.ledger" title="Link to this heading"></a></h1>
+<p>The ledger: three blocks that must never be mixed, and the guards that keep them apart.</p>
+<p><code class="docutils literal notranslate"><span class="pre">metrics</span></code> — numbers, each labelled <strong>render-side</strong> or <strong>encode-side</strong>. The
+two families are blind to each other’s mutations by construction, and a
+comparison that mixes them is comparing two different questions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tripwires</span></code> — change detectors. They fire on improvements and regressions
+alike, so they count <strong>zero</strong> toward any criterion. A tripwire in the metrics
+block is a boolean wearing a measurement’s clothes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">provenance</span></code> — never gated, never counted. Everything needed to decide
+whether two rows may be compared <em>at all</em>: the scene contract hash, the
+resolved encode and decode commands, the mask parameters, the palette, and the
+environment tuple split into a render side (<strong>comparable on any machine</strong> — the
+pixels are ISA- and OS-invariant at a pinned Chromium build) and an encode side
+(<strong>machine-scoped</strong> — a different x264 build moves the decoded stream by two
+orders of magnitude, and a band wide enough to absorb that would swallow
+<code class="docutils literal notranslate"><span class="pre">flat_field_deviation</span></code>’s entire crf18-&gt;23 signal).</p>
+<p>Four value states, not two. <code class="docutils literal notranslate"><span class="pre">no</span> <span class="pre">change</span></code> and <code class="docutils literal notranslate"><span class="pre">null</span></code> are famously easy to
+conflate, and conflating them lets any pre-encode statistic pad the witness
+count for free:</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.ledger.INLINE_SPEC_FIELDS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">INLINE_SPEC_FIELDS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('side',</span> <span class="pre">'family',</span> <span class="pre">'comparison_scope',</span> <span class="pre">'reference',</span> <span class="pre">'counts')</span></span><a class="headerlink" href="#an.bench.ledger.INLINE_SPEC_FIELDS" title="Link to this definition"></a></dt>
+<dd><p>Fields a per-scene row carries inline. Everything else about a metric — the
+sentence, the notes, each prediction’s reason and reference — is identical
+for every scene in a row and for every row, so it lives once in the
+ledger-level <code class="docutils literal notranslate"><span class="pre">metric_declarations</span></code> block.</p>
+<p>The split is not only size (it took a two-scene row from 54 KB to a third of
+that, and an#38 quadruples the corpus). It is readability: a scene block you
+can read is one where the numbers are not buried in the prose explaining
+what the numbers are. What stays inline is exactly what
+<code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">bench</span> <span class="pre">--compare</span></code> (an#40) keys on, so a comparison never has to consult
+a second block to decide whether two rows may be compared at all.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.ledger.LedgerSchemaError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">LedgerSchemaError</span></span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#LedgerSchemaError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.LedgerSchemaError" title="Link to this definition"></a></dt>
+<dd><p>A ledger row violates an invariant that would make it misreadable.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.ledger.SCHEMA_VERSION">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">SCHEMA_VERSION</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#an.bench.ledger.SCHEMA_VERSION" title="Link to this definition"></a></dt>
+<dd><p>Bumped when a reader could misinterpret an older row. <cite>an bench –compare</cite>
+(an#40) must refuse a version it does not understand rather than guess.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.ledger.Value">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">Value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal['measured'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'gated'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'unavailable']</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'measured'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#Value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.Value" title="Link to this definition"></a></dt>
+<dd><p>One measured (or deliberately absent) number.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.ledger.build_ledger">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">build_ledger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#build_ledger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.build_ledger" title="Link to this definition"></a></dt>
+<dd><p>The whole row.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.ledger.build_scene_block">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">build_scene_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#an.bench.ledger.Value" title="an.bench.ledger.Value"><span class="pre">Value</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tripwires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#an.bench.ledger.Value" title="an.bench.ledger.Value"><span class="pre">Value</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#build_scene_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.build_scene_block" title="Link to this definition"></a></dt>
+<dd><p>Assemble one scene’s three blocks, refusing anything unreadable.</p>
+<p>Completeness is enforced in both directions. A metric the registry declares
+but the row omits is a silently narrower panel; a metric the row carries
+but the registry does not declare has no family, no side and no predicted
+direction, so nothing downstream can count it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.ledger.gated">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">gated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.bench.ledger.Value" title="an.bench.ledger.Value"><span class="pre">Value</span></a></span></span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#gated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.gated" title="Link to this definition"></a></dt>
+<dd><p>Shorthand: this number would be uninterpretable, and here is the gate.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.ledger.measured">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">measured</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.bench.ledger.Value" title="an.bench.ledger.Value"><span class="pre">Value</span></a></span></span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#measured"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.measured" title="Link to this definition"></a></dt>
+<dd><p>Shorthand: a real number.</p>
+<p><code class="docutils literal notranslate"><span class="pre">nan</span></code> is refused rather than serialized: <cite>json.dumps</cite> emits the
+non-standard literal <code class="docutils literal notranslate"><span class="pre">NaN</span></code>, which several strict readers reject, and a
+metric whose mask was empty is an <code class="docutils literal notranslate"><span class="pre">unavailable</span></code>, not a number.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.ledger.metric_declarations">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">metric_declarations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#metric_declarations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.metric_declarations" title="Link to this definition"></a></dt>
+<dd><p>The full declaration of every metric and tripwire, once per ledger row.</p>
+<p>Carried IN the row rather than referenced, because <code class="docutils literal notranslate"><span class="pre">--compare</span></code> reads rows
+written by older registries: a row from six months ago has to be
+interpretable without checking out the commit that wrote it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.ledger.unavailable">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">unavailable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.bench.ledger.Value" title="an.bench.ledger.Value"><span class="pre">Value</span></a></span></span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#unavailable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.unavailable" title="Link to this definition"></a></dt>
+<dd><p>Shorthand: this check could not run, and here is why.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.ledger.witnesses">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">witnesses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ledger_scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#witnesses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.witnesses" title="Link to this definition"></a></dt>
+<dd><p>Which metrics would count for <code class="docutils literal notranslate"><span class="pre">mutation</span></code>, grouped by family.</p>
+<p>Reads the row rather than the registry, so an#41’s criterion is evaluated
+against what was actually written down.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">witnesses</span><span class="p">({</span><span class="s2">"metrics"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"m"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"family"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"under_mutation"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"high_crf"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"counts"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}}}}},</span> <span class="s2">"high_crf"</span><span class="p">)</span>
+<span class="go">{'A': ['m']}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.ledger.write_ledger">
+<span class="sig-prename descclassname"><span class="pre">an.bench.ledger.</span></span><span class="sig-name descname"><span class="pre">write_ledger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ledger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../_modules/an/bench/ledger.html#write_ledger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.ledger.write_ledger" title="Link to this definition"></a></dt>
+<dd><p>Write a row. <code class="docutils literal notranslate"><span class="pre">sort_keys=True</span></code> so two rows diff line-for-line.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="imageio.html" class="btn btn-neutral float-left" title="an.bench.imageio" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="masks.html" class="btn btn-neutral float-right" title="an.bench.masks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

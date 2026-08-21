@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.media &mdash; an 0.1.28 documentation</title>
+  <title>an.verify.media &mdash; an 0.1.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=34399df3"></script>
+      <script src="../../../_static/documentation_options.js?v=904119ea"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -81,6 +81,19 @@
 <li class="toctree-l1"><a class="reference internal" href="../audio/tts.html">an.audio.tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/run.html">an.bench.run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/dicebear.html">an.characters.dicebear</a></li>
@@ -203,11 +216,22 @@ loading frames). No scikit-image, no opencv.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="an.verify.media.ssim">
 <span class="sig-prename descclassname"><span class="pre">an.verify.media.</span></span><span class="sig-name descname"><span class="pre">ssim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../_modules/an/verify/media.html#ssim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.verify.media.ssim" title="Link to this definition"></a></dt>
-<dd><p>Mean SSIM between two single-channel images (float arrays in [0, 1]).</p>
-<p>Numpy-only implementation of Wang et al.’s SSIM. Computes on luminance,
-no per-window sliding (uses global means/variances) — fast and robust
-enough for “are these two frames structurally similar” checks.</p>
-<p>Returns a float in roughly <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>; 1 means identical.</p>
+<dd><p>A global-moment structural-similarity score between two single-channel images.</p>
+<p><strong>Not Wang et al.’s SSIM</strong>, despite what this docstring said for a long
+time: that estimator is computed over sliding local windows, and this one
+uses one global mean, variance and covariance per image. The formula is the
+same; the reduction is not, and the difference is the whole behaviour.
+Global moments are blind to a small local change — a total eye-blink scores
+0.9989 here — because the flat fill that is most of a cutout frame drags
+the mean to 1.0.</p>
+<p>That blindness is <em>fine for what this function is used for</em>: catching a
+frozen render, where every pixel is identical or none is. It is not fine as
+a quality metric, which is why <code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.metrics.ssim_map()</span></code> exists
+beside it rather than replacing it — <cite>MediaQualityVerifier</cite>’s frozen-render
+threshold was tuned against this reduction, and that verifier is in the
+default orchestrate chain.</p>
+<p>Inputs are float arrays in [0, 1]. Returns a float in roughly <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>;
+1 means identical.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ssim</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>

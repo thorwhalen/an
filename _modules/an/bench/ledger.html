@@ -1,0 +1,496 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.bench.ledger &mdash; an 0.1.29 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=904119ea"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.bench.ledger</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.bench.ledger</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The ledger: three blocks that must never be mixed, and the guards that keep them apart.</span>
+
+<span class="sd">``metrics`` — numbers, each labelled **render-side** or **encode-side**. The</span>
+<span class="sd">two families are blind to each other's mutations by construction, and a</span>
+<span class="sd">comparison that mixes them is comparing two different questions.</span>
+
+<span class="sd">``tripwires`` — change detectors. They fire on improvements and regressions</span>
+<span class="sd">alike, so they count **zero** toward any criterion. A tripwire in the metrics</span>
+<span class="sd">block is a boolean wearing a measurement's clothes.</span>
+
+<span class="sd">``provenance`` — never gated, never counted. Everything needed to decide</span>
+<span class="sd">whether two rows may be compared *at all*: the scene contract hash, the</span>
+<span class="sd">resolved encode and decode commands, the mask parameters, the palette, and the</span>
+<span class="sd">environment tuple split into a render side (**comparable on any machine** — the</span>
+<span class="sd">pixels are ISA- and OS-invariant at a pinned Chromium build) and an encode side</span>
+<span class="sd">(**machine-scoped** — a different x264 build moves the decoded stream by two</span>
+<span class="sd">orders of magnitude, and a band wide enough to absorb that would swallow</span>
+<span class="sd">``flat_field_deviation``'s entire crf18-&gt;23 signal).</span>
+
+<span class="sd">Four value states, not two. ``no change`` and ``null`` are famously easy to</span>
+<span class="sd">conflate, and conflating them lets any pre-encode statistic pad the witness</span>
+<span class="sd">count for free:</span>
+
+<span class="sd">============= ===========================================================</span>
+<span class="sd">``measured``  a number</span>
+<span class="sd">``gated``     the comparison is impossible — the reference moved, or the</span>
+<span class="sd">              source hash differs. **Uninterpretable, not good or bad.**</span>
+<span class="sd">``unavailable`` the check could not run (ffmpeg absent, golden absent). A</span>
+<span class="sd">              check that crashed is not evidence anything is fine.</span>
+<span class="sd">``no change`` a *prediction*, never a value state, and one that can never</span>
+<span class="sd">              count — see :mod:`an.bench.registry`.</span>
+<span class="sd">============= ===========================================================</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">METRICS</span><span class="p">,</span> <span class="n">MUTATIONS</span><span class="p">,</span> <span class="n">TRIPWIRES</span>
+
+<span class="c1">#: Bumped when a reader could misinterpret an older row. `an bench --compare`</span>
+<span class="c1">#: (an#40) must refuse a version it does not understand rather than guess.</span>
+<span class="n">SCHEMA_VERSION</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="n">State</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"measured"</span><span class="p">,</span> <span class="s2">"gated"</span><span class="p">,</span> <span class="s2">"unavailable"</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="LedgerSchemaError">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.LedgerSchemaError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LedgerSchemaError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A ledger row violates an invariant that would make it misreadable."""</span></div>
+
+
+
+<div class="viewcode-block" id="Value">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.Value">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Value</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One measured (or deliberately absent) number."""</span>
+
+    <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="s2">"measured"</span>
+    <span class="n">gate</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s2">"measured"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span>
+                    <span class="s2">"state='measured' with a null value. If the number could not "</span>
+                    <span class="s2">"be produced, say which: 'gated' (the comparison is "</span>
+                    <span class="s2">"impossible) or 'unavailable' (the check could not run)."</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"state=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="si">!r}</span><span class="s2"> must carry a null value, not "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">!r}</span><span class="s2">. A substituted number — 0.0 especially — is "</span>
+                <span class="s2">"read downstream as a measurement, which is exactly the "</span>
+                <span class="s2">"unknown-is-not-zero failure this schema exists to prevent."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s2">"gated"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span>
+                <span class="s2">"a gated value must name its gate; a bare null is "</span>
+                <span class="s2">"indistinguishable from 'nobody looked'"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s2">"unavailable"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">detail</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span>
+                <span class="s2">"an unavailable value must say what could not run — 'unavailable' "</span>
+                <span class="s2">"with no reason reads as 'fine, nothing to report'"</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"gate"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">detail</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"detail"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detail</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extra</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="c1">#: Fields a per-scene row carries inline. Everything else about a metric — the</span>
+<span class="c1">#: sentence, the notes, each prediction's reason and reference — is identical</span>
+<span class="c1">#: for every scene in a row and for every row, so it lives once in the</span>
+<span class="c1">#: ledger-level ``metric_declarations`` block.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The split is not only size (it took a two-scene row from 54 KB to a third of</span>
+<span class="c1">#: that, and an#38 quadruples the corpus). It is readability: a scene block you</span>
+<span class="c1">#: can read is one where the numbers are not buried in the prose explaining</span>
+<span class="c1">#: what the numbers are. What stays inline is exactly what</span>
+<span class="c1">#: ``an bench --compare`` (an#40) keys on, so a comparison never has to consult</span>
+<span class="c1">#: a second block to decide whether two rows may be compared at all.</span>
+<span class="n">INLINE_SPEC_FIELDS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"side"</span><span class="p">,</span>
+    <span class="s2">"family"</span><span class="p">,</span>
+    <span class="s2">"comparison_scope"</span><span class="p">,</span>
+    <span class="s2">"reference"</span><span class="p">,</span>
+    <span class="s2">"counts"</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_inline</span><span class="p">(</span><span class="n">spec_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One scene's row for one metric: the value, plus what `--compare` keys on."""</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">spec_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">INLINE_SPEC_FIELDS</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">spec_dict</span><span class="p">}</span>
+    <span class="n">row</span><span class="p">[</span><span class="s2">"under_mutation"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">mutation</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">pred</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"expect"</span><span class="p">,</span> <span class="s2">"counts"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">,</span> <span class="s2">"gate"</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">pred</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">mutation</span><span class="p">,</span> <span class="n">pred</span> <span class="ow">in</span> <span class="n">spec_dict</span><span class="p">[</span><span class="s2">"under_mutation"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">row</span>
+
+
+<div class="viewcode-block" id="metric_declarations">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.metric_declarations">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">metric_declarations</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The full declaration of every metric and tripwire, once per ledger row.</span>
+
+<span class="sd">    Carried IN the row rather than referenced, because ``--compare`` reads rows</span>
+<span class="sd">    written by older registries: a row from six months ago has to be</span>
+<span class="sd">    interpretable without checking out the commit that wrote it.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"metrics"</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">METRICS</span><span class="o">.</span><span class="n">items</span><span class="p">())},</span>
+        <span class="s2">"tripwires"</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">TRIPWIRES</span><span class="o">.</span><span class="n">items</span><span class="p">())},</span>
+        <span class="s2">"note"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">"The full declaration of each metric, carried once. Per-scene rows "</span>
+            <span class="s2">"inline only the value and the fields `an bench --compare` keys on."</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="build_scene_block">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.build_scene_block">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_scene_block</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Value</span><span class="p">],</span>
+    <span class="n">tripwires</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Value</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Assemble one scene's three blocks, refusing anything unreadable.</span>
+
+<span class="sd">    Completeness is enforced in both directions. A metric the registry declares</span>
+<span class="sd">    but the row omits is a silently narrower panel; a metric the row carries</span>
+<span class="sd">    but the registry does not declare has no family, no side and no predicted</span>
+<span class="sd">    direction, so nothing downstream can count it.</span>
+<span class="sd">    """</span>
+    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">METRICS</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the metrics block carries undeclared keys </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">. A metric with "</span>
+            <span class="s2">"no registry entry has no family, no side and no per-mutation "</span>
+            <span class="s2">"direction, so an#41's criterion cannot see it."</span>
+        <span class="p">)</span>
+    <span class="n">absent</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">METRICS</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">metrics</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">absent</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the metrics block is missing </span><span class="si">{</span><span class="n">absent</span><span class="si">}</span><span class="s2">. Every declared metric gets a "</span>
+            <span class="s2">"row — as 'unavailable' if it could not run. An absent row and a "</span>
+            <span class="s2">"null row look the same to a reader and mean opposite things."</span>
+        <span class="p">)</span>
+    <span class="n">unknown_tw</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">tripwires</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">TRIPWIRES</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">unknown_tw</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"undeclared tripwires </span><span class="si">{</span><span class="n">unknown_tw</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">overlap</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">tripwires</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">overlap</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">overlap</span><span class="si">}</span><span class="s2"> appears in both blocks. A tripwire counts zero and a "</span>
+            <span class="s2">"metric may count; a key that is both is a criterion nobody can evaluate."</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"scene_contract_sha256"</span><span class="p">,</span> <span class="s2">"resolution"</span><span class="p">,</span> <span class="s2">"fps"</span><span class="p">,</span> <span class="s2">"n_frames"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">provenance</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"the scene provenance is missing </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">, which decides whether "</span>
+                <span class="s2">"two rows may be compared at all"</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"provenance"</span><span class="p">:</span> <span class="n">provenance</span><span class="p">,</span>
+        <span class="s2">"metrics"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">_inline</span><span class="p">(</span><span class="n">METRICS</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="p">},</span>
+        <span class="s2">"tripwires"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">_inline</span><span class="p">(</span><span class="n">TRIPWIRES</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tripwires</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="build_ledger">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.build_ledger">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_ledger</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">scenes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The whole row."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"schema_version"</span><span class="p">:</span> <span class="n">SCHEMA_VERSION</span><span class="p">,</span>
+        <span class="s2">"tool"</span><span class="p">:</span> <span class="s2">"an.bench"</span><span class="p">,</span>
+        <span class="s2">"generated_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"+00:00"</span><span class="p">,</span> <span class="s2">"Z"</span><span class="p">),</span>
+        <span class="s2">"mutations"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">MUTATIONS</span><span class="p">),</span>
+        <span class="s2">"metric_declarations"</span><span class="p">:</span> <span class="n">metric_declarations</span><span class="p">(),</span>
+        <span class="s2">"provenance"</span><span class="p">:</span> <span class="n">provenance</span><span class="p">,</span>
+        <span class="s2">"scenes"</span><span class="p">:</span> <span class="n">scenes</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="write_ledger">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.write_ledger">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_ledger</span><span class="p">(</span><span class="n">ledger</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write a row. ``sort_keys=True`` so two rows diff line-for-line."""</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">ledger</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span></div>
+
+
+
+<div class="viewcode-block" id="witnesses">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.witnesses">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">witnesses</span><span class="p">(</span><span class="n">ledger_scene</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">mutation</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Which metrics would count for ``mutation``, grouped by family.</span>
+
+<span class="sd">    Reads the row rather than the registry, so an#41's criterion is evaluated</span>
+<span class="sd">    against what was actually written down.</span>
+
+<span class="sd">    &gt;&gt;&gt; witnesses({"metrics": {"m": {"family": "A",</span>
+<span class="sd">    ...     "under_mutation": {"high_crf": {"counts": True}}}}}, "high_crf")</span>
+<span class="sd">    {'A': ['m']}</span>
+<span class="sd">    """</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ledger_scene</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metrics"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"under_mutation"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mutation</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">pred</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"counts"</span><span class="p">):</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"family"</span><span class="p">,</span> <span class="s2">"?"</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">items</span><span class="p">())}</span></div>
+
+
+
+<div class="viewcode-block" id="unavailable">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.unavailable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Value</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Shorthand: this check could not run, and here is why."""</span>
+    <span class="k">return</span> <span class="n">Value</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s2">"unavailable"</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">detail</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="gated">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.gated">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gated</span><span class="p">(</span><span class="n">gate</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Value</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Shorthand: this number would be uninterpretable, and here is the gate."""</span>
+    <span class="k">return</span> <span class="n">Value</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s2">"gated"</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">gate</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">detail</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="measured">
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.measured">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">measured</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Value</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Shorthand: a real number.</span>
+
+<span class="sd">    ``nan`` is refused rather than serialized: `json.dumps` emits the</span>
+<span class="sd">    non-standard literal ``NaN``, which several strict readers reject, and a</span>
+<span class="sd">    metric whose mask was empty is an ``unavailable``, not a number.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LedgerSchemaError</span><span class="p">(</span>
+            <span class="s2">"refusing to record NaN as a measured value — an empty mask means "</span>
+            <span class="s2">"the metric could not run, which is 'unavailable' with a reason"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">Value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
