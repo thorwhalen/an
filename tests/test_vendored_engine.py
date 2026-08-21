@@ -128,20 +128,8 @@ def test_force_include_is_a_complete_inventory_of_the_runtime_assets():
 # The one that matters: a real render, with the outside world switched off.
 # --------------------------------------------------------------------------
 
-def _chromium_available() -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        return False
-    try:
-        with sync_playwright() as p:
-            p.chromium.launch(args=["--no-sandbox"]).close()
-        return True
-    except Exception:
-        return False
-
-
-@pytest.mark.skipif(not _chromium_available(), reason="needs playwright chromium")
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_a_render_succeeds_with_the_outside_world_switched_off(
     hermetic_browser, tmp_path
 ):

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import importlib.util
 import os
-import shutil
 import tempfile
 from pathlib import Path
 
 import pytest
+
+from .conftest import requires_live_api
 
 from an import init
 from an.ir.schema import (
@@ -81,32 +82,32 @@ def test_no_api_key_returns_info_finding():
 
 
 # -----------------------------------------------------------------------------
-# Live API test — only runs with ANTHROPIC_API_KEY + anthropic SDK
+# Live API test — SPENDS MONEY.
+#
+# This test was gated on "ffmpeg + chromium + the anthropic SDK + a key in the
+# environment" and nothing else, which is exactly the pattern this repo's
+# conftest exists to refuse: a key being present is not consent to spend, and
+# that condition is satisfied by every developer machine and every agent session
+# that has sourced a shell profile. It never fired only because the module-level
+# `importorskip("playwright...")` above it meant the whole file was never
+# collected — so the violation was invisible rather than absent. Collecting the
+# file (an#22) is what surfaced it.
+#
+# `requires_live_api` adds the missing half: an explicit positive opt-in
+# (AN_LIVE_API_TESTS=1) and never in CI. `live_api` additionally opts the test
+# out of the autouse offline-network guard, which is what let it reach Anthropic
+# at all.
 # -----------------------------------------------------------------------------
 
 
-_FFMPEG = shutil.which("ffmpeg")
-playwright = pytest.importorskip("playwright.sync_api", reason="playwright not installed")
-
-
-def _chromium_installed() -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-
-        with sync_playwright() as p:
-            b = p.chromium.launch()
-            b.close()
-        return True
-    except Exception:
-        return False
-
-
+@pytest.mark.live_api
+@requires_live_api
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 @pytest.mark.skipif(
-    not _FFMPEG
-    or not _chromium_installed()
-    or importlib.util.find_spec("anthropic") is None
+    importlib.util.find_spec("anthropic") is None
     or not os.environ.get("ANTHROPIC_API_KEY"),
-    reason="needs ffmpeg + chromium + anthropic + ANTHROPIC_API_KEY",
+    reason="needs the anthropic SDK + ANTHROPIC_API_KEY",
 )
 def test_vision_lm_full_pipeline_returns_findings():
     """Render a tiny scene + call Claude vision; parse whatever it says."""

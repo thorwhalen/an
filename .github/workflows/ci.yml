@@ -96,13 +96,45 @@ jobs:
           python-version: ${{ needs.setup.outputs.metrics-python-version }}
           force-run: ${{ needs.setup.outputs.metrics-force-run }}
 
-  # Optional Windows testing (if enabled in config)
+  # Windows testing (enabled in config).
+  #
+  # DELIBERATE DEVIATION FROM THE WADS TEMPLATE (an#22): the generated template
+  # puts `continue-on-error: true` on this job.
+  #
+  # What that flag actually does — stated precisely, because the first draft of
+  # this comment got it wrong and a comment is the standing instruction for
+  # re-applying the deviation. It does NOT make GitHub misreport the job. On all
+  # five failing runs before this change, the JOB conclusion is `failure`, the
+  # `Run Tests` STEP conclusion is `failure`, and the check-run row rendered in
+  # the PR checks list reads `Windows Tests / failure`. What the flag changes is
+  # the ROLL-UP: the workflow RUN concludes `success`, so the aggregate tick is
+  # green and nothing blocks the merge.
+  #
+  # So the signal was never hidden — it was non-blocking, which is worse in
+  # practice, because a reviewer reads the aggregate. Two Windows-only defects
+  # reached `main` past a green tick that way:
+  #
+  #   * a path-separator bug (an#21) — `str(Path.relative_to(...))` yields
+  #     backslashes on Windows while the TOML keys it was compared against are
+  #     forward-slash paths, so a completeness guard compared two spellings of the
+  #     same set;
+  #   * an unpinned text encoding — `Path.read_text()` decodes with the LOCALE
+  #     codec, cp1252 on Windows, and every doc in this repo contains non-ASCII.
+  #     Three tests added in an#16 failed on Windows and merged anyway.
+  #
+  # Removing the flag therefore buys a red RUN and a blocking merge box. Windows
+  # was green on `main` when it was removed, so it costs attention and nothing
+  # else.
+  #
+  # If a future `wads populate` regenerates this file, this deviation is the thing
+  # to re-apply — along with the `needs:` edge on `publish` below. The upstream
+  # fix is a `[tool.wads.ci.testing] windows_blocking` knob, filed as
+  # i2mint/wads#66.
   windows-validation:
     name: Windows Tests
     if: "!contains(github.event.head_commit.message, '[skip ci]') && needs.setup.outputs.test-on-windows == 'true'"
     needs: setup
     runs-on: windows-latest
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v6
@@ -131,12 +163,27 @@ jobs:
           root-dir: ${{ needs.setup.outputs.project-name }}
 
   # Publishing job
+  #
+  # SECOND DELIBERATE DEVIATION (an#22): `windows-validation` is a `needs` of
+  # this job. Without it, making the Windows leg blocking reddens the tick but
+  # not the release — a Windows-only failure on `main` still uploads to PyPI,
+  # bumps the version and pushes the tag, and the run only goes red afterwards.
+  # On this repo a merge to `main` IS the release, so a Windows leg that cannot
+  # stop it is a review signal, not a gate.
+  #
+  # `!failure() && !cancelled()` rather than a bare `needs:` edge: in GitHub
+  # Actions a SKIPPED `needs` job skips its dependents, so the bare form would
+  # silently stop every release the day someone sets `test_on_windows = false`.
+  # These status functions also remove the implicit `success()`, which is why
+  # `validation` failing still skips this job.
   publish:
     name: Publish
     permissions:
       contents: write
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')"
-    needs: [setup, validation]
+    if: "!contains(github.event.head_commit.message, '[skip ci]')
+      && !failure() && !cancelled()
+      && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')"
+    needs: [setup, validation, windows-validation]
     runs-on: ubuntu-latest
 
     steps:

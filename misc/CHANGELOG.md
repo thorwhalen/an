@@ -3,6 +3,58 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **Browser tests were not being skipped in CI — they were not being collected
+  (#22).** Eleven modules opened with a module-level
+  `pytest.importorskip("playwright.sync_api")`, which aborts the module import
+  rather than skipping a test. Measured: 472 tests collected with Playwright
+  installed, 438 without. **13 of the 34 casualties needed no browser at all** —
+  every `an.verify.media` SSIM test (the primitives Wave 2's ledger is built
+  on), two `skip_render=True` orchestrator tests, six JSON-parser tests, and a
+  paid Anthropic call gated on nothing but "is a key set", a `live_api`
+  violation that was invisible rather than absent. A test that is not collected
+  appears in neither the pass count nor the skip count, so nothing reported the
+  hole. A *separate* `importorskip("nw")` in `test_genre.py` was hiding the
+  guard that `import an` does not drag in `nw` — found by the new guard, not by
+  the sweep. CI's own numbers: 423 passed on `main`, 460 on the branch, which
+  reconciles exactly as 28 new guard tests + 13 collateral + 1 nw + 2 new
+  conftest doctests, minus the guard-file growth after the review.
+- **The gate is a marker applied after collection**, so collection is invariant:
+  `browser` and `ffmpeg` in `tests/conftest.py`, one cached Chromium probe
+  instead of eleven browser launches at import time (collection 6.0s → 1.2s),
+  and a run-summary line — `browser tests: 24 collected, 0 ran, 24 did not: …` —
+  so a green run is never silent about having checked zero pixels. That count is
+  an **observation**: `total - skipped` is a collection-time prediction and it
+  printed "24 ran" for `-m`, `-k` and `--collect-only` runs in which nothing
+  ran, including a step of the workflow this change adds. **An explicit
+  `AN_BROWSER_TESTS=1` that cannot be honoured is an ERROR, not a skip** — but
+  scoped to a lane the invocation actually selected, because the `cutout` extra
+  ships `ffmpeg-python`, not the ffmpeg binary, so the unscoped form killed
+  every run on a machine that followed this repo's own install hint.
+  `tests/test_browser_gate.py` holds all of it: 28 guards, mutation-tested
+  20/20, including the four routes an adversarial review used to reintroduce the
+  bug past an earlier draft. **It does not make the bug impossible and no longer
+  claims to** — what holds the line is a guard that shadows every optional
+  import, strips the external binaries from `PATH`, and compares pytest's own
+  node-id sets. The rendering lane lives in
+  `.github/workflows/browser-tests.yml`, dispatched on demand.
+- **The Windows CI leg can fail the build again — and now blocks the release.**
+  Precisely: `continue-on-error: true` never made GitHub misreport the job. On
+  every failing run the job conclusion, the step conclusion and the check-run
+  row all read `failure`; what the flag changed was the **roll-up**, so the
+  workflow *run* concluded `success` and nothing blocked the merge. The signal
+  was non-blocking, not hidden — worse in practice, because a reviewer reads the
+  aggregate. That is how #21's path-separator bug and an unpinned `read_text()`
+  encoding reached `main` (5 of the 30 runs before this change record a failing
+  Windows job under a green run). `publish` also gained a `needs` edge on the
+  Windows job: without it, blocking Windows reddens the tick but a Windows-only
+  failure on `main` still uploads to PyPI. Windows was green on `main` when the
+  flag was removed. Both deviations from the wads template are commented in
+  place; upstream knob filed as i2mint/wads#66.
+- **Pillow is a declared `cutout` dependency.** `an.verify.media.ssim` and
+  `an/characters/silhouette.py` import it, and the only two tests in this repo
+  that assert on *pixels* were doing `importorskip("PIL.Image")` in their
+  bodies — the rendering-verification version of the same silent hole.
+
 - **Truthed up the docs (#16), and the audit found five false claims, not one.**
   Both `CLAUDE.md` and `architecture_as_built.md` said the runtime *ignores*
   `loop_mode` — it has honoured it since #5, and the real gap is the inverse: no

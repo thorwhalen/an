@@ -33,26 +33,13 @@ from an.verify.media import (
 )
 
 
-_FFMPEG = shutil.which("ffmpeg")
-playwright = pytest.importorskip("playwright.sync_api", reason="playwright not installed")
 
 
-def _chromium_installed() -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-
-        with sync_playwright() as p:
-            b = p.chromium.launch()
-            b.close()
-        return True
-    except Exception:
-        return False
-
-
-pytestmark = pytest.mark.skipif(
-    not _FFMPEG or not _chromium_installed(),
-    reason="needs ffmpeg + playwright chromium",
-)
+# Gated per test, not per module: this file mixes pure-Python checks with
+# ones that drive a real render.
+# The SSIM tests are pure numpy and must run everywhere: they are the
+# primitives Wave 2's ledger is built on, and a module-level gate meant
+# they had never once run in CI.
 
 
 # -----------------------------------------------------------------------------
@@ -109,6 +96,8 @@ def _render_dialogue_scene(
     return render_project(root, output_name="quality")
 
 
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_render_has_nonzero_audio_volume():
     with tempfile.TemporaryDirectory() as d:
         out = _render_dialogue_scene(Path(d) / "p")
@@ -119,6 +108,8 @@ def test_render_has_nonzero_audio_volume():
         assert vol["max_db"] > -100.0
 
 
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_silence_detect_runs_without_error():
     """detect_silence returns spans (possibly empty) and doesn't crash."""
     with tempfile.TemporaryDirectory() as d:
@@ -129,6 +120,8 @@ def test_silence_detect_runs_without_error():
             assert s.duration >= 0.1
 
 
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_frame_ssim_adjacent_high_far_lower():
     """Adjacent frames during dialogue should be more similar than distant ones."""
     with tempfile.TemporaryDirectory() as d:
@@ -145,6 +138,8 @@ def test_frame_ssim_adjacent_high_far_lower():
         assert adj_ssim >= far_ssim - 1e-3
 
 
+@pytest.mark.browser
+@pytest.mark.ffmpeg
 def test_silent_shot_has_long_silence_span():
     """A shot with no dialogue should be detected as ≈silent throughout."""
     with tempfile.TemporaryDirectory() as d:

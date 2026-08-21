@@ -21,26 +21,9 @@ from an.orchestrate import render_project
 from an.project import load
 
 
-_FFMPEG = shutil.which("ffmpeg")
-playwright = pytest.importorskip("playwright.sync_api", reason="playwright not installed")
 
 
-def _chromium_installed() -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-
-        with sync_playwright() as p:
-            b = p.chromium.launch()
-            b.close()
-        return True
-    except Exception:
-        return False
-
-
-pytestmark = pytest.mark.skipif(
-    not _FFMPEG or not _chromium_installed(),
-    reason="needs ffmpeg + playwright chromium",
-)
+pytestmark = [pytest.mark.browser, pytest.mark.ffmpeg]
 
 
 _NEAR_WHITE_THRESHOLD = 240  # rgb component above this counts as "near white"
@@ -49,7 +32,7 @@ _MIN_NON_WHITE_FRACTION = 0.05  # at least 5% of pixels must be non-white
 
 def _non_white_fraction(png_path: Path) -> float:
     """Return the fraction of pixels in the PNG that are not near-white."""
-    PIL = pytest.importorskip("PIL.Image")
+    from PIL import Image as PIL
     im = PIL.open(png_path).convert("RGB")
     pixels = list(im.getdata())
     near_white = sum(

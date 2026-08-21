@@ -5,24 +5,37 @@ Both properties are load-bearing for hosts that catalog the federation's genres:
 the declared genre must not claim an engine it does not have.
 """
 
+import importlib.util
 import subprocess
 import sys
 
 import pytest
 
-nw = pytest.importorskip("nw")
+#: Two of the three tests here need nw — `an/genre.py` builds an `nw.Genre`, so
+#: even importing `an.genre` requires it. Exactly ONE does not, and it is the one
+#: that matters most to a host *without* nw: the subprocess check that `import an`
+#: gains no hard nw dependency.
+#:
+#: So the gate goes on the tests, not on the module. A module-level
+#: `importorskip("nw")` — which is what this file used to have — would abort the
+#: import and take the boundary guard down with it, which is how it came never to
+#: have run in CI. See tests/test_browser_gate.py (an#22).
+needs_nw = pytest.mark.skipif(
+    importlib.util.find_spec("nw") is None, reason="nw not installed"
+)
 
 
 def test_importing_an_does_not_import_nw():
     """``an`` gains no hard nw dependency from the genre module.
 
-    Checked in a subprocess because the rest of this file imports nw, so an
+    Checked in a subprocess because another test in this file imports nw, so an
     in-process ``sys.modules`` check would pass for the wrong reason.
     """
     code = "import an, sys; assert 'nw' not in sys.modules"
     assert subprocess.run([sys.executable, "-c", code]).returncode == 0
 
 
+@needs_nw
 def test_genre_is_planned_and_claims_no_engine():
     from an.genre import CUTOUT_ANIMATION
 
@@ -33,7 +46,10 @@ def test_genre_is_planned_and_claims_no_engine():
     assert CUTOUT_ANIMATION.strategy_names == ()
 
 
+@needs_nw
 def test_genre_registers_under_its_slug():
+    import nw
+
     from an.genre import CUTOUT_ANIMATION, CUTOUT_ANIMATION_SLUG
 
     assert nw.get_genre(CUTOUT_ANIMATION_SLUG) is CUTOUT_ANIMATION
