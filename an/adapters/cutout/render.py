@@ -74,6 +74,68 @@ DETERMINISTIC_CHROMIUM_ARGS: tuple[str, ...] = (
     "--force-color-profile=srgb",  # pins the screenshot path's colour management
 )
 
+#: x264 encode knobs pinned so the delivered mp4 is a function of the frames
+#: rather than of the machine (an#34, research §2).
+#:
+#: `-threads 1` — `-threads 1/4/11` all give bit-identical decoded pixels, so
+#: this looks unnecessary on a laptop. It is not: `auto` raises
+#: `lookahead_threads` above 1 at roughly `-threads >= 12`, and a forced
+#: `lookahead-threads=4` changes 86.2% of the bytes (max delta 80). A big CI
+#: runner crosses that line and a 4-core dev box never will, which is precisely
+#: how an unpinned thread count ships without anyone seeing it.
+#:
+#: `-crf 23 -preset medium` — both are libx264's compiled-in defaults today, so
+#: passing them changes nothing now and pins us against a build whose defaults
+#: differ. Worth pinning because preset swings distinct colour counts **2.3x,
+#: non-monotonically** (ultrafast 3141, veryfast 7296, medium 6064, slower 5393)
+#: against a crf18->23 signal of 1.35x — an unpinned preset dominates the very
+#: signal a quality ledger tries to measure.
+#:
+#: BT.709 is the one knob here that CHANGES today's output, and it changes more
+#: than the research predicted — measured, not assumed (an#34):
+#:
+#: - `-colorspace bt709` does not merely *tag* the file. It sets the matrix of
+#:   the auto-inserted RGB->YUV conversion, so the **encoded luma and chroma
+#:   planes themselves change**. Confirmed by construction: forcing
+#:   `scale=out_color_matrix=bt601` reproduces the untagged output's decoded
+#:   stream byte-for-byte, i.e. `an` has been converting with BT.601 all along.
+#: - `-color_range tv` is a **no-op today** (limited range is already the
+#:   default for yuv420p here). Pinned anyway, so a build that defaults
+#:   differently cannot change the output silently.
+#: - The ffmpeg-level `-color_primaries` / `-color_trc` flags **do not reach the
+#:   bitstream**: with them alone, ffprobe reports `color_space=bt709` and
+#:   `color_primaries=unknown`, `color_transfer=unknown`. `-x264-params` is what
+#:   lands all three in the VUI, and it leaves the decoded stream identical. A
+#:   half-tagged file is worse than an untagged one — the player stops guessing
+#:   the matrix but still guesses the primaries.
+#:
+#: Why bother: untagged, the *player* picks its matrix by a height heuristic
+#: (BT.601 below ~576 lines). Every shipped `an` example is 320x240 to 640x360,
+#: so encode and playback agree by luck; at 1080p the same code would encode
+#: with BT.601 and be displayed as BT.709, a silent, resolution-dependent colour
+#: error. Pinning both sides to BT.709 makes them agree at every resolution.
+#: This is a **one-time deliberate re-baseline** of every mp4 — cheap now,
+#: because no ledger exists yet to invalidate.
+DETERMINISTIC_X264_ARGS: tuple[str, ...] = (
+    "-threads",
+    "1",
+    "-crf",
+    "23",
+    "-preset",
+    "medium",
+    "-colorspace",
+    "bt709",
+    "-color_primaries",
+    "bt709",
+    "-color_trc",
+    "bt709",
+    "-color_range",
+    "tv",
+    # The half that actually reaches the bitstream; see above.
+    "-x264-params",
+    "colorprim=bt709:transfer=bt709:colormatrix=bt709",
+)
+
 
 class CutoutRenderError(RuntimeError):
     """Raised when a cutout render fails. Carries actionable detail."""
@@ -405,6 +467,7 @@ def _ffmpeg_mux(frames_dir: Path, fps: int, output_mp4: Path) -> None:
         "libx264",
         "-pix_fmt",
         "yuv420p",
+        *DETERMINISTIC_X264_ARGS,
         "-movflags",
         "+faststart",
         str(output_mp4),

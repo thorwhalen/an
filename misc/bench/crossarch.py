@@ -47,6 +47,8 @@ MANIFEST_NAME: str = "manifest.json"
 FRAMES_DIRNAME: str = "frames"
 #: The name of the compiled scene the browser actually loaded, staged per shot.
 STAGED_SCENE_NAME: str = "scene.json"
+#: Decode the mp4 in its own pixel format; see `decode_video`.
+DECODE_PIX_FMT: str = "yuv420p"
 
 
 def _prepare_promote_demo(project_dir: Path) -> None:
@@ -293,6 +295,69 @@ def _staged_visual_kinds(work_dir: Path) -> set[str]:
     return kinds
 
 
+def _x264_sei(mp4: Path) -> str | None:
+    """The x264 build stamp embedded in the mp4, e.g. `core 165 r3222 <sha>`.
+
+    Informational provenance, never a criterion: it carries the encoder build
+    AND the thread count, nothing strips it (`-x264-params sei=0` is silently
+    ignored), and it is therefore exactly the fingerprint that will explain a
+    future decoded-pixel change nobody predicted.
+    """
+    import re
+
+    match = re.search(rb"core\s+(\d+)\s+r(\d+)\s+([0-9a-f]+)", mp4.read_bytes())
+    return match.group(0).decode("ascii", "replace") if match else None
+
+
+def decode_video(mp4: Path) -> bytes:
+    """Decode ``mp4`` to raw frames in its NATIVE pixel format.
+
+    Native, not `rgb24`: an RGB round-trip clips precisely on the
+    saturated-fill-against-black-outline pixels this pipeline is full of, so it
+    would compare a conversion artefact rather than the decode.
+    """
+    cmd = [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        str(mp4),
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        DECODE_PIX_FMT,
+        "-",
+    ]
+    result = subprocess.run(cmd, capture_output=True, check=False)
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"ffmpeg could not decode {mp4} (rc={result.returncode}):\n"
+            f"{result.stderr.decode('utf-8', 'replace')}"
+        )
+    return result.stdout
+
+
+def video_record(mp4: Path) -> dict[str, Any]:
+    """Digest a rendered mp4: decoded frames as the criterion, bytes as evidence.
+
+    The **file** digest can never be a cross-machine criterion — five thread
+    counts produce five distinct bitstreams and the SEI is unremovable — so it
+    is recorded as evidence and the decoded stream is what gets compared.
+    """
+    raw = mp4.read_bytes()
+    decoded = decode_video(mp4)
+    return {
+        "name": mp4.name,
+        "kept_as": None,  # filled by the caller: the copy beside the frames
+        "file_bytes": len(raw),
+        "file_sha256": _sha256_bytes(raw),
+        "decoded_pix_fmt": DECODE_PIX_FMT,
+        "decoded_bytes": len(decoded),
+        "decoded_sha256": _sha256_bytes(decoded),
+        "x264_sei": _x264_sei(mp4),
+    }
+
+
 def capture_scene(
     name: str,
     fixture: Fixture,
@@ -318,7 +383,7 @@ def capture_scene(
             fixture.prepare(work_copy)
         project = load(work_copy)
         scene = project.scene
-        render(project, **CAPTURE_RENDER_KWARGS)
+        output_mp4 = render(project, **CAPTURE_RENDER_KWARGS)
 
         render_work_dir = work_copy / ".an" / "render_work"
         visual_kinds = _staged_visual_kinds(render_work_dir)
@@ -343,6 +408,12 @@ def capture_scene(
                 dest = scene_out / f"{shot_id}__{png.name}"
                 shutil.copy2(png, dest)
 
+        video = video_record(Path(output_mp4))
+        # Kept, not just digested: "the decoded streams differ" without a
+        # magnitude is the band-with-no-provenance this work exists to avoid.
+        shutil.copy2(output_mp4, out_dir / name / f"{name}.mp4")
+        video["kept_as"] = f"{name}/{name}.mp4"
+
     if not frames:
         raise RuntimeError(
             f"fixture {name!r} produced no frames — "
@@ -355,6 +426,7 @@ def capture_scene(
         # Which render path this actually exercised — the fact whose absence
         # made the first run of this experiment measure the wrong thing.
         "visual_kinds": sorted(visual_kinds),
+        "video": video,
         "resolution": [scene.meta.resolution.width, scene.meta.resolution.height],
         "fps": scene.meta.fps,
         "shots": shots,
@@ -440,6 +512,38 @@ def _compare_frame_pixels(a_png: Path, b_png: Path) -> dict[str, Any]:
     }
 
 
+def _video_delta(
+    a_mp4: Path, b_mp4: Path, *, width: int, height: int
+) -> dict[str, Any]:
+    """How far apart two decoded yuv420p streams are, luma and chroma separately.
+
+    Split by plane on purpose: 4:2:0 chroma is a quarter of the samples and a
+    different failure mode, so a single pooled number would let a real chroma
+    shift hide behind unchanged luma.
+    """
+    import numpy as np
+
+    a = np.frombuffer(decode_video(a_mp4), dtype=np.uint8)
+    b = np.frombuffer(decode_video(b_mp4), dtype=np.uint8)
+    if a.size != b.size:
+        return {"size_mismatch": [int(a.size), int(b.size)]}
+    frame_size = width * height * 3 // 2
+    if a.size % frame_size:
+        return {"unexpected_stream_size": int(a.size), "frame_size": frame_size}
+    luma = width * height
+    a = a.reshape(-1, frame_size)
+    b = b.reshape(-1, frame_size)
+    out: dict[str, Any] = {"frames": int(a.shape[0])}
+    for plane, sl in (("luma", slice(0, luma)), ("chroma", slice(luma, frame_size))):
+        delta = np.abs(a[:, sl].astype(np.int16) - b[:, sl].astype(np.int16))
+        out[plane] = {
+            "differing_fraction": round(float((delta != 0).mean()), 6),
+            "mean_abs_delta": round(float(delta.mean()), 4),
+            "max_abs_delta": int(delta.max()),
+        }
+    return out
+
+
 def _frame_png(root: Path, scene: str, key: str) -> Path:
     shot_id, stem = key.split("/", 1)
     return root / scene / FRAMES_DIRNAME / f"{shot_id}__{stem}.png"
@@ -481,8 +585,32 @@ def compare(a_dir: str | Path, b_dir: str | Path) -> dict[str, Any]:
                     _frame_png(a_root, scene, key), _frame_png(b_root, scene, key)
                 )
                 pixel_diffs.append({"key": key, **detail})
+        va, vb = sa.get("video"), sb.get("video")
+        video = None
+        if va and vb:
+            video = {
+                # The criterion. The FILE digest below is evidence, never a
+                # criterion: the x264 SEI carries the encoder build and thread
+                # count, and nothing can strip it.
+                "decoded_identical": va["decoded_sha256"] == vb["decoded_sha256"],
+                "file_bytes_identical": va["file_sha256"] == vb["file_sha256"],
+                "file_bytes": [va["file_bytes"], vb["file_bytes"]],
+                "x264_sei": [va.get("x264_sei"), vb.get("x264_sei")],
+            }
+            if (
+                not video["decoded_identical"]
+                and va.get("kept_as")
+                and vb.get("kept_as")
+            ):
+                a_mp4, b_mp4 = a_root / va["kept_as"], b_root / vb["kept_as"]
+                if a_mp4.is_file() and b_mp4.is_file():
+                    width, height = sa["resolution"]
+                    video["delta"] = _video_delta(
+                        a_mp4, b_mp4, width=width, height=height
+                    )
         report["scenes"][scene] = {
             "frames": len(keys),
+            "video": video,
             "pixels_identical": not pixel_diffs,
             "frames_with_differing_pixels": len(pixel_diffs),
             "frames_with_differing_png_bytes": png_byte_diffs,
@@ -502,10 +630,18 @@ def compare(a_dir: str | Path, b_dir: str | Path) -> dict[str, Any]:
             ),
             "differing_frames": pixel_diffs,
         }
+    # The verdict is about FRAMES only. The mp4 is reported beside it and never
+    # gated: cross-machine byte equality is unachievable by construction (the
+    # unremovable x264 SEI), and decoded-stream equality across ffmpeg builds is
+    # a finding to record, not a requirement to enforce.
     report["verdict"] = (
         "IDENTICAL"
         if all(s.get("pixels_identical") for s in report["scenes"].values())
         else "DIFFERS"
+    )
+    report["video_decoded_identical"] = all(
+        (s.get("video") or {}).get("decoded_identical", True)
+        for s in report["scenes"].values()
     )
     return report
 
@@ -539,8 +675,32 @@ def format_report(report: dict[str, Any]) -> str:
             f"worst frame {s['max_differing_pixels']} px, max channel delta "
             f"{s['max_channel_delta']}{shape_note}"
         )
+        video = s.get("video")
+        if video:
+            lines.append(
+                f"{' ' * len(scene)}  mp4: decoded "
+                f"{'identical' if video['decoded_identical'] else 'DIFFERS'}, "
+                f"file bytes "
+                f"{'identical' if video['file_bytes_identical'] else 'differ'} "
+                f"({video['file_bytes'][0]} vs {video['file_bytes'][1]}); "
+                f"x264 {video['x264_sei'][0]} | {video['x264_sei'][1]}"
+            )
+            delta = video.get("delta")
+            if delta and "luma" in delta:
+                lu, ch = delta["luma"], delta["chroma"]
+                lines.append(
+                    f"{' ' * len(scene)}       luma {lu['differing_fraction']:.4%} of "
+                    f"samples, mean |d| {lu['mean_abs_delta']}, max {lu['max_abs_delta']}"
+                    f"  |  chroma {ch['differing_fraction']:.4%}, mean |d| "
+                    f"{ch['mean_abs_delta']}, max {ch['max_abs_delta']}"
+                )
     lines.append("")
-    lines.append(f"VERDICT: {report['verdict']}")
+    lines.append(f"VERDICT (frames): {report['verdict']}")
+    lines.append(
+        f"mp4 decoded streams: "
+        f"{'identical' if report.get('video_decoded_identical') else 'DIFFER'} "
+        f"(reported, never gated)"
+    )
     return "\n".join(lines)
 
 

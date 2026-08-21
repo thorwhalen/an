@@ -8,6 +8,10 @@ declared first task.
 system — and so are the PNG file bytes.** Both render paths, all four machines,
 132 frames per machine, zero differing pixels, zero differing bytes.
 
+**The encode is not** — see "The encode side" below, added after an#34 pinned
+the x264 flags and made the question answerable. Frames and mp4 have different
+answers, which is exactly why the ledger must know which family a metric is in.
+
 Where this was measured, stated per the standing rule from an#22: a **local
 capture on the author's Mac** plus a **label-triggered run** of
 `.github/workflows/crossarch-capture.yml` (run `32495142808`, PR #32). Nothing
@@ -84,22 +88,70 @@ varied without effect, the last trivially so since ffmpeg never touches a frame.
    assertion as **equality**; any future band there is a deliberate, argued
    regression.
 
+---
+
+## The encode side — measured after the pinning, and the answer is the opposite
+
+**Settled by an#34**, once `-threads 1 -crf 23 -preset medium` + BT.709 were
+pinned. It could not be answered before: comparing an unpinned encode across
+three ffmpeg builds would have measured the absence of the pins.
+
+The frames stayed identical on every pairing throughout. Only the mp4 moved.
+
+| pair | ISA | x264 build | decoded mp4 | luma differing / mean \|d\| / max |
+|---|---|---|---|---|
+| local vs `macos-latest` | same (arm64) | same (`165 r3222`) | **identical** | — |
+| `ubuntu-latest` vs `ubuntu-24.04-arm` | **different** | **same** (`164 r3108`) | differs | 0.36% / 0.007 / 15 · 2.66% / 0.034 / 19 |
+| local vs `ubuntu-24.04-arm` | same (arm64) | **different** (`165` vs `164`) | differs | 15.87% / 0.70 / 36 · 99.24% / 3.94 / 19 |
+| local vs `ubuntu-latest` | different | different | differs | 15.88% / 0.70 / 36 · 99.14% / 3.92 / 17 |
+
+(Two figures per cell: `single_character` · `promote_demo`. Chroma is reported
+separately by the tool and is the **more** affected plane on the ISA axis —
+4.7% and 38.3% of samples against luma's 0.36% and 2.66% — which is why the
+tool splits the planes rather than pooling them.)
+
+Read in order, the rows isolate each variable:
+
+1. **Same ISA, same x264 build → byte-identical decoded stream**, across macOS
+   15 vs 26 and ffmpeg 8.1 vs 8.1.2. (The *file* bytes still differ — same
+   length, different digest — because the container records the Lavf version.
+   This is the concrete demonstration that a file digest can never be the
+   criterion.)
+2. **ISA alone, at a fixed x264 build, is a real but small effect.** x264 ships
+   hand-written SIMD per architecture, so the same source produces different
+   rounding on SSE/AVX and NEON.
+3. **The x264 build change dominates by two orders of magnitude** — and row 3
+   isolates it at *fixed* ISA, so it is not confounded.
+
+### So: do not band the encode side. Scope it.
+
+A band wide enough to absorb an x264 build change would have to tolerate a mean
+luma delta near 4 and a max of 36. Several of the ledger's own encode-side
+signals are far smaller than that — `flat_field_deviation` moves 0.0003 → 0.0005
+across crf18 → crf23 — so such a band would swallow the signal it exists to
+protect. The honest design is therefore:
+
+- **Encode-side metrics are machine-scoped.** `an bench --compare` must
+  **refuse** to compare two rows whose x264 build or ISA differ, in the same way
+  §6 already requires it to refuse rows with a different `scene_contract_sha256`:
+  the number is uninterpretable, not good or bad.
+- **The provenance row must carry the x264 SEI verbatim** (`core NNN rNNNN
+  <sha>`, which also encodes the thread count) **and the ISA.** The research
+  proposed stamping the SEI as a nice-to-have; this measurement makes it
+  load-bearing — it is the field that decides whether two rows may be compared
+  at all.
+- **Render-side and encode-side metrics therefore have different comparison
+  rules**, and the ledger schema has to say which family a metric belongs to.
+  That distinction was already required for a different reason (§1: the two
+  families are blind to each other's mutations); this is a second, independent
+  reason it cannot be dropped.
+
 ## What this does NOT settle — and must not be read as settling
 
-- **The encode side is untouched.** Every metric computed from the decoded mp4
-  (`coded_luma_edge_error`, `chroma_edge_dCr`, `flat_field_deviation`,
-  `encode_flicker_on_held_pixels`, `encode_ringing_excess`,
-  `video_stream_bytes`) depends on the ffmpeg/x264 build, which **differed
-  across these runners** (6.1.1 vs 8.1 vs 8.1.2) and cannot be pinned the way
-  the browser can. This experiment deliberately did not compare them, because
-  the x264 flags are not pinned yet: comparing an unpinned encode across three
-  builds would have measured the absence of the pins, not the presence of a
-  band. **Sequenced deliberately:** land the `-threads 1 -crf 23 -preset medium`
-  + BT.709 pinning, then re-run this capture with mp4 decode included. Until
-  then, treat the encode-side band as **unmeasured**, not as zero.
-- **The mp4 itself is never cross-machine comparable** and no future run should
-  try. Its x264 SEI carries the encoder build and thread count, and nothing
-  strips it (`-x264-params sei=0` is silently ignored).
+- **The mp4 file bytes are never comparable at all**, and no future run should
+  try. The x264 SEI carries the encoder build and thread count and nothing
+  strips it (`-x264-params sei=0` is silently ignored) — and even at a fixed
+  build the container records the muxer version, as row 1 above shows.
 - **Other Chromium builds.** This is one build, 140.0.7339.16, pinned. Nothing
   here says 1223 would also be cross-arch identical — only that 1187 → 1223 was
   pixel-identical *on one machine*.
