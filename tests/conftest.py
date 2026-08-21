@@ -362,6 +362,13 @@ BROWSER_ENV_VAR = "AN_BROWSER_TESTS"
 _INSTALL_HINT = "pip install -e '.[cutout]' && playwright install chromium"
 
 
+#: Explicitly-off spellings. Anything that is neither truthy nor falsy is an
+#: ERROR rather than a default, because reading `AN_BROWSER_TESTS=yse` as "off"
+#: would silently skip the 24 tests the typo was trying to switch on — the same
+#: shape as the bug this whole section exists to end.
+_FALSY = frozenset({"0", "false", "no", "off"})
+
+
 def _env_flag(env, name):
     """Return True/False for an explicitly-set flag, or None when unset.
 
@@ -375,11 +382,59 @@ def _env_flag(env, name):
     False
     >>> _env_flag({"X": ""}, "X") is None
     True
+
+    An unrecognised value refuses rather than defaulting. Written as a caught
+    exception rather than a traceback because three different sets of doctest
+    option flags run this file, and a traceback example is the one form whose
+    result depends on which set is active.
+
+    >>> try:
+    ...     _env_flag({"X": "maybe"}, "X")
+    ... except pytest.UsageError as e:
+    ...     print(str(e).split(".")[0])
+    X='maybe' is neither truthy (1, on, true, yes) nor falsy (0, false, no, off)
     """
     raw = env.get(name)
     if raw is None or not raw.strip():
         return None
-    return raw.strip().lower() in _TRUTHY
+    value = raw.strip().lower()
+    if value in _TRUTHY:
+        return True
+    if value in _FALSY:
+        return False
+    raise pytest.UsageError(
+        f"{name}={raw!r} is neither truthy ({', '.join(sorted(_TRUTHY))}) nor "
+        f"falsy ({', '.join(sorted(_FALSY))}). Refusing to guess: reading an "
+        f"unrecognised value as 'off' would silently skip the tests it was "
+        f"meant to switch on."
+    )
+
+
+def _is_ci(env) -> bool:
+    """Whether this looks like a CI runner.
+
+    Deliberately NOT :func:`_env_flag`. CI systems set ``CI`` to many spellings
+    — ``true``, ``1``, ``github_actions``, a job id — so an *unrecognised* value
+    must mean CI rather than raise. But ``CI=false`` / ``CI=0`` is a real
+    convention (create-react-app and several base images set it), and honouring
+    it is what stops a developer's rendering tests vanishing without explanation.
+
+    Note the deliberate asymmetry with :func:`live_api_enabled`, four hundred
+    lines up, which treats **any** non-empty ``CI`` as CI. That one gates
+    SPENDING, where the conservative direction is the opposite: a machine that
+    might be CI must never spend, so an ambiguous value there means "do not".
+    Here the cost of a false positive is a silently narrower test run, so an
+    ambiguous value means "do".
+
+    >>> _is_ci({})
+    False
+    >>> _is_ci({"CI": "true"}), _is_ci({"CI": "github_actions"})
+    (True, True)
+    >>> _is_ci({"CI": "false"}), _is_ci({"CI": "0"}), _is_ci({"CI": ""})
+    (False, False, False)
+    """
+    raw = (env.get("CI") or "").strip().lower()
+    return bool(raw) and raw not in _FALSY
 
 
 @functools.lru_cache(maxsize=1)
@@ -457,7 +512,7 @@ def _gate_verdicts(env=None):
     """The (action, message) verdict for each gated requirement."""
     env = os.environ if env is None else env
     opt_in = _env_flag(env, BROWSER_ENV_VAR)
-    ci = bool(env.get("CI"))
+    ci = _is_ci(env)
     return {
         "browser": requirement_verdict(
             "headless browser",
@@ -476,25 +531,70 @@ def _gate_verdicts(env=None):
     }
 
 
+#: How many gated tests actually reached their call phase, per requirement.
+#: NOT derived as ``total - skipped``: that is a collection-time PREDICTION, and
+#: it was wrong in three ordinary invocations — ``-m "not browser"``, ``-k``, and
+#: ``--collect-only`` all print "24 ran" for a run in which nothing ran, because
+#: deselection happens after this hook and ``--collect-only`` executes nothing.
+#: The line whose whole job is to stop a green run over-reporting was itself
+#: over-reporting, in the workflow this very change adds.
+_RAN_COUNTS: dict = {}
+
+
+@pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config, items):
-    """Skip gated tests by marker — never by refusing to collect them."""
+    """Skip gated tests by marker — never by refusing to collect them.
+
+    ``trylast`` so ``items`` is what the invocation actually selected: pytest's
+    own ``-m`` / ``-k`` deselection runs in this same hook, and seeing the
+    unfiltered list is what made both the count and the error below wrong.
+    """
     verdicts = _gate_verdicts()
-    for name, (action, message) in verdicts.items():
-        if action == "error":
-            raise pytest.UsageError(message)
     counts = {name: {"total": 0, "skipped": 0} for name in verdicts}
     for item in items:
-        for name, (action, message) in verdicts.items():
-            if item.get_closest_marker(name) is None:
-                continue
+        gated = [n for n in verdicts if item.get_closest_marker(n) is not None]
+        if not gated:
+            continue
+        # A test needing both a browser and ffmpeg is skipped once, but counted
+        # against BOTH lanes — otherwise the ffmpeg line reports "22 ran" for 22
+        # tests the browser verdict skipped.
+        skipping = [n for n in gated if verdicts[n][0] == "skip"]
+        for name in gated:
             counts[name]["total"] += 1
-            if action == "skip":
+            if skipping:
                 counts[name]["skipped"] += 1
-                item.add_marker(pytest.mark.skip(reason=message))
+        if skipping:
+            item.add_marker(pytest.mark.skip(reason=verdicts[skipping[0]][1]))
     _GATE_REPORT.clear()
     _GATE_REPORT.update(
-        {name: dict(counts[name], reason=verdicts[name][1]) for name in verdicts}
+        {
+            name: dict(
+                counts[name],
+                reason=verdicts[name][1] if verdicts[name][0] == "skip" else "",
+            )
+            for name in verdicts
+        }
     )
+    _RAN_COUNTS.clear()
+    # An explicit opt-in that cannot be honoured is an error — but only for a
+    # requirement that gates something this invocation actually selected.
+    # Raising unconditionally killed every run on a machine following this
+    # repo's own install hint: the `cutout` extra ships `ffmpeg-python`, a
+    # wrapper, not the ffmpeg binary, so "Chromium yes, ffmpeg no" is the
+    # documented setup — and there `AN_BROWSER_TESTS=1 pytest tests/` aborted
+    # with rc=4 before reading a single marker.
+    for name, (action, message) in verdicts.items():
+        if action == "error" and counts[name]["total"]:
+            raise pytest.UsageError(message)
+
+
+def pytest_runtest_logreport(report):
+    """Count what executed, so the summary reports an observation."""
+    if report.when != "call":
+        return
+    for name in _GATE_REPORT:
+        if name in report.keywords:
+            _RAN_COUNTS[name] = _RAN_COUNTS.get(name, 0) + 1
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
@@ -504,11 +604,16 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     at, which is exactly how this repo came to believe its renders were tested.
     """
     for name, info in sorted(_GATE_REPORT.items()):
-        total, skipped = info["total"], info["skipped"]
+        total = info["total"]
         if not total:
             continue
-        ran = total - skipped
+        ran = _RAN_COUNTS.get(name, 0)
         line = f"{name} tests: {total} collected, {ran} ran"
-        if skipped:
-            line += f", {skipped} skipped: {info['reason']}"
+        if ran < total:
+            line += f", {total - ran} did not"
+            # Only the gate may claim credit. When the verdict was "run", the
+            # shortfall is a deselection or an unrelated skip, and saying "CI
+            # installs no browser" there would be a second kind of lie.
+            if info["reason"]:
+                line += f": {info['reason']}"
         terminalreporter.write_line(line)

@@ -113,11 +113,13 @@ pytestmark = [pytest.mark.browser, pytest.mark.ffmpeg]   # whole module needs it
 ```
 
 Measured cost of getting it wrong here: 472 tests collected with Playwright installed,
-438 without — and **fourteen of the thirty-four casualties needed no browser at all**,
+438 without — and **13 of the 34 casualties needed no browser at all**,
 because they merely lived below an `importorskip` aimed at something else. Among them:
-every SSIM test for `an.verify.media` (the primitives Wave 2's ledger is built on), the
-test that `import an` does not drag in `nw`, and a paid Anthropic call whose only gate
-was "is a key set" — a `live_api` violation that was invisible rather than absent.
+every SSIM test for `an.verify.media` (the primitives Wave 2's ledger is built on), and a
+paid Anthropic call whose only gate was "is a key set" — a `live_api` violation that was
+invisible rather than absent. A **separate** module-level `importorskip("nw")` in
+`tests/test_genre.py` was hiding the guard that `import an` does not drag in `nw` — same
+bug, different axis, found by the new guard rather than by the sweep.
 
 The available markers and what they mean:
 
@@ -129,11 +131,16 @@ The available markers and what they mean:
 | `live` | the network, but free | skipped in CI |
 
 Three properties of the browser gate worth knowing before you touch it
-(`tests/conftest.py`, and `tests/test_browser_gate.py` mutation-tests all seven guards):
+(`tests/conftest.py`; `tests/test_browser_gate.py` mutation-tests all 28 guards
+against 20 mutations):
 
-1. **Collection is invariant.** Which tests exist must not depend on what is installed.
-   A static AST scan rejects any module-level `importorskip` or browser `launch()`, and a
-   subprocess imports every test module with Playwright shadowed to prove it.
+1. **Collection is invariant** — which tests exist must not depend on what is installed.
+   The load-bearing guard is `test_collection_does_not_depend_on_the_environment`, which
+   shadows every optional import **and** strips the external binaries from `PATH`, then
+   compares pytest's own node-id sets. Its reference is outside itself, so it catches
+   routes nobody enumerated. The AST scanner beside it is a list of known spellings and is
+   the weaker half — an adversarial review got past an earlier, scanner-only version four
+   different ways. **Do not write that this bug is "structurally impossible".** It is not.
 2. **A gated run says so out loud** — `browser tests: 24 collected, 0 ran, 24 skipped: …`
    in the run summary. A green run must never be silent about having checked zero pixels.
    That line is deliberately **ASCII**: the Windows console renders an em dash as a
@@ -143,8 +150,12 @@ Three properties of the browser gate worth knowing before you touch it
    `AN_BROWSER_TESTS=1` with no browser aborts the run. A CI job whose `playwright install`
    quietly failed has to go red; green-with-24-skips is the exact failure #22 existed to end.
 
-To actually run them: `pytest -q` on a machine with the `cutout` extra (they are on by
-default there), or dispatch `.github/workflows/browser-tests.yml`.
+To actually run them: `pytest -q` on a machine with the `cutout` extra **and the ffmpeg
+binary** — the extra ships `ffmpeg-python`, a wrapper, not the binary, so
+`pip install -e '.[cutout]' && playwright install chromium` alone runs 2 of the 24
+(`test_preview_reload.py`, the only browser tests that need no ffmpeg). Add
+`brew install ffmpeg` / `apt-get install ffmpeg`. Or dispatch
+`.github/workflows/browser-tests.yml`, which installs both.
 
 **Every regression guard is mutation-tested.** Delete the fix, confirm the test goes red.
 An unproven guard is decoration, and this is not theoretical here — a guard that tested an

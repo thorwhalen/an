@@ -75,7 +75,8 @@ Honest list. Don't let it rot either — delete a line when you close it.
 - **DiceBear-sourced characters don't lip-sync.** When a descriptor's `metadata.art_provenance` is `"dicebear"` or `"external_avatar"`, the compiler suppresses both the overlay mouth visual and the speaker's viseme channel (the face is baked into the head SVG). Audio plays; the mouth doesn't move. DiceBear is a bootstrap path — hand-rig for production dialogue, see `examples/promote_demo/`.
 - **Multi-scene projects don't exist.** `"main"` is the only supported key in the scenes store.
 - **No browser test runs in the default CI, and that is now a decision rather than an accident** (#22, closed). Rendering tests need Playwright (in the `cutout` extra) and ffmpeg (not on the runner image); adding both to every push costs a ~200 MB download to run a lane that takes well under a minute. So the lane lives in `.github/workflows/browser-tests.yml` and is dispatched on demand. **Every "verified by rendering" claim in this repo is still verified on a developer machine or an on-demand run — never on a PR.** Say that, rather than "verified in CI". Promoting the lane (nightly, PR label, or a dev→prod gate) is a two-line change documented in that workflow's header.
-  - What the gate is *not* allowed to do: vanish. The previous arrangement put `pytest.importorskip("playwright...")` at module level in eleven files, which does not skip a browser test — it aborts the module import, so its tests are never collected. 472 tests collected with Playwright, 438 without, and fourteen of the casualties needed no browser at all (every `an.verify.media` SSIM test among them). Gating is now `@pytest.mark.browser` applied after collection, with a run-summary line reporting how many rendering tests did not run. `tests/test_browser_gate.py` holds the line; all seven of its guards are mutation-tested.
+  - What the gate is *not* allowed to do: vanish. The previous arrangement put `pytest.importorskip("playwright...")` at module level in eleven files, which does not skip a browser test — it aborts the module import, so its tests are never collected. 472 tests collected with Playwright, 438 without, and **13** of the 34 casualties needed no browser at all (every `an.verify.media` SSIM test among them). Gating is now `@pytest.mark.browser` applied after collection, with a run-summary line reporting how many rendering tests actually ran — an observation, not `total - skipped`, which is a collection-time prediction and was wrong for `-m`, `-k` and `--collect-only`.
+  - **The guard does not make that bug impossible, and must not claim to.** An adversarial review reintroduced it four ways past an earlier draft of the guard (an ffmpeg-keyed module skip, a `collect_ignore`, a class-body probe, markers swapped for hand-rolled skipifs). What holds the line is `tests/test_browser_gate.py::test_collection_does_not_depend_on_the_environment`, which shadows every optional import **and** strips the external binaries from `PATH`, then compares pytest's own node-id sets — a reference outside the guard, so it catches routes nobody enumerated. The AST scanner is a list of known spellings and is the weaker half. All 28 guards are mutation-tested, against 20 mutations including those four routes.
 - **There is a second, unrendered scene evaluator.** `an/adapters/cutout/{scene,timeline,pose,clip,channel,transform}.py` form a closed cluster that nothing on the render path imports — the path is `compile.py → serialize.py → render.py → runtime.js`. Worse, `runtime.js` cites `clip.py::_wrap_time` as "the spec … must stay bit-identical to it" about a function that never executes. Resolve this BEFORE building swap channels, or the same capability gets implemented into two or three models at once.
 
 ## What never to do
@@ -89,13 +90,19 @@ Honest list. Don't let it rot either — delete a line when you close it.
 
 ## CI: what a green tick now covers
 
-- **Linux, both Python legs, and Windows** — all blocking. The Windows leg's
-  `continue-on-error: true` was removed in #22; it had let two Windows-only
-  defects reach `main` inside a green tick (#21's path separators, and an
-  unpinned `read_text()` encoding). This is a deliberate deviation from the
-  generated wads template — if `wads populate` ever regenerates
-  `.github/workflows/ci.yml`, re-apply it; the comment there says so, and the
-  upstream knob is i2mint/wads#66.
+- **Linux, both Python legs, and Windows** — all blocking, and Windows now gates
+  the **release** too (`publish` has a `needs` edge on it). Both are deliberate
+  deviations from the generated wads template, removed in #22.
+- **What `continue-on-error: true` actually did**, stated precisely because the
+  first attempt at this line got it wrong: it did **not** make GitHub misreport
+  the job. On every failing run the job conclusion, the step conclusion and the
+  check-run row in the PR checks list all read `failure`. It changed the
+  **roll-up** — the workflow *run* concluded `success`, so the aggregate tick was
+  green and nothing blocked the merge. The signal was non-blocking, not hidden,
+  which is worse in practice because a reviewer reads the aggregate. That is how
+  #21's path-separator bug and an unpinned `read_text()` encoding reached `main`.
+- If `wads populate` ever regenerates `.github/workflows/ci.yml`, re-apply both
+  deviations; the comments there say so, and the upstream knob is i2mint/wads#66.
 - **Not covered: anything that renders a pixel.** See the browser-lane entry in
   *Genuine gaps* above.
 
