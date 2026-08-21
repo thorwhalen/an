@@ -900,37 +900,45 @@ def test_a_built_in_environment_preset_is_not_a_fallback(ref):
     assert [r.resolved for r in scene.asset_resolution] == ["preset"]
 
 
-def test_the_render_path_threads_strict_assets_to_the_compiler():
+def test_the_render_path_threads_strict_assets_to_the_compiler(monkeypatch):
     """A flag nothing reads is worse than no flag: it reads as protection.
 
-    Asserted at the seam rather than end-to-end so it needs neither ffmpeg nor
-    a browser — the wiring is the claim, and the compiler's own behaviour is
-    covered above.
+    Asserted at the seam rather than end-to-end, so it runs in the default lane
+    — no ffmpeg, no browser, and (via the stub below) not even Playwright
+    installed. `CutoutRenderer.render` imports `playwright.sync_api` before it
+    compiles anything, so a real import here would make the guard skip in CI,
+    which is the same as not having it.
     """
+    import sys
+    import types
+
     from an.adapters._base import RenderContext
     from an.adapters.cutout import render as render_mod
 
     seen: dict = {}
 
     class _Stop(Exception):
-        pass
+        """Aborts the render at the seam under test; nothing past it is asserted."""
 
     def _spy(*args, **kwargs):
         seen.update(kwargs)
         raise _Stop
 
-    original_compile = render_mod.compile_shot
-    original_ffmpeg = render_mod._ensure_ffmpeg_available
-    render_mod.compile_shot = _spy
-    render_mod._ensure_ffmpeg_available = lambda: None
-    try:
-        shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
-        ctx = RenderContext(mall={}, work_dir=Path("."), strict_assets=True)
-        with pytest.raises(_Stop):
-            render_mod.CutoutRenderer().render(shot, ctx)
-    finally:
-        render_mod.compile_shot = original_compile
-        render_mod._ensure_ffmpeg_available = original_ffmpeg
+    if "playwright.sync_api" not in sys.modules:
+        pkg = types.ModuleType("playwright")
+        api = types.ModuleType("playwright.sync_api")
+        api.sync_playwright = lambda: None
+        pkg.sync_api = api
+        monkeypatch.setitem(sys.modules, "playwright", pkg)
+        monkeypatch.setitem(sys.modules, "playwright.sync_api", api)
+
+    monkeypatch.setattr(render_mod, "compile_shot", _spy)
+    monkeypatch.setattr(render_mod, "_ensure_ffmpeg_available", lambda: None)
+
+    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    ctx = RenderContext(mall={}, work_dir=Path("."), strict_assets=True)
+    with pytest.raises(_Stop):
+        render_mod.CutoutRenderer().render(shot, ctx)
 
     assert seen.get("strict_assets") is True, (
         "RenderContext.strict_assets did not reach compile_shot; the flag would "
