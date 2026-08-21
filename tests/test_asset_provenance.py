@@ -94,7 +94,7 @@ _UPSTREAM_SNAPSHOT = Path(__file__).resolve().parents[1] / "an/data/dicebear_9x_
 def _upstream_styles() -> set[str]:
     import json
 
-    return set(json.loads(_UPSTREAM_SNAPSHOT.read_text())["styles"])
+    return set(json.loads(_UPSTREAM_SNAPSHOT.read_text(encoding="utf-8"))["styles"])
 
 
 def test_every_style_upstream_publishes_is_requestable_and_licensed():
@@ -138,7 +138,7 @@ def test_the_upstream_snapshot_is_still_current():
     import json
     import urllib.request
 
-    meta = json.loads(_UPSTREAM_SNAPSHOT.read_text())
+    meta = json.loads(_UPSTREAM_SNAPSHOT.read_text(encoding="utf-8"))
     with urllib.request.urlopen(meta["source"], timeout=30) as r:
         data = json.load(r)
     live = {
@@ -310,7 +310,7 @@ def test_creating_a_character_actually_records_its_provenance(tmp_path, stub_dic
     from an.characters.schema import CharacterDescriptor
 
     desc_path = new_character(tmp_path, name="maya", style="lorelei")
-    on_disk = CharacterDescriptor.model_validate_json(desc_path.read_text())
+    on_disk = CharacterDescriptor.model_validate_json(desc_path.read_text(encoding="utf-8"))
 
     assert on_disk.source is not None, (
         "a character built from third-party art carries no provenance record"
@@ -329,7 +329,7 @@ def test_an_acknowledged_cc_by_character_carries_the_attribution_it_owes(
     desc_path = new_character(
         tmp_path, name="bo", style="adventurer", acknowledge_attribution=True
     )
-    src = CharacterDescriptor.model_validate_json(desc_path.read_text()).source
+    src = CharacterDescriptor.model_validate_json(desc_path.read_text(encoding="utf-8")).source
     assert src.license == "cc-by-4.0"
     assert "Lisa Wischofsky" in src.attribution, (
         "acknowledging the duty must RECORD what is owed, not merely permit it"
@@ -342,7 +342,7 @@ def test_offline_art_records_nothing_because_nothing_is_owed(tmp_path):
     from an.characters.schema import CharacterDescriptor
 
     desc_path = new_character(tmp_path, name="amy", use_dicebear=False)
-    assert CharacterDescriptor.model_validate_json(desc_path.read_text()).source is None
+    assert CharacterDescriptor.model_validate_json(desc_path.read_text(encoding="utf-8")).source is None
 
 
 # --------------- the legacy projects, which were told they owe nothing

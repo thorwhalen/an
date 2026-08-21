@@ -65,7 +65,7 @@ def test_the_mit_notice_ships_with_the_bytes():
     lic = VENDOR_DIR / "pixi.LICENSE.txt"
     assert lic.is_file(), f"licence notice missing at {lic}"
     assert _sha256(lic) == PIXI_LICENSE_SHA256
-    text = lic.read_text()
+    text = lic.read_text(encoding="utf-8")
     assert "Copyright (c) 2013-2023 Mathew Groves, Chad Engler" in text
     assert "The above copyright notice and this permission notice" in text
 
@@ -101,7 +101,7 @@ def test_force_include_is_a_complete_inventory_of_the_runtime_assets():
     # Parsed by hand rather than with tomllib, which is 3.11+ while this package
     # supports 3.10 — and adding `tomli` for one test would put a dependency in
     # the wheel to check the wheel's own manifest.
-    text = (REPO_ROOT / "pyproject.toml").read_text()
+    text = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     block = re.search(
         r"^\[tool\.hatch\.build\.targets\.wheel\.force-include\]\n(.*?)(?=^\[|\Z)",
         text,

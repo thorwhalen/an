@@ -461,7 +461,7 @@ class TestPromoteSecond:
             "</g></svg>"
         )
         (chars / "raw").mkdir()
-        (chars / "raw" / "raw.svg").write_text(svg)
+        (chars / "raw" / "raw.svg").write_text(svg, encoding="utf-8")
         desc = promote(tmp_path, entity="raw", as_="raw-v1")
         assert desc.exists()
         # Sliced parts inherit the source's geometry

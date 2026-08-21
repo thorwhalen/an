@@ -291,7 +291,7 @@ _PREVIEW_TEMPLATE = textwrap.dedent(
 
 
 def _write_preview_html(target: Path, *, name: str) -> Path:
-    desc = json.loads((target / "character.json").read_text())
+    desc = json.loads((target / "character.json").read_text(encoding="utf-8"))
     display_name = desc.get("display_name") or name
     pivots = desc.get("metadata", {}).get("pivots_detected", [])
     pivots_list = (

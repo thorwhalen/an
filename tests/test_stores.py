@@ -34,7 +34,7 @@ def test_characters_store_writes_meta_and_sidecar():
         store["maya"] = {"name": "Maya", "voice_ref": "maya-warm"}
         assert store["maya"]["name"] == "Maya"
         sidecar = store.sidecar_path("maya", "torso.svg")
-        sidecar.write_text("<svg/>")
+        sidecar.write_text("<svg/>", encoding="utf-8")
         # Re-reading the meta shouldn't be disturbed by the sidecar.
         assert store["maya"]["voice_ref"] == "maya-warm"
 

@@ -252,7 +252,9 @@ def validate_character(
         report.notes.append("no character.json")
     else:
         try:
-            CharacterDescriptor.model_validate_json(desc_path.read_text())
+            CharacterDescriptor.model_validate_json(
+                desc_path.read_text(encoding="utf-8")
+            )
         except Exception as e:
             report.passed = False
             report.notes.append(f"character.json invalid: {e}")
