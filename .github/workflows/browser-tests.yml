@@ -21,7 +21,12 @@
 #
 # That is the whole interface, and it is open to agents as well as humans:
 #
-#     gh pr edit <N> --add-label run-browser-tests
+#     gh api -X POST repos/<owner>/<repo>/issues/<N>/labels \
+#         -f 'labels[]=run-browser-tests'
+#
+# NOT `gh pr edit --add-label`: on this owner's repos that goes through GraphQL and
+# dies on the projects-classic deprecation, printing an error but EXITING 0 and
+# applying no label. Verified on PR #30. Read the labels back afterwards.
 #
 # Adding the label re-triggers this workflow on the PR head; pushes to a labelled
 # PR re-run it. An unlabelled PR does not start the job at all, so the default

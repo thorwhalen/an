@@ -44,8 +44,13 @@ An unlabelled PR never starts the job, so the default cost is zero.
 **Adding the label is open to agents as well as humans:**
 
 ```bash
-gh pr edit <N> --add-label run-browser-tests
+gh api -X POST repos/thorwhalen/an/issues/<N>/labels -f 'labels[]=run-browser-tests'
 ```
+
+**Not `gh pr edit --add-label`** — on this owner's repos that call goes through the
+GraphQL path and dies on the projects-classic deprecation, **printing an error but
+exiting 0 and applying no label**. Verified on PR #30. Always read the labels back:
+`gh pr view <N> --json labels -q '.labels[].name'`.
 
 **Add it when a PR can change a pixel** — the runtime (`an/data/cutout_runtime/`),
 the cutout compiler or serializer, the render path, the vendored engine, the ffmpeg

@@ -166,8 +166,13 @@ binary** — the extra ships `ffmpeg-python`, a wrapper, not the binary, so
 **On a PR, ask for the lane by labelling it — this is yours to do:**
 
 ```bash
-gh pr edit <N> --add-label run-browser-tests
+gh api -X POST repos/thorwhalen/an/issues/<N>/labels -f 'labels[]=run-browser-tests'
 ```
+
+**Not `gh pr edit --add-label`** — on this owner's repos that call goes through the
+GraphQL path and dies on the projects-classic deprecation, **printing an error but
+exiting 0 and applying no label**. Verified on PR #30. Always read the labels back:
+`gh pr view <N> --json labels -q '.labels[].name'`.
 
 Add it whenever your PR can change a pixel: the runtime under
 `an/data/cutout_runtime/`, the cutout compiler or serializer, the render path, the
