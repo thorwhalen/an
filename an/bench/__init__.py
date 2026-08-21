@@ -32,6 +32,26 @@ from an.bench.ledger import (  # noqa: F401
     build_scene_block,
     witnesses,
 )
+from an.bench.golden import (  # noqa: F401
+    GATE_ABSENT,
+    GATE_BUILD_UNKNOWN,
+    GATE_JUST_BLESSED,
+    GATE_UNDECLARED,
+    REQUIRED_GOLDEN_FRAMES,
+    RETIRED_GATES,
+    GoldenError,
+    bless_scene,
+    compare_scene,
+    frame_key,
+    pixels_sha256,
+)
+from an.bench.png import (  # noqa: F401
+    PngFormatError,
+    decode_png,
+    encode_png,
+    read_png,
+    write_png,
+)
 from an.bench.registry import (  # noqa: F401
     FAMILY_NAME,
     FAMILY_SIDE,
@@ -46,6 +66,22 @@ from an.bench.run import BenchError, format_panel, run_bench  # noqa: F401
 
 __all__ = [
     "METRICS",
+    "GATE_ABSENT",
+    "GATE_BUILD_UNKNOWN",
+    "GATE_JUST_BLESSED",
+    "GATE_UNDECLARED",
+    "REQUIRED_GOLDEN_FRAMES",
+    "RETIRED_GATES",
+    "GoldenError",
+    "PngFormatError",
+    "bless_scene",
+    "compare_scene",
+    "decode_png",
+    "encode_png",
+    "frame_key",
+    "pixels_sha256",
+    "read_png",
+    "write_png",
     "TRIPWIRES",
     "MUTATIONS",
     "FAMILY_SIDE",

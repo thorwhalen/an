@@ -179,6 +179,13 @@ def build_scene_block(
     unknown_tw = sorted(set(tripwires) - set(TRIPWIRES))
     if unknown_tw:
         raise LedgerSchemaError(f"undeclared tripwires {unknown_tw}")
+    absent_tw = sorted(set(TRIPWIRES) - set(tripwires))
+    if absent_tw:
+        raise LedgerSchemaError(
+            f"the tripwires block is missing {absent_tw}. A tripwire that stopped "
+            "being computed vanishes from the row silently, and a change detector "
+            "nobody notices has stopped detecting is worse than not having one."
+        )
     overlap = sorted(set(metrics) & set(tripwires))
     if overlap:
         raise LedgerSchemaError(

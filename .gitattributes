@@ -4,3 +4,10 @@
 # Without -text the Windows CI leg CRLF-converts it and the digest goes red there only.
 an/data/cutout_runtime/vendor/pixi.min.js -text
 an/data/cutout_runtime/vendor/pixi.LICENSE.txt -text
+
+# Golden frames are compared on DECODED PIXELS, and the decoder now verifies
+# each chunk's CRC — so a Windows CI leg CRLF-converting one would turn it from
+# a gate into a typed error. Same reasoning as the pinned bundle above; PNG is
+# binary and must never be touched.
+misc/bench/golden/**/*.png -text
+tests/fixtures/png/*.png -text

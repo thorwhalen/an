@@ -98,7 +98,7 @@ is a test for that.
 2. Declare it in `an/bench/registry.py`: family letter, unit, one-sentence
    explanation, `Optimum`, and a `Prediction` for **every** mutation. The
    dataclass refuses a declaration that counts a tautology or a gated value.
-3. Emit it in `an/bench/run.py::_shot_metrics`. The ledger builder refuses a
+3. Emit it in `an/bench/run.py::_scene_metrics`. The ledger builder refuses a
    row that omits any declared metric — an absent row and a null row look the
    same to a reader and mean opposite things.
 4. Add a test in `tests/test_bench_metrics.py` against arrays whose answer is
@@ -119,15 +119,66 @@ whose store entry lists exactly `_PLACEHOLDER_PARTS` and therefore renders a
 byte-identical picture. Falling into the rig and declaring it are the same
 pixels and different records, which is the whole point of an#33.
 
-Four scenes the corpus still lacks, and each is missing for a measured reason
-(an#38 builds them): a large flat or gently-graded field (every edge metric is
-masked to 5–10% of the frame); a saturated fill under a black outline (the real
-example frames are 31 colours on white, and the measured 4:2:0 edge error is
-~3x smaller than on a saturated pattern); a multi-shot project (a single-shot
-render short-circuits the concat to `shutil.copy`, so `_ffmpeg_concat` is never
-exercised); and an `aa_probe` with edges at non-axis angles (axis-aligned
-`drawRect` edges are bit-identical with MSAA on or off, so a corpus of
-axis-aligned art cannot validate an AA metric at all).
+The four scenes an#38 added — `graded_field`, `saturated_outline`,
+`multi_shot`, `aa_probe` — live in `misc/bench/corpus/`, **not** under
+`examples/`, and are **committed whole with no `prepare` step**. Two reasons,
+both load-bearing: `.gitignore` excludes every `examples/*/assets/`, and a
+metrics fixture has to hold still — a fixture whose pixels depend on a generator
+elsewhere in the repo needs a re-bless every time that generator changes.
+
+New corpus scenes go there too. Give each one two `golden_frames` and a
+`golden_note` saying what moves between them.
+
+## The golden gate (an#38)
+
+`an/bench/golden.py` compares today's render against committed PNGs.
+`an/bench/png.py` is the codec: filter-0 writer, full-filter reader, numpy and
+stdlib only. `misc/bench/golden/README.md` is the operator's guide; read it
+before touching a golden.
+
+Four things that are easy to get wrong here and still look like they work:
+
+1. **The criterion is `sha256` of the decoded array, never the file bytes.**
+   Chromium 1187 → 1223 changed 144 of 144 PNG files and zero pixels.
+2. **The path keys on the Chromium build alone** — the platform and arch
+   segments are measurably inert, and a Playwright bump should become a new
+   path requiring a deliberate re-bless rather than a red test.
+3. **Three absences are three gates**, plus a fourth for a bless run:
+   `golden_frames_undeclared`, `golden_absent_for_chromium_build`,
+   `chromium_build_unknown`, `blessed_this_run`. `probe_browser` never raises —
+   it returns `{"error": ...}` — so without the third an un-probeable browser
+   reads exactly like a scene nobody has blessed.
+4. **A run that blessed must not also report a pass.** Comparing against a
+   golden the same run wrote is a tautology, and the row would carry a perfect
+   score no code could have failed.
+
+`an bench --bless "<reason>"` takes the reason as the flag's **value**, so a
+bless with no recorded reason cannot be typed. It refuses a blank reason, fewer
+than two frames, a pixel-identical pair, a time past the end, and an unknown
+build; and it removes any golden it no longer blesses.
+
+**Choosing the second time is not mechanical.** `duration/2` is not a safe
+default — measured on `promote_demo`, frame 0 and frame 36 differ by exactly
+zero pixels. And a pair can be blind to a mutation the scene is not:
+`graded_field`'s marker advances by a sub-pixel step, so on frames 0, 1, 6, 8
+and 11 it lands on an exact pixel boundary and AA-off changes zero pixels there.
+Its second golden moved from f0006 to f0004 for that reason.
+
+## Multi-shot scenes pair by TIMELINE order, never by directory name
+
+`an/render.py` concatenates `[r.mp4_path for r in shot_results]` built from
+`list(scene.timeline)`. `an.bench.corpus.iter_shot_dirs` takes a **mandatory**
+`order` argument for exactly this reason: a directory-name sort agrees with the
+timeline only when the ids happen to sort that way, and when it does not, every
+encode-side metric pairs source frame *i* of one shot against decoded frame *i*
+of another and reports plausible numbers. The `multi_shot` fixture's ids are
+`intro` then `beat` **deliberately** — they sort the other way, so the fixture
+is what notices. A test pins that they still disagree.
+
+The whole scene is measured as one concatenated sequence
+(`_timeline_frames_dir`), so `scene_contract_sha256` covers every shot — but a
+single-shot scene still hashes exactly as it did before, so rows written earlier
+stay comparable.
 
 ## The palette, and why it has a permanent diagnostic
 
@@ -148,6 +199,33 @@ the two declared colours it sits between. All-blends means the metric is
 reporting anti-aliasing correctly; a non-blend near the top means the palette
 missed a literal and the number is inflated. That is a recorded field rather
 than an eyeball check, on purpose.
+
+## Two measured facts that change what counts as a witness
+
+Both found while building an#38, both by running the levers rather than by
+reading the research:
+
+- **`video_stream_bytes` under `disabled_aa` has a scene-dependent sign.** It is
+  declared `increase` (+5.5%). Measured: **+6.1% on `aa_probe`** (diagonal edges
+  → AA-off makes a high-frequency staircase that costs bits) and **−6.1% on
+  `single_character`** (axis-aligned art → AA-off removes intermediate colours
+  and the picture gets cheaper). So family F is an honest witness for that lever
+  only on a scene with non-axis-aligned edges, and an#41's criterion has to be
+  evaluated **per scene**, which `ledger.witnesses` already is.
+- **`encode_flicker_on_held_pixels` under `high_crf` is falsified on the real
+  corpus.** Declared `increase`, and the research's synthetic reference is
+  0.0321 / 0.0394 / 0.0848 at crf18/23/51. Measured on `single_character`:
+  0.000648 → 0.007018 (crf23) → 0.000985 → 0.000916 → 0.001137 → 0.001685 —
+  non-monotone, peaking at crf23, and three orders of magnitude smaller. Same
+  shape on `promote_demo`. The mechanism is the one the registry already
+  documents for the half-res-upscale case: at high CRF the whole frame flattens
+  into large uniform skip regions, so held pixels stop moving. C, D and F are
+  monotone across the whole ladder on both scenes, so the criterion still holds
+  with three families — but family E must be demoted rather than counted.
+
+Also measured: the **descriptor path is nearly blind to the AA lever** (96
+differing pixels of 12.4M on `promote_demo`), because MSAA applies to WebGL
+geometry and an SVG sprite is a pre-rasterised texture.
 
 ## Standing honesty rule
 

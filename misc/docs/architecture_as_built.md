@@ -60,6 +60,8 @@ an/
 │   ├── registry.py          the metric declaration table: family, side, per-mutation sign
 │   ├── ledger.py            the three blocks, and the guards that keep them readable
 │   ├── contract.py          scene_contract_sha256 — the comparability key
+│   ├── png.py               filter-0 writer + full-filter reader; numpy + stdlib only
+│   ├── golden.py            the golden gate and `--bless`; compares DECODED pixels
 │   ├── environment.py       the environment tuple, split by comparison scope
 │   └── run.py               capture -> panel -> row
 │
@@ -260,10 +262,12 @@ an iterate <dir> "<instruction>"   — free-text edit via Claude (needs ANTHROPI
    --no-apply-changes        (dry run)
    --model claude-opus-4-7   (override)
 an check                      — diagnose system deps
-an bench <dir>                — render the fixed corpus, write a metrics ledger row
+an bench                      — render the fixed corpus, write a metrics ledger row
    --scenes NAME,NAME
    --out PATH
-   --no-ringing              (skips one extra lossless encode per scene)
+   --keep-render PATH        (keep the throwaway render tree instead of deleting it)
+   --quiet                   (print only the ledger path)
+   --bless "<reason>"        (re-write the golden frames, recording this reason)
 ```
 
 All built via `argh` over the SSOT list `an.tools._dispatch_funcs`.

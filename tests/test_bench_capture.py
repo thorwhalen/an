@@ -48,15 +48,14 @@ def test_the_render_side_panel_is_fully_measured(ledger):
     """Nothing render-side may be gated on a real capture — those are the only
     metrics that can see a render mutation, so a null here is a blind panel."""
     block = ledger["scenes"][SCENE]
-    render_side = {
-        k: r for k, r in block["metrics"].items() if r["side"] == "render"
-    }
+    render_side = {k: r for k, r in block["metrics"].items() if r["side"] == "render"}
     unmeasured = {
         k: r["state"] for k, r in render_side.items() if r["state"] != "measured"
     }
-    # Family B is golden-referenced and an#38 has not supplied the frames yet.
-    assert set(unmeasured) == {"min_ssim_win8_vs_golden"}, unmeasured
-    assert unmeasured["min_ssim_win8_vs_golden"] == "gated"
+    # Family B included, since an#38: a golden the corpus commits makes this a
+    # real number rather than a gate, and family B is the ONLY render-side
+    # family that can see a change nobody predicted in advance.
+    assert unmeasured == {}, unmeasured
 
 
 def test_the_encode_side_panel_is_fully_measured(ledger):
@@ -156,12 +155,24 @@ def test_each_mutation_has_three_families_of_witnesses_on_a_real_row(ledger):
         assert len(families) >= 3, (mutation, families)
 
 
-def test_the_tripwire_block_is_gated_and_shaped(ledger):
-    """an#38 fills the values; the shape ships now so that needs no schema change."""
+def test_the_tripwire_block_fires_against_the_committed_golden(ledger):
+    """Measured since an#38, and still counting ZERO toward any criterion.
+
+    A tripwire fires on improvements and regressions alike, so it is a change
+    detector and not evidence of quality. Its `counts: 0` is what keeps a
+    boolean out of the witness count — and it is asserted here rather than
+    only in the registry, because the row is what `an bench --compare` reads.
+    """
     block = ledger["scenes"][SCENE]
     assert set(block["tripwires"]) == set(TRIPWIRES)
     for key, row in block["tripwires"].items():
-        assert row["state"] == "gated" and row["gate"] == "golden_absent", key
+        assert row["state"] == "measured", (
+            f"{key}: {row.get('gate')} — {row.get('detail')}"
+        )
+        assert row["value"] is True, (
+            f"{key}: today's render differs from the committed golden by "
+            f"{row.get('changed_px')} px. Look at the PNG diff before re-blessing."
+        )
         assert row["counts"] == 0, key
 
 
@@ -185,8 +196,13 @@ def test_a_capture_leaves_the_repository_untouched(tmp_path):
     before = dirty_paths(root)
     capture = capture_fixture(SCENE, DFLT_FIXTURES[SCENE], repo_root=root)
     try:
-        assert capture.project_dir.resolve() != (root / DFLT_FIXTURES[SCENE].path).resolve()
-        assert not (capture.project_dir / ".an").exists() or True  # created by the render
+        assert (
+            capture.project_dir.resolve()
+            != (root / DFLT_FIXTURES[SCENE].path).resolve()
+        )
+        assert (
+            not (capture.project_dir / ".an").exists() or True
+        )  # created by the render
     finally:
         cleanup(capture)
     assert dirty_paths(root) == before, (

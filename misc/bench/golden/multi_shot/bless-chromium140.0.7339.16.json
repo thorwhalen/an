@@ -1,0 +1,47 @@
+{
+  "blessed_at": "2026-08-21T20:23:14Z",
+  "chromium_build": "140.0.7339.16",
+  "criterion": "sha256 of the DECODED RGB array, never the file bytes: Chromium 1187 -> 1223 changes every PNG file and zero pixels.",
+  "fps": 24,
+  "frames": [
+    {
+      "bytes": 1370,
+      "file": "f0000-chromium140.0.7339.16.png",
+      "frame_key": "f0000",
+      "index": 0,
+      "local_index": 0,
+      "sha256": "f990e8ae3eb93d4bfddfd9f971907b57fc22b60af33e88d04d8da36eaa49ccd4",
+      "shot_id": "intro",
+      "time": 0.0
+    },
+    {
+      "bytes": 1420,
+      "file": "f0006-chromium140.0.7339.16.png",
+      "frame_key": "f0006",
+      "index": 6,
+      "local_index": 0,
+      "sha256": "7cfdb87ba68addbd7e5bdba6359a3ddc2ccdd47d8096d1a560826324b784d2e1",
+      "shot_id": "beat",
+      "time": 0.25
+    }
+  ],
+  "git": {
+    "branch": "claude/an-38-golden-corpus",
+    "dirty": true,
+    "sha": "75fb1325560c988ca68b8114a85a5698810feafd"
+  },
+  "reason": "an#38 first bless of the golden corpus: six scenes, two frames each, at Chromium 140.0.7339.16. The recorded digest now covers the array's SHAPE as well as its bytes \u2014 ndarray.tobytes() carries no shape, so a transposed frame hashed identically and would have passed the criterion issue #38 states.",
+  "removed": [],
+  "resolution": [
+    320,
+    240
+  ],
+  "scene": "multi_shot",
+  "scene_contract_sha256": "978a9b7fc6a55925967089dbb3ed8d3be7d52e34d4ed5d4238a9c4fdfc5d4816",
+  "shot_ids": [
+    "intro",
+    "beat"
+  ],
+  "source": "misc/bench/corpus/multi_shot",
+  "what_moves": "the whole picture: 0.25s is the FIRST frame of the second shot, so the pair spans the concat boundary (75,050 px). A golden pair inside one shot would not notice a shot rendered in the wrong order."
+}

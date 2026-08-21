@@ -1,0 +1,46 @@
+{
+  "blessed_at": "2026-08-21T20:23:06Z",
+  "chromium_build": "140.0.7339.16",
+  "criterion": "sha256 of the DECODED RGB array, never the file bytes: Chromium 1187 -> 1223 changes every PNG file and zero pixels.",
+  "fps": 24,
+  "frames": [
+    {
+      "bytes": 2546,
+      "file": "f0000-chromium140.0.7339.16.png",
+      "frame_key": "f0000",
+      "index": 0,
+      "local_index": 0,
+      "sha256": "2ff81e126cec5788e88fb3b6aefa42bbe457c306792239c4ecf2267e42070c85",
+      "shot_id": "field",
+      "time": 0.0
+    },
+    {
+      "bytes": 2729,
+      "file": "f0004-chromium140.0.7339.16.png",
+      "frame_key": "f0004",
+      "index": 4,
+      "local_index": 4,
+      "sha256": "5a6d76d36e399d50d06d43bb86c94f627f31fbd0d6c8596a6b634aac78848aa7",
+      "shot_id": "field",
+      "time": 0.1667
+    }
+  ],
+  "git": {
+    "branch": "claude/an-38-golden-corpus",
+    "dirty": true,
+    "sha": "75fb1325560c988ca68b8114a85a5698810feafd"
+  },
+  "reason": "an#38 first bless of the golden corpus: six scenes, two frames each, at Chromium 140.0.7339.16. The recorded digest now covers the array's SHAPE as well as its bytes \u2014 ndarray.tobytes() carries no shape, so a transposed frame hashed identically and would have passed the criterion issue #38 states.",
+  "removed": [],
+  "resolution": [
+    320,
+    240
+  ],
+  "scene": "graded_field",
+  "scene_contract_sha256": "02508dbe9dfc1ab699bab8f4f4d29905c629e004c9675d295736ec448045c44d",
+  "shot_ids": [
+    "field"
+  ],
+  "source": "misc/bench/corpus/graded_field",
+  "what_moves": "the white marker sweeping across the gradient (6,270 px). Frame 4, not the obvious mid-scene frame 6: the marker advances by a sub-pixel step, so on frames 0, 1, 6, 8 and 11 it lands on an exact pixel boundary and AA-off changes ZERO pixels there. A blessed pair that no available mutation can move is a gate that cannot go red."
+}

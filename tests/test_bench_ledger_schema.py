@@ -24,6 +24,7 @@ from an.bench.ledger import (
     unavailable,
     witnesses,
 )
+from an.bench.golden import GATE_ABSENT
 from an.bench.registry import (
     FAMILY_SIDE,
     METRICS,
@@ -48,7 +49,7 @@ def _full_metrics(**overrides) -> dict:
 
 
 def _full_tripwires() -> dict:
-    return {k: gated("golden_absent") for k in TRIPWIRES}
+    return {k: gated(GATE_ABSENT) for k in TRIPWIRES}
 
 
 def _block(**kwargs) -> dict:
@@ -195,7 +196,7 @@ def test_nan_is_refused_as_a_measured_value():
 
 
 def test_a_no_change_prediction_can_never_count():
-    """"No change by construction" is a tautology.
+    """ "No change by construction" is a tautology.
 
     Counting it lets any pre-encode statistic pad the witness count for free,
     which is precisely how ">=3 metrics moved" is satisfied dishonestly.
@@ -350,3 +351,53 @@ def test_family_c_supplies_at_most_one_witness_per_mutation():
     for mutation in MUTATIONS:
         c_witnesses = witnesses(block, mutation).get("C", [])
         assert len(c_witnesses) <= 1, c_witnesses
+
+
+# --------------------------------------------------------------- an#38 additions
+
+
+def test_a_single_shot_scene_hashes_exactly_as_it_did_before_multi_shot_support():
+    """History must stay comparable.
+
+    MUTATION: in `scenes_contract_sha256`, drop the `len(digests) == 1` branch.
+
+    `an bench --compare` refuses rows whose contract hash differs, so a
+    gratuitous change here would retire every already-committed row as evidence
+    about the scenes it measured — for a reason that never reached a pixel.
+    """
+    from an.bench.contract import scene_contract_sha256, scenes_contract_sha256
+
+    scene = {"meta": {"fps": 24}, "scene": {"children": [{}, {}]}}
+    assert scenes_contract_sha256([scene]) == scene_contract_sha256(scene)
+
+
+def test_a_change_to_any_shot_moves_the_scene_contract_hash():
+    """MUTATION: in `scenes_contract_sha256`, hash only `scene_jsons[0]`.
+
+    Hashing the first shot alone lets a change to the second one pass as "the
+    same scene", which is precisely the claim this digest exists to deny.
+    """
+    from an.bench.contract import scenes_contract_sha256
+
+    a = {"scene": {"children": [{}]}}
+    b = {"scene": {"children": [{}, {}]}}
+    assert scenes_contract_sha256([a, a]) != scenes_contract_sha256([a, b])
+    assert scenes_contract_sha256([a, b]) != scenes_contract_sha256([b, a]), (
+        "shot ORDER is part of the contract: the same shots concatenated the "
+        "other way round are a different video"
+    )
+
+
+def test_a_tripwire_that_stopped_being_computed_is_refused():
+    """MUTATION: in `build_scene_block`, drop the `absent_tw` check.
+
+    A change detector that quietly stopped being computed vanishes from the row
+    and reads exactly like one that fired and found nothing — the same
+    absent-versus-null confusion the metrics block already refuses.
+    """
+    with pytest.raises(LedgerSchemaError, match="tripwires block is missing"):
+        build_scene_block(
+            provenance=dict(MIN_PROVENANCE),
+            metrics={k: measured(1.0) for k in METRICS},
+            tripwires={},
+        )
