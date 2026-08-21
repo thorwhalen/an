@@ -348,6 +348,7 @@ def video_record(mp4: Path) -> dict[str, Any]:
     decoded = decode_video(mp4)
     return {
         "name": mp4.name,
+        "kept_as": None,  # filled by the caller: the copy beside the frames
         "file_bytes": len(raw),
         "file_sha256": _sha256_bytes(raw),
         "decoded_pix_fmt": DECODE_PIX_FMT,
@@ -408,6 +409,10 @@ def capture_scene(
                 shutil.copy2(png, dest)
 
         video = video_record(Path(output_mp4))
+        # Kept, not just digested: "the decoded streams differ" without a
+        # magnitude is the band-with-no-provenance this work exists to avoid.
+        shutil.copy2(output_mp4, out_dir / name / f"{name}.mp4")
+        video["kept_as"] = f"{name}/{name}.mp4"
 
     if not frames:
         raise RuntimeError(
@@ -507,6 +512,38 @@ def _compare_frame_pixels(a_png: Path, b_png: Path) -> dict[str, Any]:
     }
 
 
+def _video_delta(
+    a_mp4: Path, b_mp4: Path, *, width: int, height: int
+) -> dict[str, Any]:
+    """How far apart two decoded yuv420p streams are, luma and chroma separately.
+
+    Split by plane on purpose: 4:2:0 chroma is a quarter of the samples and a
+    different failure mode, so a single pooled number would let a real chroma
+    shift hide behind unchanged luma.
+    """
+    import numpy as np
+
+    a = np.frombuffer(decode_video(a_mp4), dtype=np.uint8)
+    b = np.frombuffer(decode_video(b_mp4), dtype=np.uint8)
+    if a.size != b.size:
+        return {"size_mismatch": [int(a.size), int(b.size)]}
+    frame_size = width * height * 3 // 2
+    if a.size % frame_size:
+        return {"unexpected_stream_size": int(a.size), "frame_size": frame_size}
+    luma = width * height
+    a = a.reshape(-1, frame_size)
+    b = b.reshape(-1, frame_size)
+    out: dict[str, Any] = {"frames": int(a.shape[0])}
+    for plane, sl in (("luma", slice(0, luma)), ("chroma", slice(luma, frame_size))):
+        delta = np.abs(a[:, sl].astype(np.int16) - b[:, sl].astype(np.int16))
+        out[plane] = {
+            "differing_fraction": round(float((delta != 0).mean()), 6),
+            "mean_abs_delta": round(float(delta.mean()), 4),
+            "max_abs_delta": int(delta.max()),
+        }
+    return out
+
+
 def _frame_png(root: Path, scene: str, key: str) -> Path:
     shot_id, stem = key.split("/", 1)
     return root / scene / FRAMES_DIRNAME / f"{shot_id}__{stem}.png"
@@ -560,6 +597,17 @@ def compare(a_dir: str | Path, b_dir: str | Path) -> dict[str, Any]:
                 "file_bytes": [va["file_bytes"], vb["file_bytes"]],
                 "x264_sei": [va.get("x264_sei"), vb.get("x264_sei")],
             }
+            if (
+                not video["decoded_identical"]
+                and va.get("kept_as")
+                and vb.get("kept_as")
+            ):
+                a_mp4, b_mp4 = a_root / va["kept_as"], b_root / vb["kept_as"]
+                if a_mp4.is_file() and b_mp4.is_file():
+                    width, height = sa["resolution"]
+                    video["delta"] = _video_delta(
+                        a_mp4, b_mp4, width=width, height=height
+                    )
         report["scenes"][scene] = {
             "frames": len(keys),
             "video": video,
@@ -637,6 +685,15 @@ def format_report(report: dict[str, Any]) -> str:
                 f"({video['file_bytes'][0]} vs {video['file_bytes'][1]}); "
                 f"x264 {video['x264_sei'][0]} | {video['x264_sei'][1]}"
             )
+            delta = video.get("delta")
+            if delta and "luma" in delta:
+                lu, ch = delta["luma"], delta["chroma"]
+                lines.append(
+                    f"{' ' * len(scene)}       luma {lu['differing_fraction']:.4%} of "
+                    f"samples, mean |d| {lu['mean_abs_delta']}, max {lu['max_abs_delta']}"
+                    f"  |  chroma {ch['differing_fraction']:.4%}, mean |d| "
+                    f"{ch['mean_abs_delta']}, max {ch['max_abs_delta']}"
+                )
     lines.append("")
     lines.append(f"VERDICT (frames): {report['verdict']}")
     lines.append(
