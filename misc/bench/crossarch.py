@@ -40,7 +40,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any, Callable, Iterable, Iterator
 
 # Tunables — module constants per the no-magic-numbers rule.
 MANIFEST_NAME: str = "manifest.json"
@@ -69,7 +69,7 @@ class Fixture:
     path: str
     #: Run against the throwaway copy before loading, to regenerate build
     #: products the repo does not track.
-    prepare: Any = None
+    prepare: Callable[[Path], None] | None = None
     #: Visual kinds the staged scene MUST contain. This is not belt-and-braces:
     #: a missing character descriptor makes the compiler fall back to the
     #: procedural rig with **no warning** (verified: zero warnings, and
@@ -422,7 +422,15 @@ def _compare_frame_pixels(a_png: Path, b_png: Path) -> dict[str, Any]:
     a, _ = decode_png(a_png)
     b, _ = decode_png(b_png)
     if a.shape != b.shape:
-        return {"shape_a": list(a.shape), "shape_b": list(b.shape)}
+        # Reported as its own kind of difference rather than folded into a pixel
+        # count: two frames of different sizes have no meaningful differing-pixel
+        # number, and defaulting one to 0 would print "DIFFERS ... 0 px" at
+        # exactly the moment someone is trying to read what changed.
+        return {
+            "shape_mismatch": True,
+            "shape_a": list(a.shape),
+            "shape_b": list(b.shape),
+        }
     delta = np.abs(a.astype(np.int16) - b.astype(np.int16))
     differing = int(np.count_nonzero(np.any(delta != 0, axis=-1)))
     return {
@@ -489,6 +497,9 @@ def compare(a_dir: str | Path, b_dir: str | Path) -> dict[str, Any]:
             "max_channel_delta": max(
                 (d.get("max_channel_delta", 0) for d in pixel_diffs), default=0
             ),
+            "frames_with_shape_mismatch": sum(
+                1 for d in pixel_diffs if d.get("shape_mismatch")
+            ),
             "differing_frames": pixel_diffs,
         }
     report["verdict"] = (
@@ -520,10 +531,13 @@ def format_report(report: dict[str, Any]) -> str:
             lines.append(f"{scene}: MISSING from side {s['missing_from']}")
             continue
         state = "identical" if s["pixels_identical"] else "DIFFERS"
+        mismatched = s.get("frames_with_shape_mismatch", 0)
+        shape_note = f"; {mismatched} frames DIFFER IN SIZE" if mismatched else ""
         lines.append(
             f"{scene}: {state} — {s['frames_with_differing_pixels']}/{s['frames']} frames "
             f"differ in pixels, {s['frames_with_differing_png_bytes']}/{s['frames']} in PNG bytes; "
-            f"worst frame {s['max_differing_pixels']} px, max channel delta {s['max_channel_delta']}"
+            f"worst frame {s['max_differing_pixels']} px, max channel delta "
+            f"{s['max_channel_delta']}{shape_note}"
         )
     lines.append("")
     lines.append(f"VERDICT: {report['verdict']}")
