@@ -161,8 +161,29 @@ To actually run them: `pytest -q` on a machine with the `cutout` extra **and the
 binary** — the extra ships `ffmpeg-python`, a wrapper, not the binary, so
 `pip install -e '.[cutout]' && playwright install chromium` alone runs 2 of the 24
 (`test_preview_reload.py`, the only browser tests that need no ffmpeg). Add
-`brew install ffmpeg` / `apt-get install ffmpeg`. Or dispatch
-`.github/workflows/browser-tests.yml`, which installs both.
+`brew install ffmpeg` / `apt-get install ffmpeg`.
+
+**On a PR, ask for the lane by labelling it — this is yours to do:**
+
+```bash
+gh api -X POST repos/thorwhalen/an/issues/<N>/labels -f 'labels[]=run-browser-tests'
+```
+
+**Not `gh pr edit --add-label`** — on this owner's repos that call goes through the
+GraphQL path and dies on the projects-classic deprecation, **printing an error but
+exiting 0 and applying no label**. Verified on PR #30. Always read the labels back:
+`gh pr view <N> --json labels -q '.labels[].name'`.
+
+Add it whenever your PR can change a pixel: the runtime under
+`an/data/cutout_runtime/`, the cutout compiler or serializer, the render path, the
+vendored engine, the ffmpeg flags, or the character rig. An unlabelled PR gets **no**
+pixel verification and the job never starts, so nothing in the checks list will tell
+you it was missing. Measured cost when you do add it: 103 s, cold cache.
+
+`misc/docs/adr_ci_verification_perimeter.md` is the decision record — read it before
+changing what CI does or does not verify, and before writing any sentence of the form
+"verified in CI", which is the one claim this repo has agreed never to make about a
+rendering behaviour.
 
 **Every regression guard is mutation-tested.** Delete the fix, confirm the test goes red.
 An unproven guard is decoration, and this is not theoretical here — a guard that tested an

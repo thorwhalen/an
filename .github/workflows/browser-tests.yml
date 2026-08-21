@@ -17,15 +17,30 @@
 # impossible; see `tests/conftest.py`'s browser-gate section and
 # `tests/test_browser_gate.py`.
 #
-# TURNING IT ON LATER IS A TWO-LINE CHANGE. Whichever is wanted:
+# HOW TO ASK FOR IT ON A PR — put the `run-browser-tests` label on the PR.
 #
-#   * nightly ->        schedule:
-#                         - cron: "0 4 * * *"
-#   * per-PR opt-in ->  pull_request:
-#                         types: [labeled, synchronize]
-#                       plus `if: contains(github.event.pull_request.labels.*.name,
-#                       'run-browser-tests')` on the job.
-#   * a dev -> prod gate -> pull_request: {branches: [prod]}
+# That is the whole interface, and it is open to agents as well as humans:
+#
+#     gh api -X POST repos/<owner>/<repo>/issues/<N>/labels \
+#         -f 'labels[]=run-browser-tests'
+#
+# NOT `gh pr edit --add-label`: on this owner's repos that goes through GraphQL and
+# dies on the projects-classic deprecation, printing an error but EXITING 0 and
+# applying no label. Verified on PR #30. Read the labels back afterwards.
+#
+# Adding the label re-triggers this workflow on the PR head; pushes to a labelled
+# PR re-run it. An unlabelled PR does not start the job at all, so the default
+# cost stays zero. Measured on the first Linux dispatch (cold cache): Chromium
+# install 24 s, ffmpeg 10 s, the rendering lane itself 45 s, whole job 103 s.
+#
+# ADD THE LABEL when a PR touches anything that can change a pixel: the runtime
+# (`an/data/cutout_runtime/`), the cutout compiler or serializer, the render
+# path, the vendored engine, the ffmpeg flags, or the character rig. The rest of
+# CI cannot see any of that — see misc/docs/adr_ci_verification_perimeter.md.
+#
+# STILL NOT ON EVERY PUSH, deliberately: ~34 s of setup plus 45 s of tests
+# against a ~50 s CI leg. Nightly is one more line (`schedule: - cron: "0 4 * * *"`),
+# and a dev->prod gate is `pull_request: {branches: [prod]}`.
 #
 # The gate itself needs no change for any of these: it keys on AN_BROWSER_TESTS,
 # and an opt-in that cannot be honoured is an ERROR rather than a skip — so a run
@@ -40,6 +55,11 @@ on:
         description: "Python version to run the rendering lane on"
         required: false
         default: "3.12"
+  pull_request:
+    # `labeled` so adding the label starts it; `synchronize` so a push to an
+    # already-labelled PR re-runs it. An unlabelled PR is filtered out by the
+    # job's `if`, which costs nothing — the job never starts.
+    types: [labeled, synchronize, reopened]
 
 concurrency:
   group: browser-${{ github.ref }}
@@ -48,6 +68,10 @@ concurrency:
 jobs:
   render:
     name: Rendering lane (Linux)
+    # A dispatch always runs. A pull_request runs only when it carries the label.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'run-browser-tests')
     runs-on: ubuntu-latest
 
     steps:

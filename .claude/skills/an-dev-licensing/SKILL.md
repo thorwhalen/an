@@ -88,6 +88,28 @@ survives:
 - a manifest of every non-`an`-authored byte, with a test that fails when a file appears
   without a row.
 
+## Rule 6 — the perimeter is four *named* licences plus explicit rulings, not a vibe
+
+The roadmap states the perimeter as "MIT / BSD / Apache-2.0 / ISC only". Read literally that
+disqualifies permissive licences nobody meant to exclude, so the perimeter is: **those four,
+plus anything added here by an explicit, dated ruling that names what was read.** Anything
+else is `UNVERIFIABLE` until someone does the reading.
+
+### Rulings on the record
+
+| Licence | Ruled | Why, and what it obliges |
+|---|---|---|
+| **MIT-CMU** (Pillow) | **INSIDE**, 2026-08-21 | Read at `pillow-11.3.0.dist-info/licenses/LICENSE`; the distribution declares `License-Expression: MIT-CMU`. Grants use, copy, modify and distribute "for any purpose and without fee". **No copyleft, no field-of-use limit, no commercial restriction.** It carries two obligations, both MIT/BSD-shaped: the copyright notice and permission notice must appear in all copies *and in supporting documentation*, and the author's name may not be used in advertising without written permission — i.e. MIT plus BSD-3's no-endorsement clause. `an` takes Pillow as an installed dependency and redistributes none of its bytes, so the notice obligation is discharged by pip; if it is ever vendored, Rule 3 applies. |
+
+**How to add a row here.** Read the licence file at the pinned version, quote the clause that
+decides it, name the *shape* it matches (MIT-plus-X, BSD-shaped, …), and state what it
+obliges `an` to actually do. A row with no obligation column is a chip with extra steps.
+
+**Note what this rule does not license you to do.** It admits *permissive variants*. It is
+not a doorway for weak copyleft, source-available terms, non-commercial clauses, or anything
+whose obligations vary by how the artifact is distributed. Those are the shapes Rule 2 is
+about, and none of them becomes acceptable by being written into a table.
+
 ## When you cannot verify
 
 Say so, in the artifact. `UNVERIFIABLE` is a real verdict and it behaves like

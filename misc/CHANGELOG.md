@@ -3,6 +3,26 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **The rendering lane is now opt-in per PR, via the `run-browser-tests` label**,
+  and the decision behind it is written down as
+  `misc/docs/adr_ci_verification_perimeter.md` — an ADR answering the question
+  an#22 actually asked, which was "which failures is this repo allowed to not
+  notice?". Adding the label is explicitly open to agents
+  (`gh pr edit <N> --add-label run-browser-tests`), and both `CLAUDE.md` and the
+  `an-dev` skill say so, with the trigger list: anything touching the runtime,
+  the cutout compiler/serializer, the render path, the vendored engine, the
+  ffmpeg flags, or the rig. An unlabelled PR never starts the job, so the
+  default cost stays zero. First Linux dispatch, cold cache: Chromium 24 s,
+  ffmpeg 10 s, the lane itself 45 s, whole job 103 s — and it passed first try.
+- **MIT-CMU is ruled inside the licence perimeter** (Pillow 11.3.0, read at its
+  own `dist-info/licenses/LICENSE`): MIT's grant plus BSD-3's no-endorsement
+  clause, no copyleft, no field-of-use limit. The perimeter is now stated as
+  "the four named licences **plus explicit dated rulings**", because read
+  literally it disqualified permissive licences nobody meant to exclude. The
+  ledger and the procedure for adding a row are Rule 6 of the
+  `an-dev-licensing` skill; a row without an obligations column is a chip with
+  extra steps.
+
 - **Wave 2's research record (`misc/docs/wave2_research.md`).** Twenty-one agents
   across five surveys and four adversarial passes, plus a separate pass on §4.
   **All twelve originally-proposed metrics were refuted** and replaced with
