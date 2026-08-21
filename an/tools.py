@@ -68,6 +68,7 @@ def render(
     tts: str = "offline",
     lipsync: str = "offline",
     parallel: str = "",
+    strict_assets: bool = False,
 ) -> str:
     """Render the project at ``project_dir`` to a single mp4.
 
@@ -78,6 +79,8 @@ def render(
         (needs the rhubarb binary), or "whisper" (needs faster-whisper)
     parallel: per-shot concurrency. "" or "1" = serial (default); "auto" =
         min(shots, cpu, 4); a number ≥ 2 caps the thread pool.
+    strict_assets: fail instead of drawing a stand-in (the placeholder rig, the
+        default backdrop) for an asset the project's stores don't supply
     """
     parallel_arg: int | str | None
     if not parallel:
@@ -95,6 +98,7 @@ def render(
         tts=tts,
         lipsync=lipsync,
         parallel=parallel_arg,
+        strict_assets=strict_assets,
     )
     return f"rendered: {output_path}"
 

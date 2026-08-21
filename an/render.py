@@ -64,6 +64,7 @@ def render_project(
     tts: str | object = "offline",
     lipsync: str | object = "offline",
     parallel: int | str | None = None,
+    strict_assets: bool = False,
 ) -> Path:
     """Render every shot in ``project_dir``'s scene and concatenate to one mp4.
 
@@ -94,6 +95,7 @@ def render_project(
         tts=tts,
         lipsync=lipsync,
         parallel=parallel,
+        strict_assets=strict_assets,
     )
 
 
@@ -107,6 +109,7 @@ def render(
     tts: str | object = "offline",
     lipsync: str | object = "offline",
     parallel: int | str | None = None,
+    strict_assets: bool = False,
 ) -> Path:
     """Lower-level: render a loaded ``Project`` to mp4.
 
@@ -115,6 +118,12 @@ def render(
     the renderer. Re-synthesis is triggered on provider changes (the
     pipeline's idempotency check compares against the current providers'
     expected content hashes).
+
+    ``strict_assets=True`` refuses to draw a stand-in for a declared asset the
+    stores do not supply — the placeholder rig for a missing character
+    descriptor, the default backdrop for an unknown environment ref. Use it for
+    anything that measures pixels: a stand-in renders happily and is a
+    different picture (an#33).
     """
     scene = project.scene
     if not scene.timeline:
@@ -157,6 +166,7 @@ def render(
         work_dir=work_dir,
         fps=effective_fps,
         resolution=effective_res,
+        strict_assets=strict_assets,
     )
 
     shots = list(scene.timeline)

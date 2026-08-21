@@ -13,6 +13,7 @@ from an.adapters.cutout.compile import compile_shot
 from an.adapters.cutout.serialize import (
     AnimationClipJSON,
     AssetJSON,
+    AssetResolutionJSON,
     AssetsJSON,
     ChannelJSON,
     CutoutSceneJSON,
@@ -44,6 +45,7 @@ __all__ = [
     "PlacedClipJSON",
     "AssetsJSON",
     "AssetJSON",
+    "AssetResolutionJSON",
 ]
 
 

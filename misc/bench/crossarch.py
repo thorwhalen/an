@@ -102,8 +102,16 @@ DFLT_FIXTURES: dict[str, Fixture] = {
 #: Rendering knobs pinned for the capture. Audio is off because it cannot move
 #: a pixel and would otherwise make the frames depend on the audio cache's
 #: warm/cold state; ``parallel=1`` because a timing-sensitive pool is one more
-#: thing to explain if the pixels ever do differ.
-CAPTURE_RENDER_KWARGS: dict[str, Any] = {"auto_audio": False, "parallel": 1}
+#: thing to explain if the pixels ever do differ; ``strict_assets=True`` because
+#: a stand-in asset renders happily as a DIFFERENT picture (an#33) — the failure
+#: that nearly invalidated this experiment. ``expect_visual_kinds`` below stays
+#: as the independent second check: it reads the staged artifact rather than
+#: trusting the compiler that produced it.
+CAPTURE_RENDER_KWARGS: dict[str, Any] = {
+    "auto_audio": False,
+    "parallel": 1,
+    "strict_assets": True,
+}
 
 
 @dataclass(frozen=True, slots=True)

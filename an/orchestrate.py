@@ -66,14 +66,20 @@ def render_project(
     tts: str = "offline",
     lipsync: str = "offline",
     parallel: int | str | None = None,
+    strict_assets: bool = False,
 ) -> Path:
-    """Render the project's scene to a single mp4 under ``output/``."""
+    """Render the project's scene to a single mp4 under ``output/``.
+
+    ``strict_assets`` refuses a stand-in for a declared asset the stores do not
+    supply, rather than drawing one and succeeding (an#33).
+    """
     return _render_project(
         project_dir,
         output_name=output_name,
         tts=tts,
         lipsync=lipsync,
         parallel=parallel,
+        strict_assets=strict_assets,
     )
 
 

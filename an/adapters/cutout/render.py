@@ -179,6 +179,7 @@ class CutoutRenderer:
             fps=ctx.fps,
             width=ctx.resolution[0],
             height=ctx.resolution[1],
+            strict_assets=ctx.strict_assets,
         )
 
         job = _stage_job(ctx.work_dir, shot.id, scene_json, mall=ctx.mall)

@@ -223,6 +223,7 @@ These are load-bearing. Breaking them breaks the system in subtle ways.
 5. **`extra="allow"` on every Pydantic IR model.** Forward-compat: an older reader of a newer document survives. The cost: typos in field names don't error.
 6. **`anima*` JS API names were renamed to `an*` during the package rename.** `window.anLoadScene`, `anSetTime`, etc. The Python side calls these via `page.evaluate`; both must stay synced.
 7. **The ScenesStore's `"main"` key is the only supported key.** Multi-scene projects are a future feature.
+8. **A substituted asset is recorded, never merely substituted.** A character whose ref is not in `mall["characters"]` gets the placeholder rig; an environment ref that names neither a store entry nor a built-in preset gets the default backdrop. Both are legitimate — an asset-less project must render — and both used to be *silent*, which is not (an#33). `compile_shot` now appends one `AssetResolutionJSON` per drawable entity to `CutoutSceneJSON.asset_resolution`, warns (`CutoutCompileWarning`) on any `fallback=True`, and raises under `strict_assets=True`. The record is load-bearing rather than decorative: a missing descriptor and a deliberately-procedural character compile to the **same scene tree**, so nothing downstream of the compiler can tell them apart. `strict_assets` threads `an render --strict-assets` → `render_project` → `render` → `RenderContext.strict_assets` → `compile_shot`; `misc/bench/crossarch.py` sets it, because a pixel measurement of the wrong picture is worse than no measurement.
 
 ---
 
@@ -236,6 +237,8 @@ an render <dir>               — full pipeline → output/main.mp4
    --tts {offline,elevenlabs}
    --lipsync {offline,whisper,rhubarb}
    --output-name NAME
+   --parallel {N,auto}
+   --strict-assets           (fail instead of drawing a stand-in — an#33)
 an iterate <dir> "<instruction>"   — free-text edit via Claude (needs ANTHROPIC_API_KEY)
    --no-apply-changes        (dry run)
    --model claude-opus-4-7   (override)

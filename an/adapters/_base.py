@@ -34,6 +34,11 @@ class RenderContext:
     work_dir: Path
     fps: int = DEFAULT_FPS
     resolution: tuple[int, int] = DEFAULT_RESOLUTION
+    #: Refuse to draw a stand-in for a declared asset that the stores do not
+    #: supply. Off by default so an asset-less project still renders; on for
+    #: anything that measures pixels, where a stand-in is a different picture
+    #: that looks like a successful render (an#33).
+    strict_assets: bool = False
     extra: dict[str, Any] = field(default_factory=dict)
 
 
