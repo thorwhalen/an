@@ -49,9 +49,18 @@ def test_parse_issues_handles_prose_around_json():
     assert out[0]["what"] == "y"
 
 
-def test_parse_issues_returns_empty_on_garbage():
-    assert _parse_issues("not json at all") == []
-    assert _parse_issues("") == []
+def test_parse_issues_returns_no_verdict_on_garbage():
+    """`None` and `[]` are different answers, and conflating them was the bug.
+
+    An empty reply, a refusal, and a literal `{"issues": []}` used to produce
+    byte-identical reports at `info` severity, with `passed` True through all
+    three — so "the model declined to answer" was indistinguishable from "the
+    model looked and found nothing".
+    """
+    assert _parse_issues("not json at all") is None
+    assert _parse_issues("") is None
+    assert _parse_issues("I can't help with that.") is None
+    assert _parse_issues('{"issues": []}') == []
 
 
 def test_no_render_returns_info_finding():
