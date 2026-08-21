@@ -22,6 +22,59 @@ day per chunk of work; keep entries terse.
   in CI (#22), the Windows leg is `continue-on-error` so a green tick can hide a
   failure, and the unrendered second scene evaluator that Wave 5 must resolve
   before swap channels land.
+### #14 rework after adversarial review
+
+Four blockers, all reproduced, and the licence one could not have been fixed
+forward once shipped:
+
+- **The table was incomplete at the pinned major.** Upstream publishes 31 styles
+  at 9.x; the table had 27. Missing: `dylan` and `toon-head` — both **CC BY 4.0**,
+  i.e. attribution-bearing — plus `glass` and `rings` (CC0). Verified from each
+  style's own 9.x LICENSE file.
+- **The completeness test was circular.** It compared `DICEBEAR_STYLES` against
+  `DICEBEAR_STYLE_LICENSES` — two hand-maintained lists, checked against each
+  other — so a style missing from BOTH was invisible, which is exactly what
+  happened. It now checks against a committed snapshot of upstream's own package
+  listing, with an opt-in `live` test that catches the snapshot itself drifting.
+- **The gate was at the wrong layer.** `an character new` had no
+  `--acknowledge-attribution` flag, so every CC BY style became unreachable from
+  the CLI with a raw traceback — while its own `--style` help still recommended
+  one of them.
+- **`an credits` told the users most at risk that they owe nothing.** Every
+  character created before this feature used the CC BY default and has no
+  `source` field, and was reported as "no third-party assets recorded" — an
+  affirmative false compliance statement, when `metadata.dicebear_style` was
+  sitting in the same file. Now reconstructed.
+- **The producer had no test at all.** Deleting `source=source` from
+  `new_character` left all 446 tests green: every credits test hand-built a
+  descriptor, so the vocabulary was asserted and the path was not.
+
+Also: `conftest` now distinguishes `live` (reaches the network, costs nothing)
+from `live_api` (spends money). Collapsing them would have been convenient and
+would have quietly eroded what `live_api` promises.
+- **Third-party art carries its rights now (#14).** New `an/ir/assets.py`
+  `AssetSource`, with the rights field names pinned literal-for-literal to
+  `illustration.ImageResult` so an adapter is a dict copy rather than a rename
+  table — a rename table is where a field quietly stops being carried, which is
+  exactly what `illustration`'s own persistence layer does today
+  (illustration#14). `cost_usd=None` means unknown, never free.
+- **The default avatar style moved to a CC0 one.** It was `adventurer`, CC BY
+  4.0 — so `an character new <name>` with no flags produced art whose licence
+  obliged the *user* to credit an artist they had never heard of, recorded
+  nowhere and displayed nowhere. `lorelei` is not merely "a CC0 one": it is the
+  only CC0 human style shaped like a bust, which is what the rig needs, and it is
+  by the same artist so the demo art barely shifts. All 27 styles stay
+  requestable; a CC BY one now needs `acknowledge_attribution=True`, and the
+  refusal shows the exact text you would owe.
+- **`an credits <project>`** walks the recorded sources and prints what must be
+  displayed. A licence recorded and never displayed is not compliance. It keeps
+  three lists, never two: owed, UNVERIFIED, and clear — folding "unknown" into
+  either one is how an obligation goes missing.
+- `an/characters/licenses.py` is the per-style table, verified against each
+  style's own licence file. The DiceBear *software* licence (MIT) is a separate
+  fact from each *style* licence; DiceBear splits them itself.
+- Corrected a count I had pinned in `wave1_verification.md` — "11 CC0, 12 CC BY"
+  did not match the per-style rows beneath it. The rows are the fact.
 
 ### Second review round (#24)
 

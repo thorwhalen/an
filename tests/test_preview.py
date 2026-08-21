@@ -49,7 +49,7 @@ def test_stage_preview_writes_runtime_and_scene_json():
         assert (staging.runtime_dir / PREVIEW_HTML_NAME).is_file()
         assert staging.scene_json_path.is_file()
 
-        compiled = json.loads(staging.scene_json_path.read_text())
+        compiled = json.loads(staging.scene_json_path.read_text(encoding="utf-8"))
         assert compiled["meta"]["duration"] == 1.0
         assert staging.shot_id == "only"
 

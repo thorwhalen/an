@@ -105,7 +105,7 @@ def test_the_schema_no_longer_advertises_a_move_the_compiler_lacks():
     """
     from an.ir import schema
 
-    src = Path(schema.__file__).read_text()
+    src = Path(schema.__file__).read_text(encoding="utf-8")
     camera = re.search(r"class Camera\(.*?\n\n\nclass ", src, re.S)
     assert camera, "Camera model not found"
 
@@ -273,7 +273,7 @@ def test_no_user_facing_error_cites_an_internal_wave_number():
     import re as _re
 
     for mod in ("an/adapters/cutout/compile.py", "an/audio/pipeline.py"):
-        src = Path(__file__).resolve().parents[1].joinpath(mod).read_text()
+        src = Path(__file__).resolve().parents[1].joinpath(mod).read_text(encoding="utf-8")
         for m in _re.finditer(r'"[^"]*Wave \d[^"]*"', src):
             raise AssertionError(
                 f"{mod} puts an internal wave reference in a user-facing string: "
@@ -361,7 +361,7 @@ def _visual_colors(node) -> set[str]:
 
 
 def _runtime_switch_cases() -> set[str]:
-    src = RUNTIME_JS.read_text()
+    src = RUNTIME_JS.read_text(encoding="utf-8")
     body = re.search(r"function applyProperty\([^)]*\)\s*\{(.*?)\n    \}", src, re.S)
     assert body
     return set(re.findall(r"case\s+'([a-z_]+)'\s*:", re.sub(r"//[^\n]*", "", body.group(1))))
@@ -388,7 +388,7 @@ def _run_node(script: str) -> str:
 
 
 def _extract(name: str, pattern: str) -> str:
-    src = RUNTIME_JS.read_text()
+    src = RUNTIME_JS.read_text(encoding="utf-8")
     m = re.search(pattern, src, re.S)
     assert m, f"{name} not found in runtime.js"
     return m.group(0)
@@ -529,7 +529,7 @@ def test_the_iterate_prompt_enumerates_the_legal_properties():
     """
     from an import iterate
 
-    src = Path(iterate.__file__).read_text()
+    src = Path(iterate.__file__).read_text(encoding="utf-8")
     prompt = src[src.index("actions: list of action dicts") :][:1200]
     for prop in ("scale_x", "alpha", "pivot_y"):
         assert prop in prompt, f"the prompt does not name {prop!r} as legal"
@@ -549,7 +549,7 @@ def test_no_skill_advertises_a_capability_that_now_raises():
     skills = Path(__file__).resolve().parents[1] / ".claude/skills"
     offenders = []
     for skill in sorted(skills.glob("*/SKILL.md")):
-        text = skill.read_text()
+        text = skill.read_text(encoding="utf-8")
         for line in text.splitlines():
             # An enumeration of legal `kind` values must not offer `prop`.
             if "`kind`" in line and "∈" in line and "prop" in line.split("∈")[1]:
@@ -756,7 +756,7 @@ def test_no_doc_offers_a_targeting_example_that_no_rig_builds():
     for rel in ("an/base.py", "CLAUDE.md", "README.md",
                 ".claude/skills/an-dev/SKILL.md", ".claude/skills/an/SKILL.md"):
         for path, prop in re.findall(r"([a-z_]+(?:/[a-z_]+)+):([a-z_]+)",
-                                     (root / rel).read_text()):
+                                     (root / rel).read_text(encoding="utf-8")):
             if path not in real:
                 offenders.append(f"{rel}: {path}:{prop} — no rig builds {path!r}")
     assert not offenders, (

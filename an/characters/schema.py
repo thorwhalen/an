@@ -39,6 +39,8 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from an.ir.assets import AssetSource
+
 
 CHARACTER_SCHEMA_VERSION = "0.1.0"
 
@@ -239,8 +241,23 @@ class CharacterDescriptor(_CharModel):
     viseme_map: dict[str, str] = Field(default_factory=lambda: dict(DEFAULT_VISEME_MAP))
     animations: dict[str, IdleAnimation] = Field(default_factory=dict)
 
-    #: Free-form metadata (dicebear style/seed, art license, etc.). Schema-evol
+    #: Where this character's art came from, and what its licence obliges.
+    #:
+    #: ``None`` means "we made this" — not "unknown". Anything acquired should
+    #: carry one, because a licence defect is the only failure that reaches
+    #: BACKWARDS through completed work: a video shipped with an unattributed
+    #: CC BY asset cannot be un-shipped.
+    #:
+    #: Field names match ``illustration.ImageResult`` exactly, so an adapter is a
+    #: dict copy rather than a rename table — and a rename table is where a field
+    #: quietly stops being carried. Pinned by test.
+    source: AssetSource | None = None
+
+    #: Free-form metadata (dicebear style/seed, etc.). Schema-evolution
     #: friendly: anything an external tool wants to record can land here.
+    #:
+    #: This comment used to say "art license, etc." — an invitation nothing ever
+    #: took up. Rights live in ``source`` now, typed, so they can be found.
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     def model_post_init(self, __context: Any) -> None:

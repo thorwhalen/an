@@ -56,7 +56,7 @@ def test_init_force_overwrites():
         root = Path(d) / "demo"
         init(root, name="orig")
         init(root, name="new", force=True)
-        assert "new" in (root / "an.toml").read_text()
+        assert "new" in (root / "an.toml").read_text(encoding="utf-8")
 
 
 def test_load_returns_project_with_mall_and_scene():

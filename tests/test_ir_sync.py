@@ -82,7 +82,7 @@ def test_sync_writes_json_when_only_md_exists():
         result = sync(pdir)
         assert result.wrote_json
         assert (pdir / "ir" / "scene.json").exists()
-        data = json.loads((pdir / "ir" / "scene.json").read_text())
+        data = json.loads((pdir / "ir" / "scene.json").read_text(encoding="utf-8"))
         scene = SceneIR.model_validate(data)
         assert scene.meta.title == "X"
 
@@ -97,4 +97,4 @@ def test_sync_writes_md_when_only_json_exists():
         result = sync(pdir)
         assert result.wrote_md
         assert (pdir / "scene.md").exists()
-        assert "JsonFirst" in (pdir / "scene.md").read_text()
+        assert "JsonFirst" in (pdir / "scene.md").read_text(encoding="utf-8")

@@ -46,7 +46,7 @@ def _scene(**textures: AssetJSON) -> CutoutSceneJSON:
 def test_a_character_texture_is_staged_at_its_declared_path(tmp_path):
     root = tmp_path / "characters"
     (root / "amy-v1" / "parts").mkdir(parents=True)
-    (root / "amy-v1" / "parts" / "head.svg").write_text("<svg/>")
+    (root / "amy-v1" / "parts" / "head.svg").write_text("<svg/>", encoding="utf-8")
     target = tmp_path / "runtime"
     target.mkdir()
 
@@ -55,7 +55,7 @@ def test_a_character_texture_is_staged_at_its_declared_path(tmp_path):
         warnings.simplefilter("error")  # any warning here is a failure
         _stage_scene_assets(scene, {"characters": _FakeStore(root)}, target)
 
-    assert (target / "characters/amy-v1/parts/head.svg").read_text() == "<svg/>"
+    assert (target / "characters/amy-v1/parts/head.svg").read_text(encoding="utf-8") == "<svg/>"
 
 
 def test_a_non_character_prefix_is_staged_rather_than_dropped(tmp_path):
@@ -66,7 +66,7 @@ def test_a_non_character_prefix_is_staged_rather_than_dropped(tmp_path):
     """
     root = tmp_path / "environments"
     (root / "park").mkdir(parents=True)
-    (root / "park" / "sky.svg").write_text("<svg id='sky'/>")
+    (root / "park" / "sky.svg").write_text("<svg id='sky'/>", encoding="utf-8")
     target = tmp_path / "runtime"
     target.mkdir()
 

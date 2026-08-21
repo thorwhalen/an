@@ -31,7 +31,7 @@ _COUNT_WORDS = r"(?:two|three|four|five|six|seven|eight|nine|ten|\d+)"
 
 
 def _lines(rel: str):
-    return (ROOT / rel).read_text().splitlines()
+    return (ROOT / rel).read_text(encoding="utf-8").splitlines()
 
 
 @pytest.mark.parametrize(
@@ -71,13 +71,13 @@ def test_no_gap_line_survives_its_gap_loop_mode():
     """
     from an.adapters.cutout import serialize
 
-    runtime = (ROOT / "an/data/cutout_runtime/runtime.js").read_text()
+    runtime = (ROOT / "an/data/cutout_runtime/runtime.js").read_text(encoding="utf-8")
     assert "function wrapTime" in runtime, (
         "the runtime no longer honours loop_mode — the docs' original claim has "
         "become true again and these assertions need rewriting, not deleting"
     )
     for rel in ("CLAUDE.md", "misc/docs/architecture_as_built.md"):
-        text = (ROOT / rel).read_text().lower()
+        text = (ROOT / rel).read_text(encoding="utf-8").lower()
         for phrase in ("runtime ignores `loop_mode`", "runtime.js has no handling for it",
                        "js runtime ignores"):
             assert phrase not in text, f"{rel} still claims the runtime ignores loop_mode"
@@ -85,7 +85,7 @@ def test_no_gap_line_survives_its_gap_loop_mode():
     # and the real gap is still real: nothing writes the field
     writers = [
         p for p in (ROOT / "an").rglob("*.py")
-        if "loop_mode=" in p.read_text() and p.name not in {"serialize.py", "clip.py"}
+        if "loop_mode=" in p.read_text(encoding="utf-8") and p.name not in {"serialize.py", "clip.py"}
     ]
     assert not writers or True, "informational"
     assert serialize.AnimationClipJSON.model_fields["loop_mode"].default == "once"
@@ -94,7 +94,7 @@ def test_no_gap_line_survives_its_gap_loop_mode():
 def test_no_doc_claims_the_engine_is_fetched_from_a_network():
     """It was vendored in #12; three docs listed it as a live gap afterwards."""
     for rel in PROSE + ("an/data/cutout_runtime/README.md",):
-        text = (ROOT / rel).read_text().lower()
+        text = (ROOT / rel).read_text(encoding="utf-8").lower()
         for phrase in ("loads pixijs from a cdn", "fetches pixijs from a cdn",
                        "cold render needs network"):
             assert phrase not in text, f"{rel} still describes the CDN dependency"
@@ -138,3 +138,50 @@ def test_the_live_api_gate_is_what_the_docs_say_it_is():
     finally:
         os.environ.clear()
         os.environ.update(prev)
+
+
+# --------------------------------------------------------- cross-platform
+
+def test_no_source_file_reads_text_without_pinning_the_encoding():
+    """`Path.read_text(encoding="utf-8")` uses the LOCALE codec, which is cp1252 on Windows.
+
+    Every doc in this repo contains non-ASCII (em dashes, arrows), so an
+    unpinned read is a `UnicodeDecodeError` on Windows and nowhere else. It
+    reached `main` because the Windows CI leg is `continue-on-error: true` — the
+    run reported green with three failures inside it, which is the same way a
+    path-separator bug reached main earlier.
+
+    This is the second Windows-only defect of its kind, hence a guard rather
+    than another fix.
+    """
+    import re as _re
+
+    offenders = []
+    for path in sorted(list((ROOT / "tests").rglob("*.py")) + list((ROOT / "an").rglob("*.py"))):
+        if ".claude" in path.parts:
+            continue
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if _re.search(r"\.read_text\(\s*\)", line):
+                offenders.append(f"{path.relative_to(ROOT)}:{n}")
+    assert not offenders, (
+        "read_text() without encoding=\"utf-8\" — decodes with the locale codec, "
+        "which fails on Windows for any non-ASCII content:\n  "
+        + "\n  ".join(offenders)
+    )
+
+
+def test_no_source_file_writes_text_without_pinning_the_encoding():
+    """The write side has the same trap, and it corrupts rather than raising."""
+    import re as _re
+
+    offenders = []
+    for path in sorted(list((ROOT / "tests").rglob("*.py")) + list((ROOT / "an").rglob("*.py"))):
+        if ".claude" in path.parts:
+            continue
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if _re.search(r"\.write_text\([^)]*\)", line) and "encoding" not in line:
+                offenders.append(f"{path.relative_to(ROOT)}:{n}: {line.strip()[:70]}")
+    assert not offenders, (
+        "write_text() without encoding=\"utf-8\" — encodes with the locale codec:\n  "
+        + "\n  ".join(offenders)
+    )

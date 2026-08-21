@@ -156,7 +156,30 @@ def preview(
 
 
 # SSOT for the CLI dispatcher (per the python-dispatching skill convention).
-_dispatch_funcs = [init, validate, sync, check, render, iterate, preview]
+
+
+def credits(project_dir: str, json_out: str | None = None) -> str:
+    """Show what third-party work is in ``project_dir`` and what it obliges.
+
+    project_dir: the an project
+    json_out: also write the machine-readable record to this path
+
+    A licence recorded and never displayed is not compliance, so this is the
+    consumer that makes the provenance field worth having.
+    """
+    from an.credits import credits_for_project
+
+    report = credits_for_project(project_dir)
+    if json_out:
+        import json as _json
+
+        _p = Path(json_out)
+        _p.parent.mkdir(parents=True, exist_ok=True)
+        _p.write_text(_json.dumps(report.to_dict(), indent=2), encoding="utf-8")
+    return report.format()
+
+
+_dispatch_funcs = [init, validate, sync, check, render, iterate, preview, credits]
 
 
 # Sub-namespaces. ``__main__`` mounts these via argh's ``namespace=`` arg so

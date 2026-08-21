@@ -154,7 +154,7 @@ def _runtime_switch_cases() -> set[str]:
     whole-file grep is wrong in both directions: it passes on a commented-out
     case and trips on the word ``case`` in prose.
     """
-    src = RUNTIME_JS.read_text()
+    src = RUNTIME_JS.read_text(encoding="utf-8")
     body = re.search(r"function applyProperty\([^)]*\)\s*\{(.*?)\n    \}", src, re.S)
     assert body, "applyProperty not found in runtime.js"
     text = re.sub(r"//[^\n]*", "", body.group(1))  # strip line comments
@@ -192,7 +192,7 @@ def test_applypose_applies_shallowest_target_first():
     ``applyPose`` with a stubbed node index and records the order in which
     ``applyProperty`` is reached.
     """
-    src = RUNTIME_JS.read_text()
+    src = RUNTIME_JS.read_text(encoding="utf-8")
     order_fn = re.search(
         r"function poseKeysInApplicationOrder\(pose\) \{.*?\n    \}", src, re.S
     )
