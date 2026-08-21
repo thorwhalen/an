@@ -62,6 +62,7 @@ an/
 │   ├── contract.py          scene_contract_sha256 — the comparability key
 │   ├── png.py               filter-0 writer + full-filter reader; numpy + stdlib only
 │   ├── golden.py            the golden gate and `--bless`; compares DECODED pixels
+│   ├── compare.py           two rows in, a verdict or a REFUSAL out (an#40)
 │   ├── environment.py       the environment tuple, split by comparison scope
 │   └── run.py               capture -> panel -> row
 │
@@ -268,6 +269,12 @@ an bench                      — render the fixed corpus, write a metrics ledge
    --keep-render PATH        (keep the throwaway render tree instead of deleting it)
    --quiet                   (print only the ledger path)
    --bless "<reason>"        (re-write the golden frames, recording this reason)
+   --compare PATH            (compare this run against a baseline row)
+an bench-compare              — two ledger rows in, a verdict or a REFUSAL out
+   --before PATH --after PATH   (default: the two newest committed rows)
+   --mutation NAME           (evaluate the per-mutation predictions instead)
+   --strict                  (exit nonzero on a regression / unmet criterion)
+   --raw                     (JSON instead of the human digest)
 ```
 
 All built via `argh` over the SSOT list `an.tools._dispatch_funcs`.

@@ -200,6 +200,42 @@ reporting anti-aliasing correctly; a non-blend near the top means the palette
 missed a literal and the number is inflated. That is a recorded field rather
 than an eyeball check, on purpose.
 
+## Comparing rows (an#40)
+
+`an bench-compare` reads two rows. **Refusing is the feature** — two rows
+measured on different scenes, resolutions or x264 builds are not "one better and
+one worse"; every number in them is uninterpretable relative to the other.
+
+Five things about it that are easy to get wrong:
+
+1. **The two sides are scoped oppositely, and both are measured.** An x264 or
+   ISA change refuses the **encode-side** metrics and leaves the render side
+   comparable. A Chromium or Playwright change refuses the **render-side**
+   metrics and leaves the encode side comparable. Refusing everything on either
+   piece of evidence throws away the half of the panel that can still be read.
+2. **A key absent from one row is unknown, not different.** The ledger grows
+   additively (an#38 added `shot_order` without bumping `SCHEMA_VERSION`,
+   correctly), so refusing on an absent field would make every future addition
+   retroactively destroy comparability with every row already written. Absences
+   are caveats; `schema_version` guards a genuinely unreadable row.
+3. **Comparability keys are PARAMETERS, never measurements.** `masks.edge.threshold`
+   is a key; `masks.edge.edge_px` is not — it changes precisely when the render
+   changes, which is when the rows are most worth comparing. Same reason
+   `today_sha256` sits in the golden diagnostics rather than in a key.
+4. **A metric's own declaration is a comparability key.** If `family` or
+   `optimum` moved between the rows, the metric means something different in
+   each — refused for that metric alone. This is why every row carries its full
+   `metric_declarations` block instead of trusting the installed registry.
+5. **There is no tolerance band and none is needed.** Two consecutive runs on
+   one machine are bit-identical across all six scenes. The report prints the
+   relative delta so magnitude is visible without one.
+
+Five per-metric verdicts under a mutation: `as_declared`, `contrary`,
+`did_not_move` (the lever never reached it — a different fix from `contrary`),
+`gated`, `unexpected_movement` (a metric declared orthogonal that moved).
+The criterion is **families, not metrics**: two witnesses from one family count
+once.
+
 ## Two measured facts that change what counts as a witness
 
 Both found while building an#38, both by running the levers rather than by

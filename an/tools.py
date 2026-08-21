@@ -189,6 +189,7 @@ def bench(
     keep_render: str = "",
     quiet: bool = False,
     bless: str = "",
+    compare: str = "",
 ) -> str:
     """Render the fixed bench corpus and write a metrics ledger.
 
@@ -201,6 +202,7 @@ def bench(
     keep_render: keep the throwaway render tree here instead of deleting it
     quiet: print only the ledger path
     bless: (re)write the golden frames, recording THIS STRING as the reason
+    compare: after the run, compare it against this baseline ledger row
 
     Rendering knobs are deliberately NOT flags: a bench whose render knobs vary
     per invocation produces incomparable rows, so they are a module constant
@@ -232,9 +234,84 @@ def bench(
         keep_render=Path(keep_render) if keep_render else None,
         bless=bless,
     )
-    if quiet:
-        return str(ledger.get("_written_to", ""))
-    return format_panel(ledger)
+    panel = str(ledger.get("_written_to", "")) if quiet else format_panel(ledger)
+    if not compare:
+        return panel
+    from an.bench.compare import compare as compare_rows
+    from an.bench.compare import format_comparison, load_row
+
+    return panel + "\n\n" + format_comparison(compare_rows(load_row(compare), ledger))
+
+
+def bench_compare(
+    before: str = "",
+    after: str = "",
+    mutation: str = "",
+    strict: bool = False,
+    raw: bool = False,
+) -> str:
+    """Compare two ledger rows — and refuse when they are not comparable.
+
+    before: baseline ledger row (default: the second-newest committed row)
+    after: the row to judge (default: the newest committed row)
+    mutation: evaluate the per-mutation predictions instead of asking whether
+        the second row is worse. One of the mutations the rows declare.
+    strict: exit nonzero when the answer is bad — a regression without a
+        mutation, or an unmet criterion with one. For CI.
+    raw: print the report as JSON instead of the human digest
+
+    Refusing is the feature. Two rows measured on different scenes, at
+    different resolutions, or on different x264 builds are not "one better and
+    one worse" — every number in them is uninterpretable relative to the other,
+    and a number reported across incomparable rows is worse than none.
+
+    ``-dirty`` rows are excluded from the defaults: a row measured against
+    uncommitted edits describes no commit. Name one explicitly to compare it.
+    """
+    import json as _json
+    import sys as _sys
+
+    from an.bench.compare import (
+        ComparisonError,
+        compare as compare_rows,
+        format_comparison,
+        latest_rows,
+        load_row,
+    )
+
+    if not before or not after:
+        rows = latest_rows()
+        if len(rows) < 2:
+            return (
+                f"need two committed ledger rows to compare; found {len(rows)}. "
+                "Run `an bench` on two different commits, or name the rows "
+                "explicitly with --before and --after."
+            )
+        before = before or str(rows[0])
+        after = after or str(rows[1])
+
+    try:
+        report = compare_rows(
+            load_row(before), load_row(after), mutation=mutation or None
+        )
+    except ComparisonError as e:
+        return f"refused: {e}"
+
+    text = (
+        _json.dumps(report, indent=2, sort_keys=True)
+        if raw
+        else format_comparison(report)
+    )
+    if strict:
+        bad = (
+            not report.get("criterion_met")
+            if mutation
+            else report.get("has_regressions")
+        )
+        if bad:
+            print(text)
+            _sys.exit(1)
+    return text
 
 
 _dispatch_funcs = [
@@ -247,6 +324,7 @@ _dispatch_funcs = [
     preview,
     credits,
     bench,
+    bench_compare,
 ]
 
 
