@@ -563,6 +563,84 @@ def test_the_criterion_needs_three_distinct_families():
     assert scene["criterion_met"] is False
 
 
+def test_the_lever_may_change_the_knob_it_pulls_but_only_in_mutation_mode():
+    """MUTATION: drop the `MUTATION_TOUCHES` exemption from `compare`.
+
+    Without it the `high_crf` lever is unevaluable: it works by changing the
+    encode command, `x264_argv` is an encode-side comparability key, and every
+    encode-side metric is therefore refused — so the encoder lever, which is half
+    of an#41's deliverable, reports 0/3 families and reads exactly like an
+    instrument that cannot see it. Verified against a real crf23 -> crf40 pair
+    while building this: 0/3 before the exemption, 4/3 after.
+
+    The exemption is per lever, by exact path, and **only in mutation mode** — a
+    blanket "ignore the environment when a mutation is given" would let a row
+    from another machine in through the same door, which is the one thing this
+    module exists to refuse.
+    """
+    from an.bench.registry import MUTATION_TOUCHES
+
+    assert MUTATION_TOUCHES["high_crf"] == (
+        ("environment", "encode_side", "x264_argv"),
+    )
+    assert MUTATION_TOUCHES["disabled_aa"] == (), (
+        "the AA lever patches runtime.js, which the row does not record — the "
+        "runtime is the code under test, not a comparability key"
+    )
+
+    changed = copy.deepcopy(_ROW_PROVENANCE)
+    changed["environment"]["encode_side"]["x264_argv"] = ["-crf", "40"]
+    before, after = _row(), _row(row_provenance=changed)
+
+    exempt = compare(before, after, mutation="high_crf")
+    assert exempt["environment_refusals"] == {}
+    assert exempt["scenes"]["s"]["metrics"][_one("encode")]["state"] == "compared"
+    assert [i["key"] for i in exempt["expected_environment_changes"]] == [
+        "environment.encode_side.x264_argv"
+    ]
+    assert "expected, and exempt" in format_comparison(exempt)
+
+    refused = compare(before, after)
+    assert refused["scenes"]["s"]["metrics"][_one("encode")]["refusal"] == (
+        "environment_differs"
+    ), "without a mutation the same difference must still refuse"
+
+
+def test_the_exemption_does_not_open_the_door_to_a_different_machine():
+    """MUTATION: exempt every environment path whenever a mutation is given.
+
+    The knob the lever pulls is the independent variable. The ISA is not.
+    """
+    changed = copy.deepcopy(_ROW_PROVENANCE)
+    changed["environment"]["encode_side"]["x264_argv"] = ["-crf", "40"]
+    changed["environment"]["encode_side"]["isa"] = "x86_64"
+    report = compare(_row(), _row(row_provenance=changed), mutation="high_crf")
+    keys = [i["key"] for i in report["environment_refusals"]["machine"]]
+    assert keys == ["environment.encode_side.isa"]
+    assert report["scenes"]["s"]["metrics"][_one("encode")]["refusal"] == (
+        "environment_differs"
+    )
+
+
+def test_a_lever_whose_declared_knob_did_not_move_is_reported_as_maybe_unapplied():
+    """MUTATION: drop the `unapplied` computation.
+
+    The cheapest available evidence that a mutation never applied. Without it, a
+    lever that silently failed to take reports "0/3 families" — which reads as
+    "the instrument is blind" and sends the reader to fix the wrong thing.
+    """
+    report = compare(_row(), _row(), mutation="high_crf")
+    assert report["mutation_may_not_have_applied"] == [
+        "environment.encode_side.x264_argv"
+    ]
+    assert "may never have applied" in format_comparison(report)
+
+    changed = copy.deepcopy(_ROW_PROVENANCE)
+    changed["environment"]["encode_side"]["x264_argv"] = ["-crf", "40"]
+    applied = compare(_row(), _row(row_provenance=changed), mutation="high_crf")
+    assert applied["mutation_may_not_have_applied"] == []
+
+
 # ---------------------------------------------------------- regression verdicts
 
 

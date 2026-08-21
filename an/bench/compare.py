@@ -47,6 +47,7 @@ from pathlib import Path
 from typing import Any
 
 from an.bench.ledger import SCHEMA_VERSION
+from an.bench.registry import MUTATION_TOUCHES
 
 #: Row schema versions this comparer understands. A row it cannot read is
 #: refused rather than guessed at — the whole point of the version field.
@@ -471,6 +472,21 @@ def compare(before: dict, after: dict, *, mutation: str | None = None) -> dict:
     env_refusals = {"any_machine": common + render, "machine": common + encode}
     env_caveats = common_caveats + render_caveats + encode_caveats
 
+    # In mutation mode, the knob the lever pulls is the INDEPENDENT VARIABLE, not
+    # a reason to refuse. Exempted by declaration and by exact path — see
+    # `MUTATION_TOUCHES`. And a declared knob that did NOT move is reported: it
+    # is the cheapest available evidence that the mutation never applied, which
+    # otherwise reads as "the instrument is blind".
+    expected_changes: list[dict] = []
+    unapplied: list[str] = []
+    if mutation is not None:
+        touched = {".".join(path) for path in MUTATION_TOUCHES.get(mutation, ())}
+        for scope, items in env_refusals.items():
+            env_refusals[scope] = [i for i in items if i["key"] not in touched]
+        seen = {i["key"] for i in common + render + encode}
+        expected_changes = [i for i in common + render + encode if i["key"] in touched]
+        unapplied = sorted(touched - seen)
+
     names_b, names_a = set(before["scenes"]), set(after["scenes"])
     scenes = {
         name: _compare_scene(
@@ -496,6 +512,8 @@ def compare(before: dict, after: dict, *, mutation: str | None = None) -> dict:
         },
         "environment_refusals": {k: v for k, v in env_refusals.items() if v},
         "environment_caveats": env_caveats,
+        "expected_environment_changes": expected_changes,
+        "mutation_may_not_have_applied": unapplied,
         "scenes_only_in_before": sorted(names_b - names_a),
         "scenes_only_in_after": sorted(names_a - names_b),
         "scenes": scenes,
@@ -544,6 +562,17 @@ def format_comparison(report: dict) -> str:
         lines.append(f"  REFUSED for every {side} metric — the environment differs:")
         for item in refusals:
             lines.append(f"    {item['key']}: {item['before']!r} -> {item['after']!r}")
+    for item in report.get("expected_environment_changes") or []:
+        lines.append(
+            f"  the lever moved {item['key']} — expected, and exempt from the "
+            f"refusal ({item['before']!r} -> {item['after']!r})"
+        )
+    for key in report.get("mutation_may_not_have_applied") or []:
+        lines.append(
+            f"  WARNING: {mutation!r} declares that it changes {key}, and it did "
+            "not. The mutation may never have applied, which reads exactly like "
+            "an instrument that cannot see it."
+        )
     for item in report.get("environment_caveats") or []:
         lines.append(
             f"  caveat: {item['key']} is absent from the {item['absent_from']} row "

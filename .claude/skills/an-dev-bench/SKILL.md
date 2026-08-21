@@ -248,16 +248,26 @@ reading the research:
   and the picture gets cheaper). So family F is an honest witness for that lever
   only on a scene with non-axis-aligned edges, and an#41's criterion has to be
   evaluated **per scene**, which `ledger.witnesses` already is.
-- **`encode_flicker_on_held_pixels` under `high_crf` is falsified on the real
-  corpus.** Declared `increase`, and the research's synthetic reference is
-  0.0321 / 0.0394 / 0.0848 at crf18/23/51. Measured on `single_character`:
-  0.000648 → 0.007018 (crf23) → 0.000985 → 0.000916 → 0.001137 → 0.001685 —
-  non-monotone, peaking at crf23, and three orders of magnitude smaller. Same
-  shape on `promote_demo`. The mechanism is the one the registry already
-  documents for the half-res-upscale case: at high CRF the whole frame flattens
-  into large uniform skip regions, so held pixels stop moving. C, D and F are
-  monotone across the whole ladder on both scenes, so the criterion still holds
-  with three families — but family E must be demoted rather than counted.
+- **`encode_flicker_on_held_pixels` under `high_crf` is non-monotone on the
+  ladder, and scene-dependent at the step the lever uses.** Declared `increase`;
+  the research's synthetic reference is 0.0321 / 0.0394 / 0.0848 at crf18/23/51.
+  Measured on `single_character` across crf 18/23/28/33/40/51: 0.000648 /
+  0.007018 / 0.000985 / 0.000916 / 0.001137 / 0.001685 — it **peaks at crf23**
+  and is three orders of magnitude smaller than the reference. The mechanism is
+  the one the registry already documents for the half-res-upscale case: at high
+  CRF the whole frame flattens into large uniform skip regions, so held pixels
+  stop moving.
+
+  **But at the crf23 → crf40 step the lever actually uses, it moves as declared
+  on five of six scenes** and contrary only on `single_character` (aa_probe
+  +115%, graded_field +114%, multi_shot +103%, promote_demo +446%,
+  saturated_outline +48%, single_character −84%). So E is **not** to be demoted
+  — a first, two-scene reading of this said "falsified on the real corpus" and
+  that was too strong, corrected once `an bench-compare` could evaluate the
+  encode lever across the whole corpus. Record the non-monotonicity, do not
+  count on E carrying a scene, and note that the criterion never needs it: C, D
+  and F are monotone across the whole ladder and satisfy it on all six scenes
+  alone.
 
 Also measured: the **descriptor path is nearly blind to the AA lever** (96
 differing pixels of 12.4M on `promote_demo`), because MSAA applies to WebGL
