@@ -299,9 +299,7 @@ class VisionLMVerifier:
             return report
         if self._judge_is_default:
             if self.api_key is None:
-                report.add(
-                    "info", "<vision_lm>", "ANTHROPIC_API_KEY not set; skipping"
-                )
+                report.add("info", "<vision_lm>", "ANTHROPIC_API_KEY not set; skipping")
                 return report
             if importlib.util.find_spec("anthropic") is None:
                 report.add(

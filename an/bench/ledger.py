@@ -221,7 +221,9 @@ def build_ledger(*, provenance: dict, scenes: dict[str, dict]) -> dict:
 def write_ledger(ledger: dict, path: Path) -> Path:
     """Write a row. ``sort_keys=True`` so two rows diff line-for-line."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return path
 
 

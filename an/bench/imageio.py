@@ -71,28 +71,58 @@ def source_rgb_command(frames_dir: Path) -> list[str]:
     clipping that ruins the edge metrics cannot reach them.
     """
     return [
-        "ffmpeg", "-v", "error", "-start_number", "0",
-        "-i", str(frames_dir / DEFAULT_FRAME_PNG_PATTERN),
-        "-pix_fmt", RGB_PIX_FMT, "-f", "rawvideo", "-",
+        "ffmpeg",
+        "-v",
+        "error",
+        "-start_number",
+        "0",
+        "-i",
+        str(frames_dir / DEFAULT_FRAME_PNG_PATTERN),
+        "-pix_fmt",
+        RGB_PIX_FMT,
+        "-f",
+        "rawvideo",
+        "-",
     ]
 
 
 def source_yuv_command(frames_dir: Path) -> list[str]:
     """Decode the pre-encode PNG sequence to planar YUV, **range- and matrix-pinned**."""
     return [
-        "ffmpeg", "-v", "error", "-start_number", "0",
-        "-i", str(frames_dir / DEFAULT_FRAME_PNG_PATTERN),
-        "-vf", SOURCE_SCALE_FILTER,
-        "-pix_fmt", YUV_PIX_FMT, "-f", "rawvideo", "-",
+        "ffmpeg",
+        "-v",
+        "error",
+        "-start_number",
+        "0",
+        "-i",
+        str(frames_dir / DEFAULT_FRAME_PNG_PATTERN),
+        "-vf",
+        SOURCE_SCALE_FILTER,
+        "-pix_fmt",
+        YUV_PIX_FMT,
+        "-f",
+        "rawvideo",
+        "-",
     ]
 
 
 def decoded_rgb_command(mp4: Path) -> list[str]:
     """Decode the delivered mp4 to raw RGB."""
     return [
-        "ffmpeg", "-v", "error", "-i", str(mp4),
-        "-map", "0:v:0", "-fps_mode", "passthrough",
-        "-pix_fmt", RGB_PIX_FMT, "-f", "rawvideo", "-",
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        str(mp4),
+        "-map",
+        "0:v:0",
+        "-fps_mode",
+        "passthrough",
+        "-pix_fmt",
+        RGB_PIX_FMT,
+        "-f",
+        "rawvideo",
+        "-",
     ]
 
 
@@ -104,9 +134,20 @@ def decoded_yuv_command(mp4: Path) -> list[str]:
     to. Adding one would convert twice.
     """
     return [
-        "ffmpeg", "-v", "error", "-i", str(mp4),
-        "-map", "0:v:0", "-fps_mode", "passthrough",
-        "-pix_fmt", YUV_PIX_FMT, "-f", "rawvideo", "-",
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        str(mp4),
+        "-map",
+        "0:v:0",
+        "-fps_mode",
+        "passthrough",
+        "-pix_fmt",
+        YUV_PIX_FMT,
+        "-f",
+        "rawvideo",
+        "-",
     ]
 
 
@@ -125,10 +166,24 @@ def lossless_encode_command(frames_dir: Path, fps: int, out: Path) -> list[str]:
             i = args.index(flag)
             del args[i : i + 2]
     return [
-        "ffmpeg", "-y", "-loglevel", "error", "-framerate", str(fps),
-        "-i", str(frames_dir / DEFAULT_FRAME_PNG_PATTERN),
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-qp", "0",
-        *args, "-movflags", "+faststart", str(out),
+        "ffmpeg",
+        "-y",
+        "-loglevel",
+        "error",
+        "-framerate",
+        str(fps),
+        "-i",
+        str(frames_dir / DEFAULT_FRAME_PNG_PATTERN),
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-qp",
+        "0",
+        *args,
+        "-movflags",
+        "+faststart",
+        str(out),
     ]
 
 
@@ -168,7 +223,10 @@ def source_rgb(frames_dir: Path, *, height: int, width: int) -> Any:
     """``(N, H, W, 3)`` uint8 of the pre-encode PNGs."""
     return _reshape(
         run_raw(source_rgb_command(frames_dir)),
-        planes=3, height=height, width=width, label="source_rgb",
+        planes=3,
+        height=height,
+        width=width,
+        label="source_rgb",
     )
 
 
@@ -176,7 +234,10 @@ def source_yuv(frames_dir: Path, *, height: int, width: int) -> Any:
     """``(N, 3, H, W)`` uint8 planar YUV of the pre-encode PNGs, range-pinned."""
     return _reshape(
         run_raw(source_yuv_command(frames_dir)),
-        planes=3, height=height, width=width, label="source_yuv",
+        planes=3,
+        height=height,
+        width=width,
+        label="source_yuv",
     )
 
 
@@ -184,7 +245,10 @@ def decoded_rgb(mp4: Path, *, height: int, width: int) -> Any:
     """``(N, H, W, 3)`` uint8 of the delivered mp4."""
     return _reshape(
         run_raw(decoded_rgb_command(mp4)),
-        planes=3, height=height, width=width, label="decoded_rgb",
+        planes=3,
+        height=height,
+        width=width,
+        label="decoded_rgb",
     )
 
 
@@ -192,7 +256,10 @@ def decoded_yuv(mp4: Path, *, height: int, width: int) -> Any:
     """``(N, 3, H, W)`` uint8 planar YUV of the delivered mp4."""
     return _reshape(
         run_raw(decoded_yuv_command(mp4)),
-        planes=3, height=height, width=width, label="decoded_yuv",
+        planes=3,
+        height=height,
+        width=width,
+        label="decoded_yuv",
     )
 
 
@@ -203,10 +270,20 @@ def video_stream_bytes(mp4: Path) -> int:
     (silent if there is no dialogue), so it varies with the audio cache's state.
     This one does not.
     """
-    out = run_raw([
-        "ffprobe", "-v", "error", "-select_streams", "v:0",
-        "-show_entries", "packet=size", "-of", "csv=p=0", str(mp4),
-    ])
+    out = run_raw(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "packet=size",
+            "-of",
+            "csv=p=0",
+            str(mp4),
+        ]
+    )
     total = 0
     for line in out.decode("ascii", "replace").splitlines():
         line = line.strip().rstrip(",")

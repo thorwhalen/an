@@ -129,9 +129,9 @@ def svg_colours(svg_path: Path) -> tuple[set[int], set[str]]:
 
     def walk(el: Any, hidden: bool) -> None:
         style = _style_values(el.get("style", ""))
-        el_hidden = hidden or style.get("display") == "none" or el.get(
-            "display"
-        ) == "none"
+        el_hidden = (
+            hidden or style.get("display") == "none" or el.get("display") == "none"
+        )
         if not el_hidden:
             candidates = [
                 el.get("fill"),
@@ -251,6 +251,11 @@ def runtime_literal_colours(runtime_js: Path) -> set[int]:
     src = runtime_js.read_text(encoding="utf-8")
     painted: set[int] = set()
     for line in src.splitlines():
-        if "beginFill" in line or "lineStyle" in line or "_COLOR" in line or "_FILL" in line:
+        if (
+            "beginFill" in line
+            or "lineStyle" in line
+            or "_COLOR" in line
+            or "_FILL" in line
+        ):
             painted.update(int(m, 16) for m in _RUNTIME_LITERAL_RE.findall(line))
     return painted
