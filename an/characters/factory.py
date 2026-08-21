@@ -115,7 +115,8 @@ def _check_style_is_usable(style: str, *, acknowledge_attribution: bool) -> None
     raise ValueError(
         f"style {style!r} is licensed {lic.license if lic else 'UNVERIFIED'}, "
         "which obliges whoever ships the rendered video to credit the artist. "
-        "Pass acknowledge_attribution=True to accept that duty; the record is "
+        "Accept that duty with acknowledge_attribution=True (or "
+        "--acknowledge-attribution on the CLI); the record is "
         "then written to the character's `source` field and `an credits` will "
         f"render it. What you would owe:\n  {owed}\n"
         f"For no obligation at all, use the default style "

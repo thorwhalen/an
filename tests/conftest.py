@@ -36,6 +36,21 @@ import pytest
 #: Set this truthy to opt a run in to real, billed API calls.
 LIVE_API_ENV_VAR = "AN_LIVE_API_TESTS"
 
+#: Markers that opt a test out of the offline network guard.
+#:
+#: TWO markers, because they are different promises and collapsing them would
+#: weaken the one that matters:
+#:
+#: - ``live_api`` — this test SPENDS MONEY. Gated on an explicit positive opt-in
+#:   env var as well, because a key being present is not consent to spend.
+#: - ``live`` — this test reaches the network but costs nothing (checking that a
+#:   pinned upstream snapshot has not drifted, say). It still must not run in the
+#:   hermetic suite, but it needs no spending gate.
+#:
+#: Marking a free test ``live_api`` would be convenient and would quietly erode
+#: what that marker promises.
+_NETWORK_OPT_OUT_MARKERS = ("live_api", "live")
+
 _TRUTHY = frozenset({"1", "true", "yes", "on"})
 
 
@@ -67,6 +82,11 @@ def pytest_configure(config):
         "markers",
         "live_api: makes a real, billed API call; skipped unless "
         f"{LIVE_API_ENV_VAR} is truthy and CI is unset",
+    )
+    config.addinivalue_line(
+        "markers",
+        "live: reaches the network but costs nothing; exempt from the offline "
+        "guard, and skipped in CI",
     )
 
 
@@ -196,7 +216,7 @@ def _no_outbound_network(request, monkeypatch):
     its own ``http://127.0.0.1:<port>`` server (``_serve_dir``), and the preview
     tests fetch from it. Tests marked ``live_api`` opt out.
     """
-    if request.node.get_closest_marker("live_api") is not None:
+    if any(request.node.get_closest_marker(m) for m in _NETWORK_OPT_OUT_MARKERS):
         yield []
         return
     attempts = install_network_guard(monkeypatch)

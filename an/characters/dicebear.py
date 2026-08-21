@@ -78,6 +78,10 @@ DICEBEAR_STYLES: tuple[str, ...] = (
     "pixel-art-neutral",
     "shapes",
     "thumbs",
+    "dylan",
+    "glass",
+    "rings",
+    "toon-head",
 )
 
 

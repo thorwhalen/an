@@ -79,15 +79,77 @@ def test_attribution_classification_distinguishes_unknown_from_no(license, expec
 # ----------------------------------------------------------- the licence table
 
 
-def test_every_requestable_style_has_a_verified_licence():
-    """A style the code can request but whose rights are unknown is a trap.
+#: Snapshot of what upstream actually publishes at the pinned major.
+#:
+#: External ground truth, and that is the entire point. The first version of the
+#: test below compared `DICEBEAR_STYLES` against `DICEBEAR_STYLE_LICENSES` —
+#: two hand-maintained lists, checked against each other — so a style missing
+#: from BOTH was invisible to it. Four were: `dylan` and `toon-head` (both
+#: CC BY 4.0, i.e. attribution-bearing), `glass` and `rings`. A guard whose
+#: reference is another copy of the thing it guards can only confirm that
+#: someone copied one list into the other.
+_UPSTREAM_SNAPSHOT = Path(__file__).resolve().parents[1] / "an/data/dicebear_9x_styles.json"
+
+
+def _upstream_styles() -> set[str]:
+    import json
+
+    return set(json.loads(_UPSTREAM_SNAPSHOT.read_text())["styles"])
+
+
+def test_every_style_upstream_publishes_is_requestable_and_licensed():
+    """Checked against upstream, not against ourselves.
 
     The DiceBear *software* licence (MIT) is a separate fact from each *style*
     licence — DiceBear splits them itself under `# Design` / `# Code` headings.
-    Reading the top-level MIT and concluding the avatars are MIT is the trap.
+    Reading the top-level MIT and concluding the avatars are MIT is the trap
+    this table exists to close, and it only closes it if the table is complete.
     """
-    missing = sorted(set(DICEBEAR_STYLES) - set(DICEBEAR_STYLE_LICENSES))
-    assert not missing, f"styles requestable with no verified licence: {missing}"
+    upstream = _upstream_styles()
+    unlicensed = sorted(upstream - set(DICEBEAR_STYLE_LICENSES))
+    assert not unlicensed, (
+        f"upstream publishes {unlicensed} at the pinned major with no licence "
+        "row — a style whose rights are unknown is a trap, and CC BY ones put a "
+        "duty on the user"
+    )
+    unrequestable = sorted(upstream - set(DICEBEAR_STYLES))
+    assert not unrequestable, (
+        f"upstream publishes {unrequestable} but DICEBEAR_STYLES omits them"
+    )
+
+
+def test_the_table_claims_nothing_upstream_does_not_publish():
+    """The other direction: a row for a style that does not exist is a lie too."""
+    extra = sorted(set(DICEBEAR_STYLE_LICENSES) - _upstream_styles())
+    assert not extra, f"licence rows for styles upstream does not publish: {extra}"
+
+
+@pytest.mark.skipif(
+    __import__("os").environ.get("CI") is not None, reason="no network in CI"
+)
+@pytest.mark.live
+def test_the_upstream_snapshot_is_still_current():
+    """Opt-in, networked: has upstream added a style since the snapshot?
+
+    The snapshot is what makes the offline test honest; this is what stops the
+    snapshot itself going stale. Marked `live` so the hermetic suite never runs
+    it — a snapshot that silently drifts is the same defect one level up.
+    """
+    import json
+    import urllib.request
+
+    meta = json.loads(_UPSTREAM_SNAPSHOT.read_text())
+    with urllib.request.urlopen(meta["source"], timeout=30) as r:
+        data = json.load(r)
+    live = {
+        d["name"] for d in data
+        if d["type"] == "dir" and d["name"] not in ("collection", "converter", "core")
+    }
+    new = sorted(live - set(meta["styles"]))
+    assert not new, (
+        f"upstream added {new} since {meta['captured']}. Read each one's LICENSE "
+        "at the pinned major, add a row, and refresh the snapshot."
+    )
 
 
 def test_the_default_style_puts_no_obligation_on_the_user():
@@ -207,3 +269,124 @@ def test_credits_is_a_registered_cli_command():
     from an.tools import _dispatch_funcs
 
     assert any(f.__name__ == "credits" for f in _dispatch_funcs)
+
+
+# ------------------- the producer, which had no coverage at all
+
+@pytest.fixture
+def stub_dicebear(monkeypatch):
+    """Serve a real DiceBear fetch from memory, so the whole path runs offline."""
+
+    def fake_urlopen(url, timeout=10.0):
+        class _Resp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def read(self):
+                return (
+                    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
+                    b'<circle cx="50" cy="50" r="40" fill="#cfd"/></svg>'
+                )
+
+        return _Resp()
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+
+def test_creating_a_character_actually_records_its_provenance(tmp_path, stub_dicebear):
+    """The behaviour this whole change exists to add, and it had NO test.
+
+    Every other test here hand-builds `CharacterDescriptor(name=..., source=...)`,
+    so deleting `source=source` from `new_character` left the full suite green —
+    the vocabulary was asserted and the producer was not. That is the same shape
+    as the previous PR's vacuous tests, one layer over.
+
+    This walks the real path: create → write to disk → read back → credits.
+    """
+    from an.characters.factory import new_character
+    from an.characters.schema import CharacterDescriptor
+
+    desc_path = new_character(tmp_path, name="maya", style="lorelei")
+    on_disk = CharacterDescriptor.model_validate_json(desc_path.read_text())
+
+    assert on_disk.source is not None, (
+        "a character built from third-party art carries no provenance record"
+    )
+    assert on_disk.source.license == "cc0-1.0"
+    assert on_disk.source.provider == "dicebear"
+    assert on_disk.source.id == "lorelei/maya"
+
+
+def test_an_acknowledged_cc_by_character_carries_the_attribution_it_owes(
+    tmp_path, stub_dicebear
+):
+    from an.characters.factory import new_character
+    from an.characters.schema import CharacterDescriptor
+
+    desc_path = new_character(
+        tmp_path, name="bo", style="adventurer", acknowledge_attribution=True
+    )
+    src = CharacterDescriptor.model_validate_json(desc_path.read_text()).source
+    assert src.license == "cc-by-4.0"
+    assert "Lisa Wischofsky" in src.attribution, (
+        "acknowledging the duty must RECORD what is owed, not merely permit it"
+    )
+
+
+def test_offline_art_records_nothing_because_nothing_is_owed(tmp_path):
+    """The one case where "no third-party assets" is the true answer."""
+    from an.characters.factory import new_character
+    from an.characters.schema import CharacterDescriptor
+
+    desc_path = new_character(tmp_path, name="amy", use_dicebear=False)
+    assert CharacterDescriptor.model_validate_json(desc_path.read_text()).source is None
+
+
+# --------------- the legacy projects, which were told they owe nothing
+
+def test_a_character_from_before_this_feature_still_reports_what_it_owes():
+    """The users most at risk are the ones with no `source` field.
+
+    Every character created before it existed used a CC BY default. Reporting
+    those as "no third-party assets recorded" is not an absence of information —
+    it is an affirmative FALSE COMPLIANCE STATEMENT, made to exactly the people
+    who need the opposite. The evidence was in the same file all along:
+    `metadata.dicebear_style`.
+    """
+    from an.characters.schema import CharacterDescriptor
+
+    legacy = CharacterDescriptor(
+        name="old",
+        metadata={"art_provenance": "dicebear", "dicebear_style": "adventurer",
+                  "dicebear_seed": "old"},
+    )
+    assert legacy.source is None  # as written before this feature existed
+
+    report = collect_credits({"characters": {"old": legacy}})
+    assert len(report.owed) == 1, (
+        "a legacy CC BY character is reported as owing nothing"
+    )
+    assert "Lisa Wischofsky" in report.owed[0].source.attribution
+
+
+def test_a_legacy_character_from_the_offline_fallback_owes_nothing():
+    """Reconstruction must not invent an obligation where there is none."""
+    from an.characters.schema import CharacterDescriptor
+
+    legacy = CharacterDescriptor(
+        name="old", metadata={"art_provenance": "fallback_geometric"}
+    )
+    assert collect_credits({"characters": {"old": legacy}}).entries == []
+
+
+def test_a_legacy_character_of_an_unrecognised_style_is_unverified_not_clear():
+    from an.characters.schema import CharacterDescriptor
+
+    legacy = CharacterDescriptor(
+        name="old", metadata={"dicebear_style": "some-style-nobody-checked"}
+    )
+    report = collect_credits({"characters": {"old": legacy}})
+    assert len(report.unverified) == 1, "an unknown style must not read as clear"

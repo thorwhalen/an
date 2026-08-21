@@ -44,6 +44,7 @@ def new(
     style: str = DICEBEAR_DEFAULT_STYLE,
     voice_ref: str = "",
     offline: bool = False,
+    acknowledge_attribution: bool = False,
     overwrite: bool = False,
 ) -> str:
     """Create a new character at ``out_dir``/``name``.
@@ -51,24 +52,36 @@ def new(
     name: character id (used as the directory name and descriptor 'name')
     out_dir: parent directory; defaults to ./assets/characters
     seed: deterministic seed for DiceBear; defaults to ``name``
-    style: DiceBear style (e.g. adventurer, lorelei, avataaars)
+    style: DiceBear style. The default is CC0 — no attribution duty. Some styles
+        are CC BY 4.0 and oblige whoever ships the video to credit the artist;
+        those need --acknowledge-attribution. Run `an credits <project>` to see
+        what a project owes.
     voice_ref: voice id stored in the descriptor's ``voice_ref`` field
     offline: skip DiceBear and use the deterministic geometric fallback
+    acknowledge_attribution: accept the attribution duty of a CC BY style
     overwrite: replace an existing directory at the target
     """
     target = _resolve_target(out_dir)
     target.mkdir(parents=True, exist_ok=True)
     if style not in DICEBEAR_STYLES:
         return f"unknown DiceBear style: {style!r}. Known: {', '.join(DICEBEAR_STYLES)}"
-    desc = _new_character(
-        target,
-        name=name,
-        seed=seed or None,
-        style=style,
-        voice_ref=voice_ref or None,
-        use_dicebear=not offline,
-        overwrite=overwrite,
-    )
+    try:
+        desc = _new_character(
+            target,
+            name=name,
+            seed=seed or None,
+            style=style,
+            voice_ref=voice_ref or None,
+            use_dicebear=not offline,
+            acknowledge_attribution=acknowledge_attribution,
+            overwrite=overwrite,
+        )
+    except ValueError as e:
+        # A licence refusal is a message for a human, not a traceback. The
+        # sibling branch above already returns its rejection as a string; a
+        # gate added below the CLI without a flag above it made every CC BY
+        # style unreachable AND ugly.
+        return str(e)
     return f"created character at {desc.parent} (descriptor: {desc.name})"
 
 

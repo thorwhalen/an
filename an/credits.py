@@ -127,9 +127,45 @@ def collect_credits(mall: Mapping[str, Any]) -> CreditsReport:
         if source is None and isinstance(descriptor, Mapping):
             raw = descriptor.get("source")
             source = AssetSource.model_validate(raw) if raw else None
+        if source is None:
+            source = _reconstruct_legacy_source(descriptor)
         if source is not None:
             report.entries.append(CreditEntry(asset=f"characters/{key}", source=source))
     return report
+
+
+def _reconstruct_legacy_source(descriptor: Any) -> AssetSource | None:
+    """Recover provenance from a descriptor written before ``source`` existed.
+
+    **The users most at risk are the ones with no ``source`` field**, because
+    every character created before it existed used a CC BY default. Reporting
+    those as "no third-party assets recorded" is not an absence of information —
+    it is an affirmative, false compliance statement, made to exactly the people
+    who need the opposite.
+
+    The evidence is right there in the same file: `new_character` has always
+    written ``metadata.dicebear_style`` and ``metadata.dicebear_seed``. So this
+    reconstructs the record rather than shrugging.
+
+    Returns ``None`` only when the art genuinely was not third-party (the
+    offline geometric fallback), which is the one case where "nothing owed" is
+    the true answer.
+    """
+    metadata = getattr(descriptor, "metadata", None)
+    if metadata is None and isinstance(descriptor, Mapping):
+        metadata = descriptor.get("metadata")
+    if not isinstance(metadata, Mapping):
+        return None
+    style = metadata.get("dicebear_style")
+    if not style:
+        return None  # fallback_geometric — we made it, nothing is owed
+    from an.characters.licenses import DICEBEAR_STYLE_LICENSES, dicebear_source
+
+    seed = str(metadata.get("dicebear_seed") or "")
+    if style in DICEBEAR_STYLE_LICENSES:
+        return dicebear_source(style, seed=seed)
+    # An unrecognised style is UNKNOWN, never "nothing owed".
+    return AssetSource(provider="dicebear", id=f"{style}/{seed}", license=None)
 
 
 def credits_for_project(project_dir: str | Path) -> CreditsReport:
