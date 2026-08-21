@@ -18,6 +18,7 @@ that were already hard or already shipped.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from importlib.metadata import PackageNotFoundError, distribution, metadata
 
 import pytest
@@ -50,16 +51,6 @@ FORBIDDEN_PATTERNS: tuple[str, ...] = (
 #: Listing beats silence: a name here is a decision someone made, and a name
 #: that disappears from the tree makes this test say so.
 EXCEPTIONS: dict[str, str] = {
-    "argh": (
-        "LGPL-3.0, and the ONLY declared-copyleft distribution in the hard "
-        "dependency set. Recorded rather than waved through: `an` imports argh "
-        "through its public interface, does not modify or vendor it, and a "
-        "pip-installed pure-Python package is inherently replaceable — so the "
-        "LGPL's combined-work condition is satisfied without reciprocity "
-        "attaching to `an`'s own code. It is still outside the MIT/BSD/Apache/"
-        "ISC rule this repo states, which is a decision for a human, not a "
-        "test. See an#45."
-    ),
     "certifi": (
         "MPL-2.0 — file-level weak copyleft over an unmodified CA bundle "
         "consumed as data. Nothing `an` ships attracts reciprocity. Arrives "
@@ -76,7 +67,12 @@ EXCEPTIONS: dict[str, str] = {
 }
 
 #: Distributions the `vision` extra adds that `an` does not otherwise ship.
-VISION_EXTRA_CLOSURE: tuple[str, ...] = ("anthropic", "distro", "docstring-parser", "jiter")
+VISION_EXTRA_CLOSURE: tuple[str, ...] = (
+    "anthropic",
+    "distro",
+    "docstring-parser",
+    "jiter",
+)
 
 
 def _declared_licence(name: str) -> str:
@@ -145,24 +141,59 @@ def test_each_recorded_exception_is_still_present_and_still_that_licence(name, r
     assert declared, f"{name} declares no licence"
 
 
+def _hard_dependencies() -> tuple[str, ...]:
+    """Every distribution a bare `pip install an` pulls in, READ FROM pyproject.
+
+    Derived rather than restated. This was a hand-maintained tuple, which is the
+    second-table smell the whole bench registry exists to avoid: a dependency
+    added to `pyproject.toml` and forgotten here is a dependency the perimeter
+    never looks at, and the perimeter reads as green either way. an#45 removed
+    two names from that list and the literal would have kept checking both.
+
+    Scanned as text rather than parsed: `tomllib` is 3.11+ and this repo
+    supports 3.10, and the shape here is a flat array of requirement strings.
+    """
+    text = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(
+        encoding="utf-8"
+    )
+    body = text.split("dependencies = [", 1)[1].split("]", 1)[0]
+    names = []
+    for line in body.splitlines():
+        line = line.split("#", 1)[0].strip().rstrip(",").strip()
+        if line.startswith(('"', "'")):
+            requirement = line.strip("\"'")
+            names.append(re.split(r"[<>=!~\[; ]", requirement, 1)[0])
+    return tuple(names)
+
+
 #: Every distribution a bare `pip install an` pulls in.
-HARD_DEPENDENCIES: tuple[str, ...] = (
-    "pydantic",
-    "dol",
-    "argh",
-    "argcomplete",
-    "pyyaml",
-    "numpy",
-)
+HARD_DEPENDENCIES: tuple[str, ...] = _hard_dependencies()
+
+
+def test_the_hard_dependency_list_is_read_from_pyproject():
+    """MUTATION: restore the hand-written tuple.
+
+    A dependency added to `pyproject.toml` and forgotten in a literal here is a
+    dependency the perimeter never looks at — and the perimeter reads as green
+    either way, which is the failure mode this whole file exists to end.
+    """
+    assert HARD_DEPENDENCIES, "no dependencies were parsed out of pyproject.toml"
+    assert "typer" in HARD_DEPENDENCIES
+    assert "argh" not in HARD_DEPENDENCIES, (
+        "argh was replaced in an#45; if it is back, so is the LGPL question"
+    )
+    for name in HARD_DEPENDENCIES:
+        assert name and not name.startswith(("#", '"', "'")), (
+            f"{name!r} is not a distribution name — the parse is wrong"
+        )
 
 
 def test_no_unrecorded_hard_dependency_is_copyleft():
     """The perimeter that matters most: what every `pip install an` pulls in.
 
-    Exactly one name is expected here, and it is in EXCEPTIONS with its
-    reasoning. The assertion is "no NEW one appeared", which is the thing a
-    test can usefully hold; whether the recorded one should stay is a decision
-    for a human and is tracked as an issue.
+    Since an#45 the expected count is ZERO — `argh` was the only one and it was
+    replaced with `typer` (MIT). The assertion is "no new one appeared", which
+    is the thing a test can usefully hold.
     """
     offenders = []
     for name in HARD_DEPENDENCIES:
@@ -177,11 +208,13 @@ def test_no_unrecorded_hard_dependency_is_copyleft():
     )
 
 
-def test_the_one_recorded_copyleft_hard_dependency_has_not_multiplied():
-    """Pinned by count, so this test notices a second one arriving.
+def test_no_hard_dependency_is_copyleft_at_all():
+    """Pinned at EMPTY since an#45, so this notices one arriving.
 
-    An `assert not offenders` that skips every exception cannot tell "the known
-    one" from "the known one plus a new one someone added to EXCEPTIONS".
+    An `assert not offenders` that skips every exception cannot tell "none" from
+    "one somebody added to EXCEPTIONS". Pinning the set itself can, and the set
+    is now empty: `argh` (LGPL-3.0) was the only member and it was replaced with
+    `typer` (MIT) rather than excepted, which is the decision an#45 asked for.
     """
     copyleft = {
         name: _declared_licence(name)
@@ -189,8 +222,8 @@ def test_the_one_recorded_copyleft_hard_dependency_has_not_multiplied():
         if _installed(name)
         and any(re.search(p, _declared_licence(name), re.I) for p in FORBIDDEN_PATTERNS)
     }
-    assert set(copyleft) == {"argh"}, (
-        f"the copyleft hard dependencies are now {sorted(copyleft)}; this test "
-        "pins the set at exactly {'argh'} so a second one is a decision "
-        "somebody makes rather than a line in EXCEPTIONS nobody reads"
+    assert copyleft == {}, (
+        f"the copyleft hard dependencies are now {sorted(copyleft)}; this set has "
+        "been empty since an#45 and a new member is a decision somebody makes "
+        "rather than a line in EXCEPTIONS nobody reads"
     )

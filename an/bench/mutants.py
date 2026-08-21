@@ -225,6 +225,31 @@ MUTANTS: tuple[Mutant, ...] = (
         ),
     ),
     Mutant(
+        name="cli_returns_nothing_to_the_terminal",
+        file="an/__main__.py",
+        old="        if result is not None:\n            typer.echo(result)",
+        new="        pass",
+        caught_by="tests/test_cli_dispatch.py",
+        why=(
+            "typer discards return values and every `an.tools` function returns "
+            "its report as a string, so the CLI would run correctly and print "
+            "NOTHING — the worst possible failure for a diagnostic tool."
+        ),
+    ),
+    Mutant(
+        name="cli_loses_the_signature_that_is_the_command_line",
+        file="an/__main__.py",
+        old="    @functools.wraps(func)\n",
+        new="    ",
+        caught_by="tests/test_cli_dispatch.py",
+        why=(
+            "`inspect.signature` follows `__wrapped__`, and that signature IS the "
+            "command line. Without it typer sees `(*args, **kwargs)` and every "
+            "flag on all 17 commands disappears at once, while `--help` still "
+            "renders."
+        ),
+    ),
+    Mutant(
         name="corpus_reads_shot_order_from_the_directory",
         file="an/bench/corpus.py",
         old='    for shot_id in order:\n        shot_dir = root / f"shot_{shot_id}"',

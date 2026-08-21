@@ -1,8 +1,10 @@
 """User-facing utility functions, plus the SSOT list for CLI dispatch.
 
 Each function here is meant to be callable from Python *and* from the shell
-via `an tools <funcname>`. Keep their signatures argh-friendly: positional
-args become required, defaults become optional flags.
+via `an <funcname>`. Keep their signatures dispatch-friendly: positional args
+become required arguments, defaults become optional flags, and the docstring
+becomes the command's help. `an/__main__.py` projects this list onto typer
+without touching these functions, so they stay plain Python.
 """
 
 from __future__ import annotations
@@ -372,7 +374,7 @@ _dispatch_funcs = [
 ]
 
 
-# Sub-namespaces. ``__main__`` mounts these via argh's ``namespace=`` arg so
+# Sub-namespaces. ``__main__`` mounts each as a sub-app so
 # the CLI looks like ``an character new <name> ...``.
 _dispatch_namespaces: dict[str, list] = {
     "character": _character_dispatch_funcs,

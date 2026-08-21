@@ -170,7 +170,7 @@ The patches are validated against the schema and persisted; affected shots' cach
 | **Lip-sync Protocol** | `OfflineLipSync` (char-distribution), `WhisperLipSync` (word-aligned via faster-whisper), `RhubarbLipSync` (phoneme-aligned), `WordTimingsLipSync` (driven by an injected `WordTimingProvider` — skip transcription entirely when the caller already has authoritative word timings) |
 | **Verifier Protocol** | `LayoutLintVerifier`, `MediaQualityVerifier`, `VisionLMVerifier` (Claude vision), `HumanInTheLoopVerifier` |
 | **Persistence** | dol-backed `MutableMapping`s organized into `build_project_mall(...)` |
-| **CLI** | `argh` dispatch over `an.tools._dispatch_funcs` (init / validate / sync / check / render / iterate) |
+| **CLI** | `typer` dispatch over `an.tools._dispatch_funcs` (init / validate / sync / check / render / iterate / bench) |
 | **Iterate loop** | `an.iterate` — Anthropic Opus 4.7 + adaptive thinking + structured JSON patches + path-based mutation + cache invalidation |
 
 For a deeper as-built reference (module-by-module map, control flows, key invariants, content-hash caching strategy), see [`misc/docs/architecture_as_built.md`](misc/docs/architecture_as_built.md). The research reports next to it cover the design space the system was built against — they are not current state, and `wave1_verification.md` is (verified fact, with the URLs each licence was read at).

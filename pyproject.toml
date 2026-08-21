@@ -32,8 +32,14 @@ classifiers = [
 dependencies = [
     "pydantic",
     "dol",
-    "argh",
-    "argcomplete",
+    # `typer` (MIT) over `argh` (LGPL-3.0), decided in an#45. argh was the only
+    # declared-copyleft distribution in this set, against the MIT/BSD/Apache/ISC
+    # rule this repo and its federation state; `tests/test_licence_perimeter.py`
+    # is what found it and what keeps a second one from arriving unnoticed.
+    # It pulls `click` (BSD-3), which also supplies the shell completion that
+    # `argcomplete` (removed with argh — it hooks argparse specifically, so it
+    # became a dependency that did nothing) used to provide.
+    "typer",
     "pyyaml",
     "numpy",
 ]

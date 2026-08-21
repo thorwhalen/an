@@ -1,6 +1,6 @@
 """User-facing character CLI subcommands.
 
-Wired into the top-level ``an`` dispatcher via ``character_*`` argh-friendly
+Wired into the top-level ``an`` dispatcher via ``character_*`` dispatch-friendly
 functions in :mod:`an.tools`. Each function here takes plain strings/bools
 and returns a string for terminal display.
 
@@ -349,6 +349,6 @@ def record(
     return f"recorded: {out}"
 
 
-# argh-friendly dispatch list. Mounted as a nested namespace ('character')
+# Dispatch list. Mounted as a nested namespace ('character')
 # by an/__main__.py so they appear as `an character new`, etc.
 _dispatch_funcs = [new, mouths, validate, silhouette, preview, record]

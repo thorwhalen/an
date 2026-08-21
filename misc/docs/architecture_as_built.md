@@ -39,7 +39,7 @@ The `iterate` loop closes the cycle: free-text → Claude → patches against `i
 ```
 an/
 ├── __init__.py              public API (curated __all__)
-├── __main__.py              argh CLI entry point
+├── __main__.py              typer CLI entry point, wired programmatically
 ├── base.py                  type aliases, version constants, easing presets
 ├── util.py                  internal helpers (hashing, file I/O, time math)
 ├── tools.py                 user-facing CLI funcs + _dispatch_funcs
@@ -282,7 +282,11 @@ an bench-mutants              — break each guard on purpose; the named test mu
    --quiet
 ```
 
-All built via `argh` over the SSOT list `an.tools._dispatch_funcs`.
+All built via `typer` over the SSOT list `an.tools._dispatch_funcs` — wired
+programmatically in `an/__main__.py`, never as decorators on the functions, so
+the business layer carries no CLI types. Typer (MIT) replaced argh (LGPL-3.0)
+in an#45; `argcomplete` went with it, since it hooks argparse specifically —
+shell completion is now `an --install-completion`.
 
 ---
 
