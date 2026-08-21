@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from an.adapters._base import RenderContext, RenderResult
+from an.determinism import capture_violations, determinism_enforced
 from an.adapters.cutout.compile import compile_shot
 from an.adapters.cutout.runtime_files import runtime_dir
 from an.adapters.cutout.serialize import to_dict
@@ -219,6 +220,13 @@ class CutoutRenderer:
                         "JS runtime did not initialize PixiJS app after anLoadScene"
                     )
 
+                # Probed on EVERY render, judged only when enforcement is on.
+                # Collecting it unconditionally is what puts the blink phases
+                # and the filter inventory into provenance, where the metrics
+                # ledger can stamp them; a fact recorded only under a flag is a
+                # fact missing from every row that matters.
+                determinism = _determinism_report(page)
+
                 total_frames = max(1, int(round(shot.duration * ctx.fps)))
                 _capture_frames(page, total_frames, ctx.fps, job.frames_dir)
             finally:
@@ -243,6 +251,12 @@ class CutoutRenderer:
                 "resolution": ctx.resolution,
                 "frame_count": total_frames,
                 "audio_tracks": len(audio_inputs),
+                # The launch argv verbatim: all four rasteriser configurations
+                # report a byte-identical WebGL renderer string, so the string
+                # cannot witness the choice and the argv is the only guard.
+                "chromium_args": list(DETERMINISTIC_CHROMIUM_ARGS),
+                "x264_args": list(DETERMINISTIC_X264_ARGS),
+                "determinism": determinism,
             },
         )
 
@@ -421,6 +435,37 @@ def _stage_scene_assets(
         target = runtime_target / src_rel
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
+
+
+def _determinism_report(page: Any) -> dict[str, Any]:
+    """Read the runtime's determinism probe, and refuse a breached perimeter.
+
+    Enforcement is ON by default (`an.determinism`), so this raises rather than
+    warning: a frame that is a function of wall time or of `Math.random()` is
+    not a worse frame, it is a frame that cannot be compared to any other — and
+    everything downstream of here, the golden corpus and the metrics ledger
+    alike, is comparison.
+
+    A runtime too old to carry the probe is reported as such, not defaulted to
+    "fine": the absence of evidence is what this whole perimeter exists against.
+    """
+    try:
+        report = page.evaluate("() => window.anDeterminismReport()")
+    except Exception as e:  # noqa: BLE001 — reported with its cause, never swallowed
+        report = {"error": f"{type(e).__name__}: {e}"}
+    if not isinstance(report, dict):
+        report = {"error": f"the probe returned {type(report).__name__}, not an object"}
+
+    violations = capture_violations(report)
+    report["violations"] = violations
+    report["enforced"] = determinism_enforced()
+    if violations and report["enforced"]:
+        raise CutoutRenderError(
+            "the render's determinism perimeter is breached, so these frames "
+            "cannot be compared with any others:\n\n"
+            + "\n\n".join(f"  - {v}" for v in violations)
+        )
+    return report
 
 
 def _capture_frames(page: Any, total_frames: int, fps: int, frames_dir: Path) -> None:

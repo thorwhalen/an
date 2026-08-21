@@ -14,6 +14,7 @@ import importlib.util
 import os
 import shutil
 import subprocess
+import sys
 from dataclasses import asdict, dataclass
 
 
@@ -100,6 +101,42 @@ def _check_python_pkg(pkg: str, install_hint: str) -> ToolStatus:
     return ToolStatus(name=pkg, installed=True, version=version)
 
 
+#: Playwright's per-platform default browser cache, keyed by ``sys.platform``.
+#:
+#: Checking only the macOS path was a macOS-only bug that mattered the moment CI
+#: first launched a browser (an#37): on Linux it reported "Chromium not
+#: installed" on a machine where it was, i.e. an instruction to run a command
+#: that would change nothing. ``PLAYWRIGHT_BROWSERS_PATH`` overrides all of
+#: them, and Playwright reads it the same way.
+PLAYWRIGHT_CACHE_BY_PLATFORM: dict[str, str] = {
+    "darwin": "~/Library/Caches/ms-playwright",
+    "linux": "~/.cache/ms-playwright",
+    "win32": "~/AppData/Local/ms-playwright",
+}
+
+
+def playwright_browser_dirs(*, platform: str | None = None) -> list[str]:
+    """Where Playwright's browser binaries could live on this machine.
+
+    A list rather than one path, and all of them are checked, because
+    ``sys.platform`` is not always the whole story (WSL, a Linux venv on a
+    macOS-mounted home). Checking a directory that does not exist costs an
+    ``os.path.isdir``. ``platform`` is injectable so the per-OS behaviour is
+    testable without monkeypatching ``sys``.
+
+    >>> playwright_browser_dirs(platform="linux")[0].endswith(".cache/ms-playwright")
+    True
+    """
+    override = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    if override:
+        return [os.path.expanduser(override)]
+    preferred = PLAYWRIGHT_CACHE_BY_PLATFORM.get(platform or sys.platform)
+    ordered = ([preferred] if preferred else []) + [
+        p for p in PLAYWRIGHT_CACHE_BY_PLATFORM.values() if p != preferred
+    ]
+    return [os.path.expanduser(p) for p in ordered]
+
+
 def _check_playwright() -> ToolStatus:
     py_status = _check_python_pkg(
         "playwright",
@@ -108,12 +145,10 @@ def _check_playwright() -> ToolStatus:
     if not py_status.installed:
         return py_status
     # Bonus: check whether the Chromium browser binary is installed.
-    cache_dir = os.environ.get("PLAYWRIGHT_BROWSERS_PATH") or os.path.expanduser(
-        "~/Library/Caches/ms-playwright"
-    )
     has_chromium = any(
         name.startswith("chromium")
-        for name in (os.listdir(cache_dir) if os.path.isdir(cache_dir) else [])
+        for directory in playwright_browser_dirs()
+        for name in (os.listdir(directory) if os.path.isdir(directory) else [])
     )
     if not has_chromium:
         py_status.detail = "playwright pkg installed but Chromium not; run: playwright install chromium"

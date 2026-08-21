@@ -48,6 +48,7 @@ an/
 ├── orchestrate.py           validate → audio → render → verify; thin re-export of iterate
 ├── iterate.py               free-text → Claude (Opus 4.7) → JSON patches → IR mutation
 ├── check_requirements.py    diagnose ffmpeg/node/playwright/elevenlabs/manim/rhubarb/etc.
+├── determinism.py           judges the runtime's determinism probe; enforced by default
 │
 ├── ir/                      Scene IR (the SSOT)
 │   ├── schema.py            Pydantic models: SceneIR, Shot, Action, Dialogue, AssetRef, ...
@@ -224,6 +225,7 @@ These are load-bearing. Breaking them breaks the system in subtle ways.
 6. **`anima*` JS API names were renamed to `an*` during the package rename.** `window.anLoadScene`, `anSetTime`, etc. The Python side calls these via `page.evaluate`; both must stay synced.
 7. **The ScenesStore's `"main"` key is the only supported key.** Multi-scene projects are a future feature.
 8. **A substituted asset is recorded, never merely substituted.** A character whose ref is not in `mall["characters"]` gets the placeholder rig; an environment ref that names neither a store entry nor a built-in preset gets the default backdrop. Both are legitimate — an asset-less project must render — and both used to be *silent*, which is not (an#33). `compile_shot` now appends one `AssetResolutionJSON` per drawable entity to `CutoutSceneJSON.asset_resolution`, warns (`CutoutCompileWarning`) on any `fallback=True`, and raises under `strict_assets=True`. The record is load-bearing rather than decorative: a missing descriptor and a deliberately-procedural character compile to the **same scene tree**, so nothing downstream of the compiler can tell them apart. `strict_assets` threads `an render --strict-assets` → `render_project` → `render` → `RenderContext.strict_assets` → `compile_shot`; `misc/bench/crossarch.py` sets it, because a pixel measurement of the wrong picture is worse than no measurement.
+9. **The determinism perimeter is observed on every render and enforced by default.** `runtime.js`'s `anDeterminismReport` reports the capture page, whether any PixiJS ticker is running, every node carrying a filter, and the per-entity blink phases; `an/determinism.py::capture_violations` judges — a pure function of that dict, so the rule is testable with no browser. The report lands in `RenderResult.provenance["determinism"]` beside the verbatim Chromium and x264 argv. A breach raises `CutoutRenderError`; `AN_DETERMINISTIC=0` downgrades it to a recorded fact. The three things it watches are deterministic *by accident* today: the app is built `autoStart: false`, nothing attaches a filter, and the capture page is `index.html` while `preview.html` (seven clock calls) is staged into the same directory. **The blink phase is a pure function of the entity NAME** — renaming a corpus character re-phases every blink and moves every pixel metric — which is why the phases are stamped rather than merely correct.
 
 ---
 

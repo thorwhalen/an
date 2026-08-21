@@ -448,7 +448,12 @@
     async function preloadAssets(sceneJson) {
         if (!PIXI.Assets) return;
         const textures = (sceneJson.assets && sceneJson.assets.textures) || {};
-        const aliases = Object.keys(textures);
+        // .sort() is a determinism CONTRACT, not tidiness. Object key order here
+        // is JSON-document order, i.e. a function of the compiler's emission
+        // order, which is not a contract — and this array is the argument to
+        // PIXI.Assets.load, whose scheduling it decides. Never observed to move
+        // a pixel; an unwritten invariant is one refactor from being false.
+        const aliases = Object.keys(textures).sort();
         if (!aliases.length) return;
         for (const alias of aliases) {
             const src = textures[alias].src || textures[alias];
@@ -567,7 +572,10 @@
         // Find every */head/<eye> path and squash its scale_y near blink times.
         // For per-character variety, offset each character's blink schedule
         // by a deterministic phase derived from its name.
-        for (const path of Object.keys(nodeIndex)) {
+        // .sort() is a determinism CONTRACT — see preloadAssets. Safe unsorted
+        // today only because each iteration writes an independent node, which is
+        // an invariant of the loop BODY that nothing states or checks.
+        for (const path of Object.keys(nodeIndex).sort()) {
             // Match "<entity>/head/(left_eye|right_eye)".
             const m = path.match(/^([^/]+)\/head\/(left_eye|right_eye)$/);
             if (!m) continue;
@@ -595,6 +603,59 @@
         }
         return Math.abs(h);
     }
+
+    // ------------------------------------------------------------------------
+    // Determinism probe (an#37).
+    //
+    // Reports; it does not judge. The Python side owns the verdict
+    // (`an/determinism.py`) so the rule is testable without a browser, and so a
+    // future rule change is a Python diff rather than a runtime re-stage.
+    //
+    // What it watches and why: the vendored PixiJS carries 4 `Math.random`, 2
+    // `Date.now`, 6 `performance.now` and 3 `requestAnimationFrame` calls, and
+    // `NoiseFilter`'s default seed is `Math.random()`. All dormant today,
+    // because the app is created with `autoStart:false` and driven by explicit
+    // `app.render()` calls, and because nothing attaches a filter. Both facts
+    // are accidents of the current code with nothing asserting them — adding a
+    // grain filter in a later wave would randomise every frame with nothing
+    // going red.
+    // ------------------------------------------------------------------------
+
+    function _filteredNodePaths() {
+        const out = [];
+        for (const path of Object.keys(nodeIndex).sort()) {
+            const n = nodeIndex[path];
+            if (n && n.filters && n.filters.length) out.push(path);
+        }
+        return out;
+    }
+
+    NS.anDeterminismReport = function () {
+        const stage = app ? app.stage : null;
+        const shared = (window.PIXI && PIXI.Ticker) ? PIXI.Ticker.shared : null;
+        const blinkPhases = {};
+        for (const path of Object.keys(nodeIndex).sort()) {
+            const m = path.match(/^([^/]+)\/head\/(left_eye|right_eye)$/);
+            if (m && !(m[1] in blinkPhases)) {
+                // Recorded, not fixed: the phase is a pure function of the
+                // entity NAME, so renaming a corpus character silently
+                // re-phases every blink and moves every pixel metric. Stamping
+                // it turns that into a visible diff.
+                blinkPhases[m[1]] = (_strHash(m[1]) % 1000) / 1000.0;
+            }
+        }
+        return {
+            page: (window.location && window.location.pathname) || null,
+            runtime_version: RUNTIME_VERSION,
+            pixi_version: (window.PIXI && PIXI.VERSION) || null,
+            auto_start: !!(app && app.ticker && app.ticker.started),
+            shared_ticker_started: !!(shared && shared.started),
+            stage_filter_count: (stage && stage.filters) ? stage.filters.length : 0,
+            filtered_node_paths: _filteredNodePaths(),
+            blink_phases: blinkPhases,
+            node_count: Object.keys(nodeIndex).length,
+        };
+    };
 
     NS.anCanvasReady = function () {
         return pixiReady;
