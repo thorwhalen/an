@@ -40,7 +40,16 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator
+from typing import Any, Iterable, Iterator
+
+from an.bench.corpus import (
+    BENCH_RENDER_KWARGS,
+    DFLT_FIXTURES,
+    Fixture,
+    assert_render_path,
+    staged_scene,
+    visual_kinds,
+)
 
 # Tunables — module constants per the no-magic-numbers rule.
 MANIFEST_NAME: str = "manifest.json"
@@ -51,67 +60,18 @@ STAGED_SCENE_NAME: str = "scene.json"
 DECODE_PIX_FMT: str = "yuv420p"
 
 
-def _prepare_promote_demo(project_dir: Path) -> None:
-    """Regenerate the promoted character from the committed source SVG.
-
-    `examples/promote_demo` ships only `raw_maya.svg`; the promoted character it
-    references is a build product and is gitignored. Without this step the
-    fixture renders on a clean checkout, produces no error, and quietly draws a
-    **different character** — see `expect_visual_kinds` below.
-    """
-    from an.characters import promote
-
-    promote(project_dir, entity="raw_maya", as_="maya-promoted", overwrite=True)
-
-
-@dataclass(frozen=True, slots=True)
-class Fixture:
-    """A capture fixture: where it lives, how to build it, what it must render."""
-
-    path: str
-    #: Run against the throwaway copy before loading, to regenerate build
-    #: products the repo does not track.
-    prepare: Callable[[Path], None] | None = None
-    #: Visual kinds the staged scene MUST contain. This is not belt-and-braces:
-    #: a missing character descriptor makes the compiler fall back to the
-    #: procedural rig with **no warning** (verified: zero warnings, and
-    #: `svg_sprite` simply absent from the compiled scene). The first run of this
-    #: experiment measured that fallback on three CI runners and would have
-    #: reported "the descriptor path is deterministic" having never rendered it.
-    expect_visual_kinds: frozenset = frozenset()
-
-
-#: The fixtures, one per render path — deliberately both, because they are not
-#: equally sensitive: the descriptor path is 12x more sensitive to a rasteriser
-#: flip than the procedural one (2.94% vs 0.24% of pixels under GPU-vs-software),
-#: so a procedural-only capture under-reports the case that matters.
-DFLT_FIXTURES: dict[str, Fixture] = {
-    # Procedural rig, 320x240, 2.5 s -> 60 frames. Needs no assets at all, which
-    # is the only reason it is reproducible from a clean checkout today.
-    "single_character": Fixture(
-        path="examples/single_character",
-        expect_visual_kinds=frozenset({"rect", "ellipse"}),
-    ),
-    # SVG-sprite descriptor (the sensitive path), 480x360, 3.0 s -> 72 frames.
-    "promote_demo": Fixture(
-        path="examples/promote_demo",
-        prepare=_prepare_promote_demo,
-        expect_visual_kinds=frozenset({"svg_sprite"}),
-    ),
-}
-#: Rendering knobs pinned for the capture. Audio is off because it cannot move
-#: a pixel and would otherwise make the frames depend on the audio cache's
-#: warm/cold state; ``parallel=1`` because a timing-sensitive pool is one more
-#: thing to explain if the pixels ever do differ; ``strict_assets=True`` because
-#: a stand-in asset renders happily as a DIFFERENT picture (an#33) — the failure
-#: that nearly invalidated this experiment. ``expect_visual_kinds`` below stays
-#: as the independent second check: it reads the staged artifact rather than
-#: trusting the compiler that produced it.
-CAPTURE_RENDER_KWARGS: dict[str, Any] = {
-    "auto_audio": False,
-    "parallel": 1,
-    "strict_assets": True,
-}
+#: Fixtures, render knobs and the render-path assertion all live in
+#: `an.bench.corpus` — ONE implementation, imported here rather than a second
+#: copy that drifts. They moved there with an#36 because `an bench` needs them
+#: too, and because a fixture list that disagrees between the two harnesses
+#: would make a cross-architecture result and a ledger row describe different
+#: pictures under the same names.
+#:
+#: `strict_assets=True` in `BENCH_RENDER_KWARGS` is why `single_character` now
+#: carries a prepare step: it INTENDS the built-in placeholder rig, and an#33
+#: made a stand-in fatal for anything that measures pixels. The prepare step
+#: declares the rig instead, which renders the identical picture.
+CAPTURE_RENDER_KWARGS: dict[str, Any] = dict(BENCH_RENDER_KWARGS)
 
 
 @dataclass(frozen=True, slots=True)
@@ -278,28 +238,17 @@ def environment_record(repo_root: Path) -> dict[str, Any]:
 
 
 def _staged_visual_kinds(work_dir: Path) -> set[str]:
-    """Every `kind` in the scene JSON the browser actually loaded.
+    """Every visual kind in the scene JSON the browser actually loaded.
 
-    Read from the staged file rather than re-compiled, so it reports what was
-    rendered rather than what a second compile would produce.
+    Delegates to `an.bench.corpus.visual_kinds`, which reads `visual.kind`
+    under `scene` specifically. The version this replaced swept every `kind` in
+    the document, and an#33's `asset_resolution` entries carry a `kind` too —
+    an ENTITY kind, not a visual one.
     """
     kinds: set[str] = set()
-
-    def walk(node: Any) -> None:
-        if isinstance(node, dict):
-            kind = node.get("kind")
-            if isinstance(kind, str):
-                kinds.add(kind)
-            for value in node.values():
-                walk(value)
-        elif isinstance(node, list):
-            for value in node:
-                walk(value)
-
     for shot_dir in sorted(work_dir.glob("shot_*")):
-        staged = shot_dir / "runtime" / STAGED_SCENE_NAME
-        if staged.is_file():
-            walk(json.loads(staged.read_text(encoding="utf-8")))
+        if (shot_dir / "runtime" / STAGED_SCENE_NAME).is_file():
+            kinds |= visual_kinds(staged_scene(shot_dir))
     return kinds
 
 
@@ -394,16 +343,8 @@ def capture_scene(
         output_mp4 = render(project, **CAPTURE_RENDER_KWARGS)
 
         render_work_dir = work_copy / ".an" / "render_work"
-        visual_kinds = _staged_visual_kinds(render_work_dir)
-        missing = fixture.expect_visual_kinds - visual_kinds
-        if missing:
-            raise RuntimeError(
-                f"fixture {name!r} rendered WITHOUT {sorted(missing)} — it "
-                f"staged {sorted(visual_kinds)} instead. A missing character "
-                f"descriptor makes the compiler fall back to the procedural rig "
-                f"silently, so this capture would have measured a different "
-                f"picture and called it the same render path."
-            )
+        staged_kinds = _staged_visual_kinds(render_work_dir)
+        assert_render_path(name, fixture, staged_kinds)
 
         shots: list[dict[str, Any]] = []
         frames: list[FrameRecord] = []
@@ -433,7 +374,7 @@ def capture_scene(
         "prepared": fixture.prepare is not None,
         # Which render path this actually exercised — the fact whose absence
         # made the first run of this experiment measure the wrong thing.
-        "visual_kinds": sorted(visual_kinds),
+        "visual_kinds": sorted(staged_kinds),
         "video": video,
         "resolution": [scene.meta.resolution.width, scene.meta.resolution.height],
         "fps": scene.meta.fps,

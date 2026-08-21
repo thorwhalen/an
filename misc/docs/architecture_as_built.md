@@ -50,6 +50,19 @@ an/
 ├── check_requirements.py    diagnose ffmpeg/node/playwright/elevenlabs/manim/rhubarb/etc.
 ├── determinism.py           judges the runtime's determinism probe; enforced by default
 │
+├── bench/                   the measurement instrument (an#36) — never imported by __init__
+│   ├── corpus.py            fixtures + pinned render knobs; the render-path assertion
+│   ├── capture.py           render one fixture into a throwaway copy
+│   ├── imageio.py           the four PINNED ffmpeg decodes + the lossless re-encode
+│   ├── masks.py             edge / flat / held / ring, all from the REFERENCE frames
+│   ├── metrics.py           pure numpy, no I/O — runs unmarked in the default CI leg
+│   ├── palette.py           derive the declared colour set; mirrors runtime.js's rule
+│   ├── registry.py          the metric declaration table: family, side, per-mutation sign
+│   ├── ledger.py            the three blocks, and the guards that keep them readable
+│   ├── contract.py          scene_contract_sha256 — the comparability key
+│   ├── environment.py       the environment tuple, split by comparison scope
+│   └── run.py               capture -> panel -> row
+│
 ├── ir/                      Scene IR (the SSOT)
 │   ├── schema.py            Pydantic models: SceneIR, Shot, Action, Dialogue, AssetRef, ...
 │   ├── compose.py           sequence/parallel/delay/loop/tween/set_/play + flatten
@@ -225,7 +238,8 @@ These are load-bearing. Breaking them breaks the system in subtle ways.
 6. **`anima*` JS API names were renamed to `an*` during the package rename.** `window.anLoadScene`, `anSetTime`, etc. The Python side calls these via `page.evaluate`; both must stay synced.
 7. **The ScenesStore's `"main"` key is the only supported key.** Multi-scene projects are a future feature.
 8. **A substituted asset is recorded, never merely substituted.** A character whose ref is not in `mall["characters"]` gets the placeholder rig; an environment ref that names neither a store entry nor a built-in preset gets the default backdrop. Both are legitimate — an asset-less project must render — and both used to be *silent*, which is not (an#33). `compile_shot` now appends one `AssetResolutionJSON` per drawable entity to `CutoutSceneJSON.asset_resolution`, warns (`CutoutCompileWarning`) on any `fallback=True`, and raises under `strict_assets=True`. The record is load-bearing rather than decorative: a missing descriptor and a deliberately-procedural character compile to the **same scene tree**, so nothing downstream of the compiler can tell them apart. `strict_assets` threads `an render --strict-assets` → `render_project` → `render` → `RenderContext.strict_assets` → `compile_shot`; `misc/bench/crossarch.py` sets it, because a pixel measurement of the wrong picture is worse than no measurement.
-9. **The determinism perimeter is observed on every render and enforced by default.** `runtime.js`'s `anDeterminismReport` reports the capture page, whether any PixiJS ticker is running, every node carrying a filter, and the per-entity blink phases; `an/determinism.py::capture_violations` judges — a pure function of that dict, so the rule is testable with no browser. The report lands in `RenderResult.provenance["determinism"]` beside the verbatim Chromium and x264 argv. A breach raises `CutoutRenderError`; `AN_DETERMINISTIC=0` downgrades it to a recorded fact. The three things it watches are deterministic *by accident* today: the app is built `autoStart: false`, nothing attaches a filter, and the capture page is `index.html` while `preview.html` (seven clock calls) is staged into the same directory. **The blink phase is a pure function of the entity NAME** — renaming a corpus character re-phases every blink and moves every pixel metric — which is why the phases are stamped rather than merely correct.
+9. **A ledger row's comparability is decided by its provenance, not by its numbers.** Two rows measured on different scenes, or on different x264 builds, are not "one better and one worse" — every metric in them is mutually uninterpretable. Render-side metrics are comparable across machines (pixels are ISA- and OS-invariant at a pinned Chromium build); encode-side metrics are **machine-scoped and must be refused rather than banded**, because a band wide enough to absorb an x264 build change would swallow `flat_field_deviation`'s entire crf18->23 signal. The deciding fields are `scene_contract_sha256`, `environment.encode_side.x264_sei` (verbatim) and `.isa`. Two of the four value states are null and they mean different things: `gated` (the comparison is impossible) is not `unavailable` (the check did not run), and neither is "no change", which is a prediction that can never count.
+10. **The determinism perimeter is observed on every render and enforced by default.** `runtime.js`'s `anDeterminismReport` reports the capture page, whether any PixiJS ticker is running, every node carrying a filter, and the per-entity blink phases; `an/determinism.py::capture_violations` judges — a pure function of that dict, so the rule is testable with no browser. The report lands in `RenderResult.provenance["determinism"]` beside the verbatim Chromium and x264 argv. A breach raises `CutoutRenderError`; `AN_DETERMINISTIC=0` downgrades it to a recorded fact. The three things it watches are deterministic *by accident* today: the app is built `autoStart: false`, nothing attaches a filter, and the capture page is `index.html` while `preview.html` (seven clock calls) is staged into the same directory. **The blink phase is a pure function of the entity NAME** — renaming a corpus character re-phases every blink and moves every pixel metric — which is why the phases are stamped rather than merely correct.
 
 ---
 
@@ -245,6 +259,10 @@ an iterate <dir> "<instruction>"   — free-text edit via Claude (needs ANTHROPI
    --no-apply-changes        (dry run)
    --model claude-opus-4-7   (override)
 an check                      — diagnose system deps
+an bench <dir>                — render the fixed corpus, write a metrics ledger row
+   --scenes NAME,NAME
+   --out PATH
+   --no-ringing              (skips one extra lossless encode per scene)
 ```
 
 All built via `argh` over the SSOT list `an.tools._dispatch_funcs`.

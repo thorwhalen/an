@@ -11,7 +11,7 @@ This file orients an AI agent doing engineering work *on* an itself. If you're u
 - **Reference research:** `misc/docs/` — seven deep reports plus the character-art upgrade plan. These describe the *design space*, not current state. Read the matching one before designing or extending a subsystem.
 - **Wave records (fact, not design space):** `misc/docs/wave1_verification.md` and `misc/docs/wave2_research.md`. The Wave 2 record is the input to `an bench`, the golden corpus, `AN_DETERMINISTIC` and the vision-verifier cassettes — and it **contradicts epic #9 in six places**, each measured. Read it before building any of them; do not re-derive it.
 - **AI changelog:** `misc/CHANGELOG.md` — append a one-line entry under today's date when you finish a non-trivial chunk.
-- **Project skills:** `.claude/skills/` — `an` (downstream orchestrator), `an-spec` (director interview), `an-dev` (dev-side; read it alongside this file).
+- **Project skills:** `.claude/skills/` — `an` (downstream orchestrator), `an-spec` (director interview), `an-dev` (dev-side; read it alongside this file), `an-dev-bench` (the measurement instrument — `an bench`, the metrics ledger, the golden corpus; read it before adding a metric or a corpus scene).
 - **Tests:** `tests/`. Doctests in module docstrings cover the public API; pytest covers cross-cutting and end-to-end checks. Run `pytest -q`, or `pytest -q --doctest-modules an/` for the full sweep. Some tests skip when an optional dependency or API key is absent. **Never write a test count into a doc** — that is precisely the number that goes stale.
 - **Examples:** `examples/` — `single_character` (simplest render), `park_bench_cartoon` (two characters, dialogue, lip-sync), `walk_demo`, `character_gallery` (`build.py` generates characters then renders a cartoon end-to-end), `promote_demo` (hand-drawn SVG → mall character → render).
 
@@ -61,6 +61,8 @@ What exists, and where. This replaces the old phase table on purpose — phase t
 | Character authoring: descriptor schema, SVG utils, 9-shape mouth set, DiceBear client, idle/blink, silhouette test, factory, promote, preview recording | `an/characters/` | shipped |
 | SVG-texture character rendering (descriptors drive real sprites, not procedural rects) | `an/adapters/cutout/compile.py` (`svg_sprite` visuals) + `runtime.js` `makeSvgSprite` | shipped |
 | Live preview with file-watch reload, `an preview <dir>` | `an/preview.py` — `preview_project()`, `preview.html` | shipped (visuals only, no audio) |
+| Metrics ledger: `an bench` renders a fixed corpus and writes one row per (date, commit) | `an/bench/` — `run_bench()`, `METRICS`, `build_scene_block()` | shipped (an#36); goldens are an#38, `--compare` is an#40 |
+| Determinism perimeter: the runtime probes, `an/determinism.py` judges, enforced by default | `an/data/cutout_runtime/runtime.js` `anDeterminismReport` + `an/determinism.py` | shipped (an#37) |
 | Camera moves (`hold / push_in / pull_out / zoom_in / zoom_out`) as root-scale tweens | `an/adapters/cutout/compile.py` — `_add_camera_clips` | shipped |
 | Emotion-driven eyebrows, environment backdrops, per-character palettes | `an/adapters/cutout/compile.py` | shipped |
 | Manim backend | `an/adapters/manim_adapter.py` | **title card only** — see gaps |

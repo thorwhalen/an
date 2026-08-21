@@ -123,13 +123,25 @@ def _media_duration(media_path: str | Path) -> float:
 
 
 def ssim(a: np.ndarray, b: np.ndarray) -> float:
-    """Mean SSIM between two single-channel images (float arrays in [0, 1]).
+    """A global-moment structural-similarity score between two single-channel images.
 
-    Numpy-only implementation of Wang et al.'s SSIM. Computes on luminance,
-    no per-window sliding (uses global means/variances) — fast and robust
-    enough for "are these two frames structurally similar" checks.
+    **Not Wang et al.'s SSIM**, despite what this docstring said for a long
+    time: that estimator is computed over sliding local windows, and this one
+    uses one global mean, variance and covariance per image. The formula is the
+    same; the reduction is not, and the difference is the whole behaviour.
+    Global moments are blind to a small local change — a total eye-blink scores
+    0.9989 here — because the flat fill that is most of a cutout frame drags
+    the mean to 1.0.
 
-    Returns a float in roughly ``[-1, 1]``; 1 means identical.
+    That blindness is *fine for what this function is used for*: catching a
+    frozen render, where every pixel is identical or none is. It is not fine as
+    a quality metric, which is why :func:`an.bench.metrics.ssim_map` exists
+    beside it rather than replacing it — `MediaQualityVerifier`'s frozen-render
+    threshold was tuned against this reduction, and that verifier is in the
+    default orchestrate chain.
+
+    Inputs are float arrays in [0, 1]. Returns a float in roughly ``[-1, 1]``;
+    1 means identical.
 
     >>> import numpy as np
     >>> x = np.zeros((8, 8), dtype=np.float32)

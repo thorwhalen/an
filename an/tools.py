@@ -183,7 +183,52 @@ def credits(project_dir: str, json_out: str | None = None) -> str:
     return report.format()
 
 
-_dispatch_funcs = [init, validate, sync, check, render, iterate, preview, credits]
+def bench(
+    scenes: str = "",
+    out: str = "",
+    keep_render: str = "",
+    quiet: bool = False,
+) -> str:
+    """Render the fixed bench corpus and write a metrics ledger.
+
+    The instrument, not the verdict: it records numbers whose predicted
+    direction under each deliberate degradation is declared in advance, so a
+    future regression is caught by something other than someone noticing.
+
+    scenes: comma-separated corpus scene names (default: all of them)
+    out: ledger path (default: misc/bench/ledger/<date>-<sha>[-dirty].json)
+    keep_render: keep the throwaway render tree here instead of deleting it
+    quiet: print only the ledger path
+
+    Rendering knobs are deliberately NOT flags: a bench whose render knobs vary
+    per invocation produces incomparable rows, so they are a module constant
+    recorded verbatim into the ledger.
+    """
+    from an.bench.corpus import DFLT_FIXTURES
+    from an.bench.run import format_panel, run_bench
+
+    chosen = None
+    if scenes:
+        wanted = [s.strip() for s in scenes.split(",") if s.strip()]
+        unknown = [w for w in wanted if w not in DFLT_FIXTURES]
+        if unknown:
+            return (
+                f"unknown corpus scene(s) {unknown}; "
+                f"available: {sorted(DFLT_FIXTURES)}"
+            )
+        chosen = {w: DFLT_FIXTURES[w] for w in wanted}
+
+    ledger = run_bench(
+        scenes=chosen,
+        out=Path(out) if out else None,
+        keep_render=Path(keep_render) if keep_render else None,
+    )
+    if quiet:
+        return str(ledger.get("_written_to", ""))
+    return format_panel(ledger)
+
+
+_dispatch_funcs = [init, validate, sync, check, render, iterate, preview, credits, bench]
 
 
 # Sub-namespaces. ``__main__`` mounts these via argh's ``namespace=`` arg so

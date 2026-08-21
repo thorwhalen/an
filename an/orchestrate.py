@@ -101,7 +101,9 @@ def orchestrate(
       3. Render (audio is auto-run inside `render` when needed).
       4. Post-render verifiers.
 
-    ``verifiers`` defaults to ``[LayoutLintVerifier()]``. Pass an empty list
+    ``verifiers`` defaults to ``[LayoutLintVerifier(), MediaQualityVerifier()]``
+    — the second one is why `an.verify.media.ssim`'s threshold is load-bearing
+    and must not be retuned casually. Pass an empty list
     to skip verification, or include ``HumanInTheLoopVerifier()`` to prompt.
     ``skip_render=True`` runs validation + lint only.
 
