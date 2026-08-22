@@ -34,12 +34,19 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-#: The two disjoint levers an#41 uses. Both are mandatory: an encoder lever
-#: cannot touch a golden-frame metric because the corpus is UPSTREAM of the
-#: encoder, so requiring ">=3 metrics" from a CRF change alone would fail
-#: because of where the corpus sits, not because the instrument is blind — and
-#: that failure would be misdiagnosed as the harness being wrong.
-MUTATIONS: tuple[str, ...] = ("high_crf", "disabled_aa")
+#: The levers an#41 and an#56 use. At least one per SIDE is mandatory: an
+#: encoder lever cannot touch a golden-frame metric because the corpus is
+#: UPSTREAM of the encoder, so requiring ">=3 metrics" from a CRF change alone
+#: would fail because of where the corpus sits, not because the instrument is
+#: blind — and that failure would be misdiagnosed as the harness being wrong.
+#:
+#: `supersample` is the third and it is the odd one out on purpose: the other
+#: two make the picture worse and it makes the picture BETTER. A panel that has
+#: only ever been shown degradations cannot tell an improvement from a
+#: regression — run as a plain commit-to-commit diff this change reports 2
+#: false regressions and 7 unearned improvements (an#56). Declaring it is how
+#: that gets found before it is believed.
+MUTATIONS: tuple[str, ...] = ("high_crf", "disabled_aa", "supersample")
 
 
 #: What each lever is EXPECTED to change about the recorded environment.
@@ -119,6 +126,15 @@ MUTATION_TOUCHES: dict[str, tuple[Touch, ...]] = {
         ),
     ),
     "disabled_aa": (Touch(path=("environment", "render_side", "runtime_sha256")),),
+    # The SAME path as `disabled_aa`, and that is correct rather than a
+    # collision: both render levers work by staging a patched copy of the
+    # runtime, so both move the digest of the runtime that rendered. The entries
+    # are keyed by lever, so nothing is shared. What the shared path DOES cost
+    # is the strength of the fingerprint — "the digest is not the shipped one"
+    # is satisfied by either lever — which is why `_verify_supersample`
+    # recomputes the digest a resolution-patched runtime produces and asserts
+    # EQUALITY, instead of copying `_verify_disabled_aa`'s inequality check.
+    "supersample": (Touch(path=("environment", "render_side", "runtime_sha256")),),
 }
 
 Side = Literal["render", "encode"]
@@ -374,6 +390,37 @@ METRICS: dict[str, MetricSpec] = {
                     ),
                     reference="2.88 -> 2.00 on `aa_probe`; 5.6368 -> 5.6369 on `promote_demo`",
                 ),
+                "supersample": Prediction(
+                    "increase",
+                    counts=True,
+                    reason=(
+                        "family A's witness for THIS lever, and scene-dependent "
+                        "by measurement in the exact inverse of `disabled_aa`. "
+                        "Holds on the five procedural scenes (`graded_field` "
+                        "+8.0%, `aa_probe` +7.4%, `saturated_outline` +5.2%, "
+                        "`multi_shot` +5.1%, `single_character` +2.6%) and is "
+                        "`contrary` on `promote_demo` at -34.8%. That inversion "
+                        "is REAL, not the +0.0001 nothing `disabled_aa` produces "
+                        "on the same scene: the SVG sprite rasterises AT 2x "
+                        "instead of being stretched up from a 1x texture, so the "
+                        "descriptor path is the one scene this lever reaches "
+                        "hardest and the AA lever cannot reach at all. The two "
+                        "render levers reach complementary scenes. `increase` is "
+                        "declared because the criterion is evaluated PER SCENE "
+                        "and met on at least one — the same shape "
+                        "`video_stream_bytes` already carries under "
+                        "`disabled_aa`. An increase here is not a regression: the "
+                        "optimum is interior, and this walks TOWARD a measured "
+                        "ceiling (2.5846 `saturated_outline`, 2.9167 "
+                        "`graded_field`, ~2.452 `multi_shot`, ~2.140 "
+                        "`single_character`, ~3.503 `promote_demo`). `aa_probe` "
+                        "has NO ceiling — its diagonals land the block-mean grid "
+                        "differently at every k, so it oscillates +/-5-8% with no "
+                        "settling — and gets no declared target, because a value "
+                        "nobody measured is not a value (research §3a)."
+                    ),
+                    reference="2.3685 -> 2.4921 on `saturated_outline`; 5.6368 -> 3.6775 on `promote_demo`",
+                ),
             },
         ),
         _spec(
@@ -403,6 +450,31 @@ METRICS: dict[str, MetricSpec] = {
                     "decrease",
                     reason="family A already supplies edge_transition_width as its witness",
                 ),
+                "supersample": Prediction(
+                    "increase",
+                    reason=(
+                        "family A already supplies `edge_transition_width` as its "
+                        "witness — count at most one per family. `increase` and "
+                        "NOT `not_applicable`: this is a render lever and the "
+                        "metric is render-side, so `not_applicable` would make "
+                        "every scene report `unexpected_movement` for a metric "
+                        "doing exactly what it should. An exact block-mean "
+                        "resolve replaces hard edge pixels with blends, and a "
+                        "blend is off-palette by definition. MEASURED on the "
+                        "corpus and scene-dependent, like everything else this "
+                        "lever touches: `single_character` +28.9%, `multi_shot` "
+                        "+24.2%, `aa_probe` +21.8%, `graded_field` +0.0%; "
+                        "contrary on the two scenes whose k=1 frames are already "
+                        "the most off-palette, `promote_demo` -22.8% and "
+                        "`saturated_outline` -9.9%, where an exact resolve "
+                        "REPLACES many one-off MSAA blends with fewer, more "
+                        "regular ones. It counts nothing either way. And the "
+                        "optimum says `minimize` while this improvement moves it "
+                        "UP, which is the metric's own caveat stated in its "
+                        "`note`: on this axis it is a change detector, not a "
+                        "quality dial."
+                    ),
+                ),
             },
         ),
         _spec(
@@ -419,6 +491,34 @@ METRICS: dict[str, MetricSpec] = {
                 "disabled_aa": Prediction(
                     "decrease",
                     reason="do not count it alongside off_palette_pixel_fraction; same family",
+                ),
+                "supersample": Prediction(
+                    "increase",
+                    reason=(
+                        "do not count it alongside `edge_transition_width`; same "
+                        "family. SCENE-DEPENDENT and measured (research §4): "
+                        "+197% `single_character`, +186% `aa_probe`, +184% "
+                        "`multi_shot`, +10% `graded_field` — and DOWN 18% on "
+                        "`saturated_outline` and 23% on `promote_demo`. On a "
+                        "scene that already carries a lot of colour, 1x MSAA "
+                        "emits many one-off blend values and an exact 2x resolve "
+                        "replaces them with fewer, more regular ones: the picture "
+                        "gets BETTER and the count goes DOWN. This is what "
+                        "refutes epic #9's 'edge distinct-colour count materially "
+                        "up on every corpus scene' — the statistic has a "
+                        "scene-dependent sign, which is not a magnitude problem "
+                        "and cannot be fixed by rendering harder. (The metric "
+                        "that done-when literally names, `edge_distinct_colours`, "
+                        "does not exist: refuted and deleted in Wave 2.) Read as "
+                        "a PAIR with `edge_transition_width` — colours up + width "
+                        "up slightly = gradation added; colours +3600% + width "
+                        "+45% = lanczos ringing; colours down + width down = "
+                        "sharpened. an#41's criterion counts metrics "
+                        "INDEPENDENTLY and cannot express that conjunction, so "
+                        "the pair is evidence for a human reader and is NOT a "
+                        "gate."
+                    ),
+                    reference="7.6 -> 21.7 on `aa_probe`; 478.2 -> 392.3 on `saturated_outline`",
                 ),
             },
         ),
@@ -491,6 +591,35 @@ METRICS: dict[str, MetricSpec] = {
                         "gated and this one not."
                     ),
                 ),
+                "supersample": Prediction(
+                    "increase",
+                    reason=(
+                        "MEASURED under the lever before it was declared, on all "
+                        "six scenes, because this metric's whole-frame sibling "
+                        "has a scene-dependent sign and there was no reason to "
+                        "assume the masked one would not. Up on four: `aa_probe` "
+                        "+184.6%, `single_character` +179.3%, `multi_shot` "
+                        "+146.3%, `graded_field` +13.6%. Down on the two "
+                        "colour-rich scenes: `saturated_outline` -12.0%, "
+                        "`promote_demo` -7.6% — where 1x MSAA already emits many "
+                        "one-off blend values and an exact 2x resolve replaces "
+                        "them with fewer, more regular ones, so the picture gets "
+                        "better and the count goes down. `increase` is declared "
+                        "because the criterion is evaluated PER SCENE and met on "
+                        "four. NOT counted: family A spends its one witness on "
+                        "`edge_transition_width` and this is the same family — "
+                        "read the two together (aa_probe +184.6% colours with "
+                        "+7.4% width is gradation added; the same 3x3 blur that "
+                        "raises this metric 9.5x doubles the width) and the pair "
+                        "separates gradation from softening. It is evidence for "
+                        "a human, never a gate: an#41's criterion counts metrics "
+                        "independently and cannot express a conjunction."
+                    ),
+                    reference=(
+                        "7.58 -> 21.58 on `aa_probe`; 422.25 -> 371.75 on "
+                        "`saturated_outline`"
+                    ),
+                ),
             },
             notes=(
                 "Its mask is NOT the `masks.edge` block the encode-side rows "
@@ -521,6 +650,20 @@ METRICS: dict[str, MetricSpec] = {
                     None,
                     gate=_GATED_REFERENCE_MOVED,
                     reason="the source PNG moves with the mutation, so the delta is uninterpretable",
+                ),
+                "supersample": Prediction(
+                    None,
+                    gate=_GATED_REFERENCE_MOVED,
+                    reason=(
+                        "same gate, same mechanism as `disabled_aa`: the source "
+                        "PNG moves with the mutation. A render lever of EITHER "
+                        "sign disqualifies it — and this one is the reason to say "
+                        "so out loud, because a softer source shrinks the edge "
+                        "mask to its easiest members and the number improves "
+                        "MECHANICALLY. Ungated it is one of the 7 unearned "
+                        "improvements a `mutation=None` diff reports for this "
+                        "change (an#56)."
+                    ),
                 ),
             },
             notes=(
@@ -556,6 +699,7 @@ METRICS: dict[str, MetricSpec] = {
                     "increase", reason="control for the ratio below"
                 ),
                 "disabled_aa": Prediction(None, gate=_GATED_REFERENCE_MOVED),
+                "supersample": Prediction(None, gate=_GATED_REFERENCE_MOVED),
             },
         ),
         _spec(
@@ -582,6 +726,16 @@ METRICS: dict[str, MetricSpec] = {
                     reason=(
                         "measured -0.7% on a faithful AA-off simulation; the "
                         "claimed +10.7% was refuted. Predict no render-side direction."
+                    ),
+                ),
+                "supersample": Prediction(
+                    None,
+                    gate=_GATED_REFERENCE_MOVED,
+                    reason=(
+                        "its subject IS the 4:2:0 subsampling of a conversion "
+                        "whose input this lever changes, so there is no fixed "
+                        "reference. Predict no render-side direction, exactly as "
+                        "for `disabled_aa`."
                     ),
                 ),
             },
@@ -612,6 +766,7 @@ METRICS: dict[str, MetricSpec] = {
                     reason="the chroma claim collapses as damage becomes generic",
                 ),
                 "disabled_aa": Prediction(None, gate=_GATED_REFERENCE_MOVED),
+                "supersample": Prediction(None, gate=_GATED_REFERENCE_MOVED),
             },
         ),
         _spec(
@@ -648,6 +803,24 @@ METRICS: dict[str, MetricSpec] = {
                         "every renderer mutation, for the same reason."
                     ),
                 ),
+                "supersample": Prediction(
+                    None,
+                    gate=_GATED_SOURCE_HASH,
+                    reason=(
+                        "the flat mask is derived from the SOURCE frames, which "
+                        "this lever changes, so the mask itself moves and the "
+                        "comparison has no fixed reference — structurally "
+                        "identical to `disabled_aa`, and the DIRECTION of the "
+                        "render change is irrelevant to it. Note the gate is "
+                        "`source_hash_differs` and NOT `reference_moved`: an#56 "
+                        "describes every C/D/E/G row as `reference_moved`, which "
+                        "is right for 5 of the 9 and wrong for this one, "
+                        "`flat_field_p99_dev`, `encode_flicker_on_held_pixels` "
+                        "and `encode_ringing_excess`. The two gates are recorded "
+                        "separately on purpose: one says the reference moved, "
+                        "this one says the MASK moved."
+                    ),
+                ),
             },
             notes=(
                 "Covers the ~90% of the frame no edge metric touches. Banding "
@@ -675,6 +848,15 @@ METRICS: dict[str, MetricSpec] = {
                         "one of six scenes and holding on five, which is what a "
                         "metric with no fixed reference looks like — not evidence "
                         "of orthogonality (an#41)."
+                    ),
+                ),
+                "supersample": Prediction(
+                    None,
+                    gate=_GATED_SOURCE_HASH,
+                    reason=(
+                        "gated for the same structural reason as the rate above: "
+                        "the flat mask moves with the source, under a render "
+                        "lever of either sign."
                     ),
                 ),
             },
@@ -721,6 +903,24 @@ METRICS: dict[str, MetricSpec] = {
                         "large uniform skip regions."
                     ),
                 ),
+                "supersample": Prediction(
+                    None,
+                    gate=_GATED_SOURCE_HASH,
+                    reason=(
+                        "'excluded from EVERY renderer mutation's witness count' "
+                        "is what the declaration beside `disabled_aa` says, and "
+                        "this is the second renderer mutation it was written for. "
+                        "Worth restating because THIS lever is the exact shape of "
+                        "the failure that gate exists for: without it, "
+                        "half-res-then-nearest-upscale — the most visible "
+                        "possible flat-art regression — reports a 7.1x "
+                        "improvement, because a flattened render gives x264 large "
+                        "uniform skip regions. A block-mean resolve flattens the "
+                        "source in the same direction, so ungated this metric "
+                        "would reward the improvement for the identical wrong "
+                        "reason and nobody could tell the two apart."
+                    ),
+                ),
             },
         ),
         _spec(
@@ -749,6 +949,16 @@ METRICS: dict[str, MetricSpec] = {
                         "both legs share a FIXED source, and a renderer mutation "
                         "moves the source — so what is left is uninterpretable "
                         "rather than zero."
+                    ),
+                ),
+                "supersample": Prediction(
+                    None,
+                    gate=_GATED_SOURCE_HASH,
+                    reason=(
+                        "the cancellation is exact only when both legs share a "
+                        "FIXED source; this lever moves it. Measured moving on "
+                        "all six scenes under `disabled_aa`, and nothing about "
+                        "the sign of the render change makes it hold still."
                     ),
                 ),
             },
@@ -784,6 +994,7 @@ METRICS: dict[str, MetricSpec] = {
             predictions={
                 "high_crf": Prediction("increase", reason="the comparison arm"),
                 "disabled_aa": Prediction(None, gate=_GATED_REFERENCE_MOVED),
+                "supersample": Prediction(None, gate=_GATED_REFERENCE_MOVED),
             },
         ),
         _spec(
@@ -821,6 +1032,35 @@ METRICS: dict[str, MetricSpec] = {
                         "one witness, and a boolean change detector is not it."
                     ),
                     reference="0.9999 -> 0.279 at 1080p / 0.063 at native for a total eye-blink",
+                ),
+                "supersample": Prediction(
+                    "decrease",
+                    counts=True,
+                    reason=(
+                        "family B's single witness, and THIS lever is what the "
+                        "SIGN AMBIGUITY note above was written about: a "
+                        "supersampling IMPROVEMENT moves this away from 1.0 "
+                        "exactly as an AA regression does, and reports the "
+                        "improvement as the LARGER change. It counts as evidence "
+                        "the render CHANGED, which is what family B measures; it "
+                        "is NOT evidence the change was good, and the note beside "
+                        "`optimum` is the standing disclaimer that must be read "
+                        "with it. Fires on all six scenes: the committed baseline "
+                        "is 1.0 on every one, and research §2/§4 measured a real "
+                        "pixel move on every one — including `promote_demo`, "
+                        "which `disabled_aa` cannot reach at all. The magnitude "
+                        "is the lever's own, from the exam run recorded in the "
+                        "an#56 PR body — not a figure lifted from a research "
+                        "table, which is the an#41-review defect this panel "
+                        "already caught once."
+                    ),
+                    reference=(
+                        "1.0 -> 0.4380 on `single_character`, 0.4449 on "
+                        "`promote_demo`, 0.6144 on `saturated_outline`, 0.7756 on "
+                        "`aa_probe`, 0.7969 on `multi_shot`, 0.8201 on "
+                        "`graded_field` — every scene, because every scene's "
+                        "pixels move"
+                    ),
                 ),
             },
             notes=(
@@ -873,6 +1113,36 @@ METRICS: dict[str, MetricSpec] = {
                     ),
                     reference="+6.6% / -6.1%, scene-dependent",
                 ),
+                "supersample": Prediction(
+                    "decrease",
+                    counts=True,
+                    reason=(
+                        "family F's witness, and the ONLY third family available "
+                        "to a render lever: A and B can count, C/D/E/G are all "
+                        "gated because their masks and references derive from the "
+                        "source frames, and F is the one encode-side family whose "
+                        "reference is `none` — a property of the encoded file "
+                        "rather than a comparison against a moving source. So "
+                        "an#41's three-family criterion for this lever is A + B + "
+                        "F, forced, with no substitute. MEASURED before it was "
+                        "declared, because two mechanisms fight here and guessing "
+                        "was not available: a block-mean resolve ADDS distinct "
+                        "values at edges (+184-197% on the three colour-poor "
+                        "scenes) and it LOWERS edge frequency, which is cheaper "
+                        "for the DCT. The second wins where there is geometry to "
+                        "smooth. Scene-dependent, the same shape this row already "
+                        "carries under `disabled_aa` — and `decrease` is declared "
+                        "because that is the sign that holds on the scenes where "
+                        "family A also holds, and because it is the side carrying "
+                        "the magnitude: the three down-moves are -4.0% to -12.2% "
+                        "and the three up-moves are +0.8% to +2.8%."
+                    ),
+                    reference=(
+                        "single_character -12.2%, multi_shot -6.6%, "
+                        "saturated_outline -4.0%; contrary and small on "
+                        "graded_field +2.8%, promote_demo +1.1%, aa_probe +0.8%"
+                    ),
+                ),
             },
             notes=(
                 "The one metric in the panel that went through NO adversarial pass.",
@@ -902,6 +1172,21 @@ METRICS: dict[str, MetricSpec] = {
                         "+3.6% / -2.7% / +7.0% / -0.0% / +4.0% / -2.9%, so it is "
                         "`contrary` on half of it. Counts nothing; kept only as "
                         "the companion the sentence above calls it (an#41 review)."
+                    ),
+                ),
+                "supersample": Prediction(
+                    "decrease",
+                    reason=(
+                        "companion to `video_stream_bytes`, contaminated by the "
+                        "AAC track the renderer always emits, silent or not, and "
+                        "therefore scene-dependent in the same way and then some. "
+                        "MEASURED alongside it rather than assumed to follow: it "
+                        "does follow, on every scene and with the same three-three "
+                        "split — `single_character` -5.9%, `multi_shot` -4.8%, "
+                        "`saturated_outline` -2.4%; up and small on `promote_demo` "
+                        "+0.6%, `aa_probe` +0.5%, `graded_field` +0.4%. Counts "
+                        "nothing — prefer `video_stream_bytes`, as its own "
+                        "`optimum` note says."
                     ),
                 ),
             },
@@ -936,6 +1221,21 @@ TRIPWIRES: dict[str, MetricSpec] = {
                         "it fails, so the row reported `unexpected_movement` on "
                         "every scene for a tripwire doing exactly its job. Found "
                         "by `an bench-compare` (an#41)."
+                    ),
+                ),
+                "supersample": Prediction(
+                    "decrease",
+                    reason=(
+                        "it FAILS — `True -> False` — on all six scenes, because "
+                        "a block-mean resolve changes pixels on all six and the "
+                        "committed baseline is `True` on all six. A change "
+                        "detector firing, not a quality measurement, which is why "
+                        "it counts ZERO — and under THIS lever that distinction "
+                        "is the whole point: the tripwire fires identically for "
+                        "an improvement and for a regression, so it can never be "
+                        "the evidence that a supersample was worth shipping. "
+                        "Spelled `decrease` rather than `no_change` for the "
+                        "reason recorded beside `disabled_aa`."
                     ),
                 ),
             },

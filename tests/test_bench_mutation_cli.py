@@ -67,15 +67,23 @@ def test_bench_refuses_to_bless_under_a_lever():
 def test_bench_refuses_an_undeclared_lever_before_rendering_anything():
     """The corpus takes minutes; a typo must not cost them.
 
-    Also the exact state a `--strict --mutation supersample` run is in before
-    the lever is registered — which is why defect 2's `--strict` fix and this
+    Also the exact state a `--strict --mutation <new-lever>` run is in before
+    that lever is registered — which is why an#54's `--strict` fix and this
     refusal belong in one PR.
+
+    The name is deliberately one that can never become a lever. This test was
+    written with `supersample`, which an#56 then registered a fortnight later —
+    so it went red for being right, and the reader had to work out that the
+    failure was about the fixture rather than the behaviour. Assert against
+    `LEVERS` rather than a literal roster for the same reason.
     """
     from an import tools
+    from an.bench.mutations import LEVERS
 
-    out = tools.bench(mutation="supersample")
-    assert out.startswith("unknown mutation 'supersample'")
-    assert "high_crf" in out and "disabled_aa" in out
+    out = tools.bench(mutation="not-a-lever-and-never-will-be")
+    assert out.startswith("unknown mutation 'not-a-lever-and-never-will-be'")
+    for declared in LEVERS:
+        assert declared in out, "the refusal must list what IS declared"
 
 
 def test_a_mutated_row_may_not_be_written_into_the_ledger_directory(
