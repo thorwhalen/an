@@ -11,8 +11,18 @@ day per chunk of work; keep entries terse.
 
   **`x264_argv` did not absorb it, deliberately.** That list is the pinned tuple and carries neither `-c:v` nor `-pix_fmt` nor `+faststart`, so folding a per-render knob in would either make a constant non-constant or turn it into a composed command — and either changes what every already-committed row means. A separate `encode_side.pix_fmt` comparability key instead.
 
-  **The panel refused to let the chroma lever count its chroma witness, and it was right
-  to.** `chroma_edge_dCr` drops 21-75% on every scene and is unambiguously the lever's
+  **The LEVER did not ship, and that is the wave's most valuable output.** Registered, it
+  met the three-family criterion on four scenes here and on **none** in CI — the divergence
+  almost entirely family D, as-declared on all six scenes on macOS/arm64 and contrary on
+  three on Linux/x86-64. Not a flake and not a bad declaration: the registry already records
+  that "a different x264 build moves the decoded stream by up to 99.2% of samples", and the
+  encode-side ROWS are `comparison_scope: "machine"` for that reason — but a PREDICTION is
+  not scoped. It is declared once and asserted wherever the exam runs. Per epic #9's explicit
+  instruction the knob shipped and the lever did not; the analysis and the fix worth trying
+  (a `-qp 0 -pix_fmt yuv444p` lossless reference, which removes the RGB->YUV conversion from
+  the comparison entirely) are an#72.
+
+  **And the panel had already refused the witness that would have carried it, correctly.** `chroma_edge_dCr` drops 21-75% on every scene and is unambiguously the lever's
   story — and `test_every_counting_encode_metric_references_the_lossless_leg` rejected it
   as a WITNESS, because it references `source_png`: an explicit RGB->YUV conversion measured
   exact on ffmpeg 8.1 and mean 0.63 / max 5 on the Linux runner's older build. It cannot

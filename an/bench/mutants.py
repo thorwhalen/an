@@ -518,19 +518,19 @@ MUTANTS: tuple[Mutant, ...] = (
     # ---------------------------------------------------------------- an#55
     # ---------------------------------------------------------------- an#59
     Mutant(
-        name="pix_fmt_lever_cannot_reach_the_encode",
+        name="pix_fmt_knob_cannot_reach_the_encode",
         file="an/adapters/cutout/render.py",
         old="    resolved = pix_fmt or DEFAULT_PIX_FMT",
         new='    resolved = pix_fmt or "yuv420p"',
         caught_by="tests/test_encode_pins.py",
         why=(
             "reading the literal instead of the module global severs the seam "
-            "the `pix_fmt` lever pulls, exactly as hoisting "
-            "`DETERMINISTIC_X264_ARGS` into a default argument would sever "
-            "`high_crf`'s. The row would still record 4:4:4 — "
-            "`environment_record` reads the global — while the file stayed "
-            "4:2:0, so the lever would report a clean set of beautiful numbers "
-            "about a picture that never existed."
+            "any outside caller pulls — the same shape hoisting "
+            "`DETERMINISTIC_X264_ARGS` into a default argument would sever for "
+            "`high_crf`. The recorded row would still say 4:4:4 (because "
+            "`environment_record` reads the global) while the file stayed "
+            "4:2:0: a row that lies about its own file. That is why the seam is "
+            "kept even though an#59 ships no lever — see the note there."
         ),
     ),
     Mutant(

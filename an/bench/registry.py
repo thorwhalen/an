@@ -46,7 +46,7 @@ from typing import Literal
 #: regression — run as a plain commit-to-commit diff this change reports 2
 #: false regressions and 7 unearned improvements (an#56). Declaring it is how
 #: that gets found before it is believed.
-MUTATIONS: tuple[str, ...] = ("high_crf", "disabled_aa", "supersample", "pix_fmt")
+MUTATIONS: tuple[str, ...] = ("high_crf", "disabled_aa", "supersample")
 
 
 #: What each lever is EXPECTED to change about the recorded environment.
@@ -426,14 +426,6 @@ METRICS: dict[str, MetricSpec] = {
                     ),
                     reference="2.3685 -> 2.4921 on `saturated_outline`; 5.6368 -> 3.6775 on `promote_demo`",
                 ),
-                "pix_fmt": Prediction(
-                    "not_applicable",
-                    reason=(
-                        "computed on the pre-encode PNG; the encoder cannot move it. "
-                        "MEASURED at exactly +0.0% on all six scenes, which is what "
-                        "'blind by construction' looks like when someone checks"
-                    ),
-                ),
             },
         ),
         _spec(
@@ -488,10 +480,6 @@ METRICS: dict[str, MetricSpec] = {
                         "quality dial."
                     ),
                 ),
-                "pix_fmt": Prediction(
-                    "not_applicable",
-                    reason=("pre-encode. Measured +0.0% on all six"),
-                ),
             },
         ),
         _spec(
@@ -536,10 +524,6 @@ METRICS: dict[str, MetricSpec] = {
                         "gate."
                     ),
                     reference="7.6 -> 21.7 on `aa_probe`; 478.2 -> 392.3 on `saturated_outline`",
-                ),
-                "pix_fmt": Prediction(
-                    "not_applicable",
-                    reason=("pre-encode. Measured +0.0% on all six"),
                 ),
             },
         ),
@@ -641,12 +625,6 @@ METRICS: dict[str, MetricSpec] = {
                         "`saturated_outline`"
                     ),
                 ),
-                "pix_fmt": Prediction(
-                    "not_applicable",
-                    reason=(
-                        "pre-encode, mask and colours both. Measured +0.0% on all six"
-                    ),
-                ),
             },
             notes=(
                 "Its mask is NOT the `masks.edge` block the encode-side rows "
@@ -692,20 +670,6 @@ METRICS: dict[str, MetricSpec] = {
                         "change (an#56)."
                     ),
                 ),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    reason=(
-                        "family C's witness under `high_crf`, but NOT under this lever: "
-                        "4:4:4 leaves the LUMA plane's rate allocation only indirectly "
-                        "affected, and the measured sign is scene-dependent and small. "
-                        "`chroma_edge_dCr` carries C here instead, because it measures "
-                        "the thing the lever changes"
-                    ),
-                    reference=(
-                        "-2.5% aa_probe, +3.4% graded_field, +4.5% multi_shot, +10.8% "
-                        "promote_demo, +4.8% saturated_outline, -16.6% single_character"
-                    ),
-                ),
             },
             notes=(
                 "Read the coded luma plane; NEVER recompute Y from decoded RGB. "
@@ -741,14 +705,6 @@ METRICS: dict[str, MetricSpec] = {
                 ),
                 "disabled_aa": Prediction(None, gate=_GATED_REFERENCE_MOVED),
                 "supersample": Prediction(None, gate=_GATED_REFERENCE_MOVED),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    reason=(
-                        "the luma control for the chroma metric, so it moves with "
-                        "`coded_luma_edge_error` and for the same reason. Identical "
-                        "values, because both read the same plane"
-                    ),
-                ),
             },
         ),
         _spec(
@@ -787,42 +743,6 @@ METRICS: dict[str, MetricSpec] = {
                         "for `disabled_aa`."
                     ),
                 ),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    reason=(
-                        "**the lever's headline, and it CANNOT count — which is "
-                        "a real limit of this panel rather than an oversight.** "
-                        "A counting witness may not carry a build-dependent "
-                        "term (`test_every_counting_encode_metric_references_"
-                        "the_lossless_leg`), and this metric references "
-                        "`source_png`: an explicit RGB->YUV conversion measured "
-                        "exact on ffmpeg 8.1 and mean 0.63 / max 5 on the Linux "
-                        "runner's older build. It cannot reference the lossless "
-                        "leg instead, because a qp0 file's chroma is ALREADY "
-                        "subsampled, so a lossless-referenced version would read "
-                        "~0 and measure nothing. **So the one lever whose "
-                        "subject is chroma cannot count its chroma witness**: "
-                        "measuring chroma subsampling requires referencing the "
-                        "conversion where subsampling happens. Family C's only "
-                        "lossless-referenced row, `coded_luma_edge_error`, is "
-                        "mixed and small here, so C supplies no witness for this "
-                        "lever and the criterion is D + E + F. The number is "
-                        "still the story — it is simply evidence for a reader "
-                        "rather than for the criterion. Original note follows. "
-                        "headline.** The metric measures chroma error at an edge, and "
-                        "4:4:4 is precisely the removal of chroma subsampling — so this "
-                        "is the one row where the change and the measurement are the "
-                        "same subject. One-signed on all six scenes and large "
-                        "everywhere. Wave 2's own conclusion, now demonstrated inside "
-                        "the panel: bitrate is second-order, pixel format is "
-                        "first-order"
-                    ),
-                    reference=(
-                        "-21.3% to -75.0%, every scene: saturated_outline -75.0, "
-                        "multi_shot -58.5, aa_probe -38.9, promote_demo -30.6, "
-                        "graded_field -23.1, single_character -21.3"
-                    ),
-                ),
             },
         ),
         _spec(
@@ -852,15 +772,6 @@ METRICS: dict[str, MetricSpec] = {
                 ),
                 "disabled_aa": Prediction(None, gate=_GATED_REFERENCE_MOVED),
                 "supersample": Prediction(None, gate=_GATED_REFERENCE_MOVED),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    reason=(
-                        "the ratio diagnostic, so it follows `chroma_edge_dCr` — and "
-                        "the fact that it moves nearly as far says the drop is chroma "
-                        "and not a luma artefact"
-                    ),
-                    reference=("-5.7% to -76.1%, every scene"),
-                ),
             },
         ),
         _spec(
@@ -915,21 +826,6 @@ METRICS: dict[str, MetricSpec] = {
                         "this one says the MASK moved."
                     ),
                 ),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    counts=True,
-                    reason=(
-                        "**family D's witness.** 4:2:0 averages chroma over 2x2 blocks, "
-                        "so a flat field of saturated colour is reconstructed from half "
-                        "the samples; removing the subsampling removes that error where "
-                        "it is most visible. One-signed on all six"
-                    ),
-                    reference=(
-                        "-2.2% to -81.7%, every scene: single_character -81.7, "
-                        "graded_field -66.9, saturated_outline -28.7, promote_demo "
-                        "-25.0, aa_probe -17.7, multi_shot -2.2"
-                    ),
-                ),
             },
             notes=(
                 "Covers the ~90% of the frame no edge metric touches. Banding "
@@ -967,15 +863,6 @@ METRICS: dict[str, MetricSpec] = {
                         "the flat mask moves with the source, under a render "
                         "lever of either sign."
                     ),
-                ),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    reason=(
-                        "family D's companion, and the tail rather than the mean. Down "
-                        "or flat on every scene; +0.0% on `aa_probe` only because its "
-                        "p99 is already at the quantiser's floor"
-                    ),
-                    reference=("0.0% to -50.0%"),
                 ),
             },
         ),
@@ -1039,23 +926,6 @@ METRICS: dict[str, MetricSpec] = {
                         "reason and nobody could tell the two apart."
                     ),
                 ),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    counts=True,
-                    reason=(
-                        "**family E's witness, and it counts only because family "
-                        "C's cannot** — see `chroma_edge_dCr`. Lossless-"
-                        "referenced, so it carries no build-dependent term. "
-                        "**Scene-dependent, with one large contrary reading that is "
-                        "worth more than the other five.** Down 1.4% to 71.5% on five "
-                        "scenes; **+226.8% on `saturated_outline`**, the scene chosen "
-                        "as the chroma stress test. Not counted, and the direction is "
-                        "declared from the majority rather than from a mechanism — "
-                        "nobody has explained the outlier, and a reason invented after "
-                        "seeing a number is not a reason"
-                    ),
-                    reference=("-1.4% to -71.5% on five; +226.8% on saturated_outline"),
-                ),
             },
         ),
         _spec(
@@ -1096,17 +966,6 @@ METRICS: dict[str, MetricSpec] = {
                         "the sign of the render change makes it hold still."
                     ),
                 ),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    reason=(
-                        "genuinely mixed and small: +8.6% to -12.5%, contrary on three "
-                        "of six. Declared for the direction 4:4:4 should produce — less "
-                        "chroma-induced overshoot at an edge — and NOT counted, because "
-                        "a 4% move that changes sign across the corpus is not evidence "
-                        "of anything"
-                    ),
-                    reference=("+4.0, -1.7, +5.8, +8.6, -12.5, -9.0 percent"),
-                ),
             },
             notes=(
                 "Provisional pending a cheap comparison against plain edge-band "
@@ -1141,14 +1000,6 @@ METRICS: dict[str, MetricSpec] = {
                 "high_crf": Prediction("increase", reason="the comparison arm"),
                 "disabled_aa": Prediction(None, gate=_GATED_REFERENCE_MOVED),
                 "supersample": Prediction(None, gate=_GATED_REFERENCE_MOVED),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    reason=(
-                        "the q4 comparator, same shape as `encode_ringing_excess` and "
-                        "same size"
-                    ),
-                    reference=("+4.0, -2.6, +4.6, -8.6, -8.3, -5.6 percent"),
-                ),
             },
         ),
         _spec(
@@ -1214,14 +1065,6 @@ METRICS: dict[str, MetricSpec] = {
                         "`aa_probe`, 0.7969 on `multi_shot`, 0.8201 on "
                         "`graded_field` — every scene, because every scene's "
                         "pixels move"
-                    ),
-                ),
-                "pix_fmt": Prediction(
-                    "not_applicable",
-                    reason=(
-                        "the golden corpus is UPSTREAM of the encoder, so family B "
-                        "cannot see an encode lever by construction — the same reason "
-                        "`high_crf` declares it"
                     ),
                 ),
             },
@@ -1305,20 +1148,6 @@ METRICS: dict[str, MetricSpec] = {
                         "graded_field +2.8%, promote_demo +1.1%, aa_probe +0.8%"
                     ),
                 ),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    counts=True,
-                    reason=(
-                        "**family F's witness, and the surprise.** 4:4:4 stores twice "
-                        "the chroma samples, so the naive expectation is a LARGER file "
-                        "— and it is smaller on five of six. The un-subsampled chroma "
-                        "plane is easier to predict, and the bits saved on prediction "
-                        "residuals exceed the bits spent on samples. Contrary on "
-                        "`graded_field` (+4.7%), the one scene that is mostly smooth "
-                        "gradient rather than flat fills against hard edges"
-                    ),
-                    reference=("-5.8, +4.7, -6.2, -10.4, -8.0, -8.6 percent"),
-                ),
             },
             notes=(
                 "The one metric in the panel that went through NO adversarial pass.",
@@ -1364,15 +1193,6 @@ METRICS: dict[str, MetricSpec] = {
                         "nothing — prefer `video_stream_bytes`, as its own "
                         "`optimum` note says."
                     ),
-                ),
-                "pix_fmt": Prediction(
-                    "decrease",
-                    reason=(
-                        "family F's companion, contaminated by the AAC track the "
-                        "renderer always emits. Follows `video_stream_bytes` on every "
-                        "scene including the contrary one"
-                    ),
-                    reference=("-3.7, +2.5, -4.4, -5.5, -4.6, -4.2 percent"),
                 ),
             },
         ),
@@ -1421,13 +1241,6 @@ TRIPWIRES: dict[str, MetricSpec] = {
                         "the evidence that a supersample was worth shipping. "
                         "Spelled `decrease` rather than `no_change` for the "
                         "reason recorded beside `disabled_aa`."
-                    ),
-                ),
-                "pix_fmt": Prediction(
-                    "not_applicable",
-                    reason=(
-                        "the tripwire fires on the golden corpus, which sits upstream "
-                        "of the encoder"
                     ),
                 ),
             },
