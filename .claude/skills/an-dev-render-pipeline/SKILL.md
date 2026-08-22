@@ -52,7 +52,7 @@ an.render.render(project, …)
 | stage | loss | measured |
 |---|---|---|
 | 4 rasterise | AA is MSAA-limited: the edge transition stays ~1 logical pixel however good the geometry is | `aa_probe` `edge_transition_width` 2.8807 at k=1 |
-| 6 capture | **nothing, if you leave it alone.** Every documented way of making it capture more pixels *except* `resolution` + `autoDensity:false` loses them again silently — §2 | — |
+| 6 capture | **nothing, if you leave it alone.** Every documented way of making it capture more pixels *except* `resolution` + `autoDensity:false` loses them again silently — §2. Since an#54 `an bench` **refuses** a capture whose PNGs are not the declared size (`an/bench/run.py::_assert_declared_resolution`, against `ShotCapture.frame_sizes` read from each IHDR), so a supersample that leaves k-times frames on disk fails loudly instead of producing k² scrambled ones. A deliberate supersample must therefore resolve **in the frame stage**, before the PNGs are written — which is what §2 already prescribes. | — |
 | 7 encode | **chroma subsampling is FIRST-order**; quantiser damage is second | edge-band error 11.35 (4:2:0 crf23) → 3.79 (4:4:4 crf18); mathematically lossless 4:2:0 only reaches 10.15 |
 | 8 audio mux | nothing (`-c:v copy`) | — |
 | concat | no pixels, but **`+faststart` is silently dropped** — `-c copy` does not re-apply it | affects multi-shot only; 5 of 6 corpus scenes take the `shutil.copy` path, so the corpus is internally inconsistent on this and `file_bytes` cannot see it |

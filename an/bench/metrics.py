@@ -23,6 +23,13 @@ easiest to undo by accident, each guarded by a test:
   source-hardness term cancels. Raw overshoot is a joint function of source
   hardness and encoder fidelity with one degree of freedom, which is why any
   move toward crisper outlines raised it under an unchanged encoder.
+- ``edge_masked_distinct_colours`` must be handed a mask built from
+  :func:`luma_u8`, never from :func:`luma709` directly. ``luma709`` returns
+  **float in [0,1]** and :func:`an.bench.masks.edge_mask` thresholds at **40 on
+  0-255**, so the float form makes every two-apart gradient <= 1.0 and the mask
+  comes back **entirely empty** — measured: 0 selected pixels against 4 for the
+  same hard step. The metric would then be ``nan`` on every scene, which reads
+  as "the check could not run" rather than as a bug (an#55).
 
 One metric the epic named is deliberately absent: ``mean_adjacent_frame_ssim``
 moves the **wrong way** (0.958 at crf18 -> 0.977 at crf51, because a crushed
@@ -223,6 +230,87 @@ def frame_distinct_colours(packed: Any) -> float:
     return float(np.mean([len(np.unique(f)) for f in packed]))
 
 
+def edge_masked_distinct_colours(packed: Any, edge: Any) -> tuple[float, int]:
+    """Mean distinct colours per frame, counted ONLY on the edge mask.
+
+    The half of `frame_distinct_colours` that is about edges: an interior-only
+    change — a gradient laid into a flat field, a soft shadow — moves the
+    whole-frame count and cannot reach this one at all. The second doctest
+    below is that property, and it is the whole of what the mask buys.
+
+    **It does NOT make the number blind to a whole-frame blur, and an#55's
+    premise that it would is refuted.** The mask is recomputed from the frame
+    being measured, and a blur WIDENS the edge band, so the mask grows to admit
+    the new gradation. Measured on the six committed goldens, 3x3 box blur,
+    ratio against k=1:
+
+    ==================  ===========  ===========
+    scene               whole-frame  edge-masked
+    ==================  ===========  ===========
+    aa_probe                 10.25x        9.50x
+    graded_field              2.04x        2.35x
+    multi_shot                7.92x        4.63x
+    promote_demo              1.25x        0.83x
+    saturated_outline         1.49x        1.14x
+    single_character          8.60x        5.70x
+    ==================  ===========  ===========
+
+    Damped on four of six, WORSE on `graded_field`, and nowhere near blind.
+    (an#55 quotes "1.8x-9.3x" for the whole-frame column; the real range on
+    these goldens is 1.25x-10.25x, wider at both ends.)
+
+    **What separates a blur from a supersample is the WIDTH half of the pair,
+    not this one.** The same blur puts `edge_transition_width` at 2.1x-3.4x
+    (`aa_probe` 2.655 -> 5.594 px), while an exact k=2 resolve moves it +2.6%
+    to +8.0% (research §4). So read this metric BESIDE
+    `edge_transition_width`: colours up with width flat is gradation added;
+    colours up with width doubled is a soft picture.
+
+    **Evidence for a human reader, never a gate.** an#41's criterion counts
+    metrics independently and cannot express a conjunction, so neither half of
+    the pair may be declared as counting on the strength of the other.
+
+    ``edge`` must come from :func:`an.bench.masks.edge_mask` applied to
+    :func:`luma_u8` — **not** to :func:`luma709`, which is float in [0,1]
+    against a threshold of 40 on 0-255 and yields an empty mask every time.
+
+    Returns ``(mean, frames_measured)``. A frame whose mask is empty is
+    **skipped, not averaged in as zero** — a zero would drag the mean down and
+    read as exactly the regression this metric exists to notice. With no such
+    frame the answer is ``nan``, which the caller records as `unavailable`;
+    :func:`an.bench.ledger.measured` refuses it.
+
+    >>> import numpy as np
+    >>> from an.bench.masks import edge_mask
+    >>> c = np.zeros((1, 4, 16, 3), np.uint8); c[0, :, 8:] = 255
+    >>> edge_masked_distinct_colours(pack_rgb(c), edge_mask(luma_u8(c)))
+    (2.0, 1)
+
+    A change entirely inside a flat field moves the whole-frame count and not
+    this one — this, and only this, is what the mask buys:
+
+    >>> d = c.copy()
+    >>> for x in range(2, 6): d[0, :, x] = 8 * (x - 1)
+    ...
+    >>> frame_distinct_colours(pack_rgb(d))
+    6.0
+    >>> edge_masked_distinct_colours(pack_rgb(d), edge_mask(luma_u8(d)))
+    (2.0, 1)
+
+    An empty mask is not a colour count of zero:
+
+    >>> flat = np.full((1, 4, 8, 3), 128, np.uint8)
+    >>> edge_masked_distinct_colours(pack_rgb(flat), edge_mask(luma_u8(flat)))
+    (nan, 0)
+    """
+    import numpy as np
+
+    per_frame = [len(np.unique(f[m])) for f, m in zip(packed, edge) if m.any()]
+    if not per_frame:
+        return float("nan"), 0
+    return float(np.mean(per_frame)), len(per_frame)
+
+
 # --------------------------------------------------------------- encode-side
 
 
@@ -336,7 +424,8 @@ def encode_ringing_excess(
     )
 
 
-# --------------------------------------------------------------- golden-side
+# ------------------------------------------- shared reductions (golden-side,
+# and the render-side edge mask via `luma_u8`)
 
 
 def _box_mean(a: Any, k: int) -> Any:
@@ -408,6 +497,35 @@ def luma709(rgb: Any) -> Any:
 
     a = np.asarray(rgb, np.float64) / 255.0
     return a[..., 0] * LUMA_709[0] + a[..., 1] * LUMA_709[1] + a[..., 2] * LUMA_709[2]
+
+
+def luma_u8(rgb: Any) -> Any:
+    """``(...,3)`` uint8 -> ``(...)`` uint8 luma, on the 0-255 scale a plane uses.
+
+    The one conversion between :func:`luma709`, which returns **float in
+    [0,1]**, and :func:`an.bench.masks.edge_mask`, whose threshold is **40 on
+    0-255**. Handing the float straight to the mask is not a wrong number, it is
+    an **empty mask**: every two-apart gradient is <= 1.0, so nothing is ever an
+    edge and the metric downstream reads `unavailable` on every scene. Written
+    once, named and tested here rather than open-coded at each call site,
+    because it cost a debugging round the first time (an#55).
+
+    **This is FULL-RANGE luma and the encode-side plane is not.**
+    :data:`an.bench.imageio.SOURCE_SCALE_FILTER` pins ``out_range=tv``, so
+    ffmpeg's Y sits in [16,235] and its gradients are 219/255 of these. At one
+    threshold that makes the render-side mask the **wider** of the two —
+    measured: a 45-code-value step selects 4 pixels here and 0 there — which is
+    why the row records it under its own operator string rather than reusing
+    :data:`an.bench.masks.EDGE_OPERATOR`.
+
+    >>> import numpy as np
+    >>> a = np.zeros((1, 1, 2, 3), np.uint8); a[0, 0, 1] = 255
+    >>> luma_u8(a).tolist()
+    [[[0, 255]]]
+    """
+    import numpy as np
+
+    return np.rint(luma709(rgb) * 255.0).clip(0, 255).astype(np.uint8)
 
 
 def golden_comparison(today_rgb: Any, golden_rgb: Any) -> dict:

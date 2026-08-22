@@ -1,0 +1,4143 @@
+{
+  "generated_at": "2026-08-22T14:37:37Z",
+  "metric_declarations": {
+    "metrics": {
+      "chroma_edge_dCr": {
+        "comparison_scope": "machine",
+        "family": "C",
+        "family_name": "coded-plane edge fidelity (encode-side)",
+        "optimum": {
+          "expect": "minimize",
+          "kind": "one_sided",
+          "note": ""
+        },
+        "reference": "source_png",
+        "reference_note": "an explicit RGB->YUV conversion of the pre-encode PNGs",
+        "sentence": "How much the colour shifts on the pixels straddling a hard outline once the video is encoded.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": null,
+            "gate": "reference_moved",
+            "reason": "measured -0.7% on a faithful AA-off simulation; the claimed +10.7% was refuted. Predict no render-side direction.",
+            "state": "gated"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "increase",
+            "reason": "family C counts as ONE family until the correlation with coded_luma_edge_error is measured across the encoder matrix"
+          }
+        },
+        "unit": "code values (8-bit Cr)"
+      },
+      "chroma_edge_dCr_over_dY": {
+        "comparison_scope": "machine",
+        "family": "C",
+        "family_name": "coded-plane edge fidelity (encode-side)",
+        "optimum": {
+          "expect": null,
+          "kind": "guard",
+          "note": "3.3 at qp0 yuv420p is real 4:2:0 bleed; 0.96 at crf51 is generic damage wearing the metric's name. The denominator IS `coded_luma_edge_error` \u2014 the research's `chroma_edge_dY` control is mean |dY| over the edge mask, which is that metric's definition verbatim. Measured identical (1.484149 for both on the first real row), so it is recorded once rather than twice: one signal under two names is exactly how a witness count is padded dishonestly."
+        },
+        "reference": "source_png",
+        "reference_note": "an explicit RGB->YUV conversion of the pre-encode PNGs",
+        "role": "diagnostic",
+        "sentence": "dCr/dY on the edge mask: large means real chroma bleed, ~1 means generic blocking.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": null,
+            "gate": "reference_moved",
+            "state": "gated"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "decrease",
+            "reason": "the chroma claim collapses as damage becomes generic"
+          }
+        },
+        "unit": "ratio"
+      },
+      "chroma_edge_dY": {
+        "comparison_scope": "machine",
+        "family": "C",
+        "family_name": "coded-plane edge fidelity (encode-side)",
+        "optimum": {
+          "expect": null,
+          "kind": "guard",
+          "note": "Read only as the ratio's denominator. NOT a second name for `coded_luma_edge_error`: that one references the lossless leg and this one references the PNG conversion, so they differ by exactly the conversion term. They were identical (1.484149) while both referenced the PNG conversion, which is why one of them was removed and then restored when the references diverged."
+        },
+        "reference": "source_png",
+        "reference_note": "an explicit RGB->YUV conversion of the pre-encode PNGs",
+        "role": "control",
+        "sentence": "The luma error on the SAME mask and the SAME reference as `chroma_edge_dCr` \u2014 a control, not a quality metric.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": null,
+            "gate": "reference_moved",
+            "state": "gated"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "increase",
+            "reason": "control for the ratio below"
+          }
+        },
+        "unit": "code values (8-bit Y)"
+      },
+      "coded_luma_edge_error": {
+        "comparison_scope": "machine",
+        "family": "C",
+        "family_name": "coded-plane edge fidelity (encode-side)",
+        "notes": [
+          "Read the coded luma plane; NEVER recompute Y from decoded RGB. The RGB round trip clips at saturated edges, and ~83% of the broken form's baseline was chroma leakage."
+        ],
+        "optimum": {
+          "expect": "minimize",
+          "kind": "one_sided",
+          "note": ""
+        },
+        "reference": "lossless",
+        "reference_note": "the decode of a -qp 0 encode \u2014 the plane libx264 received",
+        "sentence": "How much the encoder's quantiser roughens the brightness step at a line's edge, measured on the codec's own luma plane.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": null,
+            "gate": "reference_moved",
+            "reason": "the source PNG moves with the mutation, so the delta is uninterpretable",
+            "state": "gated"
+          },
+          "high_crf": {
+            "counts": true,
+            "expect": "increase",
+            "reason": "family C's witness",
+            "reference": "0.419 (qp0) -> 1.875 (crf23) -> 41.2 (crf51)"
+          }
+        },
+        "unit": "code values (8-bit Y)"
+      },
+      "edge_transition_width": {
+        "comparison_scope": "any_machine",
+        "family": "A",
+        "family_name": "edge geometry (render-side)",
+        "optimum": {
+          "expect": null,
+          "kind": "interior",
+          "note": "Two-sided: both lost AA and accidental softening (blur, non-integer canvas scale, LINEAR texel filtering) are failures. The absolute value is scene-dependent \u2014 a deliberately 3px black outline is legitimately non-flat \u2014 so compare deltas on a fixed scene, never absolutes across scenes."
+        },
+        "sentence": "The average thickness, in pixels, of the fuzzy band between two flat colour areas \u2014 under 1 is a jagged staircase, ~1 is clean AA, 3+ means the picture has gone soft.",
+        "side": "render",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": true,
+            "expect": "decrease",
+            "reason": "family A's single witness. Holds on five of six corpus scenes; on `promote_demo` it moves +0.0001 the OTHER way, because the descriptor path is nearly blind to MSAA (96 differing pixels of 12.4M \u2014 an SVG sprite is a pre-rasterised texture, and multisampling applies to WebGL geometry). A `contrary` verdict at that magnitude is the lever not reaching the scene, which is why the comparison reports the relative delta beside the direction (an#41).",
+            "reference": "2.88 -> 2.00 on `aa_probe`; 5.6368 -> 5.6369 on `promote_demo`"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "not_applicable",
+            "reason": "computed on the pre-encode PNG; the encoder cannot move it"
+          }
+        },
+        "unit": "px"
+      },
+      "encode_flicker_on_held_pixels": {
+        "comparison_scope": "machine",
+        "family": "E",
+        "family_name": "temporal held-pixel fidelity (encode-side)",
+        "optimum": {
+          "expect": "minimize",
+          "kind": "one_sided",
+          "note": ""
+        },
+        "reference": "lossless",
+        "reference_note": "the decode of a -qp 0 encode \u2014 the plane libx264 received",
+        "sentence": "The fraction of pixels the animator held perfectly still that moved by at least 2 code values in the delivered video.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": null,
+            "gate": "source_hash_differs",
+            "reason": "excluded from EVERY renderer mutation's witness count: without the source gate, half-res-then-nearest-upscale \u2014 the most visible possible flat-art regression \u2014 reports a 7.1x IMPROVEMENT, because a flattened render gives x264 large uniform skip regions.",
+            "state": "gated"
+          },
+          "high_crf": {
+            "counts": true,
+            "expect": "increase",
+            "reason": "family E's witness \u2014 and the least reliable of the four. It is NON-MONOTONE across the CRF ladder on the real corpus (0.000648 / 0.007018 / 0.000985 / 0.000916 / 0.001137 / 0.001685 over crf 18/23/28/33/40/51 on `single_character`, peaking at crf23), because at high CRF the whole frame flattens into large uniform skip regions and held pixels stop moving \u2014 the same mechanism the `disabled_aa` gate below documents. At the crf23 -> crf40 step the lever uses it holds on five of six scenes and inverts on `single_character`, so it is kept and not leaned on: C, D and F are monotone across the whole ladder and satisfy the criterion on all six scenes without it (an#41).",
+            "reference": "0.0113 -> 0.0243 on aa_probe; 0.0070 -> 0.0011 on single_character"
+          }
+        },
+        "unit": "fraction of held px moving >=2"
+      },
+      "encode_ringing_excess": {
+        "comparison_scope": "machine",
+        "family": "G",
+        "family_name": "ringing (encode-side)",
+        "notes": [
+          "Provisional pending a cheap comparison against plain edge-band MAE over the identical mask. `edge_band_mae` is recorded beside it so the first ledger row answers that question."
+        ],
+        "optimum": {
+          "expect": "minimize",
+          "kind": "one_sided",
+          "note": ""
+        },
+        "provisional": true,
+        "reference": "source_png",
+        "reference_note": "an explicit RGB->YUV conversion of the pre-encode PNGs",
+        "sentence": "How much more the encoder overshoots around outlines than a mathematically lossless encode of the same frames does.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": null,
+            "gate": "source_hash_differs",
+            "reason": "declared 'both legs rise together by construction'; measured moving on ALL SIX corpus scenes under the real MSAA lever (an#41). The cancellation is exact only when both legs share a FIXED source, and a renderer mutation moves the source \u2014 so what is left is uninterpretable rather than zero.",
+            "state": "gated"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "increase",
+            "reason": "provisional; kept out of the witness count until open question 4 is settled"
+          }
+        },
+        "unit": "code values"
+      },
+      "file_bytes": {
+        "comparison_scope": "machine",
+        "family": "F",
+        "family_name": "rate cost (encode-side)",
+        "optimum": {
+          "expect": null,
+          "kind": "guard",
+          "note": "Contaminated by the audio cache: the renderer always emits an AAC track, silent or not. Prefer video_stream_bytes."
+        },
+        "reference": "none",
+        "reference_note": "a property of the encoded file, not a comparison",
+        "role": "companion",
+        "sentence": "The whole mp4 on disk, audio track included.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": "increase",
+            "reason": "companion to `video_stream_bytes`, SCENE-DEPENDENT in the same way, and additionally contaminated by the audio track. Measured AA-on -> off across the corpus: +3.6% / -2.7% / +7.0% / -0.0% / +4.0% / -2.9%, so it is `contrary` on half of it. Counts nothing; kept only as the companion the sentence above calls it (an#41 review)."
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "decrease"
+          }
+        },
+        "unit": "bytes"
+      },
+      "flat_field_deviation": {
+        "comparison_scope": "machine",
+        "family": "D",
+        "family_name": "flat-field fidelity (encode-side)",
+        "notes": [
+          "Covers the ~90% of the frame no edge metric touches. Banding regressions are invisible without it."
+        ],
+        "optimum": {
+          "expect": "minimize",
+          "kind": "one_sided",
+          "note": ""
+        },
+        "reference": "lossless",
+        "reference_note": "the decode of a -qp 0 encode \u2014 the plane libx264 received",
+        "sentence": "Of the pixels the renderer painted inside a large flat colour field, what fraction came back more than 6 code values off.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": null,
+            "gate": "source_hash_differs",
+            "reason": "The research measured this flat across a SIMULATED AA matrix and called the orthogonality 'the metric's whole value'. Run against the real MSAA lever it moves on ALL SIX corpus scenes, in both directions (an#41). The mechanism is structural rather than surprising: the flat mask is derived from the SOURCE frames, which this lever changes, so the mask itself moves and the comparison has no fixed reference. That is the definition of gated \u2014 uninterpretable, not good or bad \u2014 and it is the same gate `encode_flicker_on_held_pixels` already carries for every renderer mutation, for the same reason.",
+            "state": "gated"
+          },
+          "high_crf": {
+            "counts": true,
+            "expect": "increase",
+            "reason": "family D's witness; monotone over a 133x span",
+            "reference": "0.0003 / 0.0005 / 0.0035 / 0.0127 / 0.0399 (crf18->51)"
+          }
+        },
+        "unit": "fraction of flat px with |d|>6"
+      },
+      "flat_field_p99_dev": {
+        "comparison_scope": "machine",
+        "family": "D",
+        "family_name": "flat-field fidelity (encode-side)",
+        "optimum": {
+          "expect": "minimize",
+          "kind": "one_sided",
+          "note": ""
+        },
+        "reference": "lossless",
+        "reference_note": "the decode of a -qp 0 encode \u2014 the plane libx264 received",
+        "role": "companion",
+        "sentence": "The 99th percentile of the same deviation, in human units.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": null,
+            "gate": "source_hash_differs",
+            "reason": "gated for the same structural reason as the rate above: the flat mask moves with the source. Measured moving on one of six scenes and holding on five, which is what a metric with no fixed reference looks like \u2014 not evidence of orthogonality (an#41).",
+            "state": "gated"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "increase",
+            "reason": "companion to the rate above"
+          }
+        },
+        "unit": "code values"
+      },
+      "frame_distinct_colours": {
+        "comparison_scope": "any_machine",
+        "family": "A",
+        "family_name": "edge geometry (render-side)",
+        "optimum": {
+          "expect": null,
+          "kind": "guard",
+          "note": "No predicted direction on AA changes. A guard, not a dial."
+        },
+        "sentence": "How many different colours are in the frame at all.",
+        "side": "render",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": "decrease",
+            "reason": "do not count it alongside off_palette_pixel_fraction; same family"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "not_applicable",
+            "reason": "pre-encode"
+          }
+        },
+        "unit": "count"
+      },
+      "min_ssim_win8_vs_golden": {
+        "comparison_scope": "any_machine",
+        "family": "B",
+        "family_name": "golden change (render-side tripwire)",
+        "notes": [
+          "The metrics survey concluded SSIM should be excluded because whole-frame SSIM scores a total eye-blink at 0.9989. That was REFUTED: only the global-moment reduction is blind. Killing SSIM outright would have discarded the best numpy-only detector available."
+        ],
+        "optimum": {
+          "expect": "maximize",
+          "kind": "one_sided",
+          "note": "SIGN AMBIGUITY, recorded deliberately: a supersampling IMPROVEMENT moves this away from 1.0 exactly as an AA regression does, and in changed-pixel terms reports the improvement as the LARGER change. It is a change detector, and must be paired with the no-reference family to say whether a change was good."
+        },
+        "role": "diagnostic",
+        "sentence": "The worst small window in the frame, scored against the committed golden \u2014 magnitude AND location of a golden failure.",
+        "side": "render",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": true,
+            "expect": "decrease",
+            "reason": "family B's single witness. `golden_identity` is the tripwire beside it and counts ZERO \u2014 one family, at most one witness, and a boolean change detector is not it.",
+            "reference": "0.9999 -> 0.279 at 1080p / 0.063 at native for a total eye-blink"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "not_applicable",
+            "reason": "the golden corpus is UPSTREAM of the encoder; no encode change can reach it"
+          }
+        },
+        "unit": "ssim"
+      },
+      "off_palette_pixel_fraction": {
+        "comparison_scope": "any_machine",
+        "family": "A",
+        "family_name": "edge geometry (render-side)",
+        "optimum": {
+          "expect": "minimize",
+          "kind": "one_sided",
+          "note": "Honest caveat: a blur, drop shadow, gradient or sub-pixel offset moves this UP, indistinguishably from better AA. It is a change detector on that axis. Its floor is scene-dependent and is NOT zero on the SVG-sprite path."
+        },
+        "sentence": "The fraction of the frame whose pixels are not exactly one of the colours the compiler declared for this shot.",
+        "side": "render",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": "decrease",
+            "reason": "family A already supplies edge_transition_width as its witness"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "not_applicable",
+            "reason": "pre-encode. NOT MEASURED \u2014 which is not the same as 'no change'"
+          }
+        },
+        "unit": "fraction"
+      },
+      "ring_band_mae": {
+        "comparison_scope": "machine",
+        "family": "G",
+        "family_name": "ringing (encode-side)",
+        "optimum": {
+          "expect": "minimize",
+          "kind": "one_sided",
+          "note": "Research \u00a71.8 calls this 'plain edge-band MAE over the identical mask'. Named for the mask it actually uses, because MAE over the EDGE mask is `coded_luma_edge_error`'s definition verbatim \u2014 measured identical on the first real row \u2014 and recording it twice would answer open question 4 with a tautology."
+        },
+        "reference": "source_png",
+        "reference_note": "an explicit RGB->YUV conversion of the pre-encode PNGs",
+        "role": "q4_comparator",
+        "sentence": "Plain mean absolute luma error over the RING band \u2014 the simpler rival to `encode_ringing_excess`, on the same mask and with no second encode.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": null,
+            "gate": "reference_moved",
+            "state": "gated"
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "increase",
+            "reason": "the comparison arm"
+          }
+        },
+        "unit": "code values"
+      },
+      "video_stream_bytes": {
+        "comparison_scope": "machine",
+        "family": "F",
+        "family_name": "rate cost (encode-side)",
+        "notes": [
+          "The one metric in the panel that went through NO adversarial pass."
+        ],
+        "optimum": {
+          "expect": null,
+          "kind": "guard",
+          "note": "Not a quality dial in either direction \u2014 a cross-check that the metrics read the file they think they do."
+        },
+        "reference": "none",
+        "reference_note": "a property of the encoded file, not a comparison",
+        "sentence": "How large the encoded video stream is, with the audio track excluded.",
+        "side": "encode",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": true,
+            "expect": "increase",
+            "reason": "hard edges cost more to code. THE WEAKEST of this mutation's three witnesses, the only unreviewed metric in the set \u2014 and SCENE-DEPENDENT, measured. It holds where the lever has non-axis-aligned edges to change (aa_probe +6.6%, multi_shot +9.7%, saturated_outline +6.9%) and INVERTS where it does not (single_character -6.1%, graded_field -5.7%, promote_demo -0.1%), because AA-off on axis-aligned art removes intermediate colours and the picture gets CHEAPER instead of harder. So this mutation's criterion is met per scene, on the scenes the lever can reach \u2014 which is the measured reason `aa_probe` is in the corpus at all (an#38, an#41).",
+            "reference": "+6.6% / -6.1%, scene-dependent"
+          },
+          "high_crf": {
+            "counts": true,
+            "expect": "decrease",
+            "reason": "free fourth cross-check",
+            "reference": "x1.18 to x1.77 at crf23 -> crf40; x2.07 across the whole ladder"
+          }
+        },
+        "unit": "bytes",
+        "unreviewed": true
+      }
+    },
+    "note": "The full declaration of each metric, carried once. Per-scene rows inline only the value and the fields `an bench --compare` keys on.",
+    "tripwires": {
+      "golden_identity": {
+        "comparison_scope": "any_machine",
+        "counts": 0,
+        "family": "B",
+        "family_name": "golden change (render-side tripwire)",
+        "notes": [
+          "Compare sha256 of DECODED pixels, never file bytes: Chromium 1187 -> 1223 changes 144/144 PNG files and zero pixels."
+        ],
+        "optimum": {
+          "expect": null,
+          "kind": "guard",
+          "note": "Full-frame, never edge-masked."
+        },
+        "sentence": "Today's frame is pixel-for-pixel the committed golden frame.",
+        "side": "render",
+        "under_mutation": {
+          "disabled_aa": {
+            "counts": false,
+            "expect": "decrease",
+            "reason": "it FAILS \u2014 a change detector firing, not a quality measurement, which is why it counts ZERO. Spelled `decrease` (True -> False) rather than `no_change`: the prediction was `no_change` while this very sentence said it fails, so the row reported `unexpected_movement` on every scene for a tripwire doing exactly its job. Found by `an bench-compare` (an#41)."
+          },
+          "high_crf": {
+            "counts": false,
+            "expect": "not_applicable",
+            "reason": "the corpus is UPSTREAM of the encoder; no encode change can reach it"
+          }
+        },
+        "unit": "boolean"
+      }
+    }
+  },
+  "mutations": [
+    "high_crf",
+    "disabled_aa"
+  ],
+  "provenance": {
+    "decode_commands": {
+      "decoded_rgb": [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        "<mp4>",
+        "-map",
+        "0:v:0",
+        "-fps_mode",
+        "passthrough",
+        "-pix_fmt",
+        "rgb24",
+        "-f",
+        "rawvideo",
+        "-"
+      ],
+      "decoded_yuv444": [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        "<mp4>",
+        "-map",
+        "0:v:0",
+        "-fps_mode",
+        "passthrough",
+        "-pix_fmt",
+        "yuv444p",
+        "-f",
+        "rawvideo",
+        "-"
+      ],
+      "source_rgb": [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-start_number",
+        "0",
+        "-i",
+        "<frames>/frame_%06d.png",
+        "-pix_fmt",
+        "rgb24",
+        "-f",
+        "rawvideo",
+        "-"
+      ],
+      "source_yuv444": [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-start_number",
+        "0",
+        "-i",
+        "<frames>/frame_%06d.png",
+        "-vf",
+        "scale=out_range=tv:out_color_matrix=bt709",
+        "-pix_fmt",
+        "yuv444p",
+        "-f",
+        "rawvideo",
+        "-"
+      ]
+    },
+    "encode_command_source": "an.adapters.cutout.render._ffmpeg_mux + DETERMINISTIC_X264_ARGS",
+    "environment": {
+      "an": "0.1.9",
+      "encode_side": {
+        "comparison_note": "a different x264 build moves the decoded stream by up to 99.2% of samples; a band wide enough to absorb that would swallow flat_field_deviation's entire crf18->23 signal, so refuse rather than widen",
+        "comparison_scope": "machine",
+        "ffmpeg": {
+          "banner": "ffmpeg version 8.1 Copyright (c) 2000-2026 the FFmpeg developers",
+          "path": "/opt/homebrew/bin/ffmpeg"
+        },
+        "isa": "arm64",
+        "platform": "macOS-15.7.4-arm64-arm-64bit",
+        "x264_argv": [
+          "-threads",
+          "1",
+          "-crf",
+          "23",
+          "-preset",
+          "medium",
+          "-colorspace",
+          "bt709",
+          "-color_primaries",
+          "bt709",
+          "-color_trc",
+          "bt709",
+          "-color_range",
+          "tv",
+          "-x264-params",
+          "colorprim=bt709:transfer=bt709:colormatrix=bt709"
+        ],
+        "x264_sei": "core 165 r3222 b35605a"
+      },
+      "numpy": "2.2.6",
+      "python": "3.12.12",
+      "render_side": {
+        "chromium_build": "140.0.7339.16",
+        "comparison_note": "measured ISA- and OS-invariant at a pinned Chromium build: zero differing pixels across arm64 macOS, x86-64 Linux and arm64 Linux, across two SwiftShader JIT backends",
+        "comparison_scope": "any_machine",
+        "executable_path": "/Users/thorwhalen/Library/Caches/ms-playwright/chromium-1187/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+        "headless": true,
+        "launch_argv": [
+          "--no-sandbox",
+          "--disable-gpu",
+          "--enable-unsafe-swiftshader",
+          "--force-color-profile=srgb"
+        ],
+        "playwright": "1.55.0",
+        "runtime_sha256": "b8d1711be37c28b5c9103a967d67879a4b544e9ff2d9aa80061cd295af3d4b80",
+        "webgl": {
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+          "samples": 4,
+          "vendor": "Google Inc. (Google)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      }
+    },
+    "git": {
+      "branch": "main",
+      "dirty": false,
+      "sha": "d468c7fc5300693d81c6f48d8e60d6e5e254f21f"
+    },
+    "render_kwargs": {
+      "auto_audio": false,
+      "parallel": 1,
+      "strict_assets": true
+    }
+  },
+  "scenes": {
+    "aa_probe": {
+      "metrics": {
+        "chroma_edge_dCr": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 8.040974
+        },
+        "chroma_edge_dCr_over_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 2.383275
+        },
+        "chroma_edge_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 3.373917
+        },
+        "coded_luma_edge_error": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 3.373917
+        },
+        "edge_transition_width": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "median": 3.0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 2.8807
+        },
+        "encode_flicker_on_held_pixels": {
+          "comparison_scope": "machine",
+          "family": "E",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.011261
+        },
+        "encode_ringing_excess": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 0.93616
+        },
+        "file_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 5328
+        },
+        "flat_field_deviation": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.006323
+        },
+        "flat_field_p99_dev": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 5.0
+        },
+        "frame_distinct_colours": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 7.5833
+        },
+        "min_ssim_win8_vs_golden": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 1.0
+        },
+        "off_palette_pixel_fraction": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 0.006812
+        },
+        "ring_band_mae": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 1.999578
+        },
+        "video_stream_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "decrease"
+            }
+          },
+          "value": 3403
+        }
+      },
+      "provenance": {
+        "asset_resolution": [
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "probe",
+            "kind": "character",
+            "ref": "probe-rig",
+            "resolved": "parts",
+            "store": "characters"
+          }
+        ],
+        "audio_cache": "cold",
+        "decoded_source_frames": 12,
+        "decoder": "ffmpeg",
+        "fps": 24,
+        "frames_on_disk": 12,
+        "golden": {
+          "changed_px": 0,
+          "chromium_build": "140.0.7339.16",
+          "declared_times": [
+            0.0,
+            0.25
+          ],
+          "frames": [
+            {
+              "changed_px": 0,
+              "frame_key": "f0000",
+              "golden": "misc/bench/golden/aa_probe/f0000-chromium140.0.7339.16.png",
+              "golden_sha256": "9d69b2bfe6e7532ae504c797cfae16d9a7d445c257675fe7a495db187dd2eca3",
+              "identical": true,
+              "index": 0,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "probe",
+              "state": "compared",
+              "time": 0.0,
+              "today_sha256": "9d69b2bfe6e7532ae504c797cfae16d9a7d445c257675fe7a495db187dd2eca3"
+            },
+            {
+              "changed_px": 0,
+              "frame_key": "f0006",
+              "golden": "misc/bench/golden/aa_probe/f0006-chromium140.0.7339.16.png",
+              "golden_sha256": "814f509071ca55ea71bf91b99d82ec282717e802e3fd4e5f68b0cac73dafecb9",
+              "identical": true,
+              "index": 6,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "probe",
+              "state": "compared",
+              "time": 0.25,
+              "today_sha256": "814f509071ca55ea71bf91b99d82ec282717e802e3fd4e5f68b0cac73dafecb9"
+            }
+          ],
+          "identical": true,
+          "max_delta": 0,
+          "min_ssim_win8": 1.0,
+          "note": "DIAGNOSTICS, not comparability keys. `an bench --compare` keys on named provenance fields \u2014 the scene contract hash, the resolution, the mask parameters, the encode command, the x264 SEI and the ISA \u2014 never on this block's equality. `today_sha256` here is a per-run MEASUREMENT and changes exactly when the render changes, which is when two rows are most worth comparing.",
+          "shape_mismatch": null,
+          "state": "measured",
+          "what_moves": "the fourth bar sweeping horizontally (4,200 px). The three angled bars are pinned and do not move \u2014 they are the AA subject."
+        },
+        "masks": {
+          "edge": {
+            "edge_px": 18817,
+            "fraction": 0.020418,
+            "frame_px": 921600,
+            "operator": "max(|Y[:,2:]-Y[:,:-2]|, |Y[2:,:]-Y[:-2,:]|) > 40, on the REFERENCE luma",
+            "threshold": 40
+          },
+          "flat": {
+            "dilate_k": 3,
+            "flat_px": 877251,
+            "fraction": 0.951878,
+            "operator": "~dilate3(any 4-neighbour RGB change in the SOURCE)"
+          },
+          "held": {
+            "operator": "|src[i+1]-src[i]|.max(-1) == 0, on the SOURCE",
+            "pairs": 11
+          },
+          "ring": {
+            "operator": "dilate2(edge) & ~edge",
+            "ring_px": 21319
+          }
+        },
+        "n_declared_entity_refs": 1,
+        "n_drawable_entities": 1,
+        "n_frames": 12,
+        "n_nodes": 6,
+        "off_palette_blend_note": "`blend_of` names the two declared colours a pixel sits between. All-blends means the metric is reporting anti-aliasing correctly; a non-blend near the top means the palette derivation missed a literal and the number is inflated with no error anywhere.",
+        "off_palette_top_colours": [
+          {
+            "blend_of": [
+              "#a83249",
+              "#ffffff"
+            ],
+            "count": 2203,
+            "hex": "#be6677"
+          },
+          {
+            "blend_of": [
+              "#a83249",
+              "#ffffff"
+            ],
+            "count": 1743,
+            "hex": "#eaccd2"
+          },
+          {
+            "blend_of": [
+              "#a83249",
+              "#ffffff"
+            ],
+            "count": 1212,
+            "hex": "#d499a4"
+          },
+          {
+            "blend_of": [
+              "#2c3e50",
+              "#ffffff"
+            ],
+            "count": 560,
+            "hex": "#616f7c"
+          },
+          {
+            "blend_of": [
+              "#2c3e50",
+              "#ffffff"
+            ],
+            "count": 539,
+            "hex": "#cbcfd4"
+          },
+          {
+            "blend_of": [
+              "#2c3e50",
+              "#a83249"
+            ],
+            "count": 20,
+            "hex": "#89354b"
+          },
+          {
+            "blend_of": null,
+            "count": 1,
+            "hex": "#9f6979"
+          }
+        ],
+        "palette_hex": [
+          "#2c3e50",
+          "#a83249",
+          "#ffffff"
+        ],
+        "palette_is_superset": false,
+        "palette_sources": {
+          "probe": {
+            "runtime_constants": 0,
+            "scene_json": 5,
+            "svg": 0
+          }
+        },
+        "png_to_encoder_input_luma": {
+          "encoder_input_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-aa_probe-2_0tbkjo/aa_probe/.an/render_work/shot_probe/_bench_qp0.mp4",
+            "-map",
+            "0:v:0",
+            "-fps_mode",
+            "passthrough",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ],
+          "luma_residual_max": 0,
+          "luma_residual_mean": 0.0,
+          "note": "Zero means this build's explicit PNG->YUV conversion reproduces what libx264 received. Nonzero means it does not, which is a property of the ffmpeg build and NOT an error: the encode-side metrics reference the lossless decode, so they do not depend on this agreeing. Measured 0.0 on ffmpeg 8.1 (arm64 macOS) and 0.629 / max 5 on the Linux runner's older build.",
+          "png_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-start_number",
+            "0",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-aa_probe-2_0tbkjo/aa_probe/.an/render_work/shot_probe/frames/frame_%06d.png",
+            "-vf",
+            "scale=out_range=tv:out_color_matrix=bt709",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ]
+        },
+        "prepared": false,
+        "references_coincide": true,
+        "resolution": [
+          320,
+          240
+        ],
+        "scene_contract_sha256": "ba1fc4917822bb811508aba837963b9f45e74ba0ca0b18e3a81a1beb3ce457c5",
+        "shot_contract_sha256": {
+          "probe": "ba1fc4917822bb811508aba837963b9f45e74ba0ca0b18e3a81a1beb3ce457c5"
+        },
+        "shot_count": 1,
+        "shot_order": [
+          "probe"
+        ],
+        "shots": [
+          {
+            "duration": 0.5,
+            "frames": 12,
+            "id": "probe"
+          }
+        ],
+        "source": "misc/bench/corpus/aa_probe",
+        "source_pixels_sha256": "5e528e6be857fecc83768308fddec7f2bee80b5cc02b201ea51ca294a6d84a2d",
+        "tolerances": {
+          "edge_flat_tol": 4,
+          "flat_dev_tol": 6,
+          "flicker_delta_tol": 2,
+          "luma_coefficients": [
+            0.2126,
+            0.7152,
+            0.0722
+          ],
+          "ssim_radius": 3
+        },
+        "unresolved_svg_colour_tokens": [],
+        "visual_kinds": [
+          "rect"
+        ],
+        "wall_seconds": 1.919
+      },
+      "tripwires": {
+        "golden_identity": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "counts": 0,
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": true
+        }
+      }
+    },
+    "graded_field": {
+      "metrics": {
+        "chroma_edge_dCr": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 2.422147
+        },
+        "chroma_edge_dCr_over_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 0.920049
+        },
+        "chroma_edge_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 2.632629
+        },
+        "coded_luma_edge_error": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 2.632629
+        },
+        "edge_transition_width": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "median": 3.0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 2.6042
+        },
+        "encode_flicker_on_held_pixels": {
+          "comparison_scope": "machine",
+          "family": "E",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.016508
+        },
+        "encode_ringing_excess": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 0.557982
+        },
+        "file_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 3871
+        },
+        "flat_field_deviation": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.003129
+        },
+        "flat_field_p99_dev": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 4.0
+        },
+        "frame_distinct_colours": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 119.9167
+        },
+        "min_ssim_win8_vs_golden": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 1.0
+        },
+        "off_palette_pixel_fraction": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 0.699057
+        },
+        "ring_band_mae": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 1.025745
+        },
+        "video_stream_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "decrease"
+            }
+          },
+          "value": 1986
+        }
+      },
+      "provenance": {
+        "asset_resolution": [
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "field",
+            "kind": "character",
+            "ref": "graded-field-rig",
+            "resolved": "descriptor",
+            "store": "characters"
+          }
+        ],
+        "audio_cache": "cold",
+        "decoded_source_frames": 12,
+        "decoder": "ffmpeg",
+        "fps": 24,
+        "frames_on_disk": 12,
+        "golden": {
+          "changed_px": 0,
+          "chromium_build": "140.0.7339.16",
+          "declared_times": [
+            0.0,
+            0.1667
+          ],
+          "frames": [
+            {
+              "changed_px": 0,
+              "frame_key": "f0000",
+              "golden": "misc/bench/golden/graded_field/f0000-chromium140.0.7339.16.png",
+              "golden_sha256": "2ff81e126cec5788e88fb3b6aefa42bbe457c306792239c4ecf2267e42070c85",
+              "identical": true,
+              "index": 0,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "field",
+              "state": "compared",
+              "time": 0.0,
+              "today_sha256": "2ff81e126cec5788e88fb3b6aefa42bbe457c306792239c4ecf2267e42070c85"
+            },
+            {
+              "changed_px": 0,
+              "frame_key": "f0004",
+              "golden": "misc/bench/golden/graded_field/f0004-chromium140.0.7339.16.png",
+              "golden_sha256": "5a6d76d36e399d50d06d43bb86c94f627f31fbd0d6c8596a6b634aac78848aa7",
+              "identical": true,
+              "index": 4,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "field",
+              "state": "compared",
+              "time": 0.1667,
+              "today_sha256": "5a6d76d36e399d50d06d43bb86c94f627f31fbd0d6c8596a6b634aac78848aa7"
+            }
+          ],
+          "identical": true,
+          "max_delta": 0,
+          "min_ssim_win8": 1.0,
+          "note": "DIAGNOSTICS, not comparability keys. `an bench --compare` keys on named provenance fields \u2014 the scene contract hash, the resolution, the mask parameters, the encode command, the x264 SEI and the ISA \u2014 never on this block's equality. `today_sha256` here is a per-run MEASUREMENT and changes exactly when the render changes, which is when two rows are most worth comparing.",
+          "shape_mismatch": null,
+          "state": "measured",
+          "what_moves": "the white marker sweeping across the gradient (6,270 px). Frame 4, not the obvious mid-scene frame 6: the marker advances by a sub-pixel step, so on frames 0, 1, 6, 8 and 11 it lands on an exact pixel boundary and AA-off changes ZERO pixels there. A blessed pair that no available mutation can move is a gate that cannot go red."
+        },
+        "masks": {
+          "edge": {
+            "edge_px": 14386,
+            "fraction": 0.01561,
+            "frame_px": 921600,
+            "operator": "max(|Y[:,2:]-Y[:,:-2]|, |Y[2:,:]-Y[:-2,:]|) > 40, on the REFERENCE luma",
+            "threshold": 40
+          },
+          "flat": {
+            "dilate_k": 3,
+            "flat_px": 257584,
+            "fraction": 0.279497,
+            "operator": "~dilate3(any 4-neighbour RGB change in the SOURCE)"
+          },
+          "held": {
+            "operator": "|src[i+1]-src[i]|.max(-1) == 0, on the SOURCE",
+            "pairs": 11
+          },
+          "ring": {
+            "operator": "dilate2(edge) & ~edge",
+            "ring_px": 13556
+          }
+        },
+        "n_declared_entity_refs": 1,
+        "n_drawable_entities": 1,
+        "n_frames": 12,
+        "n_nodes": 13,
+        "off_palette_blend_note": "`blend_of` names the two declared colours a pixel sits between. All-blends means the metric is reporting anti-aliasing correctly; a non-blend near the top means the palette derivation missed a literal and the number is inflated with no error anywhere.",
+        "off_palette_top_colours": [
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 11448,
+            "hex": "#647494"
+          },
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 11304,
+            "hex": "#425272"
+          },
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 10752,
+            "hex": "#5c6c8c"
+          },
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 10404,
+            "hex": "#7484a4"
+          },
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 10293,
+            "hex": "#7e8eae"
+          },
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 10188,
+            "hex": "#5a6a8a"
+          },
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 9710,
+            "hex": "#96a6c6"
+          },
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 9624,
+            "hex": "#445474"
+          },
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 9579,
+            "hex": "#7c8cac"
+          },
+          {
+            "blend_of": [
+              "#203050",
+              "#98a8c8"
+            ],
+            "count": 9564,
+            "hex": "#4c5c7c"
+          }
+        ],
+        "palette_hex": [
+          "#203050",
+          "#204028",
+          "#98a8c8",
+          "#ffffff"
+        ],
+        "palette_is_superset": true,
+        "palette_sources": {
+          "field": {
+            "runtime_constants": 0,
+            "scene_json": 1,
+            "svg": 4
+          }
+        },
+        "png_to_encoder_input_luma": {
+          "encoder_input_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-graded_field-wgx3j4ye/graded_field/.an/render_work/shot_field/_bench_qp0.mp4",
+            "-map",
+            "0:v:0",
+            "-fps_mode",
+            "passthrough",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ],
+          "luma_residual_max": 0,
+          "luma_residual_mean": 0.0,
+          "note": "Zero means this build's explicit PNG->YUV conversion reproduces what libx264 received. Nonzero means it does not, which is a property of the ffmpeg build and NOT an error: the encode-side metrics reference the lossless decode, so they do not depend on this agreeing. Measured 0.0 on ffmpeg 8.1 (arm64 macOS) and 0.629 / max 5 on the Linux runner's older build.",
+          "png_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-start_number",
+            "0",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-graded_field-wgx3j4ye/graded_field/.an/render_work/shot_field/frames/frame_%06d.png",
+            "-vf",
+            "scale=out_range=tv:out_color_matrix=bt709",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ]
+        },
+        "prepared": false,
+        "references_coincide": true,
+        "resolution": [
+          320,
+          240
+        ],
+        "scene_contract_sha256": "02508dbe9dfc1ab699bab8f4f4d29905c629e004c9675d295736ec448045c44d",
+        "shot_contract_sha256": {
+          "field": "02508dbe9dfc1ab699bab8f4f4d29905c629e004c9675d295736ec448045c44d"
+        },
+        "shot_count": 1,
+        "shot_order": [
+          "field"
+        ],
+        "shots": [
+          {
+            "duration": 0.5,
+            "frames": 12,
+            "id": "field"
+          }
+        ],
+        "source": "misc/bench/corpus/graded_field",
+        "source_pixels_sha256": "52ff84bcd8efc7d5828f84863c4fc95fc9c4621bea5e41502756ffe6e3ac39ab",
+        "tolerances": {
+          "edge_flat_tol": 4,
+          "flat_dev_tol": 6,
+          "flicker_delta_tol": 2,
+          "luma_coefficients": [
+            0.2126,
+            0.7152,
+            0.0722
+          ],
+          "ssim_radius": 3
+        },
+        "unresolved_svg_colour_tokens": [
+          "url(#g)"
+        ],
+        "visual_kinds": [
+          "svg_sprite"
+        ],
+        "wall_seconds": 2.025
+      },
+      "tripwires": {
+        "golden_identity": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "counts": 0,
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": true
+        }
+      }
+    },
+    "multi_shot": {
+      "metrics": {
+        "chroma_edge_dCr": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 9.287954
+        },
+        "chroma_edge_dCr_over_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 2.319292
+        },
+        "chroma_edge_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 4.004651
+        },
+        "coded_luma_edge_error": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 4.004651
+        },
+        "edge_transition_width": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "median": 2.0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 2.3307
+        },
+        "encode_flicker_on_held_pixels": {
+          "comparison_scope": "machine",
+          "family": "E",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.059019
+        },
+        "encode_ringing_excess": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 1.182261
+        },
+        "file_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 7021
+        },
+        "flat_field_deviation": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.006716
+        },
+        "flat_field_p99_dev": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 6.0
+        },
+        "frame_distinct_colours": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 36.4167
+        },
+        "min_ssim_win8_vs_golden": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 1.0
+        },
+        "off_palette_pixel_fraction": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 0.006037
+        },
+        "ring_band_mae": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 2.165323
+        },
+        "video_stream_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "decrease"
+            }
+          },
+          "value": 5043
+        }
+      },
+      "provenance": {
+        "asset_resolution": [
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "back",
+            "kind": "environment",
+            "ref": "night",
+            "resolved": "preset",
+            "store": "environments"
+          },
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "ada",
+            "kind": "character",
+            "ref": "ada-rig",
+            "resolved": "parts",
+            "store": "characters"
+          },
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "back",
+            "kind": "environment",
+            "ref": "sunset",
+            "resolved": "preset",
+            "store": "environments"
+          },
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "ada",
+            "kind": "character",
+            "ref": "ada-rig",
+            "resolved": "parts",
+            "store": "characters"
+          }
+        ],
+        "audio_cache": "cold",
+        "decoded_source_frames": 12,
+        "decoder": "ffmpeg",
+        "fps": 24,
+        "frames_on_disk": 12,
+        "golden": {
+          "changed_px": 0,
+          "chromium_build": "140.0.7339.16",
+          "declared_times": [
+            0.0,
+            0.25
+          ],
+          "frames": [
+            {
+              "changed_px": 0,
+              "frame_key": "f0000",
+              "golden": "misc/bench/golden/multi_shot/f0000-chromium140.0.7339.16.png",
+              "golden_sha256": "f990e8ae3eb93d4bfddfd9f971907b57fc22b60af33e88d04d8da36eaa49ccd4",
+              "identical": true,
+              "index": 0,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "intro",
+              "state": "compared",
+              "time": 0.0,
+              "today_sha256": "f990e8ae3eb93d4bfddfd9f971907b57fc22b60af33e88d04d8da36eaa49ccd4"
+            },
+            {
+              "changed_px": 0,
+              "frame_key": "f0006",
+              "golden": "misc/bench/golden/multi_shot/f0006-chromium140.0.7339.16.png",
+              "golden_sha256": "7cfdb87ba68addbd7e5bdba6359a3ddc2ccdd47d8096d1a560826324b784d2e1",
+              "identical": true,
+              "index": 6,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "beat",
+              "state": "compared",
+              "time": 0.25,
+              "today_sha256": "7cfdb87ba68addbd7e5bdba6359a3ddc2ccdd47d8096d1a560826324b784d2e1"
+            }
+          ],
+          "identical": true,
+          "max_delta": 0,
+          "min_ssim_win8": 1.0,
+          "note": "DIAGNOSTICS, not comparability keys. `an bench --compare` keys on named provenance fields \u2014 the scene contract hash, the resolution, the mask parameters, the encode command, the x264 SEI and the ISA \u2014 never on this block's equality. `today_sha256` here is a per-run MEASUREMENT and changes exactly when the render changes, which is when two rows are most worth comparing.",
+          "shape_mismatch": null,
+          "state": "measured",
+          "what_moves": "the whole picture: 0.25s is the FIRST frame of the second shot, so the pair spans the concat boundary (75,050 px). A golden pair inside one shot would not notice a shot rendered in the wrong order."
+        },
+        "masks": {
+          "edge": {
+            "edge_px": 17416,
+            "fraction": 0.018898,
+            "frame_px": 921600,
+            "operator": "max(|Y[:,2:]-Y[:,:-2]|, |Y[2:,:]-Y[:-2,:]|) > 40, on the REFERENCE luma",
+            "threshold": 40
+          },
+          "flat": {
+            "dilate_k": 3,
+            "flat_px": 857003,
+            "fraction": 0.929908,
+            "operator": "~dilate3(any 4-neighbour RGB change in the SOURCE)"
+          },
+          "held": {
+            "operator": "|src[i+1]-src[i]|.max(-1) == 0, on the SOURCE",
+            "pairs": 11
+          },
+          "ring": {
+            "operator": "dilate2(edge) & ~edge",
+            "ring_px": 17239
+          }
+        },
+        "n_declared_entity_refs": 4,
+        "n_drawable_entities": 4,
+        "n_frames": 12,
+        "n_nodes": 30,
+        "off_palette_blend_note": "`blend_of` names the two declared colours a pixel sits between. All-blends means the metric is reporting anti-aliasing correctly; a non-blend near the top means the palette derivation missed a literal and the number is inflated with no error anywhere.",
+        "off_palette_top_colours": [
+          {
+            "blend_of": [
+              "#1a2540",
+              "#d97706"
+            ],
+            "count": 660,
+            "hex": "#4a3a32"
+          },
+          {
+            "blend_of": [
+              "#1a2540",
+              "#d97706"
+            ],
+            "count": 660,
+            "hex": "#aa6315"
+          },
+          {
+            "blend_of": [
+              "#d97706",
+              "#f4a261"
+            ],
+            "count": 400,
+            "hex": "#e78d34"
+          },
+          {
+            "blend_of": [
+              "#5e3a1f",
+              "#e8c39e"
+            ],
+            "count": 312,
+            "hex": "#c6a17f"
+          },
+          {
+            "blend_of": [
+              "#1a1a1a",
+              "#e8c39e"
+            ],
+            "count": 266,
+            "hex": "#cbab8c"
+          },
+          {
+            "blend_of": [
+              "#1a1a1a",
+              "#f4a261"
+            ],
+            "count": 227,
+            "hex": "#815d3f"
+          },
+          {
+            "blend_of": [
+              "#d97706",
+              "#f4a261"
+            ],
+            "count": 200,
+            "hex": "#e0821d"
+          },
+          {
+            "blend_of": [
+              "#d97706",
+              "#f4a261"
+            ],
+            "count": 198,
+            "hex": "#ee984b"
+          },
+          {
+            "blend_of": [
+              "#6b2b2b",
+              "#e8c39e"
+            ],
+            "count": 176,
+            "hex": "#8b5148"
+          },
+          {
+            "blend_of": [
+              "#5e3a1f",
+              "#e8c39e"
+            ],
+            "count": 139,
+            "hex": "#a37f5f"
+          }
+        ],
+        "palette_hex": [
+          "#1a1a1a",
+          "#1a2540",
+          "#222222",
+          "#2a1010",
+          "#2c3e50",
+          "#5b4b32",
+          "#5e3a1f",
+          "#6b2b2b",
+          "#b04848",
+          "#d97706",
+          "#e8c39e",
+          "#f4a261",
+          "#fafafa",
+          "#ffffff"
+        ],
+        "palette_is_superset": false,
+        "palette_sources": {
+          "beat": {
+            "runtime_constants": 8,
+            "scene_json": 12,
+            "svg": 0
+          },
+          "intro": {
+            "runtime_constants": 8,
+            "scene_json": 12,
+            "svg": 0
+          }
+        },
+        "png_to_encoder_input_luma": {
+          "encoder_input_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/_bench_qp0.mp4",
+            "-map",
+            "0:v:0",
+            "-fps_mode",
+            "passthrough",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ],
+          "luma_residual_max": 0,
+          "luma_residual_mean": 0.0,
+          "note": "Zero means this build's explicit PNG->YUV conversion reproduces what libx264 received. Nonzero means it does not, which is a property of the ffmpeg build and NOT an error: the encode-side metrics reference the lossless decode, so they do not depend on this agreeing. Measured 0.0 on ffmpeg 8.1 (arm64 macOS) and 0.629 / max 5 on the Linux runner's older build.",
+          "png_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-start_number",
+            "0",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-timeline-multi_shot-6wckkkek/frame_%06d.png",
+            "-vf",
+            "scale=out_range=tv:out_color_matrix=bt709",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ]
+        },
+        "prepared": false,
+        "references_coincide": true,
+        "resolution": [
+          320,
+          240
+        ],
+        "scene_contract_sha256": "978a9b7fc6a55925967089dbb3ed8d3be7d52e34d4ed5d4238a9c4fdfc5d4816",
+        "shot_contract_sha256": {
+          "beat": "c91bc400efcae650c59e0ef910e7f36ab0f84ccd3986822bbea1249e718a2a78",
+          "intro": "6073404f12732001461e2a0c4139e211e43e7d7c6316518b56deeefd46f24098"
+        },
+        "shot_count": 2,
+        "shot_order": [
+          "intro",
+          "beat"
+        ],
+        "shots": [
+          {
+            "duration": 0.25,
+            "frames": 6,
+            "id": "intro"
+          },
+          {
+            "duration": 0.25,
+            "frames": 6,
+            "id": "beat"
+          }
+        ],
+        "source": "misc/bench/corpus/multi_shot",
+        "source_pixels_sha256": "83ee601fd63436cc9ddb1bc5faa0eaf3fad83ef95e855e5b00857d211d858593",
+        "tolerances": {
+          "edge_flat_tol": 4,
+          "flat_dev_tol": 6,
+          "flicker_delta_tol": 2,
+          "luma_coefficients": [
+            0.2126,
+            0.7152,
+            0.0722
+          ],
+          "ssim_radius": 3
+        },
+        "unresolved_svg_colour_tokens": [],
+        "visual_kinds": [
+          "ellipse",
+          "eye",
+          "mouth",
+          "rect"
+        ],
+        "wall_seconds": 2.891
+      },
+      "tripwires": {
+        "golden_identity": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "counts": 0,
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": true
+        }
+      }
+    },
+    "promote_demo": {
+      "metrics": {
+        "chroma_edge_dCr": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 3.400202
+        },
+        "chroma_edge_dCr_over_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 2.505406
+        },
+        "chroma_edge_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 1.357146
+        },
+        "coded_luma_edge_error": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 1.357146
+        },
+        "edge_transition_width": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "median": 5.0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 5.6368
+        },
+        "encode_flicker_on_held_pixels": {
+          "comparison_scope": "machine",
+          "family": "E",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.000111
+        },
+        "encode_ringing_excess": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 0.437566
+        },
+        "file_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 9194
+        },
+        "flat_field_deviation": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.000152
+        },
+        "flat_field_p99_dev": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 3.0
+        },
+        "frame_distinct_colours": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 1212.6528
+        },
+        "min_ssim_win8_vs_golden": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 1.0
+        },
+        "off_palette_pixel_fraction": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 0.034608
+        },
+        "ring_band_mae": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 1.004019
+        },
+        "video_stream_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "decrease"
+            }
+          },
+          "value": 4903
+        }
+      },
+      "provenance": {
+        "asset_resolution": [
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "bg",
+            "kind": "environment",
+            "ref": "park",
+            "resolved": "preset",
+            "store": "environments"
+          },
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "maya",
+            "kind": "character",
+            "ref": "maya-promoted",
+            "resolved": "descriptor",
+            "store": "characters"
+          }
+        ],
+        "audio_cache": "cold",
+        "decoded_source_frames": 72,
+        "decoder": "ffmpeg",
+        "fps": 24,
+        "frames_on_disk": 72,
+        "golden": {
+          "changed_px": 0,
+          "chromium_build": "140.0.7339.16",
+          "declared_times": [
+            0.0,
+            2.9167
+          ],
+          "frames": [
+            {
+              "changed_px": 0,
+              "frame_key": "f0000",
+              "golden": "misc/bench/golden/promote_demo/f0000-chromium140.0.7339.16.png",
+              "golden_sha256": "7626649e9bb4091f0ed050fa30522dd8a1807ae4da7780f29c81254323439ef9",
+              "identical": true,
+              "index": 0,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "s1",
+              "state": "compared",
+              "time": 0.0,
+              "today_sha256": "7626649e9bb4091f0ed050fa30522dd8a1807ae4da7780f29c81254323439ef9"
+            },
+            {
+              "changed_px": 0,
+              "frame_key": "f0070",
+              "golden": "misc/bench/golden/promote_demo/f0070-chromium140.0.7339.16.png",
+              "golden_sha256": "1de444a3f808b319927a2adf29f6e8d46b91d510851149fe70cca17dd4a3f63c",
+              "identical": true,
+              "index": 70,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "s1",
+              "state": "compared",
+              "time": 2.9167,
+              "today_sha256": "1de444a3f808b319927a2adf29f6e8d46b91d510851149fe70cca17dd4a3f63c"
+            }
+          ],
+          "identical": true,
+          "max_delta": 0,
+          "min_ssim_win8": 1.0,
+          "note": "DIAGNOSTICS, not comparability keys. `an bench --compare` keys on named provenance fields \u2014 the scene contract hash, the resolution, the mask parameters, the encode command, the x264 SEI and the ISA \u2014 never on this block's equality. `today_sha256` here is a per-run MEASUREMENT and changes exactly when the render changes, which is when two rows are most worth comparing.",
+          "shape_mismatch": null,
+          "state": "measured",
+          "what_moves": "the idle animation near the end of the shot (224 px). Measured: frame 0 against duration/2 differs by exactly ZERO pixels here, so the obvious second time would have blessed one image twice."
+        },
+        "masks": {
+          "edge": {
+            "edge_px": 205616,
+            "fraction": 0.016526,
+            "frame_px": 12441600,
+            "operator": "max(|Y[:,2:]-Y[:,:-2]|, |Y[2:,:]-Y[:-2,:]|) > 40, on the REFERENCE luma",
+            "threshold": 40
+          },
+          "flat": {
+            "dilate_k": 3,
+            "flat_px": 11414532,
+            "fraction": 0.917449,
+            "operator": "~dilate3(any 4-neighbour RGB change in the SOURCE)"
+          },
+          "held": {
+            "operator": "|src[i+1]-src[i]|.max(-1) == 0, on the SOURCE",
+            "pairs": 71
+          },
+          "ring": {
+            "operator": "dilate2(edge) & ~edge",
+            "ring_px": 264712
+          }
+        },
+        "n_declared_entity_refs": 2,
+        "n_drawable_entities": 2,
+        "n_frames": 72,
+        "n_nodes": 16,
+        "off_palette_blend_note": "`blend_of` names the two declared colours a pixel sits between. All-blends means the metric is reporting anti-aliasing correctly; a non-blend near the top means the palette derivation missed a literal and the number is inflated with no error anywhere.",
+        "off_palette_top_colours": [
+          {
+            "blend_of": null,
+            "count": 23040,
+            "hex": "#d78e4b"
+          },
+          {
+            "blend_of": null,
+            "count": 22464,
+            "hex": "#b4aba0"
+          },
+          {
+            "blend_of": [
+              "#7cba6f",
+              "#a5d8ff"
+            ],
+            "count": 22464,
+            "hex": "#a6d5f8"
+          },
+          {
+            "blend_of": null,
+            "count": 19296,
+            "hex": "#4d6878"
+          },
+          {
+            "blend_of": [
+              "#2d3b63",
+              "#7cba6f"
+            ],
+            "count": 19296,
+            "hex": "#6da26f"
+          },
+          {
+            "blend_of": [
+              "#2d3b63",
+              "#a5d8ff"
+            ],
+            "count": 7776,
+            "hex": "#8ebae1"
+          },
+          {
+            "blend_of": [
+              "#2d3b63",
+              "#a5d8ff"
+            ],
+            "count": 7776,
+            "hex": "#576f9a"
+          },
+          {
+            "blend_of": [
+              "#1a1a1a",
+              "#e08a3c"
+            ],
+            "count": 7272,
+            "hex": "#df893b"
+          },
+          {
+            "blend_of": [
+              "#1f150a",
+              "#a5d8ff"
+            ],
+            "count": 6192,
+            "hex": "#a5d4f8"
+          },
+          {
+            "blend_of": [
+              "#1a1a1a",
+              "#e08a3c"
+            ],
+            "count": 5760,
+            "hex": "#a96b35"
+          }
+        ],
+        "palette_hex": [
+          "#1a1a1a",
+          "#1f150a",
+          "#222000",
+          "#2d3b63",
+          "#3a1414",
+          "#3b2a1a",
+          "#4a5b8a",
+          "#7cba6f",
+          "#8a4717",
+          "#9c3a3a",
+          "#a47042",
+          "#a5d8ff",
+          "#a85e1f",
+          "#c25a5a",
+          "#e08a3c",
+          "#e88ea0",
+          "#f4c89a",
+          "#fafafa",
+          "#ffffff"
+        ],
+        "palette_is_superset": true,
+        "palette_sources": {
+          "s1": {
+            "runtime_constants": 0,
+            "scene_json": 3,
+            "svg": 45
+          }
+        },
+        "png_to_encoder_input_luma": {
+          "encoder_input_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-promote_demo-ufs22_2_/promote_demo/.an/render_work/shot_s1/_bench_qp0.mp4",
+            "-map",
+            "0:v:0",
+            "-fps_mode",
+            "passthrough",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ],
+          "luma_residual_max": 0,
+          "luma_residual_mean": 0.0,
+          "note": "Zero means this build's explicit PNG->YUV conversion reproduces what libx264 received. Nonzero means it does not, which is a property of the ffmpeg build and NOT an error: the encode-side metrics reference the lossless decode, so they do not depend on this agreeing. Measured 0.0 on ffmpeg 8.1 (arm64 macOS) and 0.629 / max 5 on the Linux runner's older build.",
+          "png_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-start_number",
+            "0",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-promote_demo-ufs22_2_/promote_demo/.an/render_work/shot_s1/frames/frame_%06d.png",
+            "-vf",
+            "scale=out_range=tv:out_color_matrix=bt709",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ]
+        },
+        "prepared": true,
+        "references_coincide": true,
+        "resolution": [
+          480,
+          360
+        ],
+        "scene_contract_sha256": "1e6f1aa28d79e5989f83f95b5f672381e7e4fbd9dccef5b95f06a01232c33e52",
+        "shot_contract_sha256": {
+          "s1": "1e6f1aa28d79e5989f83f95b5f672381e7e4fbd9dccef5b95f06a01232c33e52"
+        },
+        "shot_count": 1,
+        "shot_order": [
+          "s1"
+        ],
+        "shots": [
+          {
+            "duration": 3.0,
+            "frames": 72,
+            "id": "s1"
+          }
+        ],
+        "source": "examples/promote_demo",
+        "source_pixels_sha256": "72639213a9e47c9d1176e366d4231bb1f7e49d4773ac78ec93b3af41cc93bd7f",
+        "tolerances": {
+          "edge_flat_tol": 4,
+          "flat_dev_tol": 6,
+          "flicker_delta_tol": 2,
+          "luma_coefficients": [
+            0.2126,
+            0.7152,
+            0.0722
+          ],
+          "ssim_radius": 3
+        },
+        "unresolved_svg_colour_tokens": [],
+        "visual_kinds": [
+          "rect",
+          "svg_sprite"
+        ],
+        "wall_seconds": 6.082
+      },
+      "tripwires": {
+        "golden_identity": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "counts": 0,
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": true
+        }
+      }
+    },
+    "saturated_outline": {
+      "metrics": {
+        "chroma_edge_dCr": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 9.402824
+        },
+        "chroma_edge_dCr_over_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 3.181856
+        },
+        "chroma_edge_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 2.955138
+        },
+        "coded_luma_edge_error": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 2.955138
+        },
+        "edge_transition_width": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "median": 2.0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 2.3685
+        },
+        "encode_flicker_on_held_pixels": {
+          "comparison_scope": "machine",
+          "family": "E",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.001249
+        },
+        "encode_ringing_excess": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 0.932876
+        },
+        "file_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 4629
+        },
+        "flat_field_deviation": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.004811
+        },
+        "flat_field_p99_dev": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 5.0
+        },
+        "frame_distinct_colours": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 478.25
+        },
+        "min_ssim_win8_vs_golden": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 1.0
+        },
+        "off_palette_pixel_fraction": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 0.019855
+        },
+        "ring_band_mae": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 1.800378
+        },
+        "video_stream_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "decrease"
+            }
+          },
+          "value": 2704
+        }
+      },
+      "provenance": {
+        "asset_resolution": [
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "plates",
+            "kind": "character",
+            "ref": "saturated-rig",
+            "resolved": "descriptor",
+            "store": "characters"
+          }
+        ],
+        "audio_cache": "cold",
+        "decoded_source_frames": 12,
+        "decoder": "ffmpeg",
+        "fps": 24,
+        "frames_on_disk": 12,
+        "golden": {
+          "changed_px": 0,
+          "chromium_build": "140.0.7339.16",
+          "declared_times": [
+            0.0,
+            0.25
+          ],
+          "frames": [
+            {
+              "changed_px": 0,
+              "frame_key": "f0000",
+              "golden": "misc/bench/golden/saturated_outline/f0000-chromium140.0.7339.16.png",
+              "golden_sha256": "4ceb0a393bc5e506bf15a7c8a0ca6fbc9382efb6394c9e43a225416ba395aa5a",
+              "identical": true,
+              "index": 0,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "plates",
+              "state": "compared",
+              "time": 0.0,
+              "today_sha256": "4ceb0a393bc5e506bf15a7c8a0ca6fbc9382efb6394c9e43a225416ba395aa5a"
+            },
+            {
+              "changed_px": 0,
+              "frame_key": "f0006",
+              "golden": "misc/bench/golden/saturated_outline/f0006-chromium140.0.7339.16.png",
+              "golden_sha256": "3f218c9e21270f15fc241a69115f4f2f0dbf80061224b6f62abb6499a515bbaf",
+              "identical": true,
+              "index": 6,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "plates",
+              "state": "compared",
+              "time": 0.25,
+              "today_sha256": "3f218c9e21270f15fc241a69115f4f2f0dbf80061224b6f62abb6499a515bbaf"
+            }
+          ],
+          "identical": true,
+          "max_delta": 0,
+          "min_ssim_win8": 1.0,
+          "note": "DIAGNOSTICS, not comparability keys. `an bench --compare` keys on named provenance fields \u2014 the scene contract hash, the resolution, the mask parameters, the encode command, the x264 SEI and the ISA \u2014 never on this block's equality. `today_sha256` here is a per-run MEASUREMENT and changes exactly when the render changes, which is when two rows are most worth comparing.",
+          "shape_mismatch": null,
+          "state": "measured",
+          "what_moves": "the head plate rotating through 0.3 rad (1,187 px)."
+        },
+        "masks": {
+          "edge": {
+            "edge_px": 52204,
+            "fraction": 0.056645,
+            "frame_px": 921600,
+            "operator": "max(|Y[:,2:]-Y[:,:-2]|, |Y[2:,:]-Y[:-2,:]|) > 40, on the REFERENCE luma",
+            "threshold": 40
+          },
+          "flat": {
+            "dilate_k": 3,
+            "flat_px": 804471,
+            "fraction": 0.872907,
+            "operator": "~dilate3(any 4-neighbour RGB change in the SOURCE)"
+          },
+          "held": {
+            "operator": "|src[i+1]-src[i]|.max(-1) == 0, on the SOURCE",
+            "pairs": 11
+          },
+          "ring": {
+            "operator": "dilate2(edge) & ~edge",
+            "ring_px": 49744
+          }
+        },
+        "n_declared_entity_refs": 1,
+        "n_drawable_entities": 1,
+        "n_frames": 12,
+        "n_nodes": 13,
+        "off_palette_blend_note": "`blend_of` names the two declared colours a pixel sits between. All-blends means the metric is reporting anti-aliasing correctly; a non-blend near the top means the palette derivation missed a literal and the number is inflated with no error anywhere.",
+        "off_palette_top_colours": [
+          {
+            "blend_of": [
+              "#000000",
+              "#0033cc"
+            ],
+            "count": 2448,
+            "hex": "#001a66"
+          },
+          {
+            "blend_of": [
+              "#000000",
+              "#00a03c"
+            ],
+            "count": 2448,
+            "hex": "#00501e"
+          },
+          {
+            "blend_of": [
+              "#000000",
+              "#ffd400"
+            ],
+            "count": 428,
+            "hex": "#fed300"
+          },
+          {
+            "blend_of": [
+              "#000000",
+              "#0033cc"
+            ],
+            "count": 237,
+            "hex": "#010100"
+          },
+          {
+            "blend_of": [
+              "#000000",
+              "#0033cc"
+            ],
+            "count": 200,
+            "hex": "#010101"
+          },
+          {
+            "blend_of": [
+              "#000000",
+              "#ffffff"
+            ],
+            "count": 144,
+            "hex": "#fefefe"
+          },
+          {
+            "blend_of": [
+              "#000000",
+              "#0033cc"
+            ],
+            "count": 141,
+            "hex": "#020202"
+          },
+          {
+            "blend_of": [
+              "#000000",
+              "#0033cc"
+            ],
+            "count": 134,
+            "hex": "#010000"
+          },
+          {
+            "blend_of": [
+              "#000000",
+              "#ffffff"
+            ],
+            "count": 131,
+            "hex": "#040404"
+          },
+          {
+            "blend_of": [
+              "#000000",
+              "#0033cc"
+            ],
+            "count": 127,
+            "hex": "#030303"
+          }
+        ],
+        "palette_hex": [
+          "#000000",
+          "#0033cc",
+          "#00a03c",
+          "#00b0c8",
+          "#7a00b8",
+          "#e6001e",
+          "#ffd400",
+          "#ffffff"
+        ],
+        "palette_is_superset": true,
+        "palette_sources": {
+          "plates": {
+            "runtime_constants": 0,
+            "scene_json": 1,
+            "svg": 12
+          }
+        },
+        "png_to_encoder_input_luma": {
+          "encoder_input_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-saturated_outline-6gtu6bks/saturated_outline/.an/render_work/shot_plates/_bench_qp0.mp4",
+            "-map",
+            "0:v:0",
+            "-fps_mode",
+            "passthrough",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ],
+          "luma_residual_max": 0,
+          "luma_residual_mean": 0.0,
+          "note": "Zero means this build's explicit PNG->YUV conversion reproduces what libx264 received. Nonzero means it does not, which is a property of the ffmpeg build and NOT an error: the encode-side metrics reference the lossless decode, so they do not depend on this agreeing. Measured 0.0 on ffmpeg 8.1 (arm64 macOS) and 0.629 / max 5 on the Linux runner's older build.",
+          "png_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-start_number",
+            "0",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-saturated_outline-6gtu6bks/saturated_outline/.an/render_work/shot_plates/frames/frame_%06d.png",
+            "-vf",
+            "scale=out_range=tv:out_color_matrix=bt709",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ]
+        },
+        "prepared": false,
+        "references_coincide": true,
+        "resolution": [
+          320,
+          240
+        ],
+        "scene_contract_sha256": "a0e27b9f982d5935ea55f3758f37baa23dbdee3913aacc9e19b6814fc4e58b42",
+        "shot_contract_sha256": {
+          "plates": "a0e27b9f982d5935ea55f3758f37baa23dbdee3913aacc9e19b6814fc4e58b42"
+        },
+        "shot_count": 1,
+        "shot_order": [
+          "plates"
+        ],
+        "shots": [
+          {
+            "duration": 0.5,
+            "frames": 12,
+            "id": "plates"
+          }
+        ],
+        "source": "misc/bench/corpus/saturated_outline",
+        "source_pixels_sha256": "ba377b7590effe340179ef80087ffc6673f12c10dccb0fc61bae666d7792d660",
+        "tolerances": {
+          "edge_flat_tol": 4,
+          "flat_dev_tol": 6,
+          "flicker_delta_tol": 2,
+          "luma_coefficients": [
+            0.2126,
+            0.7152,
+            0.0722
+          ],
+          "ssim_radius": 3
+        },
+        "unresolved_svg_colour_tokens": [],
+        "visual_kinds": [
+          "svg_sprite"
+        ],
+        "wall_seconds": 1.967
+      },
+      "tripwires": {
+        "golden_identity": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "counts": 0,
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": true
+        }
+      }
+    },
+    "single_character": {
+      "metrics": {
+        "chroma_edge_dCr": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 3.366952
+        },
+        "chroma_edge_dCr_over_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 2.268608
+        },
+        "chroma_edge_dY": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 1.484149
+        },
+        "coded_luma_edge_error": {
+          "comparison_scope": "machine",
+          "family": "C",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 1.484149
+        },
+        "edge_transition_width": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "median": 2.0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 2.0919
+        },
+        "encode_flicker_on_held_pixels": {
+          "comparison_scope": "machine",
+          "family": "E",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.007018
+        },
+        "encode_ringing_excess": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 0.571372
+        },
+        "file_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "decrease"
+            }
+          },
+          "value": 7449
+        },
+        "flat_field_deviation": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "increase"
+            }
+          },
+          "value": 0.003942
+        },
+        "flat_field_p99_dev": {
+          "comparison_scope": "machine",
+          "family": "D",
+          "reference": "lossless",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "source_hash_differs",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 4.0
+        },
+        "frame_distinct_colours": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 34.2
+        },
+        "min_ssim_win8_vs_golden": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 1.0
+        },
+        "off_palette_pixel_fraction": {
+          "comparison_scope": "any_machine",
+          "family": "A",
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": 0.003718
+        },
+        "ring_band_mae": {
+          "comparison_scope": "machine",
+          "family": "G",
+          "reference": "source_png",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": null,
+              "gate": "reference_moved",
+              "state": "gated"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "increase"
+            }
+          },
+          "value": 0.891242
+        },
+        "video_stream_bytes": {
+          "comparison_scope": "machine",
+          "family": "F",
+          "reference": "none",
+          "side": "encode",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": true,
+              "expect": "increase"
+            },
+            "high_crf": {
+              "counts": true,
+              "expect": "decrease"
+            }
+          },
+          "value": 3644
+        }
+      },
+      "provenance": {
+        "asset_resolution": [
+          {
+            "detail": "",
+            "fallback": false,
+            "id": "charlie",
+            "kind": "character",
+            "ref": "charlie-v1",
+            "resolved": "parts",
+            "store": "characters"
+          }
+        ],
+        "audio_cache": "warm",
+        "decoded_source_frames": 60,
+        "decoder": "ffmpeg",
+        "fps": 24,
+        "frames_on_disk": 60,
+        "golden": {
+          "changed_px": 0,
+          "chromium_build": "140.0.7339.16",
+          "declared_times": [
+            0.0,
+            1.0
+          ],
+          "frames": [
+            {
+              "changed_px": 0,
+              "frame_key": "f0000",
+              "golden": "misc/bench/golden/single_character/f0000-chromium140.0.7339.16.png",
+              "golden_sha256": "88ea7d2c3f18bcc9d71699d11bbc4b8bd3148c1de970c40a41887c798ee89b40",
+              "identical": true,
+              "index": 0,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "s1",
+              "state": "compared",
+              "time": 0.0,
+              "today_sha256": "88ea7d2c3f18bcc9d71699d11bbc4b8bd3148c1de970c40a41887c798ee89b40"
+            },
+            {
+              "changed_px": 0,
+              "frame_key": "f0024",
+              "golden": "misc/bench/golden/single_character/f0024-chromium140.0.7339.16.png",
+              "golden_sha256": "ef78a54afffea9e4615662b30f351c279b57567f301fce3b80c1e474b975d76b",
+              "identical": true,
+              "index": 24,
+              "max_delta": 0,
+              "min_ssim_win8": 1.0,
+              "shape_mismatch": null,
+              "shot_id": "s1",
+              "state": "compared",
+              "time": 1.0,
+              "today_sha256": "ef78a54afffea9e4615662b30f351c279b57567f301fce3b80c1e474b975d76b"
+            }
+          ],
+          "identical": true,
+          "max_delta": 0,
+          "min_ssim_win8": 1.0,
+          "note": "DIAGNOSTICS, not comparability keys. `an bench --compare` keys on named provenance fields \u2014 the scene contract hash, the resolution, the mask parameters, the encode command, the x264 SEI and the ISA \u2014 never on this block's equality. `today_sha256` here is a per-run MEASUREMENT and changes exactly when the render changes, which is when two rows are most worth comparing.",
+          "shape_mismatch": null,
+          "state": "measured",
+          "what_moves": "a blink. Only 253 pixels differ, and that is the point: blinks occupy 3.5% of frames, so frame 0 against duration/2 is a pixel-identical pair on this scene."
+        },
+        "masks": {
+          "edge": {
+            "edge_px": 115481,
+            "fraction": 0.025061,
+            "frame_px": 4608000,
+            "operator": "max(|Y[:,2:]-Y[:,:-2]|, |Y[2:,:]-Y[:-2,:]|) > 40, on the REFERENCE luma",
+            "threshold": 40
+          },
+          "flat": {
+            "dilate_k": 3,
+            "flat_px": 4370639,
+            "fraction": 0.948489,
+            "operator": "~dilate3(any 4-neighbour RGB change in the SOURCE)"
+          },
+          "held": {
+            "operator": "|src[i+1]-src[i]|.max(-1) == 0, on the SOURCE",
+            "pairs": 59
+          },
+          "ring": {
+            "operator": "dilate2(edge) & ~edge",
+            "ring_px": 112755
+          }
+        },
+        "n_declared_entity_refs": 1,
+        "n_drawable_entities": 1,
+        "n_frames": 60,
+        "n_nodes": 12,
+        "off_palette_blend_note": "`blend_of` names the two declared colours a pixel sits between. All-blends means the metric is reporting anti-aliasing correctly; a non-blend near the top means the palette derivation missed a literal and the number is inflated with no error anywhere.",
+        "off_palette_top_colours": [
+          {
+            "blend_of": [
+              "#1a1a1a",
+              "#a87a5d"
+            ],
+            "count": 1980,
+            "hex": "#896651"
+          },
+          {
+            "blend_of": [
+              "#1a1a1a",
+              "#a87a5d"
+            ],
+            "count": 1816,
+            "hex": "#946d54"
+          },
+          {
+            "blend_of": [
+              "#a87a5d",
+              "#fafafa"
+            ],
+            "count": 968,
+            "hex": "#be9c86"
+          },
+          {
+            "blend_of": [
+              "#1a1a1a",
+              "#fafafa"
+            ],
+            "count": 960,
+            "hex": "#606060"
+          },
+          {
+            "blend_of": [
+              "#a87a5d",
+              "#fafafa"
+            ],
+            "count": 852,
+            "hex": "#d4bdae"
+          },
+          {
+            "blend_of": [
+              "#1a1a1a",
+              "#fafafa"
+            ],
+            "count": 840,
+            "hex": "#cacaca"
+          },
+          {
+            "blend_of": [
+              "#a87a5d",
+              "#fafafa"
+            ],
+            "count": 780,
+            "hex": "#eaded7"
+          },
+          {
+            "blend_of": [
+              "#222222",
+              "#a87a5d"
+            ],
+            "count": 780,
+            "hex": "#4a3e37"
+          },
+          {
+            "blend_of": [
+              "#6b2b2b",
+              "#a87a5d"
+            ],
+            "count": 706,
+            "hex": "#8a5344"
+          },
+          {
+            "blend_of": [
+              "#1a1a1a",
+              "#fafafa"
+            ],
+            "count": 694,
+            "hex": "#c6c6c6"
+          }
+        ],
+        "palette_hex": [
+          "#1a1a1a",
+          "#222222",
+          "#2a1010",
+          "#2a2a2a",
+          "#5b3a8a",
+          "#6b2b2b",
+          "#a87a5d",
+          "#b04848",
+          "#fafafa",
+          "#ffffff"
+        ],
+        "palette_is_superset": false,
+        "palette_sources": {
+          "s1": {
+            "runtime_constants": 8,
+            "scene_json": 10,
+            "svg": 0
+          }
+        },
+        "png_to_encoder_input_luma": {
+          "encoder_input_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-single_character-5xkdyvyx/single_character/.an/render_work/shot_s1/_bench_qp0.mp4",
+            "-map",
+            "0:v:0",
+            "-fps_mode",
+            "passthrough",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ],
+          "luma_residual_max": 0,
+          "luma_residual_mean": 0.0,
+          "note": "Zero means this build's explicit PNG->YUV conversion reproduces what libx264 received. Nonzero means it does not, which is a property of the ffmpeg build and NOT an error: the encode-side metrics reference the lossless decode, so they do not depend on this agreeing. Measured 0.0 on ffmpeg 8.1 (arm64 macOS) and 0.629 / max 5 on the Linux runner's older build.",
+          "png_command": [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-start_number",
+            "0",
+            "-i",
+            "/var/folders/mc/c070wfh51kxd9lft8dl74q1r0000gn/T/an-bench-single_character-5xkdyvyx/single_character/.an/render_work/shot_s1/frames/frame_%06d.png",
+            "-vf",
+            "scale=out_range=tv:out_color_matrix=bt709",
+            "-pix_fmt",
+            "yuv444p",
+            "-f",
+            "rawvideo",
+            "-"
+          ]
+        },
+        "prepared": true,
+        "references_coincide": true,
+        "resolution": [
+          320,
+          240
+        ],
+        "scene_contract_sha256": "a036ce887851b5af1c0ac337bb4482102676bc2929ece33fab088255e6cc265b",
+        "shot_contract_sha256": {
+          "s1": "a036ce887851b5af1c0ac337bb4482102676bc2929ece33fab088255e6cc265b"
+        },
+        "shot_count": 1,
+        "shot_order": [
+          "s1"
+        ],
+        "shots": [
+          {
+            "duration": 2.5,
+            "frames": 60,
+            "id": "s1"
+          }
+        ],
+        "source": "examples/single_character",
+        "source_pixels_sha256": "f0295330b8066970cb81df753573952dc9dbf764484a6076ba57fd2f68b7d7ed",
+        "tolerances": {
+          "edge_flat_tol": 4,
+          "flat_dev_tol": 6,
+          "flicker_delta_tol": 2,
+          "luma_coefficients": [
+            0.2126,
+            0.7152,
+            0.0722
+          ],
+          "ssim_radius": 3
+        },
+        "unresolved_svg_colour_tokens": [],
+        "visual_kinds": [
+          "ellipse",
+          "eye",
+          "mouth",
+          "rect"
+        ],
+        "wall_seconds": 4.99
+      },
+      "tripwires": {
+        "golden_identity": {
+          "changed_px": 0,
+          "comparison_scope": "any_machine",
+          "counts": 0,
+          "family": "B",
+          "max_delta": 0,
+          "side": "render",
+          "state": "measured",
+          "under_mutation": {
+            "disabled_aa": {
+              "counts": false,
+              "expect": "decrease"
+            },
+            "high_crf": {
+              "counts": false,
+              "expect": "not_applicable"
+            }
+          },
+          "value": true
+        }
+      }
+    }
+  },
+  "schema_version": 1,
+  "tool": "an.bench"
+}

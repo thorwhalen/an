@@ -55,7 +55,7 @@ import numpy as np
 
 from an.bench import corpus as bench_corpus
 from an.bench import masks as M
-from an.bench.metrics import edge_transition_width, frame_distinct_colours, luma709
+from an.bench.metrics import edge_transition_width, frame_distinct_colours, luma_u8
 from an.bench.paths import repo_root
 from an.bench.png import read_png, to_rgb, write_png
 
@@ -178,8 +178,7 @@ def busiest_frame_and_crop(
     n, h, w, _ = frames.shape
     best = (-1, 0, 0, 0.0)
     for i in range(n):
-        luma = np.rint(luma709(frames[i : i + 1]) * 255.0).clip(0, 255).astype(np.uint8)
-        mask = M.edge_mask(luma)[0].astype(np.int32)
+        mask = M.edge_mask(luma_u8(frames[i : i + 1]))[0].astype(np.int32)
         # Summed-area table, so every candidate window is an O(1) lookup.
         integral = mask.cumsum(0).cumsum(1)
         for y in range(0, max(1, h - ch), 4):

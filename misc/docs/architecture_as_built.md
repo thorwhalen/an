@@ -273,9 +273,11 @@ an bench                      — render the fixed corpus, write a metrics ledge
    --bless "<reason>"        (re-write the golden frames, recording this reason)
    --compare PATH            (compare this run against a baseline row)
 an bench-compare              — two ledger rows in, a verdict or a REFUSAL out
-   --before PATH --after PATH   (default: the two newest committed rows)
+   --before PATH --after PATH   (default: the two newest committed rows,
+                                 ordered by `generated_at`, not by filename)
    --mutation NAME           (evaluate the per-mutation predictions instead)
-   --strict                  (exit nonzero on a regression / unmet criterion)
+   --strict                  (exit nonzero on a regression, an unmet criterion,
+                              or a row it cannot read at all)
    --raw                     (JSON instead of the human digest)
 an bench-mutants              — break each guard on purpose; the named test must go red
    --names A,B

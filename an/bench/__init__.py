@@ -46,10 +46,13 @@ from an.bench.golden import (  # noqa: F401
     pixels_sha256,
 )
 from an.bench.png import (  # noqa: F401
+    PNG_HEADER_BYTES,
     PngFormatError,
     decode_png,
     encode_png,
+    png_dimensions,
     read_png,
+    read_png_dimensions,
     write_png,
 )
 from an.bench.registry import (  # noqa: F401
@@ -80,7 +83,9 @@ __all__ = [
     "encode_png",
     "frame_key",
     "pixels_sha256",
+    "png_dimensions",
     "read_png",
+    "read_png_dimensions",
     "write_png",
     "TRIPWIRES",
     "MUTATIONS",

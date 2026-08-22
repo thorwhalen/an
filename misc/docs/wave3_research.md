@@ -214,6 +214,19 @@ The an#41 criterion counts metrics **independently** and cannot express a conjun
 so this pair is evidence for a human reader — it is not a gate, and must not be
 described as one.
 
+> **Correction, measured after this section was written (an#55, PR-1).** The table
+> above is right; the *reason* an#55 gives for it is not. Masking the colour count
+> does **not** make it blind to a blur: the mask is recomputed from the frame being
+> measured, and a blur widens the edge band, so the mask grows to admit the new
+> gradation. 3x3 box blur on the six committed goldens, ratio against k=1,
+> whole-frame vs edge-masked — `aa_probe` 10.25x/9.50x, `graded_field`
+> 2.04x/**2.35x**, `multi_shot` 7.92x/4.63x, `promote_demo` 1.25x/0.83x,
+> `saturated_outline` 1.49x/1.14x, `single_character` 8.60x/5.70x — damped on four
+> of six, **worse on one**, blind on none. What the mask buys is that an
+> *interior-only* change cannot reach the number. What separates a blur from a
+> supersample is the **width** half of the pair: 2.1x-3.4x under the blur against
+> +2.6% to +8.0% under an exact k=2 resolve.
+
 ---
 
 ## 5. `disabled_aa` survives, and an#41's certificate holds

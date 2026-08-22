@@ -12,6 +12,8 @@ guards asserting a table's *contents* rather than the check that reads it.
 
 from __future__ import annotations
 
+import pathlib
+
 import struct
 import zlib
 
@@ -441,3 +443,112 @@ def test_our_decoder_agrees_with_ffmpeg_on_a_real_rendered_frame(tmp_path):
         # PNG implementation, not only by our own reader.
         out = write_png(tmp_path / frame.parent.parent.name / "ours.png", ours)
         assert np.array_equal(ffmpeg_rgb(out, h, w), ours), f"ffmpeg disagreed on {out}"
+
+
+# -------------------------------------------- png_dimensions / IHDR (an#54)
+
+
+def test_png_dimensions_reads_the_declared_size_from_the_header_alone():
+    """Width first — the OPPOSITE order from `read_png`, whose shape is (H, W, C).
+
+    Getting that backwards produces a check that passes on square frames only,
+    which is the kind of bug a corpus of 320x240 and 480x360 scenes would not
+    catch for a while.
+    """
+    import numpy as np
+
+    from an.bench.png import PNG_HEADER_BYTES, encode_png, png_dimensions
+
+    assert png_dimensions(encode_png(np.zeros((7, 13, 3), np.uint8))) == (13, 7)
+
+    data = encode_png(np.zeros((7, 13, 3), np.uint8))
+    # It reads only the header: a file truncated to exactly the header still
+    # answers, where a full decode cannot.
+    assert png_dimensions(data[:PNG_HEADER_BYTES]) == (13, 7)
+
+
+def test_read_png_dimensions_reads_only_the_header_off_disk(tmp_path, monkeypatch):
+    """MUTATION: `handle.read(PNG_HEADER_BYTES)` -> `handle.read()`.
+
+    The truncation assertion above survives that mutation, so the killing
+    assertion has to be on the read ITSELF: a 1080p frame is megabytes and the
+    bench reads one of these per frame of every shot.
+    """
+    import numpy as np
+
+    from an.bench import png as png_mod
+
+    path = tmp_path / "f.png"
+    path.write_bytes(png_mod.encode_png(np.zeros((7, 13, 3), np.uint8)))
+
+    seen: list[object] = []
+    real_open = pathlib.Path.open
+
+    def spy(self, *a, **kw):
+        handle = real_open(self, *a, **kw)
+        real_read = handle.read
+
+        def recording(n=-1):
+            seen.append(n)
+            return real_read(n)
+
+        handle.read = recording  # type: ignore[method-assign]
+        return handle
+
+    monkeypatch.setattr(pathlib.Path, "open", spy)
+    assert png_mod.read_png_dimensions(path) == (13, 7)
+    assert seen == [png_mod.PNG_HEADER_BYTES], (
+        f"the header read must be bounded; saw {seen}"
+    )
+
+
+def test_png_dimensions_refuses_a_header_it_cannot_read(tmp_path):
+    """MUTATION: delete the `IHDR` tag branch.
+
+    Without it a file whose first chunk is not IHDR returns whatever four bytes
+    sit at offset 16 — a plausible-looking resolution, fed straight into the
+    shape guard. A plausible wrong number is the failure class this whole PR
+    closes, so refusing is the only honest answer.
+    """
+    import struct
+    import zlib
+
+    from an.bench.png import (
+        PNG_SIGNATURE,
+        PngFormatError,
+        encode_png,
+        png_dimensions,
+    )
+    import numpy as np
+
+    with pytest.raises(PngFormatError, match="signature"):
+        png_dimensions(b"definitely not a png at all, but long enough")
+
+    with pytest.raises(PngFormatError, match="too short"):
+        png_dimensions(encode_png(np.zeros((4, 4, 3), np.uint8))[:20])
+
+    def chunk(kind, payload):
+        return (
+            struct.pack(">I", len(payload))
+            + kind
+            + payload
+            + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
+        )
+
+    not_ihdr = PNG_SIGNATURE + chunk(b"gAMA", struct.pack(">II", 999, 777))
+    with pytest.raises(PngFormatError, match="IHDR"):
+        png_dimensions(not_ihdr)
+
+
+def test_the_committed_goldens_headers_agree_with_their_decoded_shapes():
+    """The header reader and the full decoder must not be able to disagree."""
+    from pathlib import Path as _P
+
+    from an.bench.png import read_png, read_png_dimensions
+
+    goldens = sorted(
+        (_P(__file__).resolve().parents[1] / "misc/bench/golden").glob("*/*.png")
+    )
+    assert goldens, "the committed golden corpus is missing"
+    for path in goldens:
+        assert read_png_dimensions(path) == read_png(path).shape[1::-1], path

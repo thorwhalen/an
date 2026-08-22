@@ -13,8 +13,12 @@ never cleared, and ffmpeg's image2 demuxer reads the contiguous
 ``frame_%06d.png`` run from 0 — so a longer previous render is silently
 appended to this one. Every encode-side metric pairs source frame *i* with
 decoded frame *i*, so that appends garbage to one leg and shifts nothing on the
-other. ``artifacts/`` is deliberately kept: it is the audio cache, and its
-warm/cold state is recorded rather than destroyed.
+other. ``artifacts/`` is deliberately kept *except for one subdirectory*: it
+holds the audio cache, whose warm/cold state is recorded rather than destroyed
+— but ``artifacts/shots`` is ``mall["shots"]``, the previous render's per-shot
+mp4s, and this module's whole promise is that nothing of a previous render
+crosses. It is gitignored, so it does not reproduce on a clean checkout: a
+per-developer landmine, in the module whose docstring says the opposite.
 """
 
 from __future__ import annotations
@@ -33,13 +37,54 @@ from an.bench.corpus import (
     staged_scene,
     visual_kinds,
 )
+from an.bench.png import read_png_dimensions
 
 #: Copied for the render, but never these: they are the previous render's
 #: output, and one of them silently extends this one's frame sequence.
+#: Matched on the **basename**, at any depth — that is exactly what
+#: ``shutil.ignore_patterns`` does, and it is why ``artifacts/shots`` cannot be
+#: spelled here. See :data:`IGNORED_RELPATHS_ON_COPY`.
 IGNORED_ON_COPY: tuple[str, ...] = (".an", "output", ".anima")
+
+#: Excluded by their path **relative to the project root**, POSIX-spelled.
+#: ``mall["shots"]`` is ``<project>/artifacts/shots``, and ``artifacts/``
+#: itself is kept on purpose — it holds the audio cache, whose warm/cold state
+#: this module records rather than destroys.
+#:
+#: Neither spelling belongs in :data:`IGNORED_ON_COPY`, and **both fail
+#: silently**. ``shutil.ignore_patterns`` returns a closure handed the NAMES
+#: inside one directory, which it ``fnmatch.filter``s — so ``"artifacts/shots"``
+#: can never match anything (no name contains a separator) and a bare
+#: ``"shots"`` would delete every directory of that name **anywhere** in the
+#: tree, a character rig's included.
+IGNORED_RELPATHS_ON_COPY: tuple[str, ...] = ("artifacts/shots",)
 
 #: Where the renderer leaves its per-shot working tree inside the project.
 RENDER_WORK_RELPATH: str = ".an/render_work"
+
+#: How a shot's frames are named on disk. One constant rather than the literal
+#: repeated at each glob site.
+FRAME_PNG_GLOB: str = "frame_*.png"
+
+
+def distinct_png_sizes(frames_dir: Path) -> tuple[tuple[int, int], ...]:
+    """Every distinct ``(width, height)`` among a shot's frame PNGs, sorted.
+
+    Read from each file's IHDR — 24 bytes per frame — so reading all of them
+    costs nothing and catches what sampling one would miss: a sequence whose
+    size changes partway through, which is what a half-applied supersample
+    produces.
+
+    **Recorded here, enforced elsewhere.** Rendering a fixture at a size the
+    scene does not declare is a legitimate thing to do —
+    ``misc/bench/wave3_ab.py`` patches ``runtime.js`` to ``resolution: k,
+    autoDensity: false`` and drives :func:`capture_fixture` directly to measure
+    the supersample — so this module reports what it saw and
+    :mod:`an.bench.run` is where the *bench's* invariant is asserted.
+    """
+    return tuple(
+        sorted({read_png_dimensions(p) for p in Path(frames_dir).glob(FRAME_PNG_GLOB)})
+    )
 
 
 @dataclass(slots=True)
@@ -55,6 +100,11 @@ class ShotCapture:
     #: scene, so the expected frame count is derived from the same number the
     #: renderer used.
     duration: float = 0.0
+    #: The distinct pixel sizes actually on disk, from each PNG's IHDR. The
+    #: independent half of a pair whose other half — ``SceneCapture.resolution``
+    #: — comes from the staged scene's ``meta`` and never from a file. Empty
+    #: only when the shot wrote no frames.
+    frame_sizes: tuple[tuple[int, int], ...] = ()
 
 
 @dataclass(slots=True)
@@ -82,6 +132,38 @@ class CaptureError(RuntimeError):
     """A capture could not produce something the metrics need."""
 
 
+def _ignore_for(fixture_dir: Path):
+    """``copytree``'s ``ignore``, for basenames **and** project-relative paths.
+
+    ``copytree`` calls this once per directory with ``(that directory, the
+    names in it)``, so a path-shaped exclusion has to be reconstructed from the
+    directory it is handed — which is precisely why ``shutil.ignore_patterns``
+    cannot express one, and why asking it to do so is a silent no-op rather
+    than an error.
+    """
+    by_name = shutil.ignore_patterns(*IGNORED_ON_COPY)
+
+    def ignore(path: str, names: list[str]) -> set[str]:
+        try:
+            here = Path(path).relative_to(fixture_dir).as_posix()
+        except ValueError as e:
+            # Never seen: `copytree` builds every path it passes here by
+            # joining onto the one it was given. Raised rather than quietly
+            # degrading to basenames-only, because under-excluding is the
+            # defect this function exists to fix and it leaves no trace.
+            raise CaptureError(
+                f"stage_copy was asked about {path!r}, which is not under the "
+                f"fixture root {fixture_dir}, so the path-relative exclusions "
+                f"{IGNORED_RELPATHS_ON_COPY} could not be applied to it"
+            ) from e
+        prefix = "" if here == "." else f"{here}/"
+        return set(by_name(path, names)) | {
+            n for n in names if prefix + n in IGNORED_RELPATHS_ON_COPY
+        }
+
+    return ignore
+
+
 def stage_copy(fixture_dir: Path, base: Path) -> Path:
     """Copy a fixture into ``base``, leaving the previous render behind.
 
@@ -90,14 +172,17 @@ def stage_copy(fixture_dir: Path, base: Path) -> Path:
     silent. ``frames/`` is never cleared and ffmpeg's image2 demuxer reads the
     contiguous ``frame_%06d.png`` run from 0, so a longer previous render is
     appended to this one's source leg and to nothing else.
+
+    Two kinds of exclusion, because one kind cannot say both things:
+    :data:`IGNORED_ON_COPY` by basename at any depth, and
+    :data:`IGNORED_RELPATHS_ON_COPY` by path from the project root — which is
+    the only way to drop ``artifacts/shots`` while keeping ``artifacts/audio``.
     """
     base.mkdir(parents=True, exist_ok=True)
     work_copy = base / fixture_dir.name
     if work_copy.exists():
         shutil.rmtree(work_copy)
-    shutil.copytree(
-        fixture_dir, work_copy, ignore=shutil.ignore_patterns(*IGNORED_ON_COPY)
-    )
+    shutil.copytree(fixture_dir, work_copy, ignore=_ignore_for(fixture_dir))
     return work_copy
 
 
@@ -154,7 +239,7 @@ def capture_fixture(
     durations = {s.id: float(s.duration) for s in scene.timeline}
     for shot_id, shot_dir in iter_shot_dirs(work_dir, order=timeline_order):
         frames = shot_dir / "frames"
-        pngs = sorted(frames.glob("frame_*.png"))
+        pngs = sorted(frames.glob(FRAME_PNG_GLOB))
         js = staged_scene(shot_dir)
         all_kinds |= visual_kinds(js)
         meta = js.get("meta") or {}
@@ -167,6 +252,7 @@ def capture_fixture(
                 runtime_dir=shot_dir / "runtime",
                 frame_count=len(pngs),
                 duration=durations.get(shot_id, 0.0),
+                frame_sizes=distinct_png_sizes(frames),
             )
         )
 

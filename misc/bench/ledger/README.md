@@ -89,12 +89,43 @@ same expression on different references — and that is why both are in the row.
 an bench                       # the whole corpus
 an bench --scenes single_character
 an bench --bless "<reason>"    # re-write the golden frames, recording why
-an bench-compare               # the two newest committed rows
+an bench --mutation high_crf --out /tmp/mutated.json --compare <baseline>
+an bench-compare               # the two newest committed rows, BY `generated_at`
 an bench-compare --before A.json --after B.json
 an bench-compare --mutation high_crf --strict   # for CI: nonzero when unmet
 ```
 
-`misc/docs/wave2_research.md` §1 is the authority for what each metric is;
+**The default pair is ordered by `generated_at`, not by filename** (an#54). Rows
+are named `<date>-<sha7>.json`, so a filename sort orders same-day rows by *sha
+hex* — and a re-baseline plus its after-run on one day is the normal shape of a
+wave. A row whose stamp cannot be read sorts first, so it is dropped rather than
+becoming the `after` a verdict is drawn from; it never raises, because one bad
+file must not break the listing.
+
+**A `--mutation` run is never filed here.** It renders a pipeline broken on
+purpose, so a `<date>-<sha>.json` name would claim it as the commit's evidence.
+`--out` keeps one anywhere *except* this directory, which the CLI refuses.
+
+### The three-row protocol for a wave that re-blesses
+
+A `--bless` run WRITES the goldens it would otherwise have compared against, so
+its family B is gated `blessed_this_run` — and `format_comparison` skips
+`unchanged` entries, so family B does not appear as "unchanged", it does not
+appear at all. Three rows, in this order:
+
+| row | how | what it is for |
+|---|---|---|
+| **before** | `an bench` on the base commit | the baseline |
+| **after-unblessed** | `an bench` on the change, **no `--bless`** | the PR's evidence — the only row that can fail family B |
+| **after-blessed** | `an bench --bless "<why>"` | the new baseline; lands as `-dirty`, because a bless writes into the tree it names |
+
+`an bench-compare` surfaces a blessed row as a caveat rather than leaving the
+`blessed` key write-only, so a reader is told which of the three they are
+holding.
+
+`misc/docs/wave2_research.md` §1 is the authority for what each metric is,
+except `edge_masked_distinct_colours`, which is an#55 and whose own
+docstring carries its measured limits;
 `misc/docs/wave2_crossarch_verdict.md` is the authority for the comparison
 rules above.
 

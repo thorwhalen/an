@@ -339,6 +339,207 @@ MUTANTS: tuple[Mutant, ...] = (
             "pairs one shot's source frames against another's decode."
         ),
     ),
+    # ---------------------------------------------------------------- an#54
+    Mutant(
+        name="reshape_checks_divisibility_not_shape",
+        file="an/bench/imageio.py",
+        old="    if frames is not None and len(buf) != per_frame * frames:",
+        new="    if False:",
+        caught_by="tests/test_bench_shape_guard.py",
+        why=(
+            "a k-times supersample makes the decoded buffer exactly k**2 "
+            "larger, so a divisibility check ALWAYS passes and family A is "
+            "computed over k**2 as many scrambled frames — plausibly, because "
+            "at k=2 most horizontal runs survive the wrong reshape."
+        ),
+    ),
+    Mutant(
+        name="bench_measures_a_supersampled_render",
+        file="an/bench/run.py",
+        old="        if sizes != {capture.resolution}:",
+        new="        if False:",
+        caught_by="tests/test_bench_shape_guard.py",
+        why=(
+            "`capture.resolution` comes from the staged scene's meta and never "
+            "from a file, so without an independent read of the PNGs' own "
+            "IHDRs nothing in the pipeline ever compares the declared size to "
+            "the size on disk."
+        ),
+    ),
+    Mutant(
+        name="png_dimensions_trusts_a_non_ihdr_first_chunk",
+        file="an/bench/png.py",
+        old='    if data[_IHDR_TAG] != b"IHDR":',
+        new="    if False:",
+        caught_by="tests/test_bench_png.py",
+        why=(
+            "without the tag check the four bytes that happen to sit at offset "
+            "16 are returned as a resolution — a plausible number fed straight "
+            "into the shape guard, which is the failure class an#54 closes."
+        ),
+    ),
+    Mutant(
+        name="read_png_dimensions_reads_the_whole_file",
+        file="an/bench/png.py",
+        old="        return png_dimensions(handle.read(PNG_HEADER_BYTES))",
+        new="        return png_dimensions(handle.read())",
+        caught_by="tests/test_bench_png.py",
+        why=(
+            "the answer stays right and the cost stops being free: the bench "
+            "reads one of these per frame of every shot, and a 1080p frame is "
+            "megabytes against a 24-byte header."
+        ),
+    ),
+    Mutant(
+        name="strict_exits_zero_on_a_row_it_cannot_read",
+        file="an/tools.py",
+        old="        if strict:\n            print(refusal)",
+        new="        if False:\n            print(refusal)",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "the documented CI gate exited 0 on an unreadable schema_version "
+            "or an undeclared --mutation — precisely the state a `--strict "
+            "--mutation supersample` run is in before the lever is registered. "
+            "Same class an#51 closed for the refusal path."
+        ),
+    ),
+    Mutant(
+        name="latest_rows_orders_by_filename",
+        file="an/bench/compare.py",
+        old="    return sorted(rows, key=key)[-count:]",
+        new="    return sorted(rows, key=lambda p: p.name)[-count:]",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "filenames are <date>-<sha7>.json, so within one date the order is "
+            "sha HEX order. A re-baseline and its after-run on the same day "
+            "swap silently when the after-commit's sha sorts lower, and every "
+            "improvement is then reported as a regression."
+        ),
+    ),
+    Mutant(
+        name="compare_hides_that_a_row_was_blessed",
+        file="an/bench/compare.py",
+        old='            "blessed_scenes": sorted(after["provenance"].get("blessed") or ()),',
+        new='            "blessed_scenes": [],',
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "a bless run gates family B `blessed_this_run`, and "
+            "`format_comparison` skips `unchanged` entries — so family B "
+            "vanishes from the table entirely. 'Family B agreed' and 'family B "
+            "was never asked' are the same blank space."
+        ),
+    ),
+    Mutant(
+        name="capture_inherits_the_previous_renders_shots",
+        file="an/bench/capture.py",
+        old='IGNORED_RELPATHS_ON_COPY: tuple[str, ...] = ("artifacts/shots",)',
+        new="IGNORED_RELPATHS_ON_COPY: tuple[str, ...] = ()",
+        caught_by="tests/test_bench_corpus.py",
+        why=(
+            "`mall['shots']` is `<project>/artifacts/shots`, and it is "
+            "gitignored — so a previous render's per-shot mp4s cross into every "
+            "bench run on a developer machine and on no clean checkout, in the "
+            "module whose docstring is 'do not inherit a stale render'."
+        ),
+    ),
+    Mutant(
+        name="capture_excludes_shots_by_basename_at_any_depth",
+        file="an/bench/capture.py",
+        old="            n for n in names if prefix + n in IGNORED_RELPATHS_ON_COPY",
+        new=(
+            "            n\n"
+            "            for n in names\n"
+            '            if n in {p.rsplit("/", 1)[-1] '
+            "for p in IGNORED_RELPATHS_ON_COPY}"
+        ),
+        caught_by="tests/test_bench_corpus.py",
+        why=(
+            "the obvious `shutil.ignore_patterns('shots')` spelling, restated. "
+            "It fnmatches BASENAMES against the names in every directory, so it "
+            "also deletes a character rig's `assets/.../shots` — and the other "
+            "obvious spelling, `'artifacts/shots'` as a pattern, matches "
+            "NOTHING, because no name contains a separator. Both fail silently."
+        ),
+    ),
+    Mutant(
+        name="bless_names_its_row_after_the_tree_it_did_not_leave",
+        file="an/bench/run.py",
+        old="    return git_state(root) if blessed else git",
+        new="    return git",
+        caught_by="tests/test_bench_bless_protocol.py",
+        why=(
+            "`git_state` is read before the corpus loop and a `--bless` run "
+            "writes inside it, so a bless on a clean tree filed itself as "
+            "`<date>-<sha>.json` — a filename naming a commit whose tree that "
+            "very run then modified, which is what the `-dirty` suffix exists "
+            "to prevent."
+        ),
+    ),
+    Mutant(
+        name="golden_trusts_a_frame_its_own_record_disowns",
+        file="an/bench/golden.py",
+        old='        if expected is not None and expected != record["golden_sha256"]:',
+        new="        if False:",
+        caught_by="tests/test_bench_golden.py",
+        why=(
+            "the bless record and the committed PNG carry the same digest of "
+            "the same file, written by two different calls. A disagreement "
+            "means the golden is not the picture a human blessed — an edited "
+            "file, a half-finished re-bless — and every one of those read as a "
+            "clean PASS."
+        ),
+    ),
+    Mutant(
+        name="bench_asks_a_mutated_run_the_unmutated_question",
+        file="an/tools.py",
+        old="            compare_rows(load_row(compare), ledger, mutation=mutation or None)",
+        new="            compare_rows(load_row(compare), ledger)",
+        caught_by="tests/test_bench_mutation_cli.py",
+        why=(
+            "without the mutation, `compare` answers 'is the second row worse' "
+            "of a run degraded on purpose — so the declared per-mutation "
+            "predictions are never scored and the an#41 criterion cannot appear "
+            "in the mandated `--compare` artifact at all."
+        ),
+    ),
+    Mutant(
+        name="bench_blesses_a_deliberately_degraded_picture",
+        file="an/tools.py",
+        old='        if bless:\n            return (\n                "refusing --bless with --mutation: a lever renders a"',
+        new='        if False:\n            return (\n                "refusing --bless with --mutation: a lever renders a"',
+        caught_by="tests/test_bench_mutation_cli.py",
+        why=(
+            "blessing under a lever commits the degraded picture as the "
+            "reference every future run is measured against — a permanent, "
+            "silent re-baseline, and the one bless refusal that cannot be "
+            "recovered by reading the recorded reason."
+        ),
+    ),
+    # ---------------------------------------------------------------- an#55
+    Mutant(
+        name="edge_masked_colour_count_is_not_masked",
+        file="an/bench/metrics.py",
+        old="    per_frame = [len(np.unique(f[m])) for f, m in zip(packed, edge) if m.any()]",
+        new="    per_frame = [len(np.unique(f)) for f, m in zip(packed, edge) if m.any()]",
+        caught_by="tests/test_bench_metrics.py",
+        why=(
+            "unmasked it is `frame_distinct_colours` under a second name, and "
+            "the one property the mask does buy — that an interior-only change "
+            "cannot reach the number — is gone with no other symptom."
+        ),
+    ),
+    Mutant(
+        name="empty_edge_mask_reads_as_zero_colours",
+        file="an/bench/metrics.py",
+        old='        return float("nan"), 0',
+        new="        return 0.0, 0",
+        caught_by="tests/test_bench_metrics.py",
+        why=(
+            "a substituted zero is the largest possible DOWNWARD move in the "
+            "one metric that exists to notice a downward move, on exactly the "
+            "scenes where the number means nothing at all."
+        ),
+    ),
 )
 
 

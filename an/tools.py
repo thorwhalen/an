@@ -192,6 +192,7 @@ def bench(
     quiet: bool = False,
     bless: str = "",
     compare: str = "",
+    mutation: str = "",
 ) -> str:
     """Render the fixed bench corpus and write a metrics ledger.
 
@@ -205,10 +206,19 @@ def bench(
     quiet: print only the ledger path
     bless: (re)write the golden frames, recording THIS STRING as the reason
     compare: after the run, compare it against this baseline ledger row
+    mutation: pull one declared lever for this run, and ask --compare the
+        per-mutation question instead of "is the second row worse"
 
     Rendering knobs are deliberately NOT flags: a bench whose render knobs vary
     per invocation produces incomparable rows, so they are a module constant
-    recorded verbatim into the ledger.
+    recorded verbatim into the ledger. ``--mutation`` is not one of them, and is
+    the exception that states the rule: a lever is the **independent variable**,
+    it is named in the report, it is exempted by declaration in
+    ``MUTATION_TOUCHES`` rather than by widening anything, and the row it
+    produces is never filed under a commit's name. Without it the ``--compare``
+    artifact is always the ``mutation=None`` path, which asks "is this worse" of
+    a run that was broken on purpose — the wrong question, answered
+    confidently.
 
     ``--bless`` takes the reason as its value rather than pairing with a
     separate ``--reason``, so a bless with no recorded reason cannot be typed.
@@ -230,19 +240,88 @@ def bench(
             )
         chosen = {w: DFLT_FIXTURES[w] for w in wanted}
 
-    ledger = run_bench(
-        scenes=chosen,
-        out=Path(out) if out else None,
-        keep_render=Path(keep_render) if keep_render else None,
-        bless=bless,
+    if mutation:
+        # Validated BEFORE anything renders. The corpus takes minutes, and an
+        # undeclared name would otherwise surface as a bare `KeyError` from
+        # inside `mutated_row` after all of it.
+        from an.bench.mutations import LEVERS, mutated_row
+
+        if mutation not in LEVERS:
+            return (
+                f"unknown mutation {mutation!r}; declared: {sorted(LEVERS)}. A"
+                " lever is registered in `an.bench.mutations.LEVERS` and"
+                " predicted for in `an.bench.registry.MUTATIONS`; the two are"
+                " checked equal at import."
+            )
+        if bless:
+            return (
+                "refusing --bless with --mutation: a lever renders a"
+                " DELIBERATELY DEGRADED picture, and blessing it would commit"
+                " that picture as the reference every future run is measured"
+                " against. Bless from an unmutated run."
+            )
+        ledger = mutated_row(
+            mutation,
+            scenes=chosen,
+            keep_render=Path(keep_render) if keep_render else None,
+        )
+        # `mutated_row` writes nothing (`run_bench(write=False)`), and that is
+        # right: a mutated row is evidence about a pipeline broken on purpose,
+        # so filing it as `<date>-<sha>.json` would claim it is the commit's
+        # evidence — the `-dirty` failure one level up. `--out` is the only way
+        # to keep one, and it may not point into the ledger directory, where
+        # `latest_rows` would hand it to a bare `an bench-compare` as a
+        # baseline.
+        if out:
+            from an.bench.ledger import write_ledger
+            from an.bench.paths import LEDGER_DIRNAME, repo_root
+
+            path = Path(out).resolve()
+            if path.parent == (repo_root() / LEDGER_DIRNAME).resolve():
+                return (
+                    f"refusing to write a mutated row into {LEDGER_DIRNAME}: "
+                    "`latest_rows` would hand it to a bare `an bench-compare` "
+                    "as a baseline, and it measures a pipeline that was broken "
+                    "on purpose. Write it anywhere else."
+                )
+            write_ledger(ledger, path)
+            ledger["_written_to"] = str(path)
+    else:
+        ledger = run_bench(
+            scenes=chosen,
+            out=Path(out) if out else None,
+            keep_render=Path(keep_render) if keep_render else None,
+            bless=bless,
+        )
+
+    unfiled = (
+        "\nthis row was NOT written: a mutated row is evidence about a"
+        " pipeline broken on purpose, never a commit's. Pass --out <path> to"
+        " keep it, then gate it with"
+        f" `an bench-compare --mutation {mutation} --strict`."
     )
-    panel = str(ledger.get("_written_to", "")) if quiet else format_panel(ledger)
+    if quiet:
+        panel = str(ledger.get("_written_to", "")) or (
+            unfiled.strip() if mutation else ""
+        )
+    else:
+        panel = format_panel(ledger)
+        if mutation:
+            panel = f"MUTATED RUN: lever {mutation!r} pulled\n" + panel
+            if not out:
+                panel += unfiled
     if not compare:
         return panel
     from an.bench.compare import compare as compare_rows
     from an.bench.compare import format_comparison, load_row
 
-    return panel + "\n\n" + format_comparison(compare_rows(load_row(compare), ledger))
+    return (
+        panel
+        + "\n\n"
+        + format_comparison(
+            compare_rows(load_row(compare), ledger, mutation=mutation or None)
+        )
+    )
 
 
 def bench_compare(
@@ -259,7 +338,8 @@ def bench_compare(
     mutation: evaluate the per-mutation predictions instead of asking whether
         the second row is worse. One of the mutations the rows declare.
     strict: exit nonzero when the answer is bad — a regression without a
-        mutation, or an unmet criterion with one. For CI.
+        mutation, an unmet criterion with one, a comparison that answered
+        nothing, or a row that could not be read at all. For CI.
     raw: print the report as JSON instead of the human digest
 
     Refusing is the feature. Two rows measured on different scenes, at
@@ -297,7 +377,19 @@ def bench_compare(
             load_row(before), load_row(after), mutation=mutation or None
         )
     except ComparisonError as e:
-        return f"refused: {e}"
+        # `--strict` documents itself as "exit nonzero when the answer is bad",
+        # and a row the comparer cannot read at all is the worst answer there
+        # is. This handler used to `return` here, ahead of the `if strict:`
+        # block below, so an unreadable `schema_version` — or an undeclared
+        # `--mutation`, which is the state a `--strict --mutation supersample`
+        # run is in before the lever is registered — exited 0. Same failure
+        # class an#51 closed for the refusal path and left open on the raise
+        # path.
+        refusal = f"refused: {e}"
+        if strict:
+            print(refusal)
+            _sys.exit(1)
+        return refusal
 
     text = (
         _json.dumps(report, indent=2, sort_keys=True)

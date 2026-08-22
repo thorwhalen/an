@@ -14,7 +14,13 @@ from __future__ import annotations
 
 import pytest
 
-from an.bench.capture import IGNORED_ON_COPY, capture_fixture, cleanup, dirty_paths
+from an.bench.capture import (
+    IGNORED_ON_COPY,
+    IGNORED_RELPATHS_ON_COPY,
+    capture_fixture,
+    cleanup,
+    dirty_paths,
+)
 from an.bench.corpus import DFLT_FIXTURES
 from an.bench.paths import repo_root
 from an.bench.registry import METRICS, MUTATIONS, TRIPWIRES
@@ -214,6 +220,7 @@ def test_a_capture_leaves_the_repository_untouched(tmp_path):
 def test_the_copy_does_not_inherit_a_previous_render(tmp_path):
     """`frames/` is never cleared and image2 reads the contiguous run from 0."""
     assert ".an" in IGNORED_ON_COPY and "output" in IGNORED_ON_COPY
+    assert "artifacts/shots" in IGNORED_RELPATHS_ON_COPY
     root = repo_root()
     capture = capture_fixture(SCENE, DFLT_FIXTURES[SCENE], repo_root=root)
     try:

@@ -43,6 +43,7 @@ pytestmark = [pytest.mark.ffmpeg]
 H, W, N = 48, 64, 4
 FPS = 24
 
+
 #: Saturated fills against black outlines: the gamut extremes flat 2D line art
 #: is made of, and precisely where an RGB round trip clips.
 def _write_png(path: Path, arr: np.ndarray) -> None:
@@ -107,7 +108,7 @@ def test_the_conversion_distance_is_recorded_and_never_gated(frames_dir, tmp_pat
     fail for the wrong reason on the wrong machine.
     """
     mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4")
-    report = conversion_distance(frames_dir, mp4, height=H, width=W)
+    report = conversion_distance(frames_dir, mp4, height=H, width=W, frames=N)
     assert set(report) >= {
         "luma_residual_mean",
         "luma_residual_max",
@@ -130,9 +131,10 @@ def test_the_unpinned_conversion_is_measurably_further_from_the_encoder(
     mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4")
     enc_in = imageio.decoded_yuv(mp4, height=H, width=W)
 
-    pinned = imageio.source_yuv(frames_dir, height=H, width=W)
+    pinned = imageio.source_yuv(frames_dir, height=H, width=W, frames=N)
     unpinned_cmd = [
-        c for c in imageio.source_yuv_command(frames_dir)
+        c
+        for c in imageio.source_yuv_command(frames_dir)
         if c not in ("-vf", imageio.SOURCE_SCALE_FILTER)
     ]
     unpinned = np.frombuffer(imageio.run_raw(unpinned_cmd), np.uint8).reshape(
@@ -163,9 +165,18 @@ def test_the_gray_pixel_format_silently_ignores_the_range_and_matrix_options(
     decode instead.
     """
     base = [
-        "ffmpeg", "-v", "error", "-start_number", "0",
-        "-i", str(frames_dir / "frame_%06d.png"),
-        "-pix_fmt", "gray", "-f", "rawvideo", "-",
+        "ffmpeg",
+        "-v",
+        "error",
+        "-start_number",
+        "0",
+        "-i",
+        str(frames_dir / "frame_%06d.png"),
+        "-pix_fmt",
+        "gray",
+        "-f",
+        "rawvideo",
+        "-",
     ]
     scaled = base[:9] + ["-vf", imageio.SOURCE_SCALE_FILTER] + base[9:]
     assert imageio.run_raw(base) == imageio.run_raw(scaled), (
@@ -175,6 +186,13 @@ def test_the_gray_pixel_format_silently_ignores_the_range_and_matrix_options(
 
 
 def test_a_length_mismatch_is_refused_rather_than_silently_reshaped(frames_dir):
-    """An off-by-one pairing makes every encode-side metric measure motion."""
+    """An off-by-one pairing makes every encode-side metric measure motion.
+
+    ``frames=None`` is the leg that can only check divisibility — the mp4
+    decodes — so this is where the "whole number" message stays reachable. The
+    exact-count refusal has its own test in ``tests/test_bench_shape_guard.py``.
+    """
     with pytest.raises(imageio.BenchDecodeError, match="whole number"):
-        imageio._reshape(b"\x00" * 7, planes=3, height=H, width=W, label="source_yuv")
+        imageio._reshape(
+            b"\x00" * 7, planes=3, height=H, width=W, label="source_yuv", frames=None
+        )
