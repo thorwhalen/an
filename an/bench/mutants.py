@@ -516,6 +516,49 @@ MUTANTS: tuple[Mutant, ...] = (
         ),
     ),
     # ---------------------------------------------------------------- an#55
+    # ---------------------------------------------------------------- an#56
+    Mutant(
+        name="supersample_autodensity_true",
+        file="an/bench/mutations.py",
+        old='SUPERSAMPLE_OPTIONS: str = "            resolution: {k}, autoDensity: false,"',
+        new='SUPERSAMPLE_OPTIONS: str = "            resolution: {k}, autoDensity: true,"',
+        caught_by="tests/test_bench_supersample_lever.py",
+        why=(
+            "`autoDensity: true` makes Chromium composite the k-times backbuffer "
+            "down before the screenshot — a blind downscale with no filter "
+            "choice and no record. The PNGs come out the DECLARED size, so every "
+            "shape check passes and the lever silently measures nothing. It is "
+            "the option whose name most suggests it is the right one."
+        ),
+    ),
+    Mutant(
+        name="supersample_skips_the_frame_stage",
+        file="an/bench/mutations.py",
+        old="        render._capture_frames = _capture_then_resolve",
+        new="        render._capture_frames = original",
+        caught_by="tests/test_bench_supersample_lever.py",
+        why=(
+            "drops the resolve, leaving k-times PNGs on disk. Before an#54 that "
+            "was silent — `_reshape` checked byte-count divisibility and k**2 "
+            "always divides — and family A was computed on k**2 scrambled frames "
+            "that still produced a believable `edge_transition_width`. It is a "
+            "loud refusal now, which is what makes this lever safe to run."
+        ),
+    ),
+    Mutant(
+        name="supersample_verify_is_merely_not_shipped",
+        file="an/bench/mutations.py",
+        old="    if recorded != expected:",
+        new="    if False:",
+        caught_by="tests/test_bench_supersample_lever.py",
+        why=(
+            "reduces the supersample fingerprint to `disabled_aa`'s inequality, "
+            "which ANY render lever satisfies — both stage through one seam and "
+            "both move `render_side.runtime_sha256`. A row rendered with "
+            "`antialias: false` then verifies as a supersample row and the whole "
+            "lever table is written from the wrong lever's numbers."
+        ),
+    ),
     Mutant(
         name="edge_masked_colour_count_is_not_masked",
         file="an/bench/metrics.py",

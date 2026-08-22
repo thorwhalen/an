@@ -281,9 +281,12 @@ measures a pipeline broken on purpose, and `--bless` under a lever is refused
 outright.
 
 
-`an/bench/mutations.py` holds the two levers. **No production knob exists for
-either, deliberately** — a knob would have to be documented, defended, and kept
-from being switched on by accident. Each reaches an existing seam from outside:
+`an/bench/mutations.py` holds the levers. **No production knob exists for any of
+them, deliberately** — a knob would have to be documented, defended, and kept
+from being switched on by accident. (an#58 ships exactly such a knob for
+supersampling, opt-in. When it lands, that sentence stops being true and must be
+rewritten rather than left to rot.) Each lever reaches an existing seam from
+outside:
 
 - `high_crf` rebinds `render.DETERMINISTIC_X264_ARGS`. `_ffmpeg_mux` reads that
   name as a module global at call time so the rebinding reaches the delivered
@@ -293,20 +296,47 @@ from being switched on by accident. Each reaches an existing seam from outside:
   and the lever produces beautiful numbers about nothing.
 - `disabled_aa` copies the staged runtime, flips PixiJS's `antialias` in the
   copy, and rebinds `render.runtime_dir`. The shipped `runtime.js` is untouched.
+- `supersample` reaches that **same** runtime seam — `resolution: k,
+  autoDensity: false` in the Pixi application options — and then a second one it
+  cannot do without: it rebinds `render._capture_frames` so the k-times PNGs are
+  block-mean-resolved back to the declared size **in the frame stage**. Not
+  tidiness: nothing downstream reads a resolution off the files.
+  `capture.resolution` comes from the staged scene's `meta`, so unresolved
+  frames would mux a 640x480 video against a 320x240 declaration and put family
+  B's number out of reach. **A lever must measure what the product will
+  produce.**
 
 **Each lever verifies that it applied.** A lever that silently failed to take
 produces a run in which nothing moved — indistinguishable from an instrument
 that cannot see it, and it sends you to fix the wrong thing. The encode lever
-checks the row (`x264_argv` is recorded); the AA lever cannot, because the
-runtime is the code under test rather than a comparability key, so it pins the
-literal it flips and raises if it is not there exactly once.
+checks the row (`x264_argv` is recorded); the render levers check the recorded
+`runtime_sha256`.
 
-**Measured, both levers, all six scenes:**
+**And with two render levers, "not the shipped digest" stopped being enough.**
+Both stage through one seam, so `disabled_aa`'s *inequality* check is satisfied
+by either of them: copy it for `supersample` and a row rendered with
+`antialias: false` verifies clean, the lever table gets written from AA-off
+numbers, and nothing goes red. `_verify_supersample` therefore **recomputes**
+the digest a resolution-patched runtime produces and asserts EQUALITY. If you
+add a third render lever, do the same — the negative form is not extensible.
+
+**Two of the three are degradations and the third is an improvement**, and that
+is the point rather than an untidiness. A panel that has only ever been shown
+things getting worse cannot tell an improvement from a regression: run as a
+plain commit-to-commit diff, a k=2 supersample reports **2 false regressions**
+and **7 unearned improvements** (every family C/D/E/G metric whose mask derives
+from the source frames — gates live inside `Prediction`, which exists only per
+declared mutation, so with `mutation=None` no gate is consulted). Declared as a
+lever, none of that happens. What a lever has to be is **declared in advance**,
+not bad.
+
+**Measured, all three levers, all six scenes:**
 
 | lever | criterion met on | why not everywhere |
 |---|---|---|
 | `high_crf` | all six (4/3 on five, 3/3 on `single_character`) | family E inverts on `single_character` only |
 | `disabled_aa` | `aa_probe`, `multi_shot`, `saturated_outline` | family F's sign is scene-dependent; MSAA cannot reach axis-aligned art or an SVG sprite |
+| `supersample` | `multi_shot`, `saturated_outline`, `single_character` | C/D/E/G are gated for **every** render lever, so the criterion is forced to A + B + F with no substitute; family A inverts on `promote_demo` (-34.8%, the sprite rasterises at 2x) and family F's three up-moves are the small ones (+0.8% to +2.8% against -4.0% to -12.2%) |
 
 So the criterion is **per scene, met on at least one**, and the corpus has to
 contain a scene the lever can reach. That is what makes `aa_probe` load-bearing

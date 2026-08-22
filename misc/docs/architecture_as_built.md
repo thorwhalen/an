@@ -63,7 +63,7 @@ an/
 │   ├── png.py               filter-0 writer + full-filter reader; numpy + stdlib only
 │   ├── golden.py            the golden gate and `--bless`; compares DECODED pixels
 │   ├── compare.py           two rows in, a verdict or a REFUSAL out (an#40)
-│   ├── mutations.py         the two levers, through seams the shipped code has
+│   ├── mutations.py         the levers, through seams the shipped code has
 │   ├── mutants.py           guard mutants as DATA, so the proof re-runs
 │   ├── environment.py       the environment tuple, split by comparison scope
 │   └── run.py               capture -> panel -> row

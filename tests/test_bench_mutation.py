@@ -44,14 +44,20 @@ def test_every_declared_mutation_has_a_lever_that_pulls_it():
         assert lever.what and lever.why
 
 
-def test_the_two_levers_are_on_opposite_sides_of_the_encoder():
-    """MUTATION: point both levers at the same side.
+def test_both_sides_of_the_encoder_have_a_lever():
+    """MUTATION: point every lever at the same side.
 
-    Two disjoint levers are mandatory. An encoder lever cannot touch a
+    At least one lever per side is mandatory. An encoder lever cannot touch a
     golden-frame metric, because the corpus is UPSTREAM of the encoder; a render
     lever cannot be judged by an encode-side metric, because that metric's
     reference moves with the mutation. One lever can therefore never exercise
     the whole panel, and a single-lever criterion silently tests half of it.
+
+    A per-SIDE assertion rather than a per-LEVER one since an#56, which added a
+    second render lever. The two are not redundant: measured, `disabled_aa` is
+    nearly blind to the descriptor path (96 differing pixels of 12.4M on
+    `promote_demo`) and `supersample` reaches that scene hardest of all six
+    (-34.8% edge width).
     """
     assert {lever.side for lever in LEVERS.values()} == {"render", "encode"}
 
