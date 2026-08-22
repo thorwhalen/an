@@ -260,7 +260,26 @@ def compare_scene(
         }
 
     frames: list[dict] = []
-    refs = resolve_frames(capture, times)
+    try:
+        refs = resolve_frames(capture, times)
+    except GoldenError as e:
+        # A pinned time past the end of the scene is a fact about ONE scene, and
+        # `run_bench` has no per-scene handler — so this used to abort the whole
+        # run and take five other scenes' rows with it. `unavailable` is the
+        # documented outcome for "the check could not run"; no new gate name is
+        # needed, and inventing one would be a wire-format change that
+        # `an bench --compare` and `RETIRED_GATES` both have to learn.
+        return {"state": "unavailable", "detail": str(e), "frames": []}
+    if len({r.key for r in refs}) != len(refs):
+        return {
+            "state": "unavailable",
+            "detail": (
+                f"{capture.name!r} pins times that resolve to the same frame "
+                f"({[r.key for r in refs]}). Two goldens of one picture compare "
+                "the same thing twice and the second tests nothing."
+            ),
+            "frames": [],
+        }
     for ref in refs:
         golden = golden_path(capture.name, ref.key, chromium_build, root=root)
         record: dict[str, Any] = {
@@ -268,7 +287,12 @@ def compare_scene(
             "time": ref.time,
             "index": ref.index,
             "shot_id": ref.shot_id,
-            "golden": str(golden.relative_to(golden_dir(root).parent.parent))
+            # `.parents[2]`, not `.parent.parent`: `golden_dir` is
+            # `<root>/misc/bench/golden`, so two levels up is `<root>/misc` and
+            # every reported path came out as `bench/golden/...` — a path that
+            # does not exist, printed in the one message telling a reader which
+            # file to open. Measured against the committed row: 12 of 12 wrong.
+            "golden": str(golden.relative_to(golden_dir(root).parents[2]))
             if golden.is_file()
             else None,
         }
@@ -322,6 +346,7 @@ def compare_scene(
     # boolean is reported and the number is not, which is exactly the split the
     # metrics/tripwires blocks exist to express.
     mismatched = [f for f in frames if f.get("shape_mismatch")]
+    compared = [f for f in frames if f.get("changed_px") is not None]
     return {
         "state": "measured",
         "identical": all(f["identical"] for f in frames),
@@ -333,8 +358,13 @@ def compare_scene(
             for f in mismatched
         ]
         or None,
-        "changed_px": max(int(f["changed_px"] or 0) for f in frames),
-        "max_delta": max(int(f["max_delta"] or 0) for f in frames),
+        # Reduced over the frames that ACTUALLY compared, and left None when
+        # none did. `int(f["changed_px"] or 0)` turned "there is no per-pixel
+        # comparison to count" into a hard ZERO, so a fired gate printed
+        # "GOLDEN MISMATCH: 0 px changed, max delta 0" — a fabricated number, in
+        # the one schema whose entire premise is that unknown is not zero.
+        "changed_px": max((int(f["changed_px"]) for f in compared), default=None),
+        "max_delta": max((int(f["max_delta"]) for f in compared), default=None),
         "frames": frames,
     }
 

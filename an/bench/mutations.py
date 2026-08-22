@@ -99,6 +99,35 @@ def _high_crf() -> Iterator[None]:
         render.DETERMINISTIC_X264_ARGS = original
 
 
+def _verify_disabled_aa(row: dict) -> None:
+    """The row must record a runtime digest that is NOT the shipped runtime's.
+
+    The encode lever's fingerprint is in the row already (`x264_argv`); this one
+    had none, so `assert not report["mutation_may_not_have_applied"]` asserted
+    nothing for it and a lever that silently failed to take would have read as
+    an instrument that could not see it (an#41 review). Compared against the
+    pristine runtime rather than a stored constant, so a legitimate change to
+    `runtime.js` does not turn this into a re-baselining chore.
+    """
+    from an.bench.environment import runtime_sha256
+
+    recorded = (
+        ((row.get("provenance") or {}).get("environment") or {}).get("render_side")
+        or {}
+    ).get("runtime_sha256")
+    if recorded is None:
+        raise MutationError(
+            "the row records no `render_side.runtime_sha256`, so there is no way "
+            "to tell whether the AA lever reached the renderer."
+        )
+    if recorded == runtime_sha256():
+        raise MutationError(
+            "the row's runtime digest is the SHIPPED runtime's, so the AA lever "
+            "did not reach the render. Every 'nothing moved' below is about the "
+            "lever and not about the instrument."
+        )
+
+
 def _verify_high_crf(row: dict) -> None:
     argv = (
         ((row.get("provenance") or {}).get("environment") or {}).get("encode_side")
@@ -122,6 +151,10 @@ def _disabled_aa() -> Iterator[None]:
     shutil.copytree(runtime_dir(), staged)
     source = (staged / "runtime.js").read_text(encoding="utf-8")
     if source.count(AA_ON) != 1:
+        # Clean up before refusing: the refusal path is loud and rare, but a
+        # lever that leaks half a megabyte every time it declines is a lever
+        # nobody wants to run in a loop.
+        shutil.rmtree(staged.parent, ignore_errors=True)
         raise MutationError(
             f"expected exactly one {AA_ON!r} in runtime.js, found "
             f"{source.count(AA_ON)}. The AA lever is pinned to that literal, and "
@@ -170,7 +203,7 @@ LEVERS: dict[str, Lever] = {
             "contains edges this lever can actually change."
         ),
         apply=_disabled_aa,
-        verify_row=None,
+        verify_row=_verify_disabled_aa,
     ),
 }
 

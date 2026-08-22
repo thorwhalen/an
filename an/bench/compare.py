@@ -178,12 +178,21 @@ def _compare_keys(
     """
     mismatches: list[dict] = []
     caveats: list[dict] = []
+    unknown: list[str] = []
     probes = [((key,), key) for key in keys] + [
         (path, ".".join(path)) for path in paths
     ]
     for path, label in probes:
         b, a = _probe(before, path), _probe(after, path)
-        if b is _ABSENT or a is _ABSENT:
+        if b is _ABSENT and a is _ABSENT:
+            # Absent from BOTH rows is not a caveat about one of them — it is a
+            # key neither row has ever carried, which says nothing about their
+            # comparability. Reporting it as "absent from before" also leaked
+            # the sentinel object into `value`, which made the whole report
+            # un-serialisable and crashed `an bench-compare --raw` on any pair
+            # of rows predating a key. Live on the committed rows today.
+            unknown.append(label)
+        elif b is _ABSENT or a is _ABSENT:
             caveats.append(
                 {
                     "key": label,
@@ -193,6 +202,10 @@ def _compare_keys(
             )
         elif b != a:
             mismatches.append({"key": label, "before": b, "after": a})
+    if unknown:
+        caveats.append(
+            {"key": ", ".join(unknown), "absent_from": "both rows", "value": None}
+        )
     return mismatches, caveats
 
 
@@ -219,6 +232,12 @@ def _verdict_under_mutation(prediction: dict, direction: str) -> str:
     >>> _verdict_under_mutation({"expect": "increase"}, "decrease")
     'contrary'
     """
+    if not prediction:
+        # Distinct from `gated`. A gate is a DECLARED "we cannot tell"; an empty
+        # block is "nobody wrote a prediction down", which is a fact about the
+        # row rather than about the measurement. Both fail closed, but they send
+        # a reader to different places.
+        return "no_prediction"
     expect = prediction.get("expect")
     if expect is None:
         return "gated"
@@ -292,6 +311,25 @@ def _compare_scene(
             after["declarations"].get(key, {}),
             keys=DECLARATION_KEYS,
         )
+        # The inline row and the row's own declarations block must agree. They
+        # are two copies of the same fact, written at the same moment by the
+        # same registry — so a disagreement means the row was edited, and the
+        # criterion reads the INLINE one. Relabelling one metric's inline
+        # `family` moved a witness into a new family and took `criterion_met_on`
+        # from three scenes to five, with no refusal anywhere (an#41 review).
+        for field in ("family", "side"):
+            for label, row, declared in (
+                ("before", row_b, before["declarations"].get(key, {})),
+                ("after", row_a, after["declarations"].get(key, {})),
+            ):
+                if field in row and field in declared and row[field] != declared[field]:
+                    declaration.append(
+                        {
+                            "key": f"{label}.{field} (inline vs declared)",
+                            "before": declared[field],
+                            "after": row[field],
+                        }
+                    )
         if declaration:
             entry.update(
                 state="refused",
@@ -305,6 +343,24 @@ def _compare_scene(
             metrics[key] = entry
             continue
         scope = row_a.get("comparison_scope")
+        if scope not in env_refusals:
+            # An unknown or ABSENT scope must not read as "no refusals apply".
+            # It did: deleting the field let an encode-side metric from another
+            # ISA and another x264 build compare cleanly and report a
+            # regression. Every neighbouring absence in this module is a
+            # surfaced caveat; this one was silently "compare anyway".
+            entry.update(
+                state="refused",
+                refusal="comparison_scope_unknown",
+                detail=(
+                    f"the metric declares comparison_scope {scope!r}, which is "
+                    f"not one of {sorted(env_refusals)}. Without it there is no "
+                    "way to know which environment differences disqualify this "
+                    "number, so it is refused rather than compared."
+                ),
+            )
+            metrics[key] = entry
+            continue
         blocking = env_refusals.get(scope) or []
         if blocking:
             entry.update(
@@ -374,8 +430,23 @@ def _compare_scene(
             entry["verdict"] = _verdict_by_optimum(entry["optimum"], movement)
         else:
             prediction = (row_a.get("under_mutation") or {}).get(mutation) or {}
-            entry["expect"] = prediction.get("expect")
-            entry["counts"] = bool(prediction.get("counts"))
+            expect = prediction.get("expect")
+            entry["expect"] = expect
+            # `Prediction.__post_init__` refuses `counts=True` on a tautology,
+            # but a ROW is data and can say anything — and `--compare` reads
+            # rows, including hand-edited and foreign ones. Without this, three
+            # metrics relabelled `{"expect": "no_change", "counts": true}` make
+            # the criterion report MET while nothing moved at all.
+            entry["counts"] = bool(prediction.get("counts")) and expect not in (
+                None,
+                "no_change",
+                "not_applicable",
+            )
+            if bool(prediction.get("counts")) and not entry["counts"]:
+                entry["counts_refused"] = (
+                    f"the row declares counts=true with expect={expect!r}, which "
+                    "can never be a satisfied prediction"
+                )
             entry["verdict"] = _verdict_under_mutation(prediction, movement)
         metrics[key] = entry
 
@@ -483,9 +554,27 @@ def compare(before: dict, after: dict, *, mutation: str | None = None) -> dict:
         touched = {".".join(path) for path in MUTATION_TOUCHES.get(mutation, ())}
         for scope, items in env_refusals.items():
             env_refusals[scope] = [i for i in items if i["key"] not in touched]
-        seen = {i["key"] for i in common + render + encode}
-        expected_changes = [i for i in common + render + encode if i["key"] in touched]
-        unapplied = sorted(touched - seen)
+        # Probed DIRECTLY, not read off the comparability scan. A lever may
+        # declare a knob that is not a comparability key at all — the AA lever's
+        # `runtime_sha256` is provenance, because the runtime is the code under
+        # test — and such a key is never compared, so it never appeared in the
+        # scan and every run reported it as possibly-unapplied.
+        #
+        # Compared by VALUE rather than by "is this path in the mismatch list",
+        # for the same reason: the exemption is for the knob the lever pulls,
+        # and `x264_argv` is the whole encode command, so an unrelated flag
+        # change inside it rode in on the lever's coat-tails.
+        for path in MUTATION_TOUCHES.get(mutation, ()):
+            label = ".".join(path)
+            b = _probe(before["provenance"], path)
+            a = _probe(after["provenance"], path)
+            if b is _ABSENT or a is _ABSENT:
+                unapplied.append(f"{label} (absent from one of the rows)")
+            elif b == a:
+                unapplied.append(label)
+            else:
+                expected_changes.append({"key": label, "before": b, "after": a})
+        unapplied = sorted(unapplied)
 
     names_b, names_a = set(before["scenes"]), set(after["scenes"])
     scenes = {
@@ -518,6 +607,21 @@ def compare(before: dict, after: dict, *, mutation: str | None = None) -> dict:
         "scenes_only_in_after": sorted(names_a - names_b),
         "scenes": scenes,
     }
+    # Did this comparison produce an ANSWER? Separate from whether the answer
+    # was good. `--strict` used to read only `has_regressions` / `criterion_met`,
+    # so a run in which every scene was REFUSED — different scene contract,
+    # different machine, no shared scene at all — exited 0 while printing
+    # "0 regression(s)", a zero this module's own docstring calls worse than no
+    # number at all. The CI gate was passing comparisons that compared nothing.
+    compared = sum(
+        1
+        for s in scenes.values()
+        if s["comparable"]
+        for e in s["metrics"].values()
+        if e.get("state") == "compared"
+    )
+    report["metrics_compared"] = compared
+    report["answered"] = bool(scenes) and compared > 0
     if mutation is not None:
         met = [n for n, s in scenes.items() if s.get("criterion_met")]
         report["criterion_met_on"] = sorted(met)
@@ -637,8 +741,17 @@ def format_comparison(report: dict) -> str:
                     else "coverage gained"
                 )
                 lines.append(f"    [{mark}] {key:32s} {arrow}")
+    if not report.get("answered"):
+        lines.append(
+            "\nNO ANSWER: not one metric was compared. Every scene was refused, "
+            "or the two rows share no scene at all — which is a fact about the "
+            "rows and not about the code they measure."
+        )
     if mutation is not None:
         lines.append(f"\ncriterion met on: {report['criterion_met_on'] or 'NO SCENE'}")
     elif report.get("has_regressions"):
         lines.append(f"\nregressions: {report['regressions']}")
+    lines.append(f"metrics compared: {report.get('metrics_compared')}")
+    if report.get("coverage_lost"):
+        lines.append(f"COVERAGE LOST: {report['coverage_lost']}")
     return "\n".join(lines)

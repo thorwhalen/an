@@ -654,10 +654,14 @@ def _golden_failure_lines(name: str, block: dict) -> list[str]:
     if row.get("state") != "measured" or row.get("value") is not False:
         return []
     golden = (block.get("provenance") or {}).get("golden") or {}
-    lines = [
-        f"  GOLDEN MISMATCH in {name}: {row.get('changed_px')} px changed, "
-        f"max delta {row.get('max_delta')}"
-    ]
+    changed = row.get("changed_px")
+    delta = row.get("max_delta")
+    magnitude = (
+        f"{changed} px changed, max delta {delta}"
+        if changed is not None
+        else "the frames have DIFFERENT SHAPES, so there is no pixel count"
+    )
+    lines = [f"  GOLDEN MISMATCH in {name}: {magnitude}"]
     for frame in golden.get("frames") or []:
         if frame.get("state") == "compared" and not frame.get("identical"):
             lines.append(

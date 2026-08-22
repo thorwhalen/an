@@ -157,8 +157,8 @@ MUTANTS: tuple[Mutant, ...] = (
     Mutant(
         name="compare_refuses_on_an_absent_key",
         file="an/bench/compare.py",
-        old="        if b is _ABSENT or a is _ABSENT:",
-        new="        if False:",
+        old="        elif b is _ABSENT or a is _ABSENT:",
+        new="        elif False:",
         caught_by="tests/test_bench_compare.py",
         why=(
             "the ledger grows additively, so treating absence as difference makes "
@@ -222,6 +222,43 @@ MUTANTS: tuple[Mutant, ...] = (
         why=(
             "'no change by construction' is a tautology; counting it lets any "
             "pre-encode statistic pad the witness count for free."
+        ),
+    ),
+    Mutant(
+        name="golden_fabricates_a_zero_pixel_count",
+        file="an/bench/golden.py",
+        old='"changed_px": max((int(f["changed_px"]) for f in compared), default=None),',
+        new='"changed_px": max((int(f["changed_px"] or 0) for f in frames), default=0),',
+        caught_by="tests/test_bench_golden.py",
+        why=(
+            "a shape mismatch has no per-pixel comparison to count, and turning "
+            "that into 0 printed 'GOLDEN MISMATCH: 0 px changed' — a fabricated "
+            "number in the one schema whose whole premise is that unknown is not "
+            "zero."
+        ),
+    ),
+    Mutant(
+        name="compare_scope_absence_fails_open",
+        file="an/bench/compare.py",
+        old="        if scope not in env_refusals:",
+        new="        if False:",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "an absent `comparison_scope` read as 'no refusals apply', so an "
+            "encode-side metric from another ISA and another x264 build compared "
+            "cleanly and reported a regression."
+        ),
+    ),
+    Mutant(
+        name="strict_passes_a_comparison_that_compared_nothing",
+        file="an/tools.py",
+        old='            not report.get("answered")',
+        new="            False",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "the documented CI gate exited 0 on a run in which every scene was "
+            "refused, while printing '0 regression(s)' — a zero the compare "
+            "module's own docstring calls worse than no number at all."
         ),
     ),
     Mutant(

@@ -287,3 +287,115 @@ def test_a_lever_that_did_not_apply_is_refused_rather_than_reported_as_blindness
     row["provenance"]["environment"]["encode_side"]["x264_argv"] = ["-crf", "23"]
     with pytest.raises(MutationError, match="did not reach the encode"):
         lever.verify_row(row)
+
+
+# ------------------------------ an#41 adversarial-review hardening
+
+
+def test_a_mutant_that_breaks_collection_is_not_reported_as_caught():
+    """MUTATION: `caught = completed.returncode != 0` in `run_mutants`.
+
+    Not hypothetical: one declared mutant produced UNPARSEABLE Python (its `old`
+    ended in a newline and its `new` did not), pytest exited nonzero on a
+    collection error, and the sweep printed `CAUGHT ... 1 error` and `16/16`.
+    A mutant that cannot be imported has demonstrated nothing about its guard,
+    so `ERRORED` is a third answer rather than a flavour of the first.
+    """
+    from an.bench.mutants import MUTANTS as declared
+    from an.bench.mutants import Mutant, verdict_of
+
+    probe = Mutant(
+        name="probe_import_time_failure",
+        file="an/bench/png.py",
+        old='PNG_SIGNATURE: bytes = b"\\x89PNG\\r\\n\\x1a\\n"',
+        new="PNG_SIGNATURE: bytes = _undefined_name_at_import_time",
+        caught_by="tests/test_bench_png.py",
+        why="parses fine, explodes on import, so the guard never runs",
+    )
+    import an.bench.mutants as module
+
+    original = module.MUTANTS
+    module.MUTANTS = (probe,)
+    try:
+        results = run_mutants()
+    finally:
+        module.MUTANTS = original
+    assert verdict_of(results[0]) == "ERRORED"
+    assert results[0]["caught"] is False
+    assert "ERRORED" in format_results(results)
+    assert "0/1 caught" in format_results(results)
+    assert declared, "the real registry survived the swap"
+
+
+def test_every_declared_mutant_produces_parseable_python():
+    """MUTATION: declare a mutant whose `new` breaks indentation.
+
+    Checked at declaration time, for free, because the alternative is finding
+    out from a sweep that reports 16/16.
+    """
+    from pathlib import Path
+
+    from an.bench.paths import repo_root
+
+    root = repo_root()
+    for mutant in MUTANTS:
+        source = (root / mutant.file).read_text(encoding="utf-8")
+        compile(source.replace(mutant.old, mutant.new, 1), mutant.file, "exec")
+
+
+@pytest.mark.browser
+@pytest.mark.ffmpeg
+def test_the_aa_lever_can_prove_it_applied():
+    """MUTATION: `verify_row=None` for `disabled_aa`, as it was.
+
+    The encode lever's fingerprint was in the row already (`x264_argv`); this one
+    had NONE, so `assert not report["mutation_may_not_have_applied"]` asserted
+    nothing for it and a lever that silently failed to take would have read as an
+    instrument that could not see it. The row now records a digest of the staged
+    runtime — provenance, not a comparability key, because the runtime is the
+    code under test.
+    """
+    from an.bench.corpus import DFLT_FIXTURES
+    from an.bench.environment import runtime_sha256
+    from an.bench.run import run_bench
+
+    one = {"aa_probe": DFLT_FIXTURES["aa_probe"]}
+    lever = LEVERS["disabled_aa"]
+    assert lever.verify_row is not None
+
+    baseline = run_bench(scenes=one, write=False)
+    assert (
+        baseline["provenance"]["environment"]["render_side"]["runtime_sha256"]
+        == runtime_sha256()
+    )
+    with pytest.raises(MutationError, match="did not reach the render"):
+        lever.verify_row(baseline)
+
+    row = mutated_row("disabled_aa", scenes=one)
+    lever.verify_row(row)
+    assert (
+        compare(baseline, row, mutation="disabled_aa")["mutation_may_not_have_applied"]
+        == []
+    )
+
+
+@pytest.mark.parametrize("mutation", MUTATIONS)
+def test_an_unpulled_lever_is_reported_rather_than_read_as_blindness(mutation):
+    """MUTATION: drop the direct `MUTATION_TOUCHES` probe in `compare`.
+
+    Comparing a row against ITSELF is a lever that provably did not apply. Both
+    levers must say so — and before the probe read the touched paths directly,
+    the AA lever's key was never scanned at all (it is provenance, not a
+    comparability key), so it was reported as unapplied on every run including
+    the ones where it had applied.
+    """
+    import sys
+
+    sys.path.insert(0, "tests")
+    from test_bench_compare import _row
+
+    report = compare(_row(), _row(), mutation=mutation)
+    assert report["mutation_may_not_have_applied"], (
+        f"{mutation}: a row compared against itself must report its lever as "
+        "possibly unapplied"
+    )

@@ -305,10 +305,18 @@ def bench_compare(
         else format_comparison(report)
     )
     if strict:
+        # Four ways for the answer to be bad, and only one of them is a
+        # regression. A comparison that REFUSED every scene, or that lost
+        # coverage, has not "passed" — it has produced no answer, and a CI gate
+        # that reads that as success is worse than no gate.
         bad = (
-            not report.get("criterion_met")
-            if mutation
-            else report.get("has_regressions")
+            not report.get("answered")
+            or bool(report.get("coverage_lost"))
+            or (
+                not report.get("criterion_met")
+                if mutation
+                else bool(report.get("has_regressions"))
+            )
         )
         if bad:
             print(text)
@@ -339,14 +347,20 @@ def bench_mutants(names: str = "", quiet: bool = False) -> str:
     if wanted:
         unknown = sorted(set(wanted) - {m.name for m in MUTANTS})
         if unknown:
-            return (
+            print(
                 f"unknown mutant(s) {unknown}; declared: "
                 f"{sorted(m.name for m in MUTANTS)}"
             )
+            _sys.exit(1)
     try:
         results = run_mutants(wanted)
     except MutantError as e:
-        return str(e)
+        # Nonzero. Declaration rot is the failure this command exists to
+        # surface — a mutant whose source text has moved has silently stopped
+        # proving anything — and returning a string exits 0, so a CI job would
+        # print the warning and pass (an#41 review).
+        print(e)
+        _sys.exit(1)
     survivors = [r for r in results if not r["caught"]]
     text = (
         f"{len(results) - len(survivors)}/{len(results)} caught"

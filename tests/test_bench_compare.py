@@ -583,9 +583,15 @@ def test_the_lever_may_change_the_knob_it_pulls_but_only_in_mutation_mode():
     assert MUTATION_TOUCHES["high_crf"] == (
         ("environment", "encode_side", "x264_argv"),
     )
-    assert MUTATION_TOUCHES["disabled_aa"] == (), (
-        "the AA lever patches runtime.js, which the row does not record — the "
-        "runtime is the code under test, not a comparability key"
+    assert MUTATION_TOUCHES["disabled_aa"] == (
+        ("environment", "render_side", "runtime_sha256"),
+    ), (
+        "the AA lever patches runtime.js, and the row records a digest of the "
+        "staged runtime so the lever can prove it applied. That digest is "
+        "PROVENANCE and not a comparability key — the runtime is the code under "
+        "test — so listing it here exempts nothing; it is what lets "
+        "`mutation_may_not_have_applied` answer for this lever at all. Before "
+        "it existed, the an#41 assertion asserted nothing for the AA lever."
     )
 
     changed = copy.deepcopy(_ROW_PROVENANCE)
@@ -726,3 +732,152 @@ def test_latest_rows_skips_a_row_that_describes_no_commit(tmp_path):
         "2026-01-01-aaaaaaa.json",
         "2026-01-03-ccccccc.json",
     ]
+
+
+# ------------------------------ an#40 adversarial-review hardening
+
+
+def test_a_key_absent_from_BOTH_rows_is_neither_a_caveat_about_one_nor_a_sentinel():
+    """MUTATION: fold the absent-from-both branch back into the one-sided one.
+
+    Absent from both rows says nothing about their comparability — it is a key
+    neither row has ever carried. Reporting it as "absent from before" also
+    leaked the `_ABSENT` sentinel object into `value`, which made the whole
+    report un-serialisable and crashed `an bench-compare --raw` on any pair of
+    rows predating a key. Live on the committed rows today, via `shot_order`.
+    """
+    import json
+
+    trimmed = copy.deepcopy(_PROVENANCE)
+    del trimmed["shot_order"]
+    report = compare(_row(provenance=trimmed), _row(provenance=trimmed))
+    caveats = report["scenes"]["s"]["caveats"]
+    assert [c["absent_from"] for c in caveats] == ["both rows"]
+    assert caveats[0]["value"] is None
+    json.dumps(report)  # must not raise
+
+
+def test_a_metric_with_an_unknown_comparison_scope_is_refused():
+    """MUTATION: `if scope not in env_refusals:` -> `if False:`.
+
+    Deleting the field let an encode-side metric from another ISA and another
+    x264 build compare cleanly and report a `regression`. Every neighbouring
+    absence in this module is a surfaced caveat; this one was silently "compare
+    anyway", which is the one thing the module exists not to do.
+    """
+    changed = copy.deepcopy(_ROW_PROVENANCE)
+    changed["environment"]["encode_side"]["isa"] = "x86_64"
+    changed["environment"]["encode_side"]["x264_sei"] = "a different build"
+    before, after = _row(), _row(row_provenance=changed)
+    victim = _one("encode")
+    for row in (before, after):
+        row["scenes"]["s"]["metrics"][victim].pop("comparison_scope", None)
+    entry = compare(before, after)["scenes"]["s"]["metrics"][victim]
+    assert entry["state"] == "refused"
+    assert entry["refusal"] == "comparison_scope_unknown"
+
+
+def test_a_row_cannot_pad_the_criterion_with_a_tautology():
+    """MUTATION: `entry["counts"] = bool(prediction.get("counts"))`.
+
+    `Prediction.__post_init__` refuses `counts=True` on a `no_change`
+    prediction — but a ROW is data, and `--compare` reads rows, including
+    hand-edited and foreign ones. Relabelling three metrics from three families
+    as `{"expect": "no_change", "counts": true}` made the criterion report MET
+    on two byte-identical rows, with the padded witnesses INVISIBLE in the
+    digest (a `no_change` that holds prints nothing) and `--strict` exiting 0.
+    """
+    mutation = "high_crf"
+    before, after = _row(), _row()
+    families = {}
+    for key, spec in METRICS.items():
+        families.setdefault(spec.family, key)
+    padded = list(families.values())[:REQUIRED_FAMILIES]
+    for row in (before, after):
+        for key in padded:
+            row["scenes"]["s"]["metrics"][key]["under_mutation"][mutation] = {
+                "expect": "no_change",
+                "counts": True,
+            }
+    scene = compare(before, after, mutation=mutation)["scenes"]["s"]
+    assert scene["family_count"] == 0, scene["families_satisfied"]
+    assert scene["criterion_met"] is False
+    for key in padded:
+        assert scene["metrics"][key]["counts"] is False
+        assert "counts_refused" in scene["metrics"][key]
+
+
+def test_a_missing_prediction_is_not_reported_as_a_gate():
+    """MUTATION: drop the `if not prediction:` branch in `_verdict_under_mutation`.
+
+    A gate is a DECLARED "we cannot tell"; an empty block is "nobody wrote a
+    prediction down". Both fail closed, so no wrong answer — but they send a
+    reader to opposite places, and one of them is a row-format problem rather
+    than a measurement problem.
+    """
+    mutation = "high_crf"
+    after = _row({_one("encode"): 2.0})
+    victim = _one("encode")
+    after["scenes"]["s"]["metrics"][victim].pop("under_mutation")
+    entry = compare(_row(), after, mutation=mutation)["scenes"]["s"]["metrics"][victim]
+    assert entry["verdict"] == "no_prediction"
+
+
+def test_strict_refuses_to_pass_a_comparison_that_compared_nothing():
+    """MUTATION: `not report.get("answered")` -> `False` in `an.tools.bench_compare`.
+
+    The documented CI gate — "exit nonzero when the answer is bad" — exited 0 on
+    a run in which EVERY scene was refused, while printing
+    "0 regression(s), 0 improvement(s), 0 change(s)". That is a zero this
+    module's own docstring calls worse than no number at all, presented as a
+    pass. Four ways to produce it, and only one of them is a regression.
+    """
+    clean = compare(_row(), _row())
+    assert clean["answered"] is True
+    assert clean["metrics_compared"] > 0
+
+    moved = copy.deepcopy(_PROVENANCE)
+    moved["scene_contract_sha256"] = "b" * 64
+    refused = compare(_row(), _row(provenance=moved))
+    assert refused["answered"] is False
+    assert refused["metrics_compared"] == 0
+    assert "NO ANSWER" in format_comparison(refused)
+
+    assert compare(_row(), _row(scene="other"))["answered"] is False
+
+
+def test_the_strict_flag_fails_closed_end_to_end(tmp_path):
+    """The gate itself, through the CLI, on every bad outcome.
+
+    MUTATION: any weakening of `bad` in `an.tools.bench_compare`.
+    """
+    import json
+    import subprocess
+    import sys
+
+    (tmp_path / "a.json").write_text(json.dumps(_row()), encoding="utf-8")
+    moved = copy.deepcopy(_PROVENANCE)
+    moved["scene_contract_sha256"] = "b" * 64
+    cases = {
+        "clean": (_row(), 0),
+        "different scene": (_row(provenance=moved), 1),
+        "no shared scene": (_row(scene="other"), 1),
+    }
+    for label, (row, expected) in cases.items():
+        (tmp_path / "b.json").write_text(json.dumps(row), encoding="utf-8")
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "an",
+                "bench-compare",
+                "--before",
+                str(tmp_path / "a.json"),
+                "--after",
+                str(tmp_path / "b.json"),
+                "--strict",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == expected, f"{label}: {result.stdout[-400:]}"

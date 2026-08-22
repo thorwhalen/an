@@ -115,6 +115,28 @@ def probe_browser() -> dict[str, Any]:
         return {"error": f"{type(e).__name__}: {e}"}
 
 
+def runtime_sha256() -> str:
+    """A digest of the JS runtime the renderer will stage, files and names.
+
+    Provenance, NOT a comparability key: the runtime is the code under test, and
+    two rows rendered by different runtimes are exactly what `an bench --compare`
+    exists to compare. What it buys is that a render-side mutation leaves a
+    fingerprint in the row — before this, the `disabled_aa` lever had no way to
+    prove it applied, and `assert not report["mutation_may_not_have_applied"]`
+    asserted nothing for it (an#41 review).
+    """
+    import hashlib
+
+    from an.adapters.cutout.render import runtime_dir
+
+    digest = hashlib.sha256()
+    root = runtime_dir()
+    for path in sorted(p for p in root.rglob("*") if p.is_file()):
+        digest.update(str(path.relative_to(root)).encode("utf-8"))
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
 def environment_record(
     *, x264_sei: str | None = None, browser: dict[str, Any] | None = None
 ) -> dict[str, Any]:
@@ -130,6 +152,7 @@ def environment_record(
     return {
         "render_side": {
             "playwright": tool_version("playwright"),
+            "runtime_sha256": runtime_sha256(),
             **(probe_browser() if browser is None else browser),
             # The verdict's finding, carried as data rather than a comment so a
             # future reader does not have to know it.

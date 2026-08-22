@@ -116,7 +116,11 @@ def _printing(func: Callable[..., Any]) -> Callable[..., Any]:
     ``functools.wraps`` is load-bearing rather than tidy: ``inspect.signature``
     follows ``__wrapped__``, and that signature IS the command line — typer
     reads it to derive every argument and flag. Without it typer sees
-    ``(*args, **kwargs)`` and the command takes nothing at all.
+    ``(*args, **kwargs)`` and, measured, does not merely drop the flags: it
+    raises ``RuntimeError: Type not yet supported: typing.Any`` inside
+    ``typer.main.get_group``, before any command runs. The whole CLI dies,
+    ``--help`` included. An earlier note here said "``--help`` still renders",
+    which understated it (an#45 review).
     """
     import functools
 

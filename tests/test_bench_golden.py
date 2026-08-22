@@ -697,3 +697,117 @@ def test_the_panel_distinguishes_a_fired_golden_from_a_passing_one():
     for expected in ("431 px changed", "f0004", "the marker sweeping", "--bless"):
         assert expected in fired, f"the failure block does not mention {expected!r}"
     assert "measured(None)" not in fired and "measured(None)" not in held
+
+
+# ------------------------------ an#38/#40/#41 adversarial-review hardening
+
+
+def test_a_shape_mismatch_reports_no_pixel_count_rather_than_zero(tmp_path):
+    """MUTATION: `int(f["changed_px"] or 0)` in `compare_scene`'s reduction.
+
+    A shape mismatch has no per-pixel comparison to count, so `changed_px` is
+    `None`. Coercing that to 0 made a FIRED gate print "GOLDEN MISMATCH: 0 px
+    changed, max delta 0" — a fabricated number, in the one schema whose whole
+    premise is that unknown is not zero, in the one message that tells a reader
+    how bad the failure is.
+    """
+    from an.bench.run import _golden_failure_lines, _golden_values
+
+    capture = _fake_capture(tmp_path)
+    _bless(capture, [0.0, 0.25], tmp_path)
+    for path in G.iter_committed("scene", "99.0.0.0", root=tmp_path):
+        png.write_png(path, np.zeros((5, 9, 3), np.uint8))
+    result = G.compare_scene(
+        capture, times=[0.0, 0.25], chromium_build="99.0.0.0", root=tmp_path
+    )
+    assert result["changed_px"] is None
+    assert result["max_delta"] is None
+    _, tripwire = _golden_values(result)
+    block = {
+        "tripwires": {
+            "golden_identity": {"state": "measured", "value": False, **tripwire.extra}
+        },
+        "provenance": {"golden": result},
+    }
+    headline = _golden_failure_lines("scene", block)[0]
+    assert "0 px changed" not in headline
+    assert "DIFFERENT SHAPES" in headline
+
+
+def test_the_reported_golden_path_is_one_a_reader_can_open(tmp_path):
+    """MUTATION: `golden_dir(root).parent.parent` instead of `.parents[2]`.
+
+    `golden_dir` is `<root>/misc/bench/golden`, so two levels up is
+    `<root>/misc` and every path in the report came out as `bench/golden/...` —
+    a path that does not exist, printed in the message that tells a reader which
+    file to look at. Measured against the committed row: 12 of 12 wrong.
+    """
+    capture = _fake_capture(tmp_path)
+    _bless(capture, [0.0, 0.25], tmp_path)
+    result = G.compare_scene(
+        capture, times=[0.0, 0.25], chromium_build="99.0.0.0", root=tmp_path
+    )
+    for frame in result["frames"]:
+        assert frame["golden"], frame
+        assert (tmp_path / frame["golden"]).is_file(), (
+            f"the report names {frame['golden']!r}, which does not exist"
+        )
+
+
+@pytest.mark.parametrize("corruption", ["truncated", "no_iend", "garbage_idat"])
+def test_a_corrupt_golden_is_unavailable_rather_than_fatal(tmp_path, corruption):
+    """MUTATION: let `struct.error` / `zlib.error` out of `an.bench.png`.
+
+    Neither is a `PngFormatError` nor a subclass of it, so `compare_scene`'s
+    handler could not catch them — and `run_bench` has no per-scene `except`, so
+    one golden truncated in transit aborted the whole run and took five other
+    scenes' rows with it.
+    """
+    capture = _fake_capture(tmp_path)
+    _bless(capture, [0.0, 0.25], tmp_path)
+    victim = next(G.iter_committed("scene", "99.0.0.0", root=tmp_path))
+    good = victim.read_bytes()
+    victim.write_bytes(
+        {
+            "truncated": good[:-2],
+            "no_iend": good[: len(good) - 12],
+            "garbage_idat": good[:33] + b"\x00" * 20 + good[53:],
+        }[corruption]
+    )
+    result = G.compare_scene(
+        capture, times=[0.0, 0.25], chromium_build="99.0.0.0", root=tmp_path
+    )
+    assert result["state"] == "unavailable"
+    assert result["detail"]
+
+
+def test_a_pinned_time_past_the_end_does_not_abort_the_run(tmp_path):
+    """MUTATION: call `resolve_frames` outside the `try` in `compare_scene`.
+
+    A time past the end of the scene is a fact about ONE scene. `run_bench` has
+    no per-scene handler, so the `GoldenError` escaped and destroyed every other
+    scene's row in the same run. `unavailable` is the documented outcome for
+    "the check could not run"; inventing a fifth gate name would be a
+    wire-format change `--compare` and `RETIRED_GATES` both have to learn.
+    """
+    capture = _fake_capture(tmp_path, shots=(("only", 4),))
+    result = G.compare_scene(
+        capture, times=[0.0, 0.25], chromium_build="99.0.0.0", root=tmp_path
+    )
+    assert result["state"] == "unavailable"
+    assert "resolves to frame 6" in result["detail"]
+
+
+def test_two_pinned_times_that_land_on_one_frame_are_refused(tmp_path):
+    """MUTATION: drop the duplicate-key check in `compare_scene`.
+
+    Two goldens of the same picture compare the same thing twice, and the second
+    tests nothing — the same failure `bless_scene` already refuses at write time,
+    reachable at compare time through an fps change.
+    """
+    capture = _fake_capture(tmp_path)
+    result = G.compare_scene(
+        capture, times=[0.0, 0.0], chromium_build="99.0.0.0", root=tmp_path
+    )
+    assert result["state"] == "unavailable"
+    assert "same frame" in result["detail"]
