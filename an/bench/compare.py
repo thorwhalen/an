@@ -209,6 +209,50 @@ def _compare_keys(
     return mismatches, caveats
 
 
+#: The fields of a per-mutation prediction that the verdict actually reads.
+#: `reason` is prose and is deliberately NOT here — the declarations block
+#: carries it and the inline block drops it, so requiring it would refuse every
+#: real row.
+SCORING_FIELDS: tuple[str, ...] = ("expect", "counts", "gate", "state")
+
+
+def _prediction_disagreements(
+    label: str, inline: dict | None, declared: dict | None
+) -> list[dict]:
+    """Where a metric's inline prediction disagrees with its own declaration.
+
+    Two copies of one fact, written at the same moment by the same registry, so
+    a disagreement on a scoring field means the row was edited.
+
+    >>> _prediction_disagreements("after", {"m": {"expect": "increase"}},
+    ...                           {"m": {"expect": "decrease"}})
+    [{'key': 'after.under_mutation.m.expect', 'before': 'decrease', 'after': 'increase'}]
+
+    Prose-only differences are not disagreements:
+
+    >>> _prediction_disagreements("after", {"m": {"expect": "increase"}},
+    ...                           {"m": {"expect": "increase", "reason": "why"}})
+    []
+    """
+    if not isinstance(inline, dict) or not isinstance(declared, dict):
+        return []
+    out: list[dict] = []
+    for mutation in sorted(set(inline) & set(declared)):
+        a, b = inline[mutation], declared[mutation]
+        if not isinstance(a, dict) or not isinstance(b, dict):
+            continue
+        for f in SCORING_FIELDS:
+            if f in a and f in b and a[f] != b[f]:
+                out.append(
+                    {
+                        "key": f"{label}.under_mutation.{mutation}.{f}",
+                        "before": b[f],
+                        "after": a[f],
+                    }
+                )
+    return out
+
+
 def _verdict_under_mutation(prediction: dict, direction: str) -> str:
     """What one metric's movement means under a declared prediction.
 
@@ -330,6 +374,27 @@ def _compare_scene(
                             "after": row[field],
                         }
                     )
+        # The prediction gets its own check, and it matters more than the two
+        # above: it is what the an#41 criterion is scored against, it is read
+        # from the inline block of the AFTER row only, and flipping one
+        # `expect` turns `contrary` into `as_declared` with nothing else in the
+        # report moving. The cheapest possible way to fake a caught mutation.
+        #
+        # Compared field by field rather than as a whole dict, because the two
+        # copies legitimately differ: the declarations block carries `reason`
+        # and the inline block drops it to keep rows small. Whole-dict equality
+        # refused 30 of 30 metrics on the two REAL committed rows — which is
+        # how this shape was found, and why a guard is checked against real
+        # data and not only against a fixture.
+        for label, row, declared in (
+            ("before", row_b, before["declarations"].get(key, {})),
+            ("after", row_a, after["declarations"].get(key, {})),
+        ):
+            declaration.extend(
+                _prediction_disagreements(
+                    label, row.get("under_mutation"), declared.get("under_mutation")
+                )
+            )
         if declaration:
             entry.update(
                 state="refused",

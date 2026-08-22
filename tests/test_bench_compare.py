@@ -11,6 +11,8 @@ Each test names the one-line production mutation it exists to catch.
 from __future__ import annotations
 
 import copy
+import json
+from pathlib import Path
 
 import pytest
 
@@ -30,6 +32,30 @@ from an.bench.compare import (
 )
 from an.bench.ledger import build_ledger, build_scene_block, gated, measured
 from an.bench.registry import METRICS, MUTATIONS, TRIPWIRES
+
+#: The repo root, so a guard can be checked against the committed ledger
+#: rows rather than only against a fixture built to agree with it.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _declare(row: dict, key: str, mutation: str, prediction: dict) -> None:
+    """Write a per-mutation prediction into BOTH copies the row carries.
+
+    A row holds each prediction twice — inline on the metric and in
+    `metric_declarations` — and `build_scene_block` writes both from one
+    registry at one moment, so a real row's copies always agree. A test that
+    edits only the inline copy builds a row that cannot exist, and since the
+    review added a cross-check between them (an edited inline `expect` is the
+    cheapest way to fake a caught mutation) such a row is refused before it
+    reaches the behaviour under test.
+    """
+    row["scenes"]["s"]["metrics"][key]["under_mutation"][mutation] = dict(prediction)
+    declared = row["metric_declarations"]
+    for section in ("metrics", "tripwires"):
+        block = (declared.get(section) or {}).get(key)
+        if block is not None:
+            block.setdefault("under_mutation", {})[mutation] = dict(prediction)
+
 
 _PROVENANCE = {
     "scene_contract_sha256": "a" * 64,
@@ -528,10 +554,7 @@ def test_two_witnesses_from_one_family_count_once():
     before, after = _row(), _row({first: 2.0, second: 2.0})
     for row in (before, after):
         for key in (first, second):
-            row["scenes"]["s"]["metrics"][key]["under_mutation"][mutation] = {
-                "expect": "increase",
-                "counts": True,
-            }
+            _declare(row, key, mutation, {"expect": "increase", "counts": True})
     scene = compare(before, after, mutation=mutation)["scenes"]["s"]
     assert scene["families_satisfied"] == {"A": [first, second]}
     assert scene["family_count"] == 1, (
@@ -694,6 +717,65 @@ def test_the_exemption_matches_the_change_the_lever_makes_not_just_its_path():
         "environment.encode_side.x264_argv"
     ]
     assert ok["environment_refusals"] == {}
+
+
+def test_an_edited_prediction_refuses_rather_than_scoring_itself_right():
+    """MUTATION: `_prediction_disagreements` returns [] unconditionally.
+
+    Found by review. The an#41 criterion is scored against `under_mutation`,
+    which `compare` reads from the AFTER row's INLINE block only — so flipping
+    one metric's `expect` from `increase` to `decrease` turns a `contrary`
+    verdict into `as_declared`, with nothing else in the report moving. That is
+    the cheapest available way to make a mutation look caught. Same class as
+    the inline `family` relabelling the review found, on the field that
+    actually decides the verdict.
+
+    The check is field by field and not whole-dict equality, because the two
+    copies legitimately differ: the declarations block carries `reason` and the
+    inline block drops it to keep rows small. Whole-dict equality refused 30 of
+    30 metrics on the two REAL committed ledger rows — which is why the last
+    assertion here runs against those rows and not against a fixture.
+    """
+    after = _row()
+    metrics = after["scenes"]["s"]["metrics"]
+    name = next(
+        k for k, v in metrics.items() if (v.get("under_mutation") or {}).get("high_crf")
+    )
+    metrics[name]["under_mutation"]["high_crf"]["expect"] = "decrease"
+
+    entry = compare(_row(), after, mutation="high_crf")["scenes"]["s"]["metrics"][name]
+    assert entry["state"] == "refused"
+    assert entry["refusal"] == "declaration_changed"
+    assert any(
+        m["key"].endswith("under_mutation.high_crf.expect") for m in entry["mismatches"]
+    ), "and the refusal names the field that moved"
+
+    # Unedited, the same metric compares.
+    clean = compare(_row(), _row(), mutation="high_crf")["scenes"]["s"]["metrics"][name]
+    assert clean["state"] == "compared"
+
+
+def test_the_prediction_check_does_not_refuse_the_real_committed_rows():
+    """The guard above, run against real data rather than a fixture.
+
+    A whole-dict version of it passed every test in this file and refused
+    30 of 30 metrics on the two rows in `misc/bench/ledger/`. A fixture agrees
+    with whatever shape the fixture was written to have; the committed rows do
+    not.
+    """
+    rows = sorted((REPO_ROOT / "misc" / "bench" / "ledger").glob("*.json"))
+    if len(rows) < 2:
+        pytest.skip("needs two committed ledger rows")
+    before, after = (json.loads(p.read_text(encoding="utf-8")) for p in rows[:2])
+    report = compare(before, after)
+    refused = [
+        (scene, key)
+        for scene, block in report["scenes"].items()
+        for key, m in block["metrics"].items()
+        if m.get("state") == "refused"
+    ]
+    assert refused == [], f"the committed rows must compare cleanly, got {refused}"
+    assert report["metrics_compared"] > 0
 
 
 def test_a_lever_whose_declared_knob_did_not_move_is_reported_as_maybe_unapplied():
@@ -863,10 +945,7 @@ def test_a_row_cannot_pad_the_criterion_with_a_tautology():
     padded = list(families.values())[:REQUIRED_FAMILIES]
     for row in (before, after):
         for key in padded:
-            row["scenes"]["s"]["metrics"][key]["under_mutation"][mutation] = {
-                "expect": "no_change",
-                "counts": True,
-            }
+            _declare(row, key, mutation, {"expect": "no_change", "counts": True})
     scene = compare(before, after, mutation=mutation)["scenes"]["s"]
     assert scene["family_count"] == 0, scene["families_satisfied"]
     assert scene["criterion_met"] is False

@@ -205,6 +205,19 @@ MUTANTS: tuple[Mutant, ...] = (
         ),
     ),
     Mutant(
+        name="compare_trusts_an_edited_prediction",
+        file="an/bench/compare.py",
+        old="    if not isinstance(inline, dict) or not isinstance(declared, dict):\n        return []",
+        new="    if True:\n        return []",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "the prediction IS the criterion, and it is read from the after "
+            "row's inline block alone. Flipping one `expect` turns `contrary` "
+            "into `as_declared` with nothing else in the report moving — the "
+            "cheapest possible way to fake a caught mutation."
+        ),
+    ),
+    Mutant(
         name="ledger_substitutes_zero_for_unknown",
         file="an/bench/ledger.py",
         old='        if self.state == "measured":\n            if self.value is None:',
