@@ -544,14 +544,15 @@ def compare(before: dict, after: dict, *, mutation: str | None = None) -> dict:
     env_caveats = common_caveats + render_caveats + encode_caveats
 
     # In mutation mode, the knob the lever pulls is the INDEPENDENT VARIABLE, not
-    # a reason to refuse. Exempted by declaration and by exact path — see
+    # a reason to refuse. Exempted by declaration, by path AND by the shape of
+    # the change (a `-preset` edit is not the CRF lever's) — see
     # `MUTATION_TOUCHES`. And a declared knob that did NOT move is reported: it
     # is the cheapest available evidence that the mutation never applied, which
     # otherwise reads as "the instrument is blind".
     expected_changes: list[dict] = []
     unapplied: list[str] = []
     if mutation is not None:
-        touched = {".".join(path) for path in MUTATION_TOUCHES.get(mutation, ())}
+        touched = {t.label for t in MUTATION_TOUCHES.get(mutation, ())}
         for scope, items in env_refusals.items():
             env_refusals[scope] = [i for i in items if i["key"] not in touched]
         # Probed DIRECTLY, not read off the comparability scan. A lever may
@@ -564,16 +565,28 @@ def compare(before: dict, after: dict, *, mutation: str | None = None) -> dict:
         # for the same reason: the exemption is for the knob the lever pulls,
         # and `x264_argv` is the whole encode command, so an unrelated flag
         # change inside it rode in on the lever's coat-tails.
-        for path in MUTATION_TOUCHES.get(mutation, ()):
-            label = ".".join(path)
-            b = _probe(before["provenance"], path)
-            a = _probe(after["provenance"], path)
+        for touch in MUTATION_TOUCHES.get(mutation, ()):
+            b = _probe(before["provenance"], touch.path)
+            a = _probe(after["provenance"], touch.path)
             if b is _ABSENT or a is _ABSENT:
-                unapplied.append(f"{label} (absent from one of the rows)")
+                unapplied.append(f"{touch.label} (absent from one of the rows)")
             elif b == a:
-                unapplied.append(label)
+                unapplied.append(touch.label)
+            elif touch.is_the_levers_change(b, a):
+                expected_changes.append({"key": touch.label, "before": b, "after": a})
             else:
-                expected_changes.append({"key": label, "before": b, "after": a})
+                # The declared path moved, but NOT in the way this lever moves
+                # it — so the exemption does not apply and the difference is a
+                # refusal like any other. Put back so the scan below sees it.
+                env_refusals["machine"].append(
+                    {"key": touch.label, "before": b, "after": a}
+                )
+                env_refusals["any_machine"].append(
+                    {"key": touch.label, "before": b, "after": a}
+                )
+                unapplied.append(
+                    f"{touch.label} (changed, but not the change {mutation!r} makes)"
+                )
         unapplied = sorted(unapplied)
 
     names_b, names_a = set(before["scenes"]), set(after["scenes"])

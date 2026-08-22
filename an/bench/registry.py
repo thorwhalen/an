@@ -41,6 +41,7 @@ from typing import Literal
 #: that failure would be misdiagnosed as the harness being wrong.
 MUTATIONS: tuple[str, ...] = ("high_crf", "disabled_aa")
 
+
 #: What each lever is EXPECTED to change about the recorded environment.
 #:
 #: Load-bearing, and not obvious: `an bench-compare` refuses two rows whose
@@ -51,7 +52,8 @@ MUTATIONS: tuple[str, ...] = ("high_crf", "disabled_aa")
 #: deliverable, can never be evaluated at all.
 #:
 #: So the exemption is DECLARED per lever rather than inferred, it applies only
-#: in mutation mode, and it names exact paths — a blanket "ignore the
+#: in mutation mode, and it names a path together with the CHANGE the lever
+#: makes to it — a blanket "ignore the
 #: environment when a mutation is given" would silently let a row from another
 #: machine in through the same door.
 #:
@@ -62,9 +64,61 @@ MUTATIONS: tuple[str, ...] = ("high_crf", "disabled_aa")
 #: what makes `mutation_may_not_have_applied` able to answer for that lever at
 #: all. Before it existed, `assert not report["mutation_may_not_have_applied"]`
 #: asserted nothing for the AA lever (an#41 review).
-MUTATION_TOUCHES: dict[str, tuple[tuple[str, ...], ...]] = {
-    "high_crf": (("environment", "encode_side", "x264_argv"),),
-    "disabled_aa": (("environment", "render_side", "runtime_sha256"),),
+@dataclass(frozen=True, slots=True)
+class Touch:
+    """One environment key a lever is expected to change, and HOW.
+
+    ``differs_only_in`` names the argv flags whose values the lever may move.
+    Without it the exemption is by PATH, and `x264_argv` is the whole encode
+    command — so a `-preset medium` -> `-preset veryslow` change, which moves
+    every encode-side number, rode in on the CRF lever's exemption and was
+    reported as "the lever moved it — expected" (an#41 review). ``None`` means
+    any difference is the lever's, which is right for an opaque digest.
+    """
+
+    path: tuple[str, ...]
+    differs_only_in: tuple[str, ...] | None = None
+
+    @property
+    def label(self) -> str:
+        return ".".join(self.path)
+
+    def is_the_levers_change(self, before: object, after: object) -> bool:
+        """True when the observed difference is the one this lever makes."""
+        if before == after:
+            return False
+        if self.differs_only_in is None:
+            return True
+        if not isinstance(before, list) or not isinstance(after, list):
+            return False
+        return _without(before, self.differs_only_in) == _without(
+            after, self.differs_only_in
+        )
+
+
+def _without(argv: list, flags: tuple[str, ...]) -> list:
+    """``argv`` with each named flag and its value removed."""
+    out: list = []
+    skip = False
+    for item in argv:
+        if skip:
+            skip = False
+            continue
+        if item in flags:
+            skip = True
+            continue
+        out.append(item)
+    return out
+
+
+MUTATION_TOUCHES: dict[str, tuple[Touch, ...]] = {
+    "high_crf": (
+        Touch(
+            path=("environment", "encode_side", "x264_argv"),
+            differs_only_in=("-crf",),
+        ),
+    ),
+    "disabled_aa": (Touch(path=("environment", "render_side", "runtime_sha256")),),
 }
 
 Side = Literal["render", "encode"]

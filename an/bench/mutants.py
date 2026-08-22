@@ -181,13 +181,27 @@ MUTANTS: tuple[Mutant, ...] = (
     Mutant(
         name="compare_exempts_the_whole_environment",
         file="an/bench/compare.py",
-        old='        touched = {".".join(path) for path in MUTATION_TOUCHES.get(mutation, ())}',
+        old="        touched = {t.label for t in MUTATION_TOUCHES.get(mutation, ())}",
         new='        touched = {i["key"] for i in common + render + encode}',
         caught_by="tests/test_bench_compare.py",
         why=(
             "the knob the lever pulls is the independent variable; the ISA is not. "
             "A blanket exemption lets a row from another machine in through the "
             "same door."
+        ),
+    ),
+    Mutant(
+        name="compare_exempts_by_path_not_by_value",
+        file="an/bench/registry.py",
+        old="        if self.differs_only_in is None:\n            return True",
+        new="        if True:\n            return True",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "`x264_argv` is the WHOLE encode command, so exempting the path "
+            "exempts every flag in it. A `-preset medium` -> `-preset veryslow` "
+            "change moves every encode-side number and rode in as 'the lever "
+            "moved it — expected'. The exemption must match the change the "
+            "lever actually makes."
         ),
     ),
     Mutant(

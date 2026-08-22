@@ -578,13 +578,20 @@ def test_the_lever_may_change_the_knob_it_pulls_but_only_in_mutation_mode():
     from another machine in through the same door, which is the one thing this
     module exists to refuse.
     """
-    from an.bench.registry import MUTATION_TOUCHES
+    from an.bench.registry import MUTATION_TOUCHES, Touch
 
     assert MUTATION_TOUCHES["high_crf"] == (
-        ("environment", "encode_side", "x264_argv"),
+        Touch(
+            path=("environment", "encode_side", "x264_argv"),
+            differs_only_in=("-crf",),
+        ),
+    ), (
+        "the exemption must name the FLAG, not just the path: `x264_argv` is "
+        "the whole encode command, so a path-only exemption let an unrelated "
+        "`-preset` change ride in as the lever's own."
     )
     assert MUTATION_TOUCHES["disabled_aa"] == (
-        ("environment", "render_side", "runtime_sha256"),
+        Touch(path=("environment", "render_side", "runtime_sha256")),
     ), (
         "the AA lever patches runtime.js, and the row records a digest of the "
         "staged runtime so the lever can prove it applied. That digest is "
@@ -626,6 +633,67 @@ def test_the_exemption_does_not_open_the_door_to_a_different_machine():
     assert report["scenes"]["s"]["metrics"][_one("encode")]["refusal"] == (
         "environment_differs"
     )
+
+
+def test_the_exemption_matches_the_change_the_lever_makes_not_just_its_path():
+    """MUTATION: `Touch.is_the_levers_change` returns True on any difference.
+
+    Found by review, in already-merged code. `x264_argv` is the WHOLE encode
+    command, so exempting it by path exempted every flag in it: a
+    `-preset medium` -> `-preset veryslow` change — which moves every
+    encode-side number there is — rode in under `--mutation high_crf` and was
+    reported as "the lever moved it, expected", with zero refusals. The
+    exemption has to match the change the lever actually makes.
+
+    This is the same class as the defect the exemption itself was written to
+    avoid (`test_the_exemption_does_not_open_the_door_to_a_different_machine`),
+    one level down: that one refused a blanket exemption across KEYS, this one
+    refuses a blanket exemption across the VALUES behind one key.
+    """
+    unrelated = copy.deepcopy(_ROW_PROVENANCE)
+    unrelated["environment"]["encode_side"]["x264_argv"] = [
+        "-crf",
+        "23",
+        "-preset",
+        "veryslow",
+    ]
+    before = _row()
+    before["provenance"]["environment"]["encode_side"]["x264_argv"] = [
+        "-crf",
+        "23",
+        "-preset",
+        "medium",
+    ]
+    report = compare(before, _row(row_provenance=unrelated), mutation="high_crf")
+
+    assert report["expected_environment_changes"] == [], (
+        "a -preset change is not the change `high_crf` makes"
+    )
+    assert [i["key"] for i in report["environment_refusals"]["machine"]] == [
+        "environment.encode_side.x264_argv"
+    ]
+    assert report["scenes"]["s"]["metrics"][_one("encode")]["refusal"] == (
+        "environment_differs"
+    )
+    assert any(
+        "not the change" in u for u in report["mutation_may_not_have_applied"]
+    ), "and the operator is told the lever's own knob is not what moved"
+
+    # The lever's real change still passes, alongside an unrelated flag that
+    # is IDENTICAL on both sides — the check is on the difference, not on the
+    # command being a bare two-element list.
+    applied = copy.deepcopy(_ROW_PROVENANCE)
+    applied["environment"]["encode_side"]["x264_argv"] = [
+        "-crf",
+        "40",
+        "-preset",
+        "medium",
+    ]
+    ok = compare(before, _row(row_provenance=applied), mutation="high_crf")
+    assert [i["key"] for i in ok["expected_environment_changes"]] == [
+        "environment.encode_side.x264_argv"
+    ]
+    assert ok["environment_refusals"] == {}
 
 
 def test_a_lever_whose_declared_knob_did_not_move_is_reported_as_maybe_unapplied():
