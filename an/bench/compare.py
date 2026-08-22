@@ -209,6 +209,26 @@ def _compare_keys(
     return mismatches, caveats
 
 
+#: Every field a row stores TWICE — inline on the metric and in
+#: `metric_declarations` — except `under_mutation`, whose nested shape gets
+#: `_prediction_disagreements` instead. Both copies are written from one
+#: registry at one moment, so a disagreement means the row was edited, and
+#: `compare` reads the INLINE one.
+#:
+#: Three defects of this exact class were found in one review pass, each on a
+#: field that had been left out: `family` (moved a witness between families and
+#: took `criterion_met_on` from three scenes to five), `under_mutation` (flipped
+#: `contrary` to `as_declared`), and `comparison_scope` (compared an encode-side
+#: metric across a different ISA). The list is therefore checked for
+#: COMPLETENESS by a test rather than maintained by hand — see
+#: `tests/test_bench_compare.py::test_every_doubly_stored_field_is_cross_checked`.
+CROSS_CHECKED_FIELDS: tuple[str, ...] = (
+    "family",
+    "side",
+    "comparison_scope",
+    "reference",
+)
+
 #: The fields of a per-mutation prediction that the verdict actually reads.
 #: `reason` is prose and is deliberately NOT here — the declarations block
 #: carries it and the inline block drops it, so requiring it would refuse every
@@ -361,7 +381,14 @@ def _compare_scene(
         # criterion reads the INLINE one. Relabelling one metric's inline
         # `family` moved a witness into a new family and took `criterion_met_on`
         # from three scenes to five, with no refusal anywhere (an#41 review).
-        for field in ("family", "side"):
+        # `comparison_scope` is the most load-bearing of the five and was the
+        # last to be checked: it decides whether a metric may be compared
+        # ACROSS MACHINES at all, and `compare` reads it from the after row's
+        # inline block. Editing that one word from "machine" to "any_machine"
+        # made an encode-side metric compare across a different ISA with no
+        # refusal — defeating, from inside the row, the single invariant this
+        # module exists to hold (an#41 review, defect 19).
+        for field in CROSS_CHECKED_FIELDS:
             for label, row, declared in (
                 ("before", row_b, before["declarations"].get(key, {})),
                 ("after", row_a, after["declarations"].get(key, {})),

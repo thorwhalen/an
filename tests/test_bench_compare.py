@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from an.bench.compare import (
+    CROSS_CHECKED_FIELDS,
     DECLARATION_KEYS,
     ENCODE_ENV_PATHS,
     MASK_PARAM_PATHS,
@@ -776,6 +777,67 @@ def test_the_prediction_check_does_not_refuse_the_real_committed_rows():
     ]
     assert refused == [], f"the committed rows must compare cleanly, got {refused}"
     assert report["metrics_compared"] > 0
+
+
+def test_an_edited_comparison_scope_cannot_defeat_machine_scoping():
+    """MUTATION: drop `comparison_scope` from `CROSS_CHECKED_FIELDS`.
+
+    Found by review, and the worst of the three defects of this class. A row
+    stores `comparison_scope` twice and `compare` reads the INLINE copy, so
+    editing that one word from `machine` to `any_machine` made an ENCODE-side
+    metric compare across a genuinely different ISA with no refusal — defeating,
+    from inside the row, the single invariant this module exists to hold. The
+    declarations block still said `machine`.
+    """
+    name = _one("encode")
+    elsewhere = copy.deepcopy(_ROW_PROVENANCE)
+    elsewhere["environment"]["encode_side"]["isa"] = "aarch64"
+
+    honest = compare(_row(), _row(row_provenance=elsewhere))
+    assert honest["scenes"]["s"]["metrics"][name]["refusal"] == "environment_differs"
+
+    before, after = _row(), _row(row_provenance=elsewhere)
+    for row in (before, after):
+        row["scenes"]["s"]["metrics"][name]["comparison_scope"] = "any_machine"
+    forged = compare(before, after)["scenes"]["s"]["metrics"][name]
+    assert forged["state"] == "refused"
+    assert forged["refusal"] == "declaration_changed", (
+        "an inline scope that disagrees with the row's own declaration is an "
+        "edited row, not a licence to compare across machines"
+    )
+
+
+def test_every_doubly_stored_field_is_cross_checked():
+    """The structural guard: this class of defect should not be able to recur.
+
+    Three of them turned up in one review pass — `family`, `under_mutation` and
+    `comparison_scope` — each a fact the row stores TWICE where only one copy
+    was read and neither was compared against the other. Rather than keep
+    finding them one at a time, the set of doubly-stored fields is derived from
+    a real row and every member must be covered: by `CROSS_CHECKED_FIELDS`, or
+    by `_prediction_disagreements` for the one nested field.
+
+    Adding a field to both blocks without deciding what a disagreement means
+    now fails here.
+    """
+    row = _row()
+    inline = set(next(iter(row["scenes"]["s"]["metrics"].values())))
+    declared = set(next(iter(row["metric_declarations"]["metrics"].values())))
+    doubly_stored = inline & declared
+
+    covered = set(CROSS_CHECKED_FIELDS) | {"under_mutation"}
+    unchecked = doubly_stored - covered
+    assert unchecked == set(), (
+        f"{sorted(unchecked)} are stored twice in a row but never compared "
+        "against each other; `compare` reads the inline copy, so editing it is "
+        "enough to change the verdict. Decide what a disagreement means and add "
+        "the field to `CROSS_CHECKED_FIELDS` (scalars) or to "
+        "`_prediction_disagreements` (nested)."
+    )
+    assert set(CROSS_CHECKED_FIELDS) <= doubly_stored, (
+        "and a field that is NOT stored twice cannot be cross-checked — that "
+        "entry would silently never fire"
+    )
 
 
 def test_a_lever_whose_declared_knob_did_not_move_is_reported_as_maybe_unapplied():

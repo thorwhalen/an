@@ -218,6 +218,20 @@ MUTANTS: tuple[Mutant, ...] = (
         ),
     ),
     Mutant(
+        name="compare_lets_a_row_forge_its_own_scope",
+        file="an/bench/compare.py",
+        old='    "comparison_scope",\n    "reference",',
+        new='    "reference",',
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "`comparison_scope` decides whether a metric may be compared ACROSS "
+            "MACHINES, and `compare` reads the row's INLINE copy. Editing that "
+            "one word compared an encode-side metric across a different ISA "
+            "with no refusal — the single invariant this module exists to hold, "
+            "defeated from inside the row."
+        ),
+    ),
+    Mutant(
         name="ledger_substitutes_zero_for_unknown",
         file="an/bench/ledger.py",
         old='        if self.state == "measured":\n            if self.value is None:',
