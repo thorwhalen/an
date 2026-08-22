@@ -19,7 +19,7 @@ from typing import Iterable
 
 from an.adapters._base import RenderContext, RenderResult
 from an.adapters._base import _DEFAULT_REGISTRY
-from an.base import DEFAULT_FPS, DEFAULT_RESOLUTION
+from an.base import DEFAULT_FPS, DEFAULT_RESOLUTION, MP4_FASTSTART_ARGS
 from an.ir.schema import Shot
 from an.project import Project, load
 
@@ -272,7 +272,12 @@ def _ffmpeg_concat(inputs: Iterable[Path], output: Path) -> None:
         )
     inputs = list(inputs)
     if len(inputs) == 1:
-        # Single shot: just copy.
+        # Single shot: just copy. This branch can therefore fix nothing about
+        # the container -- it is sound only because the per-shot mp4 is
+        # already faststart (`_ffmpeg_add_audio`), which is why the flag has
+        # to be on the shot mux and not only on the concat below. Five of the
+        # six bench corpus scenes take this path (only `multi_shot` has two
+        # shots), so a concat-only fix would leave the corpus untouched.
         shutil.copy(inputs[0], output)
         return
 
@@ -295,6 +300,16 @@ def _ffmpeg_concat(inputs: Iterable[Path], output: Path) -> None:
         str(list_path),
         "-c",
         "copy",
+        # an#57's open question, answered by experiment on ffmpeg 8.1
+        # (Homebrew, macOS arm64): `-f concat -c copy -movflags +faststart`
+        # is a REMUX, not a transcode. The concatenated elementary stream is
+        # sha256-identical to the two inputs' streams appended
+        # (a4be46f7...218e == cat a.h264 b.h264), the video packet total is
+        # unchanged, the decoded YUV is sha256-identical, the file size is
+        # unchanged (moov is the same 1062 bytes, it just moves), and the
+        # wall time is the same 0.02 s. So it does not create the double
+        # encode epic #9 wrongly describes.
+        *MP4_FASTSTART_ARGS,
         str(output),
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)

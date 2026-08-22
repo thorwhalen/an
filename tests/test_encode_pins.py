@@ -93,6 +93,193 @@ def test_the_mux_command_carries_the_pins(tmp_path, monkeypatch):
     assert not missing, f"the mux command does not pass: {missing}\ncmd: {cmd}"
 
 
+def test_every_command_that_writes_an_mp4_asks_for_faststart(tmp_path, monkeypatch):
+    """MUTATION: drop `*MP4_FASTSTART_ARGS` from any ONE of the three commands.
+
+    Three commands build the one file a user receives, and each of the last two
+    re-lays the container with `-c copy` — which writes `moov` LAST. The flag
+    was on `_ffmpeg_mux` alone, so it applied only to `silent.mp4`, a per-shot
+    intermediate nobody is handed. A per-command test is what makes "it's on
+    the mux" stop counting as "the deliverable has it".
+
+    No ffmpeg needed — this intercepts `subprocess.run`, so it runs in the
+    default CI leg. The file-level proof is
+    `test_the_delivered_mp4_puts_moov_before_mdat`, which does need ffmpeg.
+    """
+    import an.render as project_render
+    from an.base import MP4_FASTSTART_ARGS
+
+    seen: dict[str, list[str]] = {}
+
+    class _Result:
+        returncode = 0
+        stderr = ""
+
+    def fake_run(cmd, *a, **kw):
+        seen[cmd[-1]] = list(cmd)
+        Path(cmd[-1]).write_bytes(b"")
+        return _Result()
+
+    monkeypatch.setattr(render_mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(project_render.subprocess, "run", fake_run)
+    monkeypatch.setattr(project_render.shutil, "which", lambda _n: "/usr/bin/ffmpeg")
+
+    mux_out = tmp_path / "silent.mp4"
+    render_mod._ffmpeg_mux(tmp_path, 24, mux_out)
+
+    shot_out = tmp_path / "shot.mp4"
+    render_mod._ffmpeg_add_audio(mux_out, [], shot_out, 1.0)
+
+    a_mp4, b_mp4 = tmp_path / "a.mp4", tmp_path / "b.mp4"
+    a_mp4.write_bytes(b"")
+    b_mp4.write_bytes(b"")
+    concat_out = tmp_path / "main.mp4"
+    project_render._ffmpeg_concat([a_mp4, b_mp4], concat_out)
+
+    flag, value = MP4_FASTSTART_ARGS
+    for label, out in (
+        ("_ffmpeg_mux", mux_out),
+        ("_ffmpeg_add_audio", shot_out),
+        ("_ffmpeg_concat", concat_out),
+    ):
+        cmd = seen[str(out)]
+        assert (flag, value) in _pairs(tuple(cmd)), (
+            f"{label} does not pass {flag} {value}. Every command that writes an "
+            f"mp4 must, because `-c copy` re-lays the container and writes moov "
+            f"last — a flag on one stage is silently undone by the next.\n"
+            f"cmd: {cmd}"
+        )
+
+
+@pytest.mark.ffmpeg
+def test_the_delivered_mp4_puts_moov_before_mdat(tmp_path):
+    """MUTATION: drop `*MP4_FASTSTART_ARGS` from `_ffmpeg_add_audio` (fails BOTH
+    legs) or from `_ffmpeg_concat` (fails the multi-shot leg only).
+
+    The command-level test above is not sufficient on its own, and its
+    insufficiency is the actual history here: `_ffmpeg_mux` passed the flag for
+    years and no delivered file carried it. This walks the real atom table of
+    the two files a user can actually receive — the single-shot one (which
+    `_ffmpeg_concat` reaches by `shutil.copy`, so only the shot mux can fix it)
+    and the concatenated one.
+
+    Two separate legs deliberately: five of the six bench corpus scenes are
+    single-shot, so a multi-shot-only assertion would leave the common case
+    untested.
+    """
+    import an.render as project_render
+
+    frames = tmp_path / "frames"
+    frames.mkdir()
+    for i in range(4):
+        _write_flat_png(
+            frames / (render_mod.DEFAULT_FRAME_PNG_PATTERN % i), 32, 32, (200, 40, 40)
+        )
+    silent = tmp_path / "silent.mp4"
+    render_mod._ffmpeg_mux(frames, 24, silent)
+    shot = tmp_path / "shot.mp4"
+    render_mod._ffmpeg_add_audio(silent, [], shot, 4 / 24)
+
+    single = tmp_path / "single.mp4"
+    project_render._ffmpeg_concat([shot], single)
+
+    shot_b = tmp_path / "shot_b.mp4"
+    shot_b.write_bytes(shot.read_bytes())
+    multi = tmp_path / "multi.mp4"
+    project_render._ffmpeg_concat([shot, shot_b], multi)
+
+    for label, path in (("single-shot (shutil.copy)", single), ("concat", multi)):
+        order = [name for name, _off in _top_level_atoms(path)]
+        offsets = dict(_top_level_atoms(path))
+        assert offsets["moov"] < offsets["mdat"], (
+            f"the {label} deliverable is not faststart: atoms {order}, "
+            f"moov@{offsets['moov']} mdat@{offsets['mdat']}. A player must "
+            f"download the whole file before it can start."
+        )
+
+
+@pytest.mark.ffmpeg
+def test_faststart_on_the_concat_is_a_remux_not_a_re_encode(tmp_path):
+    """MUTATION: change `_ffmpeg_concat`'s `"-c", "copy"` to `"-c:v", "libx264"`.
+
+    an#57 flagged this as UNVERIFIED and as the one way the change could do
+    harm: if `-movflags +faststart` forced a transcode on the concat leg it
+    would *create* the double encode epic #9 wrongly describes as existing. It
+    does not — but that is a property of the ffmpeg build, so it is asserted
+    rather than assumed. Measured on ffmpeg 8.1: the concatenated elementary
+    stream is byte-identical to the inputs' streams appended.
+    """
+    import an.render as project_render
+
+    frames = tmp_path / "frames"
+    frames.mkdir()
+    for i in range(4):
+        _write_flat_png(
+            frames / (render_mod.DEFAULT_FRAME_PNG_PATTERN % i), 32, 32, (200, 40, 40)
+        )
+    silent = tmp_path / "silent.mp4"
+    render_mod._ffmpeg_mux(frames, 24, silent)
+    a_mp4 = tmp_path / "a.mp4"
+    render_mod._ffmpeg_add_audio(silent, [], a_mp4, 4 / 24)
+    b_mp4 = tmp_path / "b.mp4"
+    b_mp4.write_bytes(a_mp4.read_bytes())
+
+    out = tmp_path / "main.mp4"
+    project_render._ffmpeg_concat([a_mp4, b_mp4], out)
+
+    def _annexb(p: Path) -> bytes:
+        return subprocess.run(
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-i",
+                str(p),
+                "-map",
+                "0:v",
+                "-c",
+                "copy",
+                "-bsf:v",
+                "h264_mp4toannexb",
+                "-f",
+                "h264",
+                "-",
+            ],
+            capture_output=True,
+            check=True,
+        ).stdout
+
+    assert _annexb(out) == _annexb(a_mp4) + _annexb(b_mp4), (
+        "the concat's video stream is not the two inputs' streams appended, so "
+        "`-f concat -c copy -movflags +faststart` re-encoded on this ffmpeg "
+        "build. That is the double encode an#57 warned the flag could create; "
+        "drop the flag from _ffmpeg_concat and re-open the question."
+    )
+
+
+def _top_level_atoms(path: Path) -> list[tuple[str, int]]:
+    """``[(atom_name, byte_offset), ...]`` for an mp4's top-level boxes.
+
+    Hand-rolled so the faststart tests need no mp4 library; the same 8-byte
+    header walk `ffprobe -v trace` reports, without the 3 MB of trace.
+    """
+    data = path.read_bytes()
+    out: list[tuple[str, int]] = []
+    off = 0
+    while off + 8 <= len(data):
+        size = struct.unpack(">I", data[off : off + 4])[0]
+        name = data[off + 4 : off + 8].decode("latin-1")
+        if size == 1:
+            size = struct.unpack(">Q", data[off + 8 : off + 16])[0]
+        elif size == 0:
+            size = len(data) - off
+        out.append((name, off))
+        if size <= 0:
+            break
+        off += size
+    return out
+
+
 def _write_flat_png(
     path: Path, width: int, height: int, rgb: tuple[int, int, int]
 ) -> None:

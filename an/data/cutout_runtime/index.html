@@ -5,6 +5,21 @@
     <title>an cutout runtime</title>
     <style>
         html, body { margin: 0; padding: 0; background: transparent; }
+        /* The stage canvas MUST stay composited on the RENDER page, and this is
+           the opposite of what an#57 assumed. `_capture_frames` takes a
+           Playwright ELEMENT screenshot, which Playwright implements as a PAGE
+           capture clipped to the element's document rect
+           (`screenshotter.js::screenshotElement`, pinned playwright==1.55.0):
+             - it gates on `_waitAndScrollIntoViewIfNeeded(waitForVisible=true)`,
+               so `display:none` / `visibility:hidden` /
+               `content-visibility:hidden` block for the whole locator timeout
+               and then raise TimeoutError; and
+             - it reads pixels from the COMPOSITOR, so the two spellings
+               Playwright does accept -- `opacity:0` and off-screen positioning --
+               return an all-white frame (1 distinct RGBA value).
+           Measured 2026-08-22 at 1920x1080. Hiding the canvas is only reachable
+           together with an in-page capture path; see an#57 and
+           .claude/skills/an-dev-render-pipeline/SKILL.md section 2. */
         #stage { display: block; }
     </style>
     <!-- PixiJS v7.4.2, vendored (global build, exposes window.PIXI).

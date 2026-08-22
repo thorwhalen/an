@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from an.adapters._base import RenderContext, RenderResult
+from an.base import MP4_FASTSTART_ARGS
 from an.determinism import capture_violations, determinism_enforced
 from an.adapters.cutout.compile import compile_shot
 from an.adapters.cutout.runtime_files import runtime_dir
@@ -514,8 +515,12 @@ def _ffmpeg_mux(frames_dir: Path, fps: int, output_mp4: Path) -> None:
         "-pix_fmt",
         "yuv420p",
         *DETERMINISTIC_X264_ARGS,
-        "-movflags",
-        "+faststart",
+        # Kept, though this file is an intermediate `silent.mp4` that never
+        # ships and whose container `_ffmpeg_add_audio` re-lays anyway. The
+        # point of naming the constant is that the answer to "does an's mp4
+        # have faststart" stops depending on which of the three commands you
+        # happen to be reading.
+        *MP4_FASTSTART_ARGS,
         str(output_mp4),
     ]
     try:
@@ -635,6 +640,12 @@ def _ffmpeg_add_audio(
         "1",
         "-t",
         f"{duration_s:.3f}",
+        # THE DELIVERED per-shot mp4 is this one, not `_ffmpeg_mux`'s. `-c:v
+        # copy` re-lays the container and writes `moov` last, so without this
+        # every shot mp4 `an` has ever produced is progressive-download
+        # hostile -- including the bytes that go into `mall["shots"]` and,
+        # via the single-shot `shutil.copy` branch, into `output/main.mp4`.
+        *MP4_FASTSTART_ARGS,
         str(output_path),
     ]
     try:

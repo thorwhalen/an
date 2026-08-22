@@ -30,6 +30,35 @@ DEFAULT_RESOLUTION: tuple[int, int] = (1920, 1080)
 DEFAULT_DURATION: float = 5.0  # seconds, used when a shot omits one
 
 
+# -- Delivery -----------------------------------------------------------------
+
+#: Put the mp4's `moov` atom in front of `mdat`, so a player can start before
+#: the file has finished downloading.
+#:
+#: Here, and not beside one of the ffmpeg calls, because **three separate
+#: commands build the one file a user receives** -- the frame mux
+#: (`_ffmpeg_mux`), the audio mux (`_ffmpeg_add_audio`) and the concat
+#: (`_ffmpeg_concat`) -- and each of the last two re-lays the container with
+#: `-c copy`, which writes `moov` LAST. The flag was on the first of those
+#: alone, which reads as done and delivers nothing: it applied only to
+#: `silent.mp4`, a per-shot intermediate that is never handed to anyone.
+#: Measured on a local example render (these mp4s are gitignored build
+#: products; `git ls-files` tracks exactly one, and it is moov-last too):
+#: `.an/render_work/shot_s1/silent.mp4` is `ftyp moov free mdat`, while the
+#: per-shot mp4, `artifacts/shots/*.mp4` and `output/main.mp4` are all
+#: `ftyp free mdat moov`. Single-shot and multi-shot alike; an#57's
+#: "single-shot ones keep it" is wrong, because the `shutil.copy` branch
+#: copies a file that already lost it.
+#:
+#: Deliberately NOT part of `DETERMINISTIC_X264_ARGS`. That tuple is an
+#: `ENCODE_ENV_PATHS` comparability key (an/bench/compare.py:98), and this flag
+#: moves no number the panel reads: with `-c copy` it is a container rewrite,
+#: not a re-encode. Verified on ffmpeg 8.1 -- elementary-stream sha256
+#: identical, video/audio packet totals identical, file size identical,
+#: decoded YUV sha256 identical, wall time unchanged.
+MP4_FASTSTART_ARGS: tuple[str, ...] = ("-movflags", "+faststart")
+
+
 # -- Easing -------------------------------------------------------------------
 
 #: Named easing presets. Renderers should accept these and the cubic-Bézier
