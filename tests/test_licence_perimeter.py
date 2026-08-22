@@ -153,8 +153,12 @@ def _declared_dependency_block(text: str) -> str:
     Line-based, with comments stripped first, so a stray bracket inside a
     comment cannot terminate the scan either.
 
-    >>> _declared_dependency_block('dependencies = [\n  "a[x]",\n  "b",\n]\n')
-    '  "a[x]",\n  "b",'
+    (No doctest here: CI runs `--doctest-modules` over `testpaths`, which is
+    `tests/`, so a docstring in this file is EXECUTED — and a `\\n` in a non-raw
+    docstring becomes a real newline the doctest parser reads as inconsistent
+    indentation. The examples live in
+    `test_the_derivation_survives_the_shapes_a_requirement_can_take` instead,
+    where they are ordinary code.)
     """
     lines = text.splitlines()
     start = next(
@@ -189,10 +193,8 @@ def _hard_dependencies(text: str | None = None) -> tuple[str, ...]:
 
     ``text`` is injectable so the DERIVATION can be tested against a synthetic
     block. Asserting the real tuple's contents tests the contents, not the
-    derivation — the exact shape this repo keeps losing mutants to.
-
-    >>> _hard_dependencies('dependencies = [\n  "a[x]>=1; python_version>\'3\'",  # c\n  "b",\n]')
-    ('a', 'b')
+    derivation — the exact shape this repo keeps losing mutants to. See
+    `test_the_derivation_survives_the_shapes_a_requirement_can_take`.
     """
     if text is None:
         text = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(
@@ -284,6 +286,10 @@ def test_the_derivation_survives_the_shapes_a_requirement_can_take():
         "marked",
         "commented",
     )
+    # The block matcher itself, since it is where the extras bug lived.
+    nested = 'dependencies = [\n  "a[x]",\n  "b",\n]\n'
+    assert _declared_dependency_block(nested) == '  "a[x]",\n  "b",'
+    assert _declared_dependency_block('dependencies = ["only"]') == '"only"'
 
 
 def test_the_hard_dependency_list_is_read_from_pyproject():
