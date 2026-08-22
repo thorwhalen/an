@@ -124,12 +124,20 @@ def resolve_png_bytes(data: bytes, *, factor: int) -> bytes:
     Returns ``data`` unchanged at ``factor == 1``, so the un-supersampled path
     keeps Chromium's own bytes and pays nothing at all — which is what makes
     this knob free when it is off.
+
+    **The early return sits above the imports deliberately.** "Off is free"
+    should mean free of the *dependency* too: Pillow is declared by the `cutout`
+    extra, so the default path must not need it merely to decide it has nothing
+    to do. Without this, importing it here would make the knob's own tests
+    unrunnable in the default CI lane, which installs `dev,test` and not
+    `cutout` — and CI is where that was found.
     """
+    if factor == NO_SUPERSAMPLE:
+        return data
+
     import numpy as np
     from PIL import Image
 
-    if factor == NO_SUPERSAMPLE:
-        return data
     with Image.open(io.BytesIO(data)) as image:
         frame = np.asarray(image.convert("RGB"))
     out = io.BytesIO()

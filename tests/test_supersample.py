@@ -23,7 +23,7 @@ from an.adapters.cutout.supersample import (
     resolve_png_bytes,
 )
 from an.base import DEFAULT_SUPERSAMPLE
-from an.bench.png import encode_png, read_png
+from an.bench.png import encode_png
 
 
 def test_the_factor_never_reaches_the_compiled_scene_document():
@@ -153,10 +153,31 @@ def test_the_resolve_is_bit_identical_to_the_float_form_it_replaces():
     assert disagreements == 0, f"{disagreements} of 6561 blocks round differently"
 
 
-def test_the_round_trip_writes_a_png_of_the_declared_size(tmp_path):
-    """The frame stage's contract: k-times in, declared-size PNG out."""
-    big = np.zeros((480, 640, 3), np.uint8)
-    big[:, 320:] = 200
-    out = tmp_path / "f.png"
-    out.write_bytes(resolve_png_bytes(encode_png(big), factor=2))
-    assert read_png(out).shape == (240, 320, 3)
+def test_the_round_trip_is_proven_where_pillow_actually_exists():
+    """`resolve_png_bytes`'s decode/encode half needs Pillow, which the DEFAULT
+    lane does not install — CI runs `dev,test`, and `pillow` is declared by the
+    `cutout` extra this code path cannot run without anyway.
+
+    So the contract "k-times in, declared-size PNG out" is asserted where that
+    extra exists and on real Chromium frames rather than synthetic ones:
+    `tests/test_cutout_render.py::test_a_supersampled_render_puts_declared_size_frames_on_disk`.
+    This test only pins that the pointer stays true, because a cross-reference
+    nobody checks is how a lane quietly stops covering something.
+
+    NOT a module-level `importorskip`: that removes tests from COLLECTION rather
+    than skipping them, which is an#22's defect and is invisible in both the
+    pass count and the skip count.
+    """
+    from pathlib import Path as _P
+
+    behavioural = (
+        _P(__file__).with_name("test_cutout_render.py").read_text(encoding="utf-8")
+    )
+    assert (
+        "def test_a_supersampled_render_puts_declared_size_frames_on_disk"
+        in behavioural
+    )
+    assert "read_png_dimensions" in behavioural, (
+        "the browser-lane test must still assert the SIZE on disk; without that "
+        "assertion nothing anywhere checks the frame stage's contract"
+    )
