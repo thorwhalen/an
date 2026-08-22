@@ -128,7 +128,9 @@ def render_frames(scene: str, *, k: int) -> np.ndarray:
     keep = Path(tempfile.mkdtemp(prefix=f"an-wave3-ab-{scene}-"))
     try:
         with supersampled_runtime(k):
-            capture = capture_fixture(scene, fixture, repo_root=repo_root(), keep_render=keep)
+            capture = capture_fixture(
+                scene, fixture, repo_root=repo_root(), keep_render=keep
+            )
         frames = [
             to_rgb(read_png(png))[..., :3]
             for shot in capture.shots
@@ -164,7 +166,9 @@ def resolve(frames: np.ndarray, k: int, how: str) -> np.ndarray:
     )
 
 
-def busiest_frame_and_crop(frames: np.ndarray, crop: tuple[int, int]) -> tuple[int, int, int]:
+def busiest_frame_and_crop(
+    frames: np.ndarray, crop: tuple[int, int]
+) -> tuple[int, int, int]:
     """``(frame_index, y, x)`` of the window holding the most edge pixels.
 
     Chosen by edge-mask density so the zoom is reproducible, rather than by
@@ -217,7 +221,9 @@ def contact_sheet(panels: list[tuple[str, np.ndarray]]) -> np.ndarray:
     return sheet
 
 
-def magnify(frame: np.ndarray, y: int, x: int, crop: tuple[int, int], zoom: int) -> np.ndarray:
+def magnify(
+    frame: np.ndarray, y: int, x: int, crop: tuple[int, int], zoom: int
+) -> np.ndarray:
     cw, ch = crop
     patch = frame[y : y + ch, x : x + cw]
     return np.repeat(np.repeat(patch, zoom, axis=0), zoom, axis=1)
@@ -243,7 +249,10 @@ def build(scene: str, *, k: int, out: Path, zoom: int, crop: tuple[int, int]) ->
     out.mkdir(parents=True, exist_ok=True)
 
     full = contact_sheet(
-        [(f"{name}  {stats(frames)}", frames[index]) for name, frames in variants.items()]
+        [
+            (f"{name}  {stats(frames)}", frames[index])
+            for name, frames in variants.items()
+        ]
     )
     write_png(out / f"{scene}_full.png", full)
 
@@ -265,7 +274,9 @@ def main() -> None:
     parser.add_argument("scenes", nargs="*", default=None)
     parser.add_argument("--k", type=int, default=DFLT_K)
     parser.add_argument("--zoom", type=int, default=DFLT_ZOOM)
-    parser.add_argument("--out", type=Path, default=repo_root() / "misc" / "bench" / "wave3_ab")
+    parser.add_argument(
+        "--out", type=Path, default=repo_root() / "misc" / "bench" / "wave3_ab"
+    )
     args = parser.parse_args()
     for scene in args.scenes or list(bench_corpus.DFLT_FIXTURES):
         build(scene, k=args.k, out=args.out, zoom=args.zoom, crop=DFLT_CROP)
