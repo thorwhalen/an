@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.render &mdash; an 0.1.37 documentation</title>
+  <title>an.render &mdash; an 0.1.39 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=b8ecee75"></script>
+      <script src="../../_static/documentation_options.js?v=f48ec9ae"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -192,7 +192,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenderContext</span><span class="p">,</span> <span class="n">RenderResult</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_DEFAULT_REGISTRY</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_FPS</span><span class="p">,</span> <span class="n">DEFAULT_RESOLUTION</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_FPS</span><span class="p">,</span> <span class="n">DEFAULT_RESOLUTION</span><span class="p">,</span> <span class="n">MP4_FASTSTART_ARGS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shot</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span><span class="p">,</span> <span class="n">load</span>
 
@@ -454,7 +454,12 @@
         <span class="p">)</span>
     <span class="n">inputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="c1"># Single shot: just copy.</span>
+        <span class="c1"># Single shot: just copy. This branch can therefore fix nothing about</span>
+        <span class="c1"># the container -- it is sound only because the per-shot mp4 is</span>
+        <span class="c1"># already faststart (`_ffmpeg_add_audio`), which is why the flag has</span>
+        <span class="c1"># to be on the shot mux and not only on the concat below. Five of the</span>
+        <span class="c1"># six bench corpus scenes take this path (only `multi_shot` has two</span>
+        <span class="c1"># shots), so a concat-only fix would leave the corpus untouched.</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">output</span><span class="p">)</span>
         <span class="k">return</span>
 
@@ -477,6 +482,16 @@
         <span class="nb">str</span><span class="p">(</span><span class="n">list_path</span><span class="p">),</span>
         <span class="s2">"-c"</span><span class="p">,</span>
         <span class="s2">"copy"</span><span class="p">,</span>
+        <span class="c1"># an#57's open question, answered by experiment on ffmpeg 8.1</span>
+        <span class="c1"># (Homebrew, macOS arm64): `-f concat -c copy -movflags +faststart`</span>
+        <span class="c1"># is a REMUX, not a transcode. The concatenated elementary stream is</span>
+        <span class="c1"># sha256-identical to the two inputs' streams appended</span>
+        <span class="c1"># (a4be46f7...218e == cat a.h264 b.h264), the video packet total is</span>
+        <span class="c1"># unchanged, the decoded YUV is sha256-identical, the file size is</span>
+        <span class="c1"># unchanged (moov is the same 1062 bytes, it just moves), and the</span>
+        <span class="c1"># wall time is the same 0.02 s. So it does not create the double</span>
+        <span class="c1"># encode epic #9 wrongly describes.</span>
+        <span class="o">*</span><span class="n">MP4_FASTSTART_ARGS</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">),</span>
     <span class="p">]</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>

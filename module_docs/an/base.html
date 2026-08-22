@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.base &mdash; an 0.1.37 documentation</title>
+  <title>an.base &mdash; an 0.1.39 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=b8ecee75"></script>
+      <script src="../../_static/documentation_options.js?v=f48ec9ae"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -84,6 +84,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.base.COMPATIBLE_VERSION"><code class="docutils literal notranslate"><span class="pre">COMPATIBLE_VERSION</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.EASING_PRESETS"><code class="docutils literal notranslate"><span class="pre">EASING_PRESETS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.EasingSpec"><code class="docutils literal notranslate"><span class="pre">EasingSpec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.base.MP4_FASTSTART_ARGS"><code class="docutils literal notranslate"><span class="pre">MP4_FASTSTART_ARGS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.PathStr"><code class="docutils literal notranslate"><span class="pre">PathStr</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.SCHEMA_VERSION"><code class="docutils literal notranslate"><span class="pre">SCHEMA_VERSION</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.Seconds"><code class="docutils literal notranslate"><span class="pre">Seconds</span></code></a></li>
@@ -208,6 +209,33 @@ fraction of a second so the CLI is snappy.</p>
 <dt class="sig sig-object py" id="an.base.EasingSpec">
 <span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">EasingSpec</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">TypeAlias</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">str</span> <span class="pre">|</span> <span class="pre">tuple[float,</span> <span class="pre">float,</span> <span class="pre">float,</span> <span class="pre">float]</span> <span class="pre">|</span> <span class="pre">list[float]</span></span><a class="headerlink" href="#an.base.EasingSpec" title="Link to this definition"></a></dt>
 <dd><p>Either an easing preset name or a 4-tuple cubic-Bézier control [cx1,cy1,cx2,cy2].</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.base.MP4_FASTSTART_ARGS">
+<span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">MP4_FASTSTART_ARGS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('-movflags',</span> <span class="pre">'+faststart')</span></span><a class="headerlink" href="#an.base.MP4_FASTSTART_ARGS" title="Link to this definition"></a></dt>
+<dd><p>Put the mp4’s <cite>moov</cite> atom in front of <cite>mdat</cite>, so a player can start before
+the file has finished downloading.</p>
+<p>Here, and not beside one of the ffmpeg calls, because <strong>three separate
+commands build the one file a user receives</strong> – the frame mux
+(<cite>_ffmpeg_mux</cite>), the audio mux (<cite>_ffmpeg_add_audio</cite>) and the concat
+(<cite>_ffmpeg_concat</cite>) – and each of the last two re-lays the container with
+<cite>-c copy</cite>, which writes <cite>moov</cite> LAST. The flag was on the first of those
+alone, which reads as done and delivers nothing: it applied only to
+<cite>silent.mp4</cite>, a per-shot intermediate that is never handed to anyone.
+Measured on a local example render (these mp4s are gitignored build
+products; <cite>git ls-files</cite> tracks exactly one, and it is moov-last too):
+<cite>.an/render_work/shot_s1/silent.mp4</cite> is <cite>ftyp moov free mdat</cite>, while the
+per-shot mp4, <cite>artifacts/shots/*.mp4</cite> and <cite>output/main.mp4</cite> are all
+<cite>ftyp free mdat moov</cite>. Single-shot and multi-shot alike; an#57’s
+“single-shot ones keep it” is wrong, because the <cite>shutil.copy</cite> branch
+copies a file that already lost it.</p>
+<p>Deliberately NOT part of <cite>DETERMINISTIC_X264_ARGS</cite>. That tuple is an
+<cite>ENCODE_ENV_PATHS</cite> comparability key (an/bench/compare.py:98), and this flag
+moves no number the panel reads: with <cite>-c copy</cite> it is a container rewrite,
+not a re-encode. Verified on ffmpeg 8.1 – elementary-stream sha256
+identical, video/audio packet totals identical, file size identical,
+decoded YUV sha256 identical, wall time unchanged.</p>
 </dd></dl>
 
 <dl class="py attribute">
