@@ -386,3 +386,95 @@ def test_no_corpus_fixture_ships_an_an_toml():
         for p in (root / fixture.path).glob("an.toml")
     )
     assert not strays, f"{strays} contradict their own scene.md and are read by nothing"
+
+
+# ------------------------------ an#54: what the staging copy leaves behind
+
+
+def _fixture_tree(root):
+    """A fixture shaped like a real one: an audio cache to keep, shots to drop."""
+    (root / "artifacts" / "audio").mkdir(parents=True)
+    (root / "artifacts" / "audio" / "line.wav").write_bytes(b"audio")
+    (root / "artifacts" / "shots").mkdir(parents=True)
+    (root / "artifacts" / "shots" / "s1.mp4").write_bytes(b"stale render")
+    # A directory named `shots` that has nothing to do with `mall["shots"]`.
+    (root / "assets" / "characters" / "maya" / "shots").mkdir(parents=True)
+    (root / "assets" / "characters" / "maya" / "shots" / "keep.svg").write_text(
+        "<svg/>", encoding="utf-8"
+    )
+    (root / ".an").mkdir()
+    (root / ".an" / "render_work").mkdir()
+    (root / "output").mkdir()
+    (root / "scene.md").write_text("# scene", encoding="utf-8")
+    return root
+
+
+def test_the_staging_copy_drops_the_previous_renders_shots_and_keeps_the_audio(
+    tmp_path,
+):
+    """MUTATION: `IGNORED_RELPATHS_ON_COPY = ("artifacts/shots",)` -> `()`.
+
+    `mall["shots"]` is `<project>/artifacts/shots` and it is GITIGNORED, so the
+    previous render's per-shot mp4s crossed into every bench run on a developer
+    machine and on no clean checkout — in the module whose docstring is "do not
+    inherit a stale render". `artifacts/` itself is kept on purpose: it holds
+    the audio cache, whose warm/cold state the bench records rather than
+    destroys.
+    """
+    from an.bench.capture import stage_copy
+
+    src = _fixture_tree(tmp_path / "fixture")
+    copy = stage_copy(src, tmp_path / "work")
+
+    assert (copy / "artifacts" / "audio" / "line.wav").is_file(), (
+        "the audio cache must survive — its warm/cold state is a recorded fact"
+    )
+    assert not (copy / "artifacts" / "shots").exists()
+    assert not (copy / ".an").exists() and not (copy / "output").exists()
+
+
+def test_the_exclusion_is_by_path_and_not_by_basename(tmp_path):
+    """MUTATION: match the basename `shots` at any depth instead of the path.
+
+    That is the obvious `shutil.ignore_patterns("shots")` spelling, and it also
+    deletes a character rig's `assets/characters/*/shots`. The other obvious
+    spelling — `"artifacts/shots"` as an ignore_patterns entry — matches
+    NOTHING, because the closure is handed bare names and no name contains a
+    separator. Both fail silently, in opposite directions.
+    """
+    from an.bench.capture import stage_copy
+
+    src = _fixture_tree(tmp_path / "fixture")
+    copy = stage_copy(src, tmp_path / "work")
+    assert (copy / "assets" / "characters" / "maya" / "shots" / "keep.svg").is_file(), (
+        'a directory called `shots` that is not `mall["shots"]` must survive'
+    )
+
+
+def test_a_shot_records_the_pixel_size_actually_on_disk(tmp_path):
+    """MUTATION: sample one frame instead of reading every frame's IHDR.
+
+    The uniform case still passes under that mutation; the mixed case is what
+    catches it, and a mixed sequence is exactly what a half-applied supersample
+    produces.
+    """
+    import numpy as np
+
+    from an.bench.capture import distinct_png_sizes
+    from an.bench.png import encode_png
+
+    uniform = tmp_path / "uniform"
+    uniform.mkdir()
+    for i in range(4):
+        (uniform / f"frame_{i:06d}.png").write_bytes(
+            encode_png(np.zeros((240, 320, 3), np.uint8))
+        )
+    assert distinct_png_sizes(uniform) == ((320, 240),)
+
+    mixed = tmp_path / "mixed"
+    mixed.mkdir()
+    for i, (w, h) in enumerate([(320, 240), (320, 240), (640, 480), (640, 480)]):
+        (mixed / f"frame_{i:06d}.png").write_bytes(
+            encode_png(np.zeros((h, w, 3), np.uint8))
+        )
+    assert distinct_png_sizes(mixed) == ((320, 240), (640, 480))

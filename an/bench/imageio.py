@@ -201,11 +201,59 @@ def run_raw(cmd: list[str]) -> bytes:
     return result.stdout
 
 
-def _reshape(buf: bytes, *, planes: int, height: int, width: int, label: str) -> Any:
+def _reshape(
+    buf: bytes,
+    *,
+    planes: int,
+    height: int,
+    width: int,
+    label: str,
+    frames: int | None,
+) -> Any:
+    """Shape a raw decode, refusing a buffer that is not exactly ``frames`` of them.
+
+    ``frames`` is keyword-only and **has no default**, because the defect it
+    closes is arithmetically invisible. This used to test only that the byte
+    count *divides* by ``planes * height * width`` — and a k-times supersample
+    makes the buffer exactly ``k**2`` larger, so the check always passed and the
+    reshape silently produced ``k**2 * N`` frames of scrambled pixels. At k=2
+    destination row 0 is the source row's left half and row 1 its right half, so
+    most horizontal runs survive and every family-A metric returns a believable
+    number. A default here would let a new leg opt out of the check by omission.
+
+    ``None`` means "the count is not known independently": the mp4 legs, whose
+    frame count is whatever the encoder emitted, and which the run deliberately
+    tolerates disagreeing (``frame_count_disagreement``). There only
+    divisibility can be checked, and the size of the *pixels* is guarded
+    upstream instead — the delivered mp4 is muxed from the very PNGs that
+    :func:`an.bench.run._assert_declared_resolution` has already sized.
+
+    **This is a deliberate behaviour change on the PNG legs**, and the only one
+    in an#54: a source-side count disagreement used to be *recorded* as
+    ``frame_count_disagreement`` and is now a refusal. That is the right way
+    round — ffmpeg's image2 demuxer reads the contiguous ``frame_%06d.png`` run
+    from 0, so a short read there means the frame sequence has a hole, and
+    every per-frame pairing below it is offset. The mp4 legs keep the recorded
+    form, because their count legitimately differs.
+    """
     import numpy as np
 
     per_frame = planes * height * width
-    if per_frame == 0 or len(buf) % per_frame:
+    if per_frame == 0:
+        raise BenchDecodeError(
+            f"{label}: a {planes}x{height}x{width} frame has no pixels, so the "
+            f"{len(buf)}-byte decode cannot be shaped at all."
+        )
+    if frames is not None and len(buf) != per_frame * frames:
+        raise BenchDecodeError(
+            f"{label}: {len(buf)} bytes is not exactly {frames} frames of "
+            f"{planes}x{height}x{width} ({per_frame * frames} bytes) — "
+            f"{len(buf) / per_frame:g} frames' worth arrived. The decoded "
+            "stream is not the declared resolution. A k-times supersample "
+            "divides evenly by k**2, so a divisibility check would have passed "
+            "here and produced k**2 as many scrambled frames instead."
+        )
+    if len(buf) % per_frame:
         raise BenchDecodeError(
             f"{label}: {len(buf)} bytes is not a whole number of "
             f"{planes}x{height}x{width} frames. The declared resolution and the "
@@ -219,18 +267,24 @@ def _reshape(buf: bytes, *, planes: int, height: int, width: int, label: str) ->
     return arr.reshape(n, planes, height, width)
 
 
-def source_rgb(frames_dir: Path, *, height: int, width: int) -> Any:
-    """``(N, H, W, 3)`` uint8 of the pre-encode PNGs."""
+def source_rgb(frames_dir: Path, *, height: int, width: int, frames: int) -> Any:
+    """``(N, H, W, 3)`` uint8 of the pre-encode PNGs.
+
+    ``frames`` is how many PNGs are on disk — the caller counted them — and it
+    is required rather than derived, so the decode cannot silently return a
+    different number of them.
+    """
     return _reshape(
         run_raw(source_rgb_command(frames_dir)),
         planes=3,
         height=height,
         width=width,
         label="source_rgb",
+        frames=frames,
     )
 
 
-def source_yuv(frames_dir: Path, *, height: int, width: int) -> Any:
+def source_yuv(frames_dir: Path, *, height: int, width: int, frames: int) -> Any:
     """``(N, 3, H, W)`` uint8 planar YUV of the pre-encode PNGs, range-pinned."""
     return _reshape(
         run_raw(source_yuv_command(frames_dir)),
@@ -238,28 +292,37 @@ def source_yuv(frames_dir: Path, *, height: int, width: int) -> Any:
         height=height,
         width=width,
         label="source_yuv",
+        frames=frames,
     )
 
 
 def decoded_rgb(mp4: Path, *, height: int, width: int) -> Any:
-    """``(N, H, W, 3)`` uint8 of the delivered mp4."""
+    """``(N, H, W, 3)`` uint8 of the delivered mp4.
+
+    ``frames=None``: the run deliberately tolerates the encoder emitting a
+    different count from the source leg and records it as
+    ``frame_count_disagreement``, so an equality here would turn a recorded
+    disagreement into a crash. See :func:`_reshape`.
+    """
     return _reshape(
         run_raw(decoded_rgb_command(mp4)),
         planes=3,
         height=height,
         width=width,
         label="decoded_rgb",
+        frames=None,
     )
 
 
 def decoded_yuv(mp4: Path, *, height: int, width: int) -> Any:
-    """``(N, 3, H, W)`` uint8 planar YUV of the delivered mp4."""
+    """``(N, 3, H, W)`` uint8 planar YUV of the delivered mp4. ``frames=None`` — see :func:`decoded_rgb`."""
     return _reshape(
         run_raw(decoded_yuv_command(mp4)),
         planes=3,
         height=height,
         width=width,
         label="decoded_yuv",
+        frames=None,
     )
 
 

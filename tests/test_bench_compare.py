@@ -71,6 +71,7 @@ _PROVENANCE = {
         "flat": {"operator": "flat-op", "dilate_k": 3, "flat_px": 900},
         "held": {"operator": "held-op", "pairs": 11},
         "ring": {"operator": "ring-op", "ring_px": 50},
+        "render_edge": {"operator": "render-edge-op", "threshold": 40, "edge_px": 120},
     },
 }
 
@@ -190,6 +191,11 @@ def test_the_comparability_key_tables_are_pinned_by_literal():
         ("masks", "flat", "dilate_k"),
         ("masks", "held", "operator"),
         ("masks", "ring", "operator"),
+        # Family A's own mask. A SECOND edge entry on purpose: same threshold,
+        # different plane (full-range RGB luma, not ffmpeg's limited-range Y),
+        # so collapsing the two would let a plane change pass unrefused.
+        ("masks", "render_edge", "operator"),
+        ("masks", "render_edge", "threshold"),
     )
     assert RENDER_ENV_PATHS == (
         ("environment", "render_side", "chromium_build"),
@@ -1090,3 +1096,152 @@ def test_the_strict_flag_fails_closed_end_to_end(tmp_path):
             text=True,
         )
         assert result.returncode == expected, f"{label}: {result.stdout[-400:]}"
+
+
+# ------------------------------ an#54: ordering and the strict raise path
+
+
+def _dated_row(path, stamp: str) -> None:
+    """A ledger row carrying only what `latest_rows` reads."""
+    path.write_text(json.dumps({"generated_at": stamp}), encoding="utf-8")
+
+
+def test_latest_rows_orders_by_generated_at_not_by_filename(tmp_path):
+    """MUTATION: `sorted(rows, key=key)` -> `sorted(rows, key=lambda p: p.name)`.
+
+    That mutation is literally the pre-fix code. Filenames are
+    `<date>-<sha7>.json`, so within one date the order is sha HEX order — and a
+    re-baseline and its after-run on one day are the normal shape of a Wave 3
+    PR. When the after-commit's sha sorts lower, a bare `an bench-compare`
+    silently swaps before and after and reports every improvement as a
+    regression.
+    """
+    import json as _json
+
+    ledger = tmp_path / "misc" / "bench" / "ledger"
+    ledger.mkdir(parents=True)
+    # Filename order is the REVERSE of clock order.
+    for name, stamp in (
+        ("2026-08-21-fff0000.json", "2026-08-21T19:00:00Z"),
+        ("2026-08-21-7770000.json", "2026-08-21T20:00:00Z"),
+        ("2026-08-21-000ffff.json", "2026-08-21T21:00:00Z"),
+    ):
+        (ledger / name).write_text(
+            _json.dumps({"generated_at": stamp}), encoding="utf-8"
+        )
+
+    assert [p.name for p in latest_rows(root=tmp_path)] == [
+        "2026-08-21-7770000.json",
+        "2026-08-21-000ffff.json",
+    ]
+
+
+def test_a_row_with_no_readable_generated_at_never_becomes_the_after_row(tmp_path):
+    """MUTATION: re-raise instead of returning `None` from `_generated_at`.
+
+    One malformed file in the ledger directory would then crash every bare
+    `an bench-compare` — a worse failure than the ordering bug being fixed. The
+    four unreadable shapes are pinned individually, because they are four
+    separate reasons that happen to share an answer.
+    """
+    import json as _json
+
+    from an.bench.compare import _row_instant
+
+    ledger = tmp_path / "misc" / "bench" / "ledger"
+    ledger.mkdir(parents=True)
+    (ledger / "2026-08-21-aaaaaaa.json").write_text(
+        _json.dumps({"generated_at": "2026-08-21T19:00:00Z"}), encoding="utf-8"
+    )
+    (ledger / "2026-08-22-bbbbbbb.json").write_text("{}", encoding="utf-8")
+    (ledger / "2026-08-22-ccccccc.json").write_text("not json at all", encoding="utf-8")
+    (ledger / "2026-08-22-ddddddd.json").write_text(
+        _json.dumps({"generated_at": 17}), encoding="utf-8"
+    )
+
+    rows = latest_rows(root=tmp_path, count=2)
+    assert rows[-1].name == "2026-08-21-aaaaaaa.json", (
+        "a row whose stamp cannot be read must sort BEFORE every dated one, so "
+        "a corrupt file can never become the `after` a verdict is drawn from"
+    )
+    assert _row_instant({}) is None
+    assert _row_instant({"generated_at": 17}) is None
+    assert _row_instant({"generated_at": "yesterday"}) is None
+    assert _row_instant("not a row") is None
+
+
+def test_the_committed_ledger_rows_are_already_in_generated_at_order():
+    """A NON-REGRESSION test, and deliberately not called a guard.
+
+    Today's committed rows sort identically by filename and by clock, so this
+    cannot go red on the pre-fix code. Its value is the day a row lands whose
+    filename and clock disagree — at which point it becomes load-bearing
+    without anyone having to remember to write it.
+    """
+    from an.bench.compare import _generated_at
+
+    rows = latest_rows(count=99)
+    if len(rows) < 2:
+        pytest.skip("fewer than two committed ledger rows")
+    stamps = [_generated_at(p) for p in rows]
+    assert all(s is not None for s in stamps), (
+        f"every committed row must carry a readable `generated_at`: {rows}"
+    )
+    assert stamps == sorted(stamps)
+
+
+def test_strict_exits_nonzero_when_a_row_cannot_be_read_at_all(tmp_path):
+    """MUTATION: `if strict:` -> `if False:` in the ComparisonError handler.
+
+    The handler used to `return` ahead of the strict block, so an unreadable
+    `schema_version` — or a `--mutation` no row declares, which is the state
+    every `--strict --mutation <new-lever>` run is in before the lever is
+    registered — exited 0. Same failure class an#51 closed for the refusal path.
+
+    Asserts exit codes and our own refusal string only; never typer/click help
+    text, which is not ours to pin.
+    """
+    import subprocess
+    import sys
+
+    good, bad = tmp_path / "before.json", tmp_path / "after.json"
+    good.write_text(json.dumps(_row()), encoding="utf-8")
+    unreadable = _row()
+    unreadable["schema_version"] = 99
+    bad.write_text(json.dumps(unreadable), encoding="utf-8")
+
+    argv = [
+        sys.executable,
+        "-m",
+        "an",
+        "bench-compare",
+        "--before",
+        str(good),
+        "--after",
+        str(bad),
+    ]
+    lax = subprocess.run(argv, capture_output=True, text=True)
+    assert lax.returncode == 0 and "refused:" in lax.stdout, (
+        "without --strict the refusal is still just printed; that contract does "
+        "not change"
+    )
+    strict = subprocess.run(argv + ["--strict"], capture_output=True, text=True)
+    assert strict.returncode == 1, "--strict must fail on a row it cannot read"
+    assert "refused:" in strict.stdout
+
+
+def test_a_blessed_row_is_surfaced_as_a_caveat_rather_than_left_write_only(tmp_path):
+    """MUTATION: `"blessed_scenes": sorted(...)` -> `"blessed_scenes": []`.
+
+    A `--bless` run gates family B `blessed_this_run`, and `format_comparison`
+    SKIPS entries whose verdict is `unchanged` — so family B does not appear as
+    "unchanged", it does not appear at all. "Family B agreed" and "family B was
+    never asked" are the same blank space in the table.
+    """
+    before, after = _row(), _row()
+    after["provenance"]["blessed"] = {"aa_probe": {"reason": "why"}}
+    report = compare(before, after)
+    assert report["after"]["blessed_scenes"] == ["aa_probe"]
+    assert report["before"]["blessed_scenes"] == []
+    text = format_comparison(report)
+    assert "--bless run" in text and "aa_probe" in text

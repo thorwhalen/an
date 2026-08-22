@@ -66,7 +66,7 @@ def lossless_reference(frames_dir: Path, fps: int, out: Path):
 
 
 def conversion_distance(
-    frames_dir: Path, lossless_mp4: Path, *, height: int, width: int
+    frames_dir: Path, lossless_mp4: Path, *, height: int, width: int, frames: int
 ) -> dict:
     """How far this build's PNG->YUV conversion sits from the encoder's own.
 
@@ -78,7 +78,7 @@ def conversion_distance(
     """
     import numpy as np
 
-    src = imageio.source_yuv(frames_dir, height=height, width=width)
+    src = imageio.source_yuv(frames_dir, height=height, width=width, frames=frames)
     enc_in = imageio.decoded_yuv(lossless_mp4, height=height, width=width)
     n = min(len(src), len(enc_in))
     if n == 0:
@@ -100,27 +100,91 @@ def conversion_distance(
     }
 
 
-def _png_source_rgb(frames_dir: Path, *, height: int, width: int):
+def _png_source_rgb(frames_dir: Path, *, height: int, width: int, frames: int):
     """Decode a shot's PNG sequence with the package's own reader, no ffmpeg.
 
     Byte-for-byte the same array ``imageio.source_rgb`` returns — asserted
     against it on every rendered frame in the repo — but reachable on a machine
     with no ffmpeg, which is what makes family A honestly render-side.
+
+    ``frames`` mirrors ``imageio.source_rgb``'s signature, because :func:`_stack`
+    calls both through the same ``loader`` parameter and a signature that drifted
+    would make one of the two legs uncheckable. It is **not a guard here** and
+    must not be described as one: ``frames`` arrives as ``ShotCapture.
+    frame_count``, which is a glob of this same directory, so the two can only
+    disagree if the tree changed between capture and metrics. It is a
+    consistency assertion, kept for signature parity. The real equality is on
+    :func:`an.bench.imageio.source_rgb`'s ffmpeg leg, where the decoder can and
+    does return a different count from the glob.
+
+    Its own shape check is kept even though :func:`_assert_declared_resolution`
+    runs above it — this is the no-ffmpeg branch's own opinion, formed from
+    decoded arrays rather than from IHDRs.
     """
     import numpy as np
 
     from an.adapters.cutout.render import DEFAULT_FRAME_PNG_PATTERN
 
-    frames = sorted(Path(frames_dir).glob("frame_*.png"))
-    if not frames:
+    paths = sorted(Path(frames_dir).glob("frame_*.png"))
+    if not paths:
         raise BenchError(f"no {DEFAULT_FRAME_PNG_PATTERN} frames under {frames_dir}")
-    stacked = np.stack([png.read_png(p) for p in frames])
+    if len(paths) != frames:
+        raise BenchError(
+            f"{frames_dir} holds {len(paths)} frames but the caller counted "
+            f"{frames}; the two legs of every metric below pair frame i with "
+            "frame i, so a count disagreement offsets all of them"
+        )
+    stacked = np.stack([png.read_png(p) for p in paths])
     if stacked.shape[1:3] != (height, width):
         raise BenchError(
             f"{frames_dir} holds {stacked.shape[2]}x{stacked.shape[1]} frames but "
             f"the scene declares {width}x{height}"
         )
     return stacked
+
+
+def _assert_declared_resolution(capture: SceneCapture) -> None:
+    """Refuse when the PNGs on disk are not the size the scene declares.
+
+    **The load-bearing check of this module**, because what it catches is
+    silent. Every family-A metric is computed by reshaping a decoded byte stream
+    to the DECLARED size; a k-times supersample makes that stream exactly
+    ``k**2`` larger, which divides evenly, so the old divisibility test always
+    passed and the panel was computed over ``k**2 * N`` scrambled frames. The
+    corruption is *plausible* rather than obvious: at k=2 destination row 0 is
+    the source row's left half and row 1 its right half, so most horizontal runs
+    survive and ``edge_transition_width`` returns a believable number. Measured
+    live: ``resolution: 2, autoDensity: false`` really does put 640x480 PNGs
+    beside a 320x240 declared scene (``misc/docs/wave3_research.md`` §1).
+
+    The two facts compared are genuinely independent. ``capture.resolution``
+    comes from the staged scene's ``meta.width/height`` and never from a file;
+    ``ShotCapture.frame_sizes`` is read from each PNG's IHDR and never from the
+    scene.
+
+    Here rather than in :func:`an.bench.capture.capture_fixture`, deliberately:
+    rendering a fixture at a size the scene does not declare is a legitimate
+    thing to do — ``misc/bench/wave3_ab.py`` does exactly that to measure the
+    supersample — and the invariant being asserted is the **bench's**, that the
+    declared resolution is the resolution of the pixels the panel measures. It
+    runs above the ``_ffmpeg_available()`` fork so it covers both branches, and
+    above the first decode so nothing is computed on a wrong shape.
+    """
+    for shot in capture.shots:
+        sizes = set(shot.frame_sizes)
+        if sizes != {capture.resolution}:
+            raise BenchError(
+                f"{capture.name}: shot {shot.shot_id!r} holds frames sized "
+                f"{sorted(sizes)} but the staged scene declares "
+                f"{[capture.resolution]}"
+                + (" — the shot wrote no frames at all." if not sizes else ".")
+                + " Nothing below would have raised: a k-times supersample "
+                "divides evenly by k**2, so every render-side metric would have "
+                "been computed over k**2 as many wrongly-shaped frames and "
+                "returned a plausible number for each. If this is a deliberate "
+                "supersample, the downscale belongs in the frame stage, before "
+                "the PNGs are written."
+            )
 
 
 @contextmanager
@@ -155,9 +219,35 @@ def _timeline_frames_dir(capture: SceneCapture):
         shutil.rmtree(staged, ignore_errors=True)
 
 
-def _render_side_values(src_rgb, packed, palette_uint32) -> dict[str, Value]:
+def _render_edge_mask(src_rgb):
+    """Family A's own edge mask: numpy only, no ffmpeg, no decoder.
+
+    NOT `_scene_metrics`'s `edge`, which is `masks.edge_mask(src_yuv[:n, 0])` on
+    ffmpeg's LIMITED-RANGE Y. Same operator, same threshold, different plane —
+    full-range gradients are 255/219 of limited-range ones, so this mask is
+    slightly wider — and a different frame count when the two legs disagree,
+    because this one is never truncated to `n`. Computed here rather than reused
+    from there because family A is render-side and has no business depending on
+    the encoder's toolchain (an#55).
+    """
+    return masks.edge_mask(M.luma_u8(src_rgb))
+
+
+def _render_edge_record(edge) -> dict:
+    """What the ledger records about family A's own mask."""
+    return {
+        "operator": masks.RENDER_EDGE_OPERATOR,
+        "threshold": masks.EDGE_MASK_THRESHOLD,
+        "edge_px": int(edge.sum()),
+        "frame_px": int(edge.size),
+        "fraction": round(float(edge.mean()), 6),
+    }
+
+
+def _render_side_values(src_rgb, packed, palette_uint32, *, edge) -> dict[str, Value]:
     """Family A. Computed on the pre-encode pixels; blind to the encoder by construction."""
     width_mean, width_median = M.edge_transition_width(src_rgb)
+    edge_colours, frames_measured = M.edge_masked_distinct_colours(packed, edge)
     return {
         "edge_transition_width": measured(
             round(width_mean, 4), median=round(width_median, 4)
@@ -166,6 +256,18 @@ def _render_side_values(src_rgb, packed, palette_uint32) -> dict[str, Value]:
             round(M.off_palette_pixel_fraction(packed, palette_uint32), 6)
         ),
         "frame_distinct_colours": measured(round(M.frame_distinct_colours(packed), 4)),
+        # `unavailable`, never `measured(0.0)`. A scene with no hard edge
+        # anywhere has no edge colour count, and a substituted zero would be the
+        # largest possible downward move in the one metric that exists to notice
+        # a downward move (an#55). `measured` refuses the NaN anyway.
+        "edge_masked_distinct_colours": (
+            unavailable(
+                "the render-side edge mask selected no pixels in any frame of "
+                "this scene, so there is no edge colour count to report"
+            )
+            if edge_colours != edge_colours
+            else measured(round(edge_colours, 4), frames_measured=frames_measured)
+        ),
     }
 
 
@@ -181,7 +283,10 @@ def _stack(loader, capture: SceneCapture, *, height: int, width: int):
     """
     import numpy as np
 
-    parts = [loader(s.frames_dir, height=height, width=width) for s in capture.shots]
+    parts = [
+        loader(s.frames_dir, height=height, width=width, frames=s.frame_count)
+        for s in capture.shots
+    ]
     return parts[0] if len(parts) == 1 else np.concatenate(parts)
 
 
@@ -227,7 +332,11 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
     """
     import numpy as np
 
+    # Before the first decode, and above the ffmpeg fork so it covers both
+    # branches: everything below reshapes a byte stream to the DECLARED size.
+    _assert_declared_resolution(capture)
     h, w = capture.resolution[1], capture.resolution[0]
+    n_source = sum(s.frame_count for s in capture.shots)
     values: dict[str, Value] = {}
 
     if not _ffmpeg_available():
@@ -239,14 +348,18 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
         # render-side and has no business depending on the encoder's toolchain.
         src_rgb = _stack(_png_source_rgb, capture, height=h, width=w)
         packed = M.pack_rgb(src_rgb)
+        render_edge = _render_edge_mask(src_rgb)
         pal = _merged_palette(capture)
-        values.update(_render_side_values(src_rgb, packed, pal["palette"]))
+        values.update(
+            _render_side_values(src_rgb, packed, pal["palette"], edge=render_edge)
+        )
         reason = "ffmpeg/ffprobe not on PATH; every encode-side metric needs both"
         for key in METRICS:
             values.setdefault(key, unavailable(reason))
         return values, {
             **{k: v for k, v in pal.items() if k != "palette"},
             "decoder": "an.bench.png (ffmpeg absent)",
+            "masks": {"render_edge": _render_edge_record(render_edge)},
             "source_pixels_sha256": contract.frames_sha256(src_rgb),
             "frames_on_disk": sum(s.frame_count for s in capture.shots),
             "decoded_source_frames": int(len(src_rgb)),
@@ -254,11 +367,17 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
 
     src_rgb = _stack(imageio.source_rgb, capture, height=h, width=w)
     packed = M.pack_rgb(src_rgb)
+    # Over the FULL stack, not the `[:n]` slice the encode-side masks use:
+    # family A is computed over every rendered frame, exactly as
+    # `edge_transition_width(src_rgb)` already is.
+    render_edge = _render_edge_mask(src_rgb)
 
     pal = _merged_palette(capture)
     palette_uint32 = pal["palette"]
 
-    values.update(_render_side_values(src_rgb, packed, palette_uint32))
+    values.update(
+        _render_side_values(src_rgb, packed, palette_uint32, edge=render_edge)
+    )
 
     prov: dict[str, Any] = {
         **{k: v for k, v in pal.items() if k != "palette"},
@@ -295,7 +414,9 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
         try:
             ref_yuv = imageio.decoded_yuv(qp0_mp4, height=h, width=w)
             ref_rgb = imageio.decoded_rgb(qp0_mp4, height=h, width=w)
-            distance = conversion_distance(frames_dir, qp0_mp4, height=h, width=w)
+            distance = conversion_distance(
+                frames_dir, qp0_mp4, height=h, width=w, frames=n_source
+            )
             prov["png_to_encoder_input_luma"] = distance
             # Derived so a reader does not have to. When it is True,
             # `coded_luma_edge_error` (lossless-referenced) and `chroma_edge_dY`
@@ -307,7 +428,7 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
             # whose subject IS the 4:2:0 subsampling that happens during the
             # conversion. A qp0 file's chroma is already subsampled, so referencing
             # it there would read ~0 and measure nothing.
-            src_yuv = imageio.source_yuv(frames_dir, height=h, width=w)
+            src_yuv = imageio.source_yuv(frames_dir, height=h, width=w, frames=n_source)
             dec_yuv = imageio.decoded_yuv(capture.mp4, height=h, width=w)
             dec_rgb = imageio.decoded_rgb(capture.mp4, height=h, width=w)
         finally:
@@ -345,6 +466,11 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
         },
         "held": {"operator": masks.HELD_OPERATOR, "pairs": max(0, n - 1)},
         "ring": {"operator": masks.RING_OPERATOR, "ring_px": int(ring.sum())},
+        # Family A's own mask, recorded beside the encode-side one rather than
+        # instead of it. Same threshold, different plane (full-range RGB luma
+        # against ffmpeg's limited-range Y), so the two `edge_px` counts are
+        # EXPECTED to differ and the operator strings are what say why.
+        "render_edge": _render_edge_record(render_edge),
     }
 
     def _num(fn, *args, **kwargs) -> Value:
@@ -457,6 +583,29 @@ def _golden_values(result: dict) -> tuple[Value, Value]:
     metric = measured(round(float(result["min_ssim_win8"]), 6), **extra)
     tripwire = measured(bool(result["identical"]), **extra)
     return metric, tripwire
+
+
+def naming_git_state(git: dict, *, blessed: bool, root: Path) -> dict:
+    """Which git state NAMES the row: the tree the run **left**, not the one it read.
+
+    :func:`run_bench` reads ``git_state`` once, *before* the corpus loop,
+    because that is the tree the pixels came from. A ``--bless`` run then WRITES
+    into that same tree inside the loop — the golden PNGs, and a bless record
+    whose ``blessed_at`` moves on every run — so by the time the row is named
+    the two are no longer one fact.
+
+    Named under the pre-bless state, a bless on a clean tree lands as
+    ``<date>-<sha>.json``: a filename claiming a commit whose tree that very run
+    then modified, which is exactly what the ``-dirty`` suffix exists to prevent
+    (:func:`an.bench.paths.ledger_path`). So the row records both — ``git`` is
+    what rendered, ``git_after_bless`` is what the run left behind — and the
+    *filename* follows the second. A non-bless run re-reads nothing.
+
+    Deliberately a plain function of ``blessed`` rather than an inline
+    conditional: it is the whole of the fix, and a guard for it must not have to
+    render the corpus to reach it.
+    """
+    return git_state(root) if blessed else git
 
 
 def run_bench(
@@ -590,7 +739,16 @@ def run_bench(
                 "shot_count": len(capture.shots),
                 "shot_order": [s.shot_id for s in capture.shots],
                 "shots": [
-                    {"id": s.shot_id, "frames": s.frame_count, "duration": s.duration}
+                    {
+                        "id": s.shot_id,
+                        "frames": s.frame_count,
+                        "duration": s.duration,
+                        # What the pixels on disk actually measured, as opposed
+                        # to `resolution`, which is what the scene declared.
+                        # Recorded so a reader can see the check ran and what it
+                        # examined, not only that it did not fire.
+                        "frame_sizes": [list(size) for size in s.frame_sizes],
+                    }
                     for s in capture.shots
                 ],
                 "visual_kinds": sorted(capture.visual_kinds),
@@ -616,9 +774,14 @@ def run_bench(
             for capture in captures:
                 cleanup(capture)
 
+    # Computed AFTER the loop, which is where a bless writes. `blessed` is
+    # non-empty exactly when this run wrote goldens.
+    naming_git = naming_git_state(git, blessed=bool(blessed), root=root)
+
     ledger = build_ledger(
         provenance={
             "git": git,
+            **({"git_after_bless": naming_git} if blessed else {}),
             "render_kwargs": dict(BENCH_RENDER_KWARGS),
             "environment": environment_record(x264_sei=sei, browser=browser),
             **({"blessed": blessed} if blessed else {}),
@@ -635,7 +798,7 @@ def run_bench(
         scenes=scene_blocks,
     )
     if write:
-        path = Path(out) if out else ledger_path(root=root, git=git)
+        path = Path(out) if out else ledger_path(root=root, git=naming_git)
         write_ledger(ledger, path)
         ledger["_written_to"] = str(path)
     return ledger

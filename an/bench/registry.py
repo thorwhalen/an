@@ -423,6 +423,84 @@ METRICS: dict[str, MetricSpec] = {
             },
         ),
         _spec(
+            key="edge_masked_distinct_colours",
+            family="A",
+            unit="count",
+            sentence=(
+                "How many different colours sit ON the edges — the row above, "
+                "restricted to the edge mask."
+            ),
+            optimum=Optimum(
+                kind="guard",
+                note=(
+                    "A guard, not a dial, for the exact reason Wave 2 deleted "
+                    "the ONE-SIDED `edge_distinct_colours`: a 3x3 blur raised "
+                    "that 9.2x and +/-3-LSB noise 55x, and BOTH degradations "
+                    "read as 'AA restored'. What the mask buys is narrower than "
+                    "an#55 assumed, and the difference was MEASURED before this "
+                    "row shipped: an INTERIOR-ONLY change cannot reach the "
+                    "number, but a whole-frame blur can, because the mask is "
+                    "recomputed from the frame being measured and a blur widens "
+                    "the edge band. 3x3 box blur on the six committed goldens, "
+                    "ratio against k=1, whole-frame vs edge-masked: aa_probe "
+                    "10.25x/9.50x, graded_field 2.04x/2.35x, multi_shot "
+                    "7.92x/4.63x, promote_demo 1.25x/0.83x, saturated_outline "
+                    "1.49x/1.14x, single_character 8.60x/5.70x — damped on four "
+                    "of six, WORSE on one, blind on none. So the metric that "
+                    "separates a blur from a supersample is "
+                    "`edge_transition_width` (2.1x-3.4x under the same blur "
+                    "against +2.6% to +8.0% under an exact k=2 resolve), and "
+                    "this row is the second half of that reading, not the first. "
+                    "**The pair is evidence for a human reader and NOT a gate** "
+                    "— an#41's criterion counts metrics independently and cannot "
+                    "express a conjunction, so nothing here may be read as one. "
+                    "No figure for THIS metric under a lever exists yet, which "
+                    "is why `reference` is unset rather than borrowed from "
+                    "`frame_distinct_colours` (an#55)."
+                ),
+            ),
+            predictions={
+                "high_crf": Prediction(
+                    "not_applicable",
+                    reason=(
+                        "pre-encode, and blind to the encoder BY CONSTRUCTION "
+                        "like every family A row: both the mask and the colours "
+                        "come from the source PNG, which sits upstream of the "
+                        "encoder"
+                    ),
+                ),
+                "disabled_aa": Prediction(
+                    "decrease",
+                    reason=(
+                        "the same direction as `frame_distinct_colours`, "
+                        "deliberately: for flat cutout art essentially all "
+                        "colour variety lives at edges, so the mask is close to "
+                        "a no-op for the COUNT (wave2 research §1.3 measured the "
+                        "two within 6%). The whole-frame count under the lever "
+                        "on `aa_probe` goes 7.6 -> 3.0 at k=1 and 21.7 -> 6.9 at "
+                        "k=2 (wave3 research §5) — those are `frame_distinct_"
+                        "colours` numbers, NOT this metric's, and `reference` is "
+                        "deliberately left unset until a real row measures THIS "
+                        "one. NOT counted: family A spends its one witness on "
+                        "`edge_transition_width` and this is the same family. "
+                        "NOT gated either, and the distinction is the one most "
+                        "likely to be flipped by a later reviewer: the mask does "
+                        "move with the lever, but the mask and the number come "
+                        "from the SAME frames, so there is no reference to move. "
+                        "That is what makes `flat_field_deviation` further down "
+                        "gated and this one not."
+                    ),
+                ),
+            },
+            notes=(
+                "Its mask is NOT the `masks.edge` block the encode-side rows "
+                "use. That one is ffmpeg's limited-range Y; this one is "
+                "full-range BT.709 luma from the source RGB, so at the shared "
+                "threshold of 40 it is the wider mask. The row records it "
+                "separately as `masks.render_edge`, with its own operator.",
+            ),
+        ),
+        _spec(
             key="coded_luma_edge_error",
             reference="lossless",
             family="C",

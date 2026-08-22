@@ -229,6 +229,21 @@ Five things about it that are easy to get wrong:
 5. **There is no tolerance band and none is needed.** Two consecutive runs on
    one machine are bit-identical across all six scenes. The report prints the
    relative delta so magnitude is visible without one.
+6. **The defaults are ordered by `generated_at`, not by filename** (an#54).
+   Rows are named `<date>-<sha7>.json`, so a filename sort orders same-day rows
+   by *sha hex* — and a re-baseline plus its after-run on one day is the normal
+   shape of a wave. A row whose stamp is missing or unparseable sorts first, so
+   it is dropped rather than becoming the `after` a verdict is drawn from; it
+   never raises, because one bad file must not break the listing.
+7. **`--strict` exits nonzero on a REFUSAL too** (an#54). It used to `return`
+   from the `ComparisonError` handler ahead of the strict block, so an
+   unreadable `schema_version` — or a `--mutation` no row declares, which is the
+   state every `--strict --mutation <new-lever>` run is in before the lever is
+   registered — passed green.
+8. **A blessed row is surfaced as a caveat** (an#54). A `--bless` run WROTE the
+   goldens it would otherwise have compared against, so its family B is gated
+   `blessed_this_run` — and `format_comparison` skips `unchanged` entries, so
+   family B does not appear as "unchanged", it does not appear AT ALL.
 
 Five per-metric verdicts under a mutation: `as_declared`, `contrary`,
 `did_not_move` (the lever never reached it — a different fix from `contrary`),
@@ -236,7 +251,35 @@ Five per-metric verdicts under a mutation: `as_declared`, `contrary`,
 The criterion is **families, not metrics**: two witnesses from one family count
 once.
 
+## Re-blessing inside a wave: the three-row protocol (an#54)
+
+A `--bless` run cannot be its own evidence, so a wave that moves the goldens
+files **three** rows, in this order:
+
+| row | how | what it is for |
+|---|---|---|
+| **before** | `an bench` on the base commit | the baseline |
+| **after-unblessed** | `an bench` on the change, **no `--bless`** | the PR's evidence — the only row that can fail family B |
+| **after-blessed** | `an bench --bless "<why>"` | the new baseline |
+
+Two consequences worth knowing before you meet them:
+
+- **A bless row always lands `-dirty`**, because the state that NAMES it is
+  re-read *after* the loop the bless writes in (`run_bench`'s
+  `naming_git_state`). It therefore drops out of `latest_rows`, which excludes
+  `-dirty` — correct, since its family B was never asked.
+- **A committed golden is cross-checked against its own bless record** on every
+  run, on DECODED PIXELS. A disagreement is `unavailable`, not a pass: the file
+  is not the picture a human blessed.
+
 ## Pulling a lever (an#41)
+
+`an bench --mutation <lever>` pulls one for a whole run, and asks `--compare`
+the per-mutation question instead of "is the second row worse". A mutated row
+is **never** filed in the ledger directory — the CLI refuses — because it
+measures a pipeline broken on purpose, and `--bless` under a lever is refused
+outright.
+
 
 `an/bench/mutations.py` holds the two levers. **No production knob exists for
 either, deliberately** — a knob would have to be documented, defended, and kept

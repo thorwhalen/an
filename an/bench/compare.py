@@ -43,6 +43,7 @@ than referencing the registry that happened to be installed.
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -77,6 +78,8 @@ MASK_PARAM_PATHS: tuple[tuple[str, ...], ...] = (
     ("masks", "flat", "dilate_k"),
     ("masks", "held", "operator"),
     ("masks", "ring", "operator"),
+    ("masks", "render_edge", "operator"),
+    ("masks", "render_edge", "threshold"),
 )
 
 #: Row-provenance paths that must match for a **render-side** metric.
@@ -696,13 +699,22 @@ def compare(before: dict, after: dict, *, mutation: str | None = None) -> dict:
         "coverage_lost": {
             n: s["coverage_lost"] for n, s in scenes.items() if s.get("coverage_lost")
         },
+        # `blessed_scenes` is a CAVEAT, never a comparability key. A `--bless`
+        # run WROTE the goldens it would otherwise have compared against, so its
+        # family-B rows are gated `blessed_this_run` — and `format_comparison`
+        # skips entries whose verdict is `unchanged`, so family B does not
+        # appear as "unchanged", it does not appear AT ALL. "Family B agreed"
+        # and "family B was never asked" are the same blank space in the table,
+        # which is why this key stops being write-only.
         "before": {
             "git": before["provenance"].get("git"),
             "generated_at": before.get("generated_at"),
+            "blessed_scenes": sorted(before["provenance"].get("blessed") or ()),
         },
         "after": {
             "git": after["provenance"].get("git"),
             "generated_at": after.get("generated_at"),
+            "blessed_scenes": sorted(after["provenance"].get("blessed") or ()),
         },
         "environment_refusals": {k: v for k, v in env_refusals.items() if v},
         "environment_caveats": env_caveats,
@@ -744,8 +756,65 @@ def load_row(path: Path | str) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def _row_instant(row: Any) -> float | None:
+    """A row's ``generated_at`` as a POSIX timestamp, or ``None`` if unreadable.
+
+    ``None`` for four separate reasons — not an object, no ``generated_at``, not
+    a string, not an ISO-8601 instant — and deliberately for all four at once:
+    none of them is a reason to abort a *listing*. A single malformed file in
+    the ledger directory would otherwise crash every bare ``an bench-compare``,
+    which is a worse failure than the ordering bug this exists to fix.
+
+    ``build_ledger`` writes UTC with a ``Z`` suffix, which ``fromisoformat``
+    only accepts from Python 3.11; this package's floor is 3.10, so the suffix
+    is rewritten rather than relied on. A naive stamp is read as UTC, because
+    mixing aware and naive datetimes raises on comparison and a sort must not.
+
+    >>> _row_instant({"generated_at": "2026-08-21T19:02:31Z"})
+    1787338951.0
+    >>> _row_instant({"generated_at": "yesterday"}) is None
+    True
+    >>> _row_instant({}) is None
+    True
+    >>> _row_instant("not a row") is None
+    True
+    """
+    if not isinstance(row, dict):
+        return None
+    stamp = row.get("generated_at")
+    if not isinstance(stamp, str):
+        return None
+    try:
+        moment = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    return moment.timestamp()
+
+
+def _generated_at(path: Path) -> float | None:
+    """:func:`_row_instant` for a file, with an unreadable file reading ``None``."""
+    try:
+        return _row_instant(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return None
+
+
 def latest_rows(*, root: Path | None = None, count: int = 2) -> list[Path]:
-    """The most recent committed ledger rows, newest last.
+    """The most recent committed ledger rows, newest last — **by `generated_at`**.
+
+    Not by filename. Filenames are ``<date>-<sha7>[-dirty].json``, so a filename
+    sort orders same-day rows by *sha hex*. On a Wave 3 PR the re-baseline and
+    the after-run are plausibly the same day, and when the after-commit's sha
+    sorts lower a bare ``an bench-compare`` silently swaps before and after and
+    reports every improvement as a regression.
+
+    A row whose ``generated_at`` cannot be read sorts **before** every dated
+    one, so it is dropped as soon as two dated rows exist: a corrupt or
+    pre-schema file must never become the ``after`` row a verdict is drawn from.
+    The filename stays the tiebreak, which is what keeps a directory whose rows
+    all lack the key ordered by date.
 
     ``-dirty`` rows are excluded: a row measured against uncommitted edits
     describes no commit, and comparing one is comparing against nothing
@@ -753,8 +822,14 @@ def latest_rows(*, root: Path | None = None, count: int = 2) -> list[Path]:
     """
     from an.bench.paths import ledger_dir
 
-    rows = sorted(p for p in ledger_dir(root).glob("*.json") if "-dirty" not in p.name)
-    return rows[-count:]
+    rows = [p for p in ledger_dir(root).glob("*.json") if "-dirty" not in p.name]
+    stamps = {p: _generated_at(p) for p in rows}
+
+    def key(path: Path) -> tuple[int, float, str]:
+        stamp = stamps[path]
+        return (0, 0.0, path.name) if stamp is None else (1, stamp, path.name)
+
+    return sorted(rows, key=key)[-count:]
 
 
 def format_comparison(report: dict) -> str:
@@ -766,6 +841,16 @@ def format_comparison(report: dict) -> str:
         f"{(report['after'].get('git') or {}).get('sha', '?')[:7]}"
         + (f"  under mutation {mutation!r}" if mutation else "")
     )
+    for side_name in ("before", "after"):
+        blessed = (report.get(side_name) or {}).get("blessed_scenes") or []
+        if blessed:
+            lines.append(
+                f"  caveat: the {side_name} row came from a --bless run, which "
+                f"WROTE the goldens for {blessed} rather than comparing "
+                "against them. Family B is gated `blessed_this_run` there, so "
+                "it is ABSENT from the table below — not unchanged, never "
+                "asked. The row that can fail family B is the unblessed one."
+            )
     for scope, refusals in (report.get("environment_refusals") or {}).items():
         side = "render-side" if scope == "any_machine" else "encode-side"
         lines.append(f"  REFUSED for every {side} metric — the environment differs:")

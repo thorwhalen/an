@@ -43,7 +43,10 @@ def test_a_softened_step_reads_wider_than_a_hard_one():
     for i in range(1, 4):
         soft[:, :, 8 - i] = 255 * (0.5 - i * 0.12)
         soft[:, :, 7 + i] = 255 * (0.5 + i * 0.12)
-    assert M.edge_transition_width(soft.astype(np.uint8))[0] > M.edge_transition_width(hard)[0]
+    assert (
+        M.edge_transition_width(soft.astype(np.uint8))[0]
+        > M.edge_transition_width(hard)[0]
+    )
 
 
 def _dithered_flat(amplitude: int, *, width: int = 64) -> np.ndarray:
@@ -118,7 +121,9 @@ def test_the_packed_form_agrees_with_the_slow_one_it_replaced():
     packed = M.pack_rgb(a)
     slow = 0
     for frame in a.reshape(-1, 3):
-        if ((int(frame[0]) << 16) | (int(frame[1]) << 8) | int(frame[2])) not in palette:
+        if (
+            (int(frame[0]) << 16) | (int(frame[1]) << 8) | int(frame[2])
+        ) not in palette:
             slow += 1
     assert M.off_palette_pixel_fraction(packed, palette) == pytest.approx(
         slow / a[..., 0].size
@@ -225,7 +230,10 @@ def test_a_harder_source_raises_both_legs_and_moves_the_excess_less():
     src = np.zeros((1, 1, 4), np.uint8)
     ring = np.ones((1, 1, 4), bool)
     soft = (np.array([[[4, 0, 4, 0]]], np.uint8), np.array([[[2, 0, 2, 0]]], np.uint8))
-    hard = (np.array([[[40, 0, 40, 0]]], np.uint8), np.array([[[38, 0, 38, 0]]], np.uint8))
+    hard = (
+        np.array([[[40, 0, 40, 0]]], np.uint8),
+        np.array([[[38, 0, 38, 0]]], np.uint8),
+    )
     soft_raw = M.overshoot_mean(soft[0], src, ring)
     hard_raw = M.overshoot_mean(hard[0], src, ring)
     assert hard_raw > 5 * soft_raw, "raw overshoot tracks source hardness"
@@ -257,9 +265,9 @@ def test_the_windowed_form_sees_a_local_change_the_global_one_is_blind_to():
     # the global form is blind because the flat fill dominates its moments, so
     # a synthetic with near-zero global variance would not reproduce it.
     base = np.ones((256, 256))
-    base[40:200, 40:60] = 0.1      # a torso-sized dark block
-    base[40:200, 190:210] = 0.1    # and another
-    base[100:120, 100:160] = 0.3   # a mid-tone feature
+    base[40:200, 40:60] = 0.1  # a torso-sized dark block
+    base[40:200, 190:210] = 0.1  # and another
+    base[100:120, 100:160] = 0.3  # a mid-tone feature
     blinked = base.copy()
     blinked[60:66, 120:132] = 0.05  # one eye-sized feature appears
 
@@ -290,3 +298,115 @@ def test_the_golden_comparison_is_full_frame_and_not_edge_masked():
     assert out["identical"] is False
     assert out["changed_px"] == 9
     assert out["max_delta"] == 40
+
+
+# ---------------------------------------- edge_masked_distinct_colours (an#55)
+
+
+def _box3(a):
+    """3x3 box blur, edge-replicated, per channel. The canonical soft-picture."""
+    p = np.pad(a.astype(np.float64), ((0, 0), (1, 1), (1, 1), (0, 0)), mode="edge")
+    out = np.zeros_like(p[:, 1:-1, 1:-1])
+    for dy in range(3):
+        for dx in range(3):
+            out += p[:, dy : dy + p.shape[1] - 2, dx : dx + p.shape[2] - 2]
+    return np.rint(out / 9).clip(0, 255).astype(np.uint8)
+
+
+def test_an_interior_only_change_moves_the_whole_frame_count_and_not_the_masked_one():
+    """MUTATION: `f[m]` -> `f` in `edge_masked_distinct_colours`.
+
+    This is the ONE property the mask buys, so it is the one the test pins. A
+    gradient laid entirely inside a flat field is invisible to the masked count
+    and plainly visible to the whole-frame one.
+    """
+    a = np.zeros((1, 8, 24, 3), np.uint8)
+    a[0, :, 12:] = 255
+    b = a.copy()
+    for x in range(2, 8):
+        b[0, :, x] = 8 * (x - 1)  # a ramp, well away from the step at x=12
+
+    edge_a = masks.edge_mask(M.luma_u8(a))
+    edge_b = masks.edge_mask(M.luma_u8(b))
+    assert M.frame_distinct_colours(M.pack_rgb(b)) > M.frame_distinct_colours(
+        M.pack_rgb(a)
+    )
+    assert (
+        M.edge_masked_distinct_colours(M.pack_rgb(b), edge_b)[0]
+        == (M.edge_masked_distinct_colours(M.pack_rgb(a), edge_a)[0])
+    )
+
+
+def test_the_masked_count_is_NOT_blind_to_a_blur_and_the_docstring_says_so():
+    """an#55's premise, refuted by measurement and pinned so it stays refuted.
+
+    The issue argued that restricting the count to the edge mask makes it blind
+    to "the frame got blurrier". It does not: the mask is recomputed from the
+    frame being measured, and a blur WIDENS the edge band, so the mask grows to
+    admit the new gradation. This test exists so nobody re-derives the claim
+    from the metric's name.
+
+    MUTATION: none needed — it fails the moment someone writes a blur-immunity
+    assertion in its place.
+    """
+    a = np.zeros((1, 16, 32, 3), np.uint8)
+    a[0, :, 16:] = 255
+    b = _box3(a)
+
+    masked_before = M.edge_masked_distinct_colours(
+        M.pack_rgb(a), masks.edge_mask(M.luma_u8(a))
+    )[0]
+    masked_after = M.edge_masked_distinct_colours(
+        M.pack_rgb(b), masks.edge_mask(M.luma_u8(b))
+    )[0]
+    assert masked_after > masked_before, (
+        "if this ever becomes False the refutation has been undone by accident "
+        "and the metric's docstring, which states it as measured, is now wrong"
+    )
+    # What DOES separate the two cases is the width half of the pair.
+    assert M.edge_transition_width(b)[0] > 1.5 * M.edge_transition_width(a)[0]
+
+
+def test_an_empty_edge_mask_is_unavailable_and_never_a_colour_count_of_zero():
+    """MUTATION: `return float("nan"), 0` -> `return 0.0, 0`.
+
+    A substituted zero is the largest possible DOWNWARD move in the one metric
+    that exists to notice a downward move, on the one kind of scene (no hard
+    edge anywhere) where the number means nothing at all.
+    """
+    flat = np.full((3, 8, 8, 3), 128, np.uint8)
+    value, measured_frames = M.edge_masked_distinct_colours(
+        M.pack_rgb(flat), masks.edge_mask(M.luma_u8(flat))
+    )
+    assert value != value, "an absent measurement must be NaN, not 0.0"
+    assert measured_frames == 0
+
+    from an.bench.ledger import LedgerSchemaError, measured
+
+    with pytest.raises(LedgerSchemaError):
+        measured(value)
+
+
+def test_a_frame_with_no_edges_is_skipped_rather_than_averaged_in_as_zero():
+    """One blank frame in a sequence must not drag the mean toward zero."""
+    a = np.zeros((2, 8, 24, 3), np.uint8)
+    a[0, :, 12:] = 255  # frame 0 has a step; frame 1 is uniform black
+    value, measured_frames = M.edge_masked_distinct_colours(
+        M.pack_rgb(a), masks.edge_mask(M.luma_u8(a))
+    )
+    assert measured_frames == 1
+    assert value == 2.0
+
+
+def test_the_float_luma_trap_produces_an_empty_mask_rather_than_a_wrong_number():
+    """MUTATION: `luma_u8(rgb)` -> `luma709(rgb)` at the mask's call site.
+
+    `luma709` is float in [0,1] and `edge_mask` thresholds at 40 on 0-255, so
+    every two-apart gradient is <= 1.0 and NOTHING is ever an edge. The metric
+    then reads `unavailable` on every scene — which looks like "the check could
+    not run", not like a bug.
+    """
+    a = np.zeros((1, 8, 24, 3), np.uint8)
+    a[0, :, 12:] = 255
+    assert masks.edge_mask(M.luma_u8(a)).sum() > 0
+    assert masks.edge_mask(M.luma709(a).astype(np.uint8)).sum() == 0

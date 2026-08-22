@@ -1,4 +1,11 @@
-"""The three masks every encode-side metric is computed over, plus the ring.
+"""Every mask the panel is computed over, and the recorded operator for each.
+
+Three of them serve the encode-side metrics, plus the ring. ``EDGE_OPERATOR``
+has a second spelling, ``RENDER_EDGE_OPERATOR``: the same operator applied on
+the **render** side, where the luma comes from the source RGB rather than from
+ffmpeg. It is a second string rather than a reuse because it measures a
+different plane — which is also what keeps family A's mask off the encoder's
+toolchain, on the branch where ffmpeg is absent.
 
 Each mask is derived **only from the reference (pre-encode) frames**, never
 from the decoded ones. That is not a stylistic choice: a mask derived from the
@@ -33,6 +40,22 @@ FLAT_OPERATOR: str = (
 )
 HELD_OPERATOR: str = "|src[i+1]-src[i]|.max(-1) == 0, on the SOURCE"
 RING_OPERATOR: str = "dilate2(edge) & ~edge"
+
+#: The SAME operator on the render side, and deliberately a second string
+#: rather than a reuse of `EDGE_OPERATOR`. `an.bench.imageio`'s
+#: `SOURCE_SCALE_FILTER` pins `out_range=tv`, so ffmpeg's Y lives in [16,235]
+#: and its two-apart gradients are 219/255 of the full-range ones this operator
+#: sees. At one threshold that makes this the wider mask ON A HARD SYNTHETIC
+#: STEP — measured, a 45-code-value step selects 4 pixels here and 0 on the
+#: limited-range plane — but NOT uniformly on real frames, where the two run
+#: within a percent either way and the render-side one is the narrower on
+#: `graded_field` and `single_character`. Which is the point: the two are
+#: different measurements, and a reader can only know which one a row carries
+#: if the row says which plane it measured.
+RENDER_EDGE_OPERATOR: str = (
+    "max(|Y[:,2:]-Y[:,:-2]|, |Y[2:,:]-Y[:-2,:]|) > %d, on FULL-RANGE BT.709 "
+    "luma from the SOURCE RGB (an.bench.metrics.luma_u8)" % EDGE_MASK_THRESHOLD
+)
 
 
 def dilate(mask: Any, k: int = 3) -> Any:

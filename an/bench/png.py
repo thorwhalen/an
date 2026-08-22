@@ -77,6 +77,64 @@ class PngFormatError(ValueError):
     """
 
 
+#: Bytes needed to read an image's declared size: the 8-byte signature, a
+#: 4-byte chunk length, the 4-byte `IHDR` tag, and two big-endian uint32s. PNG
+#: requires IHDR to be the FIRST chunk, so this prefix is always enough.
+PNG_HEADER_BYTES: int = 24
+
+#: Byte offsets fixed by the PNG specification, named rather than spelled
+#: inline at the two places they are sliced.
+_IHDR_TAG: slice = slice(12, 16)
+_IHDR_DIMENSIONS: slice = slice(16, PNG_HEADER_BYTES)
+
+
+def png_dimensions(data: bytes) -> tuple[int, int]:
+    """``(width, height)`` from a PNG's IHDR, without decoding a single pixel.
+
+    Width first, matching the PNG header itself — and deliberately the opposite
+    order from :func:`read_png`, which returns ``(H, W, C)`` like every other
+    array here. Getting it backwards produces a square-looking check that
+    passes on square frames only, so the order is asserted in the tests.
+
+    Cheap on purpose. The bench reads this for **every** frame on disk rather
+    than sampling one, because the failure it exists to catch — a render whose
+    frame size changed partway through — is exactly the one sampling misses.
+
+    >>> import numpy as np
+    >>> png_dimensions(encode_png(np.zeros((240, 320, 3), np.uint8)))
+    (320, 240)
+    """
+    if data[: len(PNG_SIGNATURE)] != PNG_SIGNATURE:
+        raise PngFormatError("not a PNG: the 8-byte signature does not match")
+    if len(data) < PNG_HEADER_BYTES:
+        raise PngFormatError(
+            f"{len(data)} bytes is too short to carry an IHDR; "
+            f"{PNG_HEADER_BYTES} are needed to read the declared size"
+        )
+    if data[_IHDR_TAG] != b"IHDR":
+        raise PngFormatError(
+            f"the first chunk is {data[_IHDR_TAG]!r}, not IHDR. PNG requires "
+            "IHDR first, so this file's size cannot be read from its header — "
+            "and returning the four bytes that happen to sit there would be a "
+            "plausible-looking resolution, which is worse than refusing."
+        )
+    width, height = struct.unpack(">II", data[_IHDR_DIMENSIONS])
+    return int(width), int(height)
+
+
+def read_png_dimensions(path: Any) -> tuple[int, int]:
+    """``(width, height)`` for a PNG on disk, reading only its header.
+
+    A 1080p frame is megabytes and its declared size is in the first 24 of
+    them. Reading only those is what makes checking every frame of every shot
+    free rather than a second full decode of the corpus.
+    """
+    from pathlib import Path
+
+    with Path(path).open("rb") as handle:
+        return png_dimensions(handle.read(PNG_HEADER_BYTES))
+
+
 def _chunk(kind: bytes, payload: bytes) -> bytes:
     return (
         struct.pack(">I", len(payload))
