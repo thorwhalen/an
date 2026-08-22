@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.png &mdash; an 0.1.36 documentation</title>
+  <title>an.bench.png &mdash; an 0.1.37 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1c946a6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b8ecee75"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -98,13 +98,16 @@
 <li class="toctree-l1"><a class="reference internal" href="paths.html">an.bench.paths</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.png</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.DFLT_ZLIB_LEVEL"><code class="docutils literal notranslate"><span class="pre">DFLT_ZLIB_LEVEL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.png.PNG_HEADER_BYTES"><code class="docutils literal notranslate"><span class="pre">PNG_HEADER_BYTES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.PNG_SIGNATURE"><code class="docutils literal notranslate"><span class="pre">PNG_SIGNATURE</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.PngFormatError"><code class="docutils literal notranslate"><span class="pre">PngFormatError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.RGB_CHANNELS"><code class="docutils literal notranslate"><span class="pre">RGB_CHANNELS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.SUPPORTED_BIT_DEPTH"><code class="docutils literal notranslate"><span class="pre">SUPPORTED_BIT_DEPTH</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.decode_png"><code class="docutils literal notranslate"><span class="pre">decode_png()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.encode_png"><code class="docutils literal notranslate"><span class="pre">encode_png()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.png.png_dimensions"><code class="docutils literal notranslate"><span class="pre">png_dimensions()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.read_png"><code class="docutils literal notranslate"><span class="pre">read_png()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.png.read_png_dimensions"><code class="docutils literal notranslate"><span class="pre">read_png_dimensions()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.to_rgb"><code class="docutils literal notranslate"><span class="pre">to_rgb()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.png.write_png"><code class="docutils literal notranslate"><span class="pre">write_png()</span></code></a></li>
 </ul>
@@ -222,6 +225,19 @@ read often, and because the committed bytes are reviewed in a diff.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="an.bench.png.PNG_HEADER_BYTES">
+<span class="sig-prename descclassname"><span class="pre">an.bench.png.</span></span><span class="sig-name descname"><span class="pre">PNG_HEADER_BYTES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">24</span></span><a class="headerlink" href="#an.bench.png.PNG_HEADER_BYTES" title="Link to this definition"></a></dt>
+<dd><p>the 8-byte signature, a
+4-byte chunk length, the 4-byte <cite>IHDR</cite> tag, and two big-endian uint32s. PNG
+requires IHDR to be the FIRST chunk, so this prefix is always enough.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Bytes needed to read an image’s declared size</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="an.bench.png.PNG_SIGNATURE">
 <span class="sig-prename descclassname"><span class="pre">an.bench.png.</span></span><span class="sig-name descname"><span class="pre">PNG_SIGNATURE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">b'\x89PNG\r\n\x1a\n'</span></span><a class="headerlink" href="#an.bench.png.PNG_SIGNATURE" title="Link to this definition"></a></dt>
 <dd><p>PNG’s fixed 8-byte signature.</p>
@@ -279,9 +295,36 @@ interlaced images, naming what it found.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="an.bench.png.png_dimensions">
+<span class="sig-prename descclassname"><span class="pre">an.bench.png.</span></span><span class="sig-name descname"><span class="pre">png_dimensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/png.html#png_dimensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.png.png_dimensions" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(width,</span> <span class="pre">height)</span></code> from a PNG’s IHDR, without decoding a single pixel.</p>
+<p>Width first, matching the PNG header itself — and deliberately the opposite
+order from <a class="reference internal" href="#an.bench.png.read_png" title="an.bench.png.read_png"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_png()</span></code></a>, which returns <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W,</span> <span class="pre">C)</span></code> like every other
+array here. Getting it backwards produces a square-looking check that
+passes on square frames only, so the order is asserted in the tests.</p>
+<p>Cheap on purpose. The bench reads this for <strong>every</strong> frame on disk rather
+than sampling one, because the failure it exists to catch — a render whose
+frame size changed partway through — is exactly the one sampling misses.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">png_dimensions</span><span class="p">(</span><span class="n">encode_png</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">240</span><span class="p">,</span> <span class="mi">320</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)))</span>
+<span class="go">(320, 240)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="an.bench.png.read_png">
 <span class="sig-prename descclassname"><span class="pre">an.bench.png.</span></span><span class="sig-name descname"><span class="pre">read_png</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../_modules/an/bench/png.html#read_png"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.png.read_png" title="Link to this definition"></a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W,</span> <span class="pre">3)</span></code> uint8 for a PNG on disk, alpha dropped only if opaque.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.png.read_png_dimensions">
+<span class="sig-prename descclassname"><span class="pre">an.bench.png.</span></span><span class="sig-name descname"><span class="pre">read_png_dimensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/png.html#read_png_dimensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.png.read_png_dimensions" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(width,</span> <span class="pre">height)</span></code> for a PNG on disk, reading only its header.</p>
+<p>A 1080p frame is megabytes and its declared size is in the first 24 of
+them. Reading only those is what makes checking every frame of every shot
+free rather than a second full decode of the corpus.</p>
 </dd></dl>
 
 <dl class="py function">

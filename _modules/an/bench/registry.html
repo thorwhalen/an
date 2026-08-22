@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.36 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.37 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1c946a6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b8ecee75"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -207,12 +207,19 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
-<span class="c1">#: The two disjoint levers an#41 uses. Both are mandatory: an encoder lever</span>
-<span class="c1">#: cannot touch a golden-frame metric because the corpus is UPSTREAM of the</span>
-<span class="c1">#: encoder, so requiring "&gt;=3 metrics" from a CRF change alone would fail</span>
-<span class="c1">#: because of where the corpus sits, not because the instrument is blind — and</span>
-<span class="c1">#: that failure would be misdiagnosed as the harness being wrong.</span>
-<span class="n">MUTATIONS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"high_crf"</span><span class="p">,</span> <span class="s2">"disabled_aa"</span><span class="p">)</span>
+<span class="c1">#: The levers an#41 and an#56 use. At least one per SIDE is mandatory: an</span>
+<span class="c1">#: encoder lever cannot touch a golden-frame metric because the corpus is</span>
+<span class="c1">#: UPSTREAM of the encoder, so requiring "&gt;=3 metrics" from a CRF change alone</span>
+<span class="c1">#: would fail because of where the corpus sits, not because the instrument is</span>
+<span class="c1">#: blind — and that failure would be misdiagnosed as the harness being wrong.</span>
+<span class="c1">#:</span>
+<span class="c1">#: `supersample` is the third and it is the odd one out on purpose: the other</span>
+<span class="c1">#: two make the picture worse and it makes the picture BETTER. A panel that has</span>
+<span class="c1">#: only ever been shown degradations cannot tell an improvement from a</span>
+<span class="c1">#: regression — run as a plain commit-to-commit diff this change reports 2</span>
+<span class="c1">#: false regressions and 7 unearned improvements (an#56). Declaring it is how</span>
+<span class="c1">#: that gets found before it is believed.</span>
+<span class="n">MUTATIONS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"high_crf"</span><span class="p">,</span> <span class="s2">"disabled_aa"</span><span class="p">,</span> <span class="s2">"supersample"</span><span class="p">)</span>
 
 
 <span class="c1">#: What each lever is EXPECTED to change about the recorded environment.</span>
@@ -298,6 +305,15 @@
         <span class="p">),</span>
     <span class="p">),</span>
     <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="p">(</span><span class="n">Touch</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="p">(</span><span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"render_side"</span><span class="p">,</span> <span class="s2">"runtime_sha256"</span><span class="p">)),),</span>
+    <span class="c1"># The SAME path as `disabled_aa`, and that is correct rather than a</span>
+    <span class="c1"># collision: both render levers work by staging a patched copy of the</span>
+    <span class="c1"># runtime, so both move the digest of the runtime that rendered. The entries</span>
+    <span class="c1"># are keyed by lever, so nothing is shared. What the shared path DOES cost</span>
+    <span class="c1"># is the strength of the fingerprint — "the digest is not the shipped one"</span>
+    <span class="c1"># is satisfied by either lever — which is why `_verify_supersample`</span>
+    <span class="c1"># recomputes the digest a resolution-patched runtime produces and asserts</span>
+    <span class="c1"># EQUALITY, instead of copying `_verify_disabled_aa`'s inequality check.</span>
+    <span class="s2">"supersample"</span><span class="p">:</span> <span class="p">(</span><span class="n">Touch</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="p">(</span><span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"render_side"</span><span class="p">,</span> <span class="s2">"runtime_sha256"</span><span class="p">)),),</span>
 <span class="p">}</span>
 
 <span class="n">Side</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"render"</span><span class="p">,</span> <span class="s2">"encode"</span><span class="p">]</span>
@@ -565,6 +581,37 @@
                     <span class="p">),</span>
                     <span class="n">reference</span><span class="o">=</span><span class="s2">"2.88 -&gt; 2.00 on `aa_probe`; 5.6368 -&gt; 5.6369 on `promote_demo`"</span><span class="p">,</span>
                 <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"family A's witness for THIS lever, and scene-dependent "</span>
+                        <span class="s2">"by measurement in the exact inverse of `disabled_aa`. "</span>
+                        <span class="s2">"Holds on the five procedural scenes (`graded_field` "</span>
+                        <span class="s2">"+8.0%, `aa_probe` +7.4%, `saturated_outline` +5.2%, "</span>
+                        <span class="s2">"`multi_shot` +5.1%, `single_character` +2.6%) and is "</span>
+                        <span class="s2">"`contrary` on `promote_demo` at -34.8%. That inversion "</span>
+                        <span class="s2">"is REAL, not the +0.0001 nothing `disabled_aa` produces "</span>
+                        <span class="s2">"on the same scene: the SVG sprite rasterises AT 2x "</span>
+                        <span class="s2">"instead of being stretched up from a 1x texture, so the "</span>
+                        <span class="s2">"descriptor path is the one scene this lever reaches "</span>
+                        <span class="s2">"hardest and the AA lever cannot reach at all. The two "</span>
+                        <span class="s2">"render levers reach complementary scenes. `increase` is "</span>
+                        <span class="s2">"declared because the criterion is evaluated PER SCENE "</span>
+                        <span class="s2">"and met on at least one — the same shape "</span>
+                        <span class="s2">"`video_stream_bytes` already carries under "</span>
+                        <span class="s2">"`disabled_aa`. An increase here is not a regression: the "</span>
+                        <span class="s2">"optimum is interior, and this walks TOWARD a measured "</span>
+                        <span class="s2">"ceiling (2.5846 `saturated_outline`, 2.9167 "</span>
+                        <span class="s2">"`graded_field`, ~2.452 `multi_shot`, ~2.140 "</span>
+                        <span class="s2">"`single_character`, ~3.503 `promote_demo`). `aa_probe` "</span>
+                        <span class="s2">"has NO ceiling — its diagonals land the block-mean grid "</span>
+                        <span class="s2">"differently at every k, so it oscillates +/-5-8% with no "</span>
+                        <span class="s2">"settling — and gets no declared target, because a value "</span>
+                        <span class="s2">"nobody measured is not a value (research §3a)."</span>
+                    <span class="p">),</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"2.3685 -&gt; 2.4921 on `saturated_outline`; 5.6368 -&gt; 3.6775 on `promote_demo`"</span><span class="p">,</span>
+                <span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>
@@ -594,6 +641,31 @@
                     <span class="s2">"decrease"</span><span class="p">,</span>
                     <span class="n">reason</span><span class="o">=</span><span class="s2">"family A already supplies edge_transition_width as its witness"</span><span class="p">,</span>
                 <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"family A already supplies `edge_transition_width` as its "</span>
+                        <span class="s2">"witness — count at most one per family. `increase` and "</span>
+                        <span class="s2">"NOT `not_applicable`: this is a render lever and the "</span>
+                        <span class="s2">"metric is render-side, so `not_applicable` would make "</span>
+                        <span class="s2">"every scene report `unexpected_movement` for a metric "</span>
+                        <span class="s2">"doing exactly what it should. An exact block-mean "</span>
+                        <span class="s2">"resolve replaces hard edge pixels with blends, and a "</span>
+                        <span class="s2">"blend is off-palette by definition. MEASURED on the "</span>
+                        <span class="s2">"corpus and scene-dependent, like everything else this "</span>
+                        <span class="s2">"lever touches: `single_character` +28.9%, `multi_shot` "</span>
+                        <span class="s2">"+24.2%, `aa_probe` +21.8%, `graded_field` +0.0%; "</span>
+                        <span class="s2">"contrary on the two scenes whose k=1 frames are already "</span>
+                        <span class="s2">"the most off-palette, `promote_demo` -22.8</span><span class="si">% a</span><span class="s2">nd "</span>
+                        <span class="s2">"`saturated_outline` -9.9%, where an exact resolve "</span>
+                        <span class="s2">"REPLACES many one-off MSAA blends with fewer, more "</span>
+                        <span class="s2">"regular ones. It counts nothing either way. And the "</span>
+                        <span class="s2">"optimum says `minimize` while this improvement moves it "</span>
+                        <span class="s2">"UP, which is the metric's own caveat stated in its "</span>
+                        <span class="s2">"`note`: on this axis it is a change detector, not a "</span>
+                        <span class="s2">"quality dial."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>
@@ -611,7 +683,142 @@
                     <span class="s2">"decrease"</span><span class="p">,</span>
                     <span class="n">reason</span><span class="o">=</span><span class="s2">"do not count it alongside off_palette_pixel_fraction; same family"</span><span class="p">,</span>
                 <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"do not count it alongside `edge_transition_width`; same "</span>
+                        <span class="s2">"family. SCENE-DEPENDENT and measured (research §4): "</span>
+                        <span class="s2">"+197% `single_character`, +186% `aa_probe`, +184% "</span>
+                        <span class="s2">"`multi_shot`, +10% `graded_field` — and DOWN 18</span><span class="si">% o</span><span class="s2">n "</span>
+                        <span class="s2">"`saturated_outline` and 23</span><span class="si">% o</span><span class="s2">n `promote_demo`. On a "</span>
+                        <span class="s2">"scene that already carries a lot of colour, 1x MSAA "</span>
+                        <span class="s2">"emits many one-off blend values and an exact 2x resolve "</span>
+                        <span class="s2">"replaces them with fewer, more regular ones: the picture "</span>
+                        <span class="s2">"gets BETTER and the count goes DOWN. This is what "</span>
+                        <span class="s2">"refutes epic #9's 'edge distinct-colour count materially "</span>
+                        <span class="s2">"up on every corpus scene' — the statistic has a "</span>
+                        <span class="s2">"scene-dependent sign, which is not a magnitude problem "</span>
+                        <span class="s2">"and cannot be fixed by rendering harder. (The metric "</span>
+                        <span class="s2">"that done-when literally names, `edge_distinct_colours`, "</span>
+                        <span class="s2">"does not exist: refuted and deleted in Wave 2.) Read as "</span>
+                        <span class="s2">"a PAIR with `edge_transition_width` — colours up + width "</span>
+                        <span class="s2">"up slightly = gradation added; colours +3600% + width "</span>
+                        <span class="s2">"+45% = lanczos ringing; colours down + width down = "</span>
+                        <span class="s2">"sharpened. an#41's criterion counts metrics "</span>
+                        <span class="s2">"INDEPENDENTLY and cannot express that conjunction, so "</span>
+                        <span class="s2">"the pair is evidence for a human reader and is NOT a "</span>
+                        <span class="s2">"gate."</span>
+                    <span class="p">),</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"7.6 -&gt; 21.7 on `aa_probe`; 478.2 -&gt; 392.3 on `saturated_outline`"</span><span class="p">,</span>
+                <span class="p">),</span>
             <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"edge_masked_distinct_colours"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"A"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"count"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"How many different colours sit ON the edges — the row above, "</span>
+                <span class="s2">"restricted to the edge mask."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"A guard, not a dial, for the exact reason Wave 2 deleted "</span>
+                    <span class="s2">"the ONE-SIDED `edge_distinct_colours`: a 3x3 blur raised "</span>
+                    <span class="s2">"that 9.2x and +/-3-LSB noise 55x, and BOTH degradations "</span>
+                    <span class="s2">"read as 'AA restored'. What the mask buys is narrower than "</span>
+                    <span class="s2">"an#55 assumed, and the difference was MEASURED before this "</span>
+                    <span class="s2">"row shipped: an INTERIOR-ONLY change cannot reach the "</span>
+                    <span class="s2">"number, but a whole-frame blur can, because the mask is "</span>
+                    <span class="s2">"recomputed from the frame being measured and a blur widens "</span>
+                    <span class="s2">"the edge band. 3x3 box blur on the six committed goldens, "</span>
+                    <span class="s2">"ratio against k=1, whole-frame vs edge-masked: aa_probe "</span>
+                    <span class="s2">"10.25x/9.50x, graded_field 2.04x/2.35x, multi_shot "</span>
+                    <span class="s2">"7.92x/4.63x, promote_demo 1.25x/0.83x, saturated_outline "</span>
+                    <span class="s2">"1.49x/1.14x, single_character 8.60x/5.70x — damped on four "</span>
+                    <span class="s2">"of six, WORSE on one, blind on none. So the metric that "</span>
+                    <span class="s2">"separates a blur from a supersample is "</span>
+                    <span class="s2">"`edge_transition_width` (2.1x-3.4x under the same blur "</span>
+                    <span class="s2">"against +2.6% to +8.0</span><span class="si">% u</span><span class="s2">nder an exact k=2 resolve), and "</span>
+                    <span class="s2">"this row is the second half of that reading, not the first. "</span>
+                    <span class="s2">"**The pair is evidence for a human reader and NOT a gate** "</span>
+                    <span class="s2">"— an#41's criterion counts metrics independently and cannot "</span>
+                    <span class="s2">"express a conjunction, so nothing here may be read as one. "</span>
+                    <span class="s2">"No figure for THIS metric under a lever exists yet, which "</span>
+                    <span class="s2">"is why `reference` is unset rather than borrowed from "</span>
+                    <span class="s2">"`frame_distinct_colours` (an#55)."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"not_applicable"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"pre-encode, and blind to the encoder BY CONSTRUCTION "</span>
+                        <span class="s2">"like every family A row: both the mask and the colours "</span>
+                        <span class="s2">"come from the source PNG, which sits upstream of the "</span>
+                        <span class="s2">"encoder"</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"the same direction as `frame_distinct_colours`, "</span>
+                        <span class="s2">"deliberately: for flat cutout art essentially all "</span>
+                        <span class="s2">"colour variety lives at edges, so the mask is close to "</span>
+                        <span class="s2">"a no-op for the COUNT (wave2 research §1.3 measured the "</span>
+                        <span class="s2">"two within 6%). The whole-frame count under the lever "</span>
+                        <span class="s2">"on `aa_probe` goes 7.6 -&gt; 3.0 at k=1 and 21.7 -&gt; 6.9 at "</span>
+                        <span class="s2">"k=2 (wave3 research §5) — those are `frame_distinct_"</span>
+                        <span class="s2">"colours` numbers, NOT this metric's, and `reference` is "</span>
+                        <span class="s2">"deliberately left unset until a real row measures THIS "</span>
+                        <span class="s2">"one. NOT counted: family A spends its one witness on "</span>
+                        <span class="s2">"`edge_transition_width` and this is the same family. "</span>
+                        <span class="s2">"NOT gated either, and the distinction is the one most "</span>
+                        <span class="s2">"likely to be flipped by a later reviewer: the mask does "</span>
+                        <span class="s2">"move with the lever, but the mask and the number come "</span>
+                        <span class="s2">"from the SAME frames, so there is no reference to move. "</span>
+                        <span class="s2">"That is what makes `flat_field_deviation` further down "</span>
+                        <span class="s2">"gated and this one not."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"MEASURED under the lever before it was declared, on all "</span>
+                        <span class="s2">"six scenes, because this metric's whole-frame sibling "</span>
+                        <span class="s2">"has a scene-dependent sign and there was no reason to "</span>
+                        <span class="s2">"assume the masked one would not. Up on four: `aa_probe` "</span>
+                        <span class="s2">"+184.6%, `single_character` +179.3%, `multi_shot` "</span>
+                        <span class="s2">"+146.3%, `graded_field` +13.6%. Down on the two "</span>
+                        <span class="s2">"colour-rich scenes: `saturated_outline` -12.0%, "</span>
+                        <span class="s2">"`promote_demo` -7.6% — where 1x MSAA already emits many "</span>
+                        <span class="s2">"one-off blend values and an exact 2x resolve replaces "</span>
+                        <span class="s2">"them with fewer, more regular ones, so the picture gets "</span>
+                        <span class="s2">"better and the count goes down. `increase` is declared "</span>
+                        <span class="s2">"because the criterion is evaluated PER SCENE and met on "</span>
+                        <span class="s2">"four. NOT counted: family A spends its one witness on "</span>
+                        <span class="s2">"`edge_transition_width` and this is the same family — "</span>
+                        <span class="s2">"read the two together (aa_probe +184.6</span><span class="si">% c</span><span class="s2">olours with "</span>
+                        <span class="s2">"+7.4% width is gradation added; the same 3x3 blur that "</span>
+                        <span class="s2">"raises this metric 9.5x doubles the width) and the pair "</span>
+                        <span class="s2">"separates gradation from softening. It is evidence for "</span>
+                        <span class="s2">"a human, never a gate: an#41's criterion counts metrics "</span>
+                        <span class="s2">"independently and cannot express a conjunction."</span>
+                    <span class="p">),</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"7.58 -&gt; 21.58 on `aa_probe`; 422.25 -&gt; 371.75 on "</span>
+                        <span class="s2">"`saturated_outline`"</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Its mask is NOT the `masks.edge` block the encode-side rows "</span>
+                <span class="s2">"use. That one is ffmpeg's limited-range Y; this one is "</span>
+                <span class="s2">"full-range BT.709 luma from the source RGB, so at the shared "</span>
+                <span class="s2">"threshold of 40 it is the wider mask. The row records it "</span>
+                <span class="s2">"separately as `masks.render_edge`, with its own operator."</span><span class="p">,</span>
+            <span class="p">),</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">"coded_luma_edge_error"</span><span class="p">,</span>
@@ -634,6 +841,20 @@
                     <span class="kc">None</span><span class="p">,</span>
                     <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">,</span>
                     <span class="n">reason</span><span class="o">=</span><span class="s2">"the source PNG moves with the mutation, so the delta is uninterpretable"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"same gate, same mechanism as `disabled_aa`: the source "</span>
+                        <span class="s2">"PNG moves with the mutation. A render lever of EITHER "</span>
+                        <span class="s2">"sign disqualifies it — and this one is the reason to say "</span>
+                        <span class="s2">"so out loud, because a softer source shrinks the edge "</span>
+                        <span class="s2">"mask to its easiest members and the number improves "</span>
+                        <span class="s2">"MECHANICALLY. Ungated it is one of the 7 unearned "</span>
+                        <span class="s2">"improvements a `mutation=None` diff reports for this "</span>
+                        <span class="s2">"change (an#56)."</span>
+                    <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>
             <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
@@ -669,6 +890,7 @@
                     <span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"control for the ratio below"</span>
                 <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>
@@ -695,6 +917,16 @@
                     <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
                         <span class="s2">"measured -0.7</span><span class="si">% o</span><span class="s2">n a faithful AA-off simulation; the "</span>
                         <span class="s2">"claimed +10.7% was refuted. Predict no render-side direction."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"its subject IS the 4:2:0 subsampling of a conversion "</span>
+                        <span class="s2">"whose input this lever changes, so there is no fixed "</span>
+                        <span class="s2">"reference. Predict no render-side direction, exactly as "</span>
+                        <span class="s2">"for `disabled_aa`."</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>
@@ -725,6 +957,7 @@
                     <span class="n">reason</span><span class="o">=</span><span class="s2">"the chroma claim collapses as damage becomes generic"</span><span class="p">,</span>
                 <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>
@@ -761,6 +994,24 @@
                         <span class="s2">"every renderer mutation, for the same reason."</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_SOURCE_HASH</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"the flat mask is derived from the SOURCE frames, which "</span>
+                        <span class="s2">"this lever changes, so the mask itself moves and the "</span>
+                        <span class="s2">"comparison has no fixed reference — structurally "</span>
+                        <span class="s2">"identical to `disabled_aa`, and the DIRECTION of the "</span>
+                        <span class="s2">"render change is irrelevant to it. Note the gate is "</span>
+                        <span class="s2">"`source_hash_differs` and NOT `reference_moved`: an#56 "</span>
+                        <span class="s2">"describes every C/D/E/G row as `reference_moved`, which "</span>
+                        <span class="s2">"is right for 5 of the 9 and wrong for this one, "</span>
+                        <span class="s2">"`flat_field_p99_dev`, `encode_flicker_on_held_pixels` "</span>
+                        <span class="s2">"and `encode_ringing_excess`. The two gates are recorded "</span>
+                        <span class="s2">"separately on purpose: one says the reference moved, "</span>
+                        <span class="s2">"this one says the MASK moved."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
             <span class="p">},</span>
             <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
                 <span class="s2">"Covers the ~90</span><span class="si">% o</span><span class="s2">f the frame no edge metric touches. Banding "</span>
@@ -788,6 +1039,15 @@
                         <span class="s2">"one of six scenes and holding on five, which is what a "</span>
                         <span class="s2">"metric with no fixed reference looks like — not evidence "</span>
                         <span class="s2">"of orthogonality (an#41)."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_SOURCE_HASH</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"gated for the same structural reason as the rate above: "</span>
+                        <span class="s2">"the flat mask moves with the source, under a render "</span>
+                        <span class="s2">"lever of either sign."</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>
@@ -834,6 +1094,24 @@
                         <span class="s2">"large uniform skip regions."</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_SOURCE_HASH</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"'excluded from EVERY renderer mutation's witness count' "</span>
+                        <span class="s2">"is what the declaration beside `disabled_aa` says, and "</span>
+                        <span class="s2">"this is the second renderer mutation it was written for. "</span>
+                        <span class="s2">"Worth restating because THIS lever is the exact shape of "</span>
+                        <span class="s2">"the failure that gate exists for: without it, "</span>
+                        <span class="s2">"half-res-then-nearest-upscale — the most visible "</span>
+                        <span class="s2">"possible flat-art regression — reports a 7.1x "</span>
+                        <span class="s2">"improvement, because a flattened render gives x264 large "</span>
+                        <span class="s2">"uniform skip regions. A block-mean resolve flattens the "</span>
+                        <span class="s2">"source in the same direction, so ungated this metric "</span>
+                        <span class="s2">"would reward the improvement for the identical wrong "</span>
+                        <span class="s2">"reason and nobody could tell the two apart."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>
@@ -862,6 +1140,16 @@
                         <span class="s2">"both legs share a FIXED source, and a renderer mutation "</span>
                         <span class="s2">"moves the source — so what is left is uninterpretable "</span>
                         <span class="s2">"rather than zero."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_SOURCE_HASH</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"the cancellation is exact only when both legs share a "</span>
+                        <span class="s2">"FIXED source; this lever moves it. Measured moving on "</span>
+                        <span class="s2">"all six scenes under `disabled_aa`, and nothing about "</span>
+                        <span class="s2">"the sign of the render change makes it hold still."</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>
@@ -897,6 +1185,7 @@
             <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"increase"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"the comparison arm"</span><span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">_GATED_REFERENCE_MOVED</span><span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>
@@ -934,6 +1223,35 @@
                         <span class="s2">"one witness, and a boolean change detector is not it."</span>
                     <span class="p">),</span>
                     <span class="n">reference</span><span class="o">=</span><span class="s2">"0.9999 -&gt; 0.279 at 1080p / 0.063 at native for a total eye-blink"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"family B's single witness, and THIS lever is what the "</span>
+                        <span class="s2">"SIGN AMBIGUITY note above was written about: a "</span>
+                        <span class="s2">"supersampling IMPROVEMENT moves this away from 1.0 "</span>
+                        <span class="s2">"exactly as an AA regression does, and reports the "</span>
+                        <span class="s2">"improvement as the LARGER change. It counts as evidence "</span>
+                        <span class="s2">"the render CHANGED, which is what family B measures; it "</span>
+                        <span class="s2">"is NOT evidence the change was good, and the note beside "</span>
+                        <span class="s2">"`optimum` is the standing disclaimer that must be read "</span>
+                        <span class="s2">"with it. Fires on all six scenes: the committed baseline "</span>
+                        <span class="s2">"is 1.0 on every one, and research §2/§4 measured a real "</span>
+                        <span class="s2">"pixel move on every one — including `promote_demo`, "</span>
+                        <span class="s2">"which `disabled_aa` cannot reach at all. The magnitude "</span>
+                        <span class="s2">"is the lever's own, from the exam run recorded in the "</span>
+                        <span class="s2">"an#56 PR body — not a figure lifted from a research "</span>
+                        <span class="s2">"table, which is the an#41-review defect this panel "</span>
+                        <span class="s2">"already caught once."</span>
+                    <span class="p">),</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"1.0 -&gt; 0.4380 on `single_character`, 0.4449 on "</span>
+                        <span class="s2">"`promote_demo`, 0.6144 on `saturated_outline`, 0.7756 on "</span>
+                        <span class="s2">"`aa_probe`, 0.7969 on `multi_shot`, 0.8201 on "</span>
+                        <span class="s2">"`graded_field` — every scene, because every scene's "</span>
+                        <span class="s2">"pixels move"</span>
+                    <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>
             <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
@@ -986,6 +1304,36 @@
                     <span class="p">),</span>
                     <span class="n">reference</span><span class="o">=</span><span class="s2">"+6.6% / -6.1%, scene-dependent"</span><span class="p">,</span>
                 <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"family F's witness, and the ONLY third family available "</span>
+                        <span class="s2">"to a render lever: A and B can count, C/D/E/G are all "</span>
+                        <span class="s2">"gated because their masks and references derive from the "</span>
+                        <span class="s2">"source frames, and F is the one encode-side family whose "</span>
+                        <span class="s2">"reference is `none` — a property of the encoded file "</span>
+                        <span class="s2">"rather than a comparison against a moving source. So "</span>
+                        <span class="s2">"an#41's three-family criterion for this lever is A + B + "</span>
+                        <span class="s2">"F, forced, with no substitute. MEASURED before it was "</span>
+                        <span class="s2">"declared, because two mechanisms fight here and guessing "</span>
+                        <span class="s2">"was not available: a block-mean resolve ADDS distinct "</span>
+                        <span class="s2">"values at edges (+184-197</span><span class="si">% o</span><span class="s2">n the three colour-poor "</span>
+                        <span class="s2">"scenes) and it LOWERS edge frequency, which is cheaper "</span>
+                        <span class="s2">"for the DCT. The second wins where there is geometry to "</span>
+                        <span class="s2">"smooth. Scene-dependent, the same shape this row already "</span>
+                        <span class="s2">"carries under `disabled_aa` — and `decrease` is declared "</span>
+                        <span class="s2">"because that is the sign that holds on the scenes where "</span>
+                        <span class="s2">"family A also holds, and because it is the side carrying "</span>
+                        <span class="s2">"the magnitude: the three down-moves are -4.0% to -12.2% "</span>
+                        <span class="s2">"and the three up-moves are +0.8% to +2.8%."</span>
+                    <span class="p">),</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"single_character -12.2%, multi_shot -6.6%, "</span>
+                        <span class="s2">"saturated_outline -4.0%; contrary and small on "</span>
+                        <span class="s2">"graded_field +2.8%, promote_demo +1.1%, aa_probe +0.8%"</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
             <span class="p">},</span>
             <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
                 <span class="s2">"The one metric in the panel that went through NO adversarial pass."</span><span class="p">,</span>
@@ -1015,6 +1363,21 @@
                         <span class="s2">"+3.6% / -2.7% / +7.0% / -0.0% / +4.0% / -2.9%, so it is "</span>
                         <span class="s2">"`contrary` on half of it. Counts nothing; kept only as "</span>
                         <span class="s2">"the companion the sentence above calls it (an#41 review)."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"companion to `video_stream_bytes`, contaminated by the "</span>
+                        <span class="s2">"AAC track the renderer always emits, silent or not, and "</span>
+                        <span class="s2">"therefore scene-dependent in the same way and then some. "</span>
+                        <span class="s2">"MEASURED alongside it rather than assumed to follow: it "</span>
+                        <span class="s2">"does follow, on every scene and with the same three-three "</span>
+                        <span class="s2">"split — `single_character` -5.9%, `multi_shot` -4.8%, "</span>
+                        <span class="s2">"`saturated_outline` -2.4%; up and small on `promote_demo` "</span>
+                        <span class="s2">"+0.6%, `aa_probe` +0.5%, `graded_field` +0.4%. Counts "</span>
+                        <span class="s2">"nothing — prefer `video_stream_bytes`, as its own "</span>
+                        <span class="s2">"`optimum` note says."</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>
@@ -1049,6 +1412,21 @@
                         <span class="s2">"it fails, so the row reported `unexpected_movement` on "</span>
                         <span class="s2">"every scene for a tripwire doing exactly its job. Found "</span>
                         <span class="s2">"by `an bench-compare` (an#41)."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"decrease"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"it FAILS — `True -&gt; False` — on all six scenes, because "</span>
+                        <span class="s2">"a block-mean resolve changes pixels on all six and the "</span>
+                        <span class="s2">"committed baseline is `True` on all six. A change "</span>
+                        <span class="s2">"detector firing, not a quality measurement, which is why "</span>
+                        <span class="s2">"it counts ZERO — and under THIS lever that distinction "</span>
+                        <span class="s2">"is the whole point: the tripwire fires identically for "</span>
+                        <span class="s2">"an improvement and for a regression, so it can never be "</span>
+                        <span class="s2">"the evidence that a supersample was worth shipping. "</span>
+                        <span class="s2">"Spelled `decrease` rather than `no_change` for the "</span>
+                        <span class="s2">"reason recorded beside `disabled_aa`."</span>
                     <span class="p">),</span>
                 <span class="p">),</span>
             <span class="p">},</span>

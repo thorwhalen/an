@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.golden &mdash; an 0.1.36 documentation</title>
+  <title>an.bench.golden &mdash; an 0.1.37 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1c946a6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b8ecee75"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -488,6 +488,16 @@
             <span class="p">),</span>
             <span class="s2">"frames"</span><span class="p">:</span> <span class="p">[],</span>
         <span class="p">}</span>
+    <span class="c1"># The bless record beside the frames carries the SAME digest as the frames</span>
+    <span class="c1"># themselves — `bless_scene` hashes what it wrote, this function hashes what</span>
+    <span class="c1"># it reads — and until now nothing checked they still agree. An ABSENT</span>
+    <span class="c1"># record is unknown, not different (the rule `an.bench.compare` applies to</span>
+    <span class="c1"># an absent key), so this reads as an empty mapping and gates nothing.</span>
+    <span class="n">manifest</span> <span class="o">=</span> <span class="n">load_manifest</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">blessed_digests</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frame_key"</span><span class="p">):</span> <span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sha256"</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frames"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])</span>
+    <span class="p">}</span>
+
     <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">:</span>
         <span class="n">golden</span> <span class="o">=</span> <span class="n">golden_path</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
         <span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -520,6 +530,18 @@
         <span class="n">record</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">golden_comparison</span><span class="p">(</span><span class="n">today</span><span class="p">,</span> <span class="n">blessed</span><span class="p">))</span>
         <span class="n">record</span><span class="p">[</span><span class="s2">"today_sha256"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixels_sha256</span><span class="p">(</span><span class="n">today</span><span class="p">)</span>
         <span class="n">record</span><span class="p">[</span><span class="s2">"golden_sha256"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixels_sha256</span><span class="p">(</span><span class="n">blessed</span><span class="p">)</span>
+        <span class="c1"># `golden_sha256` and the bless record's `frames[].sha256` are the same</span>
+        <span class="c1"># digest of the same file, written by two different calls, and a</span>
+        <span class="c1"># disagreement means the committed PNG is not the picture a human</span>
+        <span class="c1"># blessed: an edited file, a half-finished re-bless, a frame</span>
+        <span class="c1"># regenerated by another encoder. Every one of those reads as a clean</span>
+        <span class="c1"># PASS today. Compared on DECODED PIXELS, so a re-encode at a different</span>
+        <span class="c1"># zlib level — Chromium 1187 -&gt; 1223, 144 of 144 files, zero pixels —</span>
+        <span class="c1"># is correctly invisible here.</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="n">blessed_digests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">record</span><span class="p">[</span><span class="s2">"bless_record_sha256"</span><span class="p">]</span> <span class="o">=</span> <span class="n">expected</span>
+        <span class="k">if</span> <span class="n">expected</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">expected</span> <span class="o">!=</span> <span class="n">record</span><span class="p">[</span><span class="s2">"golden_sha256"</span><span class="p">]:</span>
+            <span class="n">record</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"record_disagrees"</span>
         <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
 
     <span class="n">unreadable</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"unreadable"</span><span class="p">]</span>
@@ -530,6 +552,31 @@
                 <span class="s2">"a committed golden could not be decoded: "</span>
                 <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'frame_key'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'error'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">unreadable</span><span class="p">)</span>
                 <span class="o">+</span> <span class="s2">". A check that could not run is not evidence that anything is fine."</span>
+            <span class="p">),</span>
+            <span class="s2">"frames"</span><span class="p">:</span> <span class="n">frames</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="c1"># After `unreadable` (a file that will not decode is the more basic</span>
+    <span class="c1"># failure) and before `absent` (which is a gate, not an alarm): a</span>
+    <span class="c1"># disagreement means an EXISTING golden is untrustworthy, which invalidates</span>
+    <span class="c1"># the scene's whole verdict rather than merely leaving it un-set-up.</span>
+    <span class="c1"># `unavailable`, not a new gate name: the check could not run, and a check</span>
+    <span class="c1"># that could not run is not evidence anything is fine.</span>
+    <span class="n">disagreeing</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"record_disagrees"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">disagreeing</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"unavailable"</span><span class="p">,</span>
+            <span class="s2">"detail"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">"a committed golden's pixels disagree with its own bless "</span>
+                <span class="s2">"record: "</span>
+                <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'frame_key'</span><span class="p">]</span><span class="si">}</span><span class="s2"> decodes to </span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'golden_sha256'</span><span class="p">][:</span><span class="mi">12</span><span class="p">]</span><span class="si">}</span><span class="s2">, "</span>
+                    <span class="sa">f</span><span class="s2">"the record says </span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'bless_record_sha256'</span><span class="p">][:</span><span class="mi">12</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">disagreeing</span>
+                <span class="p">)</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">" (scene </span><span class="si">{</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">, Chromium </span><span class="si">{</span><span class="n">chromium_build</span><span class="si">}</span><span class="s2">). The "</span>
+                <span class="s2">"file is not the picture that was blessed, so comparing "</span>
+                <span class="s2">"against it is not evidence of anything. Look at it, then "</span>
+                <span class="sa">f</span><span class="s1">'`an bench --scenes </span><span class="si">{</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> --bless "&lt;why&gt;"`.'</span>
             <span class="p">),</span>
             <span class="s2">"frames"</span><span class="p">:</span> <span class="n">frames</span><span class="p">,</span>
         <span class="p">}</span>

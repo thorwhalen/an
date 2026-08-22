@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.png &mdash; an 0.1.36 documentation</title>
+  <title>an.bench.png &mdash; an 0.1.37 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1c946a6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b8ecee75"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -250,6 +250,70 @@
 <span class="sd">    plausible array, and a golden gate that compares a plausible array is worse</span>
 <span class="sd">    than one that does not run.</span>
 <span class="sd">    """</span></div>
+
+
+
+<span class="c1">#: Bytes needed to read an image's declared size: the 8-byte signature, a</span>
+<span class="c1">#: 4-byte chunk length, the 4-byte `IHDR` tag, and two big-endian uint32s. PNG</span>
+<span class="c1">#: requires IHDR to be the FIRST chunk, so this prefix is always enough.</span>
+<span class="n">PNG_HEADER_BYTES</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">24</span>
+
+<span class="c1">#: Byte offsets fixed by the PNG specification, named rather than spelled</span>
+<span class="c1">#: inline at the two places they are sliced.</span>
+<span class="n">_IHDR_TAG</span><span class="p">:</span> <span class="nb">slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="n">_IHDR_DIMENSIONS</span><span class="p">:</span> <span class="nb">slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">PNG_HEADER_BYTES</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="png_dimensions">
+<a class="viewcode-back" href="../../../module_docs/an/bench/png.html#an.bench.png.png_dimensions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">png_dimensions</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``(width, height)`` from a PNG's IHDR, without decoding a single pixel.</span>
+
+<span class="sd">    Width first, matching the PNG header itself — and deliberately the opposite</span>
+<span class="sd">    order from :func:`read_png`, which returns ``(H, W, C)`` like every other</span>
+<span class="sd">    array here. Getting it backwards produces a square-looking check that</span>
+<span class="sd">    passes on square frames only, so the order is asserted in the tests.</span>
+
+<span class="sd">    Cheap on purpose. The bench reads this for **every** frame on disk rather</span>
+<span class="sd">    than sampling one, because the failure it exists to catch — a render whose</span>
+<span class="sd">    frame size changed partway through — is exactly the one sampling misses.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; png_dimensions(encode_png(np.zeros((240, 320, 3), np.uint8)))</span>
+<span class="sd">    (320, 240)</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">PNG_SIGNATURE</span><span class="p">)]</span> <span class="o">!=</span> <span class="n">PNG_SIGNATURE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PngFormatError</span><span class="p">(</span><span class="s2">"not a PNG: the 8-byte signature does not match"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">PNG_HEADER_BYTES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PngFormatError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2"> bytes is too short to carry an IHDR; "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">PNG_HEADER_BYTES</span><span class="si">}</span><span class="s2"> are needed to read the declared size"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">_IHDR_TAG</span><span class="p">]</span> <span class="o">!=</span> <span class="sa">b</span><span class="s2">"IHDR"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PngFormatError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the first chunk is </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="n">_IHDR_TAG</span><span class="p">]</span><span class="si">!r}</span><span class="s2">, not IHDR. PNG requires "</span>
+            <span class="s2">"IHDR first, so this file's size cannot be read from its header — "</span>
+            <span class="s2">"and returning the four bytes that happen to sit there would be a "</span>
+            <span class="s2">"plausible-looking resolution, which is worse than refusing."</span>
+        <span class="p">)</span>
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">"&gt;II"</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">_IHDR_DIMENSIONS</span><span class="p">])</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">width</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">height</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="read_png_dimensions">
+<a class="viewcode-back" href="../../../module_docs/an/bench/png.html#an.bench.png.read_png_dimensions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_png_dimensions</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``(width, height)`` for a PNG on disk, reading only its header.</span>
+
+<span class="sd">    A 1080p frame is megabytes and its declared size is in the first 24 of</span>
+<span class="sd">    them. Reading only those is what makes checking every frame of every shot</span>
+<span class="sd">    free rather than a second full decode of the corpus.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+    <span class="k">with</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">png_dimensions</span><span class="p">(</span><span class="n">handle</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">PNG_HEADER_BYTES</span><span class="p">))</span></div>
 
 
 
