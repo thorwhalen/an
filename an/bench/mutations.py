@@ -111,8 +111,18 @@ SUPERSAMPLE_K: int = 2
 #: `resolution: 2, autoDensity: true` -> 320x240. Neither key is in the shipped
 #: options today, so the engine default `RESOLUTION: 1` applies silently and
 #: both have to be introduced.
-APP_OPEN: str = "app = new PIXI.Application({"
-SUPERSAMPLE_OPTIONS: str = "            resolution: {k}, autoDensity: false,"
+#: Since an#58 the product owns `resolution` / `autoDensity: false` and reads
+#: the factor from an injected global, so the lever **overrides the line that
+#: reads it** rather than writing a second copy of the product's Pixi options.
+#: A lever that reproduces the code it is examining is examining itself.
+#:
+#: Injecting the global does NOT work and the reason is worth keeping: the
+#: product sets `window.anSupersample` from `ctx.supersample` immediately before
+#: `anLoadScene`, so it would overwrite whatever the lever put there. Caught by
+#: an#54's shape guard — 160x120 frames against a 320x240 declaration — which is
+#: what that guard is for.
+APP_OPEN: str = "const resolution = Math.max(1, (NS.anSupersample | 0) || 1);"
+SUPERSAMPLE_OPTIONS: str = "        const resolution = {k};  // supersample lever"
 
 
 class MutationError(RuntimeError):
@@ -339,49 +349,11 @@ def _supersample_patch(source: str, *, k: int) -> str:
         raise MutationError(
             f"expected exactly one {APP_OPEN!r} in runtime.js, found "
             f"{source.count(APP_OPEN)}. The supersample lever is pinned to that "
-            "literal, and a reformat of the Pixi options object must fail here "
-            "rather than produce a mutation that renders at 1x — which would "
-            "read as an instrument that cannot see a supersample."
+            "literal, and a rename must fail here rather than produce a mutation "
+            "that renders at 1x — which would read as an instrument that cannot "
+            "see a supersample."
         )
-    return source.replace(APP_OPEN, APP_OPEN + "\n" + SUPERSAMPLE_OPTIONS.format(k=k))
-
-
-def _resolve_frames_in_place(frames_dir: Path, *, k: int) -> None:
-    """Block-mean every PNG in ``frames_dir`` down by ``k``, in place.
-
-    The exact ``k x k`` block mean, and calling it a filter would be wrong: at
-    an integer ratio it IS the supersample resolve. Measured against the
-    alternatives on all six scenes (research §2): PIL's ``BOX`` agrees with it
-    to four decimals, and lanczos triples the edge band on `saturated_outline`
-    (+208.8%) because its negative lobes ring on hard-edged flat fills. An
-    ffmpeg-side ``-vf scale`` is refused for a second reason: it would move
-    `x264_argv` and retire the cross-arch verdict's load-bearing "ffmpeg never
-    touches a frame" clause.
-
-    an#58 lifts this into the render path as the product knob. When it does,
-    this must call THAT function rather than keep a second copy — and
-    ``misc/bench/wave3_ab.py``'s ``resolve(..., "box")`` branch is a third copy
-    that should collapse into it at the same time.
-    """
-    import numpy as np
-
-    from an.bench.png import read_png, write_png
-
-    for frame_png in sorted(frames_dir.glob("frame_*.png")):
-        frame = read_png(frame_png)
-        h, w, c = frame.shape
-        if h % k or w % k:
-            raise MutationError(
-                f"{frame_png.name} is {w}x{h}, which is not a whole multiple of "
-                f"k={k}. The supersample lever cannot resolve it exactly, and "
-                "resolving it approximately would make every family A number a "
-                "measurement of the resolver rather than of the render."
-            )
-        blocks = frame.reshape(h // k, k, w // k, k, c).astype(np.float64)
-        write_png(
-            frame_png,
-            np.rint(blocks.mean(axis=(1, 3))).clip(0, 255).astype(np.uint8),
-        )
+    return source.replace(APP_OPEN, SUPERSAMPLE_OPTIONS.format(k=k).strip())
 
 
 @contextmanager
@@ -416,9 +388,15 @@ def _supersample() -> Iterator[None]:
     ):
         original = render._capture_frames
 
-        def _capture_then_resolve(page, total_frames, fps, frames_dir):
-            original(page, total_frames, fps, frames_dir)
-            _resolve_frames_in_place(Path(frames_dir), k=SUPERSAMPLE_K)
+        def _capture_then_resolve(page, total_frames, fps, frames_dir, _factor=None):
+            # Forces the PRODUCT's own `supersample` parameter (an#58) rather
+            # than resolving separately, so this lever runs the exact path a
+            # user gets from `an render --supersample 2` — same function, same
+            # place in the pipeline. It has to be forced here because the bench
+            # cannot pass it through `BENCH_RENDER_KWARGS`: that dict is a
+            # comparability key, and a factor in it would refuse every metric in
+            # the row rather than measure one.
+            original(page, total_frames, fps, frames_dir, SUPERSAMPLE_K)
 
         render._capture_frames = _capture_then_resolve
         try:

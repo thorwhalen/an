@@ -71,6 +71,7 @@ def render(
     lipsync: str = "offline",
     parallel: str = "",
     strict_assets: bool = False,
+    supersample: int = 1,
 ) -> str:
     """Render the project at ``project_dir`` to a single mp4.
 
@@ -83,6 +84,10 @@ def render(
         min(shots, cpu, 4); a number ≥ 2 caps the thread pool.
     strict_assets: fail instead of drawing a stand-in (the placeholder rig, the
         default backdrop) for an asset the project's stores don't supply
+    supersample: render at N times the resolution and resolve back with an exact
+        N x N block mean. Opt-in; 1 (the default) costs nothing at all. Measured
+        on the shipped path at 1920x1080: 125.5 ms/frame at 1, 508.6 at 2 —
+        4.05x, which is NOT the 2.54x the research reports for the render alone
     """
     parallel_arg: int | str | None
     if not parallel:
@@ -101,6 +106,7 @@ def render(
         lipsync=lipsync,
         parallel=parallel_arg,
         strict_assets=strict_assets,
+        supersample=supersample,
     )
     return f"rendered: {output_path}"
 

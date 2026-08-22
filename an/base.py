@@ -29,6 +29,21 @@ DEFAULT_FPS: int = 30
 DEFAULT_RESOLUTION: tuple[int, int] = (1920, 1080)
 DEFAULT_DURATION: float = 5.0  # seconds, used when a shot omits one
 
+#: Render at this many times the declared resolution, then resolve back with an
+#: exact block mean. **1 is off, and off is free**: the un-supersampled path
+#: keeps Chromium's own PNG bytes and pays nothing.
+#:
+#: Here rather than in `an.adapters.cutout.supersample`, where the rest of the
+#: mechanism lives, because `an/adapters/_base.py` needs it for
+#: `RenderContext`'s default and importing the cutout package from there is a
+#: real cycle (`_base` -> `cutout` -> `render` -> `_base`), not a hypothetical
+#: one. `an/base.py` imports nothing from `an`.
+#:
+#: The default stays 1 deliberately. Supersampling ships OPT-IN with its A/B
+#: committed (an#58, discussion #52), per the standing rule that a default
+#: chosen by taste ships opt-in and the flip is its own one-line change.
+DEFAULT_SUPERSAMPLE: int = 1
+
 
 # -- Delivery -----------------------------------------------------------------
 

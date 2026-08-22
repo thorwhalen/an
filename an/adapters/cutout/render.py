@@ -32,6 +32,11 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from an.adapters._base import RenderContext, RenderResult
+from an.adapters.cutout.supersample import (
+    NO_SUPERSAMPLE,
+    check_factor,
+    resolve_png_bytes,
+)
 from an.base import MP4_FASTSTART_ARGS
 from an.determinism import capture_violations, determinism_enforced
 from an.adapters.cutout.compile import compile_shot
@@ -173,6 +178,9 @@ class CutoutRenderer:
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         """Render ``shot`` to mp4 using ``ctx`` for paths + parameters."""
         _ensure_ffmpeg_available()
+        # Validated before anything launches: a browser and a scene compile are
+        # minutes, and `check_factor` is microseconds.
+        supersample = check_factor(ctx.supersample)
         from playwright.sync_api import sync_playwright  # local: optional dep
 
         scene_json = compile_shot(
@@ -203,6 +211,13 @@ class CutoutRenderer:
                 )
                 page.goto(f"{base_url}/index.html")
 
+                # Injected BEFORE `anLoadScene`, which is where the PixiJS
+                # application is constructed and therefore the only moment the
+                # factor can reach `resolution`. `add_init_script` would be the
+                # other option and is wrong: the page is already loaded by the
+                # time we get here.
+                page.evaluate("(k) => { window.anSupersample = k; }", int(supersample))
+
                 # Wait for runtime + PixiJS to load.
                 page.wait_for_function(
                     "() => window.anLoadScene && window.PIXI",
@@ -229,7 +244,9 @@ class CutoutRenderer:
                 determinism = _determinism_report(page)
 
                 total_frames = max(1, int(round(shot.duration * ctx.fps)))
-                _capture_frames(page, total_frames, ctx.fps, job.frames_dir)
+                _capture_frames(
+                    page, total_frames, ctx.fps, job.frames_dir, supersample
+                )
             finally:
                 browser.close()
 
@@ -250,6 +267,10 @@ class CutoutRenderer:
                 "shot_id": shot.id,
                 "fps": ctx.fps,
                 "resolution": ctx.resolution,
+                # The DECLARED size, unchanged by supersampling — the frames on
+                # disk are always this, because the resolve runs in the frame
+                # stage. `supersample` beside it is what says how they got there.
+                "supersample": supersample,
                 "frame_count": total_frames,
                 "audio_tracks": len(audio_inputs),
                 # The launch argv verbatim: all four rasteriser configurations
@@ -469,8 +490,30 @@ def _determinism_report(page: Any) -> dict[str, Any]:
     return report
 
 
-def _capture_frames(page: Any, total_frames: int, fps: int, frames_dir: Path) -> None:
-    """Step the JS runtime through ``total_frames`` and screenshot the canvas each time."""
+def _capture_frames(
+    page: Any,
+    total_frames: int,
+    fps: int,
+    frames_dir: Path,
+    supersample: int = NO_SUPERSAMPLE,
+) -> None:
+    """Step the JS runtime through ``total_frames`` and screenshot the canvas each time.
+
+    **The resolve happens here, in the frame stage, and that is not a stylistic
+    choice.** Nothing downstream reads a resolution off the files: the bench's
+    `capture.resolution` comes from the staged scene's `meta`, `_ffmpeg_mux`
+    trusts whatever the PNGs are, and the golden gate compares against a frame
+    blessed at the declared size. k-times PNGs left on disk would mux a 640x480
+    video against a 320x240 declaration and put every render-side measurement
+    out of reach — loudly since an#54, silently before it.
+
+    An ffmpeg-side `-vf scale` would be the other place to put it, and is
+    refused: it moves `x264_argv`, which refuses every encode-side metric, and
+    retires the cross-arch verdict's "ffmpeg never touches a frame" clause.
+
+    At ``supersample == 1`` this is byte-for-byte the old path — Chromium writes
+    straight to disk and nothing decodes anything. **Off is free.**
+    """
     for i in range(total_frames):
         t = i / float(fps)
         try:
@@ -495,7 +538,14 @@ def _capture_frames(page: Any, total_frames: int, fps: int, frames_dir: Path) ->
         # Screenshot only the canvas element (no surrounding chrome).
         canvas = page.locator("#stage")
         out_path = frames_dir / (DEFAULT_FRAME_PNG_PATTERN % i)
-        canvas.screenshot(path=str(out_path), omit_background=False)
+        if supersample == NO_SUPERSAMPLE:
+            canvas.screenshot(path=str(out_path), omit_background=False)
+        else:
+            out_path.write_bytes(
+                resolve_png_bytes(
+                    canvas.screenshot(omit_background=False), factor=supersample
+                )
+            )
 
 
 def _ffmpeg_mux(frames_dir: Path, fps: int, output_mp4: Path) -> None:

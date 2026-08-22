@@ -14,6 +14,7 @@ from an.base import (
     COMPATIBLE_VERSION,
     DEFAULT_FPS,
     DEFAULT_RESOLUTION,
+    DEFAULT_SUPERSAMPLE,
     SUPPORTED_STYLES,
 )
 from an.ir import (
@@ -62,6 +63,7 @@ __all__ = [
     "COMPATIBLE_VERSION",
     "DEFAULT_FPS",
     "DEFAULT_RESOLUTION",
+    "DEFAULT_SUPERSAMPLE",
     "SUPPORTED_STYLES",
     # Scene IR
     "SceneIR",

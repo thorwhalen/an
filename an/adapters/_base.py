@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Protocol, runtime_checkable
 
-from an.base import DEFAULT_FPS, DEFAULT_RESOLUTION
+from an.base import DEFAULT_FPS, DEFAULT_RESOLUTION, DEFAULT_SUPERSAMPLE
 from an.ir.schema import Shot
 
 
@@ -39,6 +39,20 @@ class RenderContext:
     #: anything that measures pixels, where a stand-in is a different picture
     #: that looks like a successful render (an#33).
     strict_assets: bool = False
+    #: Render at this many times the declared resolution and resolve back with
+    #: an exact block mean. **1 means off, and off is free** — Chromium's own
+    #: PNG bytes reach disk untouched.
+    #:
+    #: A `RenderContext` field, and that placement is load-bearing rather than
+    #: convenient. Simulated against a real committed ledger row: as a
+    #: `render_kwargs` entry it becomes a `COMMON_ENV_PATHS` key and **all 96
+    #: metrics are refused**; as a field on the compiled scene document it moves
+    #: `scene_contract_sha256` and **every scene becomes incomparable**; here,
+    #: only `runtime_sha256` moves, which is deliberately not a comparability
+    #: key — so 30 render-side entries still compare. It needs no
+    #: `SCHEMA_VERSION` migration, and it MUST reach per-shot provenance, because
+    #: a row that does not record it cannot be read back later.
+    supersample: int = DEFAULT_SUPERSAMPLE
     extra: dict[str, Any] = field(default_factory=dict)
 
 

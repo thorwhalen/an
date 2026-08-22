@@ -171,3 +171,46 @@ def test_renderer_carries_provenance():
         assert result.provenance["shot_id"] == "prov"
         assert result.provenance["fps"] == 8
         assert result.provenance["resolution"] == (160, 120)
+
+
+@pytest.mark.browser
+@pytest.mark.ffmpeg
+def test_a_supersampled_render_puts_declared_size_frames_on_disk(tmp_path):
+    """MUTATION: drop the `supersample` argument in `_capture_frames`'s call.
+
+    The behavioural half of an#58, and the assertion that matters most: the
+    frames on disk must be the DECLARED size, not k times it. Nothing downstream
+    reads a resolution off the files — the bench's `capture.resolution` comes
+    from the staged scene's `meta`, `_ffmpeg_mux` trusts whatever the PNGs are,
+    and the golden gate compares against a frame blessed at the declared size —
+    so k-times frames would mux a 640x480 video against a 320x240 declaration.
+
+    Also asserts the pixels actually MOVED, because a knob that changes nothing
+    passes a size check trivially.
+    """
+    from an.bench.png import read_png, read_png_dimensions
+    from an.project import load
+    from an.render import render
+
+    import shutil
+
+    src = Path(__file__).resolve().parents[1] / "examples" / "single_character"
+    out = {}
+    for factor in (1, 2):
+        work = tmp_path / f"k{factor}"
+        shutil.copytree(
+            src, work, ignore=shutil.ignore_patterns(".an", "output", "artifacts")
+        )
+        render(load(work), tts="offline", lipsync="offline", supersample=factor)
+        frames = sorted((work / ".an" / "render_work").rglob("frame_*.png"))
+        assert frames, f"k={factor} produced no frames"
+        assert {read_png_dimensions(f) for f in frames} == {(320, 240)}, (
+            f"k={factor} left frames that are not the declared size"
+        )
+        out[factor] = read_png(frames[len(frames) // 2])
+
+    assert out[1].shape == out[2].shape
+    assert not (out[1] == out[2]).all(), (
+        "a supersampled render that is pixel-identical to a plain one has not "
+        "happened — check that `autoDensity` is false and the global is injected"
+    )

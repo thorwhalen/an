@@ -514,12 +514,26 @@
             parent.insertBefore(fresh, next);
             canvas = fresh;
         }
+        // Supersample factor, injected by the render path before anLoadScene.
+        // The `autoDensity` key below is LOAD-BEARING and is the whole
+        // plumbing finding. Set it true and Pixi sets the canvas CSS size to
+        // the LOGICAL size, so Chromium composites the k-times backbuffer down
+        // before the screenshot -- a blind downscale with no filter choice and
+        // no record that it happened. The literal is spelled ONCE in this file
+        // on purpose: `an/bench/mutations.py` pins it, exactly as it pins the
+        // multisampling flag below, so a reformat fails loudly at the lever
+        // rather than producing a "mutation" that changes nothing.
+        // Both keys are new; the engine default is RESOLUTION: 1, applied
+        // silently, so neither could be relied on before.
+        const resolution = Math.max(1, (NS.anSupersample | 0) || 1);
         app = new PIXI.Application({
             view: canvas,
             width: width,
             height: height,
             backgroundColor: bg,
             antialias: true,
+            resolution: resolution,
+            autoDensity: false,
             autoStart: false,
             preserveDrawingBuffer: true,
         });

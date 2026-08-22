@@ -345,6 +345,13 @@ def test_every_declared_mutant_produces_parseable_python():
 
     root = repo_root()
     for mutant in MUTANTS:
+        if not mutant.file.endswith(".py"):
+            # Gated the same way `check_sites` is, and for the same reason: the
+            # registry reaches `runtime.js` and `index.html` since an#58, and
+            # those are exactly the files where a pixel-affecting mutation hides.
+            # `compile()` refuses them, so an unconditional check here would make
+            # a renderer guard unregisterable rather than unparseable.
+            continue
         source = (root / mutant.file).read_text(encoding="utf-8")
         compile(source.replace(mutant.old, mutant.new, 1), mutant.file, "exec")
 
@@ -405,3 +412,41 @@ def test_an_unpulled_lever_is_reported_rather_than_read_as_blindness(mutation):
         f"{mutation}: a row compared against itself must report its lever as "
         "possibly unapplied"
     )
+
+
+def test_a_non_python_mutant_is_still_checked_for_everything_but_syntax():
+    """MUTATION: gate `check_sites`'s uniqueness check on `.py` too.
+
+    The `.py` gate excuses **one** check — `compile()` — for files Python cannot
+    parse. It must not excuse the others: a `runtime.js` mutant whose text is
+    absent, or occurs twice, or is a no-op, or names a `caught_by` that does not
+    exist, is exactly as useless as a Python one, and is now the more likely
+    kind because those files are edited by hand.
+    """
+    from an.bench.mutants import Mutant, check_sites
+
+    js = [m for m in MUTANTS if not m.file.endswith(".py")]
+    assert js, (
+        "no non-Python mutant is registered, so this test asserts nothing — "
+        "delete it or register the renderer guard it exists for"
+    )
+
+    import an.bench.mutants as mutants_mod
+
+    original = mutants_mod.MUTANTS
+    victim = js[0]
+    try:
+        mutants_mod.MUTANTS = (
+            Mutant(
+                name="synthetic-absent",
+                file=victim.file,
+                old="a string that is certainly not in the runtime",
+                new="nor is this",
+                caught_by=victim.caught_by,
+                why="synthetic",
+            ),
+        )
+        problems = check_sites()
+        assert any("occurs 0 times" in p for p in problems), problems
+    finally:
+        mutants_mod.MUTANTS = original

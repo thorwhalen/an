@@ -23,7 +23,8 @@ about measuring them. Any change here that could move a pixel needs the
 
 ```
 an.render.render(project, …)
-  └ RenderContext(fps, resolution, work_dir, mall, strict_assets)   ← per-render knobs live HERE
+  └ RenderContext(fps, resolution, work_dir, mall, strict_assets, supersample)
+     ↑ per-render knobs live HERE — see §6 for why anywhere else refuses metrics
      │
      ├ per shot (thread pool, DEFAULT_PARALLEL_CAP=4, one Chromium each)
      │   CutoutRenderer.render(shot, ctx)                 an/adapters/cutout/render.py
@@ -32,12 +33,18 @@ an.render.render(project, …)
      │    2. _stage_job(...)            → <project>/.an/render_work/<shot>/{runtime,frames}
      │    3. _serve_dir + Playwright Chromium, DETERMINISTIC_CHROMIUM_ARGS, headless=True,
      │       viewport = ctx.resolution
+     │    3b. page.evaluate → window.anSupersample = ctx.supersample   (BEFORE anLoadScene:
+     │                                     that is where the application is built)
      │    4. window.anLoadScene(scene)  → new PIXI.Application({view:#stage, width, height,
-     │                                     backgroundColor, antialias:true, autoStart:false,
+     │                                     backgroundColor, antialias:true, resolution:k,
+     │                                     autoDensity:false, autoStart:false,
      │                                     preserveDrawingBuffer:true})
      │    5. _determinism_report(page)  → raises on a breached perimeter (enforced by default)
      │    6. _capture_frames            → per frame: anSetTime(t); locator('#stage').screenshot()
-     │                                     → frames/frame_%06d.png   (Chromium's PNG bytes)
+     │                                     k=1 → straight to frames/frame_%06d.png, Chromium's
+     │                                           own bytes, nothing decoded (OFF IS FREE)
+     │                                     k>1 → screenshot to BYTES, block-mean resolve to the
+     │                                           declared size, then write
      │    7. _ffmpeg_mux                → silent.mp4  (libx264, yuv420p, DETERMINISTIC_X264_ARGS,
      │                                                 MP4_FASTSTART_ARGS) — an INTERMEDIATE
      │    8. _ffmpeg_add_audio          → <shot>.mp4  (-c:v copy + AAC + MP4_FASTSTART_ARGS;
@@ -57,7 +64,7 @@ an.render.render(project, …)
 | 4 rasterise | AA is MSAA-limited: the edge transition stays ~1 logical pixel however good the geometry is | `aa_probe` `edge_transition_width` 2.8807 at k=1 |
 | 6 capture | **nothing, if you leave it alone.** Every documented way of making it capture more pixels *except* `resolution` + `autoDensity:false` loses them again silently — §2. Since an#54 `an bench` **refuses** a capture whose PNGs are not the declared size (`an/bench/run.py::_assert_declared_resolution`, against `ShotCapture.frame_sizes` read from each IHDR), so a supersample that leaves k-times frames on disk fails loudly instead of producing k² scrambled ones. A deliberate supersample must therefore resolve **in the frame stage**, before the PNGs are written — which is what §2 already prescribes. | — |
 | 7 encode | **chroma subsampling is FIRST-order**; quantiser damage is second | edge-band error 11.35 (4:2:0 crf23) → 3.79 (4:4:4 crf18); mathematically lossless 4:2:0 only reaches 10.15 |
-| 8 audio mux | no pixels (`-c:v copy`), but it **re-lays the container** — this is where `+faststart` was being lost, on EVERY shot | measured on committed output: `silent.mp4` is `ftyp moov free mdat`, `artifacts/shots/*.mp4` is `ftyp free mdat moov` |
+| 8 audio mux | no pixels (`-c:v copy`), but it **re-lays the container** — this is where `+faststart` was being lost, on EVERY shot | measured on a local example render (these mp4s are gitignored build products; `git ls-files` tracks exactly one, and it was moov-last too): `silent.mp4` was `ftyp moov free mdat`, every delivered file `ftyp free mdat moov` |
 | concat | no pixels; `-c copy` does not carry `moov` position across either, so the flag is needed on this leg too | the corpus is **not** inconsistent — before the fix ALL SIX scenes lost it (5 of 6 take the `shutil.copy` path, and that path copies an already-broken file). `file_bytes` and `video_stream_bytes` cannot see the fix in either direction: measured identical |
 
 ---
@@ -83,8 +90,39 @@ record that it happened. Measured on `aa_probe` (declared 320x240):
 | `resolution: 2, autoDensity: true` | 320x240 |
 
 > **`autoDensity: false` is the supersample path**, and it is load-bearing.
-> Neither key is in the options object today, so PixiJS's `RESOLUTION: 1` applies
-> silently and *both* must be introduced together.
+> Both keys were absent before an#58, so PixiJS's `RESOLUTION: 1` applied
+> silently and *both* had to be introduced together.
+
+**Shipped since an#58, opt-in**: `an render --supersample N`, or
+`RenderContext.supersample`. Three things about it that are easy to get wrong:
+
+- **The factor reaches `runtime.js` as an injected global** (`window.anSupersample`,
+  set immediately before `anLoadScene` — which is where the PixiJS application is
+  built, and therefore the only moment it can reach `resolution`). The bench's
+  `supersample` lever cannot use that route for exactly this reason: the product
+  overwrites the global from `ctx.supersample`, so the lever **overrides the line
+  that reads it** instead. That was found by an#54's shape guard reporting
+  160x120 frames against a 320x240 declaration.
+- **The resolve is `an.adapters.cutout.supersample.block_mean_resolve` — one
+  implementation, three callers**: the renderer, the bench lever, and
+  `misc/bench/wave3_ab.py`. A lever that computes the resolve differently from
+  the product it examines is a lever measuring nothing, and nothing in CI would
+  notice. It is a two-step `uint16` sum with the tie-break spelled out, 2.3x
+  faster than the `float64` mean and bit-identical to it — asserted exhaustively
+  over every possible 2x2 and 3x3 block, because the disagreement is exactly at
+  the half and a random probe finds it only by luck.
+- **`2 * remainder` against `area`, never `remainder` against `area // 2`.** An
+  odd area has no exact half: at k=3, a remainder of 4 is a true mean of q+4/9,
+  which must round DOWN — but `area // 2` is also 4, so a naive tie-break rounds
+  it up. k=3 is the factor research §3a says reaches the ceiling on every scene
+  that has one.
+
+**Cost, on the SHIPPED path and not on the render alone** — the two differ by
+1.6x, so say which you mean. `single_character` at 1920x1080, 60 frames: **125.5
+ms/frame at k=1, 508.6 at k=2 (4.05x)**. Research §3b's 2.54x is the *render*
+only, measured with a patched runtime and no Python-side resolve. At 320x240 the
+same ladder reads 1.0x / 1.08x, because fixed costs dominate — which is why the
+corpus cannot inform the factor and must not be used to.
 
 **Lanczos (or bicubic) as the downscale filter** — refuted. It is a photographic
 resampler and this is not photographic content; its negative lobes ring on
