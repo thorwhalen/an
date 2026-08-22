@@ -130,11 +130,22 @@ def _parse_chunks(data: bytes) -> tuple[tuple[int, ...], bytes]:
     """``(IHDR fields, concatenated IDAT payload)``, refusing anything malformed."""
     if data[:8] != PNG_SIGNATURE:
         raise PngFormatError("not a PNG: the 8-byte signature does not match")
+    # Every parse failure below leaves as `PngFormatError`. `struct.error` and
+    # `zlib.error` are neither `PngFormatError` nor each other's base, so a
+    # golden truncated in transit used to escape `compare_scene`'s handler and
+    # abort the whole run — killing five other scenes' rows over one bad file.
     header: tuple[int, ...] | None = None
     idat: list[bytes] = []
+    saw_end = False
     offset = 8
     while offset + 8 <= len(data):
-        (length,) = struct.unpack(">I", data[offset : offset + 4])
+        try:
+            (length,) = struct.unpack(">I", data[offset : offset + 4])
+        except struct.error as e:
+            raise PngFormatError(
+                f"truncated at byte {offset}: a chunk length header needs 4 bytes "
+                f"and only {len(data) - offset} remain ({e})"
+            ) from e
         kind = data[offset + 4 : offset + 8]
         payload = data[offset + 8 : offset + 8 + length]
         if len(payload) != length:
@@ -146,9 +157,13 @@ def _parse_chunks(data: bytes) -> tuple[tuple[int, ...], bytes]:
         # text-mode checkout translating CRLF is the classic one — becomes a
         # typed error instead of silently different pixels compared against a
         # gate that then reports a regression nobody made.
-        (declared_crc,) = struct.unpack(
-            ">I", data[offset + 8 + length : offset + 12 + length]
-        )
+        crc_bytes = data[offset + 8 + length : offset + 12 + length]
+        if len(crc_bytes) != 4:
+            raise PngFormatError(
+                f"truncated: the {kind.decode('ascii', 'replace')} chunk's CRC "
+                f"needs 4 bytes and only {len(crc_bytes)} remain"
+            )
+        (declared_crc,) = struct.unpack(">I", crc_bytes)
         actual_crc = zlib.crc32(kind + payload) & 0xFFFFFFFF
         if declared_crc != actual_crc:
             raise PngFormatError(
@@ -162,13 +177,23 @@ def _parse_chunks(data: bytes) -> tuple[tuple[int, ...], bytes]:
         elif kind == b"IDAT":
             idat.append(payload)
         elif kind == b"IEND":
+            saw_end = True
             break
         offset += 12 + length
     if header is None:
         raise PngFormatError("no IHDR chunk")
     if not idat:
         raise PngFormatError("no IDAT chunk")
-    return header, zlib.decompress(b"".join(idat))
+    if not saw_end:
+        raise PngFormatError(
+            "no IEND chunk: the file is truncated. A golden missing only its "
+            "trailer still decodes to plausible pixels, which is worse than "
+            "failing."
+        )
+    try:
+        return header, zlib.decompress(b"".join(idat))
+    except zlib.error as e:
+        raise PngFormatError(f"the IDAT stream will not decompress: {e}") from e
 
 
 def _unfilter(raw: bytes, *, height: int, width: int, bpp: int) -> Any:

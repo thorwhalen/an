@@ -157,8 +157,8 @@ MUTANTS: tuple[Mutant, ...] = (
     Mutant(
         name="compare_refuses_on_an_absent_key",
         file="an/bench/compare.py",
-        old="        if b is _ABSENT or a is _ABSENT:",
-        new="        if False:",
+        old="        elif b is _ABSENT or a is _ABSENT:",
+        new="        elif False:",
         caught_by="tests/test_bench_compare.py",
         why=(
             "the ledger grows additively, so treating absence as difference makes "
@@ -181,13 +181,54 @@ MUTANTS: tuple[Mutant, ...] = (
     Mutant(
         name="compare_exempts_the_whole_environment",
         file="an/bench/compare.py",
-        old='        touched = {".".join(path) for path in MUTATION_TOUCHES.get(mutation, ())}',
+        old="        touched = {t.label for t in MUTATION_TOUCHES.get(mutation, ())}",
         new='        touched = {i["key"] for i in common + render + encode}',
         caught_by="tests/test_bench_compare.py",
         why=(
             "the knob the lever pulls is the independent variable; the ISA is not. "
             "A blanket exemption lets a row from another machine in through the "
             "same door."
+        ),
+    ),
+    Mutant(
+        name="compare_exempts_by_path_not_by_value",
+        file="an/bench/registry.py",
+        old="        if self.differs_only_in is None:\n            return True",
+        new="        if True:\n            return True",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "`x264_argv` is the WHOLE encode command, so exempting the path "
+            "exempts every flag in it. A `-preset medium` -> `-preset veryslow` "
+            "change moves every encode-side number and rode in as 'the lever "
+            "moved it — expected'. The exemption must match the change the "
+            "lever actually makes."
+        ),
+    ),
+    Mutant(
+        name="compare_trusts_an_edited_prediction",
+        file="an/bench/compare.py",
+        old="    if not isinstance(inline, dict) or not isinstance(declared, dict):\n        return []",
+        new="    if True:\n        return []",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "the prediction IS the criterion, and it is read from the after "
+            "row's inline block alone. Flipping one `expect` turns `contrary` "
+            "into `as_declared` with nothing else in the report moving — the "
+            "cheapest possible way to fake a caught mutation."
+        ),
+    ),
+    Mutant(
+        name="compare_lets_a_row_forge_its_own_scope",
+        file="an/bench/compare.py",
+        old='    "comparison_scope",\n    "reference",',
+        new='    "reference",',
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "`comparison_scope` decides whether a metric may be compared ACROSS "
+            "MACHINES, and `compare` reads the row's INLINE copy. Editing that "
+            "one word compared an encode-side metric across a different ISA "
+            "with no refusal — the single invariant this module exists to hold, "
+            "defeated from inside the row."
         ),
     ),
     Mutant(
@@ -222,6 +263,43 @@ MUTANTS: tuple[Mutant, ...] = (
         why=(
             "'no change by construction' is a tautology; counting it lets any "
             "pre-encode statistic pad the witness count for free."
+        ),
+    ),
+    Mutant(
+        name="golden_fabricates_a_zero_pixel_count",
+        file="an/bench/golden.py",
+        old='"changed_px": max((int(f["changed_px"]) for f in compared), default=None),',
+        new='"changed_px": max((int(f["changed_px"] or 0) for f in frames), default=0),',
+        caught_by="tests/test_bench_golden.py",
+        why=(
+            "a shape mismatch has no per-pixel comparison to count, and turning "
+            "that into 0 printed 'GOLDEN MISMATCH: 0 px changed' — a fabricated "
+            "number in the one schema whose whole premise is that unknown is not "
+            "zero."
+        ),
+    ),
+    Mutant(
+        name="compare_scope_absence_fails_open",
+        file="an/bench/compare.py",
+        old="        if scope not in env_refusals:",
+        new="        if False:",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "an absent `comparison_scope` read as 'no refusals apply', so an "
+            "encode-side metric from another ISA and another x264 build compared "
+            "cleanly and reported a regression."
+        ),
+    ),
+    Mutant(
+        name="strict_passes_a_comparison_that_compared_nothing",
+        file="an/tools.py",
+        old='            not report.get("answered")',
+        new="            False",
+        caught_by="tests/test_bench_compare.py",
+        why=(
+            "the documented CI gate exited 0 on a run in which every scene was "
+            "refused, while printing '0 regression(s)' — a zero the compare "
+            "module's own docstring calls worse than no number at all."
         ),
     ),
     Mutant(

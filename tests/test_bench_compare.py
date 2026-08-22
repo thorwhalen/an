@@ -11,10 +11,13 @@ Each test names the one-line production mutation it exists to catch.
 from __future__ import annotations
 
 import copy
+import json
+from pathlib import Path
 
 import pytest
 
 from an.bench.compare import (
+    CROSS_CHECKED_FIELDS,
     DECLARATION_KEYS,
     ENCODE_ENV_PATHS,
     MASK_PARAM_PATHS,
@@ -30,6 +33,30 @@ from an.bench.compare import (
 )
 from an.bench.ledger import build_ledger, build_scene_block, gated, measured
 from an.bench.registry import METRICS, MUTATIONS, TRIPWIRES
+
+#: The repo root, so a guard can be checked against the committed ledger
+#: rows rather than only against a fixture built to agree with it.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _declare(row: dict, key: str, mutation: str, prediction: dict) -> None:
+    """Write a per-mutation prediction into BOTH copies the row carries.
+
+    A row holds each prediction twice — inline on the metric and in
+    `metric_declarations` — and `build_scene_block` writes both from one
+    registry at one moment, so a real row's copies always agree. A test that
+    edits only the inline copy builds a row that cannot exist, and since the
+    review added a cross-check between them (an edited inline `expect` is the
+    cheapest way to fake a caught mutation) such a row is refused before it
+    reaches the behaviour under test.
+    """
+    row["scenes"]["s"]["metrics"][key]["under_mutation"][mutation] = dict(prediction)
+    declared = row["metric_declarations"]
+    for section in ("metrics", "tripwires"):
+        block = (declared.get(section) or {}).get(key)
+        if block is not None:
+            block.setdefault("under_mutation", {})[mutation] = dict(prediction)
+
 
 _PROVENANCE = {
     "scene_contract_sha256": "a" * 64,
@@ -528,10 +555,7 @@ def test_two_witnesses_from_one_family_count_once():
     before, after = _row(), _row({first: 2.0, second: 2.0})
     for row in (before, after):
         for key in (first, second):
-            row["scenes"]["s"]["metrics"][key]["under_mutation"][mutation] = {
-                "expect": "increase",
-                "counts": True,
-            }
+            _declare(row, key, mutation, {"expect": "increase", "counts": True})
     scene = compare(before, after, mutation=mutation)["scenes"]["s"]
     assert scene["families_satisfied"] == {"A": [first, second]}
     assert scene["family_count"] == 1, (
@@ -578,14 +602,27 @@ def test_the_lever_may_change_the_knob_it_pulls_but_only_in_mutation_mode():
     from another machine in through the same door, which is the one thing this
     module exists to refuse.
     """
-    from an.bench.registry import MUTATION_TOUCHES
+    from an.bench.registry import MUTATION_TOUCHES, Touch
 
     assert MUTATION_TOUCHES["high_crf"] == (
-        ("environment", "encode_side", "x264_argv"),
+        Touch(
+            path=("environment", "encode_side", "x264_argv"),
+            differs_only_in=("-crf",),
+        ),
+    ), (
+        "the exemption must name the FLAG, not just the path: `x264_argv` is "
+        "the whole encode command, so a path-only exemption let an unrelated "
+        "`-preset` change ride in as the lever's own."
     )
-    assert MUTATION_TOUCHES["disabled_aa"] == (), (
-        "the AA lever patches runtime.js, which the row does not record — the "
-        "runtime is the code under test, not a comparability key"
+    assert MUTATION_TOUCHES["disabled_aa"] == (
+        Touch(path=("environment", "render_side", "runtime_sha256")),
+    ), (
+        "the AA lever patches runtime.js, and the row records a digest of the "
+        "staged runtime so the lever can prove it applied. That digest is "
+        "PROVENANCE and not a comparability key — the runtime is the code under "
+        "test — so listing it here exempts nothing; it is what lets "
+        "`mutation_may_not_have_applied` answer for this lever at all. Before "
+        "it existed, the an#41 assertion asserted nothing for the AA lever."
     )
 
     changed = copy.deepcopy(_ROW_PROVENANCE)
@@ -619,6 +656,187 @@ def test_the_exemption_does_not_open_the_door_to_a_different_machine():
     assert keys == ["environment.encode_side.isa"]
     assert report["scenes"]["s"]["metrics"][_one("encode")]["refusal"] == (
         "environment_differs"
+    )
+
+
+def test_the_exemption_matches_the_change_the_lever_makes_not_just_its_path():
+    """MUTATION: `Touch.is_the_levers_change` returns True on any difference.
+
+    Found by review, in already-merged code. `x264_argv` is the WHOLE encode
+    command, so exempting it by path exempted every flag in it: a
+    `-preset medium` -> `-preset veryslow` change — which moves every
+    encode-side number there is — rode in under `--mutation high_crf` and was
+    reported as "the lever moved it, expected", with zero refusals. The
+    exemption has to match the change the lever actually makes.
+
+    This is the same class as the defect the exemption itself was written to
+    avoid (`test_the_exemption_does_not_open_the_door_to_a_different_machine`),
+    one level down: that one refused a blanket exemption across KEYS, this one
+    refuses a blanket exemption across the VALUES behind one key.
+    """
+    unrelated = copy.deepcopy(_ROW_PROVENANCE)
+    unrelated["environment"]["encode_side"]["x264_argv"] = [
+        "-crf",
+        "23",
+        "-preset",
+        "veryslow",
+    ]
+    before = _row()
+    before["provenance"]["environment"]["encode_side"]["x264_argv"] = [
+        "-crf",
+        "23",
+        "-preset",
+        "medium",
+    ]
+    report = compare(before, _row(row_provenance=unrelated), mutation="high_crf")
+
+    assert report["expected_environment_changes"] == [], (
+        "a -preset change is not the change `high_crf` makes"
+    )
+    assert [i["key"] for i in report["environment_refusals"]["machine"]] == [
+        "environment.encode_side.x264_argv"
+    ]
+    assert report["scenes"]["s"]["metrics"][_one("encode")]["refusal"] == (
+        "environment_differs"
+    )
+    assert any(
+        "not the change" in u for u in report["mutation_may_not_have_applied"]
+    ), "and the operator is told the lever's own knob is not what moved"
+
+    # The lever's real change still passes, alongside an unrelated flag that
+    # is IDENTICAL on both sides — the check is on the difference, not on the
+    # command being a bare two-element list.
+    applied = copy.deepcopy(_ROW_PROVENANCE)
+    applied["environment"]["encode_side"]["x264_argv"] = [
+        "-crf",
+        "40",
+        "-preset",
+        "medium",
+    ]
+    ok = compare(before, _row(row_provenance=applied), mutation="high_crf")
+    assert [i["key"] for i in ok["expected_environment_changes"]] == [
+        "environment.encode_side.x264_argv"
+    ]
+    assert ok["environment_refusals"] == {}
+
+
+def test_an_edited_prediction_refuses_rather_than_scoring_itself_right():
+    """MUTATION: `_prediction_disagreements` returns [] unconditionally.
+
+    Found by review. The an#41 criterion is scored against `under_mutation`,
+    which `compare` reads from the AFTER row's INLINE block only — so flipping
+    one metric's `expect` from `increase` to `decrease` turns a `contrary`
+    verdict into `as_declared`, with nothing else in the report moving. That is
+    the cheapest available way to make a mutation look caught. Same class as
+    the inline `family` relabelling the review found, on the field that
+    actually decides the verdict.
+
+    The check is field by field and not whole-dict equality, because the two
+    copies legitimately differ: the declarations block carries `reason` and the
+    inline block drops it to keep rows small. Whole-dict equality refused 30 of
+    30 metrics on the two REAL committed ledger rows — which is why the last
+    assertion here runs against those rows and not against a fixture.
+    """
+    after = _row()
+    metrics = after["scenes"]["s"]["metrics"]
+    name = next(
+        k for k, v in metrics.items() if (v.get("under_mutation") or {}).get("high_crf")
+    )
+    metrics[name]["under_mutation"]["high_crf"]["expect"] = "decrease"
+
+    entry = compare(_row(), after, mutation="high_crf")["scenes"]["s"]["metrics"][name]
+    assert entry["state"] == "refused"
+    assert entry["refusal"] == "declaration_changed"
+    assert any(
+        m["key"].endswith("under_mutation.high_crf.expect") for m in entry["mismatches"]
+    ), "and the refusal names the field that moved"
+
+    # Unedited, the same metric compares.
+    clean = compare(_row(), _row(), mutation="high_crf")["scenes"]["s"]["metrics"][name]
+    assert clean["state"] == "compared"
+
+
+def test_the_prediction_check_does_not_refuse_the_real_committed_rows():
+    """The guard above, run against real data rather than a fixture.
+
+    A whole-dict version of it passed every test in this file and refused
+    30 of 30 metrics on the two rows in `misc/bench/ledger/`. A fixture agrees
+    with whatever shape the fixture was written to have; the committed rows do
+    not.
+    """
+    rows = sorted((REPO_ROOT / "misc" / "bench" / "ledger").glob("*.json"))
+    if len(rows) < 2:
+        pytest.skip("needs two committed ledger rows")
+    before, after = (json.loads(p.read_text(encoding="utf-8")) for p in rows[:2])
+    report = compare(before, after)
+    refused = [
+        (scene, key)
+        for scene, block in report["scenes"].items()
+        for key, m in block["metrics"].items()
+        if m.get("state") == "refused"
+    ]
+    assert refused == [], f"the committed rows must compare cleanly, got {refused}"
+    assert report["metrics_compared"] > 0
+
+
+def test_an_edited_comparison_scope_cannot_defeat_machine_scoping():
+    """MUTATION: drop `comparison_scope` from `CROSS_CHECKED_FIELDS`.
+
+    Found by review, and the worst of the three defects of this class. A row
+    stores `comparison_scope` twice and `compare` reads the INLINE copy, so
+    editing that one word from `machine` to `any_machine` made an ENCODE-side
+    metric compare across a genuinely different ISA with no refusal — defeating,
+    from inside the row, the single invariant this module exists to hold. The
+    declarations block still said `machine`.
+    """
+    name = _one("encode")
+    elsewhere = copy.deepcopy(_ROW_PROVENANCE)
+    elsewhere["environment"]["encode_side"]["isa"] = "aarch64"
+
+    honest = compare(_row(), _row(row_provenance=elsewhere))
+    assert honest["scenes"]["s"]["metrics"][name]["refusal"] == "environment_differs"
+
+    before, after = _row(), _row(row_provenance=elsewhere)
+    for row in (before, after):
+        row["scenes"]["s"]["metrics"][name]["comparison_scope"] = "any_machine"
+    forged = compare(before, after)["scenes"]["s"]["metrics"][name]
+    assert forged["state"] == "refused"
+    assert forged["refusal"] == "declaration_changed", (
+        "an inline scope that disagrees with the row's own declaration is an "
+        "edited row, not a licence to compare across machines"
+    )
+
+
+def test_every_doubly_stored_field_is_cross_checked():
+    """The structural guard: this class of defect should not be able to recur.
+
+    Three of them turned up in one review pass — `family`, `under_mutation` and
+    `comparison_scope` — each a fact the row stores TWICE where only one copy
+    was read and neither was compared against the other. Rather than keep
+    finding them one at a time, the set of doubly-stored fields is derived from
+    a real row and every member must be covered: by `CROSS_CHECKED_FIELDS`, or
+    by `_prediction_disagreements` for the one nested field.
+
+    Adding a field to both blocks without deciding what a disagreement means
+    now fails here.
+    """
+    row = _row()
+    inline = set(next(iter(row["scenes"]["s"]["metrics"].values())))
+    declared = set(next(iter(row["metric_declarations"]["metrics"].values())))
+    doubly_stored = inline & declared
+
+    covered = set(CROSS_CHECKED_FIELDS) | {"under_mutation"}
+    unchecked = doubly_stored - covered
+    assert unchecked == set(), (
+        f"{sorted(unchecked)} are stored twice in a row but never compared "
+        "against each other; `compare` reads the inline copy, so editing it is "
+        "enough to change the verdict. Decide what a disagreement means and add "
+        "the field to `CROSS_CHECKED_FIELDS` (scalars) or to "
+        "`_prediction_disagreements` (nested)."
+    )
+    assert set(CROSS_CHECKED_FIELDS) <= doubly_stored, (
+        "and a field that is NOT stored twice cannot be cross-checked — that "
+        "entry would silently never fire"
     )
 
 
@@ -726,3 +944,149 @@ def test_latest_rows_skips_a_row_that_describes_no_commit(tmp_path):
         "2026-01-01-aaaaaaa.json",
         "2026-01-03-ccccccc.json",
     ]
+
+
+# ------------------------------ an#40 adversarial-review hardening
+
+
+def test_a_key_absent_from_BOTH_rows_is_neither_a_caveat_about_one_nor_a_sentinel():
+    """MUTATION: fold the absent-from-both branch back into the one-sided one.
+
+    Absent from both rows says nothing about their comparability — it is a key
+    neither row has ever carried. Reporting it as "absent from before" also
+    leaked the `_ABSENT` sentinel object into `value`, which made the whole
+    report un-serialisable and crashed `an bench-compare --raw` on any pair of
+    rows predating a key. Live on the committed rows today, via `shot_order`.
+    """
+    import json
+
+    trimmed = copy.deepcopy(_PROVENANCE)
+    del trimmed["shot_order"]
+    report = compare(_row(provenance=trimmed), _row(provenance=trimmed))
+    caveats = report["scenes"]["s"]["caveats"]
+    assert [c["absent_from"] for c in caveats] == ["both rows"]
+    assert caveats[0]["value"] is None
+    json.dumps(report)  # must not raise
+
+
+def test_a_metric_with_an_unknown_comparison_scope_is_refused():
+    """MUTATION: `if scope not in env_refusals:` -> `if False:`.
+
+    Deleting the field let an encode-side metric from another ISA and another
+    x264 build compare cleanly and report a `regression`. Every neighbouring
+    absence in this module is a surfaced caveat; this one was silently "compare
+    anyway", which is the one thing the module exists not to do.
+    """
+    changed = copy.deepcopy(_ROW_PROVENANCE)
+    changed["environment"]["encode_side"]["isa"] = "x86_64"
+    changed["environment"]["encode_side"]["x264_sei"] = "a different build"
+    before, after = _row(), _row(row_provenance=changed)
+    victim = _one("encode")
+    for row in (before, after):
+        row["scenes"]["s"]["metrics"][victim].pop("comparison_scope", None)
+    entry = compare(before, after)["scenes"]["s"]["metrics"][victim]
+    assert entry["state"] == "refused"
+    assert entry["refusal"] == "comparison_scope_unknown"
+
+
+def test_a_row_cannot_pad_the_criterion_with_a_tautology():
+    """MUTATION: `entry["counts"] = bool(prediction.get("counts"))`.
+
+    `Prediction.__post_init__` refuses `counts=True` on a `no_change`
+    prediction — but a ROW is data, and `--compare` reads rows, including
+    hand-edited and foreign ones. Relabelling three metrics from three families
+    as `{"expect": "no_change", "counts": true}` made the criterion report MET
+    on two byte-identical rows, with the padded witnesses INVISIBLE in the
+    digest (a `no_change` that holds prints nothing) and `--strict` exiting 0.
+    """
+    mutation = "high_crf"
+    before, after = _row(), _row()
+    families = {}
+    for key, spec in METRICS.items():
+        families.setdefault(spec.family, key)
+    padded = list(families.values())[:REQUIRED_FAMILIES]
+    for row in (before, after):
+        for key in padded:
+            _declare(row, key, mutation, {"expect": "no_change", "counts": True})
+    scene = compare(before, after, mutation=mutation)["scenes"]["s"]
+    assert scene["family_count"] == 0, scene["families_satisfied"]
+    assert scene["criterion_met"] is False
+    for key in padded:
+        assert scene["metrics"][key]["counts"] is False
+        assert "counts_refused" in scene["metrics"][key]
+
+
+def test_a_missing_prediction_is_not_reported_as_a_gate():
+    """MUTATION: drop the `if not prediction:` branch in `_verdict_under_mutation`.
+
+    A gate is a DECLARED "we cannot tell"; an empty block is "nobody wrote a
+    prediction down". Both fail closed, so no wrong answer — but they send a
+    reader to opposite places, and one of them is a row-format problem rather
+    than a measurement problem.
+    """
+    mutation = "high_crf"
+    after = _row({_one("encode"): 2.0})
+    victim = _one("encode")
+    after["scenes"]["s"]["metrics"][victim].pop("under_mutation")
+    entry = compare(_row(), after, mutation=mutation)["scenes"]["s"]["metrics"][victim]
+    assert entry["verdict"] == "no_prediction"
+
+
+def test_strict_refuses_to_pass_a_comparison_that_compared_nothing():
+    """MUTATION: `not report.get("answered")` -> `False` in `an.tools.bench_compare`.
+
+    The documented CI gate — "exit nonzero when the answer is bad" — exited 0 on
+    a run in which EVERY scene was refused, while printing
+    "0 regression(s), 0 improvement(s), 0 change(s)". That is a zero this
+    module's own docstring calls worse than no number at all, presented as a
+    pass. Four ways to produce it, and only one of them is a regression.
+    """
+    clean = compare(_row(), _row())
+    assert clean["answered"] is True
+    assert clean["metrics_compared"] > 0
+
+    moved = copy.deepcopy(_PROVENANCE)
+    moved["scene_contract_sha256"] = "b" * 64
+    refused = compare(_row(), _row(provenance=moved))
+    assert refused["answered"] is False
+    assert refused["metrics_compared"] == 0
+    assert "NO ANSWER" in format_comparison(refused)
+
+    assert compare(_row(), _row(scene="other"))["answered"] is False
+
+
+def test_the_strict_flag_fails_closed_end_to_end(tmp_path):
+    """The gate itself, through the CLI, on every bad outcome.
+
+    MUTATION: any weakening of `bad` in `an.tools.bench_compare`.
+    """
+    import json
+    import subprocess
+    import sys
+
+    (tmp_path / "a.json").write_text(json.dumps(_row()), encoding="utf-8")
+    moved = copy.deepcopy(_PROVENANCE)
+    moved["scene_contract_sha256"] = "b" * 64
+    cases = {
+        "clean": (_row(), 0),
+        "different scene": (_row(provenance=moved), 1),
+        "no shared scene": (_row(scene="other"), 1),
+    }
+    for label, (row, expected) in cases.items():
+        (tmp_path / "b.json").write_text(json.dumps(row), encoding="utf-8")
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "an",
+                "bench-compare",
+                "--before",
+                str(tmp_path / "a.json"),
+                "--after",
+                str(tmp_path / "b.json"),
+                "--strict",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == expected, f"{label}: {result.stdout[-400:]}"

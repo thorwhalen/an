@@ -589,8 +589,17 @@ def pytest_collection_modifyitems(config, items):
 
 
 def pytest_runtest_logreport(report):
-    """Count what executed, so the summary reports an observation."""
-    if report.when != "call":
+    """Count what executed, so the summary reports an observation.
+
+    ``report.skipped`` too, and it is not belt-and-braces: a `call`-phase report
+    exists for a test that skipped from its own BODY, so the line whose whole
+    job is to stop a green run over-reporting was itself over-reporting by a
+    second route. Measured — `tests/test_bench_png.py`'s ffmpeg cross-check
+    skips on "no rendered example frames in this checkout", which is the normal
+    state of a fresh clone, and the summary said "ffmpeg tests: 1 collected,
+    1 ran" for a run in which zero pixels reached ffmpeg (an#38 review).
+    """
+    if report.when != "call" or report.skipped:
         return
     for name in _GATE_REPORT:
         if name in report.keywords:
