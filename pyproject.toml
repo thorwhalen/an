@@ -32,8 +32,21 @@ classifiers = [
 dependencies = [
     "pydantic",
     "dol",
-    "argh",
-    "argcomplete",
+    # `typer` (MIT) over `argh` (LGPL-3.0), decided in an#45. argh was the only
+    # declared-copyleft distribution in this set, against the MIT/BSD/Apache/ISC
+    # rule this repo and its federation state; `tests/test_licence_perimeter.py`
+    # is what found it and what keeps a second one from arriving unnoticed.
+    # `argcomplete` went with argh: it hooks argparse specifically, so it became
+    # a dependency that did nothing. Typer supplies the replacement itself
+    # (`an --install-completion`).
+    #
+    # NOTE, and it is not pedantry: what typer pulls in DEPENDS ON WHICH TYPER
+    # RESOLVES, and nothing here pins one. 0.19.x requires `click` (BSD-3);
+    # 0.27.1 — what a fresh install gets today — requires `shellingham`, `rich`
+    # and `annotated-doc`, and no click. `tests/test_licence_perimeter.py` walks
+    # the installed transitive closure rather than these five names, and says
+    # out loud that its answer is about the environment it runs in.
+    "typer",
     "pyyaml",
     "numpy",
 ]

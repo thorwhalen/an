@@ -225,6 +225,31 @@ MUTANTS: tuple[Mutant, ...] = (
         ),
     ),
     Mutant(
+        name="cli_returns_nothing_to_the_terminal",
+        file="an/__main__.py",
+        old="        if result is not None:\n            typer.echo(result)",
+        new="        pass",
+        caught_by="tests/test_cli_dispatch.py",
+        why=(
+            "typer discards return values and every `an.tools` function returns "
+            "its report as a string, so the CLI would run correctly and print "
+            "NOTHING — the worst possible failure for a diagnostic tool."
+        ),
+    ),
+    Mutant(
+        name="cli_loses_the_signature_that_is_the_command_line",
+        file="an/__main__.py",
+        old="    @functools.wraps(func)\n    def run(",
+        new="    def run(",
+        caught_by="tests/test_cli_dispatch.py",
+        why=(
+            "`inspect.signature` follows `__wrapped__`, and that signature IS the "
+            "command line. Without it typer sees `(*args, **kwargs)` and every "
+            "flag on all 17 commands disappears at once, while `--help` still "
+            "renders."
+        ),
+    ),
+    Mutant(
         name="corpus_reads_shot_order_from_the_directory",
         file="an/bench/corpus.py",
         old='    for shot_id in order:\n        shot_dir = root / f"shot_{shot_id}"',
@@ -274,6 +299,19 @@ def check_sites(root: Path | None = None) -> list[str]:
             problems.append(f"{mutant.name}: the mutation is a no-op")
         if not (base / mutant.caught_by).is_file():
             problems.append(f"{mutant.name}: {mutant.caught_by} does not exist")
+        if count == 1:
+            # A mutant that produces unparseable Python breaks COLLECTION, and
+            # a collection error is not a guard catching anything. Checked here,
+            # at declaration time and for free, because the alternative is
+            # finding out from a sweep that says 16/16.
+            try:
+                compile(source.replace(mutant.old, mutant.new, 1), mutant.file, "exec")
+            except SyntaxError as e:
+                problems.append(
+                    f"{mutant.name}: applying it makes {mutant.file} unparseable "
+                    f"({type(e).__name__}: {e}). A mutant that breaks collection "
+                    "proves nothing about its guard."
+                )
     return problems
 
 
@@ -319,36 +357,77 @@ def run_mutants(
             for line in completed.stdout.splitlines()
             if "passed" in line or "failed" in line or "error" in line
         ]
+        last = summary[-1] if summary else ""
+        failed = _count(last, "failed")
+        errored = _count(last, "error")
+        # A mutant that breaks COLLECTION proves nothing. `returncode != 0`
+        # alone reads a SyntaxError in the mutated module as "the guard caught
+        # it" — and one declared mutant really did produce unparseable Python
+        # and really was reported as CAUGHT for nine commits. So the verdict is
+        # "at least one test FAILED", and a run that only errored is reported as
+        # `errored` rather than folded into either answer.
         results.append(
             {
                 "name": mutant.name,
                 "file": mutant.file,
                 "caught_by": mutant.caught_by,
-                "caught": completed.returncode != 0,
-                "summary": summary[-1] if summary else "",
+                "caught": failed > 0,
+                "errored": errored > 0 and failed == 0,
+                "returncode": completed.returncode,
+                "summary": last,
                 "why": mutant.why,
             }
         )
     return results
 
 
+def _count(summary: str, word: str) -> int:
+    """``N`` from a pytest summary like ``2 failed, 51 passed in 0.6s``.
+
+    >>> _count("2 failed, 51 passed in 0.57s", "failed")
+    2
+    >>> _count("53 passed in 0.55s", "failed")
+    0
+    """
+    import re
+
+    match = re.search(rf"(\d+)\s+{word}", summary)
+    return int(match.group(1)) if match else 0
+
+
+def verdict_of(result: dict) -> str:
+    """``CAUGHT`` / ``SURVIVED`` / ``ERRORED``, as three separate answers.
+
+    ``ERRORED`` is not a third flavour of caught: a mutant that stops the guard
+    file from being collected has demonstrated nothing about the guard.
+    """
+    if result.get("errored"):
+        return "ERRORED"
+    return "CAUGHT" if result["caught"] else "SURVIVED"
+
+
 def format_results(results: list[dict]) -> str:
-    """The digest, with the survivors last because they are the finding."""
+    """The digest, with the survivors and errors last because they are the finding."""
+    order = {"CAUGHT": 0, "SURVIVED": 1, "ERRORED": 2}
     lines = [
-        f"{'CAUGHT ' if r['caught'] else 'SURVIVED'}  {r['name']:44s} "
-        f"{r['caught_by']:34s} {r['summary']}"
-        for r in sorted(results, key=lambda r: r["caught"], reverse=True)
+        f"{verdict_of(r):8s}  {r['name']:44s} {r['caught_by']:34s} {r['summary']}"
+        for r in sorted(results, key=lambda r: order[verdict_of(r)])
     ]
-    survivors = [r for r in results if not r["caught"]]
+    caught = [r for r in results if verdict_of(r) == "CAUGHT"]
+    survivors = [r for r in results if verdict_of(r) == "SURVIVED"]
+    errored = [r for r in results if verdict_of(r) == "ERRORED"]
     lines.append("")
-    lines.append(
-        f"{len(results) - len(survivors)}/{len(results)} caught"
-        + (
-            ""
-            if not survivors
-            else "\n\nSURVIVORS — each one is a guard that stays green while the "
-            "bug it names is present:\n"
+    lines.append(f"{len(caught)}/{len(results)} caught")
+    if survivors:
+        lines.append(
+            "\nSURVIVORS — each one is a guard that stays green while the bug it "
+            "names is present:\n"
             + "\n".join(f"  {r['name']}: {r['why']}" for r in survivors)
         )
-    )
+    if errored:
+        lines.append(
+            "\nERRORED — the mutated file could not be collected, so these prove "
+            "NOTHING about their guard. Fix the mutant, not the test:\n"
+            + "\n".join(f"  {r['name']}: {r['summary']}" for r in errored)
+        )
     return "\n".join(lines)
