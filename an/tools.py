@@ -72,6 +72,7 @@ def render(
     parallel: str = "",
     strict_assets: bool = False,
     supersample: int = 1,
+    pix_fmt: str = "",
 ) -> str:
     """Render the project at ``project_dir`` to a single mp4.
 
@@ -88,6 +89,12 @@ def render(
         N x N block mean. Opt-in; 1 (the default) costs nothing at all. Measured
         on the shipped path at 1920x1080: 125.5 ms/frame at 1, 508.6 at 2 —
         4.05x, which is NOT the 2.54x the research reports for the render alone
+    pix_fmt: the delivered encode's pixel format — "yuv420p" (default) or
+        "yuv444p". The ONE first-order quality lever in the encoder: 4:4:4 cuts
+        the edge-band error 11.35 -> 3.79, where a mathematically lossless 4:2:0
+        only reaches 10.15. It is opt-in for a PRODUCT reason and not an encoder
+        one: High 4:4:4 Predictive is refused by many hardware decoders,
+        browsers and platforms, so a 4:4:4 file is one some viewers cannot play
     """
     parallel_arg: int | str | None
     if not parallel:
@@ -107,6 +114,7 @@ def render(
         parallel=parallel_arg,
         strict_assets=strict_assets,
         supersample=supersample,
+        pix_fmt=pix_fmt or None,
     )
     return f"rendered: {output_path}"
 

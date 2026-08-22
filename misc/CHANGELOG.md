@@ -3,6 +3,29 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **`-pix_fmt` is a knob, 4:4:4 opt-in — and it is the lever whose subject and witness are the same thing** (an#59). `an render --pix-fmt yuv444p` / `RenderContext.pix_fmt`, read as a module global at call time so the bench lever can rebind it and reach the encode **and** the recorded row together. The default stays 4:2:0 for a PRODUCT reason and not an encoder one: High 4:4:4 Predictive is refused by many hardware decoders, browsers and platforms.
+
+  **Measured on the whole panel before a single cell was declared.** `chroma_edge_dCr` measures chroma error at an edge and 4:4:4 removes chroma subsampling, so this is the one lever where the change and the measurement are the same subject — **down 21% to 75% on every scene**. Family D down on all six (-2.2% to -81.7%). Family F down on five, which is a **surprise**: 4:4:4 stores twice the chroma samples, so the naive expectation is a bigger file; the un-subsampled plane is easier to predict and the bits saved on residuals exceed the bits spent on samples. And **family A is exactly +0.0% on every scene, every metric** — "render-side metrics are blind to the encoder by construction" has been an argument in the registry since Wave 2 and is now a measurement.
+
+  Two cells declared honestly rather than flatteringly: `encode_flicker_on_held_pixels` is down on five scenes and **+226.8% on `saturated_outline`**, unexplained and left that way — a reason invented after seeing a number is not a reason; and `encode_ringing_excess` changes sign across the corpus at +-4-12%, so it is declared for the direction 4:4:4 should produce and explicitly NOT counted.
+
+  **`x264_argv` did not absorb it, deliberately.** That list is the pinned tuple and carries neither `-c:v` nor `-pix_fmt` nor `+faststart`, so folding a per-render knob in would either make a constant non-constant or turn it into a composed command — and either changes what every already-committed row means. A separate `encode_side.pix_fmt` comparability key instead.
+
+  **The panel refused to let the chroma lever count its chroma witness, and it was right
+  to.** `chroma_edge_dCr` drops 21-75% on every scene and is unambiguously the lever's
+  story — and `test_every_counting_encode_metric_references_the_lossless_leg` rejected it
+  as a WITNESS, because it references `source_png`: an explicit RGB->YUV conversion measured
+  exact on ffmpeg 8.1 and mean 0.63 / max 5 on the Linux runner's older build. It cannot
+  reference the lossless leg instead — a qp0 file's chroma is already subsampled, so a
+  lossless-referenced version would read ~0 and measure nothing. **So the one lever whose
+  subject is chroma structurally cannot count a chroma witness**: measuring chroma
+  subsampling requires referencing the conversion where subsampling happens, and that
+  conversion is build-dependent. The criterion is D + E + F instead, all lossless- or
+  none-referenced, and all three agree on four of six scenes. A real limit of the panel,
+  now written down where the next person meets it.
+
+  **`tests/test_encode_pins.py` is argv EQUALITY now, not subset membership.** Subset answers "are the pins still there" and says nothing about what else arrived: the registered mutant adds `-tune animation` — a flag measured at 0.8% and rejected — and every pin is still present while the encode moves and every encode-side metric is silently refused against every committed row. The **third x264 site**, `an/characters/record.py`, is deliberately NOT unified: it encodes a character PREVIEW, and coupling it would put `-threads 1` and BT.709 tagging on a documentation artifact and make flipping the deliverable's format silently change every character sheet. Only `MP4_FASTSTART_ARGS` is shared, because that fact genuinely is. Mutant registry 41 -> 43, all caught.
+
 - **Supersampling ships, opt-in** — `an render --supersample N` / `RenderContext.supersample` (an#58). `resolution: k` + **`autoDensity: false`** in the PixiJS options, factor injected as a global immediately before `anLoadScene` (the only moment it can reach `resolution`), and an exact k x k block mean **in the frame stage**, before ffmpeg or the metrics or the golden gate see anything. **1 is free**: at the default nothing is decoded and Chromium's own PNG bytes reach disk.
 
   **One resolve, three callers** — the renderer, the bench's `supersample` lever, and `misc/bench/wave3_ab.py`. A lever that computes the resolve differently from the product it examines is a lever measuring nothing, and nothing in CI would notice. The lever now forces `_capture_frames`'s own parameter, so it runs the exact path a user gets.

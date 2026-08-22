@@ -516,6 +516,37 @@ MUTANTS: tuple[Mutant, ...] = (
         ),
     ),
     # ---------------------------------------------------------------- an#55
+    # ---------------------------------------------------------------- an#59
+    Mutant(
+        name="pix_fmt_lever_cannot_reach_the_encode",
+        file="an/adapters/cutout/render.py",
+        old="    resolved = pix_fmt or DEFAULT_PIX_FMT",
+        new='    resolved = pix_fmt or "yuv420p"',
+        caught_by="tests/test_encode_pins.py",
+        why=(
+            "reading the literal instead of the module global severs the seam "
+            "the `pix_fmt` lever pulls, exactly as hoisting "
+            "`DETERMINISTIC_X264_ARGS` into a default argument would sever "
+            "`high_crf`'s. The row would still record 4:4:4 — "
+            "`environment_record` reads the global — while the file stayed "
+            "4:2:0, so the lever would report a clean set of beautiful numbers "
+            "about a picture that never existed."
+        ),
+    ),
+    Mutant(
+        name="mux_argv_is_checked_by_subset_not_equality",
+        file="an/adapters/cutout/render.py",
+        old='        "-c:v",\n        "libx264",',
+        new='        "-tune",\n        "animation",\n        "-c:v",\n        "libx264",',
+        caught_by="tests/test_encode_pins.py",
+        why=(
+            "`-tune animation` is a measured-and-rejected flag (0.8%) and this "
+            "is what adding it looks like. A SUBSET check passes — every pin is "
+            "still present — and the encode moves and every encode-side metric "
+            "is silently refused against every committed row. Only argv "
+            "equality notices."
+        ),
+    ),
     # ------------------------------------------------- an#57, registerable
     # since an#58 gated the parse check on `.py`. Before that these two had to
     # be mutation-tested by hand, with the proof living in a docstring instead

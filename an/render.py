@@ -71,6 +71,7 @@ def render_project(
     parallel: int | str | None = None,
     strict_assets: bool = False,
     supersample: int = DEFAULT_SUPERSAMPLE,
+    pix_fmt: str | None = None,
 ) -> Path:
     """Render every shot in ``project_dir``'s scene and concatenate to one mp4.
 
@@ -107,6 +108,7 @@ def render_project(
         parallel=parallel,
         strict_assets=strict_assets,
         supersample=supersample,
+        pix_fmt=pix_fmt,
     )
 
 
@@ -122,6 +124,7 @@ def render(
     parallel: int | str | None = None,
     strict_assets: bool = False,
     supersample: int = DEFAULT_SUPERSAMPLE,
+    pix_fmt: str | None = None,
 ) -> Path:
     """Lower-level: render a loaded ``Project`` to mp4.
 
@@ -213,6 +216,7 @@ def render(
         resolution=effective_res,
         strict_assets=strict_assets,
         supersample=supersample,
+        pix_fmt=pix_fmt,
     )
 
     shots = list(scene.timeline)

@@ -147,7 +147,7 @@ def environment_record(
     the path keys on it — and probing twice would launch a second browser and
     could, in principle, report a different build from the one that rendered.
     """
-    from an.adapters.cutout.render import DETERMINISTIC_X264_ARGS
+    from an.adapters.cutout.render import DEFAULT_PIX_FMT, DETERMINISTIC_X264_ARGS
 
     return {
         "render_side": {
@@ -169,6 +169,15 @@ def environment_record(
             "ffmpeg": ffmpeg_identity(),
             "x264_sei": x264_sei,
             "x264_argv": list(DETERMINISTIC_X264_ARGS),
+            # A SEPARATE key rather than folded into `x264_argv`, deliberately.
+            # That list is the PINNED TUPLE and always has been — it carries
+            # neither `-c:v libx264` nor `-pix_fmt` nor `+faststart` — so
+            # folding a per-render knob into it would either make a constant
+            # non-constant or turn it into a composed command, and either
+            # changes what every already-committed row means. Read at call time
+            # from the module global, so the `pix_fmt` lever's rebinding reaches
+            # the record and the encode together and the two cannot disagree.
+            "pix_fmt": DEFAULT_PIX_FMT,
             "comparison_scope": "machine",
             "comparison_note": (
                 "a different x264 build moves the decoded stream by up to 99.2% "

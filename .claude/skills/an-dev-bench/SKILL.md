@@ -336,6 +336,7 @@ not bad.
 |---|---|---|
 | `high_crf` | all six (4/3 on five, 3/3 on `single_character`) | family E inverts on `single_character` only |
 | `disabled_aa` | `aa_probe`, `multi_shot`, `saturated_outline` | family F's sign is scene-dependent; MSAA cannot reach axis-aligned art or an SVG sprite |
+| `pix_fmt` | D + E + F on four of six. **Family C cannot supply a witness here**, which is a real limit rather than an oversight: `chroma_edge_dCr` is the lever's headline (-21% to -75%, every scene) and references `source_png`, a build-dependent conversion — and it cannot reference the lossless leg instead, because a qp0 file's chroma is already subsampled and the metric would read ~0. **The one lever whose subject is chroma structurally cannot count a chroma witness.** It is also the lever that shows family A is blind to the encoder BY MEASUREMENT — `chroma_edge_dCr` measures chroma error at an edge and 4:4:4 removes chroma subsampling. Also the lever that shows family A is blind to the encoder BY MEASUREMENT: exactly +0.0% on all six scenes, every family-A metric |
 | `supersample` | `multi_shot`, `saturated_outline`, `single_character` | C/D/E/G are gated for **every** render lever, so the criterion is forced to A + B + F with no substitute; family A inverts on `promote_demo` (-34.8%, the sprite rasterises at 2x) and family F's three up-moves are the small ones (+0.8% to +2.8% against -4.0% to -12.2%) |
 
 So the criterion is **per scene, met on at least one**, and the corpus has to

@@ -76,6 +76,13 @@ from an.bench.registry import MUTATIONS
 #: proxy for the regressions this instrument exists to catch.
 HIGH_CRF: str = "40"
 
+#: The pixel format the encoder lever switches to. 4:4:4 is an IMPROVEMENT, like
+#: `supersample` and unlike the other encode lever — measured on 30 real 1080p
+#: frames, the edge-band mean error goes 11.35 -> 3.79, where a mathematically
+#: lossless 4:2:0 only reaches 10.15. Losslessness buys 8%; dropping chroma
+#: subsampling buys 66%.
+PIX_FMT_444: str = "yuv444p"
+
 #: The exact text the AA lever flips, and where. Pinned as a literal so a
 #: rename in `runtime.js` fails here — loudly, at the lever — rather than
 #: producing a "mutation" that changes nothing.
@@ -142,6 +149,44 @@ class Lever:
     #: fingerprint is in it. ``None`` when the row cannot carry one — see the
     #: module docstring.
     verify_row: Callable[[dict], None] | None = None
+
+
+@contextmanager
+def _pix_fmt_444() -> Iterator[None]:
+    """Encode the delivered mp4 at 4:4:4, leaving the lossless reference alone.
+
+    Rebinds `render.DEFAULT_PIX_FMT`, which `_ffmpeg_mux` reads as a module
+    global at call time and `environment_record` reads for the row — so the
+    encode and the recorded environment move together and cannot disagree.
+    Exactly the seam `_high_crf` uses for `DETERMINISTIC_X264_ARGS`, and it
+    breaks the same way if either is hoisted into a default argument.
+
+    It does NOT reach `an.bench.imageio.lossless_encode_command`, which spells
+    `yuv420p` itself: the lossless reference must stay a fixed target, or every
+    encode-side metric is measured against something that moved with the lever.
+    """
+    from an.adapters.cutout import render
+
+    original = render.DEFAULT_PIX_FMT
+    render.DEFAULT_PIX_FMT = PIX_FMT_444
+    try:
+        yield
+    finally:
+        render.DEFAULT_PIX_FMT = original
+
+
+def _verify_pix_fmt_444(row: dict) -> None:
+    """The row must record the 4:4:4 format, not merely a different one."""
+    recorded = (
+        ((row.get("provenance") or {}).get("environment") or {}).get("encode_side")
+        or {}
+    ).get("pix_fmt")
+    if recorded != PIX_FMT_444:
+        raise MutationError(
+            f"the mutated row records pix_fmt={recorded!r}, not {PIX_FMT_444!r}. "
+            "The lever did not reach the encode, so every 'nothing moved' below "
+            "is about the lever and not about the instrument."
+        )
 
 
 @contextmanager
@@ -469,6 +514,25 @@ LEVERS: dict[str, Lever] = {
         ),
         apply=_supersample,
         verify_row=_verify_supersample,
+    ),
+    "pix_fmt": Lever(
+        name="pix_fmt",
+        side="encode",
+        what=f"encode the delivered mp4 at {PIX_FMT_444} instead of 4:2:0",
+        why=(
+            "the encoder's one FIRST-ORDER lever, and the second improvement in "
+            "this set. Measured on 30 real 1080p frames the edge-band mean error "
+            "goes 11.35 -> 3.79, where a mathematically lossless 4:2:0 only "
+            "reaches 10.15 — losslessness buys 8%, dropping chroma subsampling "
+            "buys 66%. Inside the panel it is the one lever whose subject and "
+            "whose witness are the same thing: `chroma_edge_dCr` measures chroma "
+            "error at an edge, and this removes chroma subsampling. It is also "
+            "the lever that shows family A is blind to the encoder BY "
+            "MEASUREMENT rather than by argument: exactly +0.0% on all six "
+            "scenes, every family-A metric."
+        ),
+        apply=_pix_fmt_444,
+        verify_row=_verify_pix_fmt_444,
     ),
 }
 

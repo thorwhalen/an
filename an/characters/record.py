@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+
+from an.base import MP4_FASTSTART_ARGS
 from pathlib import Path
 from typing import Optional
 
@@ -139,12 +141,22 @@ def _ffmpeg_webm_to_mp4(webm: Path, mp4: Path, *, fps: int, crf: int) -> None:
         str(fps),
         "-c:v",
         "libx264",
+        # NOT `an.adapters.cutout.render`'s flags, and not its `-pix_fmt` knob
+        # either — deliberately, and this is the "third x264 site" an#59 names.
+        # What this encodes is a CHARACTER PREVIEW: a documentation artifact of
+        # a webm screen recording, not a rendered shot. Unifying it would put
+        # `-threads 1` and BT.709 tagging on a preview for no benefit, and would
+        # make flipping the DELIVERABLE's pixel format silently change every
+        # character sheet. Its CRF is a parameter here and a pinned constant
+        # there, which is the same distinction stated another way.
         "-pix_fmt",
         "yuv420p",
         "-crf",
         str(crf),
-        "-movflags",
-        "+faststart",
+        # The one fact that IS shared, so it is imported rather than respelled:
+        # "does an's mp4 have faststart" must not depend on which of the four
+        # ffmpeg calls in this repo you happen to be reading (an#57).
+        *MP4_FASTSTART_ARGS,
         str(mp4),
     ]
     try:

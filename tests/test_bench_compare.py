@@ -90,6 +90,7 @@ _ROW_PROVENANCE = {
             "isa": "arm64",
             "x264_sei": "core 165 r3222 abc",
             "x264_argv": ["-crf", "23"],
+            "pix_fmt": "yuv420p",
         },
     },
 }
@@ -206,6 +207,12 @@ def test_the_comparability_key_tables_are_pinned_by_literal():
         ("environment", "encode_side", "isa"),
         ("environment", "encode_side", "x264_sei"),
         ("environment", "encode_side", "x264_argv"),
+        # A SECOND encode-command key on purpose (an#59). `x264_argv` is the
+        # pinned tuple and carries neither `-c:v` nor `-pix_fmt` nor
+        # `+faststart`, so folding a per-render knob into it would either make a
+        # constant non-constant or turn it into a composed command — and either
+        # changes what every already-committed row means.
+        ("environment", "encode_side", "pix_fmt"),
         ("encode_command_source",),
         ("decode_commands",),
     )
