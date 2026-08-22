@@ -68,6 +68,7 @@ What exists, and where. This replaces the old phase table on purpose — phase t
 | Mutation levers (`high_crf`, `disabled_aa`, `supersample`) + the guard-mutant registry, `an bench-mutants` | `an/bench/{mutations,mutants}.py` | shipped (an#41, an#56) |
 | Determinism perimeter: the runtime probes, `an/determinism.py` judges, enforced by default | `an/data/cutout_runtime/runtime.js` `anDeterminismReport` + `an/determinism.py` | shipped (an#37) |
 | Camera moves (`hold / push_in / pull_out / zoom_in / zoom_out`) as root-scale tweens | `an/adapters/cutout/compile.py` — `_add_camera_clips` | shipped |
+| Supersampling, opt-in — `resolution: k` + `autoDensity: false`, resolved by an exact k x k block mean in the frame stage; `an render --supersample N` | `an/adapters/cutout/supersample.py`, `RenderContext.supersample` | shipped (an#58) |
 | Emotion-driven eyebrows, environment backdrops, per-character palettes | `an/adapters/cutout/compile.py` | shipped |
 | Manim backend | `an/adapters/manim_adapter.py` | **title card only** — see gaps |
 | Remotion backend | `an/adapters/remotion_adapter.py` | stub — raises `RemotionRenderError` documenting what a real impl needs |

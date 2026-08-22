@@ -147,8 +147,12 @@ def resolve(frames: np.ndarray, k: int, how: str) -> np.ndarray:
         return frames
     if how == "box":
         n, h, w, c = frames.shape
-        blocks = frames.reshape(n, h // k, k, w // k, k, c).astype(np.float64)
-        return np.rint(blocks.mean(axis=(2, 4))).clip(0, 255).astype(np.uint8)
+        # The PRODUCT's resolve since an#58, not a fourth copy. This script's
+        # whole job is to compare `box` against its alternatives, so it has to
+        # be measuring the same `box` the renderer and the bench lever use.
+        from an.adapters.cutout.supersample import block_mean_resolve
+
+        return np.stack([block_mean_resolve(f, k) for f in frames])
     if how == "nearest":
         return frames[:, ::k, ::k, :]
     from PIL import Image

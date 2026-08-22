@@ -38,23 +38,38 @@ def test_the_supersample_lever_stages_a_runtime_that_renders_at_k(tmp_path):
     from an.bench.mutations import AA_ON, APP_OPEN, SUPERSAMPLE_K
 
     shipped = runtime_dir()
+    shipped_source = (shipped / "runtime.js").read_text(encoding="utf-8")
+
+    # The PRODUCT owns both keys since an#58, and the lever must not write a
+    # second copy of them — a lever that reproduces the code it examines is
+    # examining itself. So assert they are already there, unconditionally.
+    assert shipped_source.count("autoDensity: false") == 1
+    assert shipped_source.count("autoDensity: true") == 0, (
+        "`autoDensity: true` reintroduces the blind Chromium downscale that the "
+        "whole plumbing finding is about"
+    )
+    assert shipped_source.count(APP_OPEN) == 1, (
+        "the lever overrides this exact line; a reformat must fail at the lever"
+    )
+
     with LEVERS["supersample"].apply():
         staged = render.runtime_dir()
         assert staged != shipped, "the lever must not point at the shipped tree"
         source = (staged / "runtime.js").read_text(encoding="utf-8")
-        assert source.count(f"resolution: {SUPERSAMPLE_K}") == 1
-        assert source.count("autoDensity: false") == 1
-        assert source.count("autoDensity: true") == 0, (
-            "`autoDensity: true` reintroduces the blind Chromium downscale the "
-            "whole plumbing finding is about"
+        assert f"const resolution = {SUPERSAMPLE_K};" in source, (
+            "the lever forces the resolution the product would otherwise read "
+            "from the injected global"
+        )
+        assert APP_OPEN not in source, (
+            "and REPLACES that read rather than sitting beside it — the product "
+            "sets `anSupersample` from ctx immediately before `anLoadScene`, so "
+            "an injected global would be overwritten"
+        )
+        assert source.count("autoDensity: false") == 1, (
+            "and does NOT duplicate the product's own Pixi options"
         )
         assert source.count(AA_ON) == 1, (
             "the AA lever's pin must survive, so the two render levers compose"
-        )
-        inserted = source.index(APP_OPEN) + len(APP_OPEN)
-        assert source[inserted : inserted + 1] == "\n"
-        assert (
-            source[inserted + 1 :].lstrip().startswith(f"resolution: {SUPERSAMPLE_K}")
         )
 
     assert render.runtime_dir() == shipped, "the rebinding must be undone"
@@ -131,37 +146,53 @@ def test_the_supersample_fingerprint_refuses_the_aa_levers_runtime():
 
 
 def test_the_resolve_is_the_exact_block_mean_and_not_a_decimation(tmp_path):
-    """MUTATION: `blocks.mean(axis=(1, 3))` -> `frame[::k, ::k, :]`.
+    """MUTATION: `sum(...)` two-step -> `frame[::k, ::k, :]`.
 
     Nearest-neighbour decimation produces a plausible picture AND a plausible
     `edge_transition_width` (measured 2.114 px against a block mean's 2.492 on
-    `saturated_outline`), so nothing downstream flags it. Only a value
-    assertion catches it — which is why the lever's resolve is pinned by value
-    rather than by "the frames came out the right size".
+    `saturated_outline`), so nothing downstream flags it. Only a value assertion
+    catches it — which is why the resolve is pinned by VALUE rather than by "the
+    frames came out the right size".
 
-    Second mutation: drop `.astype(np.float64)`, so the uint8 mean truncates and
-    every resolved pixel is biased low.
+    The function under test is the PRODUCT's, not a copy: since an#58 the lever
+    forces `_capture_frames`'s own `supersample` parameter, so there is exactly
+    one implementation and this test covers both users of it.
     """
     import numpy as np
 
-    from an.bench.mutations import SUPERSAMPLE_K, _resolve_frames_in_place
-    from an.bench.png import encode_png, read_png
+    from an.adapters.cutout.supersample import (
+        SupersampleError,
+        block_mean_resolve,
+        resolve_png_bytes,
+    )
+    from an.bench.png import encode_png
 
-    frame = np.zeros((4, 4, 3), np.uint8)
-    frame[0:2, 0:2] = [[[0, 0, 0], [0, 0, 0]], [[0, 0, 0], [4, 4, 4]]]
-    frame[0:2, 2:4] = [[[0, 0, 0], [0, 0, 0]], [[1, 1, 1], [2, 2, 2]]]
-    (tmp_path / "frame_000000.png").write_bytes(encode_png(frame))
-    _resolve_frames_in_place(tmp_path, k=2)
-
-    out = read_png(tmp_path / "frame_000000.png")
-    assert out.shape == (2, 2, 3)
+    frame = np.zeros((2, 4, 3), np.uint8)
+    frame[:, 0:2] = [[[0, 0, 0], [0, 0, 0]], [[0, 0, 0], [4, 4, 4]]]
+    frame[:, 2:4] = [[[0, 0, 0], [0, 0, 0]], [[1, 1, 1], [2, 2, 2]]]
+    out = block_mean_resolve(frame, 2)
+    assert out.shape == (1, 2, 3)
     assert out[0, 0].tolist() == [1, 1, 1], (
-        "the mean of [0,0,0,4] is 1 — a decimation would give 0 and the maximum 4"
+        "the mean of [0,0,0,4] is 1 — a decimation gives 0 and the maximum 4"
     )
     assert out[0, 1].tolist() == [1, 1, 1], "mean of [0,0,1,2] is 0.75, rint -> 1"
 
-    odd = tmp_path / "odd"
-    odd.mkdir()
-    (odd / "frame_000000.png").write_bytes(encode_png(np.zeros((5, 4, 3), np.uint8)))
-    with pytest.raises(MutationError, match="whole multiple"):
-        _resolve_frames_in_place(odd, k=SUPERSAMPLE_K)
+    # Banker's rounding, explicitly: a block averaging exactly .5 goes to the
+    # EVEN neighbour. Getting it wrong is invisible in a picture and moves every
+    # golden.
+    half = np.array([[[0, 0, 0], [1, 1, 1]]], np.uint8).reshape(1, 2, 3)
+    half = np.repeat(half, 2, axis=0)
+    assert block_mean_resolve(half, 2)[0, 0].tolist() == [0, 0, 0]
+
+    # `factor=1` must return the bytes untouched, and must do so WITHOUT
+    # importing Pillow: the default CI lane installs `dev,test`, not `cutout`.
+    # The decode/encode half is proven on real Chromium frames in the browser
+    # lane, where that extra exists.
+    big = np.zeros((8, 8, 3), np.uint8)
+    big[:, 4:] = 200
+    data = encode_png(big)
+    assert resolve_png_bytes(data, factor=1) is data
+
+    odd = np.zeros((5, 4, 3), np.uint8)
+    with pytest.raises(SupersampleError, match="whole multiple"):
+        block_mean_resolve(odd, 2)

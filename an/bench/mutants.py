@@ -516,19 +516,38 @@ MUTANTS: tuple[Mutant, ...] = (
         ),
     ),
     # ---------------------------------------------------------------- an#55
+    # ------------------------------------------------- an#57, registerable
+    # since an#58 gated the parse check on `.py`. Before that these two had to
+    # be mutation-tested by hand, with the proof living in a docstring instead
+    # of in `an bench-mutants` — for the two files where a pixel-affecting
+    # mutation is hardest to catch by reading.
+    Mutant(
+        name="capture_page_stops_compositing_the_canvas",
+        file="an/data/cutout_runtime/index.html",
+        old="#stage { display: block; }",
+        new="#stage { display: none; }",
+        caught_by="tests/test_cutout_runtime_files.py",
+        why=(
+            "an#57's proposal. The element screenshot is a PAGE capture clipped "
+            "to the element, so hiding the canvas does not make it cheaper — it "
+            "makes `Locator.screenshot` time out after 30 s per frame. The two "
+            "spellings Playwright does accept return an all-white frame."
+        ),
+    ),
     # ---------------------------------------------------------------- an#56
     Mutant(
         name="supersample_autodensity_true",
-        file="an/bench/mutations.py",
-        old='SUPERSAMPLE_OPTIONS: str = "            resolution: {k}, autoDensity: false,"',
-        new='SUPERSAMPLE_OPTIONS: str = "            resolution: {k}, autoDensity: true,"',
+        file="an/data/cutout_runtime/runtime.js",
+        old="            autoDensity: false,",
+        new="            autoDensity: true,",
         caught_by="tests/test_bench_supersample_lever.py",
         why=(
             "`autoDensity: true` makes Chromium composite the k-times backbuffer "
             "down before the screenshot — a blind downscale with no filter "
             "choice and no record. The PNGs come out the DECLARED size, so every "
-            "shape check passes and the lever silently measures nothing. It is "
-            "the option whose name most suggests it is the right one."
+            "shape check passes and the whole knob silently measures nothing. It "
+            "is the option whose name most suggests it is the right one. Lives "
+            "on the PRODUCT's file since an#58, because the product owns the key."
         ),
     ),
     Mutant(
@@ -621,11 +640,20 @@ def check_sites(root: Path | None = None) -> list[str]:
             problems.append(f"{mutant.name}: the mutation is a no-op")
         if not (base / mutant.caught_by).is_file():
             problems.append(f"{mutant.name}: {mutant.caught_by} does not exist")
-        if count == 1:
+        if count == 1 and mutant.file.endswith(".py"):
             # A mutant that produces unparseable Python breaks COLLECTION, and
             # a collection error is not a guard catching anything. Checked here,
             # at declaration time and for free, because the alternative is
             # finding out from a sweep that says 16/16.
+            #
+            # **Gated on `.py`, and that gate is the whole reason this registry
+            # can reach the renderer at all.** Unconditionally, `compile()`
+            # refuses `an/data/cutout_runtime/runtime.js` and `index.html` —
+            # which are precisely the files where a pixel-affecting mutation
+            # hides, and where a guard is hardest to prove by argument. Before
+            # an#58 the registry silently could not hold one, so those guards
+            # had to be mutation-tested by hand and the proof lived in a
+            # docstring rather than in `an bench-mutants`.
             try:
                 compile(source.replace(mutant.old, mutant.new, 1), mutant.file, "exec")
             except SyntaxError as e:
