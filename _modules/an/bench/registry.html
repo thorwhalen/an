@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.33 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.34 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=449df4d2"></script>
+      <script src="../../../_static/documentation_options.js?v=8f14641f"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -214,6 +214,7 @@
 <span class="c1">#: that failure would be misdiagnosed as the harness being wrong.</span>
 <span class="n">MUTATIONS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"high_crf"</span><span class="p">,</span> <span class="s2">"disabled_aa"</span><span class="p">)</span>
 
+
 <span class="c1">#: What each lever is EXPECTED to change about the recorded environment.</span>
 <span class="c1">#:</span>
 <span class="c1">#: Load-bearing, and not obvious: `an bench-compare` refuses two rows whose</span>
@@ -224,17 +225,79 @@
 <span class="c1">#: deliverable, can never be evaluated at all.</span>
 <span class="c1">#:</span>
 <span class="c1">#: So the exemption is DECLARED per lever rather than inferred, it applies only</span>
-<span class="c1">#: in mutation mode, and it names exact paths — a blanket "ignore the</span>
+<span class="c1">#: in mutation mode, and it names a path together with the CHANGE the lever</span>
+<span class="c1">#: makes to it — a blanket "ignore the</span>
 <span class="c1">#: environment when a mutation is given" would silently let a row from another</span>
 <span class="c1">#: machine in through the same door.</span>
 <span class="c1">#:</span>
-<span class="c1">#: `disabled_aa` touches nothing the row records: it patches `runtime.js`, and</span>
-<span class="c1">#: the runtime is the code under test rather than a comparability key. Whether</span>
-<span class="c1">#: THAT lever applied is checked by the harness that pulls it, not by reading</span>
-<span class="c1">#: the row back.</span>
-<span class="n">MUTATION_TOUCHES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"high_crf"</span><span class="p">:</span> <span class="p">((</span><span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"encode_side"</span><span class="p">,</span> <span class="s2">"x264_argv"</span><span class="p">),),</span>
-    <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="p">(),</span>
+<span class="c1">#: `disabled_aa` touches `render_side.runtime_sha256`, which is PROVENANCE and</span>
+<span class="c1">#: not a comparability key — the runtime is the code under test, and two rows</span>
+<span class="c1">#: rendered by different runtimes are exactly what `--compare` exists to</span>
+<span class="c1">#: compare. Listing it here is therefore not an exemption from anything; it is</span>
+<span class="c1">#: what makes `mutation_may_not_have_applied` able to answer for that lever at</span>
+<span class="c1">#: all. Before it existed, `assert not report["mutation_may_not_have_applied"]`</span>
+<span class="c1">#: asserted nothing for the AA lever (an#41 review).</span>
+<div class="viewcode-block" id="Touch">
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.Touch">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Touch</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One environment key a lever is expected to change, and HOW.</span>
+
+<span class="sd">    ``differs_only_in`` names the argv flags whose values the lever may move.</span>
+<span class="sd">    Without it the exemption is by PATH, and `x264_argv` is the whole encode</span>
+<span class="sd">    command — so a `-preset medium` -&gt; `-preset veryslow` change, which moves</span>
+<span class="sd">    every encode-side number, rode in on the CRF lever's exemption and was</span>
+<span class="sd">    reported as "the lever moved it — expected" (an#41 review). ``None`` means</span>
+<span class="sd">    any difference is the lever's, which is right for an opaque digest.</span>
+<span class="sd">    """</span>
+
+    <span class="n">path</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">differs_only_in</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Touch.is_the_levers_change">
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.Touch.is_the_levers_change">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_the_levers_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">after</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True when the observed difference is the one this lever makes."""</span>
+        <span class="k">if</span> <span class="n">before</span> <span class="o">==</span> <span class="n">after</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">differs_only_in</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">after</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">_without</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">differs_only_in</span><span class="p">)</span> <span class="o">==</span> <span class="n">_without</span><span class="p">(</span>
+            <span class="n">after</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">differs_only_in</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_without</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">flags</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``argv`` with each named flag and its value removed."""</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">argv</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">flags</span><span class="p">:</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">continue</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="n">MUTATION_TOUCHES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Touch</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"high_crf"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">Touch</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="p">(</span><span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"encode_side"</span><span class="p">,</span> <span class="s2">"x264_argv"</span><span class="p">),</span>
+            <span class="n">differs_only_in</span><span class="o">=</span><span class="p">(</span><span class="s2">"-crf"</span><span class="p">,),</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="p">(</span><span class="n">Touch</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="p">(</span><span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"render_side"</span><span class="p">,</span> <span class="s2">"runtime_sha256"</span><span class="p">)),),</span>
 <span class="p">}</span>
 
 <span class="n">Side</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"render"</span><span class="p">,</span> <span class="s2">"encode"</span><span class="p">]</span>
@@ -354,6 +417,22 @@
     <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"one_sided"</span><span class="p">,</span> <span class="s2">"interior"</span><span class="p">,</span> <span class="s2">"guard"</span><span class="p">]</span>
     <span class="n">expect</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"minimize"</span><span class="p">,</span> <span class="s2">"maximize"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">!=</span> <span class="s2">"one_sided"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RegistryError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"kind=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> cannot carry expect=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">expect</span><span class="si">!r}</span><span class="s2">. An "</span>
+                <span class="s2">"interior optimum has no 'better' direction — under 1 is a "</span>
+                <span class="s2">"staircase and 3+ is soft — and a guard has none by declaration. "</span>
+                <span class="s2">"Giving either one makes `--compare` report a regression the "</span>
+                <span class="s2">"table explicitly refuses to claim. Enforced here because the "</span>
+                <span class="s2">"guard test for that mutation SURVIVED it: the combination was "</span>
+                <span class="s2">"inexpressible only by convention, so nothing went red."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"one_sided"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RegistryError</span><span class="p">(</span>
+                <span class="s2">"a one-sided optimum must say which way 'better' points"</span>
+            <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">"kind"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span> <span class="s2">"expect"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expect</span><span class="p">,</span> <span class="s2">"note"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">note</span><span class="p">}</span></div>
@@ -880,7 +959,13 @@
                     <span class="s2">"decrease"</span><span class="p">,</span>
                     <span class="n">counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">reason</span><span class="o">=</span><span class="s2">"free fourth cross-check"</span><span class="p">,</span>
-                    <span class="n">reference</span><span class="o">=</span><span class="s2">"8x"</span><span class="p">,</span>
+                    <span class="c1"># MEASURED on this corpus at the lever's crf23 -&gt; crf40 step:</span>
+                    <span class="c1"># x1.18 to x1.77 smaller. The whole ladder (crf 18..51 on</span>
+                    <span class="c1"># `single_character`: 3808/3644/2903/2463/2108/1843 bytes)</span>
+                    <span class="c1"># tops out at x2.07, so 8x is unreachable at ANY rung. It was</span>
+                    <span class="c1"># a research-table figure copied into a field this repo reads</span>
+                    <span class="c1"># as a measurement of THIS pipeline (an#41 review).</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="s2">"x1.18 to x1.77 at crf23 -&gt; crf40; x2.07 across the whole ladder"</span><span class="p">,</span>
                 <span class="p">),</span>
                 <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
                     <span class="s2">"increase"</span><span class="p">,</span>
@@ -921,7 +1006,17 @@
             <span class="p">),</span>
             <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"decrease"</span><span class="p">),</span>
-                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="s2">"increase"</span><span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"increase"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"companion to `video_stream_bytes`, SCENE-DEPENDENT in "</span>
+                        <span class="s2">"the same way, and additionally contaminated by the "</span>
+                        <span class="s2">"audio track. Measured AA-on -&gt; off across the corpus: "</span>
+                        <span class="s2">"+3.6% / -2.7% / +7.0% / -0.0% / +4.0% / -2.9%, so it is "</span>
+                        <span class="s2">"`contrary` on half of it. Counts nothing; kept only as "</span>
+                        <span class="s2">"the companion the sentence above calls it (an#41 review)."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
             <span class="p">},</span>
         <span class="p">),</span>
     <span class="p">]</span>

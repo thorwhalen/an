@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.golden &mdash; an 0.1.33 documentation</title>
+  <title>an.bench.golden &mdash; an 0.1.34 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=449df4d2"></script>
+      <script src="../../../_static/documentation_options.js?v=8f14641f"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -468,7 +468,26 @@
         <span class="p">}</span>
 
     <span class="n">frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">refs</span> <span class="o">=</span> <span class="n">resolve_frames</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">refs</span> <span class="o">=</span> <span class="n">resolve_frames</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">GoldenError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># A pinned time past the end of the scene is a fact about ONE scene, and</span>
+        <span class="c1"># `run_bench` has no per-scene handler — so this used to abort the whole</span>
+        <span class="c1"># run and take five other scenes' rows with it. `unavailable` is the</span>
+        <span class="c1"># documented outcome for "the check could not run"; no new gate name is</span>
+        <span class="c1"># needed, and inventing one would be a wire-format change that</span>
+        <span class="c1"># `an bench --compare` and `RETIRED_GATES` both have to learn.</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"state"</span><span class="p">:</span> <span class="s2">"unavailable"</span><span class="p">,</span> <span class="s2">"detail"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">"frames"</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">({</span><span class="n">r</span><span class="o">.</span><span class="n">key</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">})</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">refs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"unavailable"</span><span class="p">,</span>
+            <span class="s2">"detail"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> pins times that resolve to the same frame "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">key</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">refs</span><span class="p">]</span><span class="si">}</span><span class="s2">). Two goldens of one picture compare "</span>
+                <span class="s2">"the same thing twice and the second tests nothing."</span>
+            <span class="p">),</span>
+            <span class="s2">"frames"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
     <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">:</span>
         <span class="n">golden</span> <span class="o">=</span> <span class="n">golden_path</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
         <span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -476,7 +495,12 @@
             <span class="s2">"time"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
             <span class="s2">"index"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
             <span class="s2">"shot_id"</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">shot_id</span><span class="p">,</span>
-            <span class="s2">"golden"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">golden</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">golden_dir</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">))</span>
+            <span class="c1"># `.parents[2]`, not `.parent.parent`: `golden_dir` is</span>
+            <span class="c1"># `&lt;root&gt;/misc/bench/golden`, so two levels up is `&lt;root&gt;/misc` and</span>
+            <span class="c1"># every reported path came out as `bench/golden/...` — a path that</span>
+            <span class="c1"># does not exist, printed in the one message telling a reader which</span>
+            <span class="c1"># file to open. Measured against the committed row: 12 of 12 wrong.</span>
+            <span class="s2">"golden"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">golden</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">golden_dir</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
             <span class="k">if</span> <span class="n">golden</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
             <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">}</span>
@@ -530,6 +554,7 @@
     <span class="c1"># boolean is reported and the number is not, which is exactly the split the</span>
     <span class="c1"># metrics/tripwires blocks exist to express.</span>
     <span class="n">mismatched</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"shape_mismatch"</span><span class="p">)]</span>
+    <span class="n">compared</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"changed_px"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"measured"</span><span class="p">,</span>
         <span class="s2">"identical"</span><span class="p">:</span> <span class="nb">all</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"identical"</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">),</span>
@@ -541,8 +566,13 @@
             <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">mismatched</span>
         <span class="p">]</span>
         <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s2">"changed_px"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"changed_px"</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">),</span>
-        <span class="s2">"max_delta"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"max_delta"</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">),</span>
+        <span class="c1"># Reduced over the frames that ACTUALLY compared, and left None when</span>
+        <span class="c1"># none did. `int(f["changed_px"] or 0)` turned "there is no per-pixel</span>
+        <span class="c1"># comparison to count" into a hard ZERO, so a fired gate printed</span>
+        <span class="c1"># "GOLDEN MISMATCH: 0 px changed, max delta 0" — a fabricated number, in</span>
+        <span class="c1"># the one schema whose entire premise is that unknown is not zero.</span>
+        <span class="s2">"changed_px"</span><span class="p">:</span> <span class="nb">max</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"changed_px"</span><span class="p">])</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">compared</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+        <span class="s2">"max_delta"</span><span class="p">:</span> <span class="nb">max</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">"max_delta"</span><span class="p">])</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">compared</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
         <span class="s2">"frames"</span><span class="p">:</span> <span class="n">frames</span><span class="p">,</span>
     <span class="p">}</span></div>
 
