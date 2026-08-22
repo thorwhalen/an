@@ -65,7 +65,7 @@ What exists, and where. This replaces the old phase table on purpose — phase t
 | Metrics ledger: `an bench` renders a fixed corpus and writes one row per (date, commit) | `an/bench/` — `run_bench()`, `METRICS`, `build_scene_block()` | shipped (an#36) |
 | Golden corpus: 12 committed PNGs compared on DECODED pixels, `an bench --bless "<reason>"` | `an/bench/{png,golden}.py`, `misc/bench/{corpus,golden}/` | shipped (an#38) |
 | Row comparison: `an bench-compare`, per-mutation signs, refuses incomparable rows | `an/bench/compare.py` | shipped (an#40) |
-| Mutation levers (`high_crf`, `disabled_aa`) + the guard-mutant registry, `an bench-mutants` | `an/bench/{mutations,mutants}.py` | shipped (an#41) |
+| Mutation levers (`high_crf`, `disabled_aa`, `supersample`) + the guard-mutant registry, `an bench-mutants` | `an/bench/{mutations,mutants}.py` | shipped (an#41, an#56) |
 | Determinism perimeter: the runtime probes, `an/determinism.py` judges, enforced by default | `an/data/cutout_runtime/runtime.js` `anDeterminismReport` + `an/determinism.py` | shipped (an#37) |
 | Camera moves (`hold / push_in / pull_out / zoom_in / zoom_out`) as root-scale tweens | `an/adapters/cutout/compile.py` — `_add_camera_clips` | shipped |
 | Emotion-driven eyebrows, environment backdrops, per-character palettes | `an/adapters/cutout/compile.py` | shipped |
