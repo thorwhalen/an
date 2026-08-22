@@ -76,6 +76,7 @@ from an.bench.registry import MUTATIONS
 #: proxy for the regressions this instrument exists to catch.
 HIGH_CRF: str = "40"
 
+
 #: The exact text the AA lever flips, and where. Pinned as a literal so a
 #: rename in `runtime.js` fails here — loudly, at the lever — rather than
 #: producing a "mutation" that changes nothing.

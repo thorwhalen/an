@@ -99,6 +99,7 @@ ENCODE_ENV_PATHS: tuple[tuple[str, ...], ...] = (
     ("environment", "encode_side", "isa"),
     ("environment", "encode_side", "x264_sei"),
     ("environment", "encode_side", "x264_argv"),
+    ("environment", "encode_side", "pix_fmt"),
     ("encode_command_source",),
     ("decode_commands",),
 )

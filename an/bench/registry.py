@@ -135,6 +135,11 @@ MUTATION_TOUCHES: dict[str, tuple[Touch, ...]] = {
     # recomputes the digest a resolution-patched runtime produces and asserts
     # EQUALITY, instead of copying `_verify_disabled_aa`'s inequality check.
     "supersample": (Touch(path=("environment", "render_side", "runtime_sha256")),),
+    # A scalar, so `differs_only_in` would have nothing to name — that field
+    # exists for `x264_argv`, where the whole encode command is one value and a
+    # `-preset` change could otherwise ride in under a `-crf` exemption. Here
+    # the key IS the knob.
+    "pix_fmt": (Touch(path=("environment", "encode_side", "pix_fmt")),),
 }
 
 Side = Literal["render", "encode"]

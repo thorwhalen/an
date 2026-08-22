@@ -53,6 +53,17 @@ class RenderContext:
     #: `SCHEMA_VERSION` migration, and it MUST reach per-shot provenance, because
     #: a row that does not record it cannot be read back later.
     supersample: int = DEFAULT_SUPERSAMPLE
+    #: The delivered encode's pixel format, or ``None`` for the module default.
+    #: **The one first-order quality lever in the encoder**: 4:2:0 -> 4:4:4 cuts
+    #: the edge-band error 11.35 -> 3.79, where mathematically lossless 4:2:0
+    #: only reaches 10.15. Losslessness buys 8%; dropping chroma subsampling
+    #: buys 66%.
+    #:
+    #: ``None`` rather than the literal, so the bench's `pix_fmt` lever — which
+    #: rebinds the module default — still reaches an unset render. The default
+    #: stays 4:2:0 for a PRODUCT reason and not an encoder one: High 4:4:4
+    #: Predictive is refused by many hardware decoders, browsers and platforms.
+    pix_fmt: str | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 

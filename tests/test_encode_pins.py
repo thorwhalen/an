@@ -16,6 +16,8 @@ an#34. Two different promises, so two different tests:
 
 from __future__ import annotations
 
+import inspect
+
 import struct
 import subprocess
 import zlib
@@ -91,6 +93,86 @@ def test_the_mux_command_carries_the_pins(tmp_path, monkeypatch):
         " ".join(knob) for knob in REQUIRED_KNOBS if knob not in _pairs(tuple(cmd))
     ]
     assert not missing, f"the mux command does not pass: {missing}\ncmd: {cmd}"
+
+    # **EQUALITY, not subset** (an#59). Subset membership answers "are the pins
+    # still there" and says nothing about what else arrived: a `-tune animation`
+    # added by someone who measured it at 0.8%, a stray `-vf scale` that would
+    # retire the cross-arch verdict's "ffmpeg never touches a frame" clause, or
+    # a second `-pix_fmt` later in the list silently overriding the first. Each
+    # of those passes a subset check and moves the encode.
+    expected = [
+        "ffmpeg",
+        "-y",
+        "-loglevel",
+        "error",
+        "-framerate",
+        "24",
+        "-i",
+        str(tmp_path / render_mod.DEFAULT_FRAME_PNG_PATTERN),
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        render_mod.DEFAULT_PIX_FMT,
+        *render_mod.DETERMINISTIC_X264_ARGS,
+        *render_mod.MP4_FASTSTART_ARGS,
+        str(tmp_path / "out.mp4"),
+    ]
+    assert cmd == expected, (
+        "the mux argv is pinned exactly. If this is a deliberate change, the "
+        "encode-side half of every committed ledger row stops being comparable "
+        "with it — which is correct behaviour and needs to be a decision, not a "
+        "diff nobody read.\n"
+        f"  got:      {cmd}\n  expected: {expected}"
+    )
+
+
+def test_the_pixel_format_is_a_knob_that_reaches_the_encode_and_the_row(
+    tmp_path, monkeypatch
+):
+    """MUTATION: hoist `DEFAULT_PIX_FMT` into `_ffmpeg_mux`'s default argument.
+
+    That binds it at `def` time, so the bench's `pix_fmt` lever — which rebinds
+    the module global — silently stops reaching the encode while STILL moving
+    the recorded environment. The row would then claim 4:4:4 for a 4:2:0 file:
+    a lever that reports beautiful numbers about nothing, which is the exact
+    failure `_high_crf`'s module-global read exists to avoid.
+    """
+    seen: dict[str, list[str]] = {}
+
+    class _Result:
+        returncode = 0
+        stderr = ""
+        stdout = ""
+
+    def fake_run(cmd, *a, **kw):
+        seen["cmd"] = list(cmd)
+        Path(cmd[-1]).write_bytes(b"")
+        return _Result()
+
+    monkeypatch.setattr(render_mod.subprocess, "run", fake_run)
+
+    # An explicit argument wins over the module default.
+    _ffmpeg_mux(tmp_path, 24, tmp_path / "a.mp4", "yuv444p")
+    assert dict(_pairs(tuple(seen["cmd"])))["-pix_fmt"] == "yuv444p"
+
+    # And rebinding the module global reaches the encode — the seam the lever
+    # uses, and the one a default argument would sever.
+    monkeypatch.setattr(render_mod, "DEFAULT_PIX_FMT", "yuv444p")
+    _ffmpeg_mux(tmp_path, 24, tmp_path / "b.mp4")
+    assert dict(_pairs(tuple(seen["cmd"])))["-pix_fmt"] == "yuv444p", (
+        "rebinding the module global must reach the encode — otherwise the "
+        "lever measures a 4:2:0 file and the row calls it 4:4:4"
+    )
+
+    # ...and the SAME global is what the row records, so the two cannot
+    # disagree. Read directly rather than through `environment_record`, which
+    # shells out to ffmpeg and would need the fake to impersonate it.
+    from an.bench import environment as env_mod
+
+    assert "DEFAULT_PIX_FMT" in inspect.getsource(env_mod.environment_record), (
+        "the row must read the same module global the mux does; a second "
+        "source of truth for the format is a row that can lie about its file"
+    )
 
 
 def test_every_command_that_writes_an_mp4_asks_for_faststart(tmp_path, monkeypatch):

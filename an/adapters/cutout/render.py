@@ -123,6 +123,31 @@ DETERMINISTIC_CHROMIUM_ARGS: tuple[str, ...] = (
 #: error. Pinning both sides to BT.709 makes them agree at every resolution.
 #: This is a **one-time deliberate re-baseline** of every mp4 — cheap now,
 #: because no ledger exists yet to invalidate.
+#: The delivered encode's pixel format, and **the one first-order quality lever
+#: in this file**. Measured on 30 real 1080p `an` frames, edge-band mean error:
+#: current flags 11.35, crf18 4:2:0 11.05, crf18 `-tune animation` 10.96,
+#: mathematically lossless 4:2:0 **10.15** — and crf18 **4:4:4 3.79**.
+#: Losslessness buys 8%; dropping chroma subsampling buys **66%**. Wave 2's own
+#: conclusion: "bitrate is second-order, pixel format is first-order".
+#:
+#: **The default stays 4:2:0 because that is a PRODUCT constraint, not an
+#: encoder-tuning one.** High 4:4:4 Predictive is refused by many hardware
+#: decoders, browsers and platforms, so flipping it would hand a design partner
+#: a file they cannot play. 4:4:4 is reachable per render
+#: (`an render --pix-fmt yuv444p`), which is the right shape for a knob whose
+#: right answer depends on where the file is going.
+#:
+#: Read as a MODULE GLOBAL at call time, deliberately: that is what lets the
+#: bench's lever rebind it from outside, exactly as `high_crf` rebinds
+#: `DETERMINISTIC_X264_ARGS`. Hoisting either into a default argument binds it
+#: at `def` time and disarms the lever silently.
+DEFAULT_PIX_FMT: str = "yuv420p"
+
+#: The formats the knob accepts. Not an open string: a typo would reach ffmpeg
+#: as an obscure failure minutes into a render, and a format outside this set
+#: has not been measured against the panel.
+SUPPORTED_PIX_FMTS: tuple[str, ...] = ("yuv420p", "yuv444p")
+
 DETERMINISTIC_X264_ARGS: tuple[str, ...] = (
     "-threads",
     "1",
@@ -146,6 +171,29 @@ DETERMINISTIC_X264_ARGS: tuple[str, ...] = (
 
 class CutoutRenderError(RuntimeError):
     """Raised when a cutout render fails. Carries actionable detail."""
+
+
+def _check_pix_fmt(pix_fmt: str | None) -> str:
+    """Resolve and validate the pixel format, or refuse with the whole list.
+
+    ``None`` resolves to :data:`DEFAULT_PIX_FMT` **at call time**, which is what
+    lets the bench's lever rebind the module global and reach this render.
+
+    Refuses an unknown format rather than passing it to ffmpeg: a typo would
+    otherwise surface minutes into a render as an obscure encoder error, and on
+    the second shot of a parallel render it would surface from a thread. A
+    format outside the list has also never been measured against the panel.
+    """
+    resolved = pix_fmt or DEFAULT_PIX_FMT
+    if resolved not in SUPPORTED_PIX_FMTS:
+        raise CutoutRenderError(
+            f"pix_fmt={resolved!r} is not one of {SUPPORTED_PIX_FMTS}. 4:4:4 is "
+            "opt-in and 4:2:0 is the default for a PRODUCT reason rather than "
+            "an encoder one — High 4:4:4 Predictive is refused by many hardware "
+            "decoders, browsers and platforms, so a 4:4:4 file is one some "
+            "viewers cannot play."
+        )
+    return resolved
 
 
 @dataclass(slots=True)
@@ -181,6 +229,7 @@ class CutoutRenderer:
         # Validated before anything launches: a browser and a scene compile are
         # minutes, and `check_factor` is microseconds.
         supersample = check_factor(ctx.supersample)
+        pix_fmt = _check_pix_fmt(ctx.pix_fmt)
         from playwright.sync_api import sync_playwright  # local: optional dep
 
         scene_json = compile_shot(
@@ -254,7 +303,7 @@ class CutoutRenderer:
         # Every shot mp4 carries an AAC stream (silent if no dialogue) so the
         # final ffmpeg concat across heterogeneous shots works without surprises.
         silent_mp4 = job.work_dir / "silent.mp4"
-        _ffmpeg_mux(job.frames_dir, ctx.fps, silent_mp4)
+        _ffmpeg_mux(job.frames_dir, ctx.fps, silent_mp4, pix_fmt)
         audio_inputs = _stage_audio_inputs(shot, ctx, job.work_dir)
         _ffmpeg_add_audio(silent_mp4, audio_inputs, job.output_mp4, shot.duration)
 
@@ -271,6 +320,7 @@ class CutoutRenderer:
                 # disk are always this, because the resolve runs in the frame
                 # stage. `supersample` beside it is what says how they got there.
                 "supersample": supersample,
+                "pix_fmt": pix_fmt,
                 "frame_count": total_frames,
                 "audio_tracks": len(audio_inputs),
                 # The launch argv verbatim: all four rasteriser configurations
@@ -548,8 +598,22 @@ def _capture_frames(
             )
 
 
-def _ffmpeg_mux(frames_dir: Path, fps: int, output_mp4: Path) -> None:
-    """Mux a PNG sequence to H.264 mp4."""
+def _ffmpeg_mux(
+    frames_dir: Path, fps: int, output_mp4: Path, pix_fmt: str | None = None
+) -> None:
+    """Mux a PNG sequence to H.264 mp4.
+
+    ``pix_fmt=None`` means "whatever the module default is **right now**", which
+    is what keeps the bench's `pix_fmt` lever able to reach this call by
+    rebinding :data:`DEFAULT_PIX_FMT`. A caller that passes one wins; the bench
+    never passes one, so the lever reaches the encode AND the recorded
+    environment, and the two cannot disagree.
+    """
+    # Resolved AND validated through the one function that does both, so a
+    # direct call to the mux cannot slip an unmeasured format past the check
+    # `CutoutRenderer.render` performs — and so there is one place that turns
+    # `None` into the module default, which is the seam the lever pulls.
+    resolved = _check_pix_fmt(pix_fmt)
     pattern = str(frames_dir / DEFAULT_FRAME_PNG_PATTERN)
     cmd = [
         "ffmpeg",
@@ -563,7 +627,7 @@ def _ffmpeg_mux(frames_dir: Path, fps: int, output_mp4: Path) -> None:
         "-c:v",
         "libx264",
         "-pix_fmt",
-        "yuv420p",
+        resolved,
         *DETERMINISTIC_X264_ARGS,
         # Kept, though this file is an intermediate `silent.mp4` that never
         # ships and whose container `_ffmpeg_add_audio` re-lays anyway. The
