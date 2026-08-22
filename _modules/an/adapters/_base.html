@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters._base &mdash; an 0.1.40 documentation</title>
+  <title>an.adapters._base &mdash; an 0.1.41 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=967b4925"></script>
+      <script src="../../../_static/documentation_options.js?v=3203cd3c"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -229,6 +229,17 @@
     <span class="c1">#: `SCHEMA_VERSION` migration, and it MUST reach per-shot provenance, because</span>
     <span class="c1">#: a row that does not record it cannot be read back later.</span>
     <span class="n">supersample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SUPERSAMPLE</span>
+    <span class="c1">#: The delivered encode's pixel format, or ``None`` for the module default.</span>
+    <span class="c1">#: **The one first-order quality lever in the encoder**: 4:2:0 -&gt; 4:4:4 cuts</span>
+    <span class="c1">#: the edge-band error 11.35 -&gt; 3.79, where mathematically lossless 4:2:0</span>
+    <span class="c1">#: only reaches 10.15. Losslessness buys 8%; dropping chroma subsampling</span>
+    <span class="c1">#: buys 66%.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: ``None`` rather than the literal, so the bench's `pix_fmt` lever — which</span>
+    <span class="c1">#: rebinds the module default — still reaches an unset render. The default</span>
+    <span class="c1">#: stays 4:2:0 for a PRODUCT reason and not an encoder one: High 4:4:4</span>
+    <span class="c1">#: Predictive is refused by many hardware decoders, browsers and platforms.</span>
+    <span class="n">pix_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 
 
