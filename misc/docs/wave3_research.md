@@ -280,9 +280,18 @@ this document are measuring what they claim to.
   k=2 can stay a CI gate.
 - **`parallel x supersample` memory.** One backbuffer per browser context, four
   contexts by default, k^2 per backbuffer.
-- **Whether `display:none` on the stage canvas grows with k.** Compositing is
-  per-pixel, so the measured 15x seek-loop win should grow with a supersampled
-  backbuffer — which would pay for much of the 2.54x. Worth measuring when that lands.
-- **`-f concat -c copy -movflags +faststart` on the pinned ffmpeg build.** If it forces
-  a re-encode it would *create* the double encode the epic wrongly describes.
+- ~~**Whether `display:none` on the stage canvas grows with k.**~~ **MOOT as posed
+  — an#57, 2026-08-22.** The seek-loop win is real and reproduces (16.44 → 0.69
+  ms/f at 1080p) but it is unrealisable with today's capture path: a Playwright
+  element screenshot is a *page* capture clipped to the element, so it refuses a
+  non-visible element outright and reads a blank frame from the two spellings it
+  does accept. Hide-for-seek / show-for-shot measured 116.11 vs 115.30 ms/f — no
+  win. Re-ask inside an in-page-capture change, where the hiding contributed a
+  further 1.09x on top of that change's 3.4x.
+- ~~**`-f concat -c copy -movflags +faststart` on the pinned ffmpeg build.**~~
+  **SETTLED — a remux, not a transcode (ffmpeg 8.1, an#57).** Elementary stream
+  sha256-identical to the inputs' appended, packet totals / file size / decoded
+  YUV / wall time all unchanged; only `moov` moves. Also found: the flag was
+  being lost one stage EARLIER than this list assumed — `_ffmpeg_add_audio`'s
+  `-c:v copy` drops it, so no deliverable had it, single-shot or multi.
 - **4:4:4 playback compatibility**, for the `-pix_fmt` knob's documentation.

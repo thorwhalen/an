@@ -39,11 +39,14 @@ an.render.render(project, …)
      │    6. _capture_frames            → per frame: anSetTime(t); locator('#stage').screenshot()
      │                                     → frames/frame_%06d.png   (Chromium's PNG bytes)
      │    7. _ffmpeg_mux                → silent.mp4  (libx264, yuv420p, DETERMINISTIC_X264_ARGS,
-     │                                                 -movflags +faststart)
-     │    8. _ffmpeg_add_audio          → <shot>.mp4  (-c:v copy + AAC, silent if no dialogue)
+     │                                                 MP4_FASTSTART_ARGS) — an INTERMEDIATE
+     │    8. _ffmpeg_add_audio          → <shot>.mp4  (-c:v copy + AAC + MP4_FASTSTART_ARGS;
+     │                                                 -c copy RE-LAYS the container, so the
+     │                                                 flag must be re-asked for here)
      │
      ├ _render_one → project.mall["shots"][shot.id] = mp4 bytes        ← WRITE-ONLY, see §5
      ├ _ffmpeg_concat  1 shot: shutil.copy  |  ≥2 shots: concat demuxer -c copy
+     │                 + MP4_FASTSTART_ARGS on the concat leg (a remux, verified)
      └ project.mall["output"][name] = bytes
 ```
 
@@ -54,8 +57,8 @@ an.render.render(project, …)
 | 4 rasterise | AA is MSAA-limited: the edge transition stays ~1 logical pixel however good the geometry is | `aa_probe` `edge_transition_width` 2.8807 at k=1 |
 | 6 capture | **nothing, if you leave it alone.** Every documented way of making it capture more pixels *except* `resolution` + `autoDensity:false` loses them again silently — §2. Since an#54 `an bench` **refuses** a capture whose PNGs are not the declared size (`an/bench/run.py::_assert_declared_resolution`, against `ShotCapture.frame_sizes` read from each IHDR), so a supersample that leaves k-times frames on disk fails loudly instead of producing k² scrambled ones. A deliberate supersample must therefore resolve **in the frame stage**, before the PNGs are written — which is what §2 already prescribes. | — |
 | 7 encode | **chroma subsampling is FIRST-order**; quantiser damage is second | edge-band error 11.35 (4:2:0 crf23) → 3.79 (4:4:4 crf18); mathematically lossless 4:2:0 only reaches 10.15 |
-| 8 audio mux | nothing (`-c:v copy`) | — |
-| concat | no pixels, but **`+faststart` is silently dropped** — `-c copy` does not re-apply it | affects multi-shot only; 5 of 6 corpus scenes take the `shutil.copy` path, so the corpus is internally inconsistent on this and `file_bytes` cannot see it |
+| 8 audio mux | no pixels (`-c:v copy`), but it **re-lays the container** — this is where `+faststart` was being lost, on EVERY shot | measured on committed output: `silent.mp4` is `ftyp moov free mdat`, `artifacts/shots/*.mp4` is `ftyp free mdat moov` |
+| concat | no pixels; `-c copy` does not carry `moov` position across either, so the flag is needed on this leg too | the corpus is **not** inconsistent — before the fix ALL SIX scenes lost it (5 of 6 take the `shutil.copy` path, and that path copies an already-broken file). `file_bytes` and `video_stream_bytes` cannot see the fix in either direction: measured identical |
 
 ---
 
@@ -110,6 +113,59 @@ cross-arch verdict's load-bearing clause that *"ffmpeg never touches a frame"*.
 unnecessary. The viewport stayed at 320x240 while the element screenshot came out
 640x480, un-clipped. Capture beyond the viewport works.
 
+**`display:none` on the stage canvas during the render (an#57)** — refuted, and
+the refutation is about *what the screenshot actually is*. `_capture_frames` calls
+`page.locator('#stage').screenshot(...)`, and Playwright implements an element
+screenshot as a **page capture clipped to the element's document rect**
+(`screenshotter.js::screenshotElement`, playwright==1.55.0): it first awaits
+`_waitAndScrollIntoViewIfNeeded(waitForVisible=true)`, then captures from the
+compositor. So there is no spelling that both passes the gate and keeps the
+pixels. Measured at 1920x1080:
+
+| spelling | Playwright sees visible? | seek loop | element screenshot |
+|---|---|---|---|
+| baseline | yes | 16.4 ms/f | works |
+| `display:none` | no | 0.7 ms/f | **TimeoutError** |
+| `visibility:hidden` | no | 0.7 ms/f | **TimeoutError** |
+| `content-visibility:hidden` | *unverified* | — | *unverified* |
+| `opacity:0` | **yes** | 0.7 ms/f | **all-white, 1 distinct RGBA** |
+| off-screen `fixed;left:-99999px` | **yes** | 0.8 ms/f | **all-white, 1 distinct RGBA** |
+
+`content-visibility:hidden` is listed **unverified** on purpose. Playwright's
+visibility predicate is a non-empty bounding box plus computed
+`visibility != hidden`, and a canvas under `content-visibility:hidden` keeps its
+own replaced-element box — so it plausibly reads as *visible* and belongs in the
+second group rather than the first. The guard forbids the spelling either way;
+the table does not claim a measurement nobody took.
+
+The Wave 2 number reproduces exactly as Wave 2 stated it — *on the seek loop*
+(16.44 → 0.69 ms/f, 24x here; and 0.69 ms is the bare `page.evaluate` round trip,
+0.66 ms, so the seek itself becomes free). It is **not free end to end**, because
+the element screenshot re-pays the composite. Toggling hide-for-seek /
+show-for-shot per frame measured **116.11 ms/f against a 115.30 ms/f baseline** —
+no win at all.
+
+**The win is real but it belongs to the capture path, not to the hiding.**
+Full-loop medians, interleaved over three rounds at 1080p:
+
+| regime | ms/frame |
+|---|---|
+| today: visible + `locator.screenshot()` → disk | **115.9** |
+| visible + in-page `toDataURL('image/png')` → disk | 34.3 |
+| `display:none` + in-page `toDataURL` → disk | **31.5** |
+
+So the capture path is **3.4x** and `display:none` adds a further **1.09x** on
+top of it. Isolated: the element screenshot alone costs 100.0 ms/f, `toDataURL`
+alone 10.0 ms/f visible and 9.9 ms/f hidden. And contra `wave2_research.md`'s
+alpha caveat, the two paths agreed **byte-for-byte in RGBA** on the probe scene
+(RGB maxdiff 0, alpha identical, both all-255) — which does not discharge the
+pixel gate, because one scene at one time on one machine is not the corpus.
+
+**Do not re-attempt the hiding on its own.** `index.html`'s `#stage` rule carries
+the reason, `tests/test_cutout_runtime_files.py::test_the_capture_page_never_stops_compositing_the_stage_canvas`
+refuses it, and the mutant `capture_page_stops_compositing_the_canvas` proves
+that guard fails when it is reintroduced.
+
 **`-tune animation`** — measured at **0.8%**. Dropped: it is not a wave, and
 adding it moves `x264_argv` and refuses every encode-side metric for nothing.
 
@@ -137,7 +193,7 @@ is a named constant with a recorded reason.
 | `-x264-params colorprim=…:transfer=…:colormatrix=…` | **this** is what lands all three in the VUI, and it leaves the decoded stream identical | a half-tagged file is worse than an untagged one: the player stops guessing the matrix but still guesses the primaries |
 | `-pix_fmt yuv420p` (literal in `_ffmpeg_mux`) | **the first-order quality lever, and the default is a product constraint, not an encoder-tuning one.** High 4:4:4 Predictive is refused by many hardware decoders, browsers and platforms — flipping the default would hand a design partner a file they cannot play | 4:4:4 is the opt-in |
 | `-c:v libx264` (literal) | | |
-| `-movflags +faststart` (literal) | moov atom first, so a browser can start playing before the file finishes downloading | **lost on the concat path** — see §1 |
+| `-movflags +faststart` (`an.base.MP4_FASTSTART_ARGS`) | moov atom first, so a browser can start playing before the file finishes downloading | must be re-asked for on **every** leg — `_ffmpeg_mux`, `_ffmpeg_add_audio` AND `_ffmpeg_concat`. `-c copy` re-lays the container and writes `moov` last. Deliberately **not** in `DETERMINISTIC_X264_ARGS`: that tuple is a comparability key and this flag moves no metric. Two further literal copies exist and are out of scope — `an/characters/record.py:146` and `an/bench/imageio.py:184` (the latter must stay import-bound; see §4) |
 
 Why the colour tags matter at all: untagged, the *player* picks its matrix by a
 height heuristic (BT.601 below ~576 lines). Every shipped `an` example is 320x240
@@ -221,11 +277,17 @@ property.
 
 ## 7. `an preview` is not the render path
 
-`an/preview.py` reuses the runtime in a live-reloading page. It **needs the
-`#stage` canvas composited** — anything the render path does to stop Chromium
-compositing a canvas nobody is looking at must be scoped to the render path only.
-The two share `runtime.js`, so the scoping has to be explicit in the runtime, not
-implied by which Python module called it.
+`an/preview.py` reuses the runtime in a live-reloading page. The two paths share
+`runtime.js` but **load different HTML** — `index.html` for the render,
+`preview.html` for the preview — and that split is already load-bearing and
+already enforced: `an.determinism.CAPTURE_PAGE` refuses a render captured from
+`preview.html`, because that page carries seven clock calls. So a
+render-path-only page property belongs in `index.html`, not behind a runtime
+flag; there is no need to invent a query param or a global.
+
+The question this section used to be about is now closed the other way: **nothing
+the render path can do stops Chromium compositing the canvas, because the
+element screenshot IS the compositor's output.** See §2.
 
 ---
 
@@ -241,11 +303,23 @@ Also still unmeasured, from `wave3_research.md` §7 — do not assume any of the
 - **Cross-arch pixel identity at a larger backbuffer.** The cross-arch verdict was
   measured at 1x with MSAA 4. It gates whether goldens rendered at k=2 can stay a
   CI gate.
-- Whether the compositing win grows with k.
-- `-f concat -c copy -movflags +faststart` on the pinned ffmpeg build. **If it
-  forces a re-encode it would *create* the double encode epic #9 wrongly describes
-  as already existing.**
+- ~~Whether the compositing win grows with k.~~ **MOOT until the capture path
+  changes** — the win is unrealisable while frames come from an element
+  screenshot (§2). Worth re-asking only inside an in-page-capture PR, where the
+  measured contribution at 1x is 1.09x.
+- ~~`-f concat -c copy -movflags +faststart` on the pinned ffmpeg build.~~
+  **SETTLED — it is a remux, not a transcode** (ffmpeg 8.1, Homebrew, macOS
+  arm64, an#57). The concatenated elementary stream is sha256-identical to the
+  inputs' streams appended; video packet total, file size, decoded YUV and wall
+  time are all unchanged; only the `moov` offset moves. It does **not** create
+  the double encode epic #9 wrongly describes.
 - 4:4:4 playback compatibility, for the `-pix_fmt` knob's documentation.
+- **NEW, and it is the real cost centre:** the Playwright element screenshot is
+  **100 ms/frame at 1080p** against `toDataURL`'s 10 ms — a 10x gap that is
+  neither GPU readback nor PNG encode (both paths pay those). Playwright's
+  `_preparePageForScreenshot` runs `safeNonStallingEvaluateInAllFrames` plus an
+  `await document.fonts.ready` on **every call**. Nobody has attributed the
+  100 ms, and it is the largest single number in the frame path.
 
 ## 9. Standing rules for anything in this file's scope
 
