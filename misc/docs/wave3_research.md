@@ -85,13 +85,53 @@ verdict's load-bearing clause that "ffmpeg never touches a frame".
 
 ---
 
-## 3. The factor: k=2
+## 3. The factor: k=2, with the residual recorded
 
-Quality, `edge_transition_width` at k=3 against k=2 (box): `multi_shot` 2.4487 ->
-2.4520, `single_character` 2.1455 -> 2.1467, `saturated_outline` 2.4921 -> 2.5846,
-`promote_demo` 3.6775 -> 3.5482. **k=3 buys essentially nothing on edge geometry.** It
-does keep adding gradation on colour-poor scenes (`aa_probe` distinct colours 21.7 ->
-45.7), which is the one argument for it.
+### 3a. The ceiling — Decision 6, answered by measurement
+
+Epic #9's Decision 6 asked whether to commit a reference still. Answered instead by a
+**computed ceiling**: render each scene at rising k, block-mean-resolve to the declared
+size, and let `edge_transition_width` converge. That converged value is the "target
+value" `compare.py` says an interior optimum lacks and explicitly refuses to
+manufacture from the baseline.
+
+It converges, and it honestly refuses where it cannot:
+
+| scene | k=1 | k=2 | k=3 | k=4 | k=6 | k=8 | ceiling |
+|---|---|---|---|---|---|---|---|
+| `saturated_outline` | 2.3685 | 2.4921 | 2.5846 | 2.5848 | 2.5847 | 2.5846 | **2.5846** |
+| `graded_field` | 2.6042 | 2.8125 | 2.9167 | 2.9167 | 2.9010 | 2.9167 | **2.9167** |
+| `multi_shot` | 2.3307 | 2.4487 | 2.4520 | 2.4516 | 2.4537 | 2.4552 | **~2.452** |
+| `single_character` | 2.0919 | 2.1455 | 2.1467 | 2.1415 | 2.1372 | 2.1409 | **~2.140** |
+| `promote_demo` | 5.6368 | 3.6775 | 3.5482 | 3.5248 | 3.5101 | 3.5028 | **~3.503** |
+| `aa_probe` | 2.8807 | 3.0945 | 3.3428 | 3.2848 | 3.1196 | 3.3001 | **none** |
+
+**`aa_probe` has no ceiling, and that is a finding rather than a failure.** Its edges are
+*diagonal*, so an integer block-mean resolve lands the sample grid differently against
+the edge at every k; it oscillates +/-5-8% with no settling. It therefore gets **no
+declared target**, on the same principle as the rest of this instrument: a value nobody
+measured is not a value. Do not average the oscillation into a number.
+
+### 3b. The factor
+
+Distance travelled from k=1 toward the ceiling:
+
+| scene | k=2 | k=3 | k=2 residual |
+|---|---|---|---|
+| `saturated_outline` | 57% | **100%** | 0.093 px |
+| `graded_field` | 67% | **100%** | 0.104 px |
+| `promote_demo` | 92% | 98% | 0.175 px |
+| `multi_shot` | 97% | 100% | 0.003 px |
+| `single_character` | 112% | 114% | 0.006 px |
+
+**k=3 reaches the ceiling on every scene that has one. k=2 falls 43% short on
+`saturated_outline` and 33% short on `graded_field`.** (`single_character` overshoots
+slightly at both, but its entire span is 0.048 px — that is noise scale.)
+
+An earlier draft of this document said "k=3 buys essentially nothing on edge geometry".
+**That was wrong**, and wrong in an instructive way: it was read off `multi_shot` and
+`single_character`, the two scenes where k=2 had already converged. Two scenes are not
+the corpus, and the corpus exists precisely so that a claim has to hold on all of it.
 
 Cost, measured at a real output size — `single_character` forced to 1920x1080, 60
 frames:
@@ -103,18 +143,21 @@ frames:
 | 3 | 0.640 | 5.09x | 5760x3240 |
 
 **Sub-quadratic, not k^2** — there is a real fixed per-frame cost, so the k^2 worry was
-overstated. But k=3 still costs twice k=2 for a gain that does not appear in the edge
-geometry at all.
+overstated.
 
-**The corpus cannot inform this and must not be used to.** At 320x240 the same ladder
-reads 1.0x / 1.3x / 1.8x, because fixed costs dominate: `graded_field` renders 12 frames
-in 1.99 s at k=2 and 2.08 s at k=3. Read the factor off the 1080p ladder.
+**Decision: k=2**, taken deliberately with the residual above on the record. The trade
+is 0.09-0.17 px of unconverged edge width against a doubling of render time on top of
+an already-2.54x cost: 60 frames at 1080p goes 7.5 s -> 19.2 s at k=2 and -> 38.4 s at
+k=3. Because supersampling ships **opt-in with the factor as a parameter**, anyone
+rendering hero frames can set k=3 knowingly against this table.
 
-Memory is the remaining unpriced axis: renders fan out one browser context per shot at
-a default cap of 4, and the backbuffer scales k^2 per context. At k=2 that is ~33 MB of
+**The corpus cannot inform the factor and must not be used to.** At 320x240 the same
+ladder reads 1.0x / 1.3x / 1.8x, because fixed costs dominate: `graded_field` renders 12
+frames in 1.99 s at k=2 and 2.08 s at k=3. Read cost off the 1080p ladder.
+
+Memory is the remaining unpriced axis: renders fan out one browser context per shot at a
+default cap of 4, and the backbuffer scales k^2 per context. At k=2 that is ~33 MB of
 backbuffer per context; at k=3, ~75 MB. Nobody has costed `parallel x supersample`.
-
----
 
 ## 4. The prediction column, measured in advance
 
@@ -209,7 +252,8 @@ this document are measuring what they claim to.
 |---|---|
 | lanczos downscale | **block mean (box)**; lanczos triples the edge band on the most idiom-like scene |
 | downscale "at encode" | **in the frame stage**; ffmpeg-side moves `x264_argv` and retires the cross-arch clause |
-| (factor unstated) | **k=2**; k=3 is 2x the cost for no edge-geometry gain |
+| (factor unstated) | **k=2**, chosen with the residual recorded; k=3 reaches the measured ceiling on every scene that has one, at 2x the cost of k=2 |
+| Decision 6: commit a reference still? | **a computed ceiling instead** — it converges to 4 decimals on axis-aligned scenes and honestly refuses on `aa_probe`'s diagonals |
 | "edge distinct-colour count materially up on every corpus scene" | **scene-dependent sign, down on two of six**; the named metric does not exist |
 | supersample via `resolution` | correct, **and `autoDensity: false` is load-bearing** — `true` reintroduces the blind downscale |
 
