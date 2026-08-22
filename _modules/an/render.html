@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.render &mdash; an 0.1.39 documentation</title>
+  <title>an.render &mdash; an 0.1.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f48ec9ae"></script>
+      <script src="../../_static/documentation_options.js?v=967b4925"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -60,6 +60,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
@@ -192,7 +193,12 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenderContext</span><span class="p">,</span> <span class="n">RenderResult</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_DEFAULT_REGISTRY</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_FPS</span><span class="p">,</span> <span class="n">DEFAULT_RESOLUTION</span><span class="p">,</span> <span class="n">MP4_FASTSTART_ARGS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DEFAULT_FPS</span><span class="p">,</span>
+    <span class="n">DEFAULT_RESOLUTION</span><span class="p">,</span>
+    <span class="n">DEFAULT_SUPERSAMPLE</span><span class="p">,</span>
+    <span class="n">MP4_FASTSTART_ARGS</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shot</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span><span class="p">,</span> <span class="n">load</span>
 
@@ -243,6 +249,7 @@
     <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
     <span class="n">parallel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">strict_assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">supersample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SUPERSAMPLE</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Render every shot in ``project_dir``'s scene and concatenate to one mp4.</span>
 
@@ -262,6 +269,10 @@
 <span class="sd">    spawns a Chromium + http.server per shot, so threads release the</span>
 <span class="sd">    GIL during the slow parts).</span>
 
+<span class="sd">    ``supersample`` renders at N times the declared resolution and resolves back</span>
+<span class="sd">    with an exact block mean. **Opt-in, and 1 is free** — at 1 nothing is</span>
+<span class="sd">    decoded and Chromium's own bytes reach disk. See :func:`render`.</span>
+
 <span class="sd">    Returns the absolute path of the final output file (under ``output/``).</span>
 <span class="sd">    """</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
@@ -274,6 +285,7 @@
         <span class="n">lipsync</span><span class="o">=</span><span class="n">lipsync</span><span class="p">,</span>
         <span class="n">parallel</span><span class="o">=</span><span class="n">parallel</span><span class="p">,</span>
         <span class="n">strict_assets</span><span class="o">=</span><span class="n">strict_assets</span><span class="p">,</span>
+        <span class="n">supersample</span><span class="o">=</span><span class="n">supersample</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -291,8 +303,42 @@
     <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
     <span class="n">parallel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">strict_assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">supersample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SUPERSAMPLE</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Lower-level: render a loaded ``Project`` to mp4.</span>
+
+<span class="sd">    ``supersample`` renders at N times the declared resolution and resolves back</span>
+<span class="sd">    with an exact N x N block mean, in the frame stage, before anything else</span>
+<span class="sd">    reads the frames. **Opt-in, and 1 costs nothing**: at 1 Chromium writes</span>
+<span class="sd">    straight to disk and no pixel is decoded.</span>
+
+<span class="sd">    **Measured on the shipped path, not on the render alone** — the distinction</span>
+<span class="sd">    matters, because the two differ by 1.6x. `single_character` forced to</span>
+<span class="sd">    1920x1080, 60 frames, this machine:</span>
+
+<span class="sd">    ========  =============  ==========</span>
+<span class="sd">    factor    ms/frame       vs k=1</span>
+<span class="sd">    ========  =============  ==========</span>
+<span class="sd">    1         125.5          1.00x</span>
+<span class="sd">    2         508.6          **4.05x**</span>
+<span class="sd">    ========  =============  ==========</span>
+
+<span class="sd">    `misc/docs/wave3_research.md` §3b reports 2.54x for k=2; that is the</span>
+<span class="sd">    **render only**, measured with a patched runtime and no Python-side resolve,</span>
+<span class="sd">    and quoting it here would understate what a caller pays by 1.6x. The</span>
+<span class="sd">    difference is the decode + block mean + re-encode per frame.</span>
+
+<span class="sd">    **What it buys, and where it does not.** Research §3a renders each corpus</span>
+<span class="sd">    scene at rising k and lets `edge_transition_width` converge: k=2 travels 57%</span>
+<span class="sd">    to 112% of the way to that ceiling, and k=3 reaches it on every scene that</span>
+<span class="sd">    has one, at twice k=2's cost. `promote_demo` — the descriptor path — is the</span>
+<span class="sd">    scene it helps most (-34.8% edge width, because the SVG sprite rasterises AT</span>
+<span class="sd">    2x instead of being stretched up from a 1x texture). `aa_probe` has no</span>
+<span class="sd">    ceiling at all: its diagonals land the block-mean grid differently at every</span>
+<span class="sd">    k, so it oscillates +/-5-8% with no settling.</span>
+
+<span class="sd">    **The corpus cannot inform the factor and must not be used to.** At 320x240</span>
+<span class="sd">    the same ladder reads 1.0x / 1.08x, because fixed costs dominate.</span>
 
 <span class="sd">    When ``auto_audio`` is True (the default) and any shot has dialogue,</span>
 <span class="sd">    the audio pipeline is run first so visemes + audio are available to</span>
@@ -348,6 +394,7 @@
         <span class="n">fps</span><span class="o">=</span><span class="n">effective_fps</span><span class="p">,</span>
         <span class="n">resolution</span><span class="o">=</span><span class="n">effective_res</span><span class="p">,</span>
         <span class="n">strict_assets</span><span class="o">=</span><span class="n">strict_assets</span><span class="p">,</span>
+        <span class="n">supersample</span><span class="o">=</span><span class="n">supersample</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">shots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">)</span>

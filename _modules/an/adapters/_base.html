@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters._base &mdash; an 0.1.39 documentation</title>
+  <title>an.adapters._base &mdash; an 0.1.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f48ec9ae"></script>
+      <script src="../../../_static/documentation_options.js?v=967b4925"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -60,6 +60,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
@@ -190,7 +191,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_FPS</span><span class="p">,</span> <span class="n">DEFAULT_RESOLUTION</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_FPS</span><span class="p">,</span> <span class="n">DEFAULT_RESOLUTION</span><span class="p">,</span> <span class="n">DEFAULT_SUPERSAMPLE</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shot</span>
 
 
@@ -214,6 +215,20 @@
     <span class="c1">#: anything that measures pixels, where a stand-in is a different picture</span>
     <span class="c1">#: that looks like a successful render (an#33).</span>
     <span class="n">strict_assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1">#: Render at this many times the declared resolution and resolve back with</span>
+    <span class="c1">#: an exact block mean. **1 means off, and off is free** — Chromium's own</span>
+    <span class="c1">#: PNG bytes reach disk untouched.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: A `RenderContext` field, and that placement is load-bearing rather than</span>
+    <span class="c1">#: convenient. Simulated against a real committed ledger row: as a</span>
+    <span class="c1">#: `render_kwargs` entry it becomes a `COMMON_ENV_PATHS` key and **all 96</span>
+    <span class="c1">#: metrics are refused**; as a field on the compiled scene document it moves</span>
+    <span class="c1">#: `scene_contract_sha256` and **every scene becomes incomparable**; here,</span>
+    <span class="c1">#: only `runtime_sha256` moves, which is deliberately not a comparability</span>
+    <span class="c1">#: key — so 30 render-side entries still compare. It needs no</span>
+    <span class="c1">#: `SCHEMA_VERSION` migration, and it MUST reach per-shot provenance, because</span>
+    <span class="c1">#: a row that does not record it cannot be read back later.</span>
+    <span class="n">supersample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SUPERSAMPLE</span>
     <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 
 
