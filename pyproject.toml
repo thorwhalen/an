@@ -184,12 +184,23 @@ convention = "google"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
+# `an` is here so CI's `--doctest-modules` reaches the 120 doctests under the
+# package. Without it `testpaths` scoped them away and every `>>>` in `an/` was
+# prose that happened to be syntactically checkable (an#61). A bare local
+# `pytest` is unaffected: with no `--doctest-modules` there is nothing matching
+# `python_files` under `an/` to collect.
 testpaths = [
     "tests",
+    "an",
 ]
+# Deliberately NOT `NORMALIZE_WHITESPACE`. CI overrides this key entirely with
+# `-o doctest_optionflags='ELLIPSIS IGNORE_EXCEPTION_DETAIL'`, so a doctest
+# relying on whitespace normalisation would pass locally and fail in CI. These
+# two are exactly what CI passes; keep them in sync, and see the guard in
+# `tests/test_doctest_gate.py`.
 doctest_optionflags = [
-    "NORMALIZE_WHITESPACE",
     "ELLIPSIS",
+    "IGNORE_EXCEPTION_DETAIL",
 ]
 
 [tool.wads.ci]
