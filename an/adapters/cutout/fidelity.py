@@ -48,6 +48,10 @@ DFLT_ASPECT_TOLERANCE: float = 1.000_001
 #: The visual kind whose art comes from a file and can therefore be distorted.
 SPRITE_KIND: str = "svg_sprite"
 
+#: Fit policies, mirroring ``VisualJSON.fit``.
+CONTAIN_FIT: str = "contain"
+STRETCH_FIT: str = "stretch"
+
 
 @dataclass(frozen=True, slots=True)
 class PartFidelity:
@@ -58,6 +62,7 @@ class PartFidelity:
     src: str
     box: tuple[float, float]
     raster: tuple[float, float]
+    fit: str = STRETCH_FIT
 
     @property
     def scale_x(self) -> float:
@@ -68,10 +73,31 @@ class PartFidelity:
         return self.box[1] / self.raster[1]
 
     @property
-    def aspect_distortion(self) -> float:
-        """``max(sx, sy) / min(sx, sy)``; 1.0 exactly when the art is respected."""
+    def box_aspect_disagreement(self) -> float:
+        """How far the box's shape is from the art's. 1.0 when they agree.
+
+        Pure geometry, independent of the fit policy. Under ``contain`` this is
+        *slack* — the art still keeps its shape and the box is simply roomier on
+        one axis — so it is a weaker signal than :attr:`aspect_distortion`, but
+        it is what tells you the compiler is sizing from the art rather than
+        from a constant.
+        """
         lo, hi = sorted((self.scale_x, self.scale_y))
         return hi / lo
+
+    @property
+    def aspect_distortion(self) -> float:
+        """The factor by which the art is actually reshaped on screen.
+
+        **The fit policy is what decides this, not the box.** Under
+        ``contain`` the runtime scales both axes by one factor, so the art
+        keeps its shape whatever the box says and this is 1.0. Under
+        ``stretch`` the box wins on both axes and the disagreement is the
+        distortion.
+        """
+        if self.fit == CONTAIN_FIT:
+            return 1.0
+        return self.box_aspect_disagreement
 
     def is_uniform(self, *, tolerance: float = DFLT_ASPECT_TOLERANCE) -> bool:
         return self.aspect_distortion <= tolerance
@@ -122,6 +148,7 @@ def part_fidelity(
                 src=src,
                 box=(float(visual.width), float(visual.height)),
                 raster=raster,
+                fit=getattr(visual, "fit", STRETCH_FIT),
             )
         )
     return out

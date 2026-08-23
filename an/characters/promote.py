@@ -20,7 +20,7 @@ from an.characters.factory import (
     _synthesize_eye_open,
 )
 from an.characters.mouth_set import write_default_mouths
-from an.characters.schema import CharacterDescriptor
+from an.characters.schema import CharacterDescriptor, bones_from_pivots
 from an.characters.svg_utils import (
     extract_part,
     extract_pivots,
@@ -155,10 +155,14 @@ def promote(
         display_name=as_.replace("-", " ").replace("_", " ").title(),
         voice_ref=voice_ref,
         source_svg=f"{as_}.svg",
+        # The illustrator's own joints become the rig. Before an#75 this line
+        # stored `list(pivots.keys())` and dropped every coordinate, so the art
+        # was sliced correctly and then hung on a generic skeleton.
+        bones=bones_from_pivots(pivots),
         metadata={
             "promoted_from": entity,
             "sliced_parts": sliced,
-            "pivots_detected": list(pivots.keys()),
+            "pivots_detected": sorted(pivots),
         },
     )
     desc_path = target / "character.json"

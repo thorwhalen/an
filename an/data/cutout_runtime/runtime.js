@@ -156,13 +156,45 @@
 
     // Phase 11b: build a Sprite from a pre-loaded SVG texture. The texture
     // is registered under `visualSpec.asset_id` by the asset preloader.
+    function refitToBox(sprite) {
+        // No-op unless the sprite was built with fit='contain' (only those
+        // carry _anFitBox), so the stretch path is untouched.
+        const box = sprite._anFitBox;
+        const tex = sprite.texture;
+        if (!box || !tex || !tex.orig || !(tex.orig.width > 0) || !(tex.orig.height > 0)) {
+            return;
+        }
+        const k = Math.min(box[0] / tex.orig.width, box[1] / tex.orig.height);
+        sprite.scale.set(k, k);
+    }
+
     function makeSvgSprite(visualSpec) {
         const tex = (PIXI.Assets && PIXI.Assets.get)
             ? PIXI.Assets.get(visualSpec.asset_id)
             : null;
         const sprite = tex ? new PIXI.Sprite(tex) : new PIXI.Sprite(PIXI.Texture.WHITE);
-        sprite.width = visualSpec.width || 64;
-        sprite.height = visualSpec.height || 64;
+        // Fit policy (an#74). 'contain' scales BOTH axes by one factor, so the
+        // art keeps the shape it was drawn with; the box may be left with slack
+        // on one axis and that slack is the correct rendering. The default
+        // stays 'stretch' so a stored scene without the field is unchanged.
+        //
+        // Sizing by sprite.width/height is what made this a stretch: PixiJS
+        // turns each into an INDEPENDENT axis scale, so the box's aspect ratio
+        // always won and the art's was never consulted. Measured on this repo's
+        // own rig, that distorted arm_l by 3.929x.
+        const boxW = visualSpec.width || 64;
+        const boxH = visualSpec.height || 64;
+        if (visualSpec.fit === 'contain' && tex && tex.orig
+                && tex.orig.width > 0 && tex.orig.height > 0) {
+            const k = Math.min(boxW / tex.orig.width, boxH / tex.orig.height);
+            sprite.scale.set(k, k);
+            // Remembered so a texture swap re-fits rather than inheriting the
+            // previous texture's scale — the box is the invariant, not the scale.
+            sprite._anFitBox = [boxW, boxH];
+        } else {
+            sprite.width = boxW;
+            sprite.height = boxH;
+        }
         const ax = visualSpec.anchor_x != null ? visualSpec.anchor_x : 0.5;
         const ay = visualSpec.anchor_y != null ? visualSpec.anchor_y : 0.5;
         sprite.anchor.set(ax, ay);
@@ -346,7 +378,15 @@
             const assetId = sprite._anVisemeAssets[String(visemeCode).toUpperCase()];
             if (assetId && PIXI.Assets && PIXI.Assets.get) {
                 const tex = PIXI.Assets.get(assetId);
-                if (tex) sprite.texture = tex;
+                if (tex) {
+                    sprite.texture = tex;
+                    // Re-fit: under 'contain' the scale belongs to the texture,
+                    // not to the sprite, so a swap must recompute it. Without
+                    // this every viseme after the first inherits the rest
+                    // shape's scale — silently, and only visible as a mouth
+                    // that is subtly the wrong size on some frames.
+                    refitToBox(sprite);
+                }
             }
             return;
         }
