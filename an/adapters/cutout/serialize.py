@@ -73,9 +73,23 @@ class VisualJSON(_JSONModel):
     ``PIXI.Sprite`` from a pre-loaded SVG texture identified by ``asset_id``.
     On a mouth visual, ``viseme_assets`` carries ``{letter: asset_id}`` so the
     runtime can swap textures on the viseme channel without further IR plumbing.
+
+    ``width``/``height`` are the box the art is fitted **into**, not the size it
+    is forced to. Under ``fit="contain"`` the art keeps its own aspect ratio and
+    may leave slack on one axis; that slack is the correct rendering, not a bug.
     """
 
     kind: Literal["sprite", "rect", "ellipse", "mouth", "eye", "svg_sprite"] = "rect"
+    #: How the art is fitted to ``width``/``height``.
+    #:
+    #: ``"contain"`` scales uniformly so the art keeps the shape it was drawn
+    #: with — the invariant of an#74. ``"stretch"`` sizes each axis
+    #: independently, which is what every sprite did before that issue and what
+    #: distorted `arm_l` by 3.929x on the repo's own art.
+    #:
+    #: Additive with a ``"stretch"`` default so no stored scene changes meaning;
+    #: the compiler emits ``"contain"`` for every sprite it builds.
+    fit: Literal["stretch", "contain"] = "stretch"
     texture_id: str | None = None
     asset_id: str | None = None
     viseme_assets: dict[str, str] | None = None

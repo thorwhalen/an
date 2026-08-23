@@ -5,13 +5,14 @@ compiler may never override it**. This module measures whether that holds, and
 today it does not: the compiler sizes every sprite from module constants, so a
 part's shape is decided by its box rather than by its art.
 
-These tests deliberately **record the violation as numbers** rather than assert
-the invariant. That is the point of landing them before the fix: the ratios
-below are the before-half of the wave's evidence, measured on committed art with
-no browser and no render, so the after-half is a diff rather than a claim.
+These tests recorded the violation as numbers before the fix, so the after-half
+would be a diff rather than a claim. **#73/#74 have landed and every ratio moved
+to 1.000**, so they assert the invariant directly now.
 
-**When #73/#74 land, these tests fail.** That is the success signal. Replace the
-recorded tables with :func:`assert_uniform`, which is written and unused.
+The before-numbers stay below as :data:`RECORDED_DISTORTION_BEFORE` — not to
+assert against, but because "10 of 11 sprites distorted on both rigs, worst
+3.929x" is the measurement that justified rewriting the largest function in
+`compile.py`. Deleting it would leave these tests true but unexplained.
 """
 
 from __future__ import annotations
@@ -37,10 +38,10 @@ DESCRIPTOR_RIGS: tuple[tuple[str, str], ...] = (
     ("graded_field", "graded-field-rig"),
 )
 
-#: Measured 2026-08-23 on the committed rigs, at 2db25ce. `max(sx,sy)/min(sx,sy)`
-#: per node; 1.0 means the art's shape survives. Every entry above 1.0 is a
-#: sprite whose art the compiler reshapes.
-RECORDED_DISTORTION: dict[str, dict[str, float]] = {
+#: Measured 2026-08-23 at 2db25ce, **before** the rig contract landed.
+#: `max(sx,sy)/min(sx,sy)` per node; 1.0 means the art's shape survives.
+#: Evidence, not an assertion.
+RECORDED_DISTORTION_BEFORE: dict[str, dict[str, float]] = {
     "saturated_outline": {
         "root/charlie/leg_l": 1.005,
         "root/charlie/leg_r": 1.005,
@@ -70,6 +71,20 @@ RECORDED_DISTORTION: dict[str, dict[str, float]] = {
 }
 
 
+class _CharacterStore(dict):
+    """A mall store: dict-like for the compiler, `_root` for part sizing.
+
+    The real render path's stores are dol filesystem stores and carry `_root`.
+    A plain dict here would make the compiler unable to read any part's size,
+    so every box would fall back to the default and the measurement would be
+    about the fallback rather than about the rig.
+    """
+
+    def __init__(self, mapping, root: Path):
+        super().__init__(mapping)
+        self._root = root
+
+
 def _measure(fixture: str, ref: str):
     root = CORPUS / fixture / "assets" / "characters"
     desc = json.loads((root / ref / "character.json").read_text(encoding="utf-8"))
@@ -86,14 +101,13 @@ def _measure(fixture: str, ref: str):
                 }
             ],
         ),
-        {"characters": {ref: desc}},
+        {"characters": _CharacterStore({ref: desc}, root)},
     )
     return scene, part_fidelity(scene, asset_root=root.parent)
 
 
 def assert_uniform(parts) -> None:
-    """The assertion Wave 4 is for. Unused until #73/#74 land — then it replaces
-    :data:`RECORDED_DISTORTION` and the recorded tables are deleted."""
+    """The invariant: a part is placed and uniformly scaled, never stretched."""
     offenders = [
         f"{p.node_path} {p.aspect_distortion:.3f}x" for p in parts if not p.is_uniform()
     ]
@@ -101,58 +115,90 @@ def assert_uniform(parts) -> None:
 
 
 @pytest.mark.parametrize("fixture,ref", DESCRIPTOR_RIGS)
-def test_descriptor_sprite_distortion_matches_the_recorded_measurement(fixture, ref):
-    """Pin today's distortion per node, so the fix shows up as a diff.
+def test_every_descriptor_sprite_keeps_the_shape_its_art_was_drawn_with(fixture, ref):
+    """THE invariant of Wave 4 (#74).
 
-    Failing here means one of two things: the compiler's boxes changed (the fix —
-    update the table to 1.000 and switch to `assert_uniform`), or a corpus rig's
-    art changed shape (re-measure and say so in the bless reason).
+    Aspect ratio is intrinsic to the art and the compiler may never override it.
+    Before the rewrite this failed on 10 of 11 sprites on both rigs, worst
+    3.929x — see :data:`RECORDED_DISTORTION_BEFORE`.
     """
     _, parts = _measure(fixture, ref)
-    measured = {p.node_path: round(p.aspect_distortion, 3) for p in parts}
-    assert measured == RECORDED_DISTORTION[fixture]
+    assert parts, "no sprites measured — the fixture stopped exercising the path"
+    assert_uniform(parts)
 
 
 @pytest.mark.parametrize("fixture,ref", DESCRIPTOR_RIGS)
-def test_only_the_head_survives_and_only_because_it_is_square(fixture, ref):
-    """The one uniform part is uniform by coincidence, not by design.
-
-    This is the trap a spot-check falls into: `head` looks correct, so the rig
-    looks correct. It is square art in a square box — nothing preserved its
-    aspect, the box simply happened to agree.
-    """
+def test_the_head_is_no_longer_the_only_part_that_survives(fixture, ref):
+    """Before the rewrite exactly one part was uniform, and only by coincidence
+    — square art that happened to meet a square box. That coincidence is what
+    let a spot-check conclude the rig was fine. Now every part is uniform by
+    rule; if the head is ever the only one again, the rule is gone."""
     _, parts = _measure(fixture, ref)
-    uniform = [p for p in parts if p.is_uniform()]
-    assert [p.node_path for p in uniform] == ["root/charlie/head"]
-    (head,) = uniform
-    assert head.box[0] == head.box[1], "head's box is square"
-    assert head.raster[0] == head.raster[1], "head's art is square"
+    uniform = [p.node_path for p in parts if p.is_uniform()]
+    assert len(uniform) == len(parts)
+    assert uniform != ["root/charlie/head"]
 
 
 @pytest.mark.parametrize("fixture,ref", DESCRIPTOR_RIGS)
-def test_the_violation_is_reported_as_typed_findings(fixture, ref):
-    """`aspect_findings` routes each offender to its own scene-graph node.
+def test_every_sprite_declares_the_contain_fit(fixture, ref):
+    """What actually enforces the invariant, and the half a geometry check
+    cannot see.
 
-    The orchestrator dispatches a fix by `ir_path`, so a per-part path is what
-    makes this actionable rather than merely true.
+    Under `contain` the runtime scales both axes by one factor, so the box no
+    longer decides the art's shape — which is exactly why
+    `aspect_distortion` returns 1.0 for it, and why that would be vacuous
+    without this. The other half, that the runtime honours the policy, needs a
+    browser and lives in `test_uniform_fit_browser.py`.
     """
-    scene, parts = _measure(fixture, ref)
+    _, parts = _measure(fixture, ref)
+    assert parts
+    assert {p.fit for p in parts} == {"contain"}
+
+
+@pytest.mark.parametrize("fixture,ref", DESCRIPTOR_RIGS)
+def test_each_box_is_sized_from_the_art_not_from_a_constant(fixture, ref):
+    """The stronger, fit-independent claim: the box agrees with the art's shape.
+
+    `contain` guarantees the art is never reshaped, but it would also hide a
+    compiler that sized every part 345x345 and let the runtime letterbox it.
+    Box-vs-raster agreement is what says the boxes come from the descriptor.
+    """
+    _, parts = _measure(fixture, ref)
+    off = [
+        f"{p.node_path} {p.box_aspect_disagreement:.3f}x"
+        for p in parts
+        if p.box_aspect_disagreement > DFLT_ASPECT_TOLERANCE
+    ]
+    assert not off, "boxes disagree with their art's shape: " + ", ".join(off)
+
+
+@pytest.mark.parametrize("fixture,ref", DESCRIPTOR_RIGS)
+def test_the_before_record_still_describes_this_rig(fixture, ref):
+    """Guards the evidence, not the behaviour. Every part the before-table names
+    must still exist, or the wave's headline number stops being verifiable."""
+    _, parts = _measure(fixture, ref)
+    assert {p.node_path for p in parts} == set(RECORDED_DISTORTION_BEFORE[fixture])
+    assert max(RECORDED_DISTORTION_BEFORE[fixture].values()) > 1.0
+
+
+@pytest.mark.parametrize("fixture,ref", DESCRIPTOR_RIGS)
+def test_no_sprite_is_reported_as_a_finding_any_more(fixture, ref):
+    """`aspect_findings` reported 10 offenders per rig; it must now report none.
+
+    Kept rather than deleted: it is the same call the orchestrator would make,
+    so it proves the routing surface agrees with the geometry one.
+    """
+    scene, _ = _measure(fixture, ref)
     root = CORPUS / fixture / "assets"
-    findings = aspect_findings(scene, asset_root=root)
-    assert len(findings) == sum(1 for p in parts if not p.is_uniform())
-    assert {f.ir_path for f in findings} == {
-        p.node_path for p in parts if not p.is_uniform()
-    }
-    assert all(f.severity == "error" for f in findings)
-    assert all("intrinsic to the art" in (f.suggested_fix or "") for f in findings)
+    assert aspect_findings(scene, asset_root=root) == []
 
 
 def test_the_procedural_path_has_no_sprites_to_distort():
     """Scope check: this instrument measures the descriptor path only.
 
-    `single_character` builds from `rect`/`ellipse` primitives, which carry no
-    source art and so cannot disagree with it. If this ever finds a sprite, the
-    procedural path has grown one and the instrument's scope claim is stale.
+    `aa_probe` builds from `rect` primitives, which carry no source art and so
+    cannot disagree with it. If this ever finds a sprite, the procedural path
+    has grown one and the instrument's scope claim is stale.
     """
     ref = "probe-rig"
     root = CORPUS / "aa_probe" / "assets" / "characters"
@@ -171,10 +217,7 @@ def test_the_procedural_path_has_no_sprites_to_distort():
 
 
 def test_the_tolerance_guards_float_noise_and_nothing_more():
-    """A tolerance loose enough to admit a real distortion would retire the test.
-
-    1.005 is the smallest violation the corpus actually contains (`saturated`'s
-    legs), so the tolerance must sit well below it or that row goes silent.
-    """
+    """A tolerance loose enough to admit a real distortion would retire the
+    invariant silently. 1.005 was the smallest violation the corpus contained."""
     assert DFLT_ASPECT_TOLERANCE < 1.005
     assert DFLT_ASPECT_TOLERANCE > 1.0

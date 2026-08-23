@@ -19,18 +19,25 @@ The descriptor borrows Spine's separation of concerns:
 - **bones** — where things attach. Local transforms relative to a parent.
 - **slots** — what is drawn at each bone (one attachment active at a time).
 - **skins** — for each slot, the named attachments and their SVG paths.
-- **viseme_map** — Rhubarb shape letter → attachment name on the ``mouth`` slot.
+- **asset_sets** — ``{channel: {key: attachment_name}}``. What a swap key
+  *selects*, layered over ``skins``, which says what art *exists*. The
+  ``viseme`` channel is Rhubarb's shape letter → an attachment on the ``mouth``
+  slot. (Replaced ``viseme_map`` in schema 0.2.0.)
 - **animations** — built-in idle loops (breath, blink) keyed by name.
 
+A slot's name **is** its scene-graph node name, which is why the face slots read
+``left_eye`` rather than ``eye_l``; attachment names are a separate namespace and
+keep the file-derived spelling.
+
 >>> char = CharacterDescriptor(name="maya")
->>> char.viseme_map["A"]
+>>> char.asset_sets["viseme"]["A"]
 'mouth_a'
->>> char.viseme_map["X"]
+>>> char.asset_sets["viseme"]["X"]
 'mouth_x'
 >>> char.view_box
 (0, 0, 1024, 1024)
 >>> sorted(char.skins["default"].slots.keys())[:3]
-['arm_l', 'arm_r', 'brow_l']
+['arm_l', 'arm_r', 'head']
 """
 
 from __future__ import annotations
@@ -40,10 +47,10 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from an.ir.assets import AssetSource
-from an.ir.migrate import DocumentKind, register_kind
+from an.ir.migrate import DocumentKind, register_kind, register_migration
 
 
-CHARACTER_SCHEMA_VERSION = "0.1.0"
+CHARACTER_SCHEMA_VERSION = "0.2.0"
 
 #: The descriptor is a schema-versioned document in its own right, with its own
 #: version field. Registered here rather than in :mod:`an.ir.migrate` because
@@ -66,6 +73,17 @@ MOUTH_SHAPES: tuple[str, ...] = ("a", "b", "c", "d", "e", "f", "g", "h", "x")
 #: Default Rhubarb-letter → mouth-attachment-name mapping. Uppercase keys
 #: because Rhubarb emits A-X; lowercase attachment names by convention.
 DEFAULT_VISEME_MAP: dict[str, str] = {s.upper(): f"mouth_{s}" for s in MOUTH_SHAPES}
+
+#: The swap channel lip-sync drives. Named because Wave 5 generalises swaps to
+#: `hands`, `body_facing`, `eyelid` and more; `viseme` is a conventional set
+#: name, not a special case in control flow.
+VISEME_CHANNEL: str = "viseme"
+
+
+def default_asset_sets() -> dict[str, dict[str, str]]:
+    """``{channel: {key: attachment_name}}`` for a freshly-built character."""
+    return {VISEME_CHANNEL: dict(DEFAULT_VISEME_MAP)}
+
 
 #: Required body parts. A character missing any of these can't be rendered
 #: as a full puppet; ``validate_character`` flags the gap.
@@ -142,6 +160,18 @@ class Attachment(_CharModel):
     path: str
     #: Anchor in 0..1 per-axis units (Pixi's Sprite.anchor convention).
     anchor: tuple[float, float] = (0.5, 0.5)
+
+    #: Offset from the slot's bone, in view_box units.
+    #:
+    #: **This is where a part's position lives**, and it is the reference data
+    #: model's answer, not an invention: DragonBones puts it in
+    #: ``display.transform``, Spine in the region attachment's ``{x, y}``, and
+    #: in both the *slot* carries no transform at all. It is what lets five face
+    #: parts share one ``head`` bone and still land in different places — before
+    #: this field they all stacked on the bone, because the descriptor had no
+    #: way to say otherwise and the compiler used hardcoded literals instead.
+    x: float = 0.0
+    y: float = 0.0
     #: Optional explicit bounding box override in the part's local viewBox.
     width: Optional[float] = None
     height: Optional[float] = None
@@ -252,7 +282,14 @@ class CharacterDescriptor(_CharModel):
     bones: list[Bone] = Field(default_factory=list)
     slots: list[Slot] = Field(default_factory=list)
     skins: dict[str, Skin] = Field(default_factory=dict)
-    viseme_map: dict[str, str] = Field(default_factory=lambda: dict(DEFAULT_VISEME_MAP))
+    #: ``{channel: {key: attachment_name}}`` — what a swap key SELECTS, layered
+    #: over ``skins``, which is the SSOT for what art EXISTS. The indirection is
+    #: deliberate: a channel key is not an attachment name. Today's viseme map
+    #: happens to be one-to-one (9 keys, 9 attachments), but real mouth charts
+    #: are many-to-one — ~10 drawings carrying ~40 phonemes — and collapsing the
+    #: two namespaces makes the first shared drawing a schema change instead of
+    #: a data change. Replaces ``viseme_map`` (schema 0.2.0).
+    asset_sets: dict[str, dict[str, str]] = Field(default_factory=default_asset_sets)
     animations: dict[str, IdleAnimation] = Field(default_factory=dict)
 
     #: Where this character's art came from, and what its licence obliges.
@@ -298,24 +335,115 @@ class CharacterDescriptor(_CharModel):
 # -----------------------------------------------------------------------------
 
 
+#: Slot renames carried by the 0.1.0 -> 0.2.0 migration: a slot's name is now
+#: its scene-graph node name, so the four face slots take the names the scene
+#: already addressed them by.
+_SLOT_RENAMES_0_2_0: dict[str, str] = {
+    "eye_l": "left_eye",
+    "eye_r": "right_eye",
+    "brow_l": "left_brow",
+    "brow_r": "right_brow",
+}
+
+
+@register_migration(CHARACTER_DOCUMENT_KIND.name, "0.1.0", "0.2.0")
+def _character_0_1_0_to_0_2_0(doc: dict[str, Any]) -> dict[str, Any]:
+    """`viseme_map` -> `asset_sets["viseme"]`, and slot names become node names.
+
+    Both changes ride one migration because splitting them would break the
+    descriptor schema twice and ship two migrations where one does.
+
+    `viseme_map` is popped, not copied: leaving it would let a stale map sit
+    beside the live one indefinitely, and every descriptor model sets
+    `extra="allow"`, so nothing would ever complain.
+
+    >>> out = _character_0_1_0_to_0_2_0(
+    ...     {"schema_version": "0.1.0", "viseme_map": {"A": "mouth_a"},
+    ...      "slots": [{"name": "eye_l", "bone": "head"}]}
+    ... )
+    >>> out["asset_sets"]["viseme"], "viseme_map" in out
+    ({'A': 'mouth_a'}, False)
+    >>> out["slots"][0]["name"]
+    'left_eye'
+    """
+    viseme_map = doc.pop("viseme_map", None)
+    if viseme_map is not None:
+        doc.setdefault("asset_sets", {})[VISEME_CHANNEL] = viseme_map
+
+    for slot in doc.get("slots") or ():
+        if isinstance(slot, dict) and slot.get("name") in _SLOT_RENAMES_0_2_0:
+            slot["name"] = _SLOT_RENAMES_0_2_0[slot["name"]]
+
+    for skin in (doc.get("skins") or {}).values():
+        slots = skin.get("slots") if isinstance(skin, dict) else None
+        if not isinstance(slots, dict):
+            continue
+        for old, new in _SLOT_RENAMES_0_2_0.items():
+            if old in slots:
+                slots[new] = slots.pop(old)
+
+    # Face offsets move from code into data. Before 0.2.0 the five face parts
+    # had no way to say where they sat, so the compiler hardcoded four literal
+    # pairs; a descriptor migrated from 0.1.0 therefore has the information
+    # nowhere else. Seeding only when the attachment has not been given one
+    # keeps a hand-authored offset authoritative.
+    for skin in (doc.get("skins") or {}).values():
+        slots = skin.get("slots") if isinstance(skin, dict) else None
+        if not isinstance(slots, dict):
+            continue
+        for slot_name, offset in FACE_OFFSETS.items():
+            for attachment in (slots.get(slot_name) or {}).values():
+                if not isinstance(attachment, dict):
+                    continue
+                attachment.setdefault("x", offset[0])
+                attachment.setdefault("y", offset[1])
+
+    doc["schema_version"] = "0.2.0"
+    return doc
+
+
 def _default_bones() -> list[Bone]:
     """The 7-bone default rig: root, torso, head, two arms, two legs.
 
     Coordinates assume a 1024x1024 viewBox with feet near y≈980.
     """
     return [
-        Bone(name="root", parent=None, x=512, y=980),
-        Bone(name="torso", parent="root", x=0, y=-300),
+        Bone(name="root", parent=None, x=512, y=980, pivot="root"),
+        Bone(name="torso", parent="root", x=0, y=-300, pivot="hip"),
         Bone(name="head", parent="torso", x=0, y=-260, pivot="neck"),
         Bone(name="arm_l", parent="torso", x=-90, y=-240, pivot="shoulder_l"),
         Bone(name="arm_r", parent="torso", x=90, y=-240, pivot="shoulder_r"),
-        Bone(name="leg_l", parent="root", x=-50, y=-10),
-        Bone(name="leg_r", parent="root", x=50, y=-10),
+        Bone(name="leg_l", parent="root", x=-50, y=-10, pivot="hip_l"),
+        Bone(name="leg_r", parent="root", x=50, y=-10, pivot="hip_r"),
     ]
 
 
+#: Where each face part sits relative to the ``head`` bone, in view_box units.
+#:
+#: All five share one bone, so without a per-attachment offset they stack on it.
+#: These are the compiler's four deleted hardcoded pairs converted at
+#: k = 345/1024 — i.e. the same picture, now expressed where an illustrator can
+#: change it.
+FACE_OFFSETS: dict[str, tuple[float, float]] = {
+    "left_eye": (-41.6, -17.8),
+    "right_eye": (41.6, -17.8),
+    "left_brow": (-41.6, -53.4),
+    "right_brow": (41.6, -53.4),
+    "mouth": (0.0, 41.6),
+}
+
+
 def _default_slots() -> list[Slot]:
-    """The 11-slot default draw stack: legs behind, arms in front, face on top."""
+    """The 11-slot default draw stack: legs behind, arms in front, face on top.
+
+    **A slot's name IS its scene-graph node name.** The face slots read
+    ``left_eye`` rather than ``eye_l`` for that reason and no other: node paths
+    are the authoring surface (``scene.md`` targets ``charlie/left_eye:...``, and
+    the blink code and the doc-targeting test both address them), so the
+    alternative was a slot-to-node rename table — and a rename table is where a
+    field quietly stops being carried. Attachment names are a *separate*
+    namespace and keep the file-derived spelling (``eye_l_open``).
+    """
     return [
         Slot(name="leg_l", bone="leg_l", draw_order=0, attachment="leg_l"),
         Slot(name="leg_r", bone="leg_r", draw_order=0, attachment="leg_r"),
@@ -323,12 +451,67 @@ def _default_slots() -> list[Slot]:
         Slot(name="arm_l", bone="arm_l", draw_order=2, attachment="arm_l"),
         Slot(name="arm_r", bone="arm_r", draw_order=2, attachment="arm_r"),
         Slot(name="head", bone="head", draw_order=4, attachment="head"),
-        Slot(name="eye_l", bone="head", draw_order=6, attachment="eye_l_open"),
-        Slot(name="eye_r", bone="head", draw_order=6, attachment="eye_r_open"),
+        Slot(name="left_eye", bone="head", draw_order=6, attachment="eye_l_open"),
+        Slot(name="right_eye", bone="head", draw_order=6, attachment="eye_r_open"),
         Slot(name="mouth", bone="head", draw_order=7, attachment="mouth_x"),
-        Slot(name="brow_l", bone="head", draw_order=8, attachment="brow_l"),
-        Slot(name="brow_r", bone="head", draw_order=8, attachment="brow_r"),
+        Slot(name="left_brow", bone="head", draw_order=8, attachment="brow_l"),
+        Slot(name="right_brow", bone="head", draw_order=8, attachment="brow_r"),
     ]
+
+
+def bones_from_pivots(
+    pivots: Mapping[str, tuple[float, float]],
+    *,
+    bones: list[Bone] | None = None,
+) -> list[Bone]:
+    """Re-place a bone rig onto an illustrator's own joint coordinates.
+
+    Each :class:`Bone` already declares the joint it stands for
+    (``head`` -> ``neck``, ``arm_l`` -> ``shoulder_l``, ...), and
+    :func:`~an.characters.svg_utils.extract_pivots` already returns those joints
+    as ``{name: (cx, cy)}``. Nothing connected the two: `promote` computed the
+    pivots and stored **only their names**, so the coordinates an artist drew
+    were discarded and every character got the generic rig (an#75).
+
+    Bones a drawing has no joint for keep their default placement, so a partial
+    skeleton improves a rig rather than breaking it.
+
+    Positions are stored parent-relative, so an absolute joint is converted
+    against its parent's resolved absolute position — and parents are resolved
+    first, which is why this walks in declaration order rather than by index.
+
+    >>> bones = bones_from_pivots({"neck": (500.0, 300.0), "root": (500.0, 900.0)})
+    >>> head = next(b for b in bones if b.name == "head")
+    >>> root = next(b for b in bones if b.name == "root")
+    >>> root.x, root.y
+    (500.0, 900.0)
+    >>> torso = next(b for b in bones if b.name == "torso")
+    >>> round(head.y + torso.y + root.y)          # absolute, back to the neck
+    300
+    """
+    rig = [b.model_copy(deep=True) for b in (bones or _default_bones())]
+    by_name = {b.name: b for b in rig}
+
+    def absolute(bone: Bone) -> tuple[float, float]:
+        x = y = 0.0
+        seen: set[str] = set()
+        cursor: Bone | None = bone
+        while cursor is not None and cursor.name not in seen:
+            seen.add(cursor.name)
+            x += cursor.x
+            y += cursor.y
+            cursor = by_name.get(cursor.parent) if cursor.parent else None
+        return x, y
+
+    for bone in rig:  # declaration order: a parent is always placed first
+        target = pivots.get(bone.pivot) if bone.pivot else None
+        if target is None:
+            continue
+        parent = by_name.get(bone.parent) if bone.parent else None
+        base = absolute(parent) if parent is not None else (0.0, 0.0)
+        bone.x = target[0] - base[0]
+        bone.y = target[1] - base[1]
+    return rig
 
 
 def _default_skin() -> Skin:
@@ -342,32 +525,48 @@ def _default_skin() -> Skin:
 
     # Single-attachment body slots
     for slot_name, anchor in (
-        ("torso", (0.5, 0.0)),
+        # Anchors are stated relative to each slot's BONE. The torso's bone is
+        # the hip, so the torso hangs UPWARD from it (anchor at its bottom
+        # edge); the limbs' bones are shoulders and hips, so they hang downward
+        # (anchor at their top edge). Before the compiler read any of this the
+        # anchors were inert and the torso's read (0.5, 0.0) — which, once the
+        # bone became the hip, drew the body below the waist and over the legs.
+        ("torso", (0.5, 1.0)),
         ("head", (0.5, 0.78)),
         ("arm_l", (0.5, 0.0)),
         ("arm_r", (0.5, 0.0)),
         ("leg_l", (0.5, 0.0)),
         ("leg_r", (0.5, 0.0)),
-        ("brow_l", (0.5, 0.5)),
-        ("brow_r", (0.5, 0.5)),
     ):
         slots[slot_name] = {
             slot_name: Attachment(path=f"parts/{slot_name}.svg", anchor=anchor)
         }
 
+    # Brows: slot name is the node name, attachment name is the file stem.
+    for slot_name, attachment in (("left_brow", "brow_l"), ("right_brow", "brow_r")):
+        x, y = FACE_OFFSETS[slot_name]
+        slots[slot_name] = {
+            attachment: Attachment(
+                path=f"parts/{attachment}.svg", anchor=(0.5, 0.5), x=x, y=y
+            )
+        }
+
     # Eye slots have two attachments (open + closed).
-    slots["eye_l"] = {
-        "eye_l_open": Attachment(path="parts/eye_l_open.svg", anchor=(0.5, 0.5)),
-        "eye_l_closed": Attachment(path="parts/eye_l_closed.svg", anchor=(0.5, 0.5)),
-    }
-    slots["eye_r"] = {
-        "eye_r_open": Attachment(path="parts/eye_r_open.svg", anchor=(0.5, 0.5)),
-        "eye_r_closed": Attachment(path="parts/eye_r_closed.svg", anchor=(0.5, 0.5)),
-    }
+    for slot_name, stem in (("left_eye", "eye_l"), ("right_eye", "eye_r")):
+        x, y = FACE_OFFSETS[slot_name]
+        slots[slot_name] = {
+            f"{stem}_{state}": Attachment(
+                path=f"parts/{stem}_{state}.svg", anchor=(0.5, 0.5), x=x, y=y
+            )
+            for state in ("open", "closed")
+        }
 
     # Mouth slot has 9 attachments (the viseme set).
+    mouth_x, mouth_y = FACE_OFFSETS["mouth"]
     slots["mouth"] = {
-        f"mouth_{s}": Attachment(path=f"parts/mouth/mouth_{s}.svg", anchor=(0.5, 0.5))
+        f"mouth_{s}": Attachment(
+            path=f"parts/mouth/mouth_{s}.svg", anchor=(0.5, 0.5), x=mouth_x, y=mouth_y
+        )
         for s in MOUTH_SHAPES
     }
 

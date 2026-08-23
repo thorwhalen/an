@@ -30,7 +30,8 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Mapping
-from typing import Any
+from pathlib import Path
+from typing import Any, Callable
 
 from an.ir.compose import FlatAction, flatten
 from an.ir.schema import (
@@ -59,7 +60,19 @@ from an.adapters.cutout.serialize import (
     TransformJSON,
     VisualJSON,
 )
-from an.characters.schema import MOUTH_SHAPES, REQUIRED_PARTS
+from an.characters.schema import (
+    CHARACTER_DOCUMENT_KIND,
+    MOUTH_SHAPES,
+    REQUIRED_PARTS,
+    VISEME_CHANNEL,
+    Attachment,
+    Bone,
+    CharacterDescriptor,
+    Skin,
+    Slot,
+)
+from an.characters.svg_utils import raster_size
+from an.ir.migrate import migrate
 
 
 # Default placeholder character: a recognizable stick-figure layout in pixel
@@ -554,7 +567,10 @@ def _build_character_subtree(
     if char_meta.get("kind") == "CharacterDescriptor":
         _record("descriptor")
         return _build_svg_character_subtree(
-            entity, char_meta, textures=textures if textures is not None else {}
+            entity,
+            char_meta,
+            textures=textures if textures is not None else {},
+            probe=_part_probe(characters_store),
         )
 
     declared_parts = char_meta.get("parts")
@@ -679,16 +695,24 @@ def _build_character_subtree(
 # -----------------------------------------------------------------------------
 
 
-# Render-display sizes for the SVG rig parts (in scene-graph pixels).
-# Tuned so a 1024-px-tall character at scale 1 reads at ~360 px tall on a
-# 1080p frame — roughly head:body 1:5 per the research §6.1 default.
-_SVG_HEAD_SIZE: float = 96.0
-_SVG_TORSO_SIZE: tuple[float, float] = (110.0, 130.0)
-_SVG_ARM_SIZE: tuple[float, float] = (28.0, 110.0)
-_SVG_LEG_SIZE: tuple[float, float] = (38.0, 120.0)
-_SVG_EYE_SIZE: tuple[float, float] = (18.0, 12.0)
-_SVG_BROW_SIZE: tuple[float, float] = (24.0, 8.0)
-_SVG_MOUTH_SIZE: tuple[float, float] = (44.0, 22.0)
+#: Scene-graph pixels spanned by a descriptor's full ``view_box`` height.
+#:
+#: The single number that maps descriptor space to scene space. One uniform
+#: factor ``k = SCENE_PX_PER_VIEW_BOX / view_box_height`` scales bone positions
+#: and part extents alike — uniform by construction, so the compiler cannot
+#: violate the invariant that aspect ratio is intrinsic to the art (an#74).
+#:
+#: 345 is a calibration, not a preference. It is what reproduces the framing the
+#: seven deleted ``_SVG_*_SIZE`` constants hand-tuned: at k = 345/1024 = 0.3369,
+#: ``saturated-rig``'s own art gives torso 107.8x129.4 against the old 110x130,
+#: legs 37.7x118.6 against 38x120. The constants were an approximation of
+#: exactly this product, which is the evidence that the rig should have been
+#: driving it all along.
+SCENE_PX_PER_VIEW_BOX: float = 345.0
+
+#: The fit policy every compiled sprite carries. Named rather than inlined so
+#: the one place that decides "the art keeps its shape" is greppable.
+CONTAIN_FIT: str = "contain"
 
 
 def _svg_asset_src(ref: str, rel_path: str) -> str:
@@ -707,211 +731,246 @@ def _register_texture(
     return alias
 
 
+def _part_probe(
+    characters_store: Mapping,
+) -> Callable[[str], tuple[bool, tuple[float, float] | None]] | None:
+    """A probe answering ``(art exists, the size it rasterises at)`` for a part.
+
+    **Two questions, deliberately not one.** Whether the art is *there* decides
+    whether the compiler declares a texture for it; whether it can be *measured*
+    decides only whether the sprite's box comes from the art or from the
+    runtime's fit. Collapsing them is a real bug and it was here: a degenerate
+    ``<svg/>`` is unmeasurable but present, and treating that as absent made the
+    part vanish from the scene silently — trading an#79's hang for exactly the
+    invisible-art failure #76 exists to stop.
+
+    Returns ``None`` when the store has no filesystem root — **not** a probe
+    that answers "absent" — because a store that can answer nothing must drop
+    no parts rather than all of them.
+
+    Size is read from the SVG root's ``width``/``height``, falling back to the
+    viewBox extent as a browser does: a header parse, not a render.
+    """
+    root = getattr(characters_store, "_root", None)
+    if root is None:
+        return None
+    base = Path(root)
+    prefix = "characters/"
+
+    def probe(src: str) -> tuple[bool, tuple[float, float] | None]:
+        if not src.startswith(prefix):
+            return False, None
+        path = base / src[len(prefix) :]
+        if not path.is_file():
+            return False, None
+        try:
+            return True, raster_size(path)
+        except (OSError, ValueError):
+            # Present but unreadable or malformed. Still declared, so the
+            # failure is loud at load rather than an absence nobody sees.
+            return True, None
+
+    return probe
+
+
+def _bone_positions(desc: CharacterDescriptor) -> dict[str, tuple[float, float]]:
+    """Absolute ``(x, y)`` per bone, in view_box units.
+
+    Bone transforms are parent-relative, so a bone's position is the sum along
+    its parent chain. A cycle or a dangling parent stops the walk rather than
+    looping — a malformed rig is #78's business, not this function's.
+    """
+    by_name = {b.name: b for b in desc.bones}
+    out: dict[str, tuple[float, float]] = {}
+    for bone in desc.bones:
+        x = y = 0.0
+        seen: set[str] = set()
+        cursor: Bone | None = bone
+        while cursor is not None and cursor.name not in seen:
+            seen.add(cursor.name)
+            x += cursor.x
+            y += cursor.y
+            cursor = by_name.get(cursor.parent) if cursor.parent else None
+        out[bone.name] = (x, y)
+    return out
+
+
+def _rig_origin(bones: dict[str, tuple[float, float]]) -> tuple[float, float]:
+    """The point in view_box space that the entity's placement refers to.
+
+    The centre of the rig's bone extent, **not** the root bone. The scene root
+    positions a character on x only and leaves y at 0, so this point is what
+    lands at the frame's vertical centre — and a rig whose root is its ground
+    contact (the default puts it at the feet, y=980) would therefore hang its
+    whole body above the placement point, head off-frame.
+
+    Centring on the extent makes framing independent of where an author chose
+    to put the root, which is a rigging decision and should not be a framing
+    one. On the default rig it lands at y=700, within 20 units of the torso
+    bone — i.e. it reproduces the convention the deleted `torso_y = 0.0`
+    literal encoded, without hardcoding a bone name.
+    """
+    if not bones:
+        return (0.0, 0.0)
+    xs = [x for x, _ in bones.values()]
+    ys = [y for _, y in bones.values()]
+    return ((min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0)
+
+
+def _primary_slot_per_bone(desc: CharacterDescriptor) -> dict[str, str]:
+    """``{bone name: the slot that IS that bone}``, when one exists.
+
+    Used for node nesting, which is deliberately **not** the bone hierarchy.
+    The rigs here are flat by design — arms are siblings of the torso, not
+    children (CLAUDE.md pillar 4) — so bone parentage decides *position* only.
+    A slot nests under the primary slot of its bone when it is not that slot
+    itself, which is what puts eyes and mouth under ``head`` and leaves every
+    limb a direct child of the entity.
+    """
+    return {s.bone: s.name for s in desc.slots if s.name == s.bone}
+
+
+def _attachment_for(
+    desc: CharacterDescriptor, skin: Skin, slot: Slot
+) -> tuple[str, Attachment] | None:
+    """The ``(name, attachment)`` a slot draws by default, or ``None``."""
+    available = skin.slots.get(slot.name) or {}
+    if not available:
+        return None
+    name = slot.attachment if slot.attachment in available else next(iter(available))
+    return name, available[name]
+
+
 def _build_svg_character_subtree(
     entity: AssetRef,
-    desc: dict[str, Any],
+    desc_data: dict[str, Any],
     *,
     textures: dict[str, AssetJSON],
+    probe: Callable[[str], tuple[bool, tuple[float, float] | None]] | None = None,
 ) -> NodeJSON:
-    """Build a Sprite-based subtree for a Phase-11a CharacterDescriptor."""
+    """Build the scene subtree for a character, **from its descriptor's rig**.
+
+    Every part's position comes from a bone, every part's extent from its own
+    art, and both are scaled by one uniform factor. Nothing here is a module
+    constant: the seven ``_SVG_*_SIZE`` values and the four y-offset literals
+    this replaced are gone, and gutting ``bones``/``slots``/``skins``/``view_box``
+    now changes the output — which it provably did not before (an#73).
+
+    ``probe(src) -> (exists, size)`` answers whether a part's art is on disk and
+    what size it rasterises at. Existence decides whether a texture is declared
+    at all; size lets the sprite's box be the art's own extent rather than a
+    guess. With neither, the attachment's declared ``width``/``height`` are
+    used, and failing that the runtime's ``contain`` fit draws the art at its
+    natural shape — never stretched to a fabricated box.
+    """
+    desc = CharacterDescriptor.model_validate(
+        migrate(dict(desc_data), kind=CHARACTER_DOCUMENT_KIND.name)
+    )
     ref = entity.ref or entity.id
-    name = desc.get("name", ref)
+    _, _, _, view_box_height = desc.view_box
+    k = SCENE_PX_PER_VIEW_BOX / float(view_box_height or 1)
 
-    # Register all the body / face / mouth parts as Pixi assets. Aliases follow
-    # ``<entity_id>.<slot>`` (instance-specific, so two scene entities backed by
-    # the same character ref get isolated alias namespaces — avoids collisions
-    # if they ever diverge.)
-    def _reg(slot: str, rel: str) -> str:
-        return _register_texture(
-            textures,
-            f"{entity.id}.{slot}",
-            _svg_asset_src(ref, rel),
-        )
-
-    head_alias = _reg("head", "parts/head.svg")
-    torso_alias = _reg("torso", "parts/torso.svg")
-    arm_l_alias = _reg("arm_l", "parts/arm_l.svg")
-    arm_r_alias = _reg("arm_r", "parts/arm_r.svg")
-    leg_l_alias = _reg("leg_l", "parts/leg_l.svg")
-    leg_r_alias = _reg("leg_r", "parts/leg_r.svg")
-    eye_l_alias = _reg("eye_l_open", "parts/eye_l_open.svg")
-    eye_r_alias = _reg("eye_r_open", "parts/eye_r_open.svg")
-    brow_l_alias = _reg("brow_l", "parts/brow_l.svg")
-    brow_r_alias = _reg("brow_r", "parts/brow_r.svg")
-    viseme_aliases: dict[str, str] = {}
-    for shape in MOUTH_SHAPES:
-        alias = _reg(f"mouth_{shape}", f"parts/mouth/mouth_{shape}.svg")
-        viseme_aliases[shape.upper()] = alias
-    # Default mouth attachment is the rest viseme (X).
-    mouth_alias = viseme_aliases["X"]
-
-    # Per-character viseme map: Rhubarb letter → asset alias. Carried on the
-    # mouth visual so the runtime can swap textures on the existing
-    # `<entity>/head/mouth:viseme` channel without IR plumbing.
-    viseme_map: dict[str, str] = {}
-    desc_map = desc.get("viseme_map") or {}
-    for letter in ("A", "B", "C", "D", "E", "F", "G", "H", "X"):
-        attachment = desc_map.get(letter, f"mouth_{letter.lower()}")
-        viseme_map[letter] = f"{entity.id}.{attachment}"
+    skin = desc.skins.get("default") or next(iter(desc.skins.values()), Skin())
+    bones = _bone_positions(desc)
+    origin = _rig_origin(bones)
+    nests_under = _primary_slot_per_bone(desc)
 
     # If the head art has its own face baked in (DiceBear / hand-drawn full
-    # avatars), don't overlay separate eye/brow/mouth sprites — they double
-    # up with the baked features. The mouth overlay used to attach so it
-    # could carry the lip-sync channel, but it sits below the avatar's
-    # natural mouth and reads as awkward. Per SESSION_HANDOFF.md §3 we lock
-    # it off too: lip-sync stays audio-only for these characters, and
-    # production scenes with dialogue should hand-rig characters following
-    # the Pose Animator convention (see ``examples/promote_demo/``).
-    metadata = desc.get("metadata") or {}
-    head_has_face = metadata.get("art_provenance") in ("dicebear", "external_avatar")
+    # avatars), the separate eye/brow/mouth sprites double up with the baked
+    # features. Lip-sync stays audio-only for these; hand-rig for dialogue.
+    head_has_face = (desc.metadata or {}).get(
+        "art_provenance"
+    ) in _FACE_BAKED_PROVENANCES
 
-    leg_y = 70.0
-    arm_y = -10.0
-    head_y = -100.0
-    torso_y = 0.0
+    def _register(attachment_name: str, attachment: Attachment) -> str:
+        alias = f"{entity.id}.{attachment_name}"
+        return _register_texture(textures, alias, _svg_asset_src(ref, attachment.path))
 
-    head_children: list[NodeJSON] = []
-    if not head_has_face:
-        head_children.extend(
-            [
-                # Eyes — paths match the procedural-blink regex so the
-                # existing scale.y squash works on Sprites unchanged.
-                NodeJSON(
-                    name="left_eye",
-                    transform=TransformJSON(x=-14.0, y=-6.0),
-                    visual=VisualJSON(
-                        kind="svg_sprite",
-                        asset_id=eye_l_alias,
-                        width=_SVG_EYE_SIZE[0],
-                        height=_SVG_EYE_SIZE[1],
-                    ),
-                ),
-                NodeJSON(
-                    name="right_eye",
-                    transform=TransformJSON(x=14.0, y=-6.0),
-                    visual=VisualJSON(
-                        kind="svg_sprite",
-                        asset_id=eye_r_alias,
-                        width=_SVG_EYE_SIZE[0],
-                        height=_SVG_EYE_SIZE[1],
-                    ),
-                ),
-                NodeJSON(
-                    name="left_brow",
-                    transform=TransformJSON(x=-14.0, y=-18.0),
-                    visual=VisualJSON(
-                        kind="svg_sprite",
-                        asset_id=brow_l_alias,
-                        width=_SVG_BROW_SIZE[0],
-                        height=_SVG_BROW_SIZE[1],
-                    ),
-                ),
-                NodeJSON(
-                    name="right_brow",
-                    transform=TransformJSON(x=14.0, y=-18.0),
-                    visual=VisualJSON(
-                        kind="svg_sprite",
-                        asset_id=brow_r_alias,
-                        width=_SVG_BROW_SIZE[0],
-                        height=_SVG_BROW_SIZE[1],
-                    ),
-                ),
-            ]
+    # Every attachment in the skin is registered, not just the active one, so a
+    # swap has its texture already loaded when the key changes.
+    #
+    # Except the ones whose art is not there. A skin declares an inventory —
+    # `eye_l_closed` is in the default skin and in REQUIRED_PARTS, but the bench
+    # rigs do not ship it — and declaring a texture the staging step cannot find
+    # makes the render fail at load over art no node draws. Registering only
+    # what resolves keeps the compiler from fabricating; reporting the gap in
+    # the art package is `an character validate`'s job (#78), not this one's.
+    aliases: dict[str, dict[str, str]] = {}
+    for slot_name, attachments in skin.slots.items():
+        resolved_here: dict[str, str] = {}
+        for name, att in attachments.items():
+            src = _svg_asset_src(ref, att.path)
+            if probe is not None and not probe(src)[0]:
+                continue
+            resolved_here[name] = _register(name, att)
+        aliases[slot_name] = resolved_here
+
+    nodes: dict[str, NodeJSON] = {}
+    children_of: dict[str, list[NodeJSON]] = {}
+
+    for slot in sorted(desc.slots, key=lambda s: (s.draw_order, s.name)):
+        parent = nests_under.get(slot.bone)
+        nested = parent is not None and parent != slot.name
+        if nested and head_has_face and parent == "head":
+            continue
+
+        resolved = _attachment_for(desc, skin, slot)
+        if resolved is None or resolved[0] not in aliases.get(slot.name, {}):
+            continue
+        attachment_name, attachment = resolved
+
+        # Position = the slot's bone, plus the attachment's own offset from it.
+        # Both are needed: five face parts share one `head` bone, so the bone
+        # alone would stack them, and the offset alone would ignore the rig.
+        bone_x, bone_y = bones.get(slot.bone, (0.0, 0.0))
+        if nested:
+            parent_x, parent_y = bones.get(parent, (0.0, 0.0))
+            bone_x, bone_y = bone_x - parent_x, bone_y - parent_y
+        else:
+            bone_x, bone_y = bone_x - origin[0], bone_y - origin[1]
+        bone_x += attachment.x
+        bone_y += attachment.y
+
+        src = _svg_asset_src(ref, attachment.path)
+        extent = (probe(src)[1] if probe else None) or (
+            (attachment.width, attachment.height)
+            if attachment.width and attachment.height
+            else None
         )
-    if not head_has_face:
-        head_children.append(
-            NodeJSON(
-                name="mouth",
-                transform=TransformJSON(x=0.0, y=22.0),
-                visual=VisualJSON(
-                    kind="svg_sprite",
-                    asset_id=mouth_alias,
-                    width=_SVG_MOUTH_SIZE[0],
-                    height=_SVG_MOUTH_SIZE[1],
-                    viseme_assets=viseme_map,
-                ),
-            )
-        )
-
-    head_node = NodeJSON(
-        name="head",
-        transform=TransformJSON(x=0.0, y=head_y),
-        visual=VisualJSON(
+        visual = VisualJSON(
             kind="svg_sprite",
-            asset_id=head_alias,
-            width=_SVG_HEAD_SIZE,
-            height=_SVG_HEAD_SIZE,
-        ),
-        children=head_children,
-    )
+            asset_id=aliases[slot.name][attachment_name],
+            anchor_x=attachment.anchor[0],
+            anchor_y=attachment.anchor[1],
+            fit=CONTAIN_FIT,
+            **({"width": extent[0] * k, "height": extent[1] * k} if extent else {}),
+        )
+        # The lip-sync channel swaps textures on the mouth by key.
+        viseme_set = desc.asset_sets.get(VISEME_CHANNEL) or {}
+        if slot.name == "mouth" and viseme_set:
+            visual.viseme_assets = {
+                key: aliases[slot.name][name]
+                for key, name in viseme_set.items()
+                if name in aliases[slot.name]
+            }
 
-    children: list[NodeJSON] = [
-        # Legs first (back of draw order)
-        NodeJSON(
-            name="leg_l",
-            transform=TransformJSON(x=-14.0, y=leg_y),
-            visual=VisualJSON(
-                kind="svg_sprite",
-                asset_id=leg_l_alias,
-                width=_SVG_LEG_SIZE[0],
-                height=_SVG_LEG_SIZE[1],
-                anchor_y=0.0,
-            ),
-        ),
-        NodeJSON(
-            name="leg_r",
-            transform=TransformJSON(x=14.0, y=leg_y),
-            visual=VisualJSON(
-                kind="svg_sprite",
-                asset_id=leg_r_alias,
-                width=_SVG_LEG_SIZE[0],
-                height=_SVG_LEG_SIZE[1],
-                anchor_y=0.0,
-            ),
-        ),
-        # Torso
-        NodeJSON(
-            name="torso",
-            transform=TransformJSON(x=0.0, y=torso_y),
-            visual=VisualJSON(
-                kind="svg_sprite",
-                asset_id=torso_alias,
-                width=_SVG_TORSO_SIZE[0],
-                height=_SVG_TORSO_SIZE[1],
-            ),
-        ),
-        # Arms (in front of torso)
-        NodeJSON(
-            name="arm_l",
-            transform=TransformJSON(x=-60.0, y=arm_y),
-            visual=VisualJSON(
-                kind="svg_sprite",
-                asset_id=arm_l_alias,
-                width=_SVG_ARM_SIZE[0],
-                height=_SVG_ARM_SIZE[1],
-                anchor_y=0.0,
-            ),
-        ),
-        NodeJSON(
-            name="arm_r",
-            transform=TransformJSON(x=60.0, y=arm_y),
-            visual=VisualJSON(
-                kind="svg_sprite",
-                asset_id=arm_r_alias,
-                width=_SVG_ARM_SIZE[0],
-                height=_SVG_ARM_SIZE[1],
-                anchor_y=0.0,
-            ),
-        ),
-        # Head on top
-        head_node,
-    ]
+        node = NodeJSON(
+            name=slot.name,
+            transform=TransformJSON(x=bone_x * k, y=bone_y * k),
+            visual=visual,
+        )
+        nodes[slot.name] = node
+        children_of.setdefault(parent if nested else "", []).append(node)
+
+    for parent_name, kids in children_of.items():
+        if parent_name and parent_name in nodes:
+            nodes[parent_name].children = kids
 
     return NodeJSON(
         name=entity.id,
         transform=TransformJSON(),
         slots={"root": SlotJSON(name="root")},
-        children=children,
+        children=children_of.get("", []),
     )
 
 

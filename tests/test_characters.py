@@ -50,11 +50,45 @@ class TestSchema:
         mouth_attachments = c.skins["default"].slots["mouth"]
         assert sorted(mouth_attachments) == [f"mouth_{s}" for s in sorted(MOUTH_SHAPES)]
 
-    def test_viseme_map_uppercase_keys(self):
+    def test_viseme_set_uppercase_keys(self):
+        """`viseme_map` became `asset_sets["viseme"]` in schema 0.2.0 (an#77).
+
+        The channel layer is the point: a swap key is not an attachment name,
+        and `asset_sets` is what lets Wave 5 add `hands` or `body_facing`
+        without another schema change.
+        """
         c = CharacterDescriptor(name="x")
+        visemes = c.asset_sets["viseme"]
         for letter in ("A", "B", "C", "D", "E", "F", "G", "H", "X"):
-            assert letter in c.viseme_map
-            assert c.viseme_map[letter] == f"mouth_{letter.lower()}"
+            assert letter in visemes
+            assert visemes[letter] == f"mouth_{letter.lower()}"
+
+    def test_a_0_1_0_descriptor_migrates_its_viseme_map_and_slot_names(self):
+        """The migration, on the shape a 0.1.0 descriptor actually had."""
+        from an.ir.migrate import migrate
+
+        out = migrate(
+            {
+                "kind": "CharacterDescriptor",
+                "schema_version": "0.1.0",
+                "viseme_map": {"A": "mouth_a"},
+                "slots": [{"name": "eye_l", "bone": "head"}],
+                "skins": {
+                    "default": {
+                        "name": "default",
+                        "slots": {"eye_l": {"eye_l_open": {"path": "p.svg"}}},
+                    }
+                },
+            }
+        )
+        assert out["schema_version"] == "0.2.0"
+        assert out["asset_sets"]["viseme"] == {"A": "mouth_a"}
+        assert "viseme_map" not in out, "a stale map beside the live one"
+        assert out["slots"][0]["name"] == "left_eye"
+        assert "left_eye" in out["skins"]["default"]["slots"]
+        # Face offsets move from code into data: before 0.2.0 the descriptor
+        # had nowhere to record them, so the migration is their only source.
+        assert out["skins"]["default"]["slots"]["left_eye"]["eye_l_open"]["x"] != 0.0
 
     def test_default_animations_present(self):
         c = CharacterDescriptor(name="x")
@@ -253,9 +287,7 @@ class TestDicebearWrap:
 
             return _Resp()
 
-        monkeypatch.setattr(
-            "urllib.request.urlopen", fake_urlopen
-        )
+        monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
         out = fetch_dicebear("seed-x", style="adventurer")
         assert "<svg" in out
         assert "seed=seed-x" in called["url"]
@@ -394,7 +426,9 @@ class TestSvgCharacterCompile:
             id="s1",
             style="cutout",
             duration=2.0,
-            entities=[AssetRef(id="maya", kind="character", store="characters", ref="maya")],
+            entities=[
+                AssetRef(id="maya", kind="character", store="characters", ref="maya")
+            ],
         )
         scene = compile_shot(shot, mall={"characters": store})
 
@@ -402,17 +436,23 @@ class TestSvgCharacterCompile:
         assert "maya.head" in scene.assets.textures
         assert "maya.mouth_x" in scene.assets.textures
         # Texture src is relative to the runtime root.
-        assert scene.assets.textures["maya.head"].src == "characters/maya/parts/head.svg"
+        assert (
+            scene.assets.textures["maya.head"].src == "characters/maya/parts/head.svg"
+        )
 
         # Scene tree contains svg_sprite visuals.
         maya_node = scene.scene.children[0]
         assert maya_node.name == "maya"
-        kinds = {c.name: (c.visual.kind if c.visual else None) for c in maya_node.children}
+        kinds = {
+            c.name: (c.visual.kind if c.visual else None) for c in maya_node.children
+        }
         assert kinds["head"] == "svg_sprite"
         assert kinds["torso"] == "svg_sprite"
         # Head has children: eyes/brows/mouth.
         head = next(c for c in maya_node.children if c.name == "head")
-        head_kinds = {c.name: (c.visual.kind if c.visual else None) for c in head.children}
+        head_kinds = {
+            c.name: (c.visual.kind if c.visual else None) for c in head.children
+        }
         assert head_kinds["mouth"] == "svg_sprite"
         # Mouth visual carries the viseme map.
         mouth = next(c for c in head.children if c.name == "mouth")
@@ -429,7 +469,9 @@ class TestSvgCharacterCompile:
             id="s1",
             style="cutout",
             duration=2.0,
-            entities=[AssetRef(id="bob", kind="character", store="characters", ref="bob")],
+            entities=[
+                AssetRef(id="bob", kind="character", store="characters", ref="bob")
+            ],
         )
         scene = compile_shot(shot, mall={"characters": {}})
         # No textures registered — procedural rig is texture-free.

@@ -70,6 +70,11 @@ def _parse(source: Any) -> ET.ElementTree:
         return ET.parse(source)
     if isinstance(source, str):
         return ET.ElementTree(ET.fromstring(source))
+    if isinstance(source, Path):
+        # A Path that did not match above is a path that does not exist. Saying
+        # "unsupported svg source: PosixPath" for that is a type complaint about
+        # a file problem, and sends the reader to the wrong question entirely.
+        raise FileNotFoundError(f"no SVG at {source}")
     raise TypeError(f"unsupported svg source: {type(source).__name__}")
 
 
@@ -295,10 +300,15 @@ def extract_part(
     When ``crop_viewbox`` is True (the default), the new SVG's viewBox is
     cropped to the bounding box of the part's primitive content (rect /
     circle / ellipse / path) plus ``padding`` units on each side. This
-    ensures the part fills its display rectangle when sized by the
-    renderer; without it, a part drawn in a small region of a 1024×1024
-    character canvas would be displayed at a fraction of the available
-    pixels. Falls back to the source viewBox when no bbox can be derived.
+    keeps a part's texture proportional to its content instead of to the whole
+    character canvas. Falls back to the source viewBox when no bbox can be
+    derived.
+
+    The emitted ``width``/``height`` always match the emitted viewBox, so the
+    part rasterises at its own extent and is never letterboxed inside a canvas
+    it does not fill. The crop rect's **parent-space origin survives as the
+    viewBox's first two numbers**, so where the part sat relative to its
+    siblings is not lost and needs no separate record.
 
     If no match is found, raises :class:`KeyError`.
     """
@@ -323,10 +333,17 @@ def extract_part(
             h = max(y_max - y_min, 1.0)
             viewbox = f"{x_min:.2f} {y_min:.2f} {w:.2f} {h:.2f}"
     new_root.set("viewBox", viewbox)
-    if root.get("width"):
-        new_root.set("width", root.get("width"))
-    if root.get("height"):
-        new_root.set("height", root.get("height"))
+    # Dimensions match the viewBox this part actually carries, NOT the parent's
+    # (an#75). Copying the root's turned every cropped part into a letterbox:
+    # `preserveAspectRatio="xMidYMid meet"` fitted, say, a 60x276 arm into a
+    # 1024x1024 raster, so the drawing occupied a fifth of its own texture and
+    # the compiler then squashed that to the arm's box. Measured on the repo's
+    # own rig, `arm_l` drew 4px of ink in the 28px box it was given, and a
+    # character cost 33.16 MiB of texture RAM against 1.87 MiB for the same
+    # picture. Sizing from the emitted viewBox fixes both at once.
+    vb_x, vb_y, vb_w, vb_h = (float(v) for v in viewbox.split())
+    new_root.set("width", f"{vb_w:g}")
+    new_root.set("height", f"{vb_h:g}")
     for defs in root.findall(_DEFS_TAG):
         new_root.append(ET.fromstring(ET.tostring(defs)))
     cloned = ET.fromstring(ET.tostring(target))
