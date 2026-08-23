@@ -10,7 +10,10 @@ Pure stdlib so the package stays dependency-light. Operations supported:
 - :func:`extract_pivots` — read the ``<g id="skeleton">`` group of named
   ``<circle>`` elements and return ``{name: (cx, cy)}``.
 - :func:`extract_part` — emit a standalone SVG containing only the named
-  group, preserving the parent SVG's viewBox.
+  group. By default it writes a viewBox **cropped** to the part's own bbox
+  while copying the parent's ``width``/``height``, which letterboxes the part
+  under ``preserveAspectRatio="xMidYMid meet"`` (see #75). The crop rect's
+  parent-space origin survives as the viewBox's first two numbers.
 - :func:`write_svg` — pretty-print an ``ElementTree`` (or ``Element``) to
   disk with the SVG namespace set as the default.
 
@@ -131,6 +134,55 @@ def normalize_svg(
     promote_inkscape_labels_to_ids(tree)
     _ensure_viewbox(tree, fallback=fallback_viewbox)
     return tree
+
+
+#: Attributes an SVG root may use to declare its rasterised size.
+_SIZE_ATTRS: tuple[str, str] = ("width", "height")
+
+#: Trailing units we accept on a width/height and ignore (SVG user units).
+_UNIT_SUFFIXES: tuple[str, ...] = ("px", "pt", "cm", "mm", "in", "pc")
+
+
+def _strip_units(value: str) -> float:
+    """Parse an SVG length, tolerating a unit suffix. Percentages are refused."""
+    text = value.strip()
+    if text.endswith("%"):
+        raise ValueError(f"percentage length {value!r} has no intrinsic size")
+    for suffix in _UNIT_SUFFIXES:
+        if text.endswith(suffix):
+            text = text[: -len(suffix)]
+            break
+    return float(text)
+
+
+def raster_size(source: Any) -> tuple[float, float]:
+    """Return the ``(width, height)`` an SVG declares for its own raster.
+
+    This is the size the browser rasterises the file at, which is what a
+    ``Sprite`` then scales — **not** the extent of the drawn art. The two differ
+    whenever :func:`extract_part` has cropped the viewBox while copying the
+    parent's dimensions, which is the defect behind #75.
+
+    Falls back to the viewBox extent when no ``width``/``height`` is declared,
+    matching the browser.
+
+    >>> raster_size('<svg xmlns="http://www.w3.org/2000/svg" '
+    ...             'viewBox="0 0 10 20" width="100" height="100"/>')
+    (100.0, 100.0)
+    >>> raster_size('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 20"/>')
+    (10.0, 20.0)
+    """
+    root = _parse(source).getroot()
+    declared = [root.get(name) for name in _SIZE_ATTRS]
+    if all(declared):
+        return (_strip_units(declared[0]), _strip_units(declared[1]))
+    view_box = root.get("viewBox")
+    if not view_box:
+        raise ValueError("SVG declares neither width/height nor a viewBox")
+    parts = view_box.split()
+    if len(parts) != 4:
+        raise ValueError(f"malformed viewBox {view_box!r}")
+    return (float(parts[2]), float(parts[3]))
 
 
 def extract_pivots(

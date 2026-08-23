@@ -419,9 +419,14 @@ class CutoutAssetWarning(UserWarning):
     Deliberately a warning and not an error, for now: an art package that is
     still being assembled is a real state, and refusing to render it would be
     worse than rendering it incompletely. But it must be *audible* — the
-    renderer's fallback for a missing texture is a plain white rectangle, which
-    is indistinguishable from art, so a silent skip surfaces to the user as
-    "the animation looks wrong" rather than as an error.
+    consequence of an un-staged texture is worse than it looks and worse than
+    this docstring used to claim. Measured (``misc/docs/wave4_research.md`` §4):
+    an *absent* part file crashes the render with an unwrapped minified-PixiJS
+    ``TypeError``; a degenerate SVG hangs it indefinitely (#79); a geometry-less
+    part renders invisibly. ``PIXI.Texture.WHITE`` — the actual white rectangle —
+    is reached only by a zero-byte file, an empty ``src``, or no ``src`` key.
+    Either way a silent skip surfaces to the user as "the animation is broken"
+    rather than as an error, which is what this warning exists to prevent.
     """
 
 
@@ -460,7 +465,10 @@ def _stage_scene_assets(
         if not src_rel:
             warnings.warn(
                 f"texture {alias!r} declares no src; nothing to stage. "
-                "The runtime will draw a white rectangle in its place.",
+                "The runtime will draw a white rectangle in its place — this is one "
+                "of the three inputs that genuinely reach PIXI.Texture.WHITE (the "
+                "others are a zero-byte file and an empty src). An absent *file* "
+                "does not: it crashes at load. See misc/docs/wave4_research.md #4.",
                 CutoutAssetWarning,
                 stacklevel=2,
             )
@@ -473,7 +481,8 @@ def _stage_scene_assets(
             warnings.warn(
                 f"texture {alias!r} has src {src_rel!r}, whose prefix is not one of "
                 f"{sorted(ASSET_SRC_PREFIX_TO_STORE)}. It cannot be resolved to a "
-                "store and will render as a white rectangle.",
+                "store, so nothing is staged for it and the render will fail at "
+                "load rather than draw a stand-in.",
                 CutoutAssetWarning,
                 stacklevel=2,
             )
@@ -498,7 +507,8 @@ def _stage_scene_assets(
         if not source.exists():
             warnings.warn(
                 f"texture {alias!r} declared as {src_rel!r} was not found at "
-                f"{source}. The runtime will draw a white rectangle in its place.",
+                f"{source}. Nothing is staged for it, so the render will fail at "
+                f"load rather than draw a stand-in.",
                 CutoutAssetWarning,
                 stacklevel=2,
             )

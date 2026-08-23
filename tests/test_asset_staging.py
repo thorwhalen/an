@@ -3,10 +3,10 @@
 `_stage_scene_assets` used to be `_stage_character_assets` and skipped, in
 silence, any texture whose `src` did not start with `characters/` and any file
 that was not on disk. Both silences matter because of what the renderer does
-next: `makeSvgSprite` falls back to a plain white texture when an alias is
-missing, so an un-staged asset reaches the user as a white rectangle in the
-frame — indistinguishable from art, and attributed to whatever else shipped that
-day.
+next: an un-staged asset does not fail loudly at the boundary, so it reaches
+the user as a broken render — a crash, a hang, or invisible art (see #76/#79;
+only a zero-byte file actually draws the white texture) — and gets attributed to
+whatever else shipped that day.
 
 The prefix restriction is also the hard gate in front of every plate, prop and
 imported illustration that later waves add: an environment texture declared
@@ -25,7 +25,13 @@ from an.adapters.cutout.render import (
     CutoutAssetWarning,
     _stage_scene_assets,
 )
-from an.adapters.cutout.serialize import AssetJSON, AssetsJSON, CutoutSceneJSON, NodeJSON, TimelineJSON
+from an.adapters.cutout.serialize import (
+    AssetJSON,
+    AssetsJSON,
+    CutoutSceneJSON,
+    NodeJSON,
+    TimelineJSON,
+)
 
 
 class _FakeStore:
@@ -55,7 +61,9 @@ def test_a_character_texture_is_staged_at_its_declared_path(tmp_path):
         warnings.simplefilter("error")  # any warning here is a failure
         _stage_scene_assets(scene, {"characters": _FakeStore(root)}, target)
 
-    assert (target / "characters/amy-v1/parts/head.svg").read_text(encoding="utf-8") == "<svg/>"
+    assert (target / "characters/amy-v1/parts/head.svg").read_text(
+        encoding="utf-8"
+    ) == "<svg/>"
 
 
 def test_a_non_character_prefix_is_staged_rather_than_dropped(tmp_path):
