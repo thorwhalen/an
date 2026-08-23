@@ -117,7 +117,10 @@ def _module_level_third_party_imports() -> dict[str, set[str]]:
                     continue
                 if _IMPORT_TO_DIST.get(name, name).lower() in declared:
                     continue
-                rel = str(path.relative_to(PYPROJECT.parent))
+                # `as_posix`, not `str`: on Windows the latter yields
+                # `an\\genre.py` and no key here would ever match. Same
+                # path-separator class as an#21, caught by the Windows leg.
+                rel = path.relative_to(PYPROJECT.parent).as_posix()
                 found.setdefault(rel, set()).add(name)
     return found
 
