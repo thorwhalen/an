@@ -47,6 +47,18 @@ from an.ir.schema import Shot
 
 # Tunables — exposed as module constants per the no-magic-numbers rule.
 DEFAULT_RUNTIME_LOAD_TIMEOUT_MS: int = 15_000
+
+#: Deadline for `anLoadScene`, which awaits `PIXI.Assets.load` for every declared
+#: texture. **A bound is required, not merely nice**: a degenerate part SVG —
+#: `<svg/>`, malformed XML, a zero-dimension root — makes `Assets.load` never
+#: settle, so without this the render hangs indefinitely with no error and no
+#: output (an#79). `page.evaluate` is not subject to Playwright's default
+#: timeout, so the deadline is imposed inside the page instead.
+#:
+#: The value is a policy choice, not a measurement: it needs to sit far above a
+#: legitimate cold load of a few dozen small SVGs and far below "a human gave
+#: up". Raise it for a genuinely heavy art package rather than removing it.
+DEFAULT_ASSET_LOAD_TIMEOUT_MS: int = 60_000
 DEFAULT_FRAME_PNG_PATTERN: str = "frame_%06d.png"
 
 #: Chromium launch flags that pin the rasteriser (an#31, research §2).
@@ -169,6 +181,64 @@ DETERMINISTIC_X264_ARGS: tuple[str, ...] = (
 )
 
 
+#: Races `anLoadScene` against an in-page deadline. `page.evaluate` awaits a
+#: returned promise with no timeout of its own, so the bound has to live here.
+#: The rejection message is matched by :func:`_evaluate` to name the cause.
+_LOAD_SCENE_JS: str = """
+async (args) => {
+    let timer = null;
+    const deadline = new Promise((_, reject) => {
+        timer = setTimeout(
+            () => reject(new Error(%(marker)r)), args.timeoutMs
+        );
+    });
+    try {
+        await Promise.race([window.anLoadScene(args.scene), deadline]);
+    } finally {
+        if (timer !== null) { clearTimeout(timer); }
+    }
+}
+"""
+
+#: Sentinel the in-page deadline rejects with, so the Python side can tell a
+#: timeout apart from a load failure and say something different about each.
+ASSET_LOAD_TIMEOUT_MARKER: str = "an:asset-load-timeout"
+
+_LOAD_SCENE_JS = _LOAD_SCENE_JS % {"marker": ASSET_LOAD_TIMEOUT_MARKER}
+
+
+def _evaluate(
+    page: Any, expression: str, *args: Any, doing: str, hint: str = ""
+) -> Any:
+    """`page.evaluate`, with failures wrapped as :class:`CutoutRenderError`.
+
+    A JS failure escapes Playwright as a raw ``playwright._impl._errors.Error``
+    carrying a minified stack trace and nothing about what the renderer was
+    doing. That violates the repo's typed-error convention and, in practice,
+    surfaces the most likely art failure in the product as
+    ``TypeError: Cannot read properties of undefined (reading 'x')`` (an#79).
+
+    ``doing`` names the step. The JS message is carried through verbatim
+    because it is the informative part; this only adds the context it lacks.
+    """
+    try:
+        return page.evaluate(expression, *args)
+    except Exception as e:  # noqa: BLE001 — re-raised as a typed error below
+        detail = f"{type(e).__name__}: {e}"
+        if ASSET_LOAD_TIMEOUT_MARKER in str(e):
+            raise CutoutRenderError(
+                f"timed out after {DEFAULT_ASSET_LOAD_TIMEOUT_MS} ms while {doing}. "
+                "PIXI.Assets.load never settled — an empty, malformed or "
+                "zero-dimension part SVG does this. Raise "
+                "DEFAULT_ASSET_LOAD_TIMEOUT_MS only if the art is genuinely "
+                f"this heavy.\n{detail}"
+            ) from e
+        message = f"failed while {doing}:\n{detail}"
+        if hint:
+            message = f"{message}\n\n{hint}"
+        raise CutoutRenderError(message) from e
+
+
 class CutoutRenderError(RuntimeError):
     """Raised when a cutout render fails. Carries actionable detail."""
 
@@ -265,7 +335,12 @@ class CutoutRenderer:
                 # factor can reach `resolution`. `add_init_script` would be the
                 # other option and is wrong: the page is already loaded by the
                 # time we get here.
-                page.evaluate("(k) => { window.anSupersample = k; }", int(supersample))
+                _evaluate(
+                    page,
+                    "(k) => { window.anSupersample = k; }",
+                    int(supersample),
+                    doing=f"injecting the supersample factor ({supersample})",
+                )
 
                 # Wait for runtime + PixiJS to load.
                 page.wait_for_function(
@@ -275,12 +350,27 @@ class CutoutRenderer:
 
                 scene_dict = to_dict(scene_json)
                 # anLoadScene is async (Phase 11b: it awaits Assets.load).
-                # Playwright awaits returned Promises automatically.
-                page.evaluate(
-                    "async (s) => { await window.anLoadScene(s); }", scene_dict
+                # Playwright awaits returned Promises automatically — and would
+                # await a promise that never settles forever, which is exactly
+                # what a degenerate part SVG produces, so the deadline is raced
+                # against it inside the page (an#79).
+                _evaluate(
+                    page,
+                    _LOAD_SCENE_JS,
+                    {"scene": scene_dict, "timeoutMs": DEFAULT_ASSET_LOAD_TIMEOUT_MS},
+                    doing=f"loading the scene for shot {shot.id!r}",
+                    hint=(
+                        "A part SVG that is empty, malformed or zero-dimension makes "
+                        "PIXI.Assets.load never settle; one that is absent fails the "
+                        "load outright. Check the textures this shot declares."
+                    ),
                 )
 
-                if not page.evaluate("() => window.anCanvasReady()"):
+                if not _evaluate(
+                    page,
+                    "() => window.anCanvasReady()",
+                    doing="checking the PixiJS app initialised",
+                ):
                     raise CutoutRenderError(
                         "JS runtime did not initialize PixiJS app after anLoadScene"
                     )
