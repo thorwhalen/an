@@ -40,9 +40,23 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from an.ir.assets import AssetSource
+from an.ir.migrate import DocumentKind, register_kind
 
 
 CHARACTER_SCHEMA_VERSION = "0.1.0"
+
+#: The descriptor is a schema-versioned document in its own right, with its own
+#: version field. Registered here rather than in :mod:`an.ir.migrate` because
+#: this module already imports from :mod:`an.ir.assets` — registering from the
+#: other direction would close an import cycle, and because the package that
+#: owns a schema is the one that knows its version field.
+CHARACTER_DOCUMENT_KIND: DocumentKind = register_kind(
+    DocumentKind(
+        name="CharacterDescriptor",
+        version_field="schema_version",
+        current_version=CHARACTER_SCHEMA_VERSION,
+    )
+)
 
 #: Rhubarb mouth shapes. A-F are mandatory in Rhubarb's basic set; G/H/X
 #: are emitted when ``--extendedShapes GHX`` is on (Rhubarb's default).

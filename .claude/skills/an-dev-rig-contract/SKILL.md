@@ -165,10 +165,15 @@ migration machinery**. `an/ir/migrate.py` is the scene-IR registry: `migrate()` 
 only `doc["version"]` and never inspects `"kind"`, while the descriptor spells its
 version `schema_version`. Both schemas sit at `"0.1.0"`.
 
-The failure is **namespace conflation, not key collision**: a character migration
-registered `("0.1.0","0.2.0")` is a valid entry in a registry that cannot tell the
-kinds apart, and `migrate()` would apply it to a scene. Give the registry a `kind`
-dimension, or the descriptor its own, **first**.
+The failure was **namespace conflation, not key collision**: a character migration
+registered `("0.1.0","0.2.0")` was a valid entry in a registry that could not tell the
+kinds apart, and `migrate()` would apply it to a scene.
+
+**Fixed (an#77).** `MIGRATIONS` is keyed `(kind, from, to)`; a `DocumentKind` declares
+where its version lives (`version` vs `schema_version`) and what this build writes; and
+kinds self-register on import of the package owning the schema, the way renderers do —
+with `an/ir/__init__.py` importing the character schema so a bare `import an` is enough.
+So the prerequisite is done and `viseme_map` → `asset_sets` can be written directly.
 
 And note every descriptor model sets `extra="allow"`, so a stale `viseme_map` key
 **survives validation silently**. That is why the migration must be explicit, not a

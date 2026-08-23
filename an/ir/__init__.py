@@ -39,7 +39,15 @@ from an.ir.validate import (
     ValidationReport,
     ValidationFinding,
 )
-from an.ir.migrate import migrate, register_migration, MIGRATIONS
+from an.ir.migrate import (
+    migrate,
+    register_migration,
+    register_kind,
+    kind_of,
+    DocumentKind,
+    MIGRATIONS,
+    KINDS,
+)
 from an.ir.sync import markdown_to_ir, ir_to_markdown, sync
 
 __all__ = [
@@ -66,8 +74,21 @@ __all__ = [
     "ValidationFinding",
     "migrate",
     "register_migration",
+    "register_kind",
+    "kind_of",
+    "DocumentKind",
+    "KINDS",
     "MIGRATIONS",
     "markdown_to_ir",
     "ir_to_markdown",
     "sync",
 ]
+
+# Document kinds self-register on import of the package that owns their schema,
+# the same way renderers self-register in `an.adapters`. Imported here so a bare
+# `import an.ir` is enough to make every shipped kind migratable — otherwise
+# `migrate()` on a descriptor raises "unknown document kind" in any process that
+# happened not to import the character schema. Last in the file, and a submodule
+# import, so the `an.characters.schema -> an.ir.assets` edge does not close a
+# cycle through this partially-initialised package.
+from an.characters import schema as _character_schema  # noqa: F401,E402
