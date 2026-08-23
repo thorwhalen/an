@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.schema &mdash; an 0.1.45 documentation</title>
+  <title>an.characters.schema &mdash; an 0.1.46 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=ce72d79b"></script>
+      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -195,18 +195,25 @@
 <span class="sd">- **bones** — where things attach. Local transforms relative to a parent.</span>
 <span class="sd">- **slots** — what is drawn at each bone (one attachment active at a time).</span>
 <span class="sd">- **skins** — for each slot, the named attachments and their SVG paths.</span>
-<span class="sd">- **viseme_map** — Rhubarb shape letter → attachment name on the ``mouth`` slot.</span>
+<span class="sd">- **asset_sets** — ``{channel: {key: attachment_name}}``. What a swap key</span>
+<span class="sd">  *selects*, layered over ``skins``, which says what art *exists*. The</span>
+<span class="sd">  ``viseme`` channel is Rhubarb's shape letter → an attachment on the ``mouth``</span>
+<span class="sd">  slot. (Replaced ``viseme_map`` in schema 0.2.0.)</span>
 <span class="sd">- **animations** — built-in idle loops (breath, blink) keyed by name.</span>
 
+<span class="sd">A slot's name **is** its scene-graph node name, which is why the face slots read</span>
+<span class="sd">``left_eye`` rather than ``eye_l``; attachment names are a separate namespace and</span>
+<span class="sd">keep the file-derived spelling.</span>
+
 <span class="sd">&gt;&gt;&gt; char = CharacterDescriptor(name="maya")</span>
-<span class="sd">&gt;&gt;&gt; char.viseme_map["A"]</span>
+<span class="sd">&gt;&gt;&gt; char.asset_sets["viseme"]["A"]</span>
 <span class="sd">'mouth_a'</span>
-<span class="sd">&gt;&gt;&gt; char.viseme_map["X"]</span>
+<span class="sd">&gt;&gt;&gt; char.asset_sets["viseme"]["X"]</span>
 <span class="sd">'mouth_x'</span>
 <span class="sd">&gt;&gt;&gt; char.view_box</span>
 <span class="sd">(0, 0, 1024, 1024)</span>
 <span class="sd">&gt;&gt;&gt; sorted(char.skins["default"].slots.keys())[:3]</span>
-<span class="sd">['arm_l', 'arm_r', 'brow_l']</span>
+<span class="sd">['arm_l', 'arm_r', 'head']</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -216,10 +223,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.assets</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssetSource</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentKind</span><span class="p">,</span> <span class="n">register_kind</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentKind</span><span class="p">,</span> <span class="n">register_kind</span><span class="p">,</span> <span class="n">register_migration</span>
 
 
-<span class="n">CHARACTER_SCHEMA_VERSION</span> <span class="o">=</span> <span class="s2">"0.1.0"</span>
+<span class="n">CHARACTER_SCHEMA_VERSION</span> <span class="o">=</span> <span class="s2">"0.2.0"</span>
 
 <span class="c1">#: The descriptor is a schema-versioned document in its own right, with its own</span>
 <span class="c1">#: version field. Registered here rather than in :mod:`an.ir.migrate` because</span>
@@ -242,6 +249,20 @@
 <span class="c1">#: Default Rhubarb-letter → mouth-attachment-name mapping. Uppercase keys</span>
 <span class="c1">#: because Rhubarb emits A-X; lowercase attachment names by convention.</span>
 <span class="n">DEFAULT_VISEME_MAP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span> <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">MOUTH_SHAPES</span><span class="p">}</span>
+
+<span class="c1">#: The swap channel lip-sync drives. Named because Wave 5 generalises swaps to</span>
+<span class="c1">#: `hands`, `body_facing`, `eyelid` and more; `viseme` is a conventional set</span>
+<span class="c1">#: name, not a special case in control flow.</span>
+<span class="n">VISEME_CHANNEL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"viseme"</span>
+
+
+<div class="viewcode-block" id="default_asset_sets">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.default_asset_sets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">default_asset_sets</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``{channel: {key: attachment_name}}`` for a freshly-built character."""</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">VISEME_CHANNEL</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DEFAULT_VISEME_MAP</span><span class="p">)}</span></div>
+
+
 
 <span class="c1">#: Required body parts. A character missing any of these can't be rendered</span>
 <span class="c1">#: as a full puppet; ``validate_character`` flags the gap.</span>
@@ -326,6 +347,18 @@
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
     <span class="c1">#: Anchor in 0..1 per-axis units (Pixi's Sprite.anchor convention).</span>
     <span class="n">anchor</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="c1">#: Offset from the slot's bone, in view_box units.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: **This is where a part's position lives**, and it is the reference data</span>
+    <span class="c1">#: model's answer, not an invention: DragonBones puts it in</span>
+    <span class="c1">#: ``display.transform``, Spine in the region attachment's ``{x, y}``, and</span>
+    <span class="c1">#: in both the *slot* carries no transform at all. It is what lets five face</span>
+    <span class="c1">#: parts share one ``head`` bone and still land in different places — before</span>
+    <span class="c1">#: this field they all stacked on the bone, because the descriptor had no</span>
+    <span class="c1">#: way to say otherwise and the compiler used hardcoded literals instead.</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="c1">#: Optional explicit bounding box override in the part's local viewBox.</span>
     <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">height</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
@@ -448,7 +481,14 @@
     <span class="n">bones</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Bone</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">slots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Slot</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">skins</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Skin</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-    <span class="n">viseme_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DEFAULT_VISEME_MAP</span><span class="p">))</span>
+    <span class="c1">#: ``{channel: {key: attachment_name}}`` — what a swap key SELECTS, layered</span>
+    <span class="c1">#: over ``skins``, which is the SSOT for what art EXISTS. The indirection is</span>
+    <span class="c1">#: deliberate: a channel key is not an attachment name. Today's viseme map</span>
+    <span class="c1">#: happens to be one-to-one (9 keys, 9 attachments), but real mouth charts</span>
+    <span class="c1">#: are many-to-one — ~10 drawings carrying ~40 phonemes — and collapsing the</span>
+    <span class="c1">#: two namespaces makes the first shared drawing a schema change instead of</span>
+    <span class="c1">#: a data change. Replaces ``viseme_map`` (schema 0.2.0).</span>
+    <span class="n">asset_sets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">default_asset_sets</span><span class="p">)</span>
     <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IdleAnimation</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
     <span class="c1">#: Where this character's art came from, and what its licence obliges.</span>
@@ -498,24 +538,115 @@
 <span class="c1"># -----------------------------------------------------------------------------</span>
 
 
+<span class="c1">#: Slot renames carried by the 0.1.0 -&gt; 0.2.0 migration: a slot's name is now</span>
+<span class="c1">#: its scene-graph node name, so the four face slots take the names the scene</span>
+<span class="c1">#: already addressed them by.</span>
+<span class="n">_SLOT_RENAMES_0_2_0</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"eye_l"</span><span class="p">:</span> <span class="s2">"left_eye"</span><span class="p">,</span>
+    <span class="s2">"eye_r"</span><span class="p">:</span> <span class="s2">"right_eye"</span><span class="p">,</span>
+    <span class="s2">"brow_l"</span><span class="p">:</span> <span class="s2">"left_brow"</span><span class="p">,</span>
+    <span class="s2">"brow_r"</span><span class="p">:</span> <span class="s2">"right_brow"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="nd">@register_migration</span><span class="p">(</span><span class="n">CHARACTER_DOCUMENT_KIND</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"0.1.0"</span><span class="p">,</span> <span class="s2">"0.2.0"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_character_0_1_0_to_0_2_0</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""`viseme_map` -&gt; `asset_sets["viseme"]`, and slot names become node names.</span>
+
+<span class="sd">    Both changes ride one migration because splitting them would break the</span>
+<span class="sd">    descriptor schema twice and ship two migrations where one does.</span>
+
+<span class="sd">    `viseme_map` is popped, not copied: leaving it would let a stale map sit</span>
+<span class="sd">    beside the live one indefinitely, and every descriptor model sets</span>
+<span class="sd">    `extra="allow"`, so nothing would ever complain.</span>
+
+<span class="sd">    &gt;&gt;&gt; out = _character_0_1_0_to_0_2_0(</span>
+<span class="sd">    ...     {"schema_version": "0.1.0", "viseme_map": {"A": "mouth_a"},</span>
+<span class="sd">    ...      "slots": [{"name": "eye_l", "bone": "head"}]}</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; out["asset_sets"]["viseme"], "viseme_map" in out</span>
+<span class="sd">    ({'A': 'mouth_a'}, False)</span>
+<span class="sd">    &gt;&gt;&gt; out["slots"][0]["name"]</span>
+<span class="sd">    'left_eye'</span>
+<span class="sd">    """</span>
+    <span class="n">viseme_map</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"viseme_map"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">viseme_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">doc</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"asset_sets"</span><span class="p">,</span> <span class="p">{})[</span><span class="n">VISEME_CHANNEL</span><span class="p">]</span> <span class="o">=</span> <span class="n">viseme_map</span>
+
+    <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slots"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">slot</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">slot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_SLOT_RENAMES_0_2_0</span><span class="p">:</span>
+            <span class="n">slot</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_SLOT_RENAMES_0_2_0</span><span class="p">[</span><span class="n">slot</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]]</span>
+
+    <span class="k">for</span> <span class="n">skin</span> <span class="ow">in</span> <span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"skins"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">slots</span> <span class="o">=</span> <span class="n">skin</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slots"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">skin</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">slots</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">_SLOT_RENAMES_0_2_0</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">old</span> <span class="ow">in</span> <span class="n">slots</span><span class="p">:</span>
+                <span class="n">slots</span><span class="p">[</span><span class="n">new</span><span class="p">]</span> <span class="o">=</span> <span class="n">slots</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+
+    <span class="c1"># Face offsets move from code into data. Before 0.2.0 the five face parts</span>
+    <span class="c1"># had no way to say where they sat, so the compiler hardcoded four literal</span>
+    <span class="c1"># pairs; a descriptor migrated from 0.1.0 therefore has the information</span>
+    <span class="c1"># nowhere else. Seeding only when the attachment has not been given one</span>
+    <span class="c1"># keeps a hand-authored offset authoritative.</span>
+    <span class="k">for</span> <span class="n">skin</span> <span class="ow">in</span> <span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"skins"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">slots</span> <span class="o">=</span> <span class="n">skin</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slots"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">skin</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">slots</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">FACE_OFFSETS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">attachment</span> <span class="ow">in</span> <span class="p">(</span><span class="n">slots</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">slot_name</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attachment</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="n">attachment</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">attachment</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"y"</span><span class="p">,</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">doc</span><span class="p">[</span><span class="s2">"schema_version"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"0.2.0"</span>
+    <span class="k">return</span> <span class="n">doc</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_default_bones</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Bone</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""The 7-bone default rig: root, torso, head, two arms, two legs.</span>
 
 <span class="sd">    Coordinates assume a 1024x1024 viewBox with feet near y≈980.</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="p">[</span>
-        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">980</span><span class="p">),</span>
-        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">300</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">980</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"root"</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">300</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"hip"</span><span class="p">),</span>
         <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">260</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"neck"</span><span class="p">),</span>
         <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">x</span><span class="o">=-</span><span class="mi">90</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">240</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"shoulder_l"</span><span class="p">),</span>
         <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">240</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"shoulder_r"</span><span class="p">),</span>
-        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">x</span><span class="o">=-</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">10</span><span class="p">),</span>
-        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_r"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">10</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">x</span><span class="o">=-</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"hip_l"</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_r"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"hip_r"</span><span class="p">),</span>
     <span class="p">]</span>
 
 
+<span class="c1">#: Where each face part sits relative to the ``head`` bone, in view_box units.</span>
+<span class="c1">#:</span>
+<span class="c1">#: All five share one bone, so without a per-attachment offset they stack on it.</span>
+<span class="c1">#: These are the compiler's four deleted hardcoded pairs converted at</span>
+<span class="c1">#: k = 345/1024 — i.e. the same picture, now expressed where an illustrator can</span>
+<span class="c1">#: change it.</span>
+<span class="n">FACE_OFFSETS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"left_eye"</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">41.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">17.8</span><span class="p">),</span>
+    <span class="s2">"right_eye"</span><span class="p">:</span> <span class="p">(</span><span class="mf">41.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">17.8</span><span class="p">),</span>
+    <span class="s2">"left_brow"</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">41.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">53.4</span><span class="p">),</span>
+    <span class="s2">"right_brow"</span><span class="p">:</span> <span class="p">(</span><span class="mf">41.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">53.4</span><span class="p">),</span>
+    <span class="s2">"mouth"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">41.6</span><span class="p">),</span>
+<span class="p">}</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_default_slots</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Slot</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""The 11-slot default draw stack: legs behind, arms in front, face on top."""</span>
+<span class="w">    </span><span class="sd">"""The 11-slot default draw stack: legs behind, arms in front, face on top.</span>
+
+<span class="sd">    **A slot's name IS its scene-graph node name.** The face slots read</span>
+<span class="sd">    ``left_eye`` rather than ``eye_l`` for that reason and no other: node paths</span>
+<span class="sd">    are the authoring surface (``scene.md`` targets ``charlie/left_eye:...``, and</span>
+<span class="sd">    the blink code and the doc-targeting test both address them), so the</span>
+<span class="sd">    alternative was a slot-to-node rename table — and a rename table is where a</span>
+<span class="sd">    field quietly stops being carried. Attachment names are a *separate*</span>
+<span class="sd">    namespace and keep the file-derived spelling (``eye_l_open``).</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">),</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_r"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"leg_r"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"leg_r"</span><span class="p">),</span>
@@ -523,12 +654,70 @@
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">),</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">),</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"head"</span><span class="p">),</span>
-        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"eye_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"eye_l_open"</span><span class="p">),</span>
-        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"eye_r"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"eye_r_open"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"left_eye"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"eye_l_open"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"right_eye"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"eye_r_open"</span><span class="p">),</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"mouth"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"mouth_x"</span><span class="p">),</span>
-        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"brow_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"brow_l"</span><span class="p">),</span>
-        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"brow_r"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"brow_r"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"left_brow"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"brow_l"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"right_brow"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"brow_r"</span><span class="p">),</span>
     <span class="p">]</span>
+
+
+<div class="viewcode-block" id="bones_from_pivots">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.bones_from_pivots">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bones_from_pivots</span><span class="p">(</span>
+    <span class="n">pivots</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">bones</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Bone</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Bone</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Re-place a bone rig onto an illustrator's own joint coordinates.</span>
+
+<span class="sd">    Each :class:`Bone` already declares the joint it stands for</span>
+<span class="sd">    (``head`` -&gt; ``neck``, ``arm_l`` -&gt; ``shoulder_l``, ...), and</span>
+<span class="sd">    :func:`~an.characters.svg_utils.extract_pivots` already returns those joints</span>
+<span class="sd">    as ``{name: (cx, cy)}``. Nothing connected the two: `promote` computed the</span>
+<span class="sd">    pivots and stored **only their names**, so the coordinates an artist drew</span>
+<span class="sd">    were discarded and every character got the generic rig (an#75).</span>
+
+<span class="sd">    Bones a drawing has no joint for keep their default placement, so a partial</span>
+<span class="sd">    skeleton improves a rig rather than breaking it.</span>
+
+<span class="sd">    Positions are stored parent-relative, so an absolute joint is converted</span>
+<span class="sd">    against its parent's resolved absolute position — and parents are resolved</span>
+<span class="sd">    first, which is why this walks in declaration order rather than by index.</span>
+
+<span class="sd">    &gt;&gt;&gt; bones = bones_from_pivots({"neck": (500.0, 300.0), "root": (500.0, 900.0)})</span>
+<span class="sd">    &gt;&gt;&gt; head = next(b for b in bones if b.name == "head")</span>
+<span class="sd">    &gt;&gt;&gt; root = next(b for b in bones if b.name == "root")</span>
+<span class="sd">    &gt;&gt;&gt; root.x, root.y</span>
+<span class="sd">    (500.0, 900.0)</span>
+<span class="sd">    &gt;&gt;&gt; torso = next(b for b in bones if b.name == "torso")</span>
+<span class="sd">    &gt;&gt;&gt; round(head.y + torso.y + root.y)          # absolute, back to the neck</span>
+<span class="sd">    300</span>
+<span class="sd">    """</span>
+    <span class="n">rig</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="n">bones</span> <span class="ow">or</span> <span class="n">_default_bones</span><span class="p">())]</span>
+    <span class="n">by_name</span> <span class="o">=</span> <span class="p">{</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">rig</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">absolute</span><span class="p">(</span><span class="n">bone</span><span class="p">:</span> <span class="n">Bone</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="p">:</span> <span class="n">Bone</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">bone</span>
+        <span class="k">while</span> <span class="n">cursor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cursor</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cursor</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">+=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">x</span>
+            <span class="n">y</span> <span class="o">+=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">y</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="n">by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cursor</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span> <span class="k">if</span> <span class="n">cursor</span><span class="o">.</span><span class="n">parent</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+
+    <span class="k">for</span> <span class="n">bone</span> <span class="ow">in</span> <span class="n">rig</span><span class="p">:</span>  <span class="c1"># declaration order: a parent is always placed first</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">pivots</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">bone</span><span class="o">.</span><span class="n">pivot</span><span class="p">)</span> <span class="k">if</span> <span class="n">bone</span><span class="o">.</span><span class="n">pivot</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">bone</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span> <span class="k">if</span> <span class="n">bone</span><span class="o">.</span><span class="n">parent</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">absolute</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span> <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">bone</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">bone</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">base</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">rig</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_default_skin</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Skin</span><span class="p">:</span>
@@ -542,32 +731,48 @@
 
     <span class="c1"># Single-attachment body slots</span>
     <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">anchor</span> <span class="ow">in</span> <span class="p">(</span>
-        <span class="p">(</span><span class="s2">"torso"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+        <span class="c1"># Anchors are stated relative to each slot's BONE. The torso's bone is</span>
+        <span class="c1"># the hip, so the torso hangs UPWARD from it (anchor at its bottom</span>
+        <span class="c1"># edge); the limbs' bones are shoulders and hips, so they hang downward</span>
+        <span class="c1"># (anchor at their top edge). Before the compiler read any of this the</span>
+        <span class="c1"># anchors were inert and the torso's read (0.5, 0.0) — which, once the</span>
+        <span class="c1"># bone became the hip, drew the body below the waist and over the legs.</span>
+        <span class="p">(</span><span class="s2">"torso"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
         <span class="p">(</span><span class="s2">"head"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.78</span><span class="p">)),</span>
         <span class="p">(</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
         <span class="p">(</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
         <span class="p">(</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
         <span class="p">(</span><span class="s2">"leg_r"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
-        <span class="p">(</span><span class="s2">"brow_l"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
-        <span class="p">(</span><span class="s2">"brow_r"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
     <span class="p">):</span>
         <span class="n">slots</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">slot_name</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"parts/</span><span class="si">{</span><span class="n">slot_name</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">anchor</span><span class="p">)</span>
         <span class="p">}</span>
 
+    <span class="c1"># Brows: slot name is the node name, attachment name is the file stem.</span>
+    <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">attachment</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"left_brow"</span><span class="p">,</span> <span class="s2">"brow_l"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"right_brow"</span><span class="p">,</span> <span class="s2">"brow_r"</span><span class="p">)):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">FACE_OFFSETS</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span>
+        <span class="n">slots</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">attachment</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"parts/</span><span class="si">{</span><span class="n">attachment</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+
     <span class="c1"># Eye slots have two attachments (open + closed).</span>
-    <span class="n">slots</span><span class="p">[</span><span class="s2">"eye_l"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"eye_l_open"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"parts/eye_l_open.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
-        <span class="s2">"eye_l_closed"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"parts/eye_l_closed.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
-    <span class="p">}</span>
-    <span class="n">slots</span><span class="p">[</span><span class="s2">"eye_r"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"eye_r_open"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"parts/eye_r_open.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
-        <span class="s2">"eye_r_closed"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"parts/eye_r_closed.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
-    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">stem</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"left_eye"</span><span class="p">,</span> <span class="s2">"eye_l"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"right_eye"</span><span class="p">,</span> <span class="s2">"eye_r"</span><span class="p">)):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">FACE_OFFSETS</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span>
+        <span class="n">slots</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"parts/</span><span class="si">{</span><span class="n">stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"open"</span><span class="p">,</span> <span class="s2">"closed"</span><span class="p">)</span>
+        <span class="p">}</span>
 
     <span class="c1"># Mouth slot has 9 attachments (the viseme set).</span>
+    <span class="n">mouth_x</span><span class="p">,</span> <span class="n">mouth_y</span> <span class="o">=</span> <span class="n">FACE_OFFSETS</span><span class="p">[</span><span class="s2">"mouth"</span><span class="p">]</span>
     <span class="n">slots</span><span class="p">[</span><span class="s2">"mouth"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"parts/mouth/mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+        <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"parts/mouth/mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="n">mouth_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">mouth_y</span>
+        <span class="p">)</span>
         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">MOUTH_SHAPES</span>
     <span class="p">}</span>
 

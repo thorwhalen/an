@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.svg_utils &mdash; an 0.1.45 documentation</title>
+  <title>an.characters.svg_utils &mdash; an 0.1.46 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=ce72d79b"></script>
+      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -227,10 +227,14 @@ resolve gradient / pattern / filter references like
 <p>When <code class="docutils literal notranslate"><span class="pre">crop_viewbox</span></code> is True (the default), the new SVG’s viewBox is
 cropped to the bounding box of the part’s primitive content (rect /
 circle / ellipse / path) plus <code class="docutils literal notranslate"><span class="pre">padding</span></code> units on each side. This
-ensures the part fills its display rectangle when sized by the
-renderer; without it, a part drawn in a small region of a 1024×1024
-character canvas would be displayed at a fraction of the available
-pixels. Falls back to the source viewBox when no bbox can be derived.</p>
+keeps a part’s texture proportional to its content instead of to the whole
+character canvas. Falls back to the source viewBox when no bbox can be
+derived.</p>
+<p>The emitted <code class="docutils literal notranslate"><span class="pre">width</span></code>/<code class="docutils literal notranslate"><span class="pre">height</span></code> always match the emitted viewBox, so the
+part rasterises at its own extent and is never letterboxed inside a canvas
+it does not fill. The crop rect’s <strong>parent-space origin survives as the
+viewBox’s first two numbers</strong>, so where the part sat relative to its
+siblings is not lost and needs no separate record.</p>
 <p>If no match is found, raises <code class="xref py py-class docutils literal notranslate"><span class="pre">KeyError</span></code>.</p>
 </dd></dl>
 

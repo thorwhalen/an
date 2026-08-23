@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.svg_utils &mdash; an 0.1.45 documentation</title>
+  <title>an.characters.svg_utils &mdash; an 0.1.46 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=ce72d79b"></script>
+      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -246,6 +246,11 @@
         <span class="k">return</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+        <span class="c1"># A Path that did not match above is a path that does not exist. Saying</span>
+        <span class="c1"># "unsupported svg source: PosixPath" for that is a type complaint about</span>
+        <span class="c1"># a file problem, and sends the reader to the wrong question entirely.</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no SVG at </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unsupported svg source: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 
@@ -485,10 +490,15 @@
 <span class="sd">    When ``crop_viewbox`` is True (the default), the new SVG's viewBox is</span>
 <span class="sd">    cropped to the bounding box of the part's primitive content (rect /</span>
 <span class="sd">    circle / ellipse / path) plus ``padding`` units on each side. This</span>
-<span class="sd">    ensures the part fills its display rectangle when sized by the</span>
-<span class="sd">    renderer; without it, a part drawn in a small region of a 1024×1024</span>
-<span class="sd">    character canvas would be displayed at a fraction of the available</span>
-<span class="sd">    pixels. Falls back to the source viewBox when no bbox can be derived.</span>
+<span class="sd">    keeps a part's texture proportional to its content instead of to the whole</span>
+<span class="sd">    character canvas. Falls back to the source viewBox when no bbox can be</span>
+<span class="sd">    derived.</span>
+
+<span class="sd">    The emitted ``width``/``height`` always match the emitted viewBox, so the</span>
+<span class="sd">    part rasterises at its own extent and is never letterboxed inside a canvas</span>
+<span class="sd">    it does not fill. The crop rect's **parent-space origin survives as the</span>
+<span class="sd">    viewBox's first two numbers**, so where the part sat relative to its</span>
+<span class="sd">    siblings is not lost and needs no separate record.</span>
 
 <span class="sd">    If no match is found, raises :class:`KeyError`.</span>
 <span class="sd">    """</span>
@@ -513,10 +523,17 @@
             <span class="n">h</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
             <span class="n">viewbox</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">x_min</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y_min</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">w</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">h</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span>
     <span class="n">new_root</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"viewBox"</span><span class="p">,</span> <span class="n">viewbox</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"width"</span><span class="p">):</span>
-        <span class="n">new_root</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"width"</span><span class="p">,</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"width"</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"height"</span><span class="p">):</span>
-        <span class="n">new_root</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"height"</span><span class="p">,</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"height"</span><span class="p">))</span>
+    <span class="c1"># Dimensions match the viewBox this part actually carries, NOT the parent's</span>
+    <span class="c1"># (an#75). Copying the root's turned every cropped part into a letterbox:</span>
+    <span class="c1"># `preserveAspectRatio="xMidYMid meet"` fitted, say, a 60x276 arm into a</span>
+    <span class="c1"># 1024x1024 raster, so the drawing occupied a fifth of its own texture and</span>
+    <span class="c1"># the compiler then squashed that to the arm's box. Measured on the repo's</span>
+    <span class="c1"># own rig, `arm_l` drew 4px of ink in the 28px box it was given, and a</span>
+    <span class="c1"># character cost 33.16 MiB of texture RAM against 1.87 MiB for the same</span>
+    <span class="c1"># picture. Sizing from the emitted viewBox fixes both at once.</span>
+    <span class="n">vb_x</span><span class="p">,</span> <span class="n">vb_y</span><span class="p">,</span> <span class="n">vb_w</span><span class="p">,</span> <span class="n">vb_h</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">viewbox</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="n">new_root</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"width"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">vb_w</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">new_root</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"height"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">vb_h</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">defs</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">_DEFS_TAG</span><span class="p">):</span>
         <span class="n">new_root</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">defs</span><span class="p">)))</span>
     <span class="n">cloned</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
