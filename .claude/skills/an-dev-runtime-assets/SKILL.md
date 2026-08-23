@@ -9,8 +9,14 @@ description: Use when adding, moving, renaming or removing any non-Python file t
 
 A runtime asset that is missing from the wheel **works perfectly in the editable dev
 tree and vanishes for every `pip install` user**. And it does not vanish loudly: the
-renderer degrades. A missing SVG texture becomes `PIXI.Texture.WHITE` — a white
-rectangle in the frame. A missing engine bundle gives `ReferenceError: PIXI is not
+renderer degrades — and **not in the benign way this file used to describe.** Measured
+(`misc/docs/wave4_research.md` §4): a texture whose file is *absent* does not become a
+white rectangle, it **crashes** the render with an unwrapped minified-PixiJS
+`TypeError`; a degenerate SVG (`<svg/>`, malformed, zero-dimension) makes
+`PIXI.Assets.load` **never settle**, hanging the render past 120 s with no timeout
+anywhere (#79); a valid SVG with no drawable geometry renders **silently invisible**.
+`PIXI.Texture.WHITE` is reached by exactly three inputs — a zero-byte file, `src=""`,
+and a missing `src` key. A missing engine bundle gives `ReferenceError: PIXI is not
 defined` inside the browser, where nothing in the Python stack is watching.
 
 So the bug reaches the user as *"the animation looks wrong"*, in a build nobody on the
@@ -66,7 +72,7 @@ Degradation is the enemy here, and this codebase degrades in three places:
 |---|---|---|
 | `_stage_character_assets` — declared texture whose file is absent | `continue`, silently | warn naming the alias, the declared `src`, and the store root it resolved against |
 | `_stage_character_assets` — `src` not starting with `characters/` | `continue`, silently | resolve through the prefix→store table; an unknown prefix is a programming error and raises |
-| `runtime.js` `makeSvgSprite` — `PIXI.Assets.get(alias)` returns nothing | `PIXI.Texture.WHITE` | say so — a white rectangle is indistinguishable from art |
+| `runtime.js` `makeSvgSprite` — `PIXI.Assets.get(alias)` returns nothing | `PIXI.Texture.WHITE` — reachable only from a zero-byte file, `src=""`, or no `src` key | say so, and name the alias. Note this branch is **not** what a missing *file* hits — that crashes upstream at `runtime.js:163` |
 
 The rule: **the error names the missing thing and where it was looked for.** "Texture
 not found" costs a debugging session; "texture `head` declared as
@@ -114,7 +120,11 @@ Two caches will lie to you, and both have bitten this repo:
 
 - [ ] Wheel built and the file listed in its contents — the command above, not an argument.
 - [ ] The path is not `.gitignore`d.
-- [ ] Absence produces a named error or a named warning, not a white rectangle.
+- [ ] Absence produces a named error or a named warning — naming the alias and the path
+      it resolved against. Do not describe the failure as "a white rectangle": measured,
+      absence crashes and a degenerate SVG hangs. Do not write a golden test against the
+      white rectangle either — it is invisible on a white background and absent for every
+      mode that crashes, hangs or vanishes.
 - [ ] Nothing is fetched from a network at render time.
 - [ ] If it is third-party, its licence and notice ship with it (`an-dev-licensing`).
 - [ ] `__pycache__` cleared before believing any before/after comparison.
