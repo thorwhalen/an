@@ -11,8 +11,8 @@ Two things can silently un-arm it again, so both are guarded here.
 from __future__ import annotations
 
 import ast
+import re
 import sys
-import tomllib
 from pathlib import Path
 
 PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
@@ -24,14 +24,35 @@ CI_DOCTEST_OPTIONFLAGS: frozenset[str] = frozenset(
 )
 
 
-def _pytest_config() -> dict:
-    with PYPROJECT.open("rb") as f:
-        return tomllib.load(f)["tool"]["pytest"]["ini_options"]
+def _toml_list(section: str, key: str) -> list[str]:
+    """Read a list-valued key out of one `pyproject.toml` section, by text.
+
+    Deliberately not `tomllib`: it is stdlib only from 3.11 and CI runs 3.10.
+    Deliberately not `pytestconfig.getini` either — CI **overrides**
+    `doctest_optionflags` with `-o`, so the resolved value under CI is CI's own
+    and comparing it against itself would prove nothing. What this guard is
+    about is what the *file* declares.
+
+    And deliberately not `importlib.metadata.requires`: an editable install's
+    recorded metadata goes stale (this one still lists `argh`, removed in
+    an#45, and omits `typer`), so it answers a question about the last install
+    rather than about the source.
+
+    Asserts rather than returning empty on a miss — a silently empty list here
+    would make every test below vacuously pass.
+    """
+    text = PYPROJECT.read_text(encoding="utf-8")
+    parts = text.split(f"[{section}]", 1)
+    assert len(parts) == 2, f"no [{section}] section in pyproject.toml"
+    body = re.split(r"\n\[", parts[1], maxsplit=1)[0]
+    match = re.search(rf"^{re.escape(key)}\s*=\s*\[(.*?)^\]", body, re.S | re.M)
+    assert match, f"{key} not found as a multi-line list in [{section}]"
+    return re.findall(r'"([^"]+)"', match.group(1))
 
 
 def test_the_package_is_in_testpaths_so_ci_collects_its_doctests():
     """Dropping `an` here disarms 120 doctests without failing anything."""
-    assert "an" in _pytest_config()["testpaths"]
+    assert "an" in _toml_list("tool.pytest.ini_options", "testpaths")
 
 
 def test_local_doctest_flags_match_what_ci_passes():
@@ -42,7 +63,7 @@ def test_local_doctest_flags_match_what_ci_passes():
     and fail in CI, which is the worst way to learn about it.
     `NORMALIZE_WHITESPACE` was here and is the reason this test exists.
     """
-    local = frozenset(_pytest_config()["doctest_optionflags"])
+    local = frozenset(_toml_list("tool.pytest.ini_options", "doctest_optionflags"))
     assert local == CI_DOCTEST_OPTIONFLAGS, (
         f"local doctest flags {sorted(local)} disagree with CI's "
         f"{sorted(CI_DOCTEST_OPTIONFLAGS)}. A flag CI does not pass makes a "
@@ -66,9 +87,12 @@ KNOWN_OPTIONAL_MODULE_IMPORTS: dict[str, str] = {"an/genre.py": "nw"}
 
 
 def _declared_distributions() -> set[str]:
-    with PYPROJECT.open("rb") as f:
-        deps = tomllib.load(f)["project"]["dependencies"]
-    return {d.split(">")[0].split("=")[0].split("[")[0].strip().lower() for d in deps}
+    """The distribution names `[project] dependencies` declares."""
+    return {
+        re.split(r"[<>=!;\[ ]", spec, maxsplit=1)[0].strip().lower()
+        for spec in _toml_list("project", "dependencies")
+        if spec.strip()
+    }
 
 
 def _module_level_third_party_imports() -> dict[str, set[str]]:
