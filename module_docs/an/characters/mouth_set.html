@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.mouth_set &mdash; an 0.1.43 documentation</title>
+  <title>an.characters.mouth_set &mdash; an 0.1.44 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -107,7 +107,12 @@
 <li class="toctree-l1"><a class="reference internal" href="factory.html">an.characters.factory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="idle.html">an.characters.idle</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licenses.html">an.characters.licenses</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.mouth_set</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.mouth_set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.mouth_set.DEFAULT_MOUTH_VIEWBOX"><code class="docutils literal notranslate"><span class="pre">DEFAULT_MOUTH_VIEWBOX</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.mouth_set.generate_default_mouths"><code class="docutils literal notranslate"><span class="pre">generate_default_mouths()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.mouth_set.write_default_mouths"><code class="docutils literal notranslate"><span class="pre">write_default_mouths()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="promote.html">an.characters.promote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="record.html">an.characters.record</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.characters.schema</a></li>
@@ -175,8 +180,50 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-characters-mouth-set">
-<h1>an.characters.mouth_set<a class="headerlink" href="#an-characters-mouth-set" title="Link to this heading"></a></h1>
+  <section id="module-an.characters.mouth_set">
+<span id="an-characters-mouth-set"></span><h1>an.characters.mouth_set<a class="headerlink" href="#module-an.characters.mouth_set" title="Link to this heading"></a></h1>
+<p>Generate the 9-shape default mouth set as parametric SVGs.</p>
+<p>Produces drop-in art for <code class="docutils literal notranslate"><span class="pre">mouth_a</span></code> … <code class="docutils literal notranslate"><span class="pre">mouth_h</span></code> plus <code class="docutils literal notranslate"><span class="pre">mouth_x</span></code>, with
+shape parameters cribbed from Daniel Wolf’s Rhubarb README (see research
+§2.2). Every shape is rendered into the same per-mouth canvas
+(<code class="docutils literal notranslate"><span class="pre">DEFAULT_MOUTH_VIEWBOX</span></code>, default 256×128) with a centered anchor, so
+swapping attachments at runtime needs no per-shape offset.</p>
+<p>The set is deliberately stylized — flat colors, bold strokes — so it reads
+at the small sizes a typical cutout puppet uses (~30-40 px tall on a
+1080p frame). It’s not meant to compete with hand-drawn art; it’s the
+“always works” fallback.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">svgs</span> <span class="o">=</span> <span class="n">generate_default_mouths</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">svgs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="go">['mouth_a', 'mouth_b', 'mouth_c', 'mouth_d', 'mouth_e', 'mouth_f', 'mouth_g', 'mouth_h', 'mouth_x']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">svgs</span><span class="p">[</span><span class="s1">'mouth_a'</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">100</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.characters.mouth_set.DEFAULT_MOUTH_VIEWBOX">
+<span class="sig-prename descclassname"><span class="pre">an.characters.mouth_set.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_MOUTH_VIEWBOX</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(256,</span> <span class="pre">128)</span></span><a class="headerlink" href="#an.characters.mouth_set.DEFAULT_MOUTH_VIEWBOX" title="Link to this definition"></a></dt>
+<dd><p>Mouth canvas viewBox (width, height) — small per-shape and centered so the
+anchor is always (0.5, 0.5).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.mouth_set.generate_default_mouths">
+<span class="sig-prename descclassname"><span class="pre">an.characters.mouth_set.</span></span><span class="sig-name descname"><span class="pre">generate_default_mouths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(256,</span> <span class="pre">128)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shapes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('a',</span> <span class="pre">'b',</span> <span class="pre">'c',</span> <span class="pre">'d',</span> <span class="pre">'e',</span> <span class="pre">'f',</span> <span class="pre">'g',</span> <span class="pre">'h',</span> <span class="pre">'x')</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/characters/mouth_set.html#generate_default_mouths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.mouth_set.generate_default_mouths" title="Link to this definition"></a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">{&quot;mouth_&lt;letter&gt;&quot;:</span> <span class="pre">&lt;svg-string&gt;,</span> <span class="pre">...}</span></code> for every shape.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">svgs</span> <span class="o">=</span> <span class="n">generate_default_mouths</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">'mouth_x'</span> <span class="ow">in</span> <span class="n">svgs</span> <span class="ow">and</span> <span class="s1">'viewBox'</span> <span class="ow">in</span> <span class="n">svgs</span><span class="p">[</span><span class="s1">'mouth_x'</span><span class="p">]</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.mouth_set.write_default_mouths">
+<span class="sig-prename descclassname"><span class="pre">an.characters.mouth_set.</span></span><span class="sig-name descname"><span class="pre">write_default_mouths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">canvas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(256,</span> <span class="pre">128)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shapes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('a',</span> <span class="pre">'b',</span> <span class="pre">'c',</span> <span class="pre">'d',</span> <span class="pre">'e',</span> <span class="pre">'f',</span> <span class="pre">'g',</span> <span class="pre">'h',</span> <span class="pre">'x')</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/characters/mouth_set.html#write_default_mouths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.mouth_set.write_default_mouths" title="Link to this definition"></a></dt>
+<dd><p>Write the default mouth SVGs into <code class="docutils literal notranslate"><span class="pre">out_dir</span></code> (created if missing).</p>
+<p>Returns the list of paths written, sorted by shape order.</p>
+</dd></dl>
+
 </section>
 
 

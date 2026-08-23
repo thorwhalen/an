@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.record &mdash; an 0.1.43 documentation</title>
+  <title>an.characters.record &mdash; an 0.1.44 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -109,7 +109,12 @@
 <li class="toctree-l1"><a class="reference internal" href="licenses.html">an.characters.licenses</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mouth_set.html">an.characters.mouth_set</a></li>
 <li class="toctree-l1"><a class="reference internal" href="promote.html">an.characters.promote</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.record</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.record</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.record.PreviewRecordError"><code class="docutils literal notranslate"><span class="pre">PreviewRecordError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.record.record_character"><code class="docutils literal notranslate"><span class="pre">record_character()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.record.record_preview_to_mp4"><code class="docutils literal notranslate"><span class="pre">record_preview_to_mp4()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="svg_utils.html">an.characters.svg_utils</a></li>
@@ -175,8 +180,52 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-characters-record">
-<h1>an.characters.record<a class="headerlink" href="#an-characters-record" title="Link to this heading"></a></h1>
+  <section id="module-an.characters.record">
+<span id="an-characters-record"></span><h1>an.characters.record<a class="headerlink" href="#module-an.characters.record" title="Link to this heading"></a></h1>
+<p>Record a character’s preview HTML to an mp4.</p>
+<p>Uses Playwright’s video recording (saved as webm) and converts to mp4
+via ffmpeg. The result is a real video file showing the new SVG
+character art animating: cycling visemes + breath/head-tilt.</p>
+<p>This is a stop-gap until Phase 11b wires the SVG-texture path into
+<code class="docutils literal notranslate"><span class="pre">runtime.js</span></code> and proper scene rendering uses the new character art
+directly.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Smoke-tested in tests/test_characters_record.py</span>
+</pre></div>
+</div>
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.characters.record.PreviewRecordError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.characters.record.</span></span><span class="sig-name descname"><span class="pre">PreviewRecordError</span></span><a class="reference internal" href="../../../_modules/an/characters/record.html#PreviewRecordError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.record.PreviewRecordError" title="Link to this definition"></a></dt>
+<dd><p>Raised when preview recording fails.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.record.record_character">
+<span class="sig-prename descclassname"><span class="pre">an.characters.record.</span></span><span class="sig-name descname"><span class="pre">record_character</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">char_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(640,</span> <span class="pre">480)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../_modules/an/characters/record.html#record_character"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.record.record_character" title="Link to this definition"></a></dt>
+<dd><p>Render preview.html for the character at <code class="docutils literal notranslate"><span class="pre">char_dir</span></code> and record it.</p>
+<p>The preview HTML is generated/refreshed via the same writer used by
+<code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">character</span> <span class="pre">preview</span></code>, so this command is self-contained.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.record.record_preview_to_mp4">
+<span class="sig-prename descclassname"><span class="pre">an.characters.record.</span></span><span class="sig-name descname"><span class="pre">record_preview_to_mp4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preview_html</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(640,</span> <span class="pre">480)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">23</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../_modules/an/characters/record.html#record_preview_to_mp4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.record.record_preview_to_mp4" title="Link to this definition"></a></dt>
+<dd><p>Record <code class="docutils literal notranslate"><span class="pre">preview_html</span></code> to <code class="docutils literal notranslate"><span class="pre">out_mp4</span></code> for <code class="docutils literal notranslate"><span class="pre">duration_s</span></code> seconds.</p>
+<p>Returns the output mp4 path.</p>
+<dl class="simple">
+<dt>Pipeline:</dt><dd><ol class="arabic simple">
+<li><p>Playwright launches headless Chromium with video recording on.</p></li>
+<li><p>Navigates to <code class="docutils literal notranslate"><span class="pre">preview_html</span></code> (<a class="reference external" href="file://">file://</a> URL).</p></li>
+<li><p>Waits <code class="docutils literal notranslate"><span class="pre">duration_s</span></code> real-time so the browser captures frames.</p></li>
+<li><p>Closes the context to flush the webm.</p></li>
+<li><p>ffmpeg re-encodes the webm to H.264 mp4 (better compatibility,
+smaller files, plays in <cite>quicktime</cite> / GitHub previews).</p></li>
+</ol>
+</dd>
+</dl>
+<p>Both Playwright (project dep) and ffmpeg (system dep, already
+required by the renderer) must be installed.</p>
+</dd></dl>
+
 </section>
 
 

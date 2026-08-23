@@ -1,0 +1,663 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.characters.factory &mdash; an 0.1.44 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.characters.factory</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.characters.factory</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""High-level entry points: build, validate, and inspect a character.</span>
+
+<span class="sd">The :func:`new_character` function wires together fetching/wrapping art,</span>
+<span class="sd">slicing it into per-part SVGs, generating the default mouth set, and</span>
+<span class="sd">writing a complete character directory + ``character.json`` descriptor.</span>
+
+<span class="sd">The :func:`validate_character` function checks completeness against</span>
+<span class="sd">:data:`an.characters.REQUIRED_PARTS` and the 9-shape mouth set.</span>
+
+<span class="sd">&gt;&gt;&gt; import tempfile, json, pathlib</span>
+<span class="sd">&gt;&gt;&gt; # validate_character on an empty dir gives a list of complaints:</span>
+<span class="sd">&gt;&gt;&gt; with tempfile.TemporaryDirectory() as d:</span>
+<span class="sd">...     report = validate_character(d, name='nobody')</span>
+<span class="sd">...     report.passed</span>
+<span class="sd">False</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xml.etree</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementTree</span> <span class="k">as</span> <span class="n">ET</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stable_hash</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Deterministic across processes (unlike Python's `hash()` for strings).</span>
+
+<span class="sd">    Python's built-in ``hash()`` is salt-randomized per interpreter run, so</span>
+<span class="sd">    using it for color derivation produces different palettes each render.</span>
+<span class="sd">    """</span>
+    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">digest</span><span class="p">[:</span><span class="mi">8</span><span class="p">],</span> <span class="s2">"big"</span><span class="p">)</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.licenses</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DICEBEAR_STYLE_LICENSES</span><span class="p">,</span>
+    <span class="n">attribution_for</span><span class="p">,</span>
+    <span class="n">dicebear_source</span><span class="p">,</span>
+    <span class="n">requires_acknowledgement</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.assets</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssetSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.dicebear</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DICEBEAR_DEFAULT_STYLE</span><span class="p">,</span>
+    <span class="n">fetch_dicebear</span><span class="p">,</span>
+    <span class="n">wrap_dicebear_for_an</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.mouth_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_default_mouths</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CharacterDescriptor</span><span class="p">,</span>
+    <span class="n">MOUTH_SHAPES</span><span class="p">,</span>
+    <span class="n">REQUIRED_PARTS</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.svg_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">extract_part</span><span class="p">,</span>
+    <span class="n">extract_pivots</span><span class="p">,</span>
+    <span class="n">normalize_svg</span><span class="p">,</span>
+    <span class="n">write_svg</span><span class="p">,</span>
+    <span class="n">SVG_NS</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># Each part SVG is a self-contained content-centered drawing. The canonical</span>
+<span class="c1"># `&lt;name&gt;.svg` (built via wrap_dicebear_for_an) is for human inspection /</span>
+<span class="c1"># silhouette test; the renderer uses these per-part files directly.</span>
+
+
+<div class="viewcode-block" id="ValidationReport">
+<a class="viewcode-back" href="../../../module_docs/an/characters/factory.html#an.characters.ValidationReport">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ValidationReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Result of :func:`validate_character`."""</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">directory</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">missing_parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">missing_mouths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">pivots_found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ValidationReport.format">
+<a class="viewcode-back" href="../../../module_docs/an/characters/factory.html#an.characters.ValidationReport.format">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Render a short human-readable report."""</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"character '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="si">}</span><span class="s2">: "</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="s2">"OK"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">"FAILED"</span>
+        <span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">head</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_parts</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"  missing body parts: "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_parts</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_mouths</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"  missing mouth shapes: "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_mouths</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pivots_found</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"  pivots: "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pivots_found</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  note: </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_style_is_usable</span><span class="p">(</span><span class="n">style</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">acknowledge_attribution</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refuse a style whose licence puts a duty on the user, unless acknowledged.</span>
+
+<span class="sd">    Not paternalism: `an` produces videos its user ships, and CC BY obliges them</span>
+<span class="sd">    to credit an artist they have never heard of, for art they did not know was</span>
+<span class="sd">    third-party. Making that an explicit flag is the difference between an</span>
+<span class="sd">    informed choice and an unknowing violation.</span>
+
+<span class="sd">    The default style is CC0, so the common path never sees this.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">requires_acknowledgement</span><span class="p">(</span><span class="n">style</span><span class="p">)</span> <span class="ow">or</span> <span class="n">acknowledge_attribution</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">lic</span> <span class="o">=</span> <span class="n">DICEBEAR_STYLE_LICENSES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">style</span><span class="p">)</span>
+    <span class="n">owed</span> <span class="o">=</span> <span class="n">attribution_for</span><span class="p">(</span><span class="n">style</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"an attribution you must display"</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"style </span><span class="si">{</span><span class="n">style</span><span class="si">!r}</span><span class="s2"> is licensed </span><span class="si">{</span><span class="n">lic</span><span class="o">.</span><span class="n">license</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">lic</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'UNVERIFIED'</span><span class="si">}</span><span class="s2">, "</span>
+        <span class="s2">"which obliges whoever ships the rendered video to credit the artist. "</span>
+        <span class="s2">"Accept that duty with acknowledge_attribution=True (or "</span>
+        <span class="s2">"--acknowledge-attribution on the CLI); the record is "</span>
+        <span class="s2">"then written to the character's `source` field and `an credits` will "</span>
+        <span class="sa">f</span><span class="s2">"render it. What you would owe:</span><span class="se">\n</span><span class="s2">  </span><span class="si">{</span><span class="n">owed</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"For no obligation at all, use the default style "</span>
+        <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">DICEBEAR_DEFAULT_STYLE</span><span class="si">!r}</span><span class="s2">, CC0)."</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="new_character">
+<a class="viewcode-back" href="../../../module_docs/an/characters/factory.html#an.characters.new_character">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">new_character</span><span class="p">(</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DICEBEAR_DEFAULT_STYLE</span><span class="p">,</span>
+    <span class="n">voice_ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_dicebear</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">acknowledge_attribution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Build a complete character on disk.</span>
+
+<span class="sd">    Steps:</span>
+
+<span class="sd">    1. Fetch a DiceBear avatar (skip if ``use_dicebear=False`` — useful for</span>
+<span class="sd">       offline tests).</span>
+<span class="sd">    2. Wrap it into the canonical ``an`` cutout SVG (skeleton + illustration</span>
+<span class="sd">       groups), saved as ``&lt;name&gt;.svg``.</span>
+<span class="sd">    3. Slice each part into ``parts/&lt;part&gt;.svg``.</span>
+<span class="sd">    4. Write the 9-shape default mouth set into ``parts/mouth/``.</span>
+<span class="sd">    5. Synthesize a few derived parts (open/closed eyes, brows) so the</span>
+<span class="sd">       character is complete out of the box.</span>
+<span class="sd">    6. Emit a ``character.json`` descriptor.</span>
+
+<span class="sd">    Returns the path to the created ``character.json``.</span>
+
+<span class="sd">    Raises :class:`FileExistsError` if ``out_dir/name`` already exists and</span>
+<span class="sd">    ``overwrite=False``.</span>
+<span class="sd">    """</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span>
+    <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">parts_dir</span> <span class="o">=</span> <span class="n">out</span> <span class="o">/</span> <span class="s2">"parts"</span>
+    <span class="n">parts_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+    <span class="n">mouth_dir</span> <span class="o">=</span> <span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"mouth"</span>
+    <span class="n">mouth_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+
+    <span class="c1"># Step 1 &amp; 2: source art</span>
+    <span class="n">seed_used</span> <span class="o">=</span> <span class="n">seed</span> <span class="ow">or</span> <span class="n">name</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"art_provenance"</span><span class="p">:</span> <span class="s2">"fallback_geometric"</span><span class="p">}</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">AssetSource</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">use_dicebear</span><span class="p">:</span>
+        <span class="n">_check_style_is_usable</span><span class="p">(</span><span class="n">style</span><span class="p">,</span> <span class="n">acknowledge_attribution</span><span class="o">=</span><span class="n">acknowledge_attribution</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">avatar</span> <span class="o">=</span> <span class="n">fetch_dicebear</span><span class="p">(</span><span class="n">seed_used</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">)</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"art_provenance"</span><span class="p">:</span> <span class="s2">"dicebear"</span><span class="p">,</span>
+                <span class="s2">"dicebear_style"</span><span class="p">:</span> <span class="n">style</span><span class="p">,</span>
+                <span class="s2">"dicebear_seed"</span><span class="p">:</span> <span class="n">seed_used</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">dicebear_source</span><span class="p">(</span><span class="n">style</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed_used</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">avatar</span> <span class="o">=</span> <span class="n">_fallback_face_svg</span><span class="p">(</span><span class="n">seed_used</span><span class="p">)</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"art_provenance"</span><span class="p">:</span> <span class="s2">"fallback_geometric"</span><span class="p">,</span>
+                <span class="s2">"dicebear_error"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">avatar</span> <span class="o">=</span> <span class="n">_fallback_face_svg</span><span class="p">(</span><span class="n">seed_used</span><span class="p">)</span>
+
+    <span class="n">canonical</span> <span class="o">=</span> <span class="n">wrap_dicebear_for_an</span><span class="p">(</span><span class="n">avatar</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">canonical_path</span> <span class="o">=</span> <span class="n">out</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.svg"</span>
+    <span class="n">canonical_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">canonical</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+    <span class="c1"># Step 3: write self-contained per-part SVGs (centered, sized to fill</span>
+    <span class="c1"># their own canvas). Done independently of the canonical for clean</span>
+    <span class="c1"># texture loading in Pixi.</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">normalize_svg</span><span class="p">(</span><span class="n">canonical_path</span><span class="p">)</span>
+    <span class="n">pivots</span> <span class="o">=</span> <span class="n">extract_pivots</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">skin</span><span class="p">,</span> <span class="n">clothing</span><span class="p">,</span> <span class="n">hair</span> <span class="o">=</span> <span class="n">_palette_for_seed</span><span class="p">(</span><span class="n">seed_used</span><span class="p">)</span>
+    <span class="n">_write_head_part</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"head.svg"</span><span class="p">,</span> <span class="n">avatar</span><span class="p">)</span>
+    <span class="n">_write_torso_part</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"torso.svg"</span><span class="p">,</span> <span class="n">clothing</span><span class="o">=</span><span class="n">clothing</span><span class="p">,</span> <span class="n">accent</span><span class="o">=</span><span class="n">hair</span><span class="p">)</span>
+    <span class="n">_write_arm_part</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"arm_l.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"l"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">clothing</span><span class="p">)</span>
+    <span class="n">_write_arm_part</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"arm_r.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"r"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">clothing</span><span class="p">)</span>
+    <span class="n">_write_leg_part</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"leg_l.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"l"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#3a3a4a"</span><span class="p">)</span>
+    <span class="n">_write_leg_part</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"leg_r.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"r"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#3a3a4a"</span><span class="p">)</span>
+
+    <span class="c1"># Step 4: default mouths</span>
+    <span class="n">write_default_mouths</span><span class="p">(</span><span class="n">mouth_dir</span><span class="p">)</span>
+
+    <span class="c1"># Step 5: derived parts (eyes, brows)</span>
+    <span class="n">_synthesize_eye_open</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"eye_l_open.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"l"</span><span class="p">)</span>
+    <span class="n">_synthesize_eye_closed</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"eye_l_closed.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"l"</span><span class="p">)</span>
+    <span class="n">_synthesize_eye_open</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"eye_r_open.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
+    <span class="n">_synthesize_eye_closed</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"eye_r_closed.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
+    <span class="n">_synthesize_brow</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"brow_l.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"l"</span><span class="p">)</span>
+    <span class="n">_synthesize_brow</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"brow_r.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
+
+    <span class="c1"># Step 6: descriptor</span>
+    <span class="n">descriptor</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">display_name</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span>
+        <span class="n">voice_ref</span><span class="o">=</span><span class="n">voice_ref</span><span class="p">,</span>
+        <span class="n">source_svg</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">metadata</span><span class="p">,</span> <span class="s2">"pivots_detected"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">pivots</span><span class="o">.</span><span class="n">keys</span><span class="p">())},</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">desc_path</span> <span class="o">=</span> <span class="n">out</span> <span class="o">/</span> <span class="s2">"character.json"</span>
+    <span class="n">desc_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">desc_path</span></div>
+
+
+
+<div class="viewcode-block" id="validate_character">
+<a class="viewcode-back" href="../../../module_docs/an/characters/factory.html#an.characters.validate_character">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_character</span><span class="p">(</span>
+    <span class="n">char_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check that a character directory is complete and well-formed.</span>
+
+<span class="sd">    Looks for: ``character.json``, all :data:`REQUIRED_PARTS` under</span>
+<span class="sd">    ``parts/``, all 9 mouth shapes under ``parts/mouth/``, and at least one</span>
+<span class="sd">    pivot in the canonical SVG (if one exists).</span>
+<span class="sd">    """</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">char_dir</span><span class="p">)</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">ValidationReport</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="ow">or</span> <span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">d</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"directory does not exist"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="n">desc_path</span> <span class="o">=</span> <span class="n">d</span> <span class="o">/</span> <span class="s2">"character.json"</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">desc_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"no character.json"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate_json</span><span class="p">(</span>
+                <span class="n">desc_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"character.json invalid: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">d</span> <span class="o">/</span> <span class="s2">"parts"</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">REQUIRED_PARTS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">parts</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">part</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">missing_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+    <span class="n">mouth_dir</span> <span class="o">=</span> <span class="n">parts</span> <span class="o">/</span> <span class="s2">"mouth"</span>
+    <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">MOUTH_SHAPES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mouth_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">missing_mouths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="c1"># Pivots are nice-to-have, not required for validation pass.</span>
+    <span class="n">candidate</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.svg"</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">candidate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pivots</span> <span class="o">=</span> <span class="n">extract_pivots</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">pivots_found</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">pivots</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"could not parse </span><span class="si">{</span><span class="n">candidate</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">missing_parts</span> <span class="ow">or</span> <span class="n">report</span><span class="o">.</span><span class="n">missing_mouths</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">report</span></div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Tiny SVG synthesizers for derived parts (used as offline-friendly defaults)</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="c1">#: Hand-picked skin tones in the typical illustrative cartoon range</span>
+<span class="c1">#: (warm pale → deep brown). Picked so any pair tends to read as distinct.</span>
+<span class="n">_SKIN_TONES</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"#fbe1c1"</span><span class="p">,</span>  <span class="c1"># pale warm</span>
+    <span class="s2">"#f4c89a"</span><span class="p">,</span>  <span class="c1"># peach</span>
+    <span class="s2">"#e8b687"</span><span class="p">,</span>  <span class="c1"># tan</span>
+    <span class="s2">"#d8a47f"</span><span class="p">,</span>  <span class="c1"># warm tan</span>
+    <span class="s2">"#c08a5a"</span><span class="p">,</span>  <span class="c1"># brown</span>
+    <span class="s2">"#8b5a3b"</span><span class="p">,</span>  <span class="c1"># deep brown</span>
+    <span class="s2">"#fce0c8"</span><span class="p">,</span>  <span class="c1"># very pale</span>
+    <span class="s2">"#f1c9a5"</span><span class="p">,</span>  <span class="c1"># neutral light</span>
+<span class="p">)</span>
+
+<span class="c1">#: Hair tones (dark earth + a couple of stylized colors).</span>
+<span class="n">_HAIR_TONES</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"#1a1a1a"</span><span class="p">,</span>  <span class="c1"># near-black</span>
+    <span class="s2">"#3b2a1a"</span><span class="p">,</span>  <span class="c1"># dark brown</span>
+    <span class="s2">"#5e3a1f"</span><span class="p">,</span>  <span class="c1"># brown</span>
+    <span class="s2">"#a8743f"</span><span class="p">,</span>  <span class="c1"># ginger</span>
+    <span class="s2">"#d4a017"</span><span class="p">,</span>  <span class="c1"># blonde</span>
+    <span class="s2">"#3a2a40"</span><span class="p">,</span>  <span class="c1"># dark stylized purple</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fallback_face_svg</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Tiny fallback face SVG used when DiceBear is unavailable.</span>
+
+<span class="sd">    Deterministic: same seed → same face (skin tone + hair color picked</span>
+<span class="sd">    from hand-curated palettes via stable hash). Crucially: NO eyes /</span>
+<span class="sd">    brows / mouth baked in — those are added by the overlay slots so</span>
+<span class="sd">    they can blink and lip-sync. Phase 11d fix for the "four eyes" bug.</span>
+<span class="sd">    """</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">_stable_hash</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">skin</span> <span class="o">=</span> <span class="n">_SKIN_TONES</span><span class="p">[</span><span class="n">h</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">_SKIN_TONES</span><span class="p">)]</span>
+    <span class="n">hair</span> <span class="o">=</span> <span class="n">_HAIR_TONES</span><span class="p">[(</span><span class="n">h</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">_HAIR_TONES</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"""&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"&gt;</span>
+<span class="s2">          &lt;circle cx="40" cy="44" r="28" fill="</span><span class="si">{</span><span class="n">skin</span><span class="si">}</span><span class="s2">"/&gt;</span>
+<span class="s2">          &lt;path d="M 12 36 Q 40 4 68 36 L 60 24 L 40 14 L 20 24 Z" fill="</span><span class="si">{</span><span class="n">hair</span><span class="si">}</span><span class="s2">"/&gt;</span>
+<span class="s2">        &lt;/svg&gt;"""</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_synthesize_eye_open</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">svg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="sa">f</span><span class="s1">'&lt;svg xmlns="</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="s1">" viewBox="0 0 64 32" width="64" height="32"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;g id="eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">_open"&gt;'</span>
+        <span class="s1">'&lt;ellipse cx="32" cy="16" rx="14" ry="10" fill="#ffffff" stroke="#222" stroke-width="2"/&gt;'</span>
+        <span class="s1">'&lt;circle cx="32" cy="16" r="5" fill="#1a1a1a"/&gt;'</span>
+        <span class="s2">"&lt;/g&gt;&lt;/svg&gt;"</span>
+    <span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_synthesize_eye_closed</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">svg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="sa">f</span><span class="s1">'&lt;svg xmlns="</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="s1">" viewBox="0 0 64 32" width="64" height="32"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;g id="eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">_closed"&gt;'</span>
+        <span class="s1">'&lt;path d="M 18 18 Q 32 24 46 18" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/&gt;'</span>
+        <span class="s2">"&lt;/g&gt;&lt;/svg&gt;"</span>
+    <span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_palette_for_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return ``(skin, clothing, hair)`` deterministic from ``seed``.</span>
+
+<span class="sd">    Picks from a small, hand-tuned set so two characters from different</span>
+<span class="sd">    seeds tend to look distinct.</span>
+<span class="sd">    """</span>
+    <span class="n">palettes</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"#f4c89a"</span><span class="p">,</span> <span class="s2">"#3a6ea5"</span><span class="p">,</span> <span class="s2">"#3b2a1a"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"#d8a47f"</span><span class="p">,</span> <span class="s2">"#a83249"</span><span class="p">,</span> <span class="s2">"#1a1a1a"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"#fbe1c1"</span><span class="p">,</span> <span class="s2">"#2e7d4f"</span><span class="p">,</span> <span class="s2">"#a8743f"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"#e8c39e"</span><span class="p">,</span> <span class="s2">"#d97706"</span><span class="p">,</span> <span class="s2">"#5e3a1f"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"#f1c9a5"</span><span class="p">,</span> <span class="s2">"#7a8fb5"</span><span class="p">,</span> <span class="s2">"#3a2a20"</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">_stable_hash</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">palettes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">palettes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_head_part</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">avatar_svg</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write the avatar SVG verbatim as the head part.</span>
+
+<span class="sd">    The avatar's intrinsic viewBox (whether DiceBear's 762×762 or our 80×80</span>
+<span class="sd">    fallback) is what Pixi maps to the sprite dimensions at render time, so</span>
+<span class="sd">    no rewriting/rescaling is needed.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">avatar_svg</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"&lt;?xml"</span><span class="p">):</span>
+        <span class="n">avatar_svg</span> <span class="o">=</span> <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">avatar_svg</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">avatar_svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_torso_part</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">clothing</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">accent</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A 256x256 torso SVG: rounded rect with a slight collar accent."""</span>
+    <span class="n">svg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="sa">f</span><span class="s1">'&lt;svg xmlns="</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="s1">" viewBox="0 0 256 256" width="256" height="256"&gt;'</span>
+        <span class="s1">'&lt;g id="torso"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;rect x="20" y="20" width="216" height="216" rx="40" ry="40" '</span>
+        <span class="sa">f</span><span class="s1">'fill="</span><span class="si">{</span><span class="n">clothing</span><span class="si">}</span><span class="s1">" stroke="#222" stroke-width="6"/&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;path d="M 96 20 Q 128 60 160 20" stroke="</span><span class="si">{</span><span class="n">accent</span><span class="si">}</span><span class="s1">" '</span>
+        <span class="sa">f</span><span class="s1">'stroke-width="6" fill="none"/&gt;'</span>
+        <span class="s2">"&lt;/g&gt;&lt;/svg&gt;"</span>
+    <span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_arm_part</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A 64x256 arm SVG with hand at the bottom."""</span>
+    <span class="n">svg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="sa">f</span><span class="s1">'&lt;svg xmlns="</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="s1">" viewBox="0 0 64 256" width="64" height="256"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;g id="arm_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;rect x="14" y="0" width="36" height="216" rx="18" ry="18" '</span>
+        <span class="sa">f</span><span class="s1">'fill="</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s1">" stroke="#222" stroke-width="4"/&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;circle cx="32" cy="232" r="20" fill="#f1c9a5" stroke="#222" '</span>
+        <span class="sa">f</span><span class="s1">'stroke-width="4"/&gt;'</span>
+        <span class="s2">"&lt;/g&gt;&lt;/svg&gt;"</span>
+    <span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_leg_part</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A 80x256 leg SVG with shoe at the bottom."""</span>
+    <span class="n">svg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="sa">f</span><span class="s1">'&lt;svg xmlns="</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="s1">" viewBox="0 0 80 256" width="80" height="256"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;g id="leg_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;rect x="20" y="0" width="40" height="220" rx="6" ry="6" '</span>
+        <span class="sa">f</span><span class="s1">'fill="</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s1">"/&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;ellipse cx="40" cy="232" rx="32" ry="18" fill="#1a1a1a"/&gt;'</span>
+        <span class="s2">"&lt;/g&gt;&lt;/svg&gt;"</span>
+    <span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_synthesize_brow</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">tilt</span> <span class="o">=</span> <span class="mi">4</span> <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">"l"</span> <span class="k">else</span> <span class="o">-</span><span class="mi">4</span>
+    <span class="n">svg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="sa">f</span><span class="s1">'&lt;svg xmlns="</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="s1">" viewBox="0 0 80 24" width="80" height="24"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;g id="brow_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;path d="M 8 </span><span class="si">{</span><span class="mi">12</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">tilt</span><span class="si">}</span><span class="s1"> Q 40 4 72 </span><span class="si">{</span><span class="mi">12</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">tilt</span><span class="si">}</span><span class="s1">" '</span>
+        <span class="s1">'stroke="#3a2a20" stroke-width="6" fill="none" stroke-linecap="round"/&gt;'</span>
+        <span class="s2">"&lt;/g&gt;&lt;/svg&gt;"</span>
+    <span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

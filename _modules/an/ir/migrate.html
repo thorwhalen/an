@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.migrate &mdash; an 0.1.43 documentation</title>
+  <title>an.ir.migrate &mdash; an 0.1.44 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -173,54 +173,142 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.ir.migrate</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""Schema-version migrations.</span>
+<span></span><span class="sd">"""Schema-version migrations, per document kind.</span>
 
-<span class="sd">Each migration is a function ``(doc: dict) -&gt; dict`` registered against the</span>
-<span class="sd">``(from_version, to_version)`` pair. ``migrate(doc, target)`` walks the</span>
-<span class="sd">registry, chaining migrations to bring an old document up to date.</span>
+<span class="sd">Each migration is a function ``(doc: dict) -&gt; dict`` registered against a</span>
+<span class="sd">``(kind, from_version, to_version)`` triple. :func:`migrate` walks the registry,</span>
+<span class="sd">chaining migrations to bring an old document up to date.</span>
 
-<span class="sd">We ship one identity migration in v0.1 to prove the wiring; real migrations</span>
-<span class="sd">get added when fields change.</span>
+<span class="sd">Why the kind is part of the key</span>
+<span class="sd">-------------------------------</span>
+<span class="sd">This repo versions **two** document kinds independently — the scene IR</span>
+<span class="sd">(``version``, :data:`an.base.SCHEMA_VERSION`) and the character descriptor</span>
+<span class="sd">(``schema_version``, ``an.characters.schema.CHARACTER_SCHEMA_VERSION``) — and</span>
+<span class="sd">both currently sit at ``"0.1.0"``.</span>
+
+<span class="sd">Keying on ``(from, to)`` alone conflated them. A character migration registered</span>
+<span class="sd">as ``("0.1.0", "0.2.0")`` was a well-formed entry in a registry that could not</span>
+<span class="sd">tell the kinds apart, so :func:`migrate` would happily apply it to a *scene*.</span>
+<span class="sd">That is namespace conflation rather than a key collision — nothing overwrites</span>
+<span class="sd">anything, the wrong function simply runs — which is the harder failure to spot.</span>
+<span class="sd">See ``misc/docs/wave4_research.md`` §5.</span>
+
+<span class="sd">Registering a kind</span>
+<span class="sd">------------------</span>
+<span class="sd">:mod:`an.ir.migrate` owns the mechanism; each package registers its own kind, so</span>
+<span class="sd">that this module never has to import the packages it serves. (It cannot:</span>
+<span class="sd">``an.characters.schema`` imports from ``an.ir.assets``, so an import the other</span>
+<span class="sd">way would close a cycle.)</span>
+
+<span class="sd">&gt;&gt;&gt; from an.ir.migrate import DocumentKind, register_kind</span>
+<span class="sd">&gt;&gt;&gt; _ = register_kind(DocumentKind("Widget", "widget_version", "2.0"))</span>
+<span class="sd">&gt;&gt;&gt; migrate({"kind": "Widget", "widget_version": "2.0"})["widget_version"]</span>
+<span class="sd">'2.0'</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">SCHEMA_VERSION</span>
 
+<span class="n">Migration</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
 
-<span class="c1">#: Registry: (from_version, to_version) -&gt; migration function.</span>
-<span class="n">MIGRATIONS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="DocumentKind">
+<a class="viewcode-back" href="../../../module_docs/an/ir/migrate.html#an.ir.DocumentKind">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DocumentKind</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A schema-versioned document kind.</span>
+
+<span class="sd">    ``version_field`` differs between kinds (``version`` for the scene IR,</span>
+<span class="sd">    ``schema_version`` for the character descriptor), which is exactly why a</span>
+<span class="sd">    migrator cannot simply reach for ``doc["version"]``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">version_field</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">current_version</span><span class="p">:</span> <span class="nb">str</span>
+
+<div class="viewcode-block" id="DocumentKind.version_of">
+<a class="viewcode-back" href="../../../module_docs/an/ir/migrate.html#an.ir.DocumentKind.version_of">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The document's declared version, defaulting to this build's."""</span>
+        <span class="k">return</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">version_field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_version</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1">#: Registered document kinds, by their ``kind`` tag.</span>
+<span class="n">KINDS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DocumentKind</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1">#: Registry: (kind, from_version, to_version) -&gt; migration function.</span>
+<span class="n">MIGRATIONS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Migration</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1">#: The kind assumed for a document that declares none. The scene IR predates the</span>
+<span class="c1">#: kind dimension and its persisted documents are not guaranteed to carry a</span>
+<span class="c1">#: ``kind`` key, so this keeps them migratable — it is not a general default.</span>
+<span class="n">DFLT_KIND</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"SceneIR"</span>
+
+
+<div class="viewcode-block" id="register_kind">
+<a class="viewcode-back" href="../../../module_docs/an/ir/migrate.html#an.ir.register_kind">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_kind</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="n">DocumentKind</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocumentKind</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Register a document kind. Returns it, so callers can bind the result."""</span>
+    <span class="n">KINDS</span><span class="p">[</span><span class="n">kind</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">kind</span>
+    <span class="k">return</span> <span class="n">kind</span></div>
+
+
+
+<span class="n">SCENE_IR</span><span class="p">:</span> <span class="n">DocumentKind</span> <span class="o">=</span> <span class="n">register_kind</span><span class="p">(</span>
+    <span class="n">DocumentKind</span><span class="p">(</span><span class="s2">"SceneIR"</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">,</span> <span class="n">SCHEMA_VERSION</span><span class="p">)</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="kind_of">
+<a class="viewcode-back" href="../../../module_docs/an/ir/migrate.html#an.ir.kind_of">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kind_of</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DocumentKind</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Resolve a document's kind, by explicit name or from its ``kind`` tag.</span>
+
+<span class="sd">    Raises ``ValueError`` for an unregistered kind rather than guessing — a</span>
+<span class="sd">    document whose kind nobody declared has no known version field, so any</span>
+<span class="sd">    answer would be a fabrication.</span>
+<span class="sd">    """</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">kind</span> <span class="ow">or</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">DFLT_KIND</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">KINDS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"unknown document kind </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; registered: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">KINDS</span><span class="p">)</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="s2">"Call register_kind() from the package that owns the schema."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">KINDS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
 
 
 <div class="viewcode-block" id="register_migration">
 <a class="viewcode-back" href="../../../module_docs/an/ir/migrate.html#an.ir.register_migration">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">register_migration</span><span class="p">(</span>
-    <span class="n">from_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">to_version</span><span class="p">:</span> <span class="nb">str</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span>
-    <span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
-    <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-<span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Decorator: register a migration in MIGRATIONS.</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">from_version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">to_version</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Migration</span><span class="p">],</span> <span class="n">Migration</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Decorator: register a migration for one kind in :data:`MIGRATIONS`.</span>
 
-<span class="sd">    &gt;&gt;&gt; @register_migration("0.0.99", "0.1.0")</span>
+<span class="sd">    &gt;&gt;&gt; @register_migration("SceneIR", "0.0.99", "0.1.0")</span>
 <span class="sd">    ... def _bump(doc):</span>
 <span class="sd">    ...     doc["version"] = "0.1.0"</span>
 <span class="sd">    ...     return doc</span>
-<span class="sd">    &gt;&gt;&gt; ("0.0.99", "0.1.0") in MIGRATIONS</span>
+<span class="sd">    &gt;&gt;&gt; ("SceneIR", "0.0.99", "0.1.0") in MIGRATIONS</span>
 <span class="sd">    True</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">deco</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
-        <span class="n">MIGRATIONS</span><span class="p">[(</span><span class="n">from_version</span><span class="p">,</span> <span class="n">to_version</span><span class="p">)]</span> <span class="o">=</span> <span class="n">fn</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">deco</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">Migration</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Migration</span><span class="p">:</span>
+        <span class="n">MIGRATIONS</span><span class="p">[(</span><span class="n">kind</span><span class="p">,</span> <span class="n">from_version</span><span class="p">,</span> <span class="n">to_version</span><span class="p">)]</span> <span class="o">=</span> <span class="n">fn</span>
         <span class="k">return</span> <span class="n">fn</span>
 
     <span class="k">return</span> <span class="n">deco</span></div>
 
 
 
-<span class="nd">@register_migration</span><span class="p">(</span><span class="n">SCHEMA_VERSION</span><span class="p">,</span> <span class="n">SCHEMA_VERSION</span><span class="p">)</span>
+<span class="nd">@register_migration</span><span class="p">(</span><span class="n">SCENE_IR</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">SCHEMA_VERSION</span><span class="p">,</span> <span class="n">SCHEMA_VERSION</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_identity</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Identity migration — proves the registry path works."""</span>
     <span class="k">return</span> <span class="n">doc</span>
@@ -229,36 +317,45 @@
 <div class="viewcode-block" id="migrate">
 <a class="viewcode-back" href="../../../module_docs/an/ir/migrate.html#an.ir.migrate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">migrate</span><span class="p">(</span>
-    <span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">target_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">SCHEMA_VERSION</span>
+    <span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">target_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Migrate an IR dict to ``target_version``.</span>
+<span class="w">    </span><span class="sd">"""Migrate a document to ``target_version`` (default: its kind's current).</span>
 
-<span class="sd">    Walks the migration registry one step at a time. Raises ``ValueError`` if</span>
-<span class="sd">    no path exists between the source and target versions.</span>
+<span class="sd">    Walks the migration registry one step at a time, considering only the</span>
+<span class="sd">    migrations registered for this document's kind. Raises ``ValueError`` if no</span>
+<span class="sd">    path exists between the source and target versions.</span>
 
 <span class="sd">    &gt;&gt;&gt; migrate({"version": "0.1.0", "kind": "SceneIR"})["version"]</span>
 <span class="sd">    '0.1.0'</span>
 <span class="sd">    """</span>
+    <span class="n">doc_kind</span> <span class="o">=</span> <span class="n">kind_of</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">)</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">target_version</span> <span class="k">if</span> <span class="n">target_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">doc_kind</span><span class="o">.</span><span class="n">current_version</span>
     <span class="n">current</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>  <span class="c1"># shallow copy; migrations may mutate</span>
-    <span class="n">src</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">,</span> <span class="n">SCHEMA_VERSION</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">src</span> <span class="o">==</span> <span class="n">target_version</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">target_version</span><span class="p">)</span> <span class="ow">in</span> <span class="n">MIGRATIONS</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">MIGRATIONS</span><span class="p">[(</span><span class="n">src</span><span class="p">,</span> <span class="n">target_version</span><span class="p">)](</span><span class="n">current</span><span class="p">)</span>
+    <span class="n">src</span> <span class="o">=</span> <span class="n">doc_kind</span><span class="o">.</span><span class="n">version_of</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+
+    <span class="n">steps</span> <span class="o">=</span> <span class="p">{(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span> <span class="n">fn</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">MIGRATIONS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">doc_kind</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">src</span> <span class="o">==</span> <span class="n">target</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">steps</span><span class="p">[(</span><span class="n">src</span><span class="p">,</span> <span class="n">target</span><span class="p">)](</span><span class="n">current</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">current</span>
 
     <span class="c1"># Greedy chain: find any registered step from src and follow it.</span>
     <span class="n">visited</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">src</span><span class="p">}</span>
-    <span class="k">while</span> <span class="n">src</span> <span class="o">!=</span> <span class="n">target_version</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">src</span> <span class="o">!=</span> <span class="n">target</span><span class="p">:</span>
         <span class="n">next_step</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-            <span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">MIGRATIONS</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">src</span> <span class="ow">and</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">),</span>
+            <span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">steps</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">src</span> <span class="ow">and</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">),</span>
             <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">next_step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"No migration path from </span><span class="si">{</span><span class="n">src</span><span class="si">!r}</span><span class="s2"> to </span><span class="si">{</span><span class="n">target_version</span><span class="si">!r}</span><span class="s2">; "</span>
-                <span class="sa">f</span><span class="s2">"registered: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">MIGRATIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"No migration path for </span><span class="si">{</span><span class="n">doc_kind</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> from </span><span class="si">{</span><span class="n">src</span><span class="si">!r}</span><span class="s2"> to "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2">; registered: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
-        <span class="n">current</span> <span class="o">=</span> <span class="n">MIGRATIONS</span><span class="p">[</span><span class="n">next_step</span><span class="p">](</span><span class="n">current</span><span class="p">)</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">steps</span><span class="p">[</span><span class="n">next_step</span><span class="p">](</span><span class="n">current</span><span class="p">)</span>
         <span class="n">src</span> <span class="o">=</span> <span class="n">next_step</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">current</span></div>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.assets &mdash; an 0.1.43 documentation</title>
+  <title>an.ir.assets &mdash; an 0.1.44 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -120,7 +120,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../determinism.html">an.determinism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.ir.assets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.ir.assets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.assets.ATTRIBUTION_REQUIRING_LICENSES"><code class="docutils literal notranslate"><span class="pre">ATTRIBUTION_REQUIRING_LICENSES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.assets.AssetSource"><code class="docutils literal notranslate"><span class="pre">AssetSource</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.ir.assets.AssetSource.model_config"><code class="docutils literal notranslate"><span class="pre">AssetSource.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.assets.requires_attribution"><code class="docutils literal notranslate"><span class="pre">requires_attribution()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="compose.html">an.ir.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.ir.schema</a></li>
@@ -175,8 +183,85 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-ir-assets">
-<h1>an.ir.assets<a class="headerlink" href="#an-ir-assets" title="Link to this heading"></a></h1>
+  <section id="module-an.ir.assets">
+<span id="an-ir-assets"></span><h1>an.ir.assets<a class="headerlink" href="#module-an.ir.assets" title="Link to this heading"></a></h1>
+<p>Where a third-party asset came from, and what its licence obliges.</p>
+<p><cite>an</cite> composes work it did not create — avatar art from a generator, stock images,
+fonts, commissioned SVG — into a video its user ships. A licence defect is the
+only failure in this package that reaches <em>backwards</em> through completed work: a
+video shipped with an unattributed CC BY asset cannot be un-shipped, whereas
+every rendering bug can be fixed forward.</p>
+<p>Until now there was nowhere to record any of it. The character descriptor’s
+<cite>metadata</cite> dict carried a comment saying it <em>could</em> hold a licence; nothing ever
+put one there.</p>
+<p>## Why the field names look borrowed</p>
+<p>They are. The rights fields are spelled exactly as <cite>illustration.ImageResult</cite>
+spells them — <cite>license</cite>, <cite>license_url</cite>, <cite>attribution</cite>, <cite>source_page_url</cite>,
+<cite>author</cite>, <cite>author_url</cite>, <cite>cacheable</cite>, <cite>provider</cite>, <cite>id</cite>, <cite>url</cite> — because
+<cite>illustration</cite> is the federation’s image-retrieval package and its results are
+the most likely thing to become an <cite>AssetSource</cite>. Identical names mean the
+adapter is a dict copy rather than a rename table, and a rename table is where a
+field quietly stops being carried.</p>
+<p><cite>tests/</cite> pins this literally. That is the precedent <cite>artful</cite> already set for
+shared vocabulary across packages that must not depend on each other.</p>
+<p>Two fields are <cite>an</cite>’s own, because <cite>ImageResult</cite> has no equivalent:</p>
+<ul class="simple">
+<li><p><cite>sha256</cite> — the digest of the bytes as they entered the project. A licence
+attached to a URL is a licence attached to whatever that URL serves <em>today</em>;
+attached to a digest, it stays attached to the thing that was actually used.</p></li>
+<li><p><cite>cost_usd</cite> — what acquiring it cost, if anything. <strong>`None` means unknown, never
+free.</strong> That is the federation’s rule for costs and it matters here for the
+same reason it matters in a plan: a <cite>0.0</cite> that means “we did not check” reads
+as “this was free” to every consumer downstream.</p></li>
+</ul>
+<p>## The long-term home</p>
+<p>This is a local definition of something three packages need — <cite>illustration</cite>
+retrieves third-party images, <cite>an</cite> composes them, <cite>reelee</cite> ships the result — and
+that is the signature of a missing federation primitive rather than three missing
+local fields. It is proposed upstream as <cite>lacing.Artifact.rights</cite> (lacing#34).
+<cite>Artifact</cite> is frozen and holds real deployed data, so that change needs a
+registered migration and a coordinated release; until it lands, this mirror is
+what keeps <cite>an</cite> from shipping unattributed work in the meantime.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.ir.assets.ATTRIBUTION_REQUIRING_LICENSES">
+<span class="sig-prename descclassname"><span class="pre">an.ir.assets.</span></span><span class="sig-name descname"><span class="pre">ATTRIBUTION_REQUIRING_LICENSES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'by',</span> <span class="pre">'by-sa',</span> <span class="pre">'cc-by',</span> <span class="pre">'cc-by-4.0',</span> <span class="pre">'cc-by-nc',</span> <span class="pre">'cc-by-nd',</span> <span class="pre">'cc-by-sa',</span> <span class="pre">'cc-by-sa-4.0'})</span></span><a class="headerlink" href="#an.ir.assets.ATTRIBUTION_REQUIRING_LICENSES" title="Link to this definition"></a></dt>
+<dd><p>Licence codes that oblige the <em>user of the output</em> to credit someone.</p>
+<p>Matched case-insensitively against the licence code. Deliberately a small,
+explicit set rather than a pattern: “does this oblige me” is a question with
+a legal answer, and a regex that guesses is worse than a list that admits what
+it does not know. An unrecognised licence is reported as UNKNOWN, which is
+not the same as “no obligation”.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.ir.assets.AssetSource">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.ir.assets.</span></span><span class="sig-name descname"><span class="pre">AssetSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_page_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cacheable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sha256</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_usd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~typing.Any]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/ir/assets.html#AssetSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.assets.AssetSource" title="Link to this definition"></a></dt>
+<dd><p>Provenance and rights for one third-party asset.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">AssetSource</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">"dicebear"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"lorelei/amy"</span><span class="p">,</span> <span class="n">license</span><span class="o">=</span><span class="s2">"cc0-1.0"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">requires_attribution</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">AssetSource</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">"dicebear"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"adventurer/amy"</span><span class="p">,</span> <span class="n">license</span><span class="o">=</span><span class="s2">"cc-by-4.0"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">requires_attribution</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.ir.assets.AssetSource.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'allow'}</span></span><a class="headerlink" href="#an.ir.assets.AssetSource.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.ir.assets.requires_attribution">
+<span class="sig-prename descclassname"><span class="pre">an.ir.assets.</span></span><span class="sig-name descname"><span class="pre">requires_attribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.ir.assets.AssetSource" title="an.ir.assets.AssetSource"><span class="pre">AssetSource</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/ir/assets.html#requires_attribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.assets.requires_attribution" title="Link to this definition"></a></dt>
+<dd><p>Whether shipping this asset obliges the user to credit someone.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> for an unrecognised or absent licence: “we do not know” is a
+distinct answer from “no”, and collapsing them is how an obligation gets
+silently dropped.</p>
+</dd></dl>
+
 </section>
 
 

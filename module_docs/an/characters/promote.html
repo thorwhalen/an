@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.promote &mdash; an 0.1.43 documentation</title>
+  <title>an.characters.promote &mdash; an 0.1.44 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -108,7 +108,10 @@
 <li class="toctree-l1"><a class="reference internal" href="idle.html">an.characters.idle</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licenses.html">an.characters.licenses</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mouth_set.html">an.characters.mouth_set</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.promote</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.promote</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.promote.promote"><code class="docutils literal notranslate"><span class="pre">promote()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="record.html">an.characters.record</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="silhouette.html">an.characters.silhouette</a></li>
@@ -175,8 +178,45 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-characters-promote">
-<h1>an.characters.promote<a class="headerlink" href="#an-characters-promote" title="Link to this heading"></a></h1>
+  <section id="module-an.characters.promote">
+<span id="an-characters-promote"></span><h1>an.characters.promote<a class="headerlink" href="#module-an.characters.promote" title="Link to this heading"></a></h1>
+<p>Asset promotion: lift an inline character from a scene into the mall.</p>
+<p>The <a class="reference internal" href="#an.characters.promote.promote" title="an.characters.promote.promote"><code class="xref py py-func docutils literal notranslate"><span class="pre">promote()</span></code></a> function copies a character’s SVG out of a scene’s
+inline assets into <code class="docutils literal notranslate"><span class="pre">mall[&quot;characters&quot;]/&lt;as_&gt;/</span></code> as a reusable, named
+character. This is the v0.2 deliverable per research §5.3.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Tested via tests/test_characters_promote.py with a tmp project.</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.promote.promote">
+<span class="sig-prename descclassname"><span class="pre">an.characters.promote.</span></span><span class="sig-name descname"><span class="pre">promote</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_svg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dicebear</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../_modules/an/characters/promote.html#promote"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.promote.promote" title="Link to this definition"></a></dt>
+<dd><p>Promote <code class="docutils literal notranslate"><span class="pre">entity</span></code> from <code class="docutils literal notranslate"><span class="pre">project_dir</span></code>’s inline assets into the mall.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_dir</strong> – Path to an <code class="docutils literal notranslate"><span class="pre">an</span></code> project (must contain <code class="docutils literal notranslate"><span class="pre">assets/characters/</span></code>).</p></li>
+<li><p><strong>entity</strong> – Inline entity id used inside the scene (the directory under
+<code class="docutils literal notranslate"><span class="pre">assets/characters/&lt;entity&gt;</span></code>, or the SVG file at
+<code class="docutils literal notranslate"><span class="pre">assets/characters/&lt;entity&gt;.svg</span></code>).</p></li>
+<li><p><strong>as</strong> – The mall character id to register the result as. Becomes the
+directory name under <code class="docutils literal notranslate"><span class="pre">assets/characters/</span></code> and the descriptor’s
+<code class="docutils literal notranslate"><span class="pre">name</span></code> field.</p></li>
+<li><p><strong>source_svg</strong> – Optional explicit path to a source SVG. If omitted, the function
+looks for <code class="docutils literal notranslate"><span class="pre">assets/characters/&lt;entity&gt;.svg</span></code> or
+<code class="docutils literal notranslate"><span class="pre">assets/characters/&lt;entity&gt;/&lt;entity&gt;.svg</span></code>.</p></li>
+<li><p><strong>voice_ref</strong> – Voice reference to embed in the descriptor.</p></li>
+<li><p><strong>use_dicebear</strong> – Forwarded to <a class="reference internal" href="factory.html#an.characters.factory.new_character" title="an.characters.factory.new_character"><code class="xref py py-func docutils literal notranslate"><span class="pre">new_character()</span></code></a> on the
+no-source fallback path. Pass <code class="docutils literal notranslate"><span class="pre">False</span></code> to keep the call offline —
+without it that fallback always reaches the DiceBear API, and
+<code class="docutils literal notranslate"><span class="pre">new_character</span></code> swallows the failure and generates geometry instead,
+so an offline test looks like it passed rather than like it was skipped.</p></li>
+<li><p><strong>overwrite</strong> – If False and the target already exists, raises <code class="docutils literal notranslate"><span class="pre">FileExistsError</span></code>.</p></li>
+<li><p><strong>character.json.</strong> (<em>Returns the path to the new</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

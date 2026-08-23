@@ -1,0 +1,577 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.characters.cli &mdash; an 0.1.44 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.characters.cli</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.characters.cli</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""User-facing character CLI subcommands.</span>
+
+<span class="sd">Wired into the top-level ``an`` dispatcher via ``character_*`` dispatch-friendly</span>
+<span class="sd">functions in :mod:`an.tools`. Each function here takes plain strings/bools</span>
+<span class="sd">and returns a string for terminal display.</span>
+
+<span class="sd">Subcommands (used as ``an character &lt;verb&gt; ...``):</span>
+
+<span class="sd">- ``new``       — generate a fresh character from DiceBear or fallback art.</span>
+<span class="sd">- ``mouths``    — regenerate the 9-shape default mouth set.</span>
+<span class="sd">- ``validate``  — completeness check.</span>
+<span class="sd">- ``silhouette``— rasterize silhouettes; for two characters, also IoU.</span>
+<span class="sd">- ``preview``   — open an HTML viewer cycling visemes + idle animation.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_character</span> <span class="k">as</span> <span class="n">_new_character</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_character</span> <span class="k">as</span> <span class="n">_validate_character</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.mouth_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_default_mouths</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.dicebear</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DICEBEAR_DEFAULT_STYLE</span><span class="p">,</span>
+    <span class="n">DICEBEAR_STYLES</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">out_dir</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"characters"</span>
+
+
+<div class="viewcode-block" id="new">
+<a class="viewcode-back" href="../../../module_docs/an/characters/cli.html#an.characters.cli.new">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">new</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DICEBEAR_DEFAULT_STYLE</span><span class="p">,</span>
+    <span class="n">voice_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">offline</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">acknowledge_attribution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a new character at ``out_dir``/``name``.</span>
+
+<span class="sd">    name: character id (used as the directory name and descriptor 'name')</span>
+<span class="sd">    out_dir: parent directory; defaults to ./assets/characters</span>
+<span class="sd">    seed: deterministic seed for DiceBear; defaults to ``name``</span>
+<span class="sd">    style: DiceBear style. The default is CC0 — no attribution duty. Some styles</span>
+<span class="sd">        are CC BY 4.0 and oblige whoever ships the video to credit the artist;</span>
+<span class="sd">        those need --acknowledge-attribution. Run `an credits &lt;project&gt;` to see</span>
+<span class="sd">        what a project owes.</span>
+<span class="sd">    voice_ref: voice id stored in the descriptor's ``voice_ref`` field</span>
+<span class="sd">    offline: skip DiceBear and use the deterministic geometric fallback</span>
+<span class="sd">    acknowledge_attribution: accept the attribution duty of a CC BY style</span>
+<span class="sd">    overwrite: replace an existing directory at the target</span>
+<span class="sd">    """</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">style</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DICEBEAR_STYLES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"unknown DiceBear style: </span><span class="si">{</span><span class="n">style</span><span class="si">!r}</span><span class="s2">. Known: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DICEBEAR_STYLES</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">_new_character</span><span class="p">(</span>
+            <span class="n">target</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+            <span class="n">voice_ref</span><span class="o">=</span><span class="n">voice_ref</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">use_dicebear</span><span class="o">=</span><span class="ow">not</span> <span class="n">offline</span><span class="p">,</span>
+            <span class="n">acknowledge_attribution</span><span class="o">=</span><span class="n">acknowledge_attribution</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># A licence refusal is a message for a human, not a traceback. The</span>
+        <span class="c1"># sibling branch above already returns its rejection as a string; a</span>
+        <span class="c1"># gate added below the CLI without a flag above it made every CC BY</span>
+        <span class="c1"># style unreachable AND ugly.</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"created character at </span><span class="si">{</span><span class="n">desc</span><span class="o">.</span><span class="n">parent</span><span class="si">}</span><span class="s2"> (descriptor: </span><span class="si">{</span><span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">)"</span></div>
+
+
+
+<div class="viewcode-block" id="mouths">
+<a class="viewcode-back" href="../../../module_docs/an/characters/cli.html#an.characters.cli.mouths">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mouths</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">palette</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Regenerate the default 9-shape mouth set for ``name``.</span>
+
+<span class="sd">    Useful when you want to reset a character's mouth art to the offline</span>
+<span class="sd">    fallback (e.g. after experimenting with hand-drawn mouths).</span>
+
+<span class="sd">    name: character id</span>
+<span class="sd">    out_dir: parent directory; defaults to ./assets/characters</span>
+<span class="sd">    palette: optional JSON string to override colors, e.g. '{"lip":"#a44"}'</span>
+<span class="sd">    """</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">"parts"</span> <span class="o">/</span> <span class="s2">"mouth"</span>
+    <span class="n">palette_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">palette</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">palette_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">palette</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"invalid palette JSON: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">written</span> <span class="o">=</span> <span class="n">write_default_mouths</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"wrote </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">written</span><span class="p">)</span><span class="si">}</span><span class="s2"> mouth shapes to </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<div class="viewcode-block" id="validate">
+<a class="viewcode-back" href="../../../module_docs/an/characters/cli.html#an.characters.cli.validate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Validate a character's directory structure and descriptor.</span>
+
+<span class="sd">    name: character id</span>
+<span class="sd">    out_dir: parent directory; defaults to ./assets/characters</span>
+<span class="sd">    """</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">_validate_character</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">report</span><span class="o">.</span><span class="n">format</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="silhouette">
+<a class="viewcode-back" href="../../../module_docs/an/characters/cli.html#an.characters.cli.silhouette">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">silhouette</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">other</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">output</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render a black silhouette for ``name`` (and optionally compare to ``other``).</span>
+
+<span class="sd">    When two names are given, prints both silhouettes' paths and an IoU</span>
+<span class="sd">    score (0..1; lower means more visually distinct).</span>
+
+<span class="sd">    name: character id</span>
+<span class="sd">    other: optional second character to compare against</span>
+<span class="sd">    out_dir: parent directory; defaults to ./assets/characters</span>
+<span class="sd">    output: output PNG path; defaults to &lt;character_dir&gt;/silhouette.png</span>
+<span class="sd">    size: square output size in pixels (default 512)</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.silhouette</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">render_silhouette</span><span class="p">,</span>
+        <span class="n">compare_silhouettes</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">base</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render</span><span class="p">(</span><span class="n">char_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="n">cdir</span> <span class="o">=</span> <span class="n">base</span> <span class="o">/</span> <span class="n">char_name</span>
+        <span class="n">svg</span> <span class="o">=</span> <span class="n">cdir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">char_name</span><span class="si">}</span><span class="s2">.svg"</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">svg</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">svg</span><span class="p">)</span>
+        <span class="n">out_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="k">if</span> <span class="n">output</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">other</span> <span class="k">else</span> <span class="n">cdir</span> <span class="o">/</span> <span class="s2">"silhouette.png"</span>
+        <span class="k">return</span> <span class="n">render_silhouette</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
+
+    <span class="n">a_path</span> <span class="o">=</span> <span class="n">_render</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">other</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"silhouette: </span><span class="si">{</span><span class="n">a_path</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">b_path</span> <span class="o">=</span> <span class="n">_render</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">compare_silhouettes</span><span class="p">(</span><span class="n">a_path</span><span class="p">,</span> <span class="n">b_path</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
+    <span class="n">verdict</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"very similar (consider redesigning)"</span>
+        <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;=</span> <span class="mf">0.75</span>
+        <span class="k">else</span> <span class="s2">"moderately similar"</span>
+        <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;=</span> <span class="mf">0.5</span>
+        <span class="k">else</span> <span class="s2">"distinct"</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"silhouettes:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">a_path</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">b_path</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"  IoU: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">verdict</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="preview">
+<a class="viewcode-back" href="../../../module_docs/an/characters/cli.html#an.characters.cli.preview">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">preview</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">open_browser</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render a small HTML viewer that previews all visemes + idle animation.</span>
+
+<span class="sd">    The page includes the head SVG, cycles through ``mouth_a … mouth_x``</span>
+<span class="sd">    once a second, and shows a ±2 px sine-wave breath on the head. Useful</span>
+<span class="sd">    for eyeballing a character's mouth set before integrating into the</span>
+<span class="sd">    main runtime.</span>
+
+<span class="sd">    name: character id</span>
+<span class="sd">    out_dir: parent directory; defaults to ./assets/characters</span>
+<span class="sd">    open_browser: also open the file in the default browser</span>
+<span class="sd">    """</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"no such character: </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">html_path</span> <span class="o">=</span> <span class="n">_write_preview_html</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">open_browser</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">webbrowser</span>
+
+        <span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"file://</span><span class="si">{</span><span class="n">html_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"preview: </span><span class="si">{</span><span class="n">html_path</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<span class="n">_PREVIEW_TEMPLATE</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span>
+<span class="w">    </span><span class="sd">"""\</span>
+<span class="sd">    &lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset="utf-8"&gt;</span>
+<span class="sd">    &lt;title&gt;{name} — an character preview&lt;/title&gt;</span>
+<span class="sd">    &lt;style&gt;</span>
+<span class="sd">      :root {{ color-scheme: dark; }}</span>
+<span class="sd">      body {{</span>
+<span class="sd">        font-family: -apple-system, system-ui, sans-serif;</span>
+<span class="sd">        background: #1a1d21; color: #d8dae0;</span>
+<span class="sd">        margin: 0; padding: 24px; display: grid; gap: 24px;</span>
+<span class="sd">        grid-template-columns: 320px 1fr;</span>
+<span class="sd">      }}</span>
+<span class="sd">      h1, h2, h3 {{ font-weight: 500; margin: 0 0 8px; }}</span>
+<span class="sd">      .panel {{</span>
+<span class="sd">        background: #23262b; border-radius: 8px; padding: 16px;</span>
+<span class="sd">        border: 1px solid #2f333a;</span>
+<span class="sd">      }}</span>
+<span class="sd">      .stage {{</span>
+<span class="sd">        background: #0f1115; border-radius: 8px; min-height: 480px;</span>
+<span class="sd">        display: grid; place-items: center; padding: 24px;</span>
+<span class="sd">      }}</span>
+<span class="sd">      .head-wrap {{ width: 320px; height: 320px; position: relative; }}</span>
+<span class="sd">      .head-wrap img {{ width: 100%; height: 100%; }}</span>
+<span class="sd">      .mouth-overlay {{</span>
+<span class="sd">        position: absolute; left: 50%; top: 60%; transform: translate(-50%, -50%);</span>
+<span class="sd">        width: 96px; height: 48px;</span>
+<span class="sd">      }}</span>
+<span class="sd">      .mouth-overlay img {{ width: 100%; height: 100%; }}</span>
+<span class="sd">      .grid {{</span>
+<span class="sd">        display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;</span>
+<span class="sd">      }}</span>
+<span class="sd">      .swatch {{</span>
+<span class="sd">        background: #15171a; border: 1px solid #2f333a; border-radius: 6px;</span>
+<span class="sd">        padding: 8px; text-align: center;</span>
+<span class="sd">      }}</span>
+<span class="sd">      .swatch img {{ width: 64px; height: 32px; }}</span>
+<span class="sd">      code {{ background: #15171a; padding: 1px 6px; border-radius: 4px; }}</span>
+<span class="sd">      .meta {{ font-size: 12px; color: #8a909a; }}</span>
+<span class="sd">    &lt;/style&gt;</span>
+<span class="sd">    &lt;/head&gt;</span>
+<span class="sd">    &lt;body&gt;</span>
+<span class="sd">    &lt;div class="panel"&gt;</span>
+<span class="sd">      &lt;h1&gt;{name}&lt;/h1&gt;</span>
+<span class="sd">      &lt;p class="meta"&gt;{display_name}&lt;/p&gt;</span>
+<span class="sd">      &lt;h3&gt;Viseme set&lt;/h3&gt;</span>
+<span class="sd">      &lt;div class="grid"&gt;</span>
+<span class="sd">        {viseme_grid}</span>
+<span class="sd">      &lt;/div&gt;</span>
+<span class="sd">      &lt;h3 style="margin-top:16px"&gt;Idle animation&lt;/h3&gt;</span>
+<span class="sd">      &lt;p class="meta"&gt;±2 px breath, 0.5° head tilt at 4 s period.&lt;/p&gt;</span>
+<span class="sd">      &lt;h3 style="margin-top:16px"&gt;Pivots detected&lt;/h3&gt;</span>
+<span class="sd">      &lt;ul class="meta"&gt;{pivots_list}&lt;/ul&gt;</span>
+<span class="sd">      &lt;h3 style="margin-top:16px"&gt;Files&lt;/h3&gt;</span>
+<span class="sd">      &lt;p class="meta"&gt;Descriptor: &lt;code&gt;character.json&lt;/code&gt;&lt;br&gt;</span>
+<span class="sd">      Source SVG: &lt;code&gt;{name}.svg&lt;/code&gt;&lt;br&gt;</span>
+<span class="sd">      Parts: &lt;code&gt;parts/&lt;/code&gt;&lt;/p&gt;</span>
+<span class="sd">    &lt;/div&gt;</span>
+<span class="sd">    &lt;div class="stage"&gt;</span>
+<span class="sd">      &lt;div class="head-wrap" id="stage"&gt;</span>
+<span class="sd">        &lt;img src="parts/head.svg" id="head"/&gt;</span>
+<span class="sd">        &lt;div class="mouth-overlay"&gt;&lt;img id="mouth" src="parts/mouth/mouth_x.svg"/&gt;&lt;/div&gt;</span>
+<span class="sd">      &lt;/div&gt;</span>
+<span class="sd">    &lt;/div&gt;</span>
+<span class="sd">    &lt;script&gt;</span>
+<span class="sd">      // Cycle visemes once per second.</span>
+<span class="sd">      const shapes = {viseme_letters};</span>
+<span class="sd">      let i = 0;</span>
+<span class="sd">      const mouth = document.getElementById('mouth');</span>
+<span class="sd">      setInterval(() =&gt; {{</span>
+<span class="sd">        i = (i + 1) % shapes.length;</span>
+<span class="sd">        mouth.src = `parts/mouth/mouth_${{shapes[i]}}.svg`;</span>
+<span class="sd">      }}, 700);</span>
+<span class="sd">      // ±2 px sine breath on head.</span>
+<span class="sd">      const head = document.getElementById('stage');</span>
+<span class="sd">      const t0 = performance.now();</span>
+<span class="sd">      function tick() {{</span>
+<span class="sd">        const t = (performance.now() - t0) / 1000;</span>
+<span class="sd">        const dy = 2 * Math.sin(2 * Math.PI * t / 4);</span>
+<span class="sd">        const rot = 0.5 * Math.sin(2 * Math.PI * (t / 4 + 0.25));</span>
+<span class="sd">        head.style.transform = `translateY(${{dy.toFixed(2)}}px) rotate(${{rot.toFixed(2)}}deg)`;</span>
+<span class="sd">        requestAnimationFrame(tick);</span>
+<span class="sd">      }}</span>
+<span class="sd">      requestAnimationFrame(tick);</span>
+<span class="sd">    &lt;/script&gt;</span>
+<span class="sd">    &lt;/body&gt;&lt;/html&gt;</span>
+<span class="sd">    """</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_preview_html</span><span class="p">(</span><span class="n">target</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">desc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">((</span><span class="n">target</span> <span class="o">/</span> <span class="s2">"character.json"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="n">display_name</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"display_name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span>
+    <span class="n">pivots</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metadata"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pivots_detected"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">pivots_list</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;li&gt;</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&lt;/li&gt;"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pivots</span><span class="p">)</span> <span class="k">if</span> <span class="n">pivots</span> <span class="k">else</span> <span class="s2">"&lt;li&gt;(none)&lt;/li&gt;"</span>
+    <span class="p">)</span>
+    <span class="n">viseme_grid</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="swatch"&gt;&lt;img src="parts/mouth/mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">.svg"/&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="meta"&gt;mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">&lt;/div&gt;&lt;/div&gt;'</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">,</span> <span class="s2">"d"</span><span class="p">,</span> <span class="s2">"e"</span><span class="p">,</span> <span class="s2">"f"</span><span class="p">,</span> <span class="s2">"g"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">viseme_letters</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">,</span> <span class="s2">"d"</span><span class="p">,</span> <span class="s2">"e"</span><span class="p">,</span> <span class="s2">"f"</span><span class="p">,</span> <span class="s2">"g"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">])</span>
+    <span class="n">html</span> <span class="o">=</span> <span class="n">_PREVIEW_TEMPLATE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">display_name</span><span class="o">=</span><span class="n">display_name</span><span class="p">,</span>
+        <span class="n">pivots_list</span><span class="o">=</span><span class="n">pivots_list</span><span class="p">,</span>
+        <span class="n">viseme_grid</span><span class="o">=</span><span class="n">viseme_grid</span><span class="p">,</span>
+        <span class="n">viseme_letters</span><span class="o">=</span><span class="n">viseme_letters</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">target</span> <span class="o">/</span> <span class="s2">"preview.html"</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<div class="viewcode-block" id="record">
+<a class="viewcode-back" href="../../../module_docs/an/characters/cli.html#an.characters.cli.record">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">output</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">8.0</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">640</span><span class="p">,</span>
+    <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">480</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Record a character's preview HTML to mp4.</span>
+
+<span class="sd">    Real video file showing the new SVG character art animating: cycles</span>
+<span class="sd">    through all 9 visemes and applies the breath/head-tilt animation.</span>
+
+<span class="sd">    name: character id</span>
+<span class="sd">    out_dir: parent directory; defaults to ./assets/characters</span>
+<span class="sd">    output: output mp4 path; defaults to &lt;character_dir&gt;/preview.mp4</span>
+<span class="sd">    duration: recording length in seconds (default 8)</span>
+<span class="sd">    width / height: video resolution (default 640x480)</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.record</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_character</span>
+
+    <span class="n">target</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"no such character: </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">record_character</span><span class="p">(</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">out_mp4</span><span class="o">=</span><span class="n">output</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">duration_s</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"recorded: </span><span class="si">{</span><span class="n">out</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<span class="c1"># Dispatch list. Mounted as a nested namespace ('character')</span>
+<span class="c1"># by an/__main__.py so they appear as `an character new`, etc.</span>
+<span class="n">_dispatch_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">new</span><span class="p">,</span> <span class="n">mouths</span><span class="p">,</span> <span class="n">validate</span><span class="p">,</span> <span class="n">silhouette</span><span class="p">,</span> <span class="n">preview</span><span class="p">,</span> <span class="n">record</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

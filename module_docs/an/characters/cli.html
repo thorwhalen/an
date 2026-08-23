@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.cli &mdash; an 0.1.43 documentation</title>
+  <title>an.characters.cli &mdash; an 0.1.44 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -102,7 +102,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../bench/registry.html">an.bench.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bench/run.html">an.bench.run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.cli</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.cli</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.mouths"><code class="docutils literal notranslate"><span class="pre">mouths()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.new"><code class="docutils literal notranslate"><span class="pre">new()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.preview"><code class="docutils literal notranslate"><span class="pre">preview()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.record"><code class="docutils literal notranslate"><span class="pre">record()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.silhouette"><code class="docutils literal notranslate"><span class="pre">silhouette()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.validate"><code class="docutils literal notranslate"><span class="pre">validate()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="dicebear.html">an.characters.dicebear</a></li>
 <li class="toctree-l1"><a class="reference internal" href="factory.html">an.characters.factory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="idle.html">an.characters.idle</a></li>
@@ -175,8 +183,97 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-characters-cli">
-<h1>an.characters.cli<a class="headerlink" href="#an-characters-cli" title="Link to this heading"></a></h1>
+  <section id="module-an.characters.cli">
+<span id="an-characters-cli"></span><h1>an.characters.cli<a class="headerlink" href="#module-an.characters.cli" title="Link to this heading"></a></h1>
+<p>User-facing character CLI subcommands.</p>
+<p>Wired into the top-level <code class="docutils literal notranslate"><span class="pre">an</span></code> dispatcher via <code class="docutils literal notranslate"><span class="pre">character_*</span></code> dispatch-friendly
+functions in <code class="xref py py-mod docutils literal notranslate"><span class="pre">an.tools</span></code>. Each function here takes plain strings/bools
+and returns a string for terminal display.</p>
+<p>Subcommands (used as <code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">character</span> <span class="pre">&lt;verb&gt;</span> <span class="pre">...</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">new</span></code>       — generate a fresh character from DiceBear or fallback art.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mouths</span></code>    — regenerate the 9-shape default mouth set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">validate</span></code>  — completeness check.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">silhouette</span></code>— rasterize silhouettes; for two characters, also IoU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">preview</span></code>   — open an HTML viewer cycling visemes + idle animation.</p></li>
+</ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.cli.mouths">
+<span class="sig-prename descclassname"><span class="pre">an.characters.cli.</span></span><span class="sig-name descname"><span class="pre">mouths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/cli.html#mouths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.cli.mouths" title="Link to this definition"></a></dt>
+<dd><p>Regenerate the default 9-shape mouth set for <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
+<p>Useful when you want to reset a character’s mouth art to the offline
+fallback (e.g. after experimenting with hand-drawn mouths).</p>
+<p>name: character id
+out_dir: parent directory; defaults to ./assets/characters
+palette: optional JSON string to override colors, e.g. ‘{“lip”:”#a44”}’</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.cli.new">
+<span class="sig-prename descclassname"><span class="pre">an.characters.cli.</span></span><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'lorelei'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acknowledge_attribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/cli.html#new"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.cli.new" title="Link to this definition"></a></dt>
+<dd><p>Create a new character at <code class="docutils literal notranslate"><span class="pre">out_dir</span></code>/<code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
+<p>name: character id (used as the directory name and descriptor ‘name’)
+out_dir: parent directory; defaults to ./assets/characters
+seed: deterministic seed for DiceBear; defaults to <code class="docutils literal notranslate"><span class="pre">name</span></code>
+style: DiceBear style. The default is CC0 — no attribution duty. Some styles</p>
+<blockquote>
+<div><p>are CC BY 4.0 and oblige whoever ships the video to credit the artist;
+those need –acknowledge-attribution. Run <cite>an credits &lt;project&gt;</cite> to see
+what a project owes.</p>
+</div></blockquote>
+<p>voice_ref: voice id stored in the descriptor’s <code class="docutils literal notranslate"><span class="pre">voice_ref</span></code> field
+offline: skip DiceBear and use the deterministic geometric fallback
+acknowledge_attribution: accept the attribution duty of a CC BY style
+overwrite: replace an existing directory at the target</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.cli.preview">
+<span class="sig-prename descclassname"><span class="pre">an.characters.cli.</span></span><span class="sig-name descname"><span class="pre">preview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_browser</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/cli.html#preview"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.cli.preview" title="Link to this definition"></a></dt>
+<dd><p>Render a small HTML viewer that previews all visemes + idle animation.</p>
+<p>The page includes the head SVG, cycles through <code class="docutils literal notranslate"><span class="pre">mouth_a</span> <span class="pre">…</span> <span class="pre">mouth_x</span></code>
+once a second, and shows a ±2 px sine-wave breath on the head. Useful
+for eyeballing a character’s mouth set before integrating into the
+main runtime.</p>
+<p>name: character id
+out_dir: parent directory; defaults to ./assets/characters
+open_browser: also open the file in the default browser</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.cli.record">
+<span class="sig-prename descclassname"><span class="pre">an.characters.cli.</span></span><span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">640</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">480</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/cli.html#record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.cli.record" title="Link to this definition"></a></dt>
+<dd><p>Record a character’s preview HTML to mp4.</p>
+<p>Real video file showing the new SVG character art animating: cycles
+through all 9 visemes and applies the breath/head-tilt animation.</p>
+<p>name: character id
+out_dir: parent directory; defaults to ./assets/characters
+output: output mp4 path; defaults to &lt;character_dir&gt;/preview.mp4
+duration: recording length in seconds (default 8)
+width / height: video resolution (default 640x480)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.cli.silhouette">
+<span class="sig-prename descclassname"><span class="pre">an.characters.cli.</span></span><span class="sig-name descname"><span class="pre">silhouette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">512</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/cli.html#silhouette"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.cli.silhouette" title="Link to this definition"></a></dt>
+<dd><p>Render a black silhouette for <code class="docutils literal notranslate"><span class="pre">name</span></code> (and optionally compare to <code class="docutils literal notranslate"><span class="pre">other</span></code>).</p>
+<p>When two names are given, prints both silhouettes’ paths and an IoU
+score (0..1; lower means more visually distinct).</p>
+<p>name: character id
+other: optional second character to compare against
+out_dir: parent directory; defaults to ./assets/characters
+output: output PNG path; defaults to &lt;character_dir&gt;/silhouette.png
+size: square output size in pixels (default 512)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.cli.validate">
+<span class="sig-prename descclassname"><span class="pre">an.characters.cli.</span></span><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/cli.html#validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.cli.validate" title="Link to this definition"></a></dt>
+<dd><p>Validate a character’s directory structure and descriptor.</p>
+<p>name: character id
+out_dir: parent directory; defaults to ./assets/characters</p>
+</dd></dl>
+
 </section>
 
 

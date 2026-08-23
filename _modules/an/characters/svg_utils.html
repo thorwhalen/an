@@ -1,0 +1,596 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.characters.svg_utils &mdash; an 0.1.44 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.characters.svg_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.characters.svg_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""SVG manipulation: namespace-aware DOM helpers using stdlib ``xml.etree``.</span>
+
+<span class="sd">Pure stdlib so the package stays dependency-light. Operations supported:</span>
+
+<span class="sd">- :func:`promote_inkscape_labels_to_ids` — copy ``inkscape:label`` to ``id``</span>
+<span class="sd">  on each group, since Inkscape doesn't auto-promote labels (a 2008-vintage</span>
+<span class="sd">  bug; see research §1.2).</span>
+<span class="sd">- :func:`normalize_svg` — promote labels, ensure a viewBox is set, return</span>
+<span class="sd">  the parsed ``ElementTree``.</span>
+<span class="sd">- :func:`extract_pivots` — read the ``&lt;g id="skeleton"&gt;`` group of named</span>
+<span class="sd">  ``&lt;circle&gt;`` elements and return ``{name: (cx, cy)}``.</span>
+<span class="sd">- :func:`extract_part` — emit a standalone SVG containing only the named</span>
+<span class="sd">  group. By default it writes a viewBox **cropped** to the part's own bbox</span>
+<span class="sd">  while copying the parent's ``width``/``height``, which letterboxes the part</span>
+<span class="sd">  under ``preserveAspectRatio="xMidYMid meet"`` (see #75). The crop rect's</span>
+<span class="sd">  parent-space origin survives as the viewBox's first two numbers.</span>
+<span class="sd">- :func:`write_svg` — pretty-print an ``ElementTree`` (or ``Element``) to</span>
+<span class="sd">  disk with the SVG namespace set as the default.</span>
+
+<span class="sd">&gt;&gt;&gt; raw = '''&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"&gt;</span>
+<span class="sd">...   &lt;g id="skeleton"&gt;&lt;circle id="neck" cx="50" cy="40" r="2"/&gt;&lt;/g&gt;</span>
+<span class="sd">...   &lt;g id="illustration"&gt;&lt;g id="head"&gt;&lt;circle cx="50" cy="40" r="20"/&gt;&lt;/g&gt;&lt;/g&gt;</span>
+<span class="sd">... &lt;/svg&gt;'''</span>
+<span class="sd">&gt;&gt;&gt; import io</span>
+<span class="sd">&gt;&gt;&gt; tree = normalize_svg(io.StringIO(raw))</span>
+<span class="sd">&gt;&gt;&gt; extract_pivots(tree)</span>
+<span class="sd">{'neck': (50.0, 40.0)}</span>
+<span class="sd">&gt;&gt;&gt; part = extract_part(tree, 'head')</span>
+<span class="sd">&gt;&gt;&gt; b'&lt;g id="head"' in write_svg(part)</span>
+<span class="sd">True</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xml.etree</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementTree</span> <span class="k">as</span> <span class="n">ET</span>
+
+
+<span class="n">SVG_NS</span> <span class="o">=</span> <span class="s2">"http://www.w3.org/2000/svg"</span>
+<span class="n">INKSCAPE_NS</span> <span class="o">=</span> <span class="s2">"http://www.inkscape.org/namespaces/inkscape"</span>
+<span class="n">SODIPODI_NS</span> <span class="o">=</span> <span class="s2">"http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd"</span>
+<span class="n">XLINK_NS</span> <span class="o">=</span> <span class="s2">"http://www.w3.org/1999/xlink"</span>
+
+<span class="n">ET</span><span class="o">.</span><span class="n">register_namespace</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">SVG_NS</span><span class="p">)</span>
+<span class="n">ET</span><span class="o">.</span><span class="n">register_namespace</span><span class="p">(</span><span class="s2">"inkscape"</span><span class="p">,</span> <span class="n">INKSCAPE_NS</span><span class="p">)</span>
+<span class="n">ET</span><span class="o">.</span><span class="n">register_namespace</span><span class="p">(</span><span class="s2">"sodipodi"</span><span class="p">,</span> <span class="n">SODIPODI_NS</span><span class="p">)</span>
+<span class="n">ET</span><span class="o">.</span><span class="n">register_namespace</span><span class="p">(</span><span class="s2">"xlink"</span><span class="p">,</span> <span class="n">XLINK_NS</span><span class="p">)</span>
+
+<span class="n">_SVG_TAG</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">svg"</span>
+<span class="n">_G_TAG</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">g"</span>
+<span class="n">_CIRCLE_TAG</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">circle"</span>
+<span class="n">_INK_LABEL</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">INKSCAPE_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">label"</span>
+
+<span class="c1"># Strict id-safe identifier: spaces become underscores, then keep [A-Za-z0-9_-].</span>
+<span class="n">_ID_BAD_CHAR</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^A-Za-z0-9_\-]+"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Parse ``source`` (path, file-like, or already-parsed ``ElementTree``)."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">source</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">))</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">))</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">"read"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unsupported svg source: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_label_to_id</span><span class="p">(</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert an Inkscape label to an id-safe string."""</span>
+    <span class="n">cleaned</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">"_"</span><span class="p">)</span>
+    <span class="n">cleaned</span> <span class="o">=</span> <span class="n">_ID_BAD_CHAR</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">cleaned</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cleaned</span> <span class="ow">or</span> <span class="s2">"unnamed"</span>
+
+
+<div class="viewcode-block" id="promote_inkscape_labels_to_ids">
+<a class="viewcode-back" href="../../../module_docs/an/characters/svg_utils.html#an.characters.promote_inkscape_labels_to_ids">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">promote_inkscape_labels_to_ids</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Copy ``inkscape:label`` to ``id`` on each group missing an id.</span>
+
+<span class="sd">    Returns the number of groups updated.</span>
+
+<span class="sd">    Inkscape stores the user-visible name in the ``inkscape:label`` attribute</span>
+<span class="sd">    and does NOT promote it to ``id`` on save. This is a long-standing UX</span>
+<span class="sd">    issue (Inkscape bug #243383); the workaround is to promote at parse time.</span>
+<span class="sd">    """</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">_G_TAG</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_INK_LABEL</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">label</span><span class="p">:</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="n">_label_to_id</span><span class="p">(</span><span class="n">label</span><span class="p">))</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">n</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ensure_viewbox</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0 0 1024 1024"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Ensure the root SVG has a viewBox attribute; return the resolved value.</span>
+
+<span class="sd">    If the root has only ``width``/``height``, derive a viewBox from those.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+    <span class="n">vb</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"viewBox"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vb</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">vb</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"width"</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"height"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w</span> <span class="ow">and</span> <span class="n">h</span><span class="p">:</span>
+        <span class="c1"># Strip units (Inkscape may emit "100mm").</span>
+        <span class="n">w_num</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^\d.\-]"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"1024"</span>
+        <span class="n">h_num</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^\d.\-]"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"1024"</span>
+        <span class="n">vb</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"0 0 </span><span class="si">{</span><span class="n">w_num</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">h_num</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">vb</span> <span class="o">=</span> <span class="n">fallback</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"viewBox"</span><span class="p">,</span> <span class="n">vb</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">vb</span>
+
+
+<div class="viewcode-block" id="normalize_svg">
+<a class="viewcode-back" href="../../../module_docs/an/characters/svg_utils.html#an.characters.normalize_svg">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_svg</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">fallback_viewbox</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0 0 1024 1024"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Promote Inkscape labels to ids and ensure a viewBox is set.</span>
+
+<span class="sd">    Returns the parsed ``ElementTree``. Idempotent: running it twice is a</span>
+<span class="sd">    no-op on the second pass.</span>
+<span class="sd">    """</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">promote_inkscape_labels_to_ids</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">_ensure_viewbox</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="n">fallback_viewbox</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tree</span></div>
+
+
+
+<span class="c1">#: Attributes an SVG root may use to declare its rasterised size.</span>
+<span class="n">_SIZE_ATTRS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"width"</span><span class="p">,</span> <span class="s2">"height"</span><span class="p">)</span>
+
+<span class="c1">#: Trailing units we accept on a width/height and ignore (SVG user units).</span>
+<span class="n">_UNIT_SUFFIXES</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"px"</span><span class="p">,</span> <span class="s2">"pt"</span><span class="p">,</span> <span class="s2">"cm"</span><span class="p">,</span> <span class="s2">"mm"</span><span class="p">,</span> <span class="s2">"in"</span><span class="p">,</span> <span class="s2">"pc"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_strip_units</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Parse an SVG length, tolerating a unit suffix. Percentages are refused."""</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"%"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"percentage length </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> has no intrinsic size"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="n">_UNIT_SUFFIXES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">suffix</span><span class="p">):</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">suffix</span><span class="p">)]</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="raster_size">
+<a class="viewcode-back" href="../../../module_docs/an/characters/svg_utils.html#an.characters.raster_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">raster_size</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the ``(width, height)`` an SVG declares for its own raster.</span>
+
+<span class="sd">    This is the size the browser rasterises the file at, which is what a</span>
+<span class="sd">    ``Sprite`` then scales — **not** the extent of the drawn art. The two differ</span>
+<span class="sd">    whenever :func:`extract_part` has cropped the viewBox while copying the</span>
+<span class="sd">    parent's dimensions, which is the defect behind #75.</span>
+
+<span class="sd">    Falls back to the viewBox extent when no ``width``/``height`` is declared,</span>
+<span class="sd">    matching the browser.</span>
+
+<span class="sd">    &gt;&gt;&gt; raster_size('&lt;svg xmlns="http://www.w3.org/2000/svg" '</span>
+<span class="sd">    ...             'viewBox="0 0 10 20" width="100" height="100"/&gt;')</span>
+<span class="sd">    (100.0, 100.0)</span>
+<span class="sd">    &gt;&gt;&gt; raster_size('&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 20"/&gt;')</span>
+<span class="sd">    (10.0, 20.0)</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+    <span class="n">declared</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_SIZE_ATTRS</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">declared</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">_strip_units</span><span class="p">(</span><span class="n">declared</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">_strip_units</span><span class="p">(</span><span class="n">declared</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">view_box</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"viewBox"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">view_box</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"SVG declares neither width/height nor a viewBox"</span><span class="p">)</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">view_box</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"malformed viewBox </span><span class="si">{</span><span class="n">view_box</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span></div>
+
+
+
+<div class="viewcode-block" id="extract_pivots">
+<a class="viewcode-back" href="../../../module_docs/an/characters/svg_utils.html#an.characters.extract_pivots">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_pivots</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">skeleton_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"skeleton"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Return ``{name: (cx, cy)}`` for every named ``&lt;circle&gt;`` under skeleton.</span>
+
+<span class="sd">    Pivots use the Pose Animator convention: a ``&lt;g id="skeleton"&gt;`` group</span>
+<span class="sd">    sibling of the illustration, containing one ``&lt;circle&gt;`` per named joint.</span>
+<span class="sd">    The circle's ``cx``/``cy`` is the pivot in the same coordinate system as</span>
+<span class="sd">    the art (the SVG's viewBox).</span>
+<span class="sd">    """</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">skeleton</span> <span class="o">=</span> <span class="n">_find_by_id</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">getroot</span><span class="p">(),</span> <span class="n">skeleton_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">skeleton</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="n">pivots</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">_CIRCLE_TAG</span><span class="p">):</span>
+        <span class="n">cid</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cid</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cx</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cx"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">))</span>
+            <span class="n">cy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cy"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">pivots</span><span class="p">[</span><span class="n">cid</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pivots</span></div>
+
+
+
+<span class="n">_DEFS_TAG</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">defs"</span>
+<span class="n">_RECT_TAG</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">rect"</span>
+<span class="n">_ELLIPSE_TAG</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">ellipse"</span>
+<span class="n">_PATH_TAG</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">path"</span>
+<span class="n">_PATH_NUMBER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"-?\d*\.?\d+(?:[eE][-+]?\d+)?"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bbox_union</span><span class="p">(</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">b</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Union of two ``(x_min, y_min, x_max, y_max)`` bounding boxes."""</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">b</span>
+    <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">a</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">min</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_element_bbox</span><span class="p">(</span>
+    <span class="n">el</span><span class="p">:</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Approximate bbox of a primitive SVG element from its attributes.</span>
+
+<span class="sd">    Handles ``&lt;rect&gt;``, ``&lt;circle&gt;``, ``&lt;ellipse&gt;``, and ``&lt;path&gt;``. Path</span>
+<span class="sd">    bbox is derived from all numeric pairs in the ``d`` attribute — that</span>
+<span class="sd">    overestimates curves with off-curve control points, but the result is</span>
+<span class="sd">    safe (always contains the visible art) and sufficient for cropping.</span>
+<span class="sd">    Returns ``None`` for elements with no inferable bbox.</span>
+<span class="sd">    """</span>
+    <span class="n">tag</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">tag</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_f</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">default</span>
+
+    <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">_RECT_TAG</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"x"</span><span class="p">),</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"y"</span><span class="p">),</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"width"</span><span class="p">),</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"height"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">w</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">h</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">_CIRCLE_TAG</span><span class="p">:</span>
+        <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"cx"</span><span class="p">),</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"cy"</span><span class="p">),</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"r"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">cx</span> <span class="o">-</span> <span class="n">r</span><span class="p">,</span> <span class="n">cy</span> <span class="o">-</span> <span class="n">r</span><span class="p">,</span> <span class="n">cx</span> <span class="o">+</span> <span class="n">r</span><span class="p">,</span> <span class="n">cy</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">_ELLIPSE_TAG</span><span class="p">:</span>
+        <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">rx</span><span class="p">,</span> <span class="n">ry</span> <span class="o">=</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"cx"</span><span class="p">),</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"cy"</span><span class="p">),</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"rx"</span><span class="p">),</span> <span class="n">_f</span><span class="p">(</span><span class="s2">"ry"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">cx</span> <span class="o">-</span> <span class="n">rx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">-</span> <span class="n">ry</span><span class="p">,</span> <span class="n">cx</span> <span class="o">+</span> <span class="n">rx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">+</span> <span class="n">ry</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="n">_PATH_TAG</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"d"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+        <span class="n">nums</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">_PATH_NUMBER</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">d</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">xs</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">ys</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">ys</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">ys</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_subtree_bbox</span><span class="p">(</span>
+    <span class="n">el</span><span class="p">:</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Recursive bbox over all primitive descendants of ``el``."""</span>
+    <span class="n">box</span> <span class="o">=</span> <span class="n">_element_bbox</span><span class="p">(</span><span class="n">el</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">el</span><span class="p">:</span>
+        <span class="n">box</span> <span class="o">=</span> <span class="n">_bbox_union</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">_subtree_bbox</span><span class="p">(</span><span class="n">child</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">box</span>
+
+
+<div class="viewcode-block" id="extract_part">
+<a class="viewcode-back" href="../../../module_docs/an/characters/svg_utils.html#an.characters.extract_part">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_part</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">part_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">crop_viewbox</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">padding</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">8.0</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Emit a standalone SVG tree containing only the group with the given id.</span>
+
+<span class="sd">    Any top-level ``&lt;defs&gt;`` from the source is copied so the part can</span>
+<span class="sd">    resolve gradient / pattern / filter references like</span>
+<span class="sd">    ``fill="url(#some_gradient)"``. The matched group is appended unchanged.</span>
+
+<span class="sd">    When ``crop_viewbox`` is True (the default), the new SVG's viewBox is</span>
+<span class="sd">    cropped to the bounding box of the part's primitive content (rect /</span>
+<span class="sd">    circle / ellipse / path) plus ``padding`` units on each side. This</span>
+<span class="sd">    ensures the part fills its display rectangle when sized by the</span>
+<span class="sd">    renderer; without it, a part drawn in a small region of a 1024×1024</span>
+<span class="sd">    character canvas would be displayed at a fraction of the available</span>
+<span class="sd">    pixels. Falls back to the source viewBox when no bbox can be derived.</span>
+
+<span class="sd">    If no match is found, raises :class:`KeyError`.</span>
+<span class="sd">    """</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">_parse</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">_find_by_id</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">part_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no &lt;g id=</span><span class="si">{</span><span class="n">part_id</span><span class="si">!r}</span><span class="s2">&gt; in source SVG"</span><span class="p">)</span>
+
+    <span class="n">new_root</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="n">_SVG_TAG</span><span class="p">)</span>
+    <span class="n">src_viewbox</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"viewBox"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"0 0 1024 1024"</span>
+    <span class="n">viewbox</span> <span class="o">=</span> <span class="n">src_viewbox</span>
+    <span class="k">if</span> <span class="n">crop_viewbox</span><span class="p">:</span>
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">_subtree_bbox</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bbox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x_min</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">bbox</span>
+            <span class="n">x_min</span> <span class="o">-=</span> <span class="n">padding</span>
+            <span class="n">y_min</span> <span class="o">-=</span> <span class="n">padding</span>
+            <span class="n">x_max</span> <span class="o">+=</span> <span class="n">padding</span>
+            <span class="n">y_max</span> <span class="o">+=</span> <span class="n">padding</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_max</span> <span class="o">-</span> <span class="n">x_min</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">viewbox</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">x_min</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y_min</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">w</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">h</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">new_root</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"viewBox"</span><span class="p">,</span> <span class="n">viewbox</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"width"</span><span class="p">):</span>
+        <span class="n">new_root</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"width"</span><span class="p">,</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"width"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"height"</span><span class="p">):</span>
+        <span class="n">new_root</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"height"</span><span class="p">,</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"height"</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">defs</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">_DEFS_TAG</span><span class="p">):</span>
+        <span class="n">new_root</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">defs</span><span class="p">)))</span>
+    <span class="n">cloned</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+    <span class="n">new_root</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cloned</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">(</span><span class="n">new_root</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_by_id</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">,</span> <span class="n">target_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Depth-first search for the first element whose ``id`` matches.</span>
+
+<span class="sd">    A character's parts are always ``&lt;g&gt;`` groups; the matching ``id`` may</span>
+<span class="sd">    *also* appear on a skeleton pivot ``&lt;circle&gt;`` (e.g.</span>
+<span class="sd">    ``&lt;circle id="head"&gt;``). Prefer the ``&lt;g&gt;`` so part extraction picks</span>
+<span class="sd">    up the art group, not the pivot point.</span>
+<span class="sd">    """</span>
+    <span class="n">matches</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">el</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">iter</span><span class="p">()</span> <span class="k">if</span> <span class="n">el</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">target_id</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">el</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="n">_G_TAG</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">el</span>
+    <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="write_svg">
+<a class="viewcode-back" href="../../../module_docs/an/characters/svg_utils.html#an.characters.write_svg">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_svg</span><span class="p">(</span><span class="n">tree_or_element</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Serialize an ``ElementTree`` or ``Element`` to bytes (and optionally disk).</span>
+
+<span class="sd">    Always emits ``&lt;?xml version="1.0" encoding="UTF-8"?&gt;`` and the SVG</span>
+<span class="sd">    namespace as the default, so the output is a valid standalone SVG.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tree_or_element</span><span class="p">,</span> <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">):</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">tree_or_element</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">tree_or_element</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+    <span class="c1"># Don't pass default_namespace=SVG_NS — that forces ElementTree to</span>
+    <span class="c1"># require every attribute be namespace-qualified, which fails on the</span>
+    <span class="c1"># mixed input we get from wrapping/inlining external SVGs. The default</span>
+    <span class="c1"># serialization preserves the input namespace mapping.</span>
+    <span class="n">ET</span><span class="o">.</span><span class="n">ElementTree</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">xml_declaration</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

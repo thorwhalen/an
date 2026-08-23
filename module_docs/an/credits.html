@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.credits &mdash; an 0.1.43 documentation</title>
+  <title>an.credits &mdash; an 0.1.44 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../_static/documentation_options.js?v=6a0a5382"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -114,7 +114,17 @@
 <li class="toctree-l1"><a class="reference internal" href="characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/svg_utils.html">an.characters.svg_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="check_requirements.html">an.check_requirements</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.credits</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.credits.CreditsReport"><code class="docutils literal notranslate"><span class="pre">CreditsReport</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.credits.CreditsReport.format"><code class="docutils literal notranslate"><span class="pre">CreditsReport.format()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.credits.CreditsReport.owed"><code class="docutils literal notranslate"><span class="pre">CreditsReport.owed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.credits.CreditsReport.unverified"><code class="docutils literal notranslate"><span class="pre">CreditsReport.unverified</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.credits.collect_credits"><code class="docutils literal notranslate"><span class="pre">collect_credits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.credits.credits_for_project"><code class="docutils literal notranslate"><span class="pre">credits_for_project()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="determinism.html">an.determinism</a></li>
@@ -175,8 +185,66 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-credits">
-<h1>an.credits<a class="headerlink" href="#an-credits" title="Link to this heading"></a></h1>
+  <section id="module-an.credits">
+<span id="an-credits"></span><h1>an.credits<a class="headerlink" href="#module-an.credits" title="Link to this heading"></a></h1>
+<p>What a rendered video owes, and to whom.</p>
+<p><cite>an</cite> composes work it did not create into a video its user ships. Recording where
+that work came from (<cite>an.ir.assets.AssetSource</cite>) is half the job; the other half
+is being able to <em>produce</em> the credits, because <strong>a licence recorded and never
+displayed is not compliance</strong> — it is a note to oneself.</p>
+<p>So this module walks a project’s reachable assets and answers three questions a
+user actually has:</p>
+<ul class="simple">
+<li><p>what third-party work is in this video?</p></li>
+<li><p>what must I display, verbatim, to ship it?</p></li>
+<li><p>is anything in here unverified?</p></li>
+</ul>
+<p>The third is the one that matters most and is easiest to lose. An asset with no
+licence is reported as <strong>UNKNOWN</strong>, never as “nothing owed”: those are different
+answers, and collapsing them is exactly how an obligation goes missing.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="an.credits.CreditsReport">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.credits.</span></span><span class="sig-name descname"><span class="pre">CreditsReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">CreditEntry</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/credits.html#CreditsReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.credits.CreditsReport" title="Link to this definition"></a></dt>
+<dd><p>Everything a project owes, split by whether we actually know.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="an.credits.CreditsReport.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/credits.html#CreditsReport.format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.credits.CreditsReport.format" title="Link to this definition"></a></dt>
+<dd><p>Human-readable, and honest about what it does not know.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="an.credits.CreditsReport.owed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">owed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">CreditEntry</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#an.credits.CreditsReport.owed" title="Link to this definition"></a></dt>
+<dd><p>Entries that definitely require an attribution.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="an.credits.CreditsReport.unverified">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">unverified</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">CreditEntry</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#an.credits.CreditsReport.unverified" title="Link to this definition"></a></dt>
+<dd><p>Entries whose licence we could not classify.</p>
+<p>Deliberately its own list rather than folded into <a class="reference internal" href="#an.credits.CreditsReport.owed" title="an.credits.CreditsReport.owed"><code class="xref py py-attr docutils literal notranslate"><span class="pre">owed</span></code></a>. Folding
+them in cries wolf; folding them into “nothing owed” hides a real
+obligation. Neither is honest, so they are counted separately — the same
+reason <cite>priv</cite>’s upkeep keeps <cite>unavailable</cite> apart from <cite>findings</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.credits.collect_credits">
+<span class="sig-prename descclassname"><span class="pre">an.credits.</span></span><span class="sig-name descname"><span class="pre">collect_credits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mall</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.credits.CreditsReport" title="an.credits.CreditsReport"><span class="pre">CreditsReport</span></a></span></span><a class="reference internal" href="../../_modules/an/credits.html#collect_credits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.credits.collect_credits" title="Link to this definition"></a></dt>
+<dd><p>Walk a project mall and gather every recorded <code class="xref py py-class docutils literal notranslate"><span class="pre">AssetSource</span></code>.</p>
+<p>Only the characters store carries provenance today. Environments, styles and
+props will as they gain real art; this returns what exists rather than
+pretending the walk is complete.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.credits.credits_for_project">
+<span class="sig-prename descclassname"><span class="pre">an.credits.</span></span><span class="sig-name descname"><span class="pre">credits_for_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.credits.CreditsReport" title="an.credits.CreditsReport"><span class="pre">CreditsReport</span></a></span></span><a class="reference internal" href="../../_modules/an/credits.html#credits_for_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.credits.credits_for_project" title="Link to this definition"></a></dt>
+<dd><p>Credits for the project at <code class="docutils literal notranslate"><span class="pre">project_dir</span></code>.</p>
+</dd></dl>
+
 </section>
 
 

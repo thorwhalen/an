@@ -1,0 +1,603 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.characters.schema &mdash; an 0.1.44 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.characters.schema</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.characters.schema</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Character descriptor schema (Spine-shaped, Pydantic v2).</span>
+
+<span class="sd">A character on disk lives at::</span>
+
+<span class="sd">    characters/&lt;name&gt;/</span>
+<span class="sd">        &lt;name&gt;.svg              # optional canonical layered SVG</span>
+<span class="sd">        character.json          # CharacterDescriptor as JSON</span>
+<span class="sd">        parts/</span>
+<span class="sd">            head.svg</span>
+<span class="sd">            torso.svg</span>
+<span class="sd">            arm_l.svg, arm_r.svg</span>
+<span class="sd">            leg_l.svg, leg_r.svg</span>
+<span class="sd">            eye_l_open.svg, eye_l_closed.svg, eye_r_open.svg, eye_r_closed.svg</span>
+<span class="sd">            brow_l.svg, brow_r.svg</span>
+<span class="sd">            mouth/mouth_a.svg … mouth_h.svg, mouth_x.svg</span>
+
+<span class="sd">The descriptor borrows Spine's separation of concerns:</span>
+
+<span class="sd">- **bones** — where things attach. Local transforms relative to a parent.</span>
+<span class="sd">- **slots** — what is drawn at each bone (one attachment active at a time).</span>
+<span class="sd">- **skins** — for each slot, the named attachments and their SVG paths.</span>
+<span class="sd">- **viseme_map** — Rhubarb shape letter → attachment name on the ``mouth`` slot.</span>
+<span class="sd">- **animations** — built-in idle loops (breath, blink) keyed by name.</span>
+
+<span class="sd">&gt;&gt;&gt; char = CharacterDescriptor(name="maya")</span>
+<span class="sd">&gt;&gt;&gt; char.viseme_map["A"]</span>
+<span class="sd">'mouth_a'</span>
+<span class="sd">&gt;&gt;&gt; char.viseme_map["X"]</span>
+<span class="sd">'mouth_x'</span>
+<span class="sd">&gt;&gt;&gt; char.view_box</span>
+<span class="sd">(0, 0, 1024, 1024)</span>
+<span class="sd">&gt;&gt;&gt; sorted(char.skins["default"].slots.keys())[:3]</span>
+<span class="sd">['arm_l', 'arm_r', 'brow_l']</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.assets</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssetSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentKind</span><span class="p">,</span> <span class="n">register_kind</span>
+
+
+<span class="n">CHARACTER_SCHEMA_VERSION</span> <span class="o">=</span> <span class="s2">"0.1.0"</span>
+
+<span class="c1">#: The descriptor is a schema-versioned document in its own right, with its own</span>
+<span class="c1">#: version field. Registered here rather than in :mod:`an.ir.migrate` because</span>
+<span class="c1">#: this module already imports from :mod:`an.ir.assets` — registering from the</span>
+<span class="c1">#: other direction would close an import cycle, and because the package that</span>
+<span class="c1">#: owns a schema is the one that knows its version field.</span>
+<span class="n">CHARACTER_DOCUMENT_KIND</span><span class="p">:</span> <span class="n">DocumentKind</span> <span class="o">=</span> <span class="n">register_kind</span><span class="p">(</span>
+    <span class="n">DocumentKind</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">,</span>
+        <span class="n">version_field</span><span class="o">=</span><span class="s2">"schema_version"</span><span class="p">,</span>
+        <span class="n">current_version</span><span class="o">=</span><span class="n">CHARACTER_SCHEMA_VERSION</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1">#: Rhubarb mouth shapes. A-F are mandatory in Rhubarb's basic set; G/H/X</span>
+<span class="c1">#: are emitted when ``--extendedShapes GHX`` is on (Rhubarb's default).</span>
+<span class="c1">#: We always ship all 9 so the renderer never has to fall back.</span>
+<span class="n">MOUTH_SHAPES</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">,</span> <span class="s2">"d"</span><span class="p">,</span> <span class="s2">"e"</span><span class="p">,</span> <span class="s2">"f"</span><span class="p">,</span> <span class="s2">"g"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span>
+
+<span class="c1">#: Default Rhubarb-letter → mouth-attachment-name mapping. Uppercase keys</span>
+<span class="c1">#: because Rhubarb emits A-X; lowercase attachment names by convention.</span>
+<span class="n">DEFAULT_VISEME_MAP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span> <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">MOUTH_SHAPES</span><span class="p">}</span>
+
+<span class="c1">#: Required body parts. A character missing any of these can't be rendered</span>
+<span class="c1">#: as a full puppet; ``validate_character`` flags the gap.</span>
+<span class="n">REQUIRED_PARTS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"head"</span><span class="p">,</span>
+    <span class="s2">"torso"</span><span class="p">,</span>
+    <span class="s2">"arm_l"</span><span class="p">,</span>
+    <span class="s2">"arm_r"</span><span class="p">,</span>
+    <span class="s2">"leg_l"</span><span class="p">,</span>
+    <span class="s2">"leg_r"</span><span class="p">,</span>
+    <span class="s2">"eye_l_open"</span><span class="p">,</span>
+    <span class="s2">"eye_l_closed"</span><span class="p">,</span>
+    <span class="s2">"eye_r_open"</span><span class="p">,</span>
+    <span class="s2">"eye_r_closed"</span><span class="p">,</span>
+    <span class="s2">"brow_l"</span><span class="p">,</span>
+    <span class="s2">"brow_r"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1">#: Canonical character viewBox: 1024x1024 with feet near y≈980. All parts</span>
+<span class="c1">#: inherit this viewBox at export so PixiJS can use the SVG's intrinsic</span>
+<span class="c1">#: viewBox without a calibration step.</span>
+<span class="n">DEFAULT_VIEW_BOX</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_CharModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Common config: forward-compatible reads, strict writes."""</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"allow"</span><span class="p">,</span> <span class="n">populate_by_name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Bone">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.Bone">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Bone</span><span class="p">(</span><span class="n">_CharModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A skeleton joint with a local transform relative to its parent.</span>
+
+<span class="sd">    &gt;&gt;&gt; b = Bone(name="head", parent="torso", x=0, y=-260, pivot="neck")</span>
+<span class="sd">    &gt;&gt;&gt; b.parent</span>
+<span class="sd">    'torso'</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">parent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">rotation_deg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">scale_x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">scale_y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="c1">#: Optional pivot name — must match a circle in the SVG ``skeleton`` group.</span>
+    <span class="n">pivot</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="Slot">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.Slot">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Slot</span><span class="p">(</span><span class="n">_CharModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A draw-order slot bound to a bone, displaying one attachment at a time.</span>
+
+<span class="sd">    &gt;&gt;&gt; s = Slot(name="mouth", bone="head", draw_order=7, attachment="mouth_x")</span>
+<span class="sd">    &gt;&gt;&gt; s.attachment</span>
+<span class="sd">    'mouth_x'</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">bone</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">draw_order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1">#: Default attachment name; the active attachment can change at runtime</span>
+    <span class="c1">#: via animation tracks targeting ``slot:&lt;name&gt;.attachment``.</span>
+    <span class="n">attachment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="Attachment">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.Attachment">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Attachment</span><span class="p">(</span><span class="n">_CharModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A drawable: an SVG path + anchor point (in 0..1 per-axis units).</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Attachment(path="parts/head.svg", anchor=(0.5, 0.78))</span>
+<span class="sd">    &gt;&gt;&gt; a.anchor</span>
+<span class="sd">    (0.5, 0.78)</span>
+<span class="sd">    """</span>
+
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="c1">#: Anchor in 0..1 per-axis units (Pixi's Sprite.anchor convention).</span>
+    <span class="n">anchor</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="c1">#: Optional explicit bounding box override in the part's local viewBox.</span>
+    <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">height</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="Skin">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.Skin">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Skin</span><span class="p">(</span><span class="n">_CharModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A named outfit/variant: maps slot → {attachment_name → Attachment}.</span>
+
+<span class="sd">    &gt;&gt;&gt; skin = Skin(name="default", slots={"mouth": {"mouth_a": Attachment(path="parts/mouth/mouth_a.svg")}})</span>
+<span class="sd">    &gt;&gt;&gt; skin.slots["mouth"]["mouth_a"].path</span>
+<span class="sd">    'parts/mouth/mouth_a.svg'</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"default"</span>
+    <span class="n">slots</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Attachment</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
+
+
+
+<span class="n">_TrackType</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"sine"</span><span class="p">,</span> <span class="s2">"step"</span><span class="p">,</span> <span class="s2">"linear"</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="AnimationTrack">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.AnimationTrack">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AnimationTrack</span><span class="p">(</span><span class="n">_CharModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A single channel inside an idle animation.</span>
+
+<span class="sd">    The ``target`` is a path-string per the architecture pillar:</span>
+
+<span class="sd">    - ``bone:&lt;name&gt;.&lt;prop&gt;`` for bone transforms (``x``, ``y``, ``rotation_deg``,</span>
+<span class="sd">      ``scale_x``, ``scale_y``).</span>
+<span class="sd">    - ``slot:&lt;name&gt;.attachment`` for swap animations (eyes blinking, mouth visemes).</span>
+
+<span class="sd">    For ``type="sine"``: ``amplitude`` is the peak deviation; ``phase`` is in</span>
+<span class="sd">    cycles (0..1). For ``type="step"`` / ``type="linear"``: ``frames`` is a</span>
+<span class="sd">    list of ``[time_s, value]`` pairs evaluated in order.</span>
+
+<span class="sd">    &gt;&gt;&gt; t = AnimationTrack(target="bone:torso.y", type="sine", amplitude=2.0)</span>
+<span class="sd">    &gt;&gt;&gt; t.amplitude</span>
+<span class="sd">    2.0</span>
+<span class="sd">    """</span>
+
+    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">_TrackType</span> <span class="o">=</span> <span class="s2">"sine"</span>
+    <span class="c1"># sine fields</span>
+    <span class="n">amplitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">phase</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="c1"># step / linear fields</span>
+    <span class="n">frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"target"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_target</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"bone:"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">v</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"slot:"</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"target must start with 'bone:' or 'slot:'; got </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span></div>
+
+
+
+<div class="viewcode-block" id="IdleAnimation">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.IdleAnimation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IdleAnimation</span><span class="p">(</span><span class="n">_CharModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A named idle loop (e.g., breath, blink).</span>
+
+<span class="sd">    &gt;&gt;&gt; a = IdleAnimation(name="idle_breath", duration=4.0)</span>
+<span class="sd">    &gt;&gt;&gt; a.loop</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">loop</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">tracks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnimationTrack</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="CharacterDescriptor">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.CharacterDescriptor">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CharacterDescriptor</span><span class="p">(</span><span class="n">_CharModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The on-disk character schema. Saved as ``character.json``.</span>
+
+<span class="sd">    The descriptor is the SSOT for a character's identity, body part inventory,</span>
+<span class="sd">    pivot geometry, viseme map, and built-in idle behaviors. Binary art lives</span>
+<span class="sd">    as SVG sidecars referenced by ``Attachment.path`` (relative to the</span>
+<span class="sd">    descriptor file).</span>
+
+<span class="sd">    &gt;&gt;&gt; c = CharacterDescriptor(name="maya")</span>
+<span class="sd">    &gt;&gt;&gt; c.schema_version == CHARACTER_SCHEMA_VERSION</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; # all 9 mouths are wired into the default skin</span>
+<span class="sd">    &gt;&gt;&gt; sorted(c.skins["default"].slots["mouth"].keys()) == [</span>
+<span class="sd">    ...     'mouth_a', 'mouth_b', 'mouth_c', 'mouth_d',</span>
+<span class="sd">    ...     'mouth_e', 'mouth_f', 'mouth_g', 'mouth_h', 'mouth_x',</span>
+<span class="sd">    ... ]</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; # round-trip</span>
+<span class="sd">    &gt;&gt;&gt; raw = c.model_dump_json()</span>
+<span class="sd">    &gt;&gt;&gt; back = CharacterDescriptor.model_validate_json(raw)</span>
+<span class="sd">    &gt;&gt;&gt; back.name == c.name</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+
+    <span class="n">schema_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CHARACTER_SCHEMA_VERSION</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"CharacterDescriptor"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"CharacterDescriptor"</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">display_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">view_box</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_VIEW_BOX</span>
+
+    <span class="c1">#: Voice-store id or path used by the audio pipeline. Optional; the scene</span>
+    <span class="c1">#: can override per shot.</span>
+    <span class="n">voice_ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#: Optional source SVG (relative path) that the parts/ folder was</span>
+    <span class="c1">#: extracted from. Useful for re-slicing.</span>
+    <span class="n">source_svg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">bones</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Bone</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">slots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Slot</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">skins</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Skin</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">viseme_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DEFAULT_VISEME_MAP</span><span class="p">))</span>
+    <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IdleAnimation</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="c1">#: Where this character's art came from, and what its licence obliges.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: ``None`` means "we made this" — not "unknown". Anything acquired should</span>
+    <span class="c1">#: carry one, because a licence defect is the only failure that reaches</span>
+    <span class="c1">#: BACKWARDS through completed work: a video shipped with an unattributed</span>
+    <span class="c1">#: CC BY asset cannot be un-shipped.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: Field names match ``illustration.ImageResult`` exactly, so an adapter is a</span>
+    <span class="c1">#: dict copy rather than a rename table — and a rename table is where a field</span>
+    <span class="c1">#: quietly stops being carried. Pinned by test.</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">AssetSource</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#: Free-form metadata (dicebear style/seed, etc.). Schema-evolution</span>
+    <span class="c1">#: friendly: anything an external tool wants to record can land here.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: This comment used to say "art license, etc." — an invitation nothing ever</span>
+    <span class="c1">#: took up. Rights live in ``source`` now, typed, so they can be found.</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CharacterDescriptor.model_post_init">
+<a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.CharacterDescriptor.model_post_init">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">model_post_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__context</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># If the caller didn't seed bones/slots/skins, fill in a sensible default</span>
+        <span class="c1"># rig so a freshly-constructed CharacterDescriptor is immediately usable.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bones</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bones</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_default_bones</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">slots</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">slots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_default_slots</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">skins</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">skins</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"default"</span><span class="p">:</span> <span class="n">_default_skin</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">animations</span><span class="p">:</span>
+            <span class="c1"># Resolved lazily to avoid a circular import with idle.py.</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.idle</span><span class="w"> </span><span class="kn">import</span> <span class="n">breath_animation</span><span class="p">,</span> <span class="n">blink_animation</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">animations</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"idle_breath"</span><span class="p">:</span> <span class="n">breath_animation</span><span class="p">(),</span>
+                <span class="s2">"blink"</span><span class="p">:</span> <span class="n">blink_animation</span><span class="p">(),</span>
+            <span class="p">}</span></div>
+</div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Default rig builders</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_bones</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Bone</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The 7-bone default rig: root, torso, head, two arms, two legs.</span>
+
+<span class="sd">    Coordinates assume a 1024x1024 viewBox with feet near y≈980.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">980</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">300</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">260</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"neck"</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">x</span><span class="o">=-</span><span class="mi">90</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">240</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"shoulder_l"</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">240</span><span class="p">,</span> <span class="n">pivot</span><span class="o">=</span><span class="s2">"shoulder_r"</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">x</span><span class="o">=-</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">10</span><span class="p">),</span>
+        <span class="n">Bone</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_r"</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mi">10</span><span class="p">),</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_slots</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Slot</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The 11-slot default draw stack: legs behind, arms in front, face on top."""</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_r"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"leg_r"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"leg_r"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"torso"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"head"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"eye_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"eye_l_open"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"eye_r"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"eye_r_open"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"mouth"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"mouth_x"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"brow_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"brow_l"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"brow_r"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"brow_r"</span><span class="p">),</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_skin</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Skin</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Default skin wiring slot names → attachment dicts → SVG paths.</span>
+
+<span class="sd">    Paths are relative to the descriptor file. Slicing a real source SVG can</span>
+<span class="sd">    overwrite/extend these; here we declare the canonical inventory so the</span>
+<span class="sd">    descriptor is internally consistent even before parts exist on disk.</span>
+<span class="sd">    """</span>
+    <span class="n">slots</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Attachment</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Single-attachment body slots</span>
+    <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">anchor</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"torso"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">"head"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.78</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">"leg_r"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">"brow_l"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">"brow_r"</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
+    <span class="p">):</span>
+        <span class="n">slots</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">slot_name</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"parts/</span><span class="si">{</span><span class="n">slot_name</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="n">anchor</span><span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="c1"># Eye slots have two attachments (open + closed).</span>
+    <span class="n">slots</span><span class="p">[</span><span class="s2">"eye_l"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"eye_l_open"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"parts/eye_l_open.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
+        <span class="s2">"eye_l_closed"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"parts/eye_l_closed.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
+    <span class="p">}</span>
+    <span class="n">slots</span><span class="p">[</span><span class="s2">"eye_r"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"eye_r_open"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"parts/eye_r_open.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
+        <span class="s2">"eye_r_closed"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"parts/eye_r_closed.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Mouth slot has 9 attachments (the viseme set).</span>
+    <span class="n">slots</span><span class="p">[</span><span class="s2">"mouth"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"parts/mouth/mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">MOUTH_SHAPES</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">Skin</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"default"</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="n">slots</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.svg_utils &mdash; an 0.1.43 documentation</title>
+  <title>an.characters.svg_utils &mdash; an 0.1.44 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a183c34f"></script>
+      <script src="../../../_static/documentation_options.js?v=6a0a5382"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -112,7 +112,15 @@
 <li class="toctree-l1"><a class="reference internal" href="record.html">an.characters.record</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="silhouette.html">an.characters.silhouette</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.svg_utils</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.svg_utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.svg_utils.extract_part"><code class="docutils literal notranslate"><span class="pre">extract_part()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.svg_utils.extract_pivots"><code class="docutils literal notranslate"><span class="pre">extract_pivots()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.svg_utils.normalize_svg"><code class="docutils literal notranslate"><span class="pre">normalize_svg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.svg_utils.promote_inkscape_labels_to_ids"><code class="docutils literal notranslate"><span class="pre">promote_inkscape_labels_to_ids()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.svg_utils.raster_size"><code class="docutils literal notranslate"><span class="pre">raster_size()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.svg_utils.write_svg"><code class="docutils literal notranslate"><span class="pre">write_svg()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../data.html">an.data</a></li>
@@ -175,8 +183,111 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-characters-svg-utils">
-<h1>an.characters.svg_utils<a class="headerlink" href="#an-characters-svg-utils" title="Link to this heading"></a></h1>
+  <section id="module-an.characters.svg_utils">
+<span id="an-characters-svg-utils"></span><h1>an.characters.svg_utils<a class="headerlink" href="#module-an.characters.svg_utils" title="Link to this heading"></a></h1>
+<p>SVG manipulation: namespace-aware DOM helpers using stdlib <code class="docutils literal notranslate"><span class="pre">xml.etree</span></code>.</p>
+<p>Pure stdlib so the package stays dependency-light. Operations supported:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#an.characters.svg_utils.promote_inkscape_labels_to_ids" title="an.characters.svg_utils.promote_inkscape_labels_to_ids"><code class="xref py py-func docutils literal notranslate"><span class="pre">promote_inkscape_labels_to_ids()</span></code></a> — copy <code class="docutils literal notranslate"><span class="pre">inkscape:label</span></code> to <code class="docutils literal notranslate"><span class="pre">id</span></code>
+on each group, since Inkscape doesn’t auto-promote labels (a 2008-vintage
+bug; see research §1.2).</p></li>
+<li><p><a class="reference internal" href="#an.characters.svg_utils.normalize_svg" title="an.characters.svg_utils.normalize_svg"><code class="xref py py-func docutils literal notranslate"><span class="pre">normalize_svg()</span></code></a> — promote labels, ensure a viewBox is set, return
+the parsed <code class="docutils literal notranslate"><span class="pre">ElementTree</span></code>.</p></li>
+<li><p><a class="reference internal" href="#an.characters.svg_utils.extract_pivots" title="an.characters.svg_utils.extract_pivots"><code class="xref py py-func docutils literal notranslate"><span class="pre">extract_pivots()</span></code></a> — read the <code class="docutils literal notranslate"><span class="pre">&lt;g</span> <span class="pre">id=&quot;skeleton&quot;&gt;</span></code> group of named
+<code class="docutils literal notranslate"><span class="pre">&lt;circle&gt;</span></code> elements and return <code class="docutils literal notranslate"><span class="pre">{name:</span> <span class="pre">(cx,</span> <span class="pre">cy)}</span></code>.</p></li>
+<li><p><a class="reference internal" href="#an.characters.svg_utils.extract_part" title="an.characters.svg_utils.extract_part"><code class="xref py py-func docutils literal notranslate"><span class="pre">extract_part()</span></code></a> — emit a standalone SVG containing only the named
+group. By default it writes a viewBox <strong>cropped</strong> to the part’s own bbox
+while copying the parent’s <code class="docutils literal notranslate"><span class="pre">width</span></code>/<code class="docutils literal notranslate"><span class="pre">height</span></code>, which letterboxes the part
+under <code class="docutils literal notranslate"><span class="pre">preserveAspectRatio=&quot;xMidYMid</span> <span class="pre">meet&quot;</span></code> (see #75). The crop rect’s
+parent-space origin survives as the viewBox’s first two numbers.</p></li>
+<li><p><a class="reference internal" href="#an.characters.svg_utils.write_svg" title="an.characters.svg_utils.write_svg"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_svg()</span></code></a> — pretty-print an <code class="docutils literal notranslate"><span class="pre">ElementTree</span></code> (or <code class="docutils literal notranslate"><span class="pre">Element</span></code>) to
+disk with the SVG namespace set as the default.</p></li>
+</ul>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">raw</span> <span class="o">=</span> <span class="s1">'''&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"&gt;</span>
+<span class="gp">... </span><span class="s1">  &lt;g id="skeleton"&gt;&lt;circle id="neck" cx="50" cy="40" r="2"/&gt;&lt;/g&gt;</span>
+<span class="gp">... </span><span class="s1">  &lt;g id="illustration"&gt;&lt;g id="head"&gt;&lt;circle cx="50" cy="40" r="20"/&gt;&lt;/g&gt;&lt;/g&gt;</span>
+<span class="gp">... </span><span class="s1">&lt;/svg&gt;'''</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">normalize_svg</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">raw</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">extract_pivots</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+<span class="go">{'neck': (50.0, 40.0)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">part</span> <span class="o">=</span> <span class="n">extract_part</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="s1">'head'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sa">b</span><span class="s1">'&lt;g id="head"'</span> <span class="ow">in</span> <span class="n">write_svg</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.svg_utils.extract_part">
+<span class="sig-prename descclassname"><span class="pre">an.characters.svg_utils.</span></span><span class="sig-name descname"><span class="pre">extract_part</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_viewbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ElementTree</span></span></span><a class="reference internal" href="../../../_modules/an/characters/svg_utils.html#extract_part"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.svg_utils.extract_part" title="Link to this definition"></a></dt>
+<dd><p>Emit a standalone SVG tree containing only the group with the given id.</p>
+<p>Any top-level <code class="docutils literal notranslate"><span class="pre">&lt;defs&gt;</span></code> from the source is copied so the part can
+resolve gradient / pattern / filter references like
+<code class="docutils literal notranslate"><span class="pre">fill=&quot;url(#some_gradient)&quot;</span></code>. The matched group is appended unchanged.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">crop_viewbox</span></code> is True (the default), the new SVG’s viewBox is
+cropped to the bounding box of the part’s primitive content (rect /
+circle / ellipse / path) plus <code class="docutils literal notranslate"><span class="pre">padding</span></code> units on each side. This
+ensures the part fills its display rectangle when sized by the
+renderer; without it, a part drawn in a small region of a 1024×1024
+character canvas would be displayed at a fraction of the available
+pixels. Falls back to the source viewBox when no bbox can be derived.</p>
+<p>If no match is found, raises <code class="xref py py-class docutils literal notranslate"><span class="pre">KeyError</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.svg_utils.extract_pivots">
+<span class="sig-prename descclassname"><span class="pre">an.characters.svg_utils.</span></span><span class="sig-name descname"><span class="pre">extract_pivots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeleton_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'skeleton'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/characters/svg_utils.html#extract_pivots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.svg_utils.extract_pivots" title="Link to this definition"></a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">{name:</span> <span class="pre">(cx,</span> <span class="pre">cy)}</span></code> for every named <code class="docutils literal notranslate"><span class="pre">&lt;circle&gt;</span></code> under skeleton.</p>
+<p>Pivots use the Pose Animator convention: a <code class="docutils literal notranslate"><span class="pre">&lt;g</span> <span class="pre">id=&quot;skeleton&quot;&gt;</span></code> group
+sibling of the illustration, containing one <code class="docutils literal notranslate"><span class="pre">&lt;circle&gt;</span></code> per named joint.
+The circle’s <code class="docutils literal notranslate"><span class="pre">cx</span></code>/<code class="docutils literal notranslate"><span class="pre">cy</span></code> is the pivot in the same coordinate system as
+the art (the SVG’s viewBox).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.svg_utils.normalize_svg">
+<span class="sig-prename descclassname"><span class="pre">an.characters.svg_utils.</span></span><span class="sig-name descname"><span class="pre">normalize_svg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback_viewbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'0</span> <span class="pre">0</span> <span class="pre">1024</span> <span class="pre">1024'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ElementTree</span></span></span><a class="reference internal" href="../../../_modules/an/characters/svg_utils.html#normalize_svg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.svg_utils.normalize_svg" title="Link to this definition"></a></dt>
+<dd><p>Promote Inkscape labels to ids and ensure a viewBox is set.</p>
+<p>Returns the parsed <code class="docutils literal notranslate"><span class="pre">ElementTree</span></code>. Idempotent: running it twice is a
+no-op on the second pass.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.svg_utils.promote_inkscape_labels_to_ids">
+<span class="sig-prename descclassname"><span class="pre">an.characters.svg_utils.</span></span><span class="sig-name descname"><span class="pre">promote_inkscape_labels_to_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ElementTree</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../../_modules/an/characters/svg_utils.html#promote_inkscape_labels_to_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.svg_utils.promote_inkscape_labels_to_ids" title="Link to this definition"></a></dt>
+<dd><p>Copy <code class="docutils literal notranslate"><span class="pre">inkscape:label</span></code> to <code class="docutils literal notranslate"><span class="pre">id</span></code> on each group missing an id.</p>
+<p>Returns the number of groups updated.</p>
+<p>Inkscape stores the user-visible name in the <code class="docutils literal notranslate"><span class="pre">inkscape:label</span></code> attribute
+and does NOT promote it to <code class="docutils literal notranslate"><span class="pre">id</span></code> on save. This is a long-standing UX
+issue (Inkscape bug #243383); the workaround is to promote at parse time.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.svg_utils.raster_size">
+<span class="sig-prename descclassname"><span class="pre">an.characters.svg_utils.</span></span><span class="sig-name descname"><span class="pre">raster_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/characters/svg_utils.html#raster_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.svg_utils.raster_size" title="Link to this definition"></a></dt>
+<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">(width,</span> <span class="pre">height)</span></code> an SVG declares for its own raster.</p>
+<p>This is the size the browser rasterises the file at, which is what a
+<code class="docutils literal notranslate"><span class="pre">Sprite</span></code> then scales — <strong>not</strong> the extent of the drawn art. The two differ
+whenever <a class="reference internal" href="#an.characters.svg_utils.extract_part" title="an.characters.svg_utils.extract_part"><code class="xref py py-func docutils literal notranslate"><span class="pre">extract_part()</span></code></a> has cropped the viewBox while copying the
+parent’s dimensions, which is the defect behind #75.</p>
+<p>Falls back to the viewBox extent when no <code class="docutils literal notranslate"><span class="pre">width</span></code>/<code class="docutils literal notranslate"><span class="pre">height</span></code> is declared,
+matching the browser.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">raster_size</span><span class="p">(</span><span class="s1">'&lt;svg xmlns="http://www.w3.org/2000/svg" '</span>
+<span class="gp">... </span>            <span class="s1">'viewBox="0 0 10 20" width="100" height="100"/&gt;'</span><span class="p">)</span>
+<span class="go">(100.0, 100.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raster_size</span><span class="p">(</span><span class="s1">'&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 20"/&gt;'</span><span class="p">)</span>
+<span class="go">(10.0, 20.0)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.svg_utils.write_svg">
+<span class="sig-prename descclassname"><span class="pre">an.characters.svg_utils.</span></span><span class="sig-name descname"><span class="pre">write_svg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_or_element</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="reference internal" href="../../../_modules/an/characters/svg_utils.html#write_svg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.svg_utils.write_svg" title="Link to this definition"></a></dt>
+<dd><p>Serialize an <code class="docutils literal notranslate"><span class="pre">ElementTree</span></code> or <code class="docutils literal notranslate"><span class="pre">Element</span></code> to bytes (and optionally disk).</p>
+<p>Always emits <code class="docutils literal notranslate"><span class="pre">&lt;?xml</span> <span class="pre">version=&quot;1.0&quot;</span> <span class="pre">encoding=&quot;UTF-8&quot;?&gt;</span></code> and the SVG
+namespace as the default, so the output is a valid standalone SVG.</p>
+</dd></dl>
+
 </section>
 
 
