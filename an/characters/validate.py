@@ -373,7 +373,16 @@ def _check_gaze_stack(
     if descriptor is None or not descriptor.face_overlay:
         return
     slots = {s.name for s in descriptor.slots}
-    if not {"left_pupil", "right_pupil"} & slots:
+    pupils = {"left_pupil", "right_pupil"} & slots
+    if pupils and pupils != {"left_pupil", "right_pupil"}:
+        report.add(
+            BLOCKING,
+            "character.json#slots",
+            f"{who} has one pupil slot ({sorted(pupils)}) — the gaze axes yoke both eyes",
+            f"Run `an character add-gaze {who}` to complete the stack.",
+        )
+        return
+    if not pupils:
         report.add(
             "info",
             "character.json#slots",

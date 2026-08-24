@@ -128,6 +128,10 @@ def default_binding(desc: CharacterDescriptor) -> list[Binding]:
             out.append(SetBinding(axis, slot, EYELID_CHANNEL))
     travel = getattr(desc, "gaze_travel", None) or {}
     tx, ty = float(travel.get("x", GAZE_TRAVEL)), float(travel.get("y", GAZE_TRAVEL))
+    if travel and not (tx > 0 and ty > 0):
+        raise ExpressionResolutionError(
+            desc.name, [f"gaze_travel must be positive per axis, got {travel!r}"]
+        )
     for slot in (LEFT_PUPIL_SLOT, RIGHT_PUPIL_SLOT):
         if slot in slots:
             out.append(ChannelBinding("gaze_x", slot, "x", tx, rig_scaled=True))

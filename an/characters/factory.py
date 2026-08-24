@@ -227,7 +227,7 @@ def new_character(
     desc_path = out / "character.json"
     desc_path.write_text(descriptor.model_dump_json(indent=2), encoding="utf-8")
     if gaze and descriptor.face_overlay:
-        add_gaze(out, skin=skin)
+        add_gaze(out)  # the lid's fill is read off the head art it just wrote
     return desc_path
 
 
@@ -389,8 +389,10 @@ def _skin_fill_of(head_svg: Path) -> str | None:
 
 def gaze_travel_for(rx: float = EYE_RX, ry: float = EYE_RY, pupil_r: float = PUPIL_R) -> dict[str, float]:
     """The pupil's travel per axis, in view-box units: the sclera's clearance
-    minus the pupil's radius — the compile-time clamp that keeps the pupil
-    inside the white without a runtime mask.
+    minus the pupil's radius — the semi-axes of the inner ellipse the gaze
+    axes' unit circle maps onto. The compiler clamps the summed gaze to 0.95
+    of that circle (`GAZE_ELLIPSE_MARGIN`), which is what keeps the pupil disc
+    inside the white at every angle without a runtime mask.
 
     >>> gaze_travel_for()
     {'x': 9.0, 'y': 5.0}
@@ -398,7 +400,17 @@ def gaze_travel_for(rx: float = EYE_RX, ry: float = EYE_RY, pupil_r: float = PUP
     return {"x": float(rx - pupil_r), "y": float(ry - pupil_r)}
 
 
-def add_gaze(char_dir: str | Path, *, skin: str | None = None) -> Path:
+def _is_factory_eye(path: Path, *, side: str, state: str) -> bool:
+    """Whether an eye part is this factory's own drawing (its group id and the
+    64x32 canvas) — the only art `add_gaze` may overwrite."""
+    if not path.is_file():
+        return True  # nothing to lose
+    svg = path.read_text(encoding="utf-8")
+    w, h = EYE_CANVAS
+    return f'id="eye_{side}_{state}"' in svg and f'viewBox="0 0 {w} {h}"' in svg
+
+
+def add_gaze(char_dir: str | Path, *, skin: str | None = None, overwrite_eyes: bool = False) -> Path:
     """Give a character the eye stack (an#99): three sibling slots per eye under
     the head — ``<side>_sclera`` (white fill) below ``<side>_pupil`` below
     ``<side>_eye`` (the existing slot, now the lid, drawn above the pupil) —
@@ -406,6 +418,13 @@ def add_gaze(char_dir: str | Path, *, skin: str | None = None) -> Path:
     ``gaze_travel`` clamp, and draw orders that put the lid over the pupil.
     Idempotent: a rig that already has the stack is rewritten to the same
     state. Returns the descriptor path.
+
+    The open and closed eye parts are REWRITTEN (outline-only, filled lid), so
+    on a rig whose eyes are not this factory's drawings — a promoted hand rig —
+    it refuses unless ``overwrite_eyes=True``: the stack's geometry is the
+    synthesized eye's, and an illustrator's eyes would be silently replaced
+    (an#99 review). Such a rig wants its own outline-only open eye, filled
+    lid, sclera and pupil parts drawn to its own geometry.
 
     This is the **expand** step for a pre-Wave-6 descriptor: no migration
     inserts pupil slots, because their art would be absent and absent art is
@@ -426,6 +445,28 @@ def add_gaze(char_dir: str | Path, *, skin: str | None = None) -> Path:
             "`an character promote` a hand-drawn rig with overlay face parts first."
         )
     parts = char_dir / "parts"
+    # Every refusal BEFORE the first write, so a rig that errors is untouched.
+    skin_ = desc.skins.get("default")
+    if skin_ is None:
+        raise ValueError(f"{desc.name!r} has no default skin to add the eye stack to")
+    by_name = {s.name: s for s in desc.slots}
+    for eye_slot in ("left_eye", "right_eye"):
+        if eye_slot not in by_name:
+            raise ValueError(f"{desc.name!r} has no {eye_slot!r} slot; the eye stack sits under it")
+    foreign = [
+        f"eye_{side}_{state}.svg"
+        for side in ("l", "r")
+        for state in ("open", "closed")
+        if not _is_factory_eye(parts / f"eye_{side}_{state}.svg", side=side, state=state)
+    ]
+    if foreign and not overwrite_eyes:
+        raise ValueError(
+            f"{desc.name!r}'s eye art is not this factory's ({', '.join(foreign)}): the eye "
+            "stack would replace a hand-drawn eye with the synthesized outline and lid. "
+            "Draw the rig's own outline-only open eye, filled closed lid, sclera and pupil "
+            "parts to its geometry, or pass overwrite_eyes=True (`--overwrite-eyes`) to "
+            "accept the synthesized eyes."
+        )
     if skin is None:
         # The lid's fill is the HEAD's skin — read off the head art, never
         # re-derived from a seed the descriptor may not carry (an#99 review:
@@ -438,15 +479,9 @@ def add_gaze(char_dir: str | Path, *, skin: str | None = None) -> Path:
         _synthesize_pupil(parts / f"pupil_{side}.svg", side=side)
         _synthesize_eye_open(parts / f"eye_{side}_open.svg", side=side, outline_only=True)
         _synthesize_eye_closed(parts / f"eye_{side}_closed.svg", side=side, fill=skin)
-    skin_ = desc.skins.get("default")
-    if skin_ is None:
-        raise ValueError(f"{desc.name!r} has no default skin to add the eye stack to")
-    by_name = {s.name: s for s in desc.slots}
     had_stack = "left_pupil" in by_name or "right_pupil" in by_name
     for side, eye_slot in (("l", "left_eye"), ("r", "right_eye")):
-        eye = by_name.get(eye_slot)
-        if eye is None:
-            raise ValueError(f"{desc.name!r} has no {eye_slot!r} slot; the eye stack sits under it")
+        eye = by_name[eye_slot]
         x, y = FACE_OFFSETS.get(eye_slot, (0.0, 0.0))
         existing = skin_.slots.get(eye_slot, {})
         template = existing.get("open") or next(iter(existing.values()), None)

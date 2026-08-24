@@ -345,8 +345,10 @@ class CharacterDescriptor(_CharModel):
     #: (an#99): the sclera's clearance minus the pupil's radius, written by
     #: `an character add-gaze` from the parts it synthesized. ``None`` = the
     #: rig has no pupil layer (gaze is a no-op on it) or uses the default
-    #: travel. The pupil stays inside the white by this compile-time clamp —
-    #: no runtime mask.
+    #: travel. The travel maps the gaze axes' unit circle onto the sclera's
+    #: inner ellipse; the compiler clamps the summed (x, y) to 0.95 of that
+    #: circle, which keeps the whole pupil disc inside the white at every
+    #: angle (a per-axis box pokes out at the diagonal) — no runtime mask.
     gaze_travel: Optional[dict[str, float]] = None
 
     #: Free-form metadata (dicebear style/seed, etc.). Schema-evolution

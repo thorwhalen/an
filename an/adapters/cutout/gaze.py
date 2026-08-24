@@ -122,8 +122,12 @@ def saccade_track(
             if abs(nearest - t) <= BLINK_COUPLING_WINDOW_S:
                 jump_t = nearest
         jump_t = _snap(jump_t, fps)
+        if jump_t <= steps[-1].time:
+            # The coupled blink centre fell at or before the previous step: the
+            # jump happens at its own time instead of being lost (an#99 review).
+            jump_t = _snap(t, fps)
         if jump_t <= steps[-1].time or jump_t >= duration:
-            continue
+            continue  # sub-frame fixation: this jump is absorbed by the next (x, y stay)
         x, y = tx, ty
         steps.append(GazeStep(jump_t, x, y))
     return steps

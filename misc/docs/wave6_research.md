@@ -745,6 +745,13 @@ blinks, so its blinks are frame-quantised in the face clip). The one deviation f
 rig WITHOUT pupils is not merely "a no-op" but a byte-identical document — an axis the rig binds
 nothing to is filtered out before the solver runs. Determinism is a test compiling the same shot
 twice; `meta.gaze_seeds` is serialized only when non-empty, so pre-Wave-6 contract hashes hold.
+The review corrected the clamp: §9's "travel = sclera clearance minus pupil radius" is a per-axis
+BOX, and at its corner the pupil disc pokes 2% past the ellipse; the compiler clamps the summed
+(x, y) to 0.95 of the unit circle instead (`GAZE_ELLIPSE_MARGIN`), measured to keep the disc
+inside at every angle. Also from the review: `add_gaze` refuses to overwrite eye art that is not
+the factory's own (a promoted rig's illustrator eyes) unless `overwrite_eyes=True`, reads the lid's
+fill off the head art, validates before it writes, and a coupled jump whose blink centre falls
+before the previous step keeps its own time instead of being lost.
 
 ## 15. What the adversarial pass changed
 

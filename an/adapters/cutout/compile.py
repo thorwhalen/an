@@ -178,6 +178,11 @@ _BLINK_DEPTH: float = 0.95
 EYE_NODE_NAMES: frozenset[str] = frozenset({"left_eye", "right_eye"})
 #: The pupil nodes of the gaze stack (an#99); a rig without them takes gaze as a no-op.
 PUPIL_NODE_NAMES: frozenset[str] = frozenset({"left_pupil", "right_pupil"})
+#: The summed gaze (x, y), in axis units, is clamped to a circle of this radius
+#: — the declared travel maps the unit circle onto the sclera's inner ellipse,
+#: and 0.95 keeps the whole pupil disc inside it at every angle (measured on
+#: the synthesized eye: 1.0 pokes out by 2% of the ellipse at the diagonal).
+GAZE_ELLIPSE_MARGIN: float = 0.95
 #: Within a blink window, the eyelid swap shows CLOSED for the central half —
 #: the span where the squash curve sits above 0.7 of full closure.
 _EYELID_CLOSED_SPAN: tuple[float, float] = (0.25, 0.75)
@@ -2539,10 +2544,13 @@ def _add_face_clips(
         # ...and an axis the rig binds nothing to (gaze on a rig without
         # pupils, an#99) contributes nothing either: the document stays the one
         # the rig had, and `an character validate` says why.
-        if desc is None:
+        if desc is None or not spans:
             spans = [sp for sp in spans if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)]
         else:
-            bound = {b.axis for b in binding_for(desc)}
+            try:
+                bound = {b.axis for b in binding_for(desc)}
+            except ExpressionResolutionError as e:
+                raise CutoutCompileError(str(e)) from e
             spans = [
                 sp
                 for sp in spans
@@ -2634,6 +2642,21 @@ def _solve_face(
             base = (curves.get(axis) or [0.0] * n)
             base = (base + [base[-1]] * n)[:n]
             curves[axis] = [max(-1.0, min(1.0, base[i] + jitter[i])) for i in range(n)]
+    if "gaze_x" in curves or "gaze_y" in curves:
+        # The pupil stays inside the WHITE, an ellipse, not inside a box: the
+        # summed (x, y) — in axis units, where the declared travel is the unit
+        # circle — is clamped to a circle of radius GAZE_ELLIPSE_MARGIN. At
+        # the corner of the box the pupil disc pokes past the sclera by ~3
+        # canvas units (an#99 review); at 0.95 it stays inside on every angle.
+        gx = list(curves.get("gaze_x") or [0.0] * n)
+        gy = list(curves.get("gaze_y") or [0.0] * n)
+        gx, gy = (gx + [gx[-1]] * n)[:n], (gy + [gy[-1]] * n)[:n]
+        for i in range(n):
+            m = math.hypot(gx[i], gy[i])
+            if m > GAZE_ELLIPSE_MARGIN:
+                gx[i] *= GAZE_ELLIPSE_MARGIN / m
+                gy[i] *= GAZE_ELLIPSE_MARGIN / m
+        curves["gaze_x"], curves["gaze_y"] = gx, gy
     # Authored channels on face nodes win; say so once per (target, property).
     authored: set[tuple[str, str]] = set()
     for track in tracks:
@@ -2646,7 +2669,11 @@ def _solve_face(
 
     offsets: dict[tuple[str, str], list[float]] = {}
     lid_expr: dict[str, list[float]] = {}
-    for b in binding_for(desc):
+    try:
+        bindings = binding_for(desc)
+    except ExpressionResolutionError as e:
+        raise CutoutCompileError(str(e)) from e
+    for b in bindings:
         samples = curves.get(b.axis)
         if samples is None:
             continue
