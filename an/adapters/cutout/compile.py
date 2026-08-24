@@ -521,7 +521,9 @@ def compile_shot(
         vocab=vocab,
     )
     # Blinks (an#88): compiled per eye, ahead of everything authored.
-    blink_phases = _add_blink_clips(shot, animations, tracks, vocab=vocab, fps=fps)
+    blink_phases = _add_blink_clips(
+        shot, animations, tracks, vocab=vocab, fps=fps, mall=mall
+    )
     # Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale
     # animation on the synthetic scene root so directors get visible camera
     # behavior without writing channels by hand.
@@ -1203,7 +1205,11 @@ def _build_svg_character_subtree(
     for slot in sorted(desc.slots, key=lambda s: (s.draw_order, s.name)):
         parent = nests_under.get(slot.bone)
         nested = parent is not None and parent != slot.name
-        if nested and head_has_face and parent == "head":
+        # Baked face: drop every slot nested under the HEAD BONE's primary
+        # slot — keyed on the bone (the rig's skeleton contract), not on the
+        # slot name "head": a rig whose head slot is named otherwise used to
+        # get its face overlays (and their blinks) back (an#88 review).
+        if nested and head_has_face and parent == nests_under.get("head"):
             continue
 
         resolved = _attachment_for(desc, skin, slot)
@@ -1963,9 +1969,14 @@ def _add_blink_clips(
     *,
     vocab: _SwapVocabulary,
     fps: int,
+    mall: Mapping[str, Mapping] | None = None,
 ) -> dict[str, float]:
     """Emit blink clips per eye node of every character; return the phases
     used, per entity, for the compiled scene's meta.
+
+    A character whose descriptor declares ``face_overlay=False`` never
+    blinks, whatever eye nodes the rig builder produced — the policy lives
+    here, not in a naming coincidence of the rig builder.
 
     Mechanism splits by what the eye can do (research §6):
 
@@ -1994,9 +2005,10 @@ def _add_blink_clips(
     post-pose reset clobbered any authored ``scale_y`` on every frame.
     """
     phases: dict[str, float] = {}
+    baked = _baked_face_speakers(shot, mall)
     track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
     for entity in shot.entities:
-        if entity.kind != "character":
+        if entity.kind != "character" or entity.id in baked:
             continue
         eyes = sorted(
             p

@@ -80,9 +80,12 @@ def _blink_channels(scene):
 
 def test_the_phase_is_the_runtime_s_rule_ported_exactly():
     """Pinned against the values the research measured from the JS
-    (`_strHash % 1000 / 1000`): charlie 0.762, maya 0.284."""
+    (`_strHash % 1000 / 1000`): charlie 0.762, maya 0.284 — and `plates`
+    (the saturated_outline entity), whose int32 hash is NEGATIVE, so it
+    pins the `Math.abs` step that every positive-hash name lets slip."""
     assert blink_phase("charlie") == 0.762
     assert blink_phase("maya") == 0.284
+    assert blink_phase("plates") == 0.667
 
 
 def test_blink_windows_reproduce_the_runtime_s_cycle_rule():
@@ -320,7 +323,162 @@ def test_a_window_straddling_the_shot_start_begins_in_the_right_state(gale_store
     assert _evaluate(tl, 0.1)[("awg/head/left_eye", "eyelid")] == "OPEN"
 
 
+def test_the_eyelid_channel_is_closed_exactly_for_the_central_half(gale_store):
+    """CLOSED iff t is inside [start + 0.25·span, start + 0.75·span), OPEN
+    everywhere else — evaluated at every frame. Reversing the OPEN/CLOSED
+    order survived the first battery (eyes closed 54% of the time; only the
+    browser-lane golden would have noticed)."""
+    from an.adapters.cutout.compile import _EYELID_CLOSED_SPAN
+    from tests.test_swap_channels import _evaluate, _python_timeline
+
+    shot = Shot(
+        id="s",
+        style="cutout",
+        duration=8.0,
+        entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
+    )
+    scene = compile_shot(shot, mall={"characters": gale_store}, fps=24)
+    tl = _python_timeline(scene)
+    lo, hi = _EYELID_CLOSED_SPAN
+    spans = [(s + lo * (e - s), s + hi * (e - s)) for s, e in _blink_windows("gale", 8.0)]
+    closed_frames = 0
+    for f in range(0, 8 * 24 + 1):
+        t = f / 24
+        pose = _evaluate(tl, t)
+        value = pose.get(("gale/head/left_eye", "eyelid"), "OPEN")
+        expected = "CLOSED" if any(a <= t < b for a, b in spans) else "OPEN"
+        assert value == expected, (t, value, expected)
+        closed_frames += value == "CLOSED"
+    assert 0 < closed_frames < 8 * 24 * 0.1
+
+
+def test_a_baked_face_never_blinks_even_if_the_rig_builds_eye_nodes(gale_store, tmp_path):
+    """The policy lives in the emitter, not in the rig builder's naming: a
+    baked face whose head slot is not named `head` used to get its face
+    overlays (and blinks) back (an#88 review, mutant 8)."""
+    import json as _json
+
+    desc_path = tmp_path / "gale" / "character.json"
+    doc = _json.loads(desc_path.read_text(encoding="utf-8"))
+    doc["face_overlay"] = False
+    for slot in doc["slots"]:
+        if slot["name"] == "head":
+            slot["name"] = "noggin"
+    doc["skins"]["default"]["slots"]["noggin"] = doc["skins"]["default"]["slots"].pop("head")
+    desc_path.write_text(_json.dumps(doc), encoding="utf-8")
+    shot = Shot(
+        id="s",
+        style="cutout",
+        duration=8.0,
+        entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
+    )
+    scene = compile_shot(shot, mall={"characters": gale_store})
+    # The rig builder DOES build the eyes here (a head slot not named after
+    # its bone is not a primary slot, so nothing nests under it — a rig
+    # design rule, not a blink one), which is exactly why the no-blink
+    # policy has to live in the emitter.
+    paths = set(_paths(scene.scene))
+    assert any(p.rsplit("/", 1)[-1] in EYE_NODE_NAMES for p in paths)
+    assert not _blink_channels(scene)
+    assert scene.meta.blink_phases == {}
+
+
+def test_an_unnested_eye_slot_still_blinks_by_its_leaf_name(gale_store, tmp_path):
+    """The old regex needed `<entity>/head/<eye>`; the leaf-name rule blinks
+    an eye wherever the rig put it (a head slot named otherwise nests the
+    eyes at depth 2)."""
+    import json as _json
+
+    desc_path = tmp_path / "gale" / "character.json"
+    doc = _json.loads(desc_path.read_text(encoding="utf-8"))
+    for slot in doc["slots"]:
+        if slot["name"] == "head":
+            slot["name"] = "noggin"
+    doc["skins"]["default"]["slots"]["noggin"] = doc["skins"]["default"]["slots"].pop("head")
+    desc_path.write_text(_json.dumps(doc), encoding="utf-8")
+    shot = Shot(
+        id="s",
+        style="cutout",
+        duration=8.0,
+        entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
+    )
+    scene = compile_shot(shot, mall={"characters": gale_store})
+    assert "gale/left_eye" in _blink_channels(scene)
+
+
+def _paths(node, prefix=""):
+    path = f"{prefix}/{node.name}" if prefix else node.name
+    if prefix or node.name != "root":
+        yield path
+        child_prefix = path
+    else:
+        child_prefix = ""
+    for c in node.children:
+        yield from _paths(c, child_prefix)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
+def test_the_compiled_squash_matches_the_deleted_runtime_rule_at_every_frame():
+    """The strongest browser-free evidence that the move changed no pixel:
+    the deleted JS rule — `_strHash` and `(t + phase*P) % P < D`, sine
+    squash — re-executed under node at every frame time, against the
+    compiled channel evaluated through the Python spec. Covers a
+    negative-hash name (`plates`) and several frame rates. (The independent
+    review measured 1302 frames, 0 mismatches; this commits that check.)
+    """
+    import json
+    import subprocess
+
+    from tests.test_swap_channels import _evaluate, _python_timeline
+
+    js = r"""
+    function _strHash(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return Math.abs(h); }
+    const P = 4.0, D = 0.14;
+    const cases = JSON.parse(process.argv[1]);
+    const out = cases.map(([name, fps, duration]) => {
+      const phase = (_strHash(name) % 1000) / 1000.0;
+      const vals = [];
+      const n = Math.round(duration * fps);
+      for (let f = 0; f <= n; f++) {
+        const t = f / fps;
+        const cycle = (t + phase * P) % P;
+        vals.push(cycle < D ? 1.0 - 0.95 * Math.sin((cycle / D) * Math.PI) : 1.0);
+      }
+      return vals;
+    });
+    console.log(JSON.stringify(out));
+    """
+    cases = [["charlie", 24, 2.5], ["plates", 30, 6.0], ["teacher", 25, 9.0], ["ada", 60, 5.0]]
+    proc = subprocess.run(
+        ["node", "-e", js, json.dumps(cases)], capture_output=True, text=True, timeout=30
+    )
+    assert proc.returncode == 0, proc.stderr
+    expected = json.loads(proc.stdout)
+    for (name, fps, duration), row in zip(cases, expected):
+        shot = Shot(
+            id="s",
+            style="cutout",
+            duration=duration,
+            entities=[AssetRef(kind="character", id=name, store="characters", ref="c")],
+        )
+        tl = _python_timeline(compile_shot(shot, mall={"characters": {}}, fps=fps))
+        key = (f"{name}/head/left_eye", "scale_y")
+        last = 1.0
+        for f, want in enumerate(row):
+            pose = _evaluate(tl, f / fps)
+            # Outside a clip the pose carries nothing — the runtime keeps the
+            # last applied value, which the clip's rest keyframe made 1.0.
+            got = pose.get(key, last)
+            last = got
+            assert got == pytest.approx(want, abs=1e-9), (name, fps, f / fps, got, want)
+
+
 def test_the_runtime_carries_no_blink_machinery():
+    """A source-text guard, deliberately: restoring the old post-pose pass
+    beside the compiled channels would render byte-identically on every
+    corpus golden (the pass forces the same value), so no pixel test could
+    see it — only an authored eye channel in a browser could. Text is what
+    is left to pin."""
     src = RUNTIME_JS.read_text(encoding="utf-8")
     code = re.sub(r"//[^\n]*", "", re.sub(r"/\*.*?\*/", "", src, flags=re.S))
     assert "applyProceduralBlinks" not in code
