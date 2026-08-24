@@ -88,6 +88,59 @@ EASING_PRESETS: tuple[str, ...] = (
 )
 
 
+# -- Animatable transform vocabulary -----------------------------------------
+
+#: The property names the cutout runtime animates NUMERICALLY. Any other
+#: property on a set/tween names a swap SET declared by the target entity's
+#: descriptor (an#87). This is the SSOT the three consumers share so the IR
+#: validator, the character validator and the compiler cannot drift: the
+#: compiler derives its rest-value table from ``TransformJSON`` and a test
+#: asserts that derivation equals this set. Lives here because ``an.base`` is
+#: the one module all three layers may import.
+TRANSFORM_PROPERTIES: frozenset[str] = frozenset(
+    {
+        "x",
+        "y",
+        "rotation",
+        "rotation_rad",
+        "scale_x",
+        "scale_y",
+        "skew_x",
+        "skew_y",
+        "pivot_x",
+        "pivot_y",
+        "alpha",
+    }
+)
+
+#: Characters within which a swap-set name is not addressable: ``/`` would read
+#: as a path segment and ``::`` is the runtime's pose-key separator.
+SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS: tuple[str, ...] = ("/", "::")
+
+
+def swap_set_name_problem(name: str) -> str | None:
+    """Why ``name`` cannot be a swap-set name, or ``None`` if it can.
+
+    >>> swap_set_name_problem("hands") is None
+    True
+    >>> swap_set_name_problem("alpha")
+    "'alpha' is a transform property; the runtime's static switch would shadow the set"
+    >>> swap_set_name_problem("a::b")
+    "'a::b' contains '::', which is reserved"
+    """
+    if name in TRANSFORM_PROPERTIES:
+        return (
+            f"{name!r} is a transform property; the runtime's static switch "
+            "would shadow the set"
+        )
+    for bad in SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS:
+        if bad in name:
+            return f"{name!r} contains {bad!r}, which is reserved"
+    if not name:
+        return "a swap-set name may not be empty"
+    return None
+
+
 # -- Type aliases -------------------------------------------------------------
 
 #: Slash-delimited node path, e.g. ``"charlie/head/mouth"``.

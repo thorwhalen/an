@@ -139,11 +139,14 @@ The IR shape (relevant fields):
         "kind" MUST be one of: character, environment, voice, style.
         "prop" is declared by the IR but NOT rendered — it raises. Do not emit one.
       - actions: list of action dicts (kind ∈ {tween, set, play, sequence, parallel, delay, loop})
-        A tween/set action's "property" MUST be one of:
+        A tween/set action's "property" is EITHER a transform:
           x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, skew_y,
           pivot_x, pivot_y, alpha
-        Anything else (opacity, visible, color, tint, width, ...) is NOT
-        implemented and now FAILS THE RENDER — it used to be silently ignored.
+        OR the name of a swap set the target character's descriptor declares
+        in asset_sets (e.g. "viseme", "eyelid", "hands"), used with a "set"
+        action whose "value" is one of that set's declared KEYS. Any other
+        property (opacity, visible, color, tint, width, ...) is refused at
+        compile with the declared sets listed. Never invent a set or a key.
         "alpha" is the fade primitive and cascades to a character's parts.
         A tween with no "from" starts at the property's rest value: 1.0 for
         scale_x / scale_y / alpha, 0.0 for the rest.

@@ -29,8 +29,9 @@ There is no other swap implementation, and the epic forbids a second.
    (two sets on one node collide on the `target::swap` pose key with an
    emission-order winner nothing pins); `swap:<set>` buys nothing over the
    reservation check. Corollary: a set name must not collide with
-   `compile.py::_PROPERTY_REST_VALUES ∪ {rotation_rad}` or contain `::`/`/` —
-   the static switch would silently shadow it.
+   `an.base.TRANSFORM_PROPERTIES` or contain `::`/`/` — the static switch
+   would silently shadow it. Enforced by `an.base.swap_set_name_problem` at
+   compile (`_swap_vocabulary`) and in `an character validate`.
 2. **Binding is projection, not declaration.** `asset_sets` carries no slot
    field; the skin IS the binding. A set may project onto several slots — that
    is how ONE `eyelid` set drives both eye slots, whose attachments share the
@@ -55,11 +56,16 @@ There is no other swap implementation, and the epic forbids a second.
    usage-aware escalation, deliberately NOT the blanket rule (which would
    brick every rig without closed-eye art). The runtime throw is for
    hand-written scenes: compiled scenes are total by construction.
-6. **Sets compile to HOLD channels.** All `set` actions on one
-   (target, property) merge into one step channel spanning first-`at` → shot
-   end. Never reintroduce the 0.001s placement window: a set at a
-   non-frame-aligned time silently never fired, and persistence was an
-   accident of stateful forward rendering.
+6. **Sets compile to HOLD channels — until the next action.** `set` actions
+   on one (target, property) merge into a step channel that holds from each
+   set until the next action on that target/property: the next set joins as
+   a keyframe, a tween ENDS the hold at its start (so the tween governs and
+   its end value persists after it), and with nothing following the hold
+   runs to the shot end. Holding to the shot end regardless was measured to
+   let a `set` mask every later tween on the property (the clip lands after
+   the tween clips and evaluation is later-wins). Never reintroduce the
+   0.001s placement window either: a set at a non-frame-aligned time silently
+   never fired, and persistence was an accident of stateful forward rendering.
 7. **The swap carries texture only.** Placement, anchor, and fit box are baked
    from the DEFAULT attachment; `refitToBox` re-fits on every swap (keep it —
    without it every key inherits the previous texture's scale). Per-key
@@ -76,7 +82,10 @@ There is no other swap implementation, and the epic forbids a second.
 2. Put the attachments (and their files) in the slot(s) that should swap.
 3. Author `{kind: set, target: <entity>/<node>, property: props, value: KEY}`.
 
-No compiler, runtime, serialize, or schema change. The proof of that claim is
+No compiler, runtime, serialize, or schema change — for a set in YOUR
+descriptor. (The shipped DEFAULT rig's `eyelid` set needed a schema event, because
+"the skin is the binding" means slots one set drives together must share
+attachment names, and the default eye slots did not.) The proof of the claim is
 `tests/test_swap_channels.py::test_the_renderer_knows_nothing_about_the_fixture_sets`
 — the committed fixture (`tests/fixtures/characters/gale/`, `hands` +
 `body_facing`) animates with zero occurrences of its set names in either file.

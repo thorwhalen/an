@@ -410,7 +410,6 @@ def test_the_runtime_raises_on_an_unknown_property():
     fn = _extract("applyProperty", r"function applyProperty\([^)]*\)\s*\{.*?\n    \}")
     script = "\n".join(
         [
-            "function setVisemeOnMouth() {}",
             fn,
             "const node = {name: 'charlie', scale: {}, skew: {}, pivot: {}};",
             "try { applyProperty(node, 'opacity', 0.5); console.log('SILENT'); }",
@@ -432,10 +431,9 @@ def test_the_runtime_still_applies_every_known_property():
     `case 'x': node.y = value` passed it unnoticed.
     """
     fn = _extract("applyProperty", r"function applyProperty\([^)]*\)\s*\{.*?\n    \}")
-    props = sorted(_runtime_switch_cases() - {"viseme"})
+    props = sorted(_runtime_switch_cases())
     script = "\n".join(
         [
-            "function setVisemeOnMouth() {}",
             fn,
             f"const props = {props!r};".replace("'", '"'),
             "const out = {};",

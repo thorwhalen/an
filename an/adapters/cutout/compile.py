@@ -34,6 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
+from an.base import TRANSFORM_PROPERTIES, swap_set_name_problem
 from an.ir.compose import FlatAction, flatten
 from an.ir.schema import (
     Action,
@@ -107,6 +108,15 @@ def _palette_for(entity_id: str) -> tuple[str, str, str]:
 
 # Cap viseme keyframe density to ~7Hz; reduces "twitchy" mouth at full speed.
 _MIN_VISEME_GAP_S: float = 0.14
+
+#: The procedural (drawn) mouth's swap vocabulary, DECLARED as data on its
+#: visual exactly as the runtime declares it (`g._anDrawSets = {viseme: ...}`)
+#: and as an SVG mouth carries its projection. A drawn mouth has no textures,
+#: so each key maps to itself — the code the runtime's shape table draws. The
+#: compiler never branches on the set's NAME: the drawn mouth is just a node
+#: whose visual carries a `viseme` set (an#87).
+PROCEDURAL_MOUTH_KEYS: dict[str, str] = {s.upper(): s.upper() for s in MOUTH_SHAPES}
+PROCEDURAL_MOUTH_SETS: frozenset[str] = frozenset({VISEME_CHANNEL})
 
 
 def _property_rest_values() -> dict[str, float]:
@@ -250,52 +260,64 @@ class _SwapVocabulary:
     the scene tree so ``node_sets`` reflects what actually resolved:
 
     - ``node_sets`` — node path → set name → {KEY: texture alias}: the per-slot
-      projections stamped on each visual (``VisualJSON.asset_sets``).
-    - ``procedural_mouths`` — node paths whose visual is the procedural drawn
-      mouth; those apply the ``viseme`` set by redrawing rather than texture
-      swap, with the runtime's shape table as the key domain.
+      projections stamped on each visual (``VisualJSON.asset_sets``). The
+      procedural drawn mouth is in here too — it declares its set on its
+      visual like everything else, so nothing below names a set specially.
+    - ``node_asset_ids`` — node path → the visual's default texture alias,
+      which is what makes a set's REST key derivable (the key whose alias is
+      the default attachment).
     - ``declared`` — entity id → set name → declared keys, from the MIGRATED
       descriptor. Declared-but-unresolved (art missing) is the escalation
-      case; undeclared is an authoring error.
+      case; undeclared is an authoring error. Entities without a descriptor
+      are absent, and their built nodes' sets ARE their declaration.
     - ``paths`` — every node path the runtime will index (targets check).
     """
 
     node_sets: dict[str, dict[str, dict[str, str]]]
-    procedural_mouths: frozenset[str]
+    node_asset_ids: dict[str, str | None]
     declared: dict[str, dict[str, frozenset[str]]]
     paths: frozenset[str]
 
     def swap_capable_paths(self, entity_id: str, set_name: str) -> list[str]:
         """Node paths under ``entity_id`` that can apply ``set_name``."""
-        out = [
+        return sorted(
             p
             for p, sets in self.node_sets.items()
             if p.split("/", 1)[0] == entity_id and set_name in sets
-        ]
-        if set_name == VISEME_CHANNEL:
-            out += [
-                p
-                for p in self.procedural_mouths
-                if p.split("/", 1)[0] == entity_id
-            ]
-        return sorted(out)
+        )
+
+    def rest_key(self, path: str, set_name: str) -> str | None:
+        """The key a node shows at rest for ``set_name``, or None.
+
+        The key whose alias is the visual's default texture — for an SVG
+        mouth the slot's default attachment, for the drawn mouth (whose keys
+        map to themselves) the runtime's initial ``X``. Derived, so a viseme
+        vocabulary other than Rhubarb's (MPEG-4 numbers, Azure names) still
+        knows how to close the mouth.
+        """
+        key_map = self.node_sets.get(path, {}).get(set_name) or {}
+        asset_id = self.node_asset_ids.get(path)
+        for key, alias in key_map.items():
+            if alias == asset_id:
+                return key
+        if asset_id is None and "X" in key_map:
+            return "X"
+        return None
 
 
 def _swap_vocabulary(
     root: NodeJSON, shot: Shot, mall: Mapping[str, Mapping]
 ) -> _SwapVocabulary:
     node_sets: dict[str, dict[str, dict[str, str]]] = {}
-    procedural_mouths: set[str] = set()
+    node_asset_ids: dict[str, str | None] = {}
 
     def walk(node: NodeJSON, prefix: str) -> None:
         path = f"{prefix}/{node.name}" if prefix else node.name
         if prefix or node.name != "root":
             v = node.visual
-            if v is not None:
-                if v.asset_sets:
-                    node_sets[path] = v.asset_sets
-                if v.kind == "mouth":
-                    procedural_mouths.add(path)
+            if v is not None and v.asset_sets:
+                node_sets[path] = v.asset_sets
+                node_asset_ids[path] = v.asset_id
             child_prefix = path
         else:
             child_prefix = ""  # skip the synthetic root, as the runtime does
@@ -321,13 +343,25 @@ def _swap_vocabulary(
         desc = CharacterDescriptor.model_validate(
             migrate(dict(desc_data), kind=CHARACTER_DOCUMENT_KIND.name)
         )
+        for channel in desc.asset_sets:
+            problem = swap_set_name_problem(channel)
+            if problem is not None:
+                # The reservation check (an#87): a set named `alpha` would be
+                # applied by the runtime's static switch, never as a swap —
+                # the descriptor would declare a capability the pipeline
+                # silently routes elsewhere.
+                raise CutoutCompileError(
+                    f"character {entity.ref!r} declares an asset set that "
+                    f"cannot be a swap-set name: {problem}. Transform "
+                    f"properties are: {sorted(TRANSFORM_PROPERTIES)}."
+                )
         declared[entity.id] = {
             channel: frozenset(keys) for channel, keys in desc.asset_sets.items()
         }
 
     return _SwapVocabulary(
         node_sets=node_sets,
-        procedural_mouths=frozenset(procedural_mouths),
+        node_asset_ids=node_asset_ids,
         declared=declared,
         paths=frozenset(_runtime_node_paths(root)),
     )
@@ -792,7 +826,11 @@ def _build_character_subtree(
                     name="mouth",
                     transform=TransformJSON(x=0.0, y=14.0),
                     visual=VisualJSON(
-                        kind="mouth", width=22.0, height=4.0, color="#552222"
+                        kind="mouth",
+                        width=22.0,
+                        height=4.0,
+                        color="#552222",
+                        asset_sets={VISEME_CHANNEL: dict(PROCEDURAL_MOUTH_KEYS)},
                     ),
                 )
             )
@@ -1182,8 +1220,10 @@ def _compile_actions(
     """Flatten authoring actions and convert to animation clips.
 
     Tweens and plays compile per action. **Set actions compile per
-    (target, property) group into ONE step channel that HOLDS from the first
-    ``at`` to the shot end** (an#87) — the viseme-clip shape. The previous
+    (target, property) group into step channels that HOLD from each set until
+    the next action on that target/property** — the next set joins the same
+    channel as a keyframe; a tween ends the hold at its start; with nothing
+    following, the hold runs to the shot end (an#87) — the viseme-clip shape. The previous
     per-set 0.001s placement window had two defects: a set at a
     non-frame-aligned time (``at=3.02`` @30fps, window [3.02, 3.021] between
     samples) silently never fired, and when one did fire its persistence was
@@ -1209,12 +1249,16 @@ def _compile_actions(
         ]
 
     set_groups: dict[tuple[str, str], list[FlatAction]] = {}
+    tween_starts: dict[tuple[str, str], list[float]] = {}
     ordinal = 0
     for flat in flat_list:
         if isinstance(flat.action, SetAction):
             key = (flat.action.target, flat.action.property)
             set_groups.setdefault(key, []).append(flat)
             continue
+        if isinstance(flat.action, TweenAction):
+            key = (flat.action.target, flat.action.property)
+            tween_starts.setdefault(key, []).append(flat.start)
         anim_id, track_root, placed = _compile_one(flat, ordinal=ordinal)
         ordinal += 1
         if anim_id is not None and anim_id not in animations:
@@ -1225,25 +1269,42 @@ def _compile_actions(
 
     for (target, prop), group in set_groups.items():
         group.sort(key=lambda f: f.start)
-        first = group[0].start
-        anim_id = f"__set__{ordinal}"
-        ordinal += 1
-        kfs = []
+        boundaries = sorted(tween_starts.get((target, prop), []))
+        # A set holds until the NEXT ACTION on the same (target, property):
+        # the next set joins the same channel as a keyframe, but a tween ends
+        # the hold at its start so the tween governs from there and its end
+        # value persists after it (the runtime's stateful hold, unchanged).
+        # Holding to the shot end regardless would let a `set` placed AFTER
+        # the tween clips in the track mask the tween for the whole shot —
+        # measured, and the most common authoring shape ("set the start
+        # pose, then animate") was a no-op tween (an#87 review).
+        runs: list[list[FlatAction]] = []
         for flat in group:
-            value = flat.action.value
-            _check_keyframe_value(value, target=target, prop=prop)
-            kfs.append(
-                KeyframeJSON(time=flat.start - first, value=value, easing="step")
+            if runs and not any(runs[-1][0].start <= b <= flat.start for b in boundaries):
+                runs[-1].append(flat)
+            else:
+                runs.append([flat])
+        for run in runs:
+            first = run[0].start
+            end = next((b for b in boundaries if b >= first), shot_duration)
+            anim_id = f"__set__{ordinal}"
+            ordinal += 1
+            kfs = []
+            for flat in run:
+                value = flat.action.value
+                _check_keyframe_value(value, target=target, prop=prop)
+                kfs.append(
+                    KeyframeJSON(time=flat.start - first, value=value, easing="step")
+                )
+            duration = max(0.001, end - first)
+            animations[anim_id] = AnimationClipJSON(
+                name=anim_id,
+                duration=duration,
+                channels=[ChannelJSON(target=target, property=prop, keyframes=kfs)],
             )
-        duration = max(0.001, shot_duration - first)
-        animations[anim_id] = AnimationClipJSON(
-            name=anim_id,
-            duration=duration,
-            channels=[ChannelJSON(target=target, property=prop, keyframes=kfs)],
-        )
-        placed_by_track.setdefault(_track_root_of(target), []).append(
-            PlacedClipJSON(animation_id=anim_id, start_time=first, duration=duration)
-        )
+            placed_by_track.setdefault(_track_root_of(target), []).append(
+                PlacedClipJSON(animation_id=anim_id, start_time=first, duration=duration)
+            )
 
     # Re-pass: every referenced animation must actually exist.
     #
@@ -1352,7 +1413,17 @@ def _build_anim_for(
             action.to_value, target=action.target, prop=action.property
         )
         easing = _easing_to_json(action.easing)
-        if action.property in swap_properties and easing != "step":
+        # Only an easing the author actually WROTE earns a warning:
+        # TweenAction's default is 'ease_in_out', so a swap tween with no
+        # easing given would otherwise be told it "asked for" one.
+        authored_non_step = (
+            action.property in swap_properties
+            and "easing" in action.model_fields_set
+            and easing != "step"
+        )
+        if action.property in swap_properties:
+            easing = "step"
+        if authored_non_step:
             # Swap channels are stepped by FORMAT, not by taste — Spine's
             # attachment keyframes carry {time, name} and no curve field at
             # all. The evaluator already refuses to ease a non-numeric value
@@ -1368,7 +1439,6 @@ def _build_anim_for(
                 CutoutCompileWarning,
                 stacklevel=2,
             )
-            easing = "step"
         return AnimationClipJSON(
             name=anim_id,
             duration=action.duration,
@@ -1420,26 +1490,25 @@ def _check_swap_action(
 
     declared_sets = vocab.declared.get(entity_id)
     if declared_sets is None:
-        # No descriptor: the only swap a procedural rig supports is `viseme`
-        # on its drawn mouth, whose key domain is the runtime's shape table.
-        if prop == VISEME_CHANNEL and target in vocab.procedural_mouths:
-            shapes = {s.upper() for s in MOUTH_SHAPES}
-            for v in values:
-                if str(v).upper() not in shapes:
-                    raise CutoutCompileError(
-                        f"action sets {target!r}:{prop!r} to {v!r}, which is "
-                        "not a drawable mouth shape (known: "
-                        f"{sorted(shapes)})."
+        # No descriptor: what the BUILT nodes declare is the vocabulary — the
+        # procedural rig's drawn mouth carries its `viseme` set on its visual,
+        # exactly as an SVG rig's projections do. Exact key match, like every
+        # other set: a lowercase code used to be silently drawn as rest.
+        declared_sets = {}
+        for path, sets in vocab.node_sets.items():
+            if path.split("/", 1)[0] == entity_id:
+                for set_name, key_map in sets.items():
+                    declared_sets.setdefault(set_name, frozenset())
+                    declared_sets[set_name] = declared_sets[set_name] | frozenset(
+                        key_map
                     )
-            return True
-        capable = vocab.swap_capable_paths(entity_id, prop) if prop else []
-        raise CutoutCompileError(
-            f"action targets {target!r}:{prop!r}, which is not a transform "
-            f"property, and {entity_id!r} has no descriptor declaring asset "
-            "sets. Procedural rigs support exactly one swap: `viseme` on "
-            f"their mouth node{f' ({capable})' if capable else ''}. "
-            f"Transform properties are: {sorted(_PROPERTY_REST_VALUES)}."
-        )
+        if not declared_sets:
+            raise CutoutCompileError(
+                f"action targets {target!r}:{prop!r}, which is not a transform "
+                f"property, and {entity_id!r} declares no asset sets (no "
+                "descriptor, and no built node carries a set). Transform "
+                f"properties are: {sorted(TRANSFORM_PROPERTIES)}."
+            )
 
     if prop not in declared_sets:
         raise CutoutCompileError(
@@ -1648,12 +1717,7 @@ def _add_viseme_clips(
             if vocab is None:
                 continue
             all_mouths = sorted(
-                {
-                    p
-                    for p, sets in vocab.node_sets.items()
-                    if VISEME_CHANNEL in sets
-                }
-                | set(vocab.procedural_mouths)
+                p for p, sets in vocab.node_sets.items() if VISEME_CHANNEL in sets
             )
             warnings.warn(
                 f"shot {shot.id!r} dialogue line {i} is spoken by {speaker!r}, "
@@ -1679,10 +1743,8 @@ def _add_viseme_clips(
             condensed.append((t, v))
 
         for target in mouth_paths:
-            if target in vocab.procedural_mouths and target not in vocab.node_sets:
-                mapped = {s.upper() for s in MOUTH_SHAPES}
-            else:
-                mapped = set(vocab.node_sets[target][VISEME_CHANNEL])
+            mapped = set(vocab.node_sets[target][VISEME_CHANNEL])
+            rest = vocab.rest_key(target, VISEME_CHANNEL)
             usable = [(t, v) for t, v in condensed if v in mapped]
             dropped = sorted({v for _, v in condensed} - mapped)
             if dropped:
@@ -1694,12 +1756,13 @@ def _add_viseme_clips(
                     CutoutCompileWarning,
                     stacklevel=2,
                 )
-            if "X" not in mapped:
+            if rest is None:
                 warnings.warn(
-                    f"shot {shot.id!r} dialogue line {i}: {target!r} cannot "
-                    "show the rest shape 'X', so no viseme channel was "
-                    "emitted for it — a mouth that cannot close should not "
-                    "start talking.",
+                    f"shot {shot.id!r} dialogue line {i}: {target!r} has no "
+                    "rest key in its viseme set (no key maps to the node's "
+                    "default attachment, and there is no 'X'), so no viseme "
+                    "channel was emitted for it — a mouth that cannot close "
+                    "should not start talking.",
                     CutoutCompileWarning,
                     stacklevel=2,
                 )
@@ -1712,8 +1775,11 @@ def _add_viseme_clips(
             # The rest key is an INVARIANT, not a conditionally-appended
             # keyframe: a raw keyframe landing at (or clamping to) exactly
             # line.duration used to suppress the append, freezing the mouth
-            # in its last viseme forever after the line.
-            kfs.append(KeyframeJSON(time=line.duration, value="X", easing="step"))
+            # in its last viseme forever after the line. And it is DERIVED
+            # (the key whose art is the node's default attachment), not the
+            # literal 'X' — a set keyed by MPEG-4 numbers or Azure names
+            # closes its mouth too.
+            kfs.append(KeyframeJSON(time=line.duration, value=rest, easing="step"))
 
             anim_id = f"__viseme__{shot.id}_{i}_{target.replace('/', '.')}"
             animations[anim_id] = AnimationClipJSON(

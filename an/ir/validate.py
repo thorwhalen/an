@@ -18,6 +18,9 @@ from typing import Any, Literal, Mapping
 
 from pydantic import ValidationError
 
+from an.base import TRANSFORM_PROPERTIES
+from an.ir.compose import flatten
+from an.ir.migrate import migrate
 from an.ir.schema import SceneIR
 
 
@@ -107,32 +110,16 @@ _RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(
 _DRAWABLE_ENTITY_KINDS: frozenset[str] = frozenset({"character", "environment"})
 _CONFIGURING_ENTITY_KINDS: frozenset[str] = frozenset({"voice", "style"})
 
-#: Transform properties the renderer animates numerically. Any OTHER property
-#: on a set/tween names a swap SET, which must be declared by the target
-#: entity's descriptor (an#87).
-#:
-#: Duplicated from the compiler's rest-value SSOT deliberately — importing it
-#: here would make the IR layer depend on an adapter — and pinned together by
-#: the test suite, the `_RENDERABLE_CAMERA_MOVES` pattern.
-_TRANSFORM_PROPERTIES: frozenset[str] = frozenset(
-    {
-        "x",
-        "y",
-        "rotation",
-        "rotation_rad",
-        "scale_x",
-        "scale_y",
-        "skew_x",
-        "skew_y",
-        "pivot_x",
-        "pivot_y",
-        "alpha",
-    }
-)
+#: Any property outside the transform vocabulary on a set/tween names a swap
+#: SET, which must be declared by the target entity's descriptor (an#87). The
+#: vocabulary itself is the shared SSOT in ``an.base`` (importable by every
+#: layer); the compiler's rest-value table is asserted equal to it by test.
+_TRANSFORM_PROPERTIES: frozenset[str] = TRANSFORM_PROPERTIES
 
-#: The one swap a descriptor-less (procedural) rig supports: `viseme` on its
-#: drawn mouth, whose key domain is the runtime's shape table. Mirrors the
-#: compiler's rule; pinned by test like the sets above.
+#: The swap sets a descriptor-less (procedural) rig supports — declared as
+#: data on its drawn mouth by the compiler (`PROCEDURAL_MOUTH_SETS`). This
+#: layer cannot import the adapter, so the value is duplicated here and
+#: pinned against the compiler's constant by ``tests/test_swap_channels.py``.
 _PROCEDURAL_SWAP_SETS: frozenset[str] = frozenset({"viseme"})
 
 
@@ -154,7 +141,16 @@ def _check_swap_references(
     refs_by_entity = {
         e.id: e.ref for e in shot.entities if e.kind == "character"
     }
-    for k, action in enumerate(shot.actions):
+    # Flattened, like the compiler: the documented `start:` idiom wraps every
+    # leaf in a `sequence`, so walking only top-level actions would miss the
+    # common case (an#87 review) — an authoring-time gate that only sees the
+    # top level is a gate with a hole in it.
+    leaves = [
+        (k, flat.action)
+        for k, action in enumerate(shot.actions)
+        for flat in flatten(action)
+    ]
+    for k, action in leaves:
         prop = getattr(action, "property", None)
         if prop is None or prop in _TRANSFORM_PROPERTIES:
             continue
@@ -171,7 +167,11 @@ def _check_swap_references(
                 isinstance(candidate, dict)
                 and candidate.get("kind") == "CharacterDescriptor"
             ):
-                desc = candidate
+                # The MIGRATED document, as the compiler reads it: every
+                # committed pre-0.3.0 descriptor has no `asset_sets` on disk
+                # (0.1.0 carries `viseme_map`; `eyelid` is migration-seeded),
+                # so the raw dict would refuse swaps the compiler accepts.
+                desc = migrate(dict(candidate), kind="CharacterDescriptor")
         if desc is None:
             if prop not in _PROCEDURAL_SWAP_SETS:
                 report.add(

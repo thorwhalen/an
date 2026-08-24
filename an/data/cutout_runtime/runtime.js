@@ -156,7 +156,9 @@
             // sprite — the set name is convention, not control flow.
             const g = new PIXI.Graphics();
             drawMouthShape(g, 'X');
-            g._anDrawSets = { viseme: drawMouthShape };
+            g._anDrawSets = {
+                viseme: { keys: Object.keys(VISEME_SHAPES).sort(), apply: drawMouthShape },
+            };
             return g;
         }
         if (visualSpec.kind === 'eye') {
@@ -407,20 +409,31 @@
     // class an#87 closes. Compiled scenes never reach the throw (the
     // compiler validates and drops with a warning); a hand-written scene
     // gets a diagnosis instead of a frozen mouth.
+    function unknownSwapKey(node, prop, key, known) {
+        return new Error(
+            'unknown key ' + JSON.stringify(key) + ' for swap set ' +
+            JSON.stringify(prop) + ' on ' + JSON.stringify(node.name) +
+            '. Known keys: ' + JSON.stringify(known.slice().sort())
+        );
+    }
+
     function applySwap(child, node, prop, value) {
         const key = String(value);
         if (child._anDrawSets && child._anDrawSets[prop]) {
-            child._anDrawSets[prop](child, key);
+            // A drawn set declares {keys, apply}: the same loud unknown-key
+            // error as a texture set, naming node, set and known keys, before
+            // the redraw function's own backstop can fire.
+            const drawn = child._anDrawSets[prop];
+            if (drawn.keys.indexOf(key) < 0) {
+                throw unknownSwapKey(node, prop, key, drawn.keys);
+            }
+            drawn.apply(child, key);
             return;
         }
         const map = child._anAssetSets[prop];
         const assetId = map[key];
         if (assetId === undefined) {
-            throw new Error(
-                'unknown key ' + JSON.stringify(key) + ' for swap set ' +
-                JSON.stringify(prop) + ' on ' + JSON.stringify(node.name) +
-                '. Known keys: ' + JSON.stringify(Object.keys(map).sort())
-            );
+            throw unknownSwapKey(node, prop, key, Object.keys(map));
         }
         const tex = PIXI.Assets.get(assetId);
         if (!tex) {

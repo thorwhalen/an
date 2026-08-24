@@ -296,6 +296,7 @@ def test_trap_b_the_runtime_throws_on_an_unknown_swap_key():
         [
             "function refitToBox() {}",
             "const PIXI = { Assets: { get: (id) => ({ id }) } };",
+            _extract("unknownSwapKey"),
             _extract("applySwap"),
             "const child = { _anAssetSets: { hands: { fist: 'a1', palm: 'a2' } } };",
             "const node = { name: 'gale/left_hand', children: [child] };",
@@ -316,6 +317,7 @@ def test_the_runtime_swaps_a_texture_and_refits_for_a_known_key():
             "let refitted = 0;",
             "function refitToBox() { refitted++; }",
             "const PIXI = { Assets: { get: (id) => ({ id }) } };",
+            _extract("unknownSwapKey"),
             _extract("applySwap"),
             "const child = { _anAssetSets: { hands: { fist: 'a1' } } };",
             "const node = { name: 'gale/left_hand', children: [child] };",
@@ -354,9 +356,10 @@ def test_the_procedural_mouth_declares_viseme_as_a_draw_set():
         [
             "const calls = [];",
             "function drawMouthShape(g, code) { calls.push(code); }",
+            _extract("unknownSwapKey"),
             _extract("applySwap"),
             _extract("applyProperty"),
-            "const g = { _anDrawSets: { viseme: drawMouthShape } };",
+            "const g = { _anDrawSets: { viseme: { keys: ['A', 'X'], apply: drawMouthShape } } };",
             "const node = { name: 'c/head/mouth', children: [g], scale: {}, skew: {}, pivot: {} };",
             "applyProperty(node, 'viseme', 'A');",
             "console.log(JSON.stringify(calls));",
@@ -434,3 +437,327 @@ def test_an_authored_hand_and_facing_swap_change_the_pixels(gale_store, tmp_path
     assert (before != after).any(), (
         "the authored swaps at t=1.0 must change the rendered pixels"
     )
+
+
+# --------------------------------------------- the adversarial-review round
+
+
+def test_a_set_holds_only_until_the_next_action_on_its_property(gale_store):
+    """A `set` must not mask a later `tween` on the same target/property.
+
+    The first hold rule ("first `at` → shot end") appended the set clip after
+    every tween clip, and later-wins evaluation let `set x=50 at 0` pin the
+    property for the whole shot — the most common authoring shape ("set the
+    start pose, then animate") became a no-op tween (an#87 review). The hold
+    now ends at the next action's start.
+    """
+    from an.ir.compose import delay, sequence
+
+    scene = compile_shot(
+        _shot(
+            [
+                SetAction(target="gale/torso", property="x", value=50.0, at=0.0),
+                sequence(
+                    delay(1.0),
+                    TweenAction(
+                        target="gale/torso", property="x", from_value=0.0,
+                        to_value=100.0, duration=0.5,
+                    ),
+                ),
+                SetAction(target="gale/torso", property="x", value=-7.0, at=1.8),
+            ],
+            duration=3.0,
+        ),
+        mall={"characters": gale_store},
+    )
+    holds = sorted(
+        (p.start_time, p.duration)
+        for t in scene.timeline.tracks
+        for p in t.clips
+        if p.animation_id.startswith("__set__")
+    )
+    # Two runs: [0.0, 1.0) ends at the tween's start; [1.8, 3.0] runs to end.
+    assert holds == [
+        (0.0, pytest.approx(1.0)),
+        (pytest.approx(1.8), pytest.approx(1.2)),
+    ]
+    # And, evaluated through the Python spec, the tween is visible at t=1.25.
+    from an.adapters.cutout.channel import Channel, Keyframe
+    from an.adapters.cutout.clip import Clip
+    from an.adapters.cutout.timeline import PlacedClip, Timeline, Track, evaluate_timeline
+
+    clips = {
+        aid: Clip(
+            aid,
+            duration=a.duration,
+            channels=[
+                Channel(
+                    ch.target,
+                    ch.property,
+                    [
+                        Keyframe(
+                            k.time,
+                            k.value,
+                            tuple(k.easing) if isinstance(k.easing, list) else k.easing,
+                        )
+                        for k in ch.keyframes
+                    ],
+                )
+                for ch in a.channels
+            ],
+        )
+        for aid, a in scene.animations.items()
+    }
+    tl = Timeline(
+        duration=3.0,
+        tracks=[
+            Track(
+                t.target_root,
+                [
+                    PlacedClip(clips[p.animation_id], p.start_time, p.duration, p.speed)
+                    for p in t.clips
+                ],
+            )
+            for t in scene.timeline.tracks
+        ],
+    )
+    key = ("gale/torso", "x")
+    assert evaluate_timeline(tl, 0.5)[key] == 50.0
+    assert evaluate_timeline(tl, 1.25)[key] == pytest.approx(50.0)
+    assert evaluate_timeline(tl, 1.5)[key] == pytest.approx(100.0)
+    assert evaluate_timeline(tl, 2.5)[key] == -7.0
+
+
+def test_the_ir_validator_reads_the_migrated_descriptor(tmp_path):
+    """Every committed pre-0.3.0 descriptor has no `asset_sets` on disk, so a
+    validator reading the raw dict refused swaps the compiler accepts —
+    `an validate`/`an iterate` were unusable for swaps on every example
+    project (an#87 review)."""
+    from an.ir.validate import validate_semantic
+    from an.ir.schema import Meta, SceneIR
+
+    old_doc = {
+        "kind": "CharacterDescriptor",
+        "schema_version": "0.1.0",
+        "name": "robo",
+        "viseme_map": {"A": "mouth_a", "X": "mouth_x"},
+    }
+    scene = SceneIR(
+        meta=Meta(title="t", duration=1.0),
+        timeline=[
+            Shot(
+                id="s",
+                style="cutout",
+                duration=1.0,
+                entities=[AssetRef(kind="character", id="robo", store="characters", ref="robo")],
+                actions=[
+                    SetAction(target="robo/head/mouth", property="viseme", value="A"),
+                    SetAction(target="robo/head/left_eye", property="eyelid", value="CLOSED"),
+                ],
+            )
+        ],
+    )
+    report = validate_semantic(scene, available_characters={"robo": old_doc})
+    assert report.passed, [f.description for f in report.findings]
+
+
+def test_the_ir_validator_sees_swaps_nested_in_compositions(gale_store):
+    """The documented `start:` idiom wraps every leaf in a `sequence`; a gate
+    that walked only top-level actions had a hole exactly there."""
+    from an.ir.compose import delay, sequence
+    from an.ir.validate import validate_semantic
+    from an.ir.schema import Meta, SceneIR
+
+    scene = SceneIR(
+        meta=Meta(title="t", duration=2.0),
+        timeline=[
+            _shot(
+                [
+                    sequence(
+                        delay(0.5),
+                        SetAction(target="gale/left_hand", property="hands", value="NOPE"),
+                    )
+                ]
+            )
+        ],
+    )
+    report = validate_semantic(scene, available_characters=gale_store)
+    assert not report.passed
+    assert any("NOPE" in f.description for f in report.findings)
+
+
+@pytest.mark.parametrize(
+    "rig",
+    [
+        "misc/bench/corpus/graded_field/assets/characters/graded-field-rig",
+        "misc/bench/corpus/saturated_outline/assets/characters/saturated-rig",
+    ],
+)
+def test_the_committed_corpus_rigs_pass_the_asset_set_checks(rig):
+    """`an character validate` must validate the MIGRATED document: both
+    corpus rigs are 0.1.0 on disk, and read raw the 0.3.0 default `eyelid` set
+    was checked against un-renamed attachments — every one failed its own
+    validator (an#87 review). The only blocking findings they may carry are
+    the honest missing-closed-eye ones."""
+    from an.characters.validate import validate_character
+
+    report = validate_character(Path(__file__).resolve().parents[1] / rig)
+    blocking = [f for f in report.findings if f.severity == "error"]
+    assert all("eye_" in f.ir_path and "closed" in f.ir_path for f in blocking), [
+        (f.ir_path, f.description) for f in blocking
+    ]
+
+
+def test_the_transform_vocabulary_is_one_set_in_three_places():
+    """`an.base.TRANSFORM_PROPERTIES` is the SSOT the IR validator and the
+    character validator import; the compiler DERIVES its rest-value table from
+    `TransformJSON`, so this is the pin that keeps the derivation equal to the
+    declared vocabulary — and the pin the review found missing."""
+    from an.adapters.cutout.compile import (
+        PROCEDURAL_MOUTH_SETS,
+        RUNTIME_APPLIED_PROPERTIES,
+        _PROPERTY_REST_VALUES,
+    )
+    from an.base import TRANSFORM_PROPERTIES
+    from an.ir import validate as ir_validate
+
+    assert set(_PROPERTY_REST_VALUES) == TRANSFORM_PROPERTIES
+    assert RUNTIME_APPLIED_PROPERTIES == TRANSFORM_PROPERTIES
+    assert ir_validate._TRANSFORM_PROPERTIES == TRANSFORM_PROPERTIES
+    assert ir_validate._PROCEDURAL_SWAP_SETS == PROCEDURAL_MOUTH_SETS
+
+
+def test_a_lowercase_authored_viseme_on_a_procedural_rig_is_refused():
+    """Exact key match, like every other set. The first cut upper-cased at
+    check time and then emitted the raw code, so a compile-ACCEPTED scene
+    reached the runtime's case-sensitive throw (an#87 review)."""
+    shot = Shot(
+        id="s",
+        style="cutout",
+        duration=1.0,
+        entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
+        actions=[SetAction(target="c/head/mouth", property="viseme", value="a")],
+    )
+    with pytest.raises(CutoutCompileError, match="'A'"):
+        compile_shot(shot, mall={"characters": {}})
+    ok = shot.model_copy(
+        update={"actions": [SetAction(target="c/head/mouth", property="viseme", value="A")]}
+    )
+    scene = compile_shot(ok, mall={"characters": {}})
+    assert _channels(scene, "viseme")[0].keyframes[0].value == "A"
+
+
+def test_the_procedural_mouth_declares_its_set_as_data():
+    """The compiler no longer branches on the set NAME for the drawn mouth: the
+    mouth's VisualJSON carries `asset_sets={viseme: {A: A, ..., X: X}}`, the
+    mirror of the runtime's `_anDrawSets`."""
+    shot = Shot(
+        id="s",
+        style="cutout",
+        duration=1.0,
+        entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
+    )
+    scene = compile_shot(shot, mall={"characters": {}})
+    head = next(c for c in scene.scene.children[0].children if c.name == "head")
+    mouth = next(c for c in head.children if c.name == "mouth")
+    assert mouth.visual.kind == "mouth"
+    assert mouth.visual.asset_sets["viseme"]["X"] == "X"
+    assert set(mouth.visual.asset_sets["viseme"]) == set("ABCDEFGHX")
+
+
+def test_the_rest_key_is_derived_from_the_default_attachment(gale_store, tmp_path):
+    """A viseme vocabulary that is not Rhubarb's (MPEG-4 numbers, Azure names)
+    must still close its mouth: the rest key is the key whose art is the
+    slot's default attachment, not the literal 'X' (an#87 review)."""
+    import json as _json
+
+    from an.ir.schema import Dialogue, VisemeKeyframe, VisemeTrack
+
+    desc_path = tmp_path / "gale" / "character.json"
+    doc = _json.loads(desc_path.read_text())
+    doc["asset_sets"]["viseme"] = {"SIL": "mouth_x", "AA": "mouth_a", "EH": "mouth_c"}
+    desc_path.write_text(_json.dumps(doc))
+    shot = _shot()
+    shot = shot.model_copy(
+        update={
+            "dialogue": [
+                Dialogue(
+                    speaker="gale",
+                    text="hi",
+                    start=0.0,
+                    duration=1.0,
+                    viseme_track=VisemeTrack(
+                        convention="mpeg4",
+                        keyframes=[
+                            VisemeKeyframe(time=0.0, viseme="SIL"),
+                            VisemeKeyframe(time=0.3, viseme="AA"),
+                        ],
+                    ),
+                )
+            ]
+        }
+    )
+    scene = compile_shot(shot, mall={"characters": gale_store})
+    (ch,) = _channels(scene, "viseme")
+    assert [k.value for k in ch.keyframes] == ["SIL", "AA", "SIL"]
+
+
+def test_a_set_named_like_a_transform_is_refused(gale_store, tmp_path):
+    """The reservation the design promised and the first cut did not enforce:
+    a set named `alpha` would be applied by the runtime's static switch, never
+    as a swap (an#87 review)."""
+    import json as _json
+
+    from an.characters.validate import validate_character
+
+    desc_path = tmp_path / "gale" / "character.json"
+    doc = _json.loads(desc_path.read_text())
+    doc["asset_sets"]["alpha"] = {"a": "fist"}
+    desc_path.write_text(_json.dumps(doc))
+    with pytest.raises(CutoutCompileError, match="alpha"):
+        compile_shot(_shot(), mall={"characters": gale_store})
+    report = validate_character(tmp_path / "gale")
+    assert any(
+        f.severity == "error" and "alpha" in f.description for f in report.findings
+    )
+
+
+def test_a_baked_face_provenance_with_overlay_true_is_flagged(gale_store, tmp_path):
+    """Nothing infers `face_overlay` from provenance any more (a declared fact
+    is only worth having if nothing second-guesses it), so a current-schema
+    descriptor written to the OLD convention gets a loud advisory instead of
+    a silent double face (an#87 review)."""
+    import json as _json
+
+    from an.characters.validate import validate_character
+
+    desc_path = tmp_path / "gale" / "character.json"
+    doc = _json.loads(desc_path.read_text())
+    doc["metadata"] = {"art_provenance": "dicebear"}
+    desc_path.write_text(_json.dumps(doc))
+    report = validate_character(tmp_path / "gale")
+    assert any("face_overlay" in f.ir_path for f in report.findings)
+
+
+def test_a_swap_tween_with_the_default_easing_does_not_warn(gale_store):
+    """The warning is for an easing the author WROTE; TweenAction's default
+    is 'ease_in_out', which would otherwise be reported as 'asked for'."""
+    import warnings as _warnings
+
+    with _warnings.catch_warnings():
+        _warnings.simplefilter("error", CutoutCompileWarning)
+        scene = compile_shot(
+            _shot(
+                [
+                    TweenAction(
+                        target="gale/torso",
+                        property="body_facing",
+                        from_value="front",
+                        to_value="left",
+                        duration=1.0,
+                    )
+                ]
+            ),
+            mall={"characters": gale_store},
+        )
+    assert _channels(scene, "body_facing")[0].keyframes[0].easing == "step"

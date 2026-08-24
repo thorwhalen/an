@@ -362,9 +362,10 @@ What genuinely remains, in rough priority order:
    version of this section claiming otherwise was stale. The remaining gap is
    the inverse and easy to miss: no compiler code writes the field, so looping
    is reachable only by hand-writing `CutoutSceneJSON`.
-3. **Lip-sync for face-baked characters.** DiceBear / external-avatar
-   descriptors have the face baked into the head SVG, so the compiler suppresses
-   both the overlay mouth and the viseme channel. Those characters speak without
+3. **Lip-sync for face-baked characters.** A descriptor declaring
+   `face_overlay: false` (DiceBear avatars; the 0.3.0 migration derives it from
+   the old provenance string) has the face baked into the head SVG, so the
+   compiler suppresses both the overlay mouth and the viseme channel. Those characters speak without
    moving their mouths. Hand-rigging (see `examples/promote_demo/`) is the
    production path today.
 4. **Multi-scene projects.** `"main"` is the only key the scenes store supports.

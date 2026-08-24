@@ -24,7 +24,10 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Iterator
 
+from an.base import swap_set_name_problem
+from an.ir.migrate import migrate
 from an.characters.schema import (
+    CHARACTER_DOCUMENT_KIND,
     MOUTH_SHAPES,
     REQUIRED_PARTS,
     CharacterDescriptor,
@@ -191,8 +194,16 @@ def validate_character(
         )
     else:
         try:
-            descriptor = CharacterDescriptor.model_validate_json(
-                desc_path.read_text(encoding="utf-8")
+            # Validate the MIGRATED document — the one the compiler renders.
+            # Both committed corpus rigs are 0.1.0 on disk; read raw, the
+            # 0.3.0 model default `eyelid` set would be checked against
+            # un-renamed `eye_l_open` attachments and every one of them would
+            # fail its own validator (an#87 review).
+            descriptor = CharacterDescriptor.model_validate(
+                migrate(
+                    json.loads(desc_path.read_text(encoding="utf-8")),
+                    kind=CHARACTER_DOCUMENT_KIND.name,
+                )
             )
         except (ValueError, json.JSONDecodeError) as e:
             report.add(
@@ -221,6 +232,7 @@ def validate_character(
         _check_part(rel, path, report)
 
     _check_asset_sets(directory, descriptor, report, who=who)
+    _check_face_overlay_declaration(descriptor, report, who=who)
     _check_joint_names(directory, descriptor, report)
 
     if descriptor is not None and descriptor.source is None:
@@ -269,6 +281,17 @@ def _check_asset_sets(
     if skin is None:
         return
     for channel, key_map in descriptor.asset_sets.items():
+        problem = swap_set_name_problem(channel)
+        if problem is not None:
+            report.add(
+                BLOCKING,
+                f"character.json#asset_sets.{channel}",
+                f"{who} declares an asset set that cannot be a swap-set name: "
+                f"{problem}",
+                "Rename the set; the transform vocabulary and '/' / '::' are "
+                "reserved.",
+            )
+            continue
         for key, attachment_name in key_map.items():
             holding_slots = [
                 slot_name
@@ -320,6 +343,40 @@ def _check_asset_sets(
                     "Give the set's attachments identical geometry, or "
                     "accept that per-key placement is not yet expressible.",
                 )
+
+
+#: Provenance values that historically MEANT a baked face. The compiler no
+#: longer reads them (the declared `face_overlay` field does the job, an#87);
+#: this check is what keeps a hand-authored current-schema descriptor honest.
+_BAKED_FACE_PROVENANCES: tuple[str, ...] = ("dicebear", "external_avatar")
+
+
+def _check_face_overlay_declaration(
+    descriptor: CharacterDescriptor | None, report: VerificationReport, *, who: str
+) -> None:
+    """A baked-face provenance with `face_overlay=True` is almost certainly a
+    mistake — the overlay eyes/brows/mouth will draw over the baked face.
+
+    Before 0.3.0 the provenance string WAS the switch; a descriptor written
+    to that convention at the current schema version declares the opposite
+    of what its author meant, and nothing infers it any more (a declared
+    fact is only worth having if nothing second-guesses it). Advisory, since
+    a hand-drawn "external" avatar with real overlay parts is legitimate.
+    """
+    if descriptor is None or not descriptor.face_overlay:
+        return
+    provenance = (descriptor.metadata or {}).get("art_provenance")
+    if provenance in _BAKED_FACE_PROVENANCES:
+        report.add(
+            ADVISORY,
+            "character.json#face_overlay",
+            f"{who} declares face_overlay=true but its art_provenance is "
+            f"{provenance!r}, which usually means the face is baked into the "
+            "head art — the overlay eyes/brows/mouth will draw over it",
+            "Set face_overlay: false if the face is baked in (the compiler "
+            "reads only that field now), or leave it if the avatar really "
+            "has separate face parts.",
+        )
 
 
 def _check_joint_names(

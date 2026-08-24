@@ -26,8 +26,10 @@ The descriptor borrows Spine's separation of concerns:
 - **animations** — built-in idle loops (breath, blink) keyed by name.
 
 A slot's name **is** its scene-graph node name, which is why the face slots read
-``left_eye`` rather than ``eye_l``; attachment names are a separate namespace and
-keep the file-derived spelling.
+``left_eye`` rather than ``eye_l``; attachment names are a separate, per-slot
+namespace — file-derived for single-attachment slots, and shared key-like names
+(``open``/``closed`` on both eye slots, 0.3.0) where one swap set must drive
+several slots.
 
 >>> char = CharacterDescriptor(name="maya")
 >>> char.asset_sets["viseme"]["A"]
