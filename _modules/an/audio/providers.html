@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.providers &mdash; an 0.1.53 documentation</title>
+  <title>an.audio.providers &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -206,10 +206,14 @@
     <span class="s2">"mac_say"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">MacSayTTS</span><span class="p">(),</span>
 <span class="p">}</span>
 
-<span class="n">LIPSYNC_FACTORIES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">LipSyncProvider</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"offline"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">OfflineLipSync</span><span class="p">(),</span>
-    <span class="s2">"rhubarb"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">RhubarbLipSync</span><span class="p">(),</span>
-    <span class="s2">"whisper"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">WhisperLipSync</span><span class="p">(),</span>
+<span class="c1">#: The language a provider aligns for when the caller says nothing. Only</span>
+<span class="c1">#: Rhubarb reads it today (its recognizer follows the language, an#96).</span>
+<span class="n">DEFAULT_LANGUAGE</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"en"</span>
+
+<span class="n">LIPSYNC_FACTORIES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">LipSyncProvider</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"offline"</span><span class="p">:</span> <span class="k">lambda</span> <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">OfflineLipSync</span><span class="p">(),</span>
+    <span class="s2">"rhubarb"</span><span class="p">:</span> <span class="k">lambda</span> <span class="o">*</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="n">DEFAULT_LANGUAGE</span><span class="p">:</span> <span class="n">RhubarbLipSync</span><span class="p">(</span><span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">),</span>
+    <span class="s2">"whisper"</span><span class="p">:</span> <span class="k">lambda</span> <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">WhisperLipSync</span><span class="p">(),</span>
 <span class="p">}</span>
 
 
@@ -231,10 +235,14 @@
 
 <div class="viewcode-block" id="make_lipsync">
 <a class="viewcode-back" href="../../../module_docs/an/audio/providers.html#an.audio.make_lipsync">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">make_lipsync</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LipSyncProvider</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Instantiate a LipSync provider by name."""</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_lipsync</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_LANGUAGE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LipSyncProvider</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Instantiate a LipSync provider by name.</span>
+
+<span class="sd">    ``language`` (BCP-47) reaches providers that select behaviour by language —</span>
+<span class="sd">    Rhubarb's recognizer today; a future aligner's weight allowlist.</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">LIPSYNC_FACTORIES</span><span class="p">[</span><span class="n">name</span><span class="p">]()</span>
+        <span class="k">return</span> <span class="n">LIPSYNC_FACTORIES</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"unknown LipSync provider </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; known: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">LIPSYNC_FACTORIES</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>

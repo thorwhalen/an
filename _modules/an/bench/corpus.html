@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.corpus &mdash; an 0.1.53 documentation</title>
+  <title>an.bench.corpus &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -273,6 +273,16 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters</span><span class="w"> </span><span class="kn">import</span> <span class="n">promote</span>
 
     <span class="n">promote</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="s2">"raw_maya"</span><span class="p">,</span> <span class="n">as_</span><span class="o">=</span><span class="s2">"maya-promoted"</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># The IR is regenerated from `scene.md` in the staged copy. Since an#96 the</span>
+    <span class="c1"># scene has a dialogue line, and `python examples/promote_demo/build.py`</span>
+    <span class="c1"># (auto_audio=True) stamps visemes into the committed `ir/scene.json` —</span>
+    <span class="c1"># which would move this fixture's contract hash with developer state.</span>
+    <span class="c1"># The bench renders with auto_audio=False and this scene's picture has no</span>
+    <span class="c1"># visemes in it by design; dropping the staged IR makes that a property of</span>
+    <span class="c1"># the fixture rather than of whoever last ran the example.</span>
+    <span class="n">ir</span> <span class="o">=</span> <span class="n">project_dir</span> <span class="o">/</span> <span class="s2">"ir"</span> <span class="o">/</span> <span class="s2">"scene.json"</span>
+    <span class="k">if</span> <span class="n">ir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">ir</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="Fixture">
@@ -406,6 +416,25 @@
         <span class="n">golden_note</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"the fourth bar sweeping horizontally (4,200 px). The three angled "</span>
             <span class="s2">"bars are pinned and do not move — they are the AA subject."</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="s2">"dialogue"</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">CORPUS_DIRNAME</span><span class="si">}</span><span class="s2">/dialogue"</span><span class="p">,</span>
+        <span class="n">expect_visual_kinds</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">({</span><span class="s2">"rect"</span><span class="p">,</span> <span class="s2">"ellipse"</span><span class="p">,</span> <span class="s2">"mouth"</span><span class="p">,</span> <span class="s2">"eye"</span><span class="p">}),</span>
+        <span class="n">golden_frames</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">),</span>
+        <span class="n">golden_note</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"the mouth mid-line: frame 14 sits on the `h`/`a` of 'shape' and "</span>
+            <span class="s2">"TODAY'S condenser shows `C` there, having dropped the `D` and `A` "</span>
+            <span class="s2">"that follow inside its 0.14 s window — the drop-instead-of-hold "</span>
+            <span class="s2">"defect PR-B (an#97) replaces with a vote, which is what will move "</span>
+            <span class="s2">"this frame. The head is lifted 34 px above its rest by an absolute "</span>
+            <span class="s2">"`set` so the placeholder rig's mouth clears the torso (127 px "</span>
+            <span class="s2">"differ between the pair). The second golden sits INSIDE the spoken "</span>
+            <span class="s2">"interval, which no other corpus scene does: `single_character` "</span>
+            <span class="s2">"samples after its line ends and `promote_demo` renders mute in the "</span>
+            <span class="s2">"bench (no visemes in its IR, by design). The visemes are the "</span>
+            <span class="s2">"offline provider's, stamped into the committed ir/scene.json; the "</span>
+            <span class="s2">"bench renders with auto_audio=False and reads them from there."</span>
         <span class="p">),</span>
     <span class="p">),</span>
     <span class="s2">"multi_shot"</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">(</span>

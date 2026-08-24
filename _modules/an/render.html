@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.render &mdash; an 0.1.53 documentation</title>
+  <title>an.render &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -253,6 +253,7 @@
     <span class="n">supersample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SUPERSAMPLE</span><span class="p">,</span>
     <span class="n">pix_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"en"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Render every shot in ``project_dir``'s scene and concatenate to one mp4.</span>
 
@@ -281,6 +282,10 @@
 <span class="sd">    of that many updates per second — 15 at 30 fps is "on twos". ``None`` uses</span>
 <span class="sd">    the scene's declaration, which is itself ``None`` (smooth) by default.</span>
 
+<span class="sd">    ``language`` (BCP-47) reaches lip-sync providers that select behaviour by</span>
+<span class="sd">    it when ``lipsync`` is a provider *name* — Rhubarb's recognizer (an#96). A</span>
+<span class="sd">    provider *instance* carries its own.</span>
+
 <span class="sd">    Returns the absolute path of the final output file (under ``output/``).</span>
 <span class="sd">    """</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
@@ -296,6 +301,7 @@
         <span class="n">supersample</span><span class="o">=</span><span class="n">supersample</span><span class="p">,</span>
         <span class="n">pix_fmt</span><span class="o">=</span><span class="n">pix_fmt</span><span class="p">,</span>
         <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span><span class="p">,</span>
+        <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -316,6 +322,7 @@
     <span class="n">supersample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SUPERSAMPLE</span><span class="p">,</span>
     <span class="n">pix_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"en"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Lower-level: render a loaded ``Project`` to mp4.</span>
 
@@ -375,7 +382,7 @@
 
         <span class="n">tts_provider</span> <span class="o">=</span> <span class="n">make_tts</span><span class="p">(</span><span class="n">tts</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tts</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">tts</span>
         <span class="n">lipsync_provider</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">make_lipsync</span><span class="p">(</span><span class="n">lipsync</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lipsync</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">lipsync</span>
+            <span class="n">make_lipsync</span><span class="p">(</span><span class="n">lipsync</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lipsync</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">lipsync</span>
         <span class="p">)</span>
 
         <span class="n">produce_audio_for_scene</span><span class="p">(</span>

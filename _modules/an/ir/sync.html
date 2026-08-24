@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.53 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -295,7 +295,7 @@
     <span class="n">shots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Shot</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">shot_id</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">[</span><span class="s2">"__shots__"</span><span class="p">]:</span>
         <span class="n">shot_yaml</span> <span class="o">=</span> <span class="n">_extract_yaml_block</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="s2">"shot"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="n">dialogue_block</span> <span class="o">=</span> <span class="n">_extract_dialogue_block</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+        <span class="n">dialogue_block</span> <span class="o">=</span> <span class="n">_extract_dialogue_block</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">shot_id</span><span class="o">=</span><span class="n">shot_id</span><span class="p">)</span>
         <span class="n">entities_block</span> <span class="o">=</span> <span class="n">_extract_entities_block</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
         <span class="n">actions_block</span> <span class="o">=</span> <span class="n">_extract_actions_block</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
         <span class="n">shot_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -365,7 +365,7 @@
 <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_extract_dialogue_block</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dialogue</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_dialogue_block</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">shot_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dialogue</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Parse a ```dialogue block.</span>
 
 <span class="sd">    Each non-empty, non-comment line follows ``speaker[emotion]: text`` where</span>
@@ -374,6 +374,10 @@
 <span class="sd">        charlie: Hello.</span>
 <span class="sd">        charlie [happy]: Hello!</span>
 <span class="sd">        maya [skeptical]: Sure.</span>
+
+<span class="sd">    A line that matches none of those shapes is a **parse error**, not a skip:</span>
+<span class="sd">    this parser used to drop it silently, and ``examples/promote_demo`` was mute</span>
+<span class="sd">    for months because its one line read ``maya (warm): …`` (an#96).</span>
 <span class="sd">    """</span>
     <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dialogue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_FENCE_RE</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
@@ -386,7 +390,14 @@
                 <span class="k">continue</span>
             <span class="n">match</span> <span class="o">=</span> <span class="n">_DIALOGUE_LINE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
-                <span class="k">continue</span>
+                <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot_id</span><span class="si">!r}</span><span class="s2">: "</span> <span class="k">if</span> <span class="n">shot_id</span> <span class="k">else</span> <span class="s2">""</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">dialogue line </span><span class="si">{</span><span class="n">line</span><span class="si">!r}</span><span class="s2"> is not `speaker: text` or "</span>
+                    <span class="s2">"`speaker [emotion]: text` — speaker ids are `[</span><span class="se">\\</span><span class="s2">w-]+`, and "</span>
+                    <span class="s2">"the emotion goes in square brackets. A line that does not "</span>
+                    <span class="s2">"parse is refused rather than dropped, so a typo cannot "</span>
+                    <span class="s2">"silence a character."</span>
+                <span class="p">)</span>
             <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">"speaker"</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">"speaker"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
                 <span class="s2">"text"</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">"text"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>

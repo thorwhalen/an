@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.whisper_lipsync &mdash; an 0.1.53 documentation</title>
+  <title>an.audio.whisper_lipsync &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -79,7 +79,10 @@
 <li class="toctree-l1"><a class="reference internal" href="rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tts.html">an.audio.tts</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.audio.whisper_lipsync</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#an.audio.whisper_lipsync.WhisperLipSync"><code class="docutils literal notranslate"><span class="pre">WhisperLipSync</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.whisper_lipsync.WhisperLipSync"><code class="docutils literal notranslate"><span class="pre">WhisperLipSync</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.audio.whisper_lipsync.WhisperLipSync.emits_word_timings"><code class="docutils literal notranslate"><span class="pre">WhisperLipSync.emits_word_timings</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
@@ -204,6 +207,12 @@ subsequent calls in the same process re-use the cached model.</p></li>
 <p>Implements the <code class="docutils literal notranslate"><span class="pre">LipSyncProvider</span></code> protocol. The model is lazy-loaded on
 the first call (subsequent calls in the same process reuse the instance
 via the class-level <code class="docutils literal notranslate"><span class="pre">_model</span></code> cache).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.audio.whisper_lipsync.WhisperLipSync.emits_word_timings">
+<span class="sig-name descname"><span class="pre">emits_word_timings</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#an.audio.whisper_lipsync.WhisperLipSync.emits_word_timings" title="Link to this definition"></a></dt>
+<dd><p>Whisper aligns from words, so the track carries them (an#96).</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>

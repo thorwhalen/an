@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.rhubarb_lipsync &mdash; an 0.1.53 documentation</title>
+  <title>an.audio.rhubarb_lipsync &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -180,6 +180,20 @@
 
 <span class="sd">Falls back gracefully (raises a clear error) if the binary is missing — the</span>
 <span class="sd">default ``OfflineLipSync`` keeps the pipeline functional in the meantime.</span>
+
+<span class="sd">**The recognizer follows the language** (an#96, epic #9 defect 5a). Rhubarb has</span>
+<span class="sd">two: ``pocketSphinx`` — its default, "use for English recordings", the only one</span>
+<span class="sd">that reads ``--dialogFile`` (it builds a dialog language model and mixes it 90/10</span>
+<span class="sd">with the default) — and ``phonetic``, "use for non-English recordings", which</span>
+<span class="sd">``UNUSED(dialog)``s the transcript at source. This module used to pass</span>
+<span class="sd">``-r phonetic`` **and** ``--dialogFile`` unconditionally: English speech from an</span>
+<span class="sd">English transcript ran the language-independent recognizer and the transcript</span>
+<span class="sd">it wrote to disk was never read. Now ``recognizer=None`` (the default) resolves</span>
+<span class="sd">per ``language`` — ``"en"`` → ``pocketSphinx`` with the dialog file, anything</span>
+<span class="sd">else → ``phonetic`` and **no transcript is written** (a file nothing reads is a</span>
+<span class="sd">lie waiting for the next reader). An explicit ``recognizer`` still overrides.</span>
+<span class="sd">``name`` carries the recognizer so the viseme cache key changes with it and no</span>
+<span class="sd">stale ``phonetic`` track replays.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -195,27 +209,77 @@
 
 
 <span class="n">_DEFAULT_TIMEOUT_S</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">60.0</span>
-<span class="n">_RECOGNIZER</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"phonetic"</span>  <span class="c1"># works well without a dialog file</span>
+<span class="c1">#: Rhubarb's own default and its English recognizer — the one that reads the</span>
+<span class="c1">#: dialog file.</span>
+<span class="n">_ENGLISH_RECOGNIZER</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pocketSphinx"</span>
+<span class="c1">#: Language-independent; ignores the dialog file at source.</span>
+<span class="n">_PHONETIC_RECOGNIZER</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"phonetic"</span>
+<span class="c1">#: The languages `pocketSphinx` (CMU Sphinx US English acoustic model) covers.</span>
+<span class="n">ENGLISH_LANGUAGES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"en"</span><span class="p">})</span>
+<span class="n">RECOGNIZERS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="n">_ENGLISH_RECOGNIZER</span><span class="p">,</span> <span class="n">_PHONETIC_RECOGNIZER</span><span class="p">})</span>
+
+
+<div class="viewcode-block" id="recognizer_for">
+<a class="viewcode-back" href="../../../module_docs/an/audio/rhubarb_lipsync.html#an.audio.recognizer_for">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">recognizer_for</span><span class="p">(</span><span class="n">language</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The Rhubarb recognizer for a BCP-47 language tag (primary subtag only).</span>
+
+<span class="sd">    Accepts the POSIX locale spelling too (``en_US``); an empty tag is refused</span>
+<span class="sd">    rather than read as "non-English" (an#96 review).</span>
+
+<span class="sd">    &gt;&gt;&gt; recognizer_for("en"), recognizer_for("en-GB"), recognizer_for("en_US"), recognizer_for("fr")</span>
+<span class="sd">    ('pocketSphinx', 'pocketSphinx', 'pocketSphinx', 'phonetic')</span>
+<span class="sd">    """</span>
+    <span class="n">primary</span> <span class="o">=</span> <span class="n">language</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">primary</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"language must be a BCP-47 tag such as 'en' or 'fr'; got ''"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_ENGLISH_RECOGNIZER</span> <span class="k">if</span> <span class="n">primary</span> <span class="ow">in</span> <span class="n">ENGLISH_LANGUAGES</span> <span class="k">else</span> <span class="n">_PHONETIC_RECOGNIZER</span></div>
+
 
 
 <div class="viewcode-block" id="RhubarbLipSync">
 <a class="viewcode-back" href="../../../module_docs/an/audio/rhubarb_lipsync.html#an.audio.RhubarbLipSync">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RhubarbLipSync</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Wrap the rhubarb CLI. Implements the ``LipSyncProvider`` protocol."""</span>
+<span class="w">    </span><span class="sd">"""Wrap the rhubarb CLI. Implements the ``LipSyncProvider`` protocol.</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"rhubarb"</span>
+<span class="sd">    &gt;&gt;&gt; RhubarbLipSync(binary_path="/bin/rhubarb").recognizer</span>
+<span class="sd">    'pocketSphinx'</span>
+<span class="sd">    &gt;&gt;&gt; RhubarbLipSync(binary_path="/bin/rhubarb", language="de").recognizer</span>
+<span class="sd">    'phonetic'</span>
+<span class="sd">    &gt;&gt;&gt; RhubarbLipSync(binary_path="/bin/rhubarb", language="de").name</span>
+<span class="sd">    'rhubarb:phonetic'</span>
+<span class="sd">    """</span>
+
     <span class="n">convention</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"rhubarb"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">binary_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">recognizer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_RECOGNIZER</span><span class="p">,</span>
+        <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"en"</span><span class="p">,</span>
+        <span class="n">recognizer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">timeout_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_TIMEOUT_S</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">binary_path</span> <span class="o">=</span> <span class="n">binary_path</span> <span class="ow">or</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"rhubarb"</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">recognizer</span> <span class="o">=</span> <span class="n">recognizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">language</span> <span class="o">=</span> <span class="n">language</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">recognizer</span> <span class="k">if</span> <span class="n">recognizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">recognizer_for</span><span class="p">(</span><span class="n">language</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">chosen</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RECOGNIZERS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"unknown rhubarb recognizer </span><span class="si">{</span><span class="n">chosen</span><span class="si">!r}</span><span class="s2">; known: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">RECOGNIZERS</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recognizer</span> <span class="o">=</span> <span class="n">chosen</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timeout_s</span> <span class="o">=</span> <span class="n">timeout_s</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="c1"># The recognizer is part of the identity: it changes the track, so it</span>
+        <span class="c1"># must change the viseme cache key (the pipeline hashes `name`).</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"rhubarb:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">recognizer</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uses_dialog_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether the chosen recognizer reads a transcript at all."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">recognizer</span> <span class="o">==</span> <span class="n">_ENGLISH_RECOGNIZER</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">audio</span><span class="p">:</span> <span class="n">AudioClip</span><span class="p">,</span> <span class="n">transcript</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VisemeTrack</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_path</span><span class="p">:</span>
@@ -233,22 +297,13 @@
                 <span class="n">audio_path</span> <span class="o">=</span> <span class="n">d</span> <span class="o">/</span> <span class="s2">"audio.wav"</span>
                 <span class="n">audio_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">audio</span><span class="o">.</span><span class="n">bytes_</span><span class="p">)</span>
 
-            <span class="n">dialog_path</span> <span class="o">=</span> <span class="n">d</span> <span class="o">/</span> <span class="s2">"transcript.txt"</span>
-            <span class="n">dialog_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">transcript</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
             <span class="n">out_json</span> <span class="o">=</span> <span class="n">d</span> <span class="o">/</span> <span class="s2">"out.json"</span>
-
-            <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">binary_path</span><span class="p">,</span>
-                <span class="s2">"-f"</span><span class="p">,</span>
-                <span class="s2">"json"</span><span class="p">,</span>
-                <span class="s2">"-r"</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">recognizer</span><span class="p">,</span>
-                <span class="s2">"--dialogFile"</span><span class="p">,</span>
-                <span class="nb">str</span><span class="p">(</span><span class="n">dialog_path</span><span class="p">),</span>
-                <span class="s2">"-o"</span><span class="p">,</span>
-                <span class="nb">str</span><span class="p">(</span><span class="n">out_json</span><span class="p">),</span>
-                <span class="nb">str</span><span class="p">(</span><span class="n">audio_path</span><span class="p">),</span>
-            <span class="p">]</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">binary_path</span><span class="p">,</span> <span class="s2">"-f"</span><span class="p">,</span> <span class="s2">"json"</span><span class="p">,</span> <span class="s2">"-r"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">recognizer</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">uses_dialog_file</span><span class="p">:</span>
+                <span class="n">dialog_path</span> <span class="o">=</span> <span class="n">d</span> <span class="o">/</span> <span class="s2">"transcript.txt"</span>
+                <span class="n">dialog_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">transcript</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+                <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--dialogFile"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">dialog_path</span><span class="p">)]</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-o"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_json</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">audio_path</span><span class="p">)]</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
                     <span class="n">cmd</span><span class="p">,</span>

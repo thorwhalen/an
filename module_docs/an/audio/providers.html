@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.providers &mdash; an 0.1.53 documentation</title>
+  <title>an.audio.providers &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -76,6 +76,7 @@
 <li class="toctree-l1"><a class="reference internal" href="offline_tts.html">an.audio.offline_tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">an.audio.pipeline</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.audio.providers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.providers.DEFAULT_LANGUAGE"><code class="docutils literal notranslate"><span class="pre">DEFAULT_LANGUAGE</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.providers.known_lipsync_names"><code class="docutils literal notranslate"><span class="pre">known_lipsync_names()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.providers.known_tts_names"><code class="docutils literal notranslate"><span class="pre">known_tts_names()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.providers.make_lipsync"><code class="docutils literal notranslate"><span class="pre">make_lipsync()</span></code></a></li>
@@ -194,6 +195,13 @@ specific classes.</p>
 <span class="go">'offline'</span>
 </pre></div>
 </div>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.audio.providers.DEFAULT_LANGUAGE">
+<span class="sig-prename descclassname"><span class="pre">an.audio.providers.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_LANGUAGE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'en'</span></span><a class="headerlink" href="#an.audio.providers.DEFAULT_LANGUAGE" title="Link to this definition"></a></dt>
+<dd><p>The language a provider aligns for when the caller says nothing. Only
+Rhubarb reads it today (its recognizer follows the language, an#96).</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="an.audio.providers.known_lipsync_names">
 <span class="sig-prename descclassname"><span class="pre">an.audio.providers.</span></span><span class="sig-name descname"><span class="pre">known_lipsync_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/audio/providers.html#known_lipsync_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.providers.known_lipsync_names" title="Link to this definition"></a></dt>
@@ -208,8 +216,10 @@ specific classes.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="an.audio.providers.make_lipsync">
-<span class="sig-prename descclassname"><span class="pre">an.audio.providers.</span></span><span class="sig-name descname"><span class="pre">make_lipsync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="lipsync.html#an.audio.lipsync.LipSyncProvider" title="an.audio.lipsync.LipSyncProvider"><span class="pre">LipSyncProvider</span></a></span></span><a class="reference internal" href="../../../_modules/an/audio/providers.html#make_lipsync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.providers.make_lipsync" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.audio.providers.</span></span><span class="sig-name descname"><span class="pre">make_lipsync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'en'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="lipsync.html#an.audio.lipsync.LipSyncProvider" title="an.audio.lipsync.LipSyncProvider"><span class="pre">LipSyncProvider</span></a></span></span><a class="reference internal" href="../../../_modules/an/audio/providers.html#make_lipsync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.providers.make_lipsync" title="Link to this definition"></a></dt>
 <dd><p>Instantiate a LipSync provider by name.</p>
+<p><code class="docutils literal notranslate"><span class="pre">language</span></code> (BCP-47) reaches providers that select behaviour by language —
+Rhubarb’s recognizer today; a future aligner’s weight allowlist.</p>
 </dd></dl>
 
 <dl class="py function">

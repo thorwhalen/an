@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio &mdash; an 0.1.53 documentation</title>
+  <title>an.audio &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -77,7 +77,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.MacSayTTS"><code class="docutils literal notranslate"><span class="pre">MacSayTTS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.OfflineLipSync"><code class="docutils literal notranslate"><span class="pre">OfflineLipSync</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.OfflineTTS"><code class="docutils literal notranslate"><span class="pre">OfflineTTS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#an.audio.RhubarbLipSync"><code class="docutils literal notranslate"><span class="pre">RhubarbLipSync</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.RhubarbLipSync"><code class="docutils literal notranslate"><span class="pre">RhubarbLipSync</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.audio.RhubarbLipSync.uses_dialog_file"><code class="docutils literal notranslate"><span class="pre">RhubarbLipSync.uses_dialog_file</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.StaticWordTimings"><code class="docutils literal notranslate"><span class="pre">StaticWordTimings</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.TTSProvider"><code class="docutils literal notranslate"><span class="pre">TTSProvider</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#an.audio.TTSProvider.list_voices"><code class="docutils literal notranslate"><span class="pre">TTSProvider.list_voices()</span></code></a></li>
@@ -87,12 +90,18 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.Viseme"><code class="docutils literal notranslate"><span class="pre">Viseme</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.VisemeTrack"><code class="docutils literal notranslate"><span class="pre">VisemeTrack</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.VoiceMeta"><code class="docutils literal notranslate"><span class="pre">VoiceMeta</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#an.audio.WhisperLipSync"><code class="docutils literal notranslate"><span class="pre">WhisperLipSync</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.WhisperLipSync"><code class="docutils literal notranslate"><span class="pre">WhisperLipSync</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.audio.WhisperLipSync.emits_word_timings"><code class="docutils literal notranslate"><span class="pre">WhisperLipSync.emits_word_timings</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.WordTimingProvider"><code class="docutils literal notranslate"><span class="pre">WordTimingProvider</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#an.audio.WordTimingProvider.words_for"><code class="docutils literal notranslate"><span class="pre">WordTimingProvider.words_for()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#an.audio.WordTimingsLipSync"><code class="docutils literal notranslate"><span class="pre">WordTimingsLipSync</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.WordTimingsLipSync"><code class="docutils literal notranslate"><span class="pre">WordTimingsLipSync</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.audio.WordTimingsLipSync.emits_word_timings"><code class="docutils literal notranslate"><span class="pre">WordTimingsLipSync.emits_word_timings</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.default_lipsync"><code class="docutils literal notranslate"><span class="pre">default_lipsync()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.default_tts"><code class="docutils literal notranslate"><span class="pre">default_tts()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.audio.known_lipsync_names"><code class="docutils literal notranslate"><span class="pre">known_lipsync_names()</span></code></a></li>
@@ -245,6 +254,11 @@ without external services.</p>
 <dt class="sig sig-object py" id="an.audio.LipSyncProvider">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.audio.</span></span><span class="sig-name descname"><span class="pre">LipSyncProvider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/audio/lipsync.html#LipSyncProvider"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.LipSyncProvider" title="Link to this definition"></a></dt>
 <dd><p>Audio + transcript → aligned viseme track.</p>
+<p>A provider that fills <code class="docutils literal notranslate"><span class="pre">VisemeTrack.words</span></code> also declares
+<code class="docutils literal notranslate"><span class="pre">emits_word_timings</span> <span class="pre">=</span> <span class="pre">True</span></code> (a plain class attribute, absent means
+False). The audio pipeline reads it to decide whether a line whose
+<code class="docutils literal notranslate"><span class="pre">word_timings</span></code> are missing needs re-alignment — without the flag, a
+provider that cannot supply words would re-align every line forever.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="an.audio.LipSyncProvider.align">
 <span class="sig-name descname"><span class="pre">align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">audio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="audio/tts.html#an.audio.tts.AudioClip" title="an.audio.tts.AudioClip"><span class="pre">AudioClip</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">transcript</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="audio/lipsync.html#an.audio.lipsync.VisemeTrack" title="an.audio.lipsync.VisemeTrack"><span class="pre">VisemeTrack</span></a></span></span><a class="reference internal" href="../../_modules/an/audio/lipsync.html#LipSyncProvider.align"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.LipSyncProvider.align" title="Link to this definition"></a></dt>
@@ -277,8 +291,22 @@ fully offline — uses Apple’s voice synthesis bundled with the OS.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="an.audio.RhubarbLipSync">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.audio.</span></span><span class="sig-name descname"><span class="pre">RhubarbLipSync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recognizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'phonetic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/audio/rhubarb_lipsync.html#RhubarbLipSync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.RhubarbLipSync" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.audio.</span></span><span class="sig-name descname"><span class="pre">RhubarbLipSync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'en'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recognizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/audio/rhubarb_lipsync.html#RhubarbLipSync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.RhubarbLipSync" title="Link to this definition"></a></dt>
 <dd><p>Wrap the rhubarb CLI. Implements the <code class="docutils literal notranslate"><span class="pre">LipSyncProvider</span></code> protocol.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">RhubarbLipSync</span><span class="p">(</span><span class="n">binary_path</span><span class="o">=</span><span class="s2">"/bin/rhubarb"</span><span class="p">)</span><span class="o">.</span><span class="n">recognizer</span>
+<span class="go">'pocketSphinx'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RhubarbLipSync</span><span class="p">(</span><span class="n">binary_path</span><span class="o">=</span><span class="s2">"/bin/rhubarb"</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">"de"</span><span class="p">)</span><span class="o">.</span><span class="n">recognizer</span>
+<span class="go">'phonetic'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RhubarbLipSync</span><span class="p">(</span><span class="n">binary_path</span><span class="o">=</span><span class="s2">"/bin/rhubarb"</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">"de"</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+<span class="go">'rhubarb:phonetic'</span>
+</pre></div>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="an.audio.RhubarbLipSync.uses_dialog_file">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">uses_dialog_file</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#an.audio.RhubarbLipSync.uses_dialog_file" title="Link to this definition"></a></dt>
+<dd><p>Whether the chosen recognizer reads a transcript at all.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -313,8 +341,14 @@ fully offline — uses Apple’s voice synthesis bundled with the OS.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="an.audio.VisemeTrack">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.audio.</span></span><span class="sig-name descname"><span class="pre">VisemeTrack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visemes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="audio/lipsync.html#an.audio.lipsync.Viseme" title="an.audio.lipsync.Viseme"><span class="pre">Viseme</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'rhubarb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/audio/lipsync.html#VisemeTrack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.VisemeTrack" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.audio.</span></span><span class="sig-name descname"><span class="pre">VisemeTrack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visemes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="audio/lipsync.html#an.audio.lipsync.Viseme" title="an.audio.lipsync.Viseme"><span class="pre">Viseme</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'rhubarb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list[tuple[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float]]</span> <span class="pre">|</span> <span class="pre">None</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/audio/lipsync.html#VisemeTrack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.VisemeTrack" title="Link to this definition"></a></dt>
 <dd><p>Aligned viseme sequence produced by a LipSyncProvider.</p>
+<p><code class="docutils literal notranslate"><span class="pre">words</span></code> carries the word timings the provider aligned from, when it had
+any (whisper, <a class="reference internal" href="audio/injectable_lipsync.html#an.audio.injectable_lipsync.WordTimingsLipSync" title="an.audio.injectable_lipsync.WordTimingsLipSync"><code class="xref py py-class docutils literal notranslate"><span class="pre">WordTimingsLipSync</span></code></a>);
+<code class="docutils literal notranslate"><span class="pre">None</span></code> for providers that never see words (offline, Rhubarb — whose JSON
+is mouth cues only). Retained since an#96 rather than discarded after the
+viseme conversion: captions (Wave 8) and any consumer that wants to know
+<em>which word</em> a mouth shape belongs to read them from the IR.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -330,6 +364,12 @@ fully offline — uses Apple’s voice synthesis bundled with the OS.</p>
 <p>Implements the <code class="docutils literal notranslate"><span class="pre">LipSyncProvider</span></code> protocol. The model is lazy-loaded on
 the first call (subsequent calls in the same process reuse the instance
 via the class-level <code class="docutils literal notranslate"><span class="pre">_model</span></code> cache).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.audio.WhisperLipSync.emits_word_timings">
+<span class="sig-name descname"><span class="pre">emits_word_timings</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#an.audio.WhisperLipSync.emits_word_timings" title="Link to this definition"></a></dt>
+<dd><p>Whisper aligns from words, so the track carries them (an#96).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -372,6 +412,12 @@ we insert a rest keyframe. Defaults to <code class="docutils literal notranslate
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.audio.WordTimingsLipSync.emits_word_timings">
+<span class="sig-name descname"><span class="pre">emits_word_timings</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#an.audio.WordTimingsLipSync.emits_word_timings" title="Link to this definition"></a></dt>
+<dd><p>Built from words, so the track carries them (an#96).</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py function">
@@ -400,8 +446,10 @@ we insert a rest keyframe. Defaults to <code class="docutils literal notranslate
 
 <dl class="py function">
 <dt class="sig sig-object py" id="an.audio.make_lipsync">
-<span class="sig-prename descclassname"><span class="pre">an.audio.</span></span><span class="sig-name descname"><span class="pre">make_lipsync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="audio/lipsync.html#an.audio.lipsync.LipSyncProvider" title="an.audio.lipsync.LipSyncProvider"><span class="pre">LipSyncProvider</span></a></span></span><a class="reference internal" href="../../_modules/an/audio/providers.html#make_lipsync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.make_lipsync" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.audio.</span></span><span class="sig-name descname"><span class="pre">make_lipsync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'en'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="audio/lipsync.html#an.audio.lipsync.LipSyncProvider" title="an.audio.lipsync.LipSyncProvider"><span class="pre">LipSyncProvider</span></a></span></span><a class="reference internal" href="../../_modules/an/audio/providers.html#make_lipsync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.make_lipsync" title="Link to this definition"></a></dt>
 <dd><p>Instantiate a LipSync provider by name.</p>
+<p><code class="docutils literal notranslate"><span class="pre">language</span></code> (BCP-47) reaches providers that select behaviour by language —
+Rhubarb’s recognizer today; a future aligner’s weight allowlist.</p>
 </dd></dl>
 
 <dl class="py function">

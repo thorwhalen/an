@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.pipeline &mdash; an 0.1.53 documentation</title>
+  <title>an.audio.pipeline &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -198,11 +198,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.lipsync</span><span class="w"> </span><span class="kn">import</span> <span class="n">LipSyncProvider</span><span class="p">,</span> <span class="n">VisemeTrack</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.lipsync</span><span class="w"> </span><span class="kn">import</span> <span class="n">LipSyncProvider</span><span class="p">,</span> <span class="n">Viseme</span><span class="p">,</span> <span class="n">VisemeTrack</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.offline_lipsync</span><span class="w"> </span><span class="kn">import</span> <span class="n">OfflineLipSync</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.offline_tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">OfflineTTS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.audio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">AudioClip</span><span class="p">,</span> <span class="n">TTSProvider</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dialogue</span><span class="p">,</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">VisemeKeyframe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dialogue</span><span class="p">,</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">VisemeKeyframe</span><span class="p">,</span> <span class="n">WordTimingIR</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">VisemeTrack</span> <span class="k">as</span> <span class="n">IRVisemeTrack</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">_stable_hash</span>
 
@@ -323,6 +323,11 @@
                 <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_ref</span> <span class="o">==</span> <span class="n">expected_viseme_ref</span>
                 <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                 <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="c1"># A line stamped before an#96 by a provider that HAS words is</span>
+                <span class="c1"># re-aligned once so the words land; a provider without words</span>
+                <span class="c1"># (offline, Rhubarb) never triggers this, or it would re-align</span>
+                <span class="c1"># forever. The cache key is unchanged: the sidecar simply grew.</span>
+                <span class="ow">and</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">word_timings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">_emits_word_timings</span><span class="p">(</span><span class="n">lipsync</span><span class="p">))</span>
                 <span class="ow">and</span> <span class="p">(</span><span class="n">audio_store</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">expected_audio_ref</span> <span class="ow">in</span> <span class="n">audio_store</span><span class="p">)</span>
                 <span class="ow">and</span> <span class="p">(</span><span class="n">viseme_store</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">expected_viseme_ref</span> <span class="ow">in</span> <span class="n">viseme_store</span><span class="p">)</span>
             <span class="p">)</span>
@@ -343,6 +348,7 @@
             <span class="k">if</span> <span class="n">was_synthesized</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">line</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">cursor</span>
             <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span> <span class="o">=</span> <span class="n">_to_ir_viseme_track</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
+            <span class="n">line</span><span class="o">.</span><span class="n">word_timings</span> <span class="o">=</span> <span class="n">_to_ir_word_timings</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
             <span class="n">line</span><span class="o">.</span><span class="n">audio_ref</span> <span class="o">=</span> <span class="n">expected_audio_ref</span>
             <span class="n">line</span><span class="o">.</span><span class="n">viseme_ref</span> <span class="o">=</span> <span class="n">expected_viseme_ref</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="n">audio</span><span class="o">.</span><span class="n">duration</span>
@@ -360,6 +366,29 @@
     <span class="k">return</span> <span class="n">IRVisemeTrack</span><span class="p">(</span>
         <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span><span class="n">VisemeKeyframe</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">viseme</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">track</span><span class="o">.</span><span class="n">visemes</span><span class="p">]</span>
     <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_to_ir_word_timings</span><span class="p">(</span><span class="n">track</span><span class="p">:</span> <span class="n">VisemeTrack</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">WordTimingIR</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The track's word timings as IR models, or ``None`` when it has none.</span>
+
+<span class="sd">    Clamped to ``[0, track.duration]`` the way the visemes are: transcribers</span>
+<span class="sd">    "occasionally round the last word's end past the audio's actual length",</span>
+<span class="sd">    and a caption cue reads ``line.start + word.end`` (an#96 review).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">track</span><span class="o">.</span><span class="n">words</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">text</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">track</span><span class="o">.</span><span class="n">words</span><span class="p">:</span>
+        <span class="n">hi</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">track</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span> <span class="k">if</span> <span class="n">track</span><span class="o">.</span><span class="n">duration</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">end</span><span class="p">)),</span> <span class="n">hi</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">start</span><span class="p">)),</span> <span class="n">e</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">WordTimingIR</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_emits_word_timings</span><span class="p">(</span><span class="n">lipsync</span><span class="p">:</span> <span class="n">LipSyncProvider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether ``lipsync`` declares that it fills ``VisemeTrack.words``."""</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">lipsync</span><span class="p">,</span> <span class="s2">"emits_word_timings"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_load_or_synthesize</span><span class="p">(</span>
@@ -392,9 +421,10 @@
     <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"visemes"</span> <span class="ow">in</span> <span class="n">mall</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">mall</span><span class="p">[</span><span class="s2">"visemes"</span><span class="p">]:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">mall</span><span class="p">[</span><span class="s2">"visemes"</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">VisemeTrack</span><span class="p">(</span>
+            <span class="n">words</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"words"</span><span class="p">)</span>
+            <span class="n">cached</span> <span class="o">=</span> <span class="n">VisemeTrack</span><span class="p">(</span>
                 <span class="n">visemes</span><span class="o">=</span><span class="p">[</span>
-                    <span class="nb">__import__</span><span class="p">(</span><span class="s2">"an.audio.lipsync"</span><span class="p">,</span> <span class="n">fromlist</span><span class="o">=</span><span class="p">[</span><span class="s2">"Viseme"</span><span class="p">])</span><span class="o">.</span><span class="n">Viseme</span><span class="p">(</span>
+                    <span class="n">Viseme</span><span class="p">(</span>
                         <span class="n">time</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s2">"time"</span><span class="p">],</span>
                         <span class="n">code</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="s2">"code"</span><span class="p">],</span>
                         <span class="n">intensity</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"intensity"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
@@ -403,16 +433,39 @@
                 <span class="p">],</span>
                 <span class="n">convention</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"convention"</span><span class="p">,</span> <span class="n">lipsync</span><span class="o">.</span><span class="n">convention</span><span class="p">),</span>
                 <span class="n">duration</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">,</span> <span class="n">audio</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
+                <span class="n">words</span><span class="o">=</span><span class="p">(</span>
+                    <span class="p">[(</span><span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">words</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">),</span>
             <span class="p">)</span>
+            <span class="c1"># A payload written before an#96 by a provider that HAS words is</span>
+            <span class="c1"># missing them; re-align once so the sidecar carries them. The key</span>
+            <span class="c1"># is the same, so the rewrite below replaces the old payload.</span>
+            <span class="k">if</span> <span class="n">cached</span><span class="o">.</span><span class="n">words</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">_emits_word_timings</span><span class="p">(</span><span class="n">lipsync</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">cached</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="c1"># Fall through to recompute; cache content was malformed.</span>
             <span class="k">pass</span>
     <span class="n">track</span> <span class="o">=</span> <span class="n">lipsync</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="n">audio</span><span class="p">,</span> <span class="n">transcript</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_emits_word_timings</span><span class="p">(</span><span class="n">lipsync</span><span class="p">)</span> <span class="ow">and</span> <span class="n">track</span><span class="o">.</span><span class="n">words</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The declaration is what `already_done` trusts: a provider that</span>
+        <span class="c1"># claims words and returns none would be re-aligned on every run,</span>
+        <span class="c1"># silently — the exact loop the flag exists to prevent (an#96 review).</span>
+        <span class="k">raise</span> <span class="n">AudioPipelineError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"lip-sync provider </span><span class="si">{</span><span class="n">lipsync</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> declares emits_word_timings but "</span>
+            <span class="s2">"returned a track with words=None; set the flag False or fill words."</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"visemes"</span> <span class="ow">in</span> <span class="n">mall</span><span class="p">:</span>
         <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">"visemes"</span><span class="p">:</span> <span class="p">[</span><span class="n">asdict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">track</span><span class="o">.</span><span class="n">visemes</span><span class="p">],</span>
             <span class="s2">"convention"</span><span class="p">:</span> <span class="n">track</span><span class="o">.</span><span class="n">convention</span><span class="p">,</span>
             <span class="s2">"duration"</span><span class="p">:</span> <span class="n">track</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+            <span class="s2">"words"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="p">[[</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">track</span><span class="o">.</span><span class="n">words</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">track</span><span class="o">.</span><span class="n">words</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
         <span class="p">}</span>
         <span class="n">mall</span><span class="p">[</span><span class="s2">"visemes"</span><span class="p">][</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">track</span>

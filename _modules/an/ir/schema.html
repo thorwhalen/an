@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.53 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -207,7 +207,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">model_validator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">COMPATIBLE_VERSION</span><span class="p">,</span>
@@ -448,6 +448,29 @@
 
 
 
+<div class="viewcode-block" id="WordTimingIR">
+<a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.WordTimingIR">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">WordTimingIR</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""One word of a line and when it was spoken, in seconds from the line's</span>
+<span class="sd">    start (like :class:`VisemeKeyframe`, never absolute). Stamped by the audio</span>
+<span class="sd">    pipeline from the provider's word timings when it has them (an#96); JSON</span>
+<span class="sd">    only — ``scene.md`` never carries it, the way it never carries visemes."""</span>
+
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">start</span><span class="p">:</span> <span class="n">Seconds</span>
+    <span class="n">end</span><span class="p">:</span> <span class="n">Seconds</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ordered</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"WordTimingIR"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"word timing </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="si">!r}</span><span class="s2"> must satisfy 0 &lt;= start &lt;= end; "</span>
+                <span class="sa">f</span><span class="s2">"got start=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s2">, end=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+
 <div class="viewcode-block" id="Dialogue">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.Dialogue">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Dialogue</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
@@ -464,6 +487,9 @@
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">emotion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">viseme_track</span><span class="p">:</span> <span class="n">VisemeTrack</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: The provider's word timings, line-relative; ``None`` when the provider</span>
+    <span class="c1">#: has none (offline, Rhubarb) or the line was stamped before an#96.</span>
+    <span class="n">word_timings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">WordTimingIR</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">audio_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># mall["audio"] key (content-hash of TTS input)</span>
     <span class="n">viseme_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># mall["visemes"] key (content-hash of lipsync input)</span></div>
 
@@ -479,6 +505,7 @@
     <span class="n">start</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">viseme_track</span><span class="p">:</span> <span class="n">VisemeTrack</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">word_timings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">WordTimingIR</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">audio_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">viseme_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 

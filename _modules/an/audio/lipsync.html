@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.lipsync &mdash; an 0.1.53 documentation</title>
+  <title>an.audio.lipsync &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -210,27 +210,43 @@
 
 
 
+<span class="c1">#: One word's slice in time. Tuple form keeps providers cheap.</span>
+<span class="n">WordTiming</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>  <span class="c1"># (text, start_s, end_s)</span>
+
+
 <div class="viewcode-block" id="VisemeTrack">
 <a class="viewcode-back" href="../../../module_docs/an/audio/lipsync.html#an.audio.VisemeTrack">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">VisemeTrack</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Aligned viseme sequence produced by a LipSyncProvider."""</span>
+<span class="w">    </span><span class="sd">"""Aligned viseme sequence produced by a LipSyncProvider.</span>
+
+<span class="sd">    ``words`` carries the word timings the provider aligned from, when it had</span>
+<span class="sd">    any (whisper, :class:`~an.audio.injectable_lipsync.WordTimingsLipSync`);</span>
+<span class="sd">    ``None`` for providers that never see words (offline, Rhubarb — whose JSON</span>
+<span class="sd">    is mouth cues only). Retained since an#96 rather than discarded after the</span>
+<span class="sd">    viseme conversion: captions (Wave 8) and any consumer that wants to know</span>
+<span class="sd">    *which word* a mouth shape belongs to read them from the IR.</span>
+<span class="sd">    """</span>
 
     <span class="n">visemes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Viseme</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">convention</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"rhubarb"</span>  <span class="c1"># "rhubarb", "azure22", "mpeg4", etc.</span>
-    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">words</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">WordTiming</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-
-
-<span class="c1">#: One word's slice in time. Tuple form keeps providers cheap.</span>
-<span class="n">WordTiming</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>  <span class="c1"># (text, start_s, end_s)</span>
 
 
 <div class="viewcode-block" id="LipSyncProvider">
 <a class="viewcode-back" href="../../../module_docs/an/audio/lipsync.html#an.audio.LipSyncProvider">[docs]</a>
 <span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">LipSyncProvider</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Audio + transcript → aligned viseme track."""</span>
+<span class="w">    </span><span class="sd">"""Audio + transcript → aligned viseme track.</span>
+
+<span class="sd">    A provider that fills ``VisemeTrack.words`` also declares</span>
+<span class="sd">    ``emits_word_timings = True`` (a plain class attribute, absent means</span>
+<span class="sd">    False). The audio pipeline reads it to decide whether a line whose</span>
+<span class="sd">    ``word_timings`` are missing needs re-alignment — without the flag, a</span>
+<span class="sd">    provider that cannot supply words would re-align every line forever.</span>
+<span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">convention</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># which viseme convention this provider emits</span>

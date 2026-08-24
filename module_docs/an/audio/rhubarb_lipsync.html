@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.audio.rhubarb_lipsync &mdash; an 0.1.53 documentation</title>
+  <title>an.audio.rhubarb_lipsync &mdash; an 0.1.54 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c54c130b"></script>
+      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -77,7 +77,12 @@
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">an.audio.pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="providers.html">an.audio.providers</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.audio.rhubarb_lipsync</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#an.audio.rhubarb_lipsync.RhubarbLipSync"><code class="docutils literal notranslate"><span class="pre">RhubarbLipSync</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.rhubarb_lipsync.ENGLISH_LANGUAGES"><code class="docutils literal notranslate"><span class="pre">ENGLISH_LANGUAGES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.rhubarb_lipsync.RhubarbLipSync"><code class="docutils literal notranslate"><span class="pre">RhubarbLipSync</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.audio.rhubarb_lipsync.RhubarbLipSync.uses_dialog_file"><code class="docutils literal notranslate"><span class="pre">RhubarbLipSync.uses_dialog_file</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.audio.rhubarb_lipsync.recognizer_for"><code class="docutils literal notranslate"><span class="pre">recognizer_for()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tts.html">an.audio.tts</a></li>
@@ -185,10 +190,55 @@
 Linux/Windows: download from the project’s GitHub releases.</p>
 <p>Falls back gracefully (raises a clear error) if the binary is missing — the
 default <code class="docutils literal notranslate"><span class="pre">OfflineLipSync</span></code> keeps the pipeline functional in the meantime.</p>
+<p><strong>The recognizer follows the language</strong> (an#96, epic #9 defect 5a). Rhubarb has
+two: <code class="docutils literal notranslate"><span class="pre">pocketSphinx</span></code> — its default, “use for English recordings”, the only one
+that reads <code class="docutils literal notranslate"><span class="pre">--dialogFile</span></code> (it builds a dialog language model and mixes it 90/10
+with the default) — and <code class="docutils literal notranslate"><span class="pre">phonetic</span></code>, “use for non-English recordings”, which
+<code class="docutils literal notranslate"><span class="pre">UNUSED(dialog)``s</span> <span class="pre">the</span> <span class="pre">transcript</span> <span class="pre">at</span> <span class="pre">source.</span> <span class="pre">This</span> <span class="pre">module</span> <span class="pre">used</span> <span class="pre">to</span> <span class="pre">pass</span>
+<span class="pre">``-r</span> <span class="pre">phonetic</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">--dialogFile</span></code> unconditionally: English speech from an
+English transcript ran the language-independent recognizer and the transcript
+it wrote to disk was never read. Now <code class="docutils literal notranslate"><span class="pre">recognizer=None</span></code> (the default) resolves
+per <code class="docutils literal notranslate"><span class="pre">language</span></code> — <code class="docutils literal notranslate"><span class="pre">&quot;en&quot;</span></code> → <code class="docutils literal notranslate"><span class="pre">pocketSphinx</span></code> with the dialog file, anything
+else → <code class="docutils literal notranslate"><span class="pre">phonetic</span></code> and <strong>no transcript is written</strong> (a file nothing reads is a
+lie waiting for the next reader). An explicit <code class="docutils literal notranslate"><span class="pre">recognizer</span></code> still overrides.
+<code class="docutils literal notranslate"><span class="pre">name</span></code> carries the recognizer so the viseme cache key changes with it and no
+stale <code class="docutils literal notranslate"><span class="pre">phonetic</span></code> track replays.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.audio.rhubarb_lipsync.ENGLISH_LANGUAGES">
+<span class="sig-prename descclassname"><span class="pre">an.audio.rhubarb_lipsync.</span></span><span class="sig-name descname"><span class="pre">ENGLISH_LANGUAGES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'en'})</span></span><a class="headerlink" href="#an.audio.rhubarb_lipsync.ENGLISH_LANGUAGES" title="Link to this definition"></a></dt>
+<dd><p>The languages <cite>pocketSphinx</cite> (CMU Sphinx US English acoustic model) covers.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="an.audio.rhubarb_lipsync.RhubarbLipSync">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.audio.rhubarb_lipsync.</span></span><span class="sig-name descname"><span class="pre">RhubarbLipSync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recognizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'phonetic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/audio/rhubarb_lipsync.html#RhubarbLipSync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.rhubarb_lipsync.RhubarbLipSync" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.audio.rhubarb_lipsync.</span></span><span class="sig-name descname"><span class="pre">RhubarbLipSync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'en'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recognizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/audio/rhubarb_lipsync.html#RhubarbLipSync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.rhubarb_lipsync.RhubarbLipSync" title="Link to this definition"></a></dt>
 <dd><p>Wrap the rhubarb CLI. Implements the <code class="docutils literal notranslate"><span class="pre">LipSyncProvider</span></code> protocol.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">RhubarbLipSync</span><span class="p">(</span><span class="n">binary_path</span><span class="o">=</span><span class="s2">"/bin/rhubarb"</span><span class="p">)</span><span class="o">.</span><span class="n">recognizer</span>
+<span class="go">'pocketSphinx'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RhubarbLipSync</span><span class="p">(</span><span class="n">binary_path</span><span class="o">=</span><span class="s2">"/bin/rhubarb"</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">"de"</span><span class="p">)</span><span class="o">.</span><span class="n">recognizer</span>
+<span class="go">'phonetic'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RhubarbLipSync</span><span class="p">(</span><span class="n">binary_path</span><span class="o">=</span><span class="s2">"/bin/rhubarb"</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">"de"</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+<span class="go">'rhubarb:phonetic'</span>
+</pre></div>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="an.audio.rhubarb_lipsync.RhubarbLipSync.uses_dialog_file">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">uses_dialog_file</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#an.audio.rhubarb_lipsync.RhubarbLipSync.uses_dialog_file" title="Link to this definition"></a></dt>
+<dd><p>Whether the chosen recognizer reads a transcript at all.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.audio.rhubarb_lipsync.recognizer_for">
+<span class="sig-prename descclassname"><span class="pre">an.audio.rhubarb_lipsync.</span></span><span class="sig-name descname"><span class="pre">recognizer_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/audio/rhubarb_lipsync.html#recognizer_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.audio.rhubarb_lipsync.recognizer_for" title="Link to this definition"></a></dt>
+<dd><p>The Rhubarb recognizer for a BCP-47 language tag (primary subtag only).</p>
+<p>Accepts the POSIX locale spelling too (<code class="docutils literal notranslate"><span class="pre">en_US</span></code>); an empty tag is refused
+rather than read as “non-English” (an#96 review).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">recognizer_for</span><span class="p">(</span><span class="s2">"en"</span><span class="p">),</span> <span class="n">recognizer_for</span><span class="p">(</span><span class="s2">"en-GB"</span><span class="p">),</span> <span class="n">recognizer_for</span><span class="p">(</span><span class="s2">"en_US"</span><span class="p">),</span> <span class="n">recognizer_for</span><span class="p">(</span><span class="s2">"fr"</span><span class="p">)</span>
+<span class="go">('pocketSphinx', 'pocketSphinx', 'pocketSphinx', 'phonetic')</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
