@@ -209,7 +209,9 @@ def test_the_blink_phase_dependence_on_the_entity_name_is_recorded():
     diff in the ledger instead of an unexplained metric shift.
 
     Since an#88 the blink is a COMPILED channel, so the stamp lives in the
-    compiled scene's meta (the runtime's probe no longer owns the fact).
+    compiled scene's meta, is carried into `RenderResult.provenance`, and is
+    written into every bench ledger row (the runtime's probe no longer owns
+    the fact).
     """
     from an.adapters.cutout.compile import blink_phase, compile_shot
     from an.ir.schema import AssetRef, Shot

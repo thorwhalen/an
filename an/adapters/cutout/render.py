@@ -422,6 +422,11 @@ class CutoutRenderer:
                 "chromium_args": list(DETERMINISTIC_CHROMIUM_ARGS),
                 "x264_args": list(DETERMINISTIC_X264_ARGS),
                 "determinism": determinism,
+                # Per-entity blink phase (a pure function of the entity NAME):
+                # stamped by the compiler since blinks became channels (an#88),
+                # carried here so a renamed character is a visible provenance
+                # diff rather than an unexplained metric shift.
+                "blink_phases": dict(scene_json.meta.blink_phases),
             },
         )
 

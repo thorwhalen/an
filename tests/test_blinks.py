@@ -51,12 +51,28 @@ def _procedural_shot(duration=2.5, actions=()):
 
 
 def _blink_channels(scene):
-    return {
-        ch.target: (ch.property, ch.keyframes)
-        for aid, a in scene.animations.items()
-        if aid.startswith("__blink__")
-        for ch in a.channels
+    """target -> (property, keyframes at ABSOLUTE times), merged across the
+    one-clip-per-window placements (an#88 review: per-window clips, so an
+    authored eye value persists between blinks like every other property)."""
+    from an.adapters.cutout.serialize import KeyframeJSON
+
+    starts = {
+        p.animation_id: p.start_time for t in scene.timeline.tracks for p in t.clips
     }
+    out: dict = {}
+    for aid, a in scene.animations.items():
+        if not aid.startswith("__blink__"):
+            continue
+        for ch in a.channels:
+            prop, kfs = out.setdefault(ch.target, (ch.property, []))
+            assert prop == ch.property
+            kfs.extend(
+                KeyframeJSON(time=starts[aid] + k.time, value=k.value, easing=k.easing)
+                for k in ch.keyframes
+            )
+    for prop, kfs in out.values():
+        kfs.sort(key=lambda k: k.time)
+    return out
 
 
 # ---------------------------------------------------------------- the schedule
@@ -89,12 +105,24 @@ def test_blink_windows_reproduce_the_runtime_s_cycle_rule():
 
 def test_the_golden_blink_frames_are_where_the_research_measured_them():
     """single_character f0024 (t=1.0) and promote_demo f0070 (t=70/24) sit
-    mid-blink — the two goldens this change re-blesses, and no others."""
+    mid-blink — the only two goldens the move could touch (measured after:
+    only promote_demo's PNG changed; single_character's squash is
+    byte-identical)."""
     assert any(s <= 1.0 < e for s, e in _blink_windows("charlie", 2.5))
     assert any(s <= 70 / 24 < e for s, e in _blink_windows("maya", 3.0))
     # graded_field / saturated_outline: 0.5s shots, first blink beyond the end.
     assert not [w for w in _blink_windows("field", 0.5) if w[0] < 0.5]
     assert not [w for w in _blink_windows("plates", 0.5) if w[0] < 0.5]
+
+
+def test_the_hash_iterates_utf16_units_like_the_runtime_did():
+    """`charCodeAt` walks UTF-16 code units; a non-BMP character is two of
+    them. Values measured from the deleted JS `_strHash` under node."""
+    from an.adapters.cutout.compile import _js_string_hash
+
+    assert _js_string_hash("\U0001F600") == 1772899
+    assert _js_string_hash("a\U0001F600b") == 57849694
+    assert _js_string_hash("charlie") % 1000 == 762
 
 
 # ------------------------------------------------------------ the squash path
@@ -110,8 +138,9 @@ def test_procedural_eyes_get_a_scale_y_squash_channel_at_the_frame_times():
     # cycle 0.048 → 1 - 0.95*sin(0.048/0.14*pi) = 0.163434 (research §6).
     at_golden = [k for k in kfs if k.time == pytest.approx(1.0)]
     assert at_golden and at_golden[0].value == pytest.approx(0.163434, abs=1e-6)
-    # Outside every window the value is exactly 1.0 (no residual squash).
-    assert kfs[0].time == 0.0 and kfs[0].value == 1.0
+    # Outside every window the value is exactly 1.0 (the return-to-rest
+    # keyframe, applied on a rendered frame; between windows the pose
+    # carries no eye value at all, so an authored value persists).
     for k in kfs:
         in_window = any(s < k.time < e for s, e in _blink_windows("charlie", 2.5))
         if not in_window:
@@ -167,10 +196,12 @@ def test_an_eye_with_closed_art_blinks_by_eyelid_swap(gale_store):
 def test_a_rig_without_closed_eye_art_falls_back_to_the_squash(gale_store, tmp_path):
     for side in ("l", "r"):
         (tmp_path / "gale" / "parts" / f"eye_{side}_closed.svg").unlink()
+    # 8 s, so gale's first blink window (3.44 s) falls inside the shot —
+    # per-window clips mean a shot with no window has no clip at all.
     shot = Shot(
         id="s",
         style="cutout",
-        duration=3.0,
+        duration=8.0,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
     )
     scene = compile_shot(shot, mall={"characters": gale_store})
@@ -224,6 +255,69 @@ def test_an_authored_eye_scale_y_tween_survives_to_the_pose():
         assert _evaluate(tl, t)[key] == 3.0
     # And the other eye, un-authored, still blinks.
     assert _evaluate(tl, 1.0)[("charlie/head/right_eye", "scale_y")] < 0.2
+
+
+def test_an_authored_eye_value_persists_between_blinks_like_any_property():
+    """One clip PER WINDOW: outside a blink the pose carries no eye value, so
+    an authored tween's end value holds the way `scale_x`'s does. A
+    whole-shot 1.0 fill snapped `scale_y` back the frame after the tween
+    ended while `scale_x` held — the an#88 review's D2."""
+    from tests.test_swap_channels import _evaluate, _python_timeline
+
+    shot = _procedural_shot(
+        duration=2.5,
+        actions=[
+            TweenAction(
+                target="charlie/head/left_eye", property=p, from_value=3.0,
+                to_value=3.0, duration=0.5, easing="linear",
+            )
+            for p in ("scale_y", "scale_x")
+        ],
+    )
+    scene = compile_shot(shot, mall={"characters": {}}, fps=24)
+    tl = _python_timeline(scene)
+    pose = _evaluate(tl, 0.75)  # after the tweens, outside any blink window
+    assert ("charlie/head/left_eye", "scale_y") not in pose
+    assert ("charlie/head/left_eye", "scale_x") not in pose
+
+
+def test_an_eye_that_rests_closed_does_not_blink(gale_store, tmp_path):
+    """A sleeping character: the author closed the eyes; the old runtime never
+    opened them either (it only squashed). Neither swap nor squash."""
+    import json as _json
+
+    desc_path = tmp_path / "gale" / "character.json"
+    doc = _json.loads(desc_path.read_text(encoding="utf-8"))
+    for slot in doc["slots"]:
+        if slot["name"] in ("left_eye", "right_eye"):
+            slot["attachment"] = "closed"
+    desc_path.write_text(_json.dumps(doc), encoding="utf-8")
+    shot = Shot(
+        id="s",
+        style="cutout",
+        duration=8.0,
+        entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
+    )
+    scene = compile_shot(shot, mall={"characters": gale_store})
+    assert not _blink_channels(scene)
+
+
+def test_a_window_straddling_the_shot_start_begins_in_the_right_state(gale_store):
+    """Entity `awg` has phase 0.009: its first window is (-0.036, 0.104), CLOSED
+    from -0.001 to 0.069 — so frame 0 must be CLOSED (an#88 review D3)."""
+    from tests.test_swap_channels import _evaluate, _python_timeline
+
+    shot = Shot(
+        id="s",
+        style="cutout",
+        duration=2.0,
+        entities=[AssetRef(kind="character", id="awg", store="characters", ref="gale")],
+    )
+    scene = compile_shot(shot, mall={"characters": gale_store}, fps=24)
+    tl = _python_timeline(scene)
+    assert _evaluate(tl, 0.0)[("awg/head/left_eye", "eyelid")] == "CLOSED"
+    assert _evaluate(tl, 1 / 24)[("awg/head/left_eye", "eyelid")] == "CLOSED"
+    assert _evaluate(tl, 0.1)[("awg/head/left_eye", "eyelid")] == "OPEN"
 
 
 def test_the_runtime_carries_no_blink_machinery():

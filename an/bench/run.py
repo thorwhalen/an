@@ -725,6 +725,14 @@ def run_bench(
                     s.shot_id: contract.scene_contract_sha256(s.scene_json)
                     for s in capture.shots
                 },
+                # Additive (an#88): the per-entity blink phase each shot was
+                # compiled with. A renamed corpus character re-phases every
+                # blink and moves every pixel metric; this makes that a
+                # visible diff in the row instead of an unexplained shift.
+                "blink_phases": {
+                    s.shot_id: dict((s.scene_json.get("meta") or {}).get("blink_phases") or {})
+                    for s in capture.shots
+                },
                 "n_drawable_entities": sum(
                     contract.count_drawable_entities(s.scene_json)
                     for s in capture.shots

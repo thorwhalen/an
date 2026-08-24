@@ -149,9 +149,13 @@ def _js_string_hash(s: str) -> int:
     >>> _js_string_hash("charlie") % 1000
     762
     """
+    # JS iterates UTF-16 code units (`charCodeAt`), not code points: a
+    # non-BMP character is two units. Encode the same way so the port stays
+    # bit-identical for every entity id, not only ASCII/BMP ones.
+    units = s.encode("utf-16-le")
     h = 0
-    for ch in s:
-        h = ((h << 5) - h) + ord(ch)
+    for i in range(0, len(units), 2):
+        h = ((h << 5) - h) + int.from_bytes(units[i : i + 2], "little")
         h &= 0xFFFFFFFF
         if h >= 0x80000000:
             h -= 0x100000000
@@ -1960,18 +1964,30 @@ def _add_blink_clips(
     vocab: _SwapVocabulary,
     fps: int,
 ) -> dict[str, float]:
-    """Emit one blink channel per eye node of every character; return the
-    phases used, per entity, for the compiled scene's meta.
+    """Emit blink clips per eye node of every character; return the phases
+    used, per entity, for the compiled scene's meta.
 
     Mechanism splits by what the eye can do (research §6):
 
     - an eye whose visual projects the ``eyelid`` set with both ``OPEN`` and
-      ``CLOSED`` resolved swaps ART — a step channel through the one swap
-      implementation, CLOSED for the central half of each blink window;
+      ``CLOSED`` resolved, and whose rest attachment IS the open one, swaps
+      ART — a step channel through the one swap implementation, CLOSED for
+      the central half of each blink window;
     - any other eye (the procedural drawn eye; a descriptor rig without
       closed-eye art) gets the sine SQUASH the runtime used to apply, as a
       ``scale_y`` channel sampled at the frame times — a tween, not a swap,
-      so "one swap implementation" holds without contortions.
+      so "one swap implementation" holds without contortions;
+    - an eye that rests CLOSED (a sleeping character) does not blink at all:
+      the author closed it, and the old runtime never opened it either.
+
+    **One clip per blink window, not one whole-shot fill.** Outside a window
+    the pose then carries NO eye value, so an authored eye channel's end
+    value persists exactly as every other property's does (the runtime's
+    stateful hold); a whole-shot ``1.0`` fill snapped an authored ``scale_y``
+    back the frame after its tween ended (an#88 review). Each clip is
+    extended to the first frame time at or after the window's end so the
+    return-to-rest keyframe is applied on a rendered frame — the runtime's
+    per-frame reset, reproduced at exactly the frames that matter.
 
     The clips go at the FRONT of the entity's track: later-wins evaluation
     then lets an authored eye channel override a blink, where the old
@@ -1994,52 +2010,67 @@ def _add_blink_clips(
         placed: list[PlacedClipJSON] = []
         for path in eyes:
             eyelid = vocab.node_sets.get(path, {}).get(EYELID_CHANNEL) or {}
-            if "OPEN" in eyelid and "CLOSED" in eyelid:
-                kfs = [KeyframeJSON(time=0.0, value="OPEN", easing="step")]
-                lo, hi = _EYELID_CLOSED_SPAN
-                for start, end in windows:
-                    span = end - start
-                    for time, key in (
-                        (start + lo * span, "CLOSED"),
-                        (start + hi * span, "OPEN"),
-                    ):
-                        if 0.0 <= time <= shot.duration:
-                            kfs.append(KeyframeJSON(time=time, value=key, easing="step"))
-                prop = EYELID_CHANNEL
-            else:
-                kfs = [KeyframeJSON(time=0.0, value=1.0, easing="linear")]
-                for start, end in windows:
-                    if 0.0 <= start <= shot.duration:
-                        kfs.append(KeyframeJSON(time=start, value=1.0, easing="linear"))
-                    first = int(math.floor(start * fps)) + 1
-                    last = int(math.ceil(end * fps)) - 1
-                    for f in range(max(first, 0), last + 1):
-                        time = f / fps
-                        if time <= start or time >= end or time > shot.duration:
-                            continue
-                        u = (time - start) / (end - start)
-                        kfs.append(
-                            KeyframeJSON(
-                                time=time,
-                                value=1.0 - _BLINK_DEPTH * math.sin(u * math.pi),
-                                easing="linear",
+            has_art = "OPEN" in eyelid and "CLOSED" in eyelid
+            rest = vocab.rest_key(path, EYELID_CHANNEL) if has_art else None
+            if has_art and rest not in (None, "OPEN"):
+                continue  # rests closed: the author's call, not a blink's
+            use_swap = has_art and rest == "OPEN"
+            for start, end in windows:
+                clip_start = max(0.0, start)
+                # Extend to the first rendered frame at/after the window end
+                # (capped at the shot), so the rest keyframe is APPLIED.
+                clip_end = min(shot.duration, math.ceil(end * fps - 1e-9) / fps)
+                if clip_end <= clip_start:
+                    continue
+                span = end - start
+                if use_swap:
+                    lo, hi = _EYELID_CLOSED_SPAN
+                    t_closed, t_open = start + lo * span, start + hi * span
+                    initial = "CLOSED" if t_closed <= clip_start < t_open else "OPEN"
+                    kfs = [KeyframeJSON(time=0.0, value=initial, easing="step")]
+                    for time, key in ((t_closed, "CLOSED"), (t_open, "OPEN")):
+                        if clip_start < time <= clip_end:
+                            kfs.append(
+                                KeyframeJSON(time=time - clip_start, value=key, easing="step")
                             )
+                    prop = EYELID_CHANNEL
+                else:
+                    def squash(time: float) -> float:
+                        u = (time - start) / span
+                        if u <= 0.0 or u >= 1.0:
+                            return 1.0
+                        return 1.0 - _BLINK_DEPTH * math.sin(u * math.pi)
+
+                    first_f = math.ceil(clip_start * fps - 1e-9)
+                    last_f = math.floor(clip_end * fps + 1e-9)
+                    times = sorted(
+                        {clip_start, clip_end}
+                        | {f / fps for f in range(first_f, last_f + 1)}
+                    )
+                    kfs = [
+                        KeyframeJSON(
+                            time=time - clip_start, value=squash(time), easing="linear"
                         )
-                    if 0.0 <= end <= shot.duration:
-                        kfs.append(KeyframeJSON(time=end, value=1.0, easing="linear"))
-                prop = "scale_y"
-            kfs.sort(key=lambda k: k.time)
-            anim_id = f"__blink__{shot.id}_{path.replace('/', '.')}"
-            animations[anim_id] = AnimationClipJSON(
-                name=anim_id,
-                duration=max(0.001, shot.duration),
-                channels=[ChannelJSON(target=path, property=prop, keyframes=kfs)],
-            )
-            placed.append(
-                PlacedClipJSON(
-                    animation_id=anim_id, start_time=0.0, duration=max(0.001, shot.duration)
+                        for time in times
+                        if clip_start <= time <= clip_end
+                    ]
+                    prop = "scale_y"
+                anim_id = (
+                    f"__blink__{shot.id}_{path.replace('/', '.')}_{len(placed)}"
                 )
-            )
+                duration = max(0.001, clip_end - clip_start)
+                animations[anim_id] = AnimationClipJSON(
+                    name=anim_id,
+                    duration=duration,
+                    channels=[ChannelJSON(target=path, property=prop, keyframes=kfs)],
+                )
+                placed.append(
+                    PlacedClipJSON(
+                        animation_id=anim_id, start_time=clip_start, duration=duration
+                    )
+                )
+        if not placed:
+            continue
         track = track_lookup.get(entity.id)
         if track is None:
             track = TrackJSON(target_root=entity.id, clips=[])

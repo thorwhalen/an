@@ -182,7 +182,7 @@ DFLT_FIXTURES: dict[str, Fixture] = {
         golden_frames=(0.0, 1.0),
         golden_note=(
             "a blink (the compiled scale_y squash on the procedural eyes). Only "
-            "~250 pixels differ, and that is the point: blinks occupy 3.5% of "
+            "253 pixels differ, and that is the point: blinks occupy 3.5% of "
             "frames, so frame 0 against duration/2 is a pixel-identical pair "
             "on this scene."
         ),
