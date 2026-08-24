@@ -23,11 +23,11 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import asdict
 from typing import Any
 
-from an.audio.lipsync import LipSyncProvider, VisemeTrack
+from an.audio.lipsync import LipSyncProvider, Viseme, VisemeTrack
 from an.audio.offline_lipsync import OfflineLipSync
 from an.audio.offline_tts import OfflineTTS
 from an.audio.tts import AudioClip, TTSProvider
-from an.ir.schema import Dialogue, SceneIR, VisemeKeyframe
+from an.ir.schema import Dialogue, SceneIR, VisemeKeyframe, WordTimingIR
 from an.ir.schema import VisemeTrack as IRVisemeTrack
 from an.util import _stable_hash
 
@@ -134,6 +134,11 @@ def produce_audio_for_scene(
                 and line.viseme_ref == expected_viseme_ref
                 and line.viseme_track is not None
                 and line.duration is not None
+                # A line stamped before an#96 by a provider that HAS words is
+                # re-aligned once so the words land; a provider without words
+                # (offline, Rhubarb) never triggers this, or it would re-align
+                # forever. The cache key is unchanged: the sidecar simply grew.
+                and (line.word_timings is not None or not _emits_word_timings(lipsync))
                 and (audio_store is None or expected_audio_ref in audio_store)
                 and (viseme_store is None or expected_viseme_ref in viseme_store)
             )
@@ -154,6 +159,7 @@ def produce_audio_for_scene(
             if was_synthesized or line.start is None:
                 line.start = cursor
             line.viseme_track = _to_ir_viseme_track(track)
+            line.word_timings = _to_ir_word_timings(track)
             line.audio_ref = expected_audio_ref
             line.viseme_ref = expected_viseme_ref
             cursor = line.start + audio.duration
@@ -170,6 +176,18 @@ def _to_ir_viseme_track(track: VisemeTrack) -> IRVisemeTrack:
     return IRVisemeTrack(
         keyframes=[VisemeKeyframe(time=v.time, viseme=v.code) for v in track.visemes]
     )
+
+
+def _to_ir_word_timings(track: VisemeTrack) -> list[WordTimingIR] | None:
+    """The track's word timings as IR models, or ``None`` when it has none."""
+    if track.words is None:
+        return None
+    return [WordTimingIR(text=w[0], start=float(w[1]), end=float(w[2])) for w in track.words]
+
+
+def _emits_word_timings(lipsync: LipSyncProvider) -> bool:
+    """Whether ``lipsync`` declares that it fills ``VisemeTrack.words``."""
+    return bool(getattr(lipsync, "emits_word_timings", False))
 
 
 def _load_or_synthesize(
@@ -202,9 +220,10 @@ def _load_or_align(
     if mall is not None and "visemes" in mall and cache_key in mall["visemes"]:
         try:
             payload = json.loads(mall["visemes"][cache_key].decode("utf-8"))
-            return VisemeTrack(
+            words = payload.get("words")
+            cached = VisemeTrack(
                 visemes=[
-                    __import__("an.audio.lipsync", fromlist=["Viseme"]).Viseme(
+                    Viseme(
                         time=v["time"],
                         code=v["code"],
                         intensity=v.get("intensity", 1.0),
@@ -213,7 +232,17 @@ def _load_or_align(
                 ],
                 convention=payload.get("convention", lipsync.convention),
                 duration=payload.get("duration", audio.duration),
+                words=(
+                    [(str(w[0]), float(w[1]), float(w[2])) for w in words]
+                    if words is not None
+                    else None
+                ),
             )
+            # A payload written before an#96 by a provider that HAS words is
+            # missing them; re-align once so the sidecar carries them. The key
+            # is the same, so the rewrite below replaces the old payload.
+            if cached.words is not None or not _emits_word_timings(lipsync):
+                return cached
         except Exception:
             # Fall through to recompute; cache content was malformed.
             pass
@@ -223,6 +252,11 @@ def _load_or_align(
             "visemes": [asdict(v) for v in track.visemes],
             "convention": track.convention,
             "duration": track.duration,
+            "words": (
+                [[w[0], float(w[1]), float(w[2])] for w in track.words]
+                if track.words is not None
+                else None
+            ),
         }
         mall["visemes"][cache_key] = json.dumps(payload).encode("utf-8")
     return track

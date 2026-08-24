@@ -227,6 +227,22 @@ DFLT_FIXTURES: dict[str, Fixture] = {
             "bars are pinned and do not move — they are the AA subject."
         ),
     ),
+    "dialogue": Fixture(
+        path=f"{CORPUS_DIRNAME}/dialogue",
+        expect_visual_kinds=frozenset({"rect", "ellipse", "mouth", "eye"}),
+        golden_frames=(0.0, 0.6),
+        golden_note=(
+            "the mouth mid-line, on the wide-open `D` of 'shape' (the head is "
+            "lifted 34 px above its rest by an absolute `set` so the placeholder rig's mouth clears the "
+            "torso — unlifted, 62 px differed): the second golden sits INSIDE "
+            "the spoken interval, which no other corpus scene does — `single_character` "
+            "samples after its line ends and `promote_demo` was mute until "
+            "an#96 — so the viseme condenser and the co-articulation passes "
+            "(Wave 6) have a frame that can go red. The visemes are the "
+            "offline provider's, stamped into the committed ir/scene.json; "
+            "the bench renders with auto_audio=False and reads them from there."
+        ),
+    ),
     "multi_shot": Fixture(
         path=f"{CORPUS_DIRNAME}/multi_shot",
         expect_visual_kinds=frozenset({"rect", "ellipse"}),

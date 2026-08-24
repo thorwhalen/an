@@ -237,6 +237,17 @@ class VisemeTrack(_IRModel):
     keyframes: list[VisemeKeyframe] = Field(default_factory=list)
 
 
+class WordTimingIR(_IRModel):
+    """One word of a line and when it was spoken, in seconds from the line's
+    start (like :class:`VisemeKeyframe`, never absolute). Stamped by the audio
+    pipeline from the provider's word timings when it has them (an#96); JSON
+    only — ``scene.md`` never carries it, the way it never carries visemes."""
+
+    text: str
+    start: Seconds
+    end: Seconds
+
+
 class Dialogue(_IRModel):
     """One line of spoken dialogue.
 
@@ -251,6 +262,9 @@ class Dialogue(_IRModel):
     duration: Seconds | None = None
     emotion: str | None = None
     viseme_track: VisemeTrack | None = None
+    #: The provider's word timings, line-relative; ``None`` when the provider
+    #: has none (offline, Rhubarb) or the line was stamped before an#96.
+    word_timings: list[WordTimingIR] | None = None
     audio_ref: str | None = None  # mall["audio"] key (content-hash of TTS input)
     viseme_ref: str | None = None  # mall["visemes"] key (content-hash of lipsync input)
 
@@ -263,6 +277,7 @@ class Narration(_IRModel):
     start: Seconds | None = None
     duration: Seconds | None = None
     viseme_track: VisemeTrack | None = None
+    word_timings: list[WordTimingIR] | None = None
     audio_ref: str | None = None
     viseme_ref: str | None = None
 

@@ -158,6 +158,13 @@ misc/bench/corpus/*/output/
 misc/bench/corpus/*/artifacts/
 misc/bench/corpus/*/.an/
 misc/bench/corpus/*/ir/
+# …except `dialogue`'s IR, which is the fixture: the bench renders with
+# `auto_audio=False`, so the visemes a speaking scene needs must already be in
+# its committed `ir/scene.json` (offline provider, deterministic), exactly as
+# `examples/single_character/ir/scene.json` does. Without this carve-out the
+# scene would be mute on a clean checkout and its "mid-line" golden a lie (an#96).
+!misc/bench/corpus/dialogue/ir/
+!misc/bench/corpus/dialogue/ir/scene.json
 
 # `misc/demos/build_demos.py`'s output. Regenerable in a couple of minutes from
 # the committed script, and the media is published as release assets rather than

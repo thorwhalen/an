@@ -35,5 +35,5 @@ camera:
 ```
 
 ```dialogue
-maya (warm): I started life as one SVG, and now I have a rig.
+maya: I started life as one SVG, and now I have a rig.
 ```

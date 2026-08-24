@@ -193,6 +193,10 @@ def _extract_dialogue_block(text: str) -> list[Dialogue]:
         charlie: Hello.
         charlie [happy]: Hello!
         maya [skeptical]: Sure.
+
+    A line that matches none of those shapes is a **parse error**, not a skip:
+    this parser used to drop it silently, and ``examples/promote_demo`` was mute
+    for months because its one line read ``maya (warm): …`` (an#96).
     """
     out: list[Dialogue] = []
     for m in _FENCE_RE.finditer(text):
@@ -205,7 +209,13 @@ def _extract_dialogue_block(text: str) -> list[Dialogue]:
                 continue
             match = _DIALOGUE_LINE_RE.match(line)
             if not match:
-                continue
+                raise ValueError(
+                    f"dialogue line {line!r} is not `speaker: text` or "
+                    "`speaker [emotion]: text` — speaker ids are `[\\w-]+`, and "
+                    "the emotion goes in square brackets. A line that does not "
+                    "parse is refused rather than dropped, so a typo cannot "
+                    "silence a character."
+                )
             kwargs: dict[str, Any] = {
                 "speaker": match.group("speaker").strip(),
                 "text": match.group("text").strip(),

@@ -56,6 +56,9 @@ class WhisperLipSync:
     via the class-level ``_model`` cache).
     """
 
+    #: Whisper aligns from words, so the track carries them (an#96).
+    emits_word_timings: bool = True
+
     name: str = "whisper"
     convention: str = "rhubarb"
 
@@ -136,4 +139,5 @@ class WhisperLipSync:
             ),
             convention=self.convention,
             duration=audio.duration,
+            words=list(words),
         )
