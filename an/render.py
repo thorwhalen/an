@@ -199,7 +199,9 @@ def render(
 
         tts_provider = make_tts(tts) if isinstance(tts, str) else tts
         lipsync_provider = (
-            make_lipsync(lipsync, language=language) if isinstance(lipsync, str) else lipsync
+            make_lipsync(lipsync, language=language)
+            if isinstance(lipsync, str)
+            else lipsync
         )
 
         produce_audio_for_scene(
