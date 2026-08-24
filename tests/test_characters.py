@@ -81,14 +81,21 @@ class TestSchema:
                 },
             }
         )
-        assert out["schema_version"] == "0.2.0"
+        # The chain runs to the CURRENT version — 0.1.0 docs cross both
+        # migrations, so this test sees the 0.3.0 shape (per-slot eye
+        # attachment keys, face_overlay, the eyelid set) too.
+        assert out["schema_version"] == "0.3.0"
         assert out["asset_sets"]["viseme"] == {"A": "mouth_a"}
         assert "viseme_map" not in out, "a stale map beside the live one"
         assert out["slots"][0]["name"] == "left_eye"
         assert "left_eye" in out["skins"]["default"]["slots"]
         # Face offsets move from code into data: before 0.2.0 the descriptor
         # had nowhere to record them, so the migration is their only source.
-        assert out["skins"]["default"]["slots"]["left_eye"]["eye_l_open"]["x"] != 0.0
+        # 0.3.0 then renames the eye attachment key to the shared per-slot
+        # spelling, so the offset is found under "open".
+        assert out["skins"]["default"]["slots"]["left_eye"]["open"]["x"] != 0.0
+        assert out["face_overlay"] is True  # no baked-face provenance declared
+        assert out["asset_sets"]["eyelid"] == {"OPEN": "open", "CLOSED": "closed"}
 
     def test_default_animations_present(self):
         c = CharacterDescriptor(name="x")
@@ -441,12 +448,19 @@ class TestSvgCharacterCompile:
         )
         scene = compile_shot(shot, mall={"characters": store})
 
-        # Asset table should contain the head, mouth-X, etc.
-        assert "maya.head" in scene.assets.textures
-        assert "maya.mouth_x" in scene.assets.textures
+        # Asset table should contain the head, mouth-X, etc. Aliases are
+        # SLOT-QUALIFIED (an#87): attachment names are a per-slot namespace
+        # (both eye slots carry `open`/`closed`), and the old
+        # `{entity}.{attachment}` space was silently first-wins on cross-slot
+        # collision.
+        assert "maya.head.head" in scene.assets.textures
+        assert "maya.mouth.mouth_x" in scene.assets.textures
+        assert "maya.left_eye.open" in scene.assets.textures
+        assert "maya.right_eye.open" in scene.assets.textures
         # Texture src is relative to the runtime root.
         assert (
-            scene.assets.textures["maya.head"].src == "characters/maya/parts/head.svg"
+            scene.assets.textures["maya.head.head"].src
+            == "characters/maya/parts/head.svg"
         )
 
         # Scene tree contains svg_sprite visuals.
@@ -463,11 +477,23 @@ class TestSvgCharacterCompile:
             c.name: (c.visual.kind if c.visual else None) for c in head.children
         }
         assert head_kinds["mouth"] == "svg_sprite"
-        # Mouth visual carries the viseme map.
+        # Mouth visual carries the viseme projection; the eye visuals carry
+        # the eyelid projection — the SAME set on both, which is what the
+        # per-slot attachment keys exist for (an#87).
         mouth = next(c for c in head.children if c.name == "mouth")
-        assert mouth.visual.viseme_assets is not None
-        assert mouth.visual.viseme_assets["A"] == "maya.mouth_a"
-        assert mouth.visual.viseme_assets["X"] == "maya.mouth_x"
+        assert mouth.visual.asset_sets is not None
+        assert mouth.visual.asset_sets["viseme"]["A"] == "maya.mouth.mouth_a"
+        assert mouth.visual.asset_sets["viseme"]["X"] == "maya.mouth.mouth_x"
+        left_eye = next(c for c in head.children if c.name == "left_eye")
+        right_eye = next(c for c in head.children if c.name == "right_eye")
+        assert left_eye.visual.asset_sets["eyelid"] == {
+            "OPEN": "maya.left_eye.open",
+            "CLOSED": "maya.left_eye.closed",
+        }
+        assert right_eye.visual.asset_sets["eyelid"] == {
+            "OPEN": "maya.right_eye.open",
+            "CLOSED": "maya.right_eye.closed",
+        }
 
     def test_no_descriptor_falls_back_to_procedural(self):
         """Existing scenes with no character.json keep the procedural rig."""

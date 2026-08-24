@@ -34,6 +34,11 @@ Gut every rig field and recompile. The emitted `CutoutSceneJSON` is **byte-ident
 | `viseme_map["A"]` changed *(control)* | **DIFFERENT** |
 | `metadata.art_provenance = "dicebear"` *(control)* | **DIFFERENT** |
 
+*(Historical, as measured in Wave 4. Since an#87 the compiler reads the
+declared `face_overlay` field, not the provenance string; `viseme_map` became
+`asset_sets` in 0.2.0. The measurement stands as the record of what the
+compiler ignored before Wave 4.)*
+
 The two controls are what make the null result mean something. **After the rewrite,
 every row above must read DIFFERENT.** That inversion is the wave's real acceptance
 test — it is cheap (no browser, no render) and it cannot be satisfied by accident.
@@ -51,7 +56,7 @@ Four descriptor keys are read, at five sites; **three have any effect**.
 | `kind` | `compile.py:554` | selects the descriptor branch |
 | `name` | `compile.py:718` | **none** — a local that is never loaded |
 | `viseme_map` | `compile.py:752` | mouth alias table |
-| `metadata.art_provenance` | `:765`, `:1098` | face-baked overlay suppression |
+| `metadata.art_provenance` | `:765`, `:1098` | face-baked overlay suppression — now the declared `face_overlay` field (an#87) |
 
 Dead everywhere — **no producer and no consumer**: `view_box`, `bones`, `slots`
 (and `draw_order`), `skins` (and every `Attachment.path`/`.anchor`/`.width`/`.height`),

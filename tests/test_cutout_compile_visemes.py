@@ -111,16 +111,22 @@ def test_head_node_has_mouth_child():
 
 
 def test_dicebear_character_skips_mouth_overlay_and_viseme_channel():
-    """Phase-12 hardening: face-baked descriptors get no mouth overlay nor viseme channel.
+    """Face-baked descriptors get no mouth overlay nor viseme channel.
 
     The mouth overlay used to attach for DiceBear characters so the
     viseme channel had a target. Per SESSION_HANDOFF.md §3 we lock both
     off — the overlay sat below the avatar's natural mouth and read as
     awkward during dialogue.
+
+    Since an#87 the fact is DECLARED (`face_overlay=False`) rather than
+    sniffed from `metadata.art_provenance`; the version-less dict here is
+    treated as current-schema, so it must carry the declaration itself. The
+    stored-0.2.0 migration path is covered separately below.
     """
     descriptor = {
         "kind": "CharacterDescriptor",
         "name": "diane",
+        "face_overlay": False,
         "metadata": {"art_provenance": "dicebear"},
     }
     shot = Shot(
@@ -146,6 +152,38 @@ def test_dicebear_character_skips_mouth_overlay_and_viseme_channel():
         any(c.property == "viseme" for c in a.channels)
         for a in j.animations.values()
     ), "no viseme channel should be emitted for face-baked speakers"
+
+
+def test_a_stored_0_2_0_dicebear_descriptor_migrates_to_a_declared_baked_face():
+    """The migration path for the same suppression: real stored 0.2.0 docs
+    carry only the provenance string; both compile-side reads must see the
+    derived `face_overlay=False` through the migration (an#87). The channel
+    suppressor is the site that read RAW store dicts before — this is the
+    test that keeps it on the migrated model.
+    """
+    descriptor = {
+        "kind": "CharacterDescriptor",
+        "schema_version": "0.2.0",
+        "name": "diane",
+        "metadata": {"art_provenance": "dicebear"},
+    }
+    shot = Shot(
+        id="s1",
+        style="cutout",
+        duration=2.0,
+        entities=[
+            AssetRef(kind="character", id="diane", store="characters", ref="diane-v1")
+        ],
+        dialogue=[_line_with_visemes("diane")],
+    )
+    j = compile_shot(shot, mall={"characters": {"diane-v1": descriptor}})
+    char_node = j.scene.children[0]
+    head = next(c for c in char_node.children if c.name == "head")
+    assert not any(c.name == "mouth" for c in head.children)
+    assert not any(
+        any(c.property == "viseme" for c in a.channels)
+        for a in j.animations.values()
+    )
 
 
 def test_offline_character_still_emits_viseme_channel():

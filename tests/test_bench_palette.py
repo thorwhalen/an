@@ -241,3 +241,32 @@ def test_palette_sources_separates_the_two_halves_of_the_derivation():
                             runtime_dir=Path("."))
     assert pal["palette_sources"]["runtime_constants"] == len(RUNTIME_MOUTH_COLOURS)
     assert pal["palette_sources"]["scene_json"] >= 2  # background + the rect
+
+
+def test_a_compiled_scene_s_swap_set_aliases_flow_into_the_palette(tmp_path):
+    """The reader moved from `viseme_assets` to `asset_sets` (an#87). A stale
+    key there degrades SILENTLY (`or {}`) into an under-collected palette, so
+    this pins that every projected set's aliases reach the derivation — via
+    the unresolved-token record, since no SVG is staged here."""
+    import shutil
+
+    from an.adapters.cutout.compile import compile_shot
+    from an.adapters.cutout.serialize import to_dict
+    from an.ir.schema import AssetRef, Shot
+    from an.stores.characters import CharactersStore
+
+    fixtures = Path(__file__).resolve().parent / "fixtures" / "characters"
+    shutil.copytree(fixtures / "gale", tmp_path / "gale")
+    scene = compile_shot(
+        Shot(
+            id="s",
+            style="cutout",
+            duration=1.0,
+            entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
+        ),
+        mall={"characters": CharactersStore(tmp_path)},
+    )
+    pal = palette_for_scene(to_dict(scene), runtime_dir=tmp_path / "nowhere")
+    tokens = " ".join(pal["unresolved_svg_colour_tokens"])
+    for src in ("hand_fist.svg", "hand_point.svg", "torso_left.svg", "mouth_a.svg"):
+        assert src in tokens, f"{src} did not flow from asset_sets into the palette"

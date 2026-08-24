@@ -202,8 +202,15 @@ def palette_for_scene(scene_json: dict, *, runtime_dir: Path) -> dict:
             # visual.color here is the #888888 schema default on every one.
             if visual.get("asset_id"):
                 referenced_aliases.add(str(visual["asset_id"]))
-            for alias in (visual.get("viseme_assets") or {}).values():
-                referenced_aliases.add(str(alias))
+            # Every key of every swap set can reach the screen mid-shot, so
+            # all of them join the reference palette. (This read `viseme_assets`
+            # until an#87 generalised the field; a stale key here degrades
+            # SILENTLY — `or {}` — into an under-collected palette, which is
+            # why `tests/test_bench_palette.py` pins a compiled scene's swap
+            # aliases flowing through.)
+            for key_map in (visual.get("asset_sets") or {}).values():
+                for alias in (key_map or {}).values():
+                    referenced_aliases.add(str(alias))
 
     # A viseme set declares all nine mouth shapes while a given render paints
     # only some, so the SVG half makes the palette a SUPERSET. That is the safe

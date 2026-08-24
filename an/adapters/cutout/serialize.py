@@ -83,8 +83,15 @@ class VisualJSON(_JSONModel):
 
     ``kind="svg_sprite"`` is the Phase 11b path: the runtime instantiates a
     ``PIXI.Sprite`` from a pre-loaded SVG texture identified by ``asset_id``.
-    On a mouth visual, ``viseme_assets`` carries ``{letter: asset_id}`` so the
-    runtime can swap textures on the viseme channel without further IR plumbing.
+
+    ``asset_sets`` carries this node's swap vocabulary —
+    ``{set_name: {KEY: asset_id}}``, the compiler's per-slot **projection** of
+    the descriptor's ``asset_sets`` onto the slot this visual draws (an#87).
+    A channel whose property names one of these sets swaps the sprite's
+    texture by key; ``viseme`` is just the conventional set name lip-sync
+    uses. Same field name as ``CharacterDescriptor.asset_sets`` on purpose:
+    one vocabulary, two layers (descriptor = declared, wire = resolved to
+    texture aliases). Replaces the mouth-only ``viseme_assets``.
 
     ``width``/``height`` are the box the art is fitted **into**, not the size it
     is forced to. Under ``fit="contain"`` the art keeps its own aspect ratio and
@@ -104,7 +111,7 @@ class VisualJSON(_JSONModel):
     fit: Literal["stretch", "contain"] = "stretch"
     texture_id: str | None = None
     asset_id: str | None = None
-    viseme_assets: dict[str, str] | None = None
+    asset_sets: dict[str, dict[str, str]] | None = None
     width: float = 50.0
     height: float = 50.0
     anchor_x: float = 0.5

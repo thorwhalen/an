@@ -99,7 +99,9 @@ an/
 │   │   │                    applier and scene graph were deleted in an#86, with
 │   │   │                    node-backed parity tests pinning evaluateChannel+wrapTime)
 │   │   ├── serialize.py     Pydantic models for the JS-runtime JSON contract
-│   │   ├── compile.py       Shot -> CutoutSceneJSON (the bridge)
+│   │   │                    (VisualJSON.asset_sets = per-node swap-set projection, an#87)
+│   │   ├── compile.py       Shot -> CutoutSceneJSON (the bridge); projects asset_sets
+│   │   │                    onto slots, validates authored swaps, sets -> hold channels
 │   │   ├── render.py        Playwright headless capture + ffmpeg mux + audio overlay
 │   │   │                    (rasteriser PINNED — `DETERMINISTIC_CHROMIUM_ARGS`, an#31)
 │   │   └── runtime_files.py importlib.resources locator for the bundled JS runtime
@@ -129,7 +131,8 @@ an/
 └── data/                    bundled non-Python resources
     └── cutout_runtime/
         ├── index.html       loads PixiJS v7 + runtime.js
-        ├── runtime.js       drawMouthShape, applyProceduralBlinks, channel/timeline eval
+        ├── runtime.js       applySwap (the ONE swap path — any declared set, viseme incl.),
+        │                    drawMouthShape, applyProceduralBlinks, channel/timeline eval
         └── README.md
 ```
 
@@ -359,9 +362,10 @@ What genuinely remains, in rough priority order:
    version of this section claiming otherwise was stale. The remaining gap is
    the inverse and easy to miss: no compiler code writes the field, so looping
    is reachable only by hand-writing `CutoutSceneJSON`.
-3. **Lip-sync for face-baked characters.** DiceBear / external-avatar
-   descriptors have the face baked into the head SVG, so the compiler suppresses
-   both the overlay mouth and the viseme channel. Those characters speak without
+3. **Lip-sync for face-baked characters.** A descriptor declaring
+   `face_overlay: false` (DiceBear avatars; the 0.3.0 migration derives it from
+   the old provenance string) has the face baked into the head SVG, so the
+   compiler suppresses both the overlay mouth and the viseme channel. Those characters speak without
    moving their mouths. Hand-rigging (see `examples/promote_demo/`) is the
    production path today.
 4. **Multi-scene projects.** `"main"` is the only key the scenes store supports.

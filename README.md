@@ -204,8 +204,9 @@ cutout pipeline.
 
 - 3D animation, generative video, interactive output, SaaS hosting, music/sound-effect generation, in-house GUI, or editing of pre-existing video footage. `an` synthesizes; it does not cut.
 - The Manim backend works for placeholder title cards but isn't doing real shot-to-Manim translation; Remotion + whiteboard are skeleton implementations that respond correctly to `can_render` but can't produce video yet.
-- Lip-sync for face-baked characters. Characters sourced from DiceBear (or any
-  `external_avatar` descriptor) carry their face inside the head SVG, so the
+- Lip-sync for face-baked characters. Characters whose descriptor declares
+  `face_overlay: false` (DiceBear avatars, or any hand-declared baked face)
+  carry their face inside the head SVG, so the
   compiler suppresses both the overlay mouth and the viseme channel — they speak
   without moving their mouths. Hand-rigged characters lip-sync normally; see
   `examples/promote_demo/`.

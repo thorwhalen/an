@@ -18,6 +18,9 @@ from typing import Any, Literal, Mapping
 
 from pydantic import ValidationError
 
+from an.base import TRANSFORM_PROPERTIES
+from an.ir.compose import flatten
+from an.ir.migrate import migrate
 from an.ir.schema import SceneIR
 
 
@@ -107,6 +110,109 @@ _RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(
 _DRAWABLE_ENTITY_KINDS: frozenset[str] = frozenset({"character", "environment"})
 _CONFIGURING_ENTITY_KINDS: frozenset[str] = frozenset({"voice", "style"})
 
+#: Any property outside the transform vocabulary on a set/tween names a swap
+#: SET, which must be declared by the target entity's descriptor (an#87). The
+#: vocabulary itself is the shared SSOT in ``an.base`` (importable by every
+#: layer); the compiler's rest-value table is asserted equal to it by test.
+_TRANSFORM_PROPERTIES: frozenset[str] = TRANSFORM_PROPERTIES
+
+#: The swap sets a descriptor-less (procedural) rig supports — declared as
+#: data on its drawn mouth by the compiler (`PROCEDURAL_MOUTH_SETS`). This
+#: layer cannot import the adapter, so the value is duplicated here and
+#: pinned against the compiler's constant by ``tests/test_swap_channels.py``.
+_PROCEDURAL_SWAP_SETS: frozenset[str] = frozenset({"viseme"})
+
+
+def _check_swap_references(
+    shot, path: str, report: "ValidationReport", available_characters
+) -> None:
+    """A set/tween on a non-transform property must name a declared asset set
+    and key of its target entity's descriptor — checked HERE, before the
+    author pays for TTS or a Chromium launch, because compile raises on it
+    (an#87). Same charter as `_check_renderable`; needs the store, so it runs
+    from `validate_semantic`'s shot loop.
+
+    Descriptor-less (procedural) entities get a carve-out for `viseme` — the
+    compiler validates its codes against the drawn-mouth shapes — and an
+    error for anything else, matching the compiler's verdicts.
+    """
+    if available_characters is None:
+        return
+    refs_by_entity = {
+        e.id: e.ref for e in shot.entities if e.kind == "character"
+    }
+    # Flattened, like the compiler: the documented `start:` idiom wraps every
+    # leaf in a `sequence`, so walking only top-level actions would miss the
+    # common case (an#87 review) — an authoring-time gate that only sees the
+    # top level is a gate with a hole in it.
+    leaves = [
+        (k, flat.action)
+        for k, action in enumerate(shot.actions)
+        for flat in flatten(action)
+    ]
+    for k, action in leaves:
+        prop = getattr(action, "property", None)
+        if prop is None or prop in _TRANSFORM_PROPERTIES:
+            continue
+        target = getattr(action, "target", "") or ""
+        entity_id = target.split("/", 1)[0]
+        ref = refs_by_entity.get(entity_id)
+        desc = None
+        if ref is not None:
+            try:
+                candidate = available_characters[ref]
+            except (KeyError, TypeError):
+                candidate = None
+            if (
+                isinstance(candidate, dict)
+                and candidate.get("kind") == "CharacterDescriptor"
+            ):
+                # The MIGRATED document, as the compiler reads it: every
+                # committed pre-0.3.0 descriptor has no `asset_sets` on disk
+                # (0.1.0 carries `viseme_map`; `eyelid` is migration-seeded),
+                # so the raw dict would refuse swaps the compiler accepts.
+                desc = migrate(dict(candidate), kind="CharacterDescriptor")
+        if desc is None:
+            if prop not in _PROCEDURAL_SWAP_SETS:
+                report.add(
+                    "error",
+                    f"{path}/actions/{k}",
+                    f"property {prop!r} is not a transform, and "
+                    f"{entity_id!r} has no descriptor declaring asset sets — "
+                    "compiling this shot raises. Procedural rigs support "
+                    f"exactly {sorted(_PROCEDURAL_SWAP_SETS)} on their mouth.",
+                )
+            continue
+        declared = desc.get("asset_sets") or {}
+        if prop not in declared:
+            report.add(
+                "error",
+                f"{path}/actions/{k}",
+                f"property {prop!r} names no declared asset set of "
+                f"{entity_id!r} (it has: {sorted(declared)}) — compiling "
+                "this shot raises.",
+            )
+            continue
+        keys = declared.get(prop) or {}
+        values = [
+            v
+            for v in (
+                getattr(action, "value", None),
+                getattr(action, "from_value", None),
+                getattr(action, "to_value", None),
+            )
+            if v is not None
+        ]
+        for v in values:
+            if not isinstance(v, str) or v not in keys:
+                report.add(
+                    "error",
+                    f"{path}/actions/{k}",
+                    f"{v!r} is not a declared key of {entity_id!r}'s "
+                    f"{prop!r} set (it has: {sorted(keys)}) — compiling "
+                    "this shot raises.",
+                )
+
 
 def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
     """Report, at validate time, what compile and render will refuse.
@@ -173,8 +279,10 @@ def validate_semantic(
 ) -> ValidationReport:
     """Cross-field semantic checks. Pass live stores in for cross-store checks.
 
-    Both ``available_voices`` and ``available_characters`` accept any mapping;
-    only their ``__contains__`` is consulted. Pass ``None`` to skip those checks.
+    Both ``available_voices`` and ``available_characters`` accept any mapping.
+    Voices are consulted via ``__contains__`` only; characters additionally
+    via ``__getitem__`` (the swap-reference check reads descriptor dicts,
+    an#87). Pass ``None`` to skip those checks.
     """
     report = ValidationReport()
 
@@ -203,6 +311,7 @@ def validate_semantic(
             report.add("error", f"{path}/duration", "shot duration must be > 0")
 
         _check_renderable(shot, path, report)
+        _check_swap_references(shot, path, report, available_characters)
 
         # Entity references resolve?
         if available_characters is not None:

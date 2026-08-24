@@ -230,7 +230,7 @@ def test_an_off_screen_speaker_warns_and_emits_no_channel():
         duration=1.0,
         dialogue=[_spoken_line("narrator")],
     )
-    with pytest.warns(CutoutCompileWarning, match="no mouth node"):
+    with pytest.warns(CutoutCompileWarning, match="no viseme-capable mouth node"):
         scene = compile_shot(shot)
     targets = {ch.target for a in scene.animations.values() for ch in a.channels}
     assert not any(t.startswith("narrator") for t in targets), (
@@ -410,7 +410,6 @@ def test_the_runtime_raises_on_an_unknown_property():
     fn = _extract("applyProperty", r"function applyProperty\([^)]*\)\s*\{.*?\n    \}")
     script = "\n".join(
         [
-            "function setVisemeOnMouth() {}",
             fn,
             "const node = {name: 'charlie', scale: {}, skew: {}, pivot: {}};",
             "try { applyProperty(node, 'opacity', 0.5); console.log('SILENT'); }",
@@ -432,10 +431,9 @@ def test_the_runtime_still_applies_every_known_property():
     `case 'x': node.y = value` passed it unnoticed.
     """
     fn = _extract("applyProperty", r"function applyProperty\([^)]*\)\s*\{.*?\n    \}")
-    props = sorted(_runtime_switch_cases() - {"viseme"})
+    props = sorted(_runtime_switch_cases())
     script = "\n".join(
         [
-            "function setVisemeOnMouth() {}",
             fn,
             f"const props = {props!r};".replace("'", '"'),
             "const out = {};",
@@ -532,7 +530,13 @@ def test_the_iterate_prompt_enumerates_the_legal_properties():
     prompt = src[src.index("actions: list of action dicts") :][:1200]
     for prop in ("scale_x", "alpha", "pivot_y"):
         assert prop in prompt, f"the prompt does not name {prop!r} as legal"
-    assert "FAILS THE RENDER" in prompt or "fails the render" in prompt
+    # Since an#87 any other property names a swap SET: the prompt must say
+    # that an undeclared one is refused at compile, and must forbid inventing
+    # sets or keys — the model's hallucination surface moved from property
+    # names to key names.
+    assert "asset_sets" in prompt
+    assert re.search(r"refused at\s+compile", prompt)
+    assert "Never invent" in prompt
 
 
 # ------------------------------------------- 8. the docs must not advertise them

@@ -121,32 +121,39 @@ def test_rest_values_are_derived_from_the_schema_not_restated():
             )
 
 
-def test_a_tween_on_a_property_with_no_rest_value_is_refused():
-    """The blocker that killed the first version of this change.
+def test_a_tween_on_an_undeclared_property_is_refused_at_compile():
+    """A property outside the transform vocabulary names a SWAP SET (an#87).
 
-    A colour-valued tween with no ``from_value`` used to compile to
-    ``[(0.0, 0.0), (1.0, '#ff0000')]``. The runtime's mixed-type branch snaps to
-    the *first* value, so the subject rendered **solid black for the whole
-    shot** and flipped to red on the last frame — silently.
-
-    0.0 does not mean "unchanged"; it means zero. The compiler now refuses to
-    invent an identity it does not have.
+    The pre-#87 contract was two-stage: a tween on `tint` with no
+    ``from_value`` was refused for its missing rest identity, while one WITH
+    a ``from_value`` compiled and then died in the browser at applyProperty.
+    Both now fail at compile, earlier and with the real diagnosis: `tint` is
+    not a transform, `charlie` has no descriptor, and a procedural rig's only
+    swap is `viseme` on its mouth. (When #62 implements tint it enters the
+    transform vocabulary and both forms simply compile.)
     """
-    with pytest.raises(CutoutCompileError) as e:
-        compile_shot(_shot_with_tween("tint", to_value="#ff0000"))
-    msg = str(e.value)
-    assert "tint" in msg and "from_value" in msg
-    assert "set" in msg, "the error should point at the action that *is* appropriate"
+    for kwargs in ({}, {"from_value": "#000000"}):
+        with pytest.raises(CutoutCompileError) as e:
+            compile_shot(_shot_with_tween("tint", to_value="#ff0000", **kwargs))
+        msg = str(e.value)
+        assert "tint" in msg
+        assert "viseme" in msg, "the error should name the one supported swap"
+        assert "transform" in msg.lower()
 
 
-def test_an_explicit_from_value_makes_any_property_tweenable():
-    """The refusal is about a missing identity, not about the property."""
+def test_an_explicit_from_value_makes_any_transform_property_tweenable():
+    """The rest-value refusal is about a missing identity, not the property.
+
+    ``pivot_x`` has a rest value, so this exercises the from_value override on
+    a genuine transform property; arbitrary NON-transform names stopped being
+    tweenable at all when properties became swap-set names (see above).
+    """
     got = _first_keyframe_value(
-        _shot_with_tween("tint", to_value="#ff0000", from_value="#000000"),
+        _shot_with_tween("pivot_x", to_value=3.0, from_value=2.0),
         target="charlie",
-        prop="tint",
+        prop="pivot_x",
     )
-    assert got == "#000000"
+    assert got == 2.0
 
 
 # ------------------------------------------------- tier 3: Python <-> JS parity

@@ -297,6 +297,42 @@ def _build_composition(work: Path) -> Path:
     return _render(_project(work, scene_md=md, characters=("maya",)))
 
 
+def _build_swap_channels(work: Path) -> Path:
+    """Swap channels from scene.md (an#87): the committed `gale` art package
+    carries a multi-key `hands` set and a `body_facing` set that no renderer
+    or compiler code knows by name — they animate purely as descriptor data."""
+    chars_dir = work / "assets" / "characters"
+    chars_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(
+        REPO_ROOT / "tests" / "fixtures" / "characters" / "gale",
+        chars_dir / "gale",
+        dirs_exist_ok=True,
+    )
+    md = (
+        _meta("Swap channels: named keys, not keyframes", 4.0)
+        + "\n"
+        + _shot("s1", 4.0)
+        + "\n"
+        + _entities("gale")
+        + "\n```yaml actions\n"
+        "- kind: set\n  target: gale/left_hand\n  property: hands\n"
+        "  value: fist\n  at: 0.0\n"
+        "- kind: set\n  target: gale/left_hand\n  property: hands\n"
+        "  value: palm\n  at: 1.0\n"
+        "- kind: set\n  target: gale/left_hand\n  property: hands\n"
+        "  value: point\n  at: 2.0\n"
+        "- kind: set\n  target: gale/torso\n  property: body_facing\n"
+        "  value: left\n  at: 1.5\n"
+        "- kind: set\n  target: gale/torso\n  property: body_facing\n"
+        "  value: right\n  at: 2.5\n"
+        "- kind: set\n  target: gale/torso\n  property: body_facing\n"
+        "  value: front\n  at: 3.4\n"
+        "```\n"
+    )
+    (work / "scene.md").write_text(md, encoding="utf-8")
+    return _render(work)
+
+
 def _copy_example(rel: str) -> Callable[[Path], Path]:
     def build(work: Path) -> Path:
         src = REPO_ROOT / rel
@@ -403,6 +439,25 @@ DEMOS: tuple[Demo, ...] = (
         ),
         how="`yaml actions` entries with `start:` → `an.ir.compose` → the flattened timeline.",
         build=_build_composition,
+    ),
+    Demo(
+        slug="swap-channels",
+        title="Swap channels: named keys, not keyframes",
+        shows=(
+            "A hand changes fist → palm → point and the torso turns left, right, "
+            "and back — six `set` lines naming KEYS of the character's declared "
+            "`hands` and `body_facing` asset sets. Neither set name appears in "
+            "the renderer or the compiler: the descriptor declares the sets, the "
+            "skin carries the art, and the one generic swap path applies them — "
+            "the same path lip-sync's `viseme` set rides (an#87)."
+        ),
+        how=(
+            "`{kind: set, target: gale/left_hand, property: hands, value: fist}` "
+            "in `yaml actions`; the set names come from the character's "
+            "`asset_sets`, validated at compile with the declared keys named in "
+            "every error."
+        ),
+        build=_build_swap_channels,
     ),
     Demo(
         slug="svg-promote",

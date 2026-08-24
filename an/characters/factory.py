@@ -187,12 +187,16 @@ def new_character(
     _synthesize_brow(parts_dir / "brow_l.svg", side="l")
     _synthesize_brow(parts_dir / "brow_r.svg", side="r")
 
-    # Step 6: descriptor
+    # Step 6: descriptor. `face_overlay` is DECLARED here (an#87): a DiceBear
+    # avatar has its face baked into the head SVG, so the overlay face parts
+    # and the viseme channel are suppressed by this fact — the compiler no
+    # longer sniffs metadata.art_provenance, which is provenance again.
     descriptor = CharacterDescriptor(
         name=name,
         display_name=name.title(),
         voice_ref=voice_ref,
         source_svg=f"{name}.svg",
+        face_overlay=metadata.get("art_provenance") != "dicebear",
         metadata={**metadata, "pivots_detected": list(pivots.keys())},
         source=source,
     )

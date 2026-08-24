@@ -76,7 +76,10 @@ Two namespaces, deliberately:
 
 - **Slot** — where a thing is drawn (`left_eye`, `mouth`, `torso`). This is the
   scene-graph node name, and it is what `scene.md` targets.
-- **Attachment** — *which* drawing (`eye_l_open`, `mouth_a`). Follows the files.
+- **Attachment** — *which* drawing (`mouth_a`, `brow_l`). Usually follows the
+  files — except where one swap set must drive several slots at once: both eye
+  slots name their attachments `open`/`closed` (paths still `eye_l_open.svg`
+  etc.) so the single `eyelid` set projects onto each (an#87).
 
 A slot holds several attachments and shows one at a time. That is how a mouth
 carries nine visemes, and how an eye carries open and closed.
