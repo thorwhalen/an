@@ -132,7 +132,9 @@ def merge_duplicates(keys: Iterable) -> list[Cue]:
     return out
 
 
-def suppress_weak(keys: Iterable, *, max_weak_s: float, end: float | None = None) -> list[Cue]:
+def suppress_weak(
+    keys: Iterable, *, max_weak_s: float, end: float | None = None
+) -> list[Cue]:
     """Drop a weak (low-dominance) cue that would show for less than ``max_weak_s``.
 
     >>> raw = [(0.0, "X"), (0.20, "D"), (0.40, "B"), (0.43, "D"), (0.80, "X")]
@@ -146,7 +148,11 @@ def suppress_weak(keys: Iterable, *, max_weak_s: float, end: float | None = None
     """
     cues = _cues(keys)
     spans = _spans(cues, end=end)
-    kept = [c for c, span in zip(cues, spans) if not (c.dominance < WEAK_BELOW and span < max_weak_s)]
+    kept = [
+        c
+        for c, span in zip(cues, spans)
+        if not (c.dominance < WEAK_BELOW and span < max_weak_s)
+    ]
     return merge_duplicates(kept)
 
 
@@ -172,7 +178,9 @@ def lead(keys: Iterable, *, lead_s: float) -> list[Cue]:
     return merge_duplicates(out)
 
 
-def decay(keys: Iterable, *, decay_s: float, rest: str = "X", end: float | None = None) -> list[Cue]:
+def decay(
+    keys: Iterable, *, decay_s: float, rest: str = "X", end: float | None = None
+) -> list[Cue]:
     """Give a shape ``decay_s`` to close: a rest arriving sooner than that after
     the shape before it is pushed out to ``decay_s``, never past the next cue
     and never past ``end`` (a rest pushed to ``end`` is where the line closes).
@@ -198,7 +206,9 @@ def decay(keys: Iterable, *, decay_s: float, rest: str = "X", end: float | None 
     return merge_duplicates(out)
 
 
-def condense(keys: Iterable, *, min_hold_s: float, end: float | None = None) -> list[Cue]:
+def condense(
+    keys: Iterable, *, min_hold_s: float, end: float | None = None
+) -> list[Cue]:
     """Enforce a minimum hold by voting, never by dropping.
 
     Windows of ``min_hold_s`` open at each cue that clears the previous window.
@@ -267,9 +277,13 @@ def condense(keys: Iterable, *, min_hold_s: float, end: float | None = None) -> 
         window_end = start + min_hold_s
         members: list[tuple[Cue, float]] = []
         if carried is not None:
-            members.append((carried, max(0.0, min(ends[carried_idx], window_end) - start)))
+            members.append(
+                (carried, max(0.0, min(ends[carried_idx], window_end) - start))
+            )
         j = i
-        while j < len(cues) and (cues[j].time < window_end - _EDGE_EPS or (not members and j == i)):
+        while j < len(cues) and (
+            cues[j].time < window_end - _EDGE_EPS or (not members and j == i)
+        ):
             overlap = max(0.0, min(ends[j], window_end) - max(cues[j].time, start))
             members.append((cues[j], overlap))
             j += 1
@@ -333,7 +347,13 @@ def coarticulate(
     cues = lead(cues, lead_s=lead_s)
     cues = decay(cues, decay_s=decay_s, rest=rest, end=end)
     out = condense(cues, min_hold_s=min_hold_s, end=end)
-    if end is not None and cues_in and cues_in[-1].code == rest and out and out[-1].code != rest:
+    if (
+        end is not None
+        and cues_in
+        and cues_in[-1].code == rest
+        and out
+        and out[-1].code != rest
+    ):
         # The closing rest lost its last window (or the decay pushed it onto
         # the end): the line still closes, at `end`.
         out.append(Cue(float(end), rest, cues_in[-1].intensity))

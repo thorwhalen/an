@@ -304,7 +304,11 @@ def judge_legibility(
     tests, the paid one otherwise. Parsing stays outside the recording.
     """
     reply = (judge or judge_frames)(
-        frames, prompt=legibility_prompt(text), model=model, max_tokens=max_tokens, api_key=api_key
+        frames,
+        prompt=legibility_prompt(text),
+        model=model,
+        max_tokens=max_tokens,
+        api_key=api_key,
     )
     return _parse_legibility(reply)
 

@@ -428,9 +428,30 @@ def _build_lipsync_coarticulation(work: Path) -> Path:
     from an.ir.schema import AssetRef, Shot
     from an.project import load
 
-    probe = _project(work / "probe", scene_md=_meta("probe", 1.0) + "\n" + _shot("p", 1.0) + "\n" + _entities("maya"), characters=("maya",))
-    shot = Shot(id="p", style="cutout", duration=1.0, entities=[AssetRef(kind="character", id="maya", store="characters", ref="maya")])
-    js = compile_shot(shot, mall=load(probe).mall, fps=DEMO_FPS, width=DEMO_RESOLUTION[0], height=DEMO_RESOLUTION[1])
+    probe = _project(
+        work / "probe",
+        scene_md=_meta("probe", 1.0)
+        + "\n"
+        + _shot("p", 1.0)
+        + "\n"
+        + _entities("maya"),
+        characters=("maya",),
+    )
+    shot = Shot(
+        id="p",
+        style="cutout",
+        duration=1.0,
+        entities=[
+            AssetRef(kind="character", id="maya", store="characters", ref="maya")
+        ],
+    )
+    js = compile_shot(
+        shot,
+        mall=load(probe).mall,
+        fps=DEMO_FPS,
+        width=DEMO_RESOLUTION[0],
+        height=DEMO_RESOLUTION[1],
+    )
     ent = next(c for c in js.scene.children if c.name == "maya")
     head_rest_y = next(c for c in ent.children if c.name == "head").transform.y
     lifted = head_rest_y - 16
@@ -453,10 +474,22 @@ def _build_lipsync_coarticulation(work: Path) -> Path:
     out = work / "side_by_side.mp4"
     subprocess.run(
         [
-            "ffmpeg", "-v", "error", "-y", "-i", str(before), "-i", str(after),
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-i",
+            str(before),
+            "-i",
+            str(after),
             "-filter_complex",
             f"[0:v]crop={PANE_CROP}[a];[1:v]crop={PANE_CROP}[b];[a][b]hstack=inputs=2",
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out),
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-an",
+            str(out),
         ],
         check=True,
     )
