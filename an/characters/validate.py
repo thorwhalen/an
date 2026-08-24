@@ -288,8 +288,7 @@ def _check_asset_sets(
                 f"character.json#asset_sets.{channel}",
                 f"{who} declares an asset set that cannot be a swap-set name: "
                 f"{problem}",
-                "Rename the set; the transform vocabulary and '/' / '::' are "
-                "reserved.",
+                "Rename the set; the transform vocabulary and '/' / '::' are reserved.",
             )
             continue
         for key, attachment_name in key_map.items():
@@ -342,15 +341,11 @@ def _check_asset_sets(
         # Geometry consistency, per slot the channel projects onto.
         for slot_name, attachments in skin.slots.items():
             in_set = [
-                attachments[name]
-                for name in key_map.values()
-                if name in attachments
+                attachments[name] for name in key_map.values() if name in attachments
             ]
             if len(in_set) < 2:
                 continue
-            geometries = {
-                (a.anchor, a.x, a.y, a.width, a.height) for a in in_set
-            }
+            geometries = {(a.anchor, a.x, a.y, a.width, a.height) for a in in_set}
             if len(geometries) > 1:
                 report.add(
                     ADVISORY,

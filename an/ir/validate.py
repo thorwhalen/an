@@ -138,9 +138,7 @@ def _check_swap_references(
     """
     if available_characters is None:
         return
-    refs_by_entity = {
-        e.id: e.ref for e in shot.entities if e.kind == "character"
-    }
+    refs_by_entity = {e.id: e.ref for e in shot.entities if e.kind == "character"}
     # Flattened, like the compiler: the documented `start:` idiom wraps every
     # leaf in a `sequence`, so walking only top-level actions would miss the
     # common case (an#87 review) — an authoring-time gate that only sees the

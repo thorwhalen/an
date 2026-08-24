@@ -1289,7 +1289,9 @@ def _compile_actions(
         # pose, then animate") was a no-op tween (an#87 review).
         runs: list[list[FlatAction]] = []
         for flat in group:
-            if runs and not any(runs[-1][0].start <= b <= flat.start for b in boundaries):
+            if runs and not any(
+                runs[-1][0].start <= b <= flat.start for b in boundaries
+            ):
                 runs[-1].append(flat)
             else:
                 runs.append([flat])
@@ -1319,7 +1321,9 @@ def _compile_actions(
                 channels=[ChannelJSON(target=target, property=prop, keyframes=kfs)],
             )
             hold_by_track.setdefault(_track_root_of(target), []).append(
-                PlacedClipJSON(animation_id=anim_id, start_time=first, duration=duration)
+                PlacedClipJSON(
+                    animation_id=anim_id, start_time=first, duration=duration
+                )
             )
     # Holds FIRST in every track — see the docstring: later-wins evaluation
     # must let an active tween override a hold at the shared instant.
@@ -1560,7 +1564,11 @@ def _check_swap_action(
                 "those paths."
             )
         _record_used_swap_fallback(
-            resolutions, entity_id, target, prop, detail=(
+            resolutions,
+            entity_id,
+            target,
+            prop,
+            detail=(
                 f"the {prop!r} set is declared but none of its art resolved, "
                 f"so the authored swap on {target!r} cannot be shown; the "
                 "channel was dropped"
@@ -1570,7 +1578,11 @@ def _check_swap_action(
     missing = [str(v) for v in values if str(v) not in node_map]
     if missing:
         _record_used_swap_fallback(
-            resolutions, entity_id, target, prop, detail=(
+            resolutions,
+            entity_id,
+            target,
+            prop,
+            detail=(
                 f"the authored swap uses key(s) {missing} of the {prop!r} "
                 f"set, whose art did not resolve on {target!r} (resolved "
                 f"keys: {sorted(node_map)}); the channel was dropped"
@@ -1806,9 +1818,7 @@ def _add_viseme_clips(
                 name=anim_id,
                 duration=line.duration,
                 channels=[
-                    ChannelJSON(
-                        target=target, property=VISEME_CHANNEL, keyframes=kfs
-                    ),
+                    ChannelJSON(target=target, property=VISEME_CHANNEL, keyframes=kfs),
                 ],
             )
             track = track_lookup.get(speaker)
