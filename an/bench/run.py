@@ -643,14 +643,19 @@ def shot_policy_provenance(shots) -> dict[str, dict[str, Any]]:
 
 
 def viseme_keyframes_per_second(scene_json: dict) -> float | None:
-    """Mouth-shape changes per second of dialogue in a compiled shot, or
-    ``None`` when nothing speaks (an#97).
+    """Viseme keyframes per second of dialogue in a compiled shot, or ``None``
+    when nothing speaks (an#97).
 
-    Counted over the ``__viseme__`` clips: keyframes minus one per clip (the
-    trailing rest is an invariant, not a decision), over the clips' summed
-    durations. The co-articulation passes must make this fall on a speaking
-    scene while the judged legibility does not; recorded as provenance rather
-    than a panel metric because no lever in the registry moves it.
+    Counted over the ``__viseme__`` clips: keyframes minus one per channel
+    (the trailing rest is an invariant, not a decision — today's emission has
+    one channel per clip), over the clips' summed durations, which are the
+    frame-ceiled windows rather than the lines' exact lengths (a small
+    downward bias, the same for every row). Keyframes, not distinct shapes — a repeated code (the carried
+    rest before the terminal one) counts. The co-articulation passes bring
+    this below the RAW provider track's rate; against the old drop-not-hold
+    condenser it can rise, because that loop was cheaper only by dropping
+    shapes. Recorded as provenance rather than a panel metric because no lever
+    in the registry moves it.
 
     >>> viseme_keyframes_per_second({"animations": {}})
     >>> viseme_keyframes_per_second({"animations": {"__viseme__s_0_m": {"duration": 2.0,

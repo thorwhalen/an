@@ -111,7 +111,8 @@ Pin it where something has actually moved, and record what. Two traps, both met
 while building this corpus:
 
 - **`duration/2` is not a safe default.** Blinks occupy 3.5% of frames, so on
-  `single_character` frame 0 and frame 30 are the same picture.
+  `single_character` frame 0 and frame 30 were the same picture — until the an#97
+  anticipation lead put the line's first mouth shape on frame 0 (81 px apart now).
 - **A pair can be blind to a mutation the scene is not.** `graded_field`'s
   marker advances by a sub-pixel step, so on frames 0, 1, 6, 8 and 11 it lands
   on an exact pixel boundary and turning anti-aliasing off changes **zero**

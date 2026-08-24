@@ -617,9 +617,9 @@ DEMOS: tuple[Demo, ...] = (
             "shape came first and the closures and open vowels a viewer reads "
             "were the ones lost — against the co-articulation passes on the "
             "right: duplicates merged, sub-frame tongue shapes dropped, every "
-            "shape two frames ahead of its sound, a beat to close before rest, "
-            "and a hold that VOTES (the longest, most lip-heavy shape in the "
-            "window wins). The mouth art is identical in both panes; only which "
+            "shape 2/24 s ahead of its sound (two frames at this demo's 24 fps), a "
+            "beat to close before rest, and a hold that VOTES (the shape with the "
+            "largest in-window span × dominance wins, shown from the window start). The mouth art is identical in both panes; only which "
             "shape shows, and when, differs (an#97)."
         ),
         how=(

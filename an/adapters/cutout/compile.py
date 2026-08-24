@@ -123,8 +123,9 @@ def _palette_for(entity_id: str) -> tuple[str, str, str]:
 
 
 #: Co-articulation on/off (an#97). ON is the product; OFF reproduces the
-#: pre-#97 emission — the raw provider track thinned by the old drop-not-hold
-#: condenser — and exists so the `lipsync-coarticulation` demo and a test can
+#: pre-#97 mouth CHOICE — the raw provider track thinned by the old drop-not-hold
+#: condenser — over the new frame-ceiled clip window (so not byte-for-byte the
+#: old emission: OFF still closes the mouth after a line) and exists so the `lipsync-coarticulation` demo and a test can
 #: render the two side by side. Not a RenderContext knob: nobody should ship
 #: the old behaviour, and a module flag rebound for one render is the shape
 #: the bench's levers already use.
@@ -2100,7 +2101,17 @@ def _add_viseme_clips(
     """
     face_baked = _baked_face_speakers(shot, mall)
     track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
-    for i, line in enumerate(shot.dialogue):
+    # Emit in TIME order, keeping each line's authored index for its ids: the
+    # frame-ceiled window of one line can overlap the next line's first frame
+    # on the same track, and the runtime resolves that by clip order (later
+    # wins) — so a dialogue list authored out of order would show line 1's
+    # rest over line 2's opening shape for one frame (an#97 review). In-order
+    # lists are emitted exactly as before.
+    ordered = sorted(
+        enumerate(shot.dialogue),
+        key=lambda p: (p[1].start if p[1].start is not None else math.inf, p[0]),
+    )
+    for i, line in ordered:
         if line.viseme_track is None or not line.viseme_track.keyframes:
             continue
         if line.start is None or line.duration is None:

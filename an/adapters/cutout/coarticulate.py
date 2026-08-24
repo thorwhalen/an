@@ -3,8 +3,8 @@ track and the compiler's channel emission (an#97, epic #9 Wave 6).
 
 A lip-sync provider hands the compiler a list of ``(time, code)`` cues — one
 mouth shape per phoneme or per character, at whatever density it produced.
-Shown as-is, that track *flickers*: consonant clusters run well above the
-~7 Hz a viewer can read, tongue-only shapes swap the lips for one frame, and
+Shown as-is, that track *flickers*: consonant clusters swap the mouth faster
+than a frame or two can show, tongue-only shapes swap the lips for one frame, and
 every shape lands exactly on its sound instead of a beat ahead of it. These
 passes turn the raw track into what an animator would key, in this order:
 
@@ -22,7 +22,8 @@ passes turn the raw track into what an animator would key, in this order:
    ``decay_s`` (JALI: "another 120 ms to decay to zero"), never past the next
    speaking cue.
 4. **Minimum hold** — :func:`condense`, LAST. It **holds and votes**; it never
-   drops. Windows of at least ``min_hold_s`` open at each cue that clears the
+   drops a cue unvoted (a carried loser can lose its next window too and never
+   show — outvoted twice, not skipped). Windows of at least ``min_hold_s`` open at each cue that clears the
    previous window; within a window the shape with the largest
    ``span × dominance`` (Rhubarb's "select shape with highest total duration
    within the candidate range", weighted by Cohen–Massaro's per-segment
@@ -45,6 +46,7 @@ codes both "most consonants" and the vowel EE, so the letter alone cannot say).
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Iterable, Sequence
 
@@ -97,10 +99,21 @@ def _cues(keys: Iterable) -> list[Cue]:
     return sorted(out, key=lambda c: c.time)
 
 
+#: Window-edge tolerance: ``0.28 + 0.14`` is ``0.42000000000000004``, so a cue at
+#: exactly three holds would otherwise fall *inside* the third window.
+_EDGE_EPS: float = 1e-9
+
+
 def _spans(cues: Sequence[Cue], *, end: float | None) -> list[float]:
-    """How long each cue would show if nothing were held: until the next cue, or ``end``."""
+    """How long each cue would show if nothing were held: until the next cue,
+    then until ``end`` — or **forever** when ``end`` is unknown, so a last cue
+    is never a zero-span nobody that loses every vote and vanishes (review of
+    an#97: ``condense([(0, "X"), (0.1, "A")], min_hold_s=0.14)`` used to
+    return just the rest)."""
     return [
-        (cues[i + 1].time - c.time) if i + 1 < len(cues) else (max(0.0, end - c.time) if end is not None else 0.0)
+        (cues[i + 1].time - c.time)
+        if i + 1 < len(cues)
+        else (max(0.0, end - c.time) if end is not None else math.inf)
         for i, c in enumerate(cues)
     ]
 
@@ -138,9 +151,13 @@ def suppress_weak(keys: Iterable, *, max_weak_s: float, end: float | None = None
 
 
 def lead(keys: Iterable, *, lead_s: float) -> list[Cue]:
-    """Anticipation: every cue but the opening rest moves ``lead_s`` earlier, clamped at 0.
+    """Anticipation: every cue moves ``lead_s`` earlier, clamped at 0.
 
-    Cues that collide at 0 collapse to the last one (the one nearest the sound).
+    Cues that collide at 0 collapse to the last one — the shape that is still
+    the state once the collision is over. An opening burst shorter than the
+    lead (``[(0, X), (0.02, A), (0.05, D), (0.07, X)]``) therefore never opens
+    the mouth; the hold would have refused a 70 ms word anyway, and the old
+    condenser did.
 
     >>> [(round(c.time, 3), c.code) for c in lead([(0.0, "X"), (0.05, "D"), (0.5, "B")], lead_s=0.08)]
     [(0.0, 'D'), (0.42, 'B')]
@@ -155,9 +172,10 @@ def lead(keys: Iterable, *, lead_s: float) -> list[Cue]:
     return merge_duplicates(out)
 
 
-def decay(keys: Iterable, *, decay_s: float, rest: str = "X") -> list[Cue]:
+def decay(keys: Iterable, *, decay_s: float, rest: str = "X", end: float | None = None) -> list[Cue]:
     """Give a shape ``decay_s`` to close: a rest arriving sooner than that after
-    the shape before it is pushed out to ``decay_s``, never past the next cue.
+    the shape before it is pushed out to ``decay_s``, never past the next cue
+    and never past ``end`` (a rest pushed to ``end`` is where the line closes).
 
     >>> [(round(c.time, 3), c.code) for c in decay([(0.0, "X"), (0.2, "D"), (0.25, "X"), (0.6, "B")], decay_s=0.12)]
     [(0.0, 'X'), (0.2, 'D'), (0.32, 'X'), (0.6, 'B')]
@@ -173,6 +191,8 @@ def decay(keys: Iterable, *, decay_s: float, rest: str = "X") -> list[Cue]:
             if c.time < earliest:
                 if nxt is not None and earliest >= nxt:
                     continue  # the next shape arrives first: no rest in between
+                if end is not None:
+                    earliest = min(earliest, end)
                 c = Cue(earliest, c.code, c.intensity)
         out.append(c)
     return merge_duplicates(out)
@@ -209,10 +229,17 @@ def condense(keys: Iterable, *, min_hold_s: float, end: float | None = None) -> 
     >>> [(c.time, c.code) for c in condense(raw, min_hold_s=0.14)]
     [(0.0, 'X'), (0.3, 'D'), (0.8, 'X')]
 
-    A cue exactly at the window edge opens the next window, untouched:
+    A cue exactly at the window edge opens the next window, untouched — also
+    at the third edge, where ``0.28 + 0.14`` is a hair over ``0.42`` in binary:
 
-    >>> [(c.time, c.code) for c in condense([(0.0, "X"), (0.14, "C"), (0.28, "D")], min_hold_s=0.14)]
-    [(0.0, 'X'), (0.14, 'C'), (0.28, 'D')]
+    >>> [(c.time, c.code) for c in condense([(0.0, "X"), (0.14, "C"), (0.28, "D"), (0.42, "A")], min_hold_s=0.14)]
+    [(0.0, 'X'), (0.14, 'C'), (0.28, 'D'), (0.42, 'A')]
+
+    Without ``end`` the last cue shows forever, so it always survives (it opens
+    its own window when it loses one):
+
+    >>> [(c.time, c.code) for c in condense([(0.0, "X"), (0.1, "A")], min_hold_s=0.14)]
+    [(0.0, 'X'), (0.14, 'A')]
 
     Windows chain, so nothing is lost: the opening rest keeps its window
     (0.10 of rest beats a 20 ms closure and 20 ms of F); F, running past the
@@ -242,7 +269,7 @@ def condense(keys: Iterable, *, min_hold_s: float, end: float | None = None) -> 
         if carried is not None:
             members.append((carried, max(0.0, min(ends[carried_idx], window_end) - start)))
         j = i
-        while j < len(cues) and (cues[j].time < window_end or (not members and j == i)):
+        while j < len(cues) and (cues[j].time < window_end - _EDGE_EPS or (not members and j == i)):
             overlap = max(0.0, min(ends[j], window_end) - max(cues[j].time, start))
             members.append((cues[j], overlap))
             j += 1
@@ -254,11 +281,11 @@ def condense(keys: Iterable, *, min_hold_s: float, end: float | None = None) -> 
         last_cue, _ = members[-1]
         last_idx = j - 1 if members[-1][0] is not carried else carried_idx
         carried = None
-        if last_cue is not winner and ends[last_idx] > window_end and last_idx < len(cues):
+        if last_cue is not winner and ends[last_idx] > window_end + _EDGE_EPS:
             carried, carried_idx = last_cue, last_idx
             start = window_end
         elif j < len(cues):
-            start = max(cues[j].time, window_end) if cues[j].time < window_end else cues[j].time
+            start = cues[j].time  # the loop above guarantees it clears the window
         i = j
     return out
 
@@ -278,12 +305,39 @@ def coarticulate(
     >>> raw = [(0.0, "X"), (0.30, "B"), (0.34, "A"), (0.38, "D"), (0.80, "X")]
     >>> [(round(c.time, 3), c.code) for c in coarticulate(raw, fps=24, end=1.0)]
     [(0.0, 'X'), (0.257, 'D'), (0.717, 'X')]
+
+    A track that ends on ``rest`` still does after the passes, at ``end`` when
+    the decay left no room before it (the compiler appends its own terminal
+    rest at the line's end regardless — this is for every other caller):
+
+    >>> [(round(c.time, 3), c.code) for c in coarticulate([(0, "X"), (0.3, "D"), (0.69, "C"), (0.71, "X")], fps=24, end=0.71)]
+    [(0.0, 'X'), (0.217, 'D'), (0.607, 'C'), (0.71, 'X')]
+
+    The knobs are validated up front — a negative lead or a zero hold is a
+    typo, not a style:
+
+    >>> coarticulate(raw, fps=24, end=1.0, min_hold_s=0)
+    Traceback (most recent call last):
+    ...
+    ValueError: min_hold_s must be > 0, got 0
     """
+    if not (fps > 0):
+        raise ValueError(f"fps must be > 0, got {fps}")
+    if not (min_hold_s > 0):
+        raise ValueError(f"min_hold_s must be > 0, got {min_hold_s}")
+    if lead_s < 0 or decay_s < 0:
+        raise ValueError(f"lead_s and decay_s must be >= 0, got {lead_s} and {decay_s}")
+    cues_in = _cues(keys)
     one_frame = 1.0 / fps
-    cues = suppress_weak(keys, max_weak_s=one_frame, end=end)
+    cues = suppress_weak(cues_in, max_weak_s=one_frame, end=end)
     cues = lead(cues, lead_s=lead_s)
-    cues = decay(cues, decay_s=decay_s, rest=rest)
-    return condense(cues, min_hold_s=min_hold_s, end=end)
+    cues = decay(cues, decay_s=decay_s, rest=rest, end=end)
+    out = condense(cues, min_hold_s=min_hold_s, end=end)
+    if end is not None and cues_in and cues_in[-1].code == rest and out and out[-1].code != rest:
+        # The closing rest lost its last window (or the decay pushed it onto
+        # the end): the line still closes, at `end`.
+        out.append(Cue(float(end), rest, cues_in[-1].intensity))
+    return out
 
 
 if __name__ == "__main__":

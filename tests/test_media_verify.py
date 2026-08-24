@@ -122,20 +122,24 @@ def test_silence_detect_runs_without_error():
 
 @pytest.mark.browser
 @pytest.mark.ffmpeg
-def test_frame_ssim_adjacent_high_far_lower():
-    """Adjacent frames during dialogue should be more similar than distant ones."""
+def test_frame_ssim_moves_during_the_line_and_rests_after_it():
+    """The mouth animates while the line is spoken and the picture is static
+    after it. The earlier form of this test compared frame 0 against the LAST
+    frame and expected them to diverge — which held only because the mouth was
+    stuck open after the line (the window bug an#97 fixed); with a closed
+    mouth at both ends they are near-identical closed-lip art, and adjacent
+    frames inside the line differ MORE than the two ends do."""
     with tempfile.TemporaryDirectory() as d:
-        out = _render_dialogue_scene(Path(d) / "p", duration=2.0)
+        out = _render_dialogue_scene(Path(d) / "p", duration=2.0)  # ~0.9 s line
         frames = extract_frames(out, Path(d) / "frames", fps=4.0)
-        if len(frames) < 4:
+        if len(frames) < 8:
             pytest.skip("not enough frames extracted")
-        # Adjacent (≈0.25s apart) vs. far (across the whole render).
-        adj_ssim = ssim_image_files(frames[0], frames[1])
-        far_ssim = ssim_image_files(frames[0], frames[-1])
-        assert adj_ssim > 0.5  # close enough in content
-        # Adjacent should be at least as similar as far (mouth animates → far diverges).
-        # Not strict <, since static portions may keep both ≈1.
-        assert adj_ssim >= far_ssim - 1e-3
+        adjacent = [ssim_image_files(a, b) for a, b in zip(frames, frames[1:])]
+        during, after = adjacent[:3], adjacent[-2:]
+        assert all(s > 0.5 for s in adjacent)  # the same picture, but for the mouth
+        assert min(during) < 1.0 - 1e-4, during  # something moved while speaking
+        assert min(after) > 1.0 - 1e-6, after  # nothing moves once it is over
+        assert min(during) < min(after)
 
 
 @pytest.mark.browser

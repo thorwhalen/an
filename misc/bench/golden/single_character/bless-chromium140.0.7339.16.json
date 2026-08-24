@@ -1,5 +1,5 @@
 {
-  "blessed_at": "2026-08-24T20:45:25Z",
+  "blessed_at": "2026-08-24T21:22:48Z",
   "chromium_build": "140.0.7339.16",
   "criterion": "sha256 of the DECODED RGB array, never the file bytes: Chromium 1187 -> 1223 changes every PNG file and zero pixels.",
   "fps": 24,
@@ -28,9 +28,9 @@
   "git": {
     "branch": "wave6-pr-b",
     "dirty": true,
-    "sha": "4d9f9f38e62e87cf5a26dda97633d117e6f2cefe"
+    "sha": "d2054c8acbefcbae4ea74cc5fad28036855be018"
   },
-  "reason": "an#97: frame 0 shows the first mouth shape two frames early (the anticipation lead, 81 px); frame 24 now shows the mouth CLOSED after the line \u2014 the terminal rest at 0.71 s was never sampled before (frame 17 is 0.708 s, frame 18 lay outside the clip window), so the old golden had the mouth stuck open after the line",
+  "reason": "an#97: frame 0 shows the led first mouth shape (the anticipation lead, 81 px); frame 24 shows the mouth CLOSED after the 0.71 s line \u2014 the terminal rest was never sampled before (frame 17 is 0.708 s, frame 18 lay outside the old clip window), so the old golden had the mouth stuck open after the line (81 px)",
   "removed": [],
   "resolution": [
     320,
@@ -42,5 +42,5 @@
     "s1"
   ],
   "source": "examples/single_character",
-  "what_moves": "a blink (the compiled scale_y squash on the procedural eyes). Only 253 pixels differ, and that is the point: blinks occupy 3.5% of frames, so frame 0 against duration/2 is a pixel-identical pair on this scene."
+  "what_moves": "a blink (the compiled scale_y squash on the procedural eyes) plus, since an#97, the mouth: 253 pixels differ, 172 from the blink and 81 from the mouth (frame 0 shows the led first shape of the 0.71 s line, frame 24 the closed rest after it, which the frame-ceiled window now samples). Blinks occupy 3.5% of frames, so before the lead frame 0 against duration/2 was a pixel-identical pair on this scene; the mouth now separates them by 81 px."
 }

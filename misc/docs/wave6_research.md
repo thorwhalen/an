@@ -506,7 +506,7 @@ change — and the parser's silent drop of an unmatched dialogue line becomes an
 (PR-A), with `promote_demo`'s `maya (warm):` corrected so it speaks again.
 
 **Co-articulation passes**, pure functions over `list[Viseme]`, run **in the compiler**
-where `_MIN_VISEME_GAP_S` lives — not in the audio pipeline — so the cached track stays the
+where `_MIN_VISEME_GAP_S` lived (now `_LEGACY_MIN_VISEME_GAP_S`, kept for the OFF path) — not in the audio pipeline — so the cached track stays the
 raw provider output and a knob change is a recompile, never a re-alignment. `Viseme.intensity`
 (exists, set by nothing) becomes the dominance carrier. In order: **(a)** symbolic —
 `merge_duplicates`, and `suppress_weak` drops a low-dominance key whose span is under one
@@ -554,8 +554,10 @@ dropping the shapes a viewer reads. A pre-existing defect surfaced on the way: t
 rest at `line.duration` was never *sampled* when the line ended between frames (frame 17 at
 0.708 s, frame 18 outside a 0.71 s window), so `single_character` had its mouth stuck open
 after the line; the clip window is frame-ceiled now. The legibility cassette is scaffolded
-(prompt, parser, frozen strips, replay-only test) but **not recorded** — no API key was
-available to the session; the live test is one command for a human with one.
+(prompt, parser, frozen strips — `python tests/_lipsync_strips.py` renders the `dialogue`
+fixture with the passes off and on and writes eight frames per pane — and the replay-only
+test) but **not recorded** — no API key was available to the session; the live test is one
+command for a human with one (`AN_LIVE_API_TESTS=1 pytest -m live_api -k legibility`).
 
 **Word-timing retention** (landed first; no pixel, no cache key). `VisemeTrack.words:
 list[WordTiming] | None` on the audio dataclass; whisper and `WordTimingsLipSync` fill it,
@@ -609,8 +611,9 @@ seam, its test is that `language` is not forwarded.
   is information about the vocabulary, not the judge. For legibility, a second call over a
   dense 8-frame strip inside the dialogue line asks for a 1–5 "could you read this mouth is
   saying `<text>`" score; the done-when is two numbers on one cassette: viseme keyframes per
-  second of dialogue (counted from compiled `__viseme__` clips, trailing rest excluded) down,
-  legibility not down. The judge stays out of the ledger (bench rule 5).
+  second of dialogue (counted from compiled `__viseme__` clips, trailing rest excluded) down
+  **against the raw provider track** — against the old drop-not-hold condenser it rises on a
+  dense track, measured in the PR-B addendum to §11 — legibility not down. The judge stays out of the ledger (bench rule 5).
 
 ## 13. Demos (every user-facing piece gets a clip)
 

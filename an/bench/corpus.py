@@ -191,10 +191,13 @@ DFLT_FIXTURES: dict[str, Fixture] = {
         expect_visual_kinds=frozenset({"rect", "ellipse"}),
         golden_frames=(0.0, 1.0),
         golden_note=(
-            "a blink (the compiled scale_y squash on the procedural eyes). Only "
-            "253 pixels differ, and that is the point: blinks occupy 3.5% of "
-            "frames, so frame 0 against duration/2 is a pixel-identical pair "
-            "on this scene."
+            "a blink (the compiled scale_y squash on the procedural eyes) plus, "
+            "since an#97, the mouth: 253 pixels differ, 172 from the blink and "
+            "81 from the mouth (frame 0 shows the led first shape of the 0.71 s "
+            "line, frame 24 the closed rest after it, which the frame-ceiled "
+            "window now samples). Blinks occupy 3.5% of frames, so before the "
+            "lead frame 0 against duration/2 was a pixel-identical pair on this "
+            "scene; the mouth now separates them by 81 px."
         ),
     ),
     "promote_demo": Fixture(
@@ -243,15 +246,17 @@ DFLT_FIXTURES: dict[str, Fixture] = {
         golden_frames=(0.0, 0.6),
         golden_note=(
             "the mouth mid-line: frame 14 sits on the `h`/`a` of 'shape' and "
-            "TODAY'S condenser shows `C` there, having dropped the `D` and `A` "
-            "that follow inside its 0.14 s window — the drop-instead-of-hold "
-            "defect PR-B (an#97) replaces with a vote, which is what will move "
-            "this frame. The head is lifted 34 px above its rest by an absolute "
-            "`set` so the placeholder rig's mouth clears the torso (127 px "
-            "differ between the pair). The second golden sits INSIDE the spoken "
-            "interval, which no other corpus scene does: `single_character` "
-            "samples after its line ends and `promote_demo` renders mute in the "
-            "bench (no visemes in its IR, by design). The visemes are the "
+            "shows `A`, the winner of its 0.14 s window under the an#97 vote; "
+            "the old drop-not-hold condenser showed `C` there, having dropped "
+            "the `D` and `A` that followed inside the window. Frame 0 shows "
+            "`E` — the winner of the first window, after the lead pulled the "
+            "line's opening cues to 0 — where the old path showed the rest. The "
+            "head is lifted 34 px above its rest by an absolute `set` so the "
+            "placeholder rig's mouth clears the torso. The second golden sits "
+            "INSIDE the spoken interval; `single_character`'s second golden "
+            "samples after its line ends (its first, at t=0, is on the led "
+            "first shape) and `promote_demo` renders mute in the bench (no "
+            "visemes in its IR, by design). The visemes are the "
             "offline provider's, stamped into the committed ir/scene.json; the "
             "bench renders with auto_audio=False and reads them from there."
         ),

@@ -23,9 +23,13 @@ from an.adapters.cutout.coarticulate import (
     coarticulate,
     condense,
     lead,
+    suppress_weak,
 )
 from an.adapters.cutout.compile import compile_shot
 from an.ir.schema import AssetRef, Dialogue, Shot, VisemeKeyframe, VisemeTrack
+
+from .conftest import requires_live_api
+from .test_swap_channels import _evaluate, _python_timeline
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -96,9 +100,12 @@ def test_the_terminal_rest_invariant_survives_the_passes():
     assert all(0.0 <= t <= 1.0 for t, _ in keys)
 
 
-def test_the_passes_reduce_keyframes_on_the_corpus_dialogue_scene(monkeypatch):
-    """The wave's measurement, at the compiler: fewer mouth-shape changes per
-    second on `misc/bench/corpus/dialogue` than the old condenser produced."""
+def test_the_passes_thin_the_raw_track_but_not_below_the_old_condenser(monkeypatch):
+    """The wave's measurement, at the compiler, on `misc/bench/corpus/dialogue`:
+    fewer viseme keyframes per second than the RAW provider track, capped by
+    the hold — and MORE than the old condenser, which was cheaper only by
+    dropping the shapes a viewer reads. The direction against the old loop is
+    pinned so a doc claiming "fewer than before" fails here first."""
     from an.bench.run import viseme_keyframes_per_second
     from an.project import load
 
@@ -123,7 +130,6 @@ def test_the_passes_reduce_keyframes_on_the_corpus_dialogue_scene(monkeypatch):
     assert rate_on <= 1.0 / DEFAULT_MIN_HOLD_S + 0.5
     assert rate_off < rate_on, (rate_off, rate_on)
     # And the frame-14 golden changes: today's `C` is voted against.
-    from tests.test_swap_channels import _evaluate, _python_timeline
 
     before = _evaluate(_python_timeline(off), 14 / 24)[("talker/head/mouth", "viseme")]
     after = _evaluate(_python_timeline(on), 14 / 24)[("talker/head/mouth", "viseme")]
@@ -233,18 +239,15 @@ def test_a_different_line_is_a_different_recording():
     assert a != b
 
 
-LEGIBILITY_FRAMES = ROOT / "tests" / "fixtures" / "vision_frames" / "lipsync"
 LINE = "Hold the shape, then vote."
 
 
 def _strips():
-    """The frozen 8-frame strips of the `dialogue` line, before and after."""
-    out = {}
-    for variant in ("before", "after"):
-        files = sorted((LEGIBILITY_FRAMES / variant).glob("*.png"))
-        if len(files) == 8:
-            out[variant] = [f.read_bytes() for f in files]
-    return out
+    """The frozen strips of the `dialogue` line, before and after
+    (`tests/_lipsync_strips.py` is the freezer and the SSOT for their shape)."""
+    from tests._lipsync_strips import load_strips
+
+    return load_strips()
 
 
 def test_legibility_does_not_drop_under_the_passes_replay_only():
@@ -256,7 +259,7 @@ def test_legibility_does_not_drop_under_the_passes_replay_only():
 
     strips = _strips()
     if len(strips) < 2:
-        pytest.skip("frozen lipsync strips not recorded yet (tests/fixtures/vision_frames/lipsync/{before,after})")
+        pytest.skip("frozen lipsync strips missing — python tests/_lipsync_strips.py")
     for variant in strips:
         key = judge_key(strips[variant], prompt=legibility_prompt(LINE))
         if not (CASSETTE_DIR / f"{key}.json").is_file():
@@ -269,13 +272,16 @@ def test_legibility_does_not_drop_under_the_passes_replay_only():
 
 
 @pytest.mark.live_api
+@requires_live_api
 def test_record_the_legibility_cassette():
-    """Spends once (~$0.005 x 2). Gated on the explicit positive opt-in."""
+    """Spends once (~$0.005 x 2). Gated on the explicit positive opt-in — the
+    marker alone opts out of the network guard, `requires_live_api` is the
+    skip (the first draft had only the marker and CI ran it)."""
     from tests._vision_cassettes import memoized_judge
     from an.verify.vision import judge_legibility
 
     strips = _strips()
-    assert len(strips) == 2, "render the strips first: python misc/demos/build_demos.py lipsync-coarticulation, then freeze 8 frames per pane"
+    assert len(strips) == 2, "freeze the strips first: python tests/_lipsync_strips.py"
     judge = memoized_judge(replay_only=False)
     for variant in strips:
         assert judge_legibility(strips[variant], LINE, judge=judge) is not None
@@ -287,3 +293,135 @@ def test_the_demo_flag_restores_itself():
     assert "compile_mod.COARTICULATION_ENABLED = False" in src
     assert "compile_mod.COARTICULATION_ENABLED = original" in src
     assert json.dumps(compile_mod.COARTICULATION_ENABLED) == "true"
+
+
+def test_the_recording_test_skips_without_the_opt_in(tmp_path):
+    """The mutant that reached CI: `@pytest.mark.live_api` alone opts the test
+    OUT of the network guard and skips nothing — `requires_live_api` is the
+    skip. Observed through pytest itself, with the opt-in and the CI marker
+    both stripped from the environment, so the assertion is about what a bare
+    `pytest` does and not about which decorators the function carries."""
+    import os
+    import subprocess
+    import sys
+
+    env = {k: v for k, v in os.environ.items() if k not in ("AN_LIVE_API_TESTS", "CI")}
+    proc = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-rs", "--no-header",
+         "tests/test_coarticulation.py::test_record_the_legibility_cassette"],
+        cwd=ROOT, env=env, capture_output=True, text=True, check=False,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "1 skipped" in proc.stdout and "AN_LIVE_API_TESTS" in proc.stdout, proc.stdout
+    assert "failed" not in proc.stdout and "passed" not in proc.stdout.split("\n")[-2], proc.stdout
+
+
+# --- an#97 review: the four mutants that survived, and the four edge defects ---
+
+
+def _codes(cues):
+    return [(round(c.time, 3), c.code) for c in cues]
+
+
+def test_a_carried_member_votes_with_its_in_window_span_not_its_raw_span():
+    """Mutant 1b: `F` (raw span 0.10 from 0.10) carries into the window at 0.14,
+    where its in-window span is only 0.06 — `A` (0.07 inside) beats it. Voting
+    with the raw span would hand F the window."""
+    out = _codes(condense([(0, "X"), (0.10, "F"), (0.20, "A"), (0.27, "C"), (0.8, "X")], min_hold_s=0.14, end=1.0))
+    assert out == [(0.0, "X"), (0.14, "A"), (0.28, "C"), (0.8, "X")], out
+
+
+def test_the_decay_pass_delays_a_rest_that_arrives_too_soon():
+    """Mutant 5: a rest 50 ms after `D` is pushed to `D + 0.12` before the hold
+    sees it; without the pass the rest either shows at its raw (led) time or
+    wins the window outright. Here D leads to 0.217, the rest to 0.267, decay
+    puts it at 0.337, and the hold places it at its own window at 0.357."""
+    out = _codes(coarticulate([(0, "X"), (0.30, "D"), (0.35, "X"), (0.9, "B")], fps=24, end=1.0))
+    rest_times = [t for t, code in out if code == "X" and t > 0]
+    assert rest_times and rest_times[0] >= round(0.30 - 2 / 24 + 0.12, 3) - 1e-9, out
+    assert out[1] == (0.217, "D"), out
+
+
+@pytest.mark.parametrize("bad", [0, 6, -1, 5.5])
+def test_the_legibility_parser_refuses_a_score_off_the_scale(bad):
+    """Mutant 12: only 1–5 is a verdict; 0, 6 or a fraction is a reply that
+    did not follow the rubric and must read as `None`, never as a number."""
+    from an.verify.vision import _parse_legibility
+
+    assert _parse_legibility(json.dumps({"legibility": bad, "heard": "x"})) is None
+
+
+def test_a_raw_key_past_the_line_end_is_not_emitted():
+    """Mutant 14: a provider key at 1.2 s on a 1.0 s line must not become a
+    keyframe; only the terminal rest sits at or after `line.duration`."""
+    from an.adapters.cutout.serialize import to_dict
+
+    track = VisemeTrack(keyframes=[VisemeKeyframe(time=0.0, viseme="X"), VisemeKeyframe(time=0.4, viseme="D"), VisemeKeyframe(time=1.2, viseme="A")])
+    shot = Shot(
+        id="s", style="cutout", duration=2.0,
+        entities=[AssetRef(kind="character", id="c", store="characters", ref="c-v1")],
+        dialogue=[Dialogue(speaker="c", text="hi", start=0.0, duration=1.0, viseme_track=track)],
+    )
+    js = to_dict(compile_shot(shot, fps=24))
+    (clip,) = [a for k, a in js["animations"].items() if k.startswith("__viseme__")]
+    (channel,) = clip["channels"]
+    late = [k for k in channel["keyframes"] if k["time"] >= 1.0]
+    assert late == [{"time": 1.0, "value": "X", "easing": "step"}], channel["keyframes"]
+
+
+def test_without_end_the_last_cue_always_survives():
+    """D4: with `end` unknown the last cue used to have a zero span, lose every
+    vote and vanish — `[(0, X), (0.1, A)]` condensed to just the rest."""
+    assert _codes(condense([(0, "X"), (0.1, "A")], min_hold_s=0.14)) == [(0.0, "X"), (0.14, "A")]
+    assert _codes(condense([(0, "X"), (0.3, "D"), (0.4, "X")], min_hold_s=0.14)) == [(0.0, "X"), (0.3, "D"), (0.44, "X")]
+    assert _codes(suppress_weak([(0, "X"), (0.2, "D"), (0.5, "B")], max_weak_s=0.04))[-1] == (0.5, "B")
+
+
+def test_window_edges_are_not_float_fragile():
+    """D5: `0.28 + 0.14 == 0.42000000000000004`, so a cue at exactly three
+    holds fell INSIDE the third window and, with `end` given, was placed a
+    rounding error late; with `end` unknown it vanished."""
+    out = _codes(condense([(0, "X"), (0.14, "C"), (0.28, "D"), (0.42, "A")], min_hold_s=0.14, end=1.0))
+    assert out == [(0.0, "X"), (0.14, "C"), (0.28, "D"), (0.42, "A")], out
+    raw = condense([(0, "X"), (0.14, "C"), (0.28, "D"), (0.42, "A")], min_hold_s=0.14, end=1.0)
+    assert raw[-1].time == 0.42, raw[-1].time
+
+
+def test_a_track_ending_on_rest_still_ends_on_rest_after_the_passes():
+    """D6: the decay pushed a closing rest past the line's end and it was lost
+    from the standalone API (the compiler masks this with its own terminal
+    rest). It now lands at `end`."""
+    out = _codes(coarticulate([(0, "X"), (0.3, "D"), (0.69, "C"), (0.71, "X")], fps=24, end=0.71))
+    assert out[-1] == (0.71, "X"), out
+
+
+def test_the_knobs_are_validated():
+    with pytest.raises(ValueError, match="lead_s"):
+        coarticulate([(0, "X")], fps=24, end=1.0, lead_s=-0.1)
+    with pytest.raises(ValueError, match="fps"):
+        coarticulate([(0, "X")], fps=0, end=1.0)
+
+
+def test_out_of_order_dialogue_lines_are_emitted_in_time_order():
+    """D8: two back-to-back lines on one speaker — the first's frame-ceiled
+    window overlaps the second's first frame, and the runtime resolves same-
+    track overlap by clip order. Authored `[line2, line1]`, the mouth used to
+    show line 1's rest over line 2's opening shape for one frame."""
+    from an.adapters.cutout.serialize import to_dict
+
+    def track(code):
+        return VisemeTrack(keyframes=[VisemeKeyframe(time=0.0, viseme="X"), VisemeKeyframe(time=0.05, viseme=code)])
+
+    line1 = Dialogue(speaker="c", text="one", start=0.0, duration=0.71, viseme_track=track("D"))
+    line2 = Dialogue(speaker="c", text="two", start=0.71, duration=0.71, viseme_track=track("A"))
+    for order in ([line1, line2], [line2, line1]):
+        shot = Shot(
+            id="s", style="cutout", duration=2.0,
+            entities=[AssetRef(kind="character", id="c", store="characters", ref="c-v1")],
+            dialogue=list(order),
+        )
+        compiled = compile_shot(shot, fps=24)
+        js = to_dict(compiled)
+        assert _evaluate(_python_timeline(compiled), 18 / 24)[("c/head/mouth", "viseme")] == "A", order
+        (trk,) = [t for t in js["timeline"]["tracks"] if t["target_root"] == "c"]
+        assert [c["start_time"] for c in trk["clips"] if "__viseme__" in c["animation_id"]] == [0.0, 0.71]
