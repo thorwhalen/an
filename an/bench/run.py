@@ -579,6 +579,7 @@ def pinned_frames_min_pairwise_changed_px(capture: SceneCapture, times) -> Value
     changed, a, b = best
     return measured(changed, closest_pair=[G.frame_key(a), G.frame_key(b)])
 
+
 #: Said when a run blessed the goldens it would otherwise have compared against.
 JUST_BLESSED_DETAIL: str = (
     "this run WROTE these goldens, so comparing against them is a tautology: "

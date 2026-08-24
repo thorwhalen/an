@@ -2146,10 +2146,16 @@ def _add_viseme_clips(
             continue
         set_name = VISEME_CHANNEL
         desc = vocab.descriptors.get(speaker) if vocab is not None else None
-        if desc is not None and provider is not None and hasattr(provider, "mouth_preset_at"):
+        if (
+            desc is not None
+            and provider is not None
+            and hasattr(provider, "mouth_preset_at")
+        ):
             preset = provider.mouth_preset_at(shot, speaker, float(line.start))
             if preset is not None:
-                keys_used = {str(kf.viseme).upper() for kf in line.viseme_track.keyframes}
+                keys_used = {
+                    str(kf.viseme).upper() for kf in line.viseme_track.keyframes
+                }
                 # The terminal rest is a key the line USES (appended below), so
                 # a variant without it must not be selected (an#98 review).
                 keys_used |= {
@@ -2158,7 +2164,9 @@ def _add_viseme_clips(
                     if (r := _mouth_rest_key(vocab, p, VISEME_CHANNEL)) is not None
                 }
                 try:
-                    set_name = resolve_mouth_set(desc, preset, keys_used=keys_used, who=speaker)
+                    set_name = resolve_mouth_set(
+                        desc, preset, keys_used=keys_used, who=speaker
+                    )
                 except ExpressionResolutionError as e:
                     raise CutoutCompileError(str(e)) from e
                 if set_name != VISEME_CHANNEL:
@@ -2180,9 +2188,7 @@ def _add_viseme_clips(
                             set_name = VISEME_CHANNEL
                             break
         mouth_paths = (
-            vocab.swap_capable_paths(speaker, set_name)
-            if vocab is not None
-            else []
+            vocab.swap_capable_paths(speaker, set_name) if vocab is not None else []
         )
         if not mouth_paths:
             if vocab is None:
@@ -2414,7 +2420,12 @@ def _compress_linear(times: list[float], values: list[float]) -> list[KeyframeJS
     kfs: list[KeyframeJSON] = []
     n = len(times)
     for i in range(n):
-        keep = i == 0 or i == n - 1 or values[i] != values[i - 1] or values[i] != values[i + 1]
+        keep = (
+            i == 0
+            or i == n - 1
+            or values[i] != values[i - 1]
+            or values[i] != values[i + 1]
+        )
         if keep:
             kfs.append(KeyframeJSON(time=times[i], value=values[i], easing="linear"))
     return kfs
@@ -2488,9 +2499,13 @@ def _add_face_clips(
             authored = [sp for sp in spans if sp.source == "action"]
             if authored:
                 problems = expression_problems(
-                    vocab.descriptors.get(entity.id), preset=authored[0].preset, who=entity.id
+                    vocab.descriptors.get(entity.id),
+                    preset=authored[0].preset,
+                    who=entity.id,
                 )
-                raise CutoutCompileError(str(ExpressionResolutionError(entity.id, problems)))
+                raise CutoutCompileError(
+                    str(ExpressionResolutionError(entity.id, problems))
+                )
             if spans:
                 warnings.warn(
                     f"shot {shot.id!r}: {entity.id!r} has its face baked into the head "
@@ -2503,13 +2518,19 @@ def _add_face_clips(
         desc = vocab.descriptors.get(entity.id)
         if desc is not None:
             for sp in spans:
-                problems = expression_problems(desc, preset=sp.preset, axes=sp.axes, who=entity.id)
+                problems = expression_problems(
+                    desc, preset=sp.preset, axes=sp.axes, who=entity.id
+                )
                 if problems:
-                    raise CutoutCompileError(str(ExpressionResolutionError(entity.id, problems)))
+                    raise CutoutCompileError(
+                        str(ExpressionResolutionError(entity.id, problems))
+                    )
         # A span that asks for nothing — `preset: None` with no axes, or
         # `intensity: 0` — is not a contributor: the entity keeps its verbatim
         # blink clips rather than a rest-valued face clip (an#98 review).
-        spans = [sp for sp in spans if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)]
+        spans = [
+            sp for sp in spans if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)
+        ]
         if not spans or desc is None:
             if spans and desc is None:
                 warnings.warn(
@@ -2518,12 +2539,24 @@ def _add_face_clips(
                     CutoutCompileWarning,
                     stacklevel=2,
                 )
-            placed = _blink_placements(shot, entity.id, animations, vocab=vocab, fps=fps)
+            placed = _blink_placements(
+                shot, entity.id, animations, vocab=vocab, fps=fps
+            )
             if placed is None:
                 continue
             phases[entity.id] = blink_phase(entity.id)
         else:
-            placed = _solve_face(shot, entity.id, desc, animations, tracks, vocab=vocab, fps=fps, provider=provider, spans=spans)
+            placed = _solve_face(
+                shot,
+                entity.id,
+                desc,
+                animations,
+                tracks,
+                vocab=vocab,
+                fps=fps,
+                provider=provider,
+                spans=spans,
+            )
             if _eye_paths(vocab, entity.id):
                 phases[entity.id] = blink_phase(entity.id)
         if not placed:
@@ -2550,7 +2583,9 @@ def _solve_face(
     spans,
 ) -> list[PlacedClipJSON]:
     """The solved face of one expressed-on entity: one clip, one channel per key."""
-    curves = {c.axis: list(c.samples) for c in provider.curves(shot, entity_id, fps=fps)}
+    curves = {
+        c.axis: list(c.samples) for c in provider.curves(shot, entity_id, fps=fps)
+    }
     n = int(math.ceil(float(shot.duration) * fps - 1e-9)) + 1
     times = [f / fps for f in range(n)]
     k = vocab.entity_scale.get(entity_id, 1.0)
@@ -2596,7 +2631,11 @@ def _solve_face(
             )
         rest = float(getattr(vocab.node_transforms[path], prop))
         channels.append(
-            ChannelJSON(target=path, property=prop, keyframes=_compress_linear(times, [rest + v for v in acc]))
+            ChannelJSON(
+                target=path,
+                property=prop,
+                keyframes=_compress_linear(times, [rest + v for v in acc]),
+            )
         )
     # Lids: every eye node, expression or not — a blink is a lid contributor.
     for path in _eye_paths(vocab, entity_id):
@@ -2609,28 +2648,50 @@ def _solve_face(
         if has_art:
             if (path, EYELID_CHANNEL) in authored:
                 continue  # an authored eye channel overrides the lid entirely (an#88)
-            keys = [lid_key(min(expr[i], _lid_blink_at(t, windows)), available=eyelid) for i, t in enumerate(times)]
+            keys = [
+                lid_key(min(expr[i], _lid_blink_at(t, windows)), available=eyelid)
+                for i, t in enumerate(times)
+            ]
             kfs = [KeyframeJSON(time=times[0], value=keys[0], easing="step")]
             for i in range(1, n):
                 if keys[i] != keys[i - 1]:
-                    kfs.append(KeyframeJSON(time=times[i], value=keys[i], easing="step"))
-            channels.append(ChannelJSON(target=path, property=EYELID_CHANNEL, keyframes=kfs))
+                    kfs.append(
+                        KeyframeJSON(time=times[i], value=keys[i], easing="step")
+                    )
+            channels.append(
+                ChannelJSON(target=path, property=EYELID_CHANNEL, keyframes=kfs)
+            )
         else:
             if (path, "scale_y") in authored:
                 continue
             rest_sy = float(vocab.node_transforms[path].scale_y)
             values = [
-                max(0.05 * rest_sy, rest_sy * _blink_squash_at(t, windows) * (1.0 + LID_SQUASH_GAIN * expr[i]))
+                max(
+                    0.05 * rest_sy,
+                    rest_sy
+                    * _blink_squash_at(t, windows)
+                    * (1.0 + LID_SQUASH_GAIN * expr[i]),
+                )
                 for i, t in enumerate(times)
             ]
-            channels.append(ChannelJSON(target=path, property="scale_y", keyframes=_compress_linear(times, values)))
+            channels.append(
+                ChannelJSON(
+                    target=path,
+                    property="scale_y",
+                    keyframes=_compress_linear(times, values),
+                )
+            )
 
     placed: list[PlacedClipJSON] = []
     if channels:
         anim_id = f"__face__{shot.id}_{entity_id}"
         duration = max(0.001, times[-1])
-        animations[anim_id] = AnimationClipJSON(name=anim_id, duration=duration, channels=channels)
-        placed.append(PlacedClipJSON(animation_id=anim_id, start_time=0.0, duration=duration))
+        animations[anim_id] = AnimationClipJSON(
+            name=anim_id, duration=duration, channels=channels
+        )
+        placed.append(
+            PlacedClipJSON(animation_id=anim_id, start_time=0.0, duration=duration)
+        )
 
     # The silent mouth form: hold the variant's rest key over each expression
     # span, outside this entity's dialogue lines — and, whenever any variant is
@@ -2649,14 +2710,28 @@ def _solve_face(
     for l in shot.dialogue:
         if l.speaker == entity_id and l.start is not None and l.duration is not None:
             a = float(l.start)
-            end = a + math.ceil(float(l.duration) * fps - 1e-9) / fps  # the clip's inclusive last frame
+            end = (
+                a + math.ceil(float(l.duration) * fps - 1e-9) / fps
+            )  # the clip's inclusive last frame
             line_windows.append((a, end))
     variant_used = any(sp.mouth_form for sp in spans)
     for l in shot.dialogue:
-        if l.speaker == entity_id and l.start is not None and getattr(l, "emotion", None):
-            variant_used = variant_used or bool(mouth_form_of((l.emotion or "").strip().lower()))
+        if (
+            l.speaker == entity_id
+            and l.start is not None
+            and getattr(l, "emotion", None)
+        ):
+            variant_used = variant_used or bool(
+                mouth_form_of((l.emotion or "").strip().lower())
+            )
 
-    def hold_clips(set_name: str, rest: str, target: str, spans_: list[tuple[float, float]], tag: str) -> None:
+    def hold_clips(
+        set_name: str,
+        rest: str,
+        target: str,
+        spans_: list[tuple[float, float]],
+        tag: str,
+    ) -> None:
         for j, (a, b) in enumerate(spans_):
             for k, (ha, hb) in enumerate(_subtract_intervals((a, b), line_windows)):
                 # Snap to frames: start on the first frame at/after `ha` (one
@@ -2666,7 +2741,14 @@ def _solve_face(
                 if any(abs(start - lw_end) < 1e-9 for _, lw_end in line_windows):
                     start += frame
                 end = min(shot.duration, math.ceil(hb * fps - 1e-9) / fps)
-                if any(abs(end - lw_start) < 1e-9 for lw_start, _ in line_windows) or end > hb + 1e-9 and any(lw_start - 1e-9 <= end <= lw_end + 1e-9 for lw_start, lw_end in line_windows):
+                if (
+                    any(abs(end - lw_start) < 1e-9 for lw_start, _ in line_windows)
+                    or end > hb + 1e-9
+                    and any(
+                        lw_start - 1e-9 <= end <= lw_end + 1e-9
+                        for lw_start, lw_end in line_windows
+                    )
+                ):
                     end -= frame
                 if end - start < -1e-9:
                     continue
@@ -2675,15 +2757,31 @@ def _solve_face(
                 animations[anim_id] = AnimationClipJSON(
                     name=anim_id,
                     duration=dur,
-                    channels=[ChannelJSON(target=target, property=set_name, keyframes=[KeyframeJSON(time=0.0, value=rest, easing="step")])],
+                    channels=[
+                        ChannelJSON(
+                            target=target,
+                            property=set_name,
+                            keyframes=[
+                                KeyframeJSON(time=0.0, value=rest, easing="step")
+                            ],
+                        )
+                    ],
                 )
-                placed.append(PlacedClipJSON(animation_id=anim_id, start_time=start, duration=dur))
+                placed.append(
+                    PlacedClipJSON(animation_id=anim_id, start_time=start, duration=dur)
+                )
 
     if variant_used:
         for target in vocab.swap_capable_paths(entity_id, VISEME_CHANNEL):
             rest = _mouth_rest_key(vocab, target, VISEME_CHANNEL)
             if rest is not None:
-                hold_clips(VISEME_CHANNEL, rest, target, [(0.0, float(shot.duration))], "neutral")
+                hold_clips(
+                    VISEME_CHANNEL,
+                    rest,
+                    target,
+                    [(0.0, float(shot.duration))],
+                    "neutral",
+                )
     for idx, sp in enumerate(spans):
         if sp.mouth_form is None or sp.source != "action":
             continue
@@ -2696,7 +2794,9 @@ def _solve_face(
     return placed
 
 
-def _subtract_intervals(span: tuple[float, float], holes: list[tuple[float, float]]) -> list[tuple[float, float]]:
+def _subtract_intervals(
+    span: tuple[float, float], holes: list[tuple[float, float]]
+) -> list[tuple[float, float]]:
     """``span`` minus every hole, as sorted disjoint intervals."""
     out: list[tuple[float, float]] = []
     cursor, end = span

@@ -194,7 +194,9 @@ def generate_default_mouths(
     if palette:
         pal.update(palette)
     return {
-        mouth_attachment_name(shape, form): _shape_svg(shape, canvas=canvas, palette=pal, smile=smile)
+        mouth_attachment_name(shape, form): _shape_svg(
+            shape, canvas=canvas, palette=pal, smile=smile
+        )
         for shape in shapes
     }
 
@@ -220,7 +222,9 @@ def write_default_mouths(
     batches = [generate_default_mouths(canvas=canvas, palette=palette, shapes=shapes)]
     for form, smile in (variants or {}).items():
         batches.append(
-            generate_default_mouths(canvas=canvas, palette=palette, shapes=shapes, smile=smile, form=form)
+            generate_default_mouths(
+                canvas=canvas, palette=palette, shapes=shapes, smile=smile, form=form
+            )
         )
     for batch in batches:
         for name, svg in batch.items():

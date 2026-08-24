@@ -211,7 +211,9 @@ class FlatAction:
 
     start: Seconds
     end: Seconds
-    action: Action  # always a leaf: SetAction | TweenAction | PlayAction | ExpressionAction
+    action: (
+        Action  # always a leaf: SetAction | TweenAction | PlayAction | ExpressionAction
+    )
 
 
 def flatten(action: Action, *, start: Seconds = 0.0) -> list[FlatAction]:

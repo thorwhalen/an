@@ -112,7 +112,11 @@ def default_binding(desc: CharacterDescriptor) -> list[Binding]:
         ("brow_height_r", RIGHT_BROW_SLOT, -1.0),
     ):
         if slot in slots:
-            out.append(ChannelBinding(axis, slot, "y", sign * BROW_HEIGHT_TRAVEL, rig_scaled=True))
+            out.append(
+                ChannelBinding(
+                    axis, slot, "y", sign * BROW_HEIGHT_TRAVEL, rig_scaled=True
+                )
+            )
     for axis, slot, sign in (
         ("brow_angle_l", LEFT_BROW_SLOT, -1.0),
         ("brow_angle_r", RIGHT_BROW_SLOT, 1.0),
@@ -124,8 +128,12 @@ def default_binding(desc: CharacterDescriptor) -> list[Binding]:
             out.append(SetBinding(axis, slot, EYELID_CHANNEL))
     for slot in (LEFT_PUPIL_SLOT, RIGHT_PUPIL_SLOT):
         if slot in slots:
-            out.append(ChannelBinding("gaze_x", slot, "x", GAZE_TRAVEL, rig_scaled=True))
-            out.append(ChannelBinding("gaze_y", slot, "y", GAZE_TRAVEL, rig_scaled=True))
+            out.append(
+                ChannelBinding("gaze_x", slot, "x", GAZE_TRAVEL, rig_scaled=True)
+            )
+            out.append(
+                ChannelBinding("gaze_y", slot, "y", GAZE_TRAVEL, rig_scaled=True)
+            )
     return out
 
 
@@ -150,8 +158,10 @@ def binding_for(desc: CharacterDescriptor) -> list[Binding]:
         if raw.get("slot") not in slots:
             raise ExpressionResolutionError(
                 desc.name,
-                [f"expression_binding maps {axis!r} onto slot {raw.get('slot')!r}, "
-                 f"which the rig does not declare (slots: {sorted(slots)})"],
+                [
+                    f"expression_binding maps {axis!r} onto slot {raw.get('slot')!r}, "
+                    f"which the rig does not declare (slots: {sorted(slots)})"
+                ],
             )
         if "set_family" in raw:
             out.append(SetBinding(axis, str(raw["slot"]), str(raw["set_family"])))
@@ -185,7 +195,7 @@ def declared_mouth_variants(desc: CharacterDescriptor) -> dict[str, str]:
     """
     prefix = VISEME_CHANNEL + "@"
     return {
-        name[len(prefix):]: name
+        name[len(prefix) :]: name
         for name in desc.asset_sets
         if name.startswith(prefix) and len(name) > len(prefix)
     }

@@ -44,7 +44,15 @@ class Preset:
     anchor: str = ""
 
 
-def _p(name: str, *, height: tuple[float, float], angle: tuple[float, float], lid: tuple[float, float], form: str | None, anchor: str) -> Preset:
+def _p(
+    name: str,
+    *,
+    height: tuple[float, float],
+    angle: tuple[float, float],
+    lid: tuple[float, float],
+    form: str | None,
+    anchor: str,
+) -> Preset:
     return Preset(
         name,
         axes={
@@ -64,15 +72,78 @@ PRESETS: dict[str, Preset] = {
     p.name: p
     for p in (
         Preset("neutral", axes={}, mouth_form=None, anchor=""),
-        _p("happy", height=(0.2, 0.2), angle=(0.1, 0.1), lid=(-0.2, -0.2), form="happy", anchor="6+12"),
-        _p("sad", height=(0.3, 0.3), angle=(0.6, 0.6), lid=(-0.3, -0.3), form="sad", anchor="1+4+15"),
-        _p("angry", height=(-0.6, -0.6), angle=(-0.8, -0.8), lid=(0.1, 0.1), form="angry", anchor="4+5+7+23"),
-        _p("surprised", height=(1.0, 1.0), angle=(0.0, 0.0), lid=(0.4, 0.4), form="surprised", anchor="1+2+5+26"),
-        _p("afraid", height=(0.7, 0.7), angle=(0.5, 0.5), lid=(0.5, 0.5), form="afraid", anchor="1+2+4+5+7+20+26"),
-        _p("disgusted", height=(-0.3, -0.3), angle=(-0.3, -0.3), lid=(-0.4, -0.4), form="disgusted", anchor="9+15+17"),
-        _p("thinking", height=(0.5, -0.2), angle=(0.3, -0.1), lid=(-0.1, -0.1), form=None, anchor="cartoon convention"),
-        _p("skeptical", height=(0.6, -0.3), angle=(0.0, -0.2), lid=(0.0, -0.2), form=None, anchor="cartoon convention"),
-        _p("amused", height=(0.1, 0.1), angle=(0.05, 0.05), lid=(-0.1, -0.1), form="happy", anchor="happy at ~0.6"),
+        _p(
+            "happy",
+            height=(0.2, 0.2),
+            angle=(0.1, 0.1),
+            lid=(-0.2, -0.2),
+            form="happy",
+            anchor="6+12",
+        ),
+        _p(
+            "sad",
+            height=(0.3, 0.3),
+            angle=(0.6, 0.6),
+            lid=(-0.3, -0.3),
+            form="sad",
+            anchor="1+4+15",
+        ),
+        _p(
+            "angry",
+            height=(-0.6, -0.6),
+            angle=(-0.8, -0.8),
+            lid=(0.1, 0.1),
+            form="angry",
+            anchor="4+5+7+23",
+        ),
+        _p(
+            "surprised",
+            height=(1.0, 1.0),
+            angle=(0.0, 0.0),
+            lid=(0.4, 0.4),
+            form="surprised",
+            anchor="1+2+5+26",
+        ),
+        _p(
+            "afraid",
+            height=(0.7, 0.7),
+            angle=(0.5, 0.5),
+            lid=(0.5, 0.5),
+            form="afraid",
+            anchor="1+2+4+5+7+20+26",
+        ),
+        _p(
+            "disgusted",
+            height=(-0.3, -0.3),
+            angle=(-0.3, -0.3),
+            lid=(-0.4, -0.4),
+            form="disgusted",
+            anchor="9+15+17",
+        ),
+        _p(
+            "thinking",
+            height=(0.5, -0.2),
+            angle=(0.3, -0.1),
+            lid=(-0.1, -0.1),
+            form=None,
+            anchor="cartoon convention",
+        ),
+        _p(
+            "skeptical",
+            height=(0.6, -0.3),
+            angle=(0.0, -0.2),
+            lid=(0.0, -0.2),
+            form=None,
+            anchor="cartoon convention",
+        ),
+        _p(
+            "amused",
+            height=(0.1, 0.1),
+            angle=(0.05, 0.05),
+            lid=(-0.1, -0.1),
+            form="happy",
+            anchor="happy at ~0.6",
+        ),
     )
 }
 
@@ -114,7 +185,11 @@ def preset_axes(
     # out-of-range override at half intensity is half the range, not the
     # whole of it (an#98 review).
     clamped = clamp_axes(merged)
-    return {k: v for k, v in ((k, v * float(intensity)) for k, v in clamped.items()) if v != 0.0}
+    return {
+        k: v
+        for k, v in ((k, v * float(intensity)) for k, v in clamped.items())
+        if v != 0.0
+    }
 
 
 def mouth_form_of(preset: str | None) -> str | None:

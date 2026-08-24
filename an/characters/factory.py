@@ -189,7 +189,9 @@ def new_character(
     _write_leg_part(parts_dir / "leg_r.svg", side="r", color="#3a3a4a")
 
     # Step 4: default mouths, plus the form variants (an#98)
-    variants = DEFAULT_MOUTH_VARIANTS if mouth_variants is None else dict(mouth_variants)
+    variants = (
+        DEFAULT_MOUTH_VARIANTS if mouth_variants is None else dict(mouth_variants)
+    )
     write_default_mouths(mouth_dir, variants=variants)
 
     # Step 5: derived parts (eyes, brows)
@@ -219,7 +221,9 @@ def new_character(
     return desc_path
 
 
-def declare_mouth_variants(descriptor: CharacterDescriptor, variants: dict[str, float]) -> None:
+def declare_mouth_variants(
+    descriptor: CharacterDescriptor, variants: dict[str, float]
+) -> None:
     """Declare a ``viseme@<form>`` set per variant on ``descriptor`` — the set's
     keys map to ``mouth_<shape>_<form>`` attachments, which are added to the
     default skin's ``mouth`` slot with the neutral mouth's geometry. The

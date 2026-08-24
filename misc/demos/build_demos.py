@@ -270,14 +270,28 @@ def _build_emotion_visemes(work: Path) -> Path:
             + f"\n```yaml actions\n- kind: expression\n  target: maya\n  preset: {preset}\n  blend: 0.0\n```\n"
             + f"\n```dialogue\nmaya: {line}\n```\n"
         )
-        clips.append(_render(_project(work / preset, scene_md=md, characters=("maya",))))
+        clips.append(
+            _render(_project(work / preset, scene_md=md, characters=("maya",)))
+        )
     out = work / "side_by_side.mp4"
     subprocess.run(
         [
-            "ffmpeg", "-v", "error", "-y", "-i", str(clips[0]), "-i", str(clips[1]),
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-i",
+            str(clips[0]),
+            "-i",
+            str(clips[1]),
             "-filter_complex",
             f"[0:v]crop={FACE_CROP}[a];[1:v]crop={FACE_CROP}[b];[a][b]hstack=inputs=2",
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out),
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-an",
+            str(out),
         ],
         check=True,
     )

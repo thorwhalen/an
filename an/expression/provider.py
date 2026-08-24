@@ -81,7 +81,11 @@ def expression_spans(shot: Shot, entity_id: str) -> list[ExpressionSpan]:
         action = flat.action
         if action.target.split("/", 1)[0] != entity_id:
             continue
-        end = flat.start + action.duration if action.duration is not None else float(shot.duration)
+        end = (
+            flat.start + action.duration
+            if action.duration is not None
+            else float(shot.duration)
+        )
         spans.append(
             ExpressionSpan(
                 start=float(flat.start),
@@ -137,7 +141,9 @@ class AxisCurve:
 class ExpressionProvider(Protocol):
     """The seam: whatever produces per-axis curves for one entity of one shot."""
 
-    def curves(self, shot: Shot, entity_id: str, *, fps: int) -> Iterable[AxisCurve]: ...
+    def curves(
+        self, shot: Shot, entity_id: str, *, fps: int
+    ) -> Iterable[AxisCurve]: ...
 
 
 class DefaultExpressionProvider:
@@ -166,7 +172,9 @@ class DefaultExpressionProvider:
         # The SUM is clamped to the axis range: two happy spans overlapping
         # must not raise a brow past what one axis can ask for.
         return [
-            AxisCurve(axis, tuple(AXES[axis].clamp(v) if axis in AXES else v for v in samples))
+            AxisCurve(
+                axis, tuple(AXES[axis].clamp(v) if axis in AXES else v for v in samples)
+            )
             for axis, samples in per_axis.items()
         ]
 

@@ -10,7 +10,15 @@ cutout compiler's face solver consumes these; ``an validate`` and
 ``an character validate`` share the same resolution.
 """
 
-from an.expression.axes import AXES, BROW_AXES, GAZE_AXES, LID_AXES, Axis, clamp_axes, lid_key
+from an.expression.axes import (
+    AXES,
+    BROW_AXES,
+    GAZE_AXES,
+    LID_AXES,
+    Axis,
+    clamp_axes,
+    lid_key,
+)
 from an.expression.binding import (
     Binding,
     ChannelBinding,
@@ -24,7 +32,13 @@ from an.expression.binding import (
     variant_set_name,
 )
 from an.expression.blendshapes import BLENDSHAPE_V2_NAMES, from_blendshapes
-from an.expression.presets import PRESETS, Preset, known_presets, mouth_form_of, preset_axes
+from an.expression.presets import (
+    PRESETS,
+    Preset,
+    known_presets,
+    mouth_form_of,
+    preset_axes,
+)
 from an.expression.provider import (
     AxisCurve,
     DefaultExpressionProvider,

@@ -56,7 +56,12 @@ AXES: dict[str, Axis] = {
     "gaze_y": Axis("gaze_y", -1.0, 1.0),
 }
 
-BROW_AXES: tuple[str, ...] = ("brow_height_l", "brow_height_r", "brow_angle_l", "brow_angle_r")
+BROW_AXES: tuple[str, ...] = (
+    "brow_height_l",
+    "brow_height_r",
+    "brow_angle_l",
+    "brow_angle_r",
+)
 LID_AXES: tuple[str, ...] = ("lid_open_l", "lid_open_r")
 GAZE_AXES: tuple[str, ...] = ("gaze_x", "gaze_y")
 

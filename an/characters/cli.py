@@ -134,7 +134,9 @@ def mouths(
     desc_path = char_dir / "character.json"
     if desc_path.is_file() and variant_map:
         raw = json.loads(desc_path.read_text(encoding="utf-8"))
-        desc = CharacterDescriptor.model_validate(migrate(raw, kind="CharacterDescriptor"))
+        desc = CharacterDescriptor.model_validate(
+            migrate(raw, kind="CharacterDescriptor")
+        )
         declare_mouth_variants(desc, variant_map)
         desc_path.write_text(desc.model_dump_json(indent=2), encoding="utf-8")
     return f"wrote {len(written)} mouth shapes to {target}"
@@ -150,14 +152,21 @@ def _parse_variants(spec: str) -> dict[str, float]:
     out: dict[str, float] = {}
     for form in forms:
         if form not in known:
-            raise ValueError(f"unknown mouth form {form!r}; the presets prefer: {', '.join(sorted(known))}")
+            raise ValueError(
+                f"unknown mouth form {form!r}; the presets prefer: {', '.join(sorted(known))}"
+            )
         out[form] = DEFAULT_MOUTH_VARIANTS.get(form, _VARIANT_SMILE.get(form, 0.0))
     return out
 
 
 #: Corner upturn per mouth form for the forms without a default variant
 #: (art direction; the same knob `DEFAULT_MOUTH_VARIANTS` sets for happy/sad).
-_VARIANT_SMILE: dict[str, float] = {"angry": -0.25, "surprised": 0.0, "afraid": -0.15, "disgusted": -0.3}
+_VARIANT_SMILE: dict[str, float] = {
+    "angry": -0.25,
+    "surprised": 0.0,
+    "afraid": -0.15,
+    "disgusted": -0.3,
+}
 
 
 def validate(name: str, out_dir: str = "") -> str:

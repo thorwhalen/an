@@ -269,7 +269,9 @@ def _extract_actions_block(text: str) -> list:
                 f"each entry under `yaml actions` must be a mapping; got {item!r}"
             )
         kind = item.get("kind")
-        start = item.pop("start", None) if kind in ("tween", "play", "expression") else None
+        start = (
+            item.pop("start", None) if kind in ("tween", "play", "expression") else None
+        )
         if kind == "tween":
             target = item["target"]
             property_ = item["property"]
@@ -318,7 +320,9 @@ def _extract_actions_block(text: str) -> list:
             # the next sync and then from the JSON on the next md edit.
             raw_axes = item.get("axes") or {}
             if not isinstance(raw_axes, dict):
-                raise ValueError(f"actions[{i}].axes must be a mapping; got {raw_axes!r}")
+                raise ValueError(
+                    f"actions[{i}].axes must be a mapping; got {raw_axes!r}"
+                )
             action = _compose.expression(
                 item["target"],
                 item.get("preset"),
@@ -329,7 +333,9 @@ def _extract_actions_block(text: str) -> list:
                     if item.get("duration") is not None
                     else None
                 ),
-                blend=float(item["blend"]) if item.get("blend") is not None else _compose.DFLT_EXPRESSION_BLEND_S,
+                blend=float(item["blend"])
+                if item.get("blend") is not None
+                else _compose.DFLT_EXPRESSION_BLEND_S,
             )
         else:
             raise ValueError(
