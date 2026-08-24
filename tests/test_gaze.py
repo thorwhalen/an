@@ -126,21 +126,30 @@ def test_add_gaze_is_the_expand_step_and_is_idempotent(rigs):
 
 
 def test_authored_gaze_moves_the_pupils_by_the_declared_travel(rigs):
+    """`gaze_x = ±1` pins the pupil at exactly ±travel·k whatever the saccades
+    add (the summed curve is clamped to the axis range), yoked on both sides;
+    every frame of the shot stays inside the travel."""
     root, mall = rigs
-    js = compile_shot(_shot("g", "g", [expression("g", None, axes={"gaze_x": 1.0, "gaze_y": -1.0}, blend=0.0)]), mall=mall, fps=24, strict_assets=True)
-    k = compile_shot(_shot("g", "g"), mall=mall, fps=24, strict_assets=True)  # any compile carries the rig scale
+    plus = compile_shot(_shot("g", "g", [expression("g", None, axes={"gaze_x": 1.0, "gaze_y": -1.0}, blend=0.0)]), mall=mall, fps=24, strict_assets=True)
+    minus = compile_shot(_shot("g", "g", [expression("g", None, axes={"gaze_x": -1.0, "gaze_y": 1.0}, blend=0.0)]), mall=mall, fps=24, strict_assets=True)
+    rest_x, rest_y = _rest(plus, "g", "left_pupil", "x"), _rest(plus, "g", "left_pupil", "y")
+    # At t=0 the saccade generator's first step is (0, 0), so the authored
+    # value is the whole offset: exactly ±travel·k, mirrored, on both pupils.
+    dx_plus = _pupil(plus, 0.0, "g", "x") - rest_x
+    dx_minus = _pupil(minus, 0.0, "g", "x") - rest_x
+    assert dx_plus > 0 and dx_minus == pytest.approx(-dx_plus), (dx_plus, dx_minus)
+    dy_plus = _pupil(plus, 0.0, "g", "y") - rest_y
+    assert dy_plus < 0 and _pupil(minus, 0.0, "g", "y") - rest_y == pytest.approx(-dy_plus)
+    assert _pupil(plus, 0.0, "g", "x", "right") - _rest(plus, "g", "right_pupil", "x") == pytest.approx(dx_plus), "yoked"
     travel = mall["characters"]["g"]["gaze_travel"]
-    rest_x, rest_y = _rest(js, "g", "left_pupil", "x"), _rest(js, "g", "left_pupil", "y")
-    # Saccades add jitter; compare against the same instant with amplitude off
-    # is not available from here, so check the clamp: |offset| <= travel * scale.
-    dx = _pupil(js, 0.5, "g", "x") - rest_x
-    dy = _pupil(js, 0.5, "g", "y") - rest_y
-    ent = next(e for e in js.scene.children if e.name == "g")
-    assert dx > 0 and dy < 0, (dx, dy)
-    assert _pupil(js, 0.5, "g", "x", "right") - _rest(js, "g", "right_pupil", "x") == pytest.approx(dx), "both pupils yoked"
-    # The clamp: gaze_x=1 plus positive jitter can never exceed the travel.
-    scale = dx / (travel["x"] * 1.0)  # implied rig factor (dx == travel*k when jitter is 0 or negative)
-    assert 0 < scale <= 1.0 or dx <= travel["x"] * 1.5, (dx, travel)
+    k = dx_plus / travel["x"]  # the rig factor, implied by x…
+    assert -dy_plus / travel["y"] == pytest.approx(k, rel=1e-6), "…and the same factor on y"
+    ambient = compile_shot(_shot("g", "g", duration=8.0), mall=mall, fps=24, strict_assets=True)
+    tl = _python_timeline(ambient)
+    for f in range(0, 8 * 24 + 1):
+        pose = _evaluate(tl, f / 24)
+        assert abs(pose[("g/head/left_pupil", "x")] - rest_x) <= travel["x"] * k + 1e-9
+        assert abs(pose[("g/head/left_pupil", "y")] - rest_y) <= travel["y"] * k + 1e-9
 
 
 def test_saccades_are_ambient_deterministic_and_stamped(rigs):
@@ -192,7 +201,70 @@ def test_a_baked_face_refuses_gaze_naming_add_gaze(rigs):
         compile_shot(_shot("x", "b", [expression("x", None, axes={"gaze_x": 0.5})]), mall=m, fps=24, strict_assets=True)
 
 
-def test_blink_windows_feed_the_coupling(rigs):
+def test_blink_windows_feed_the_coupling(rigs, monkeypatch):
     """The solver hands the generator the entity's real blink windows."""
-    w = _blink_windows("g", 12.0)
-    assert w, "12 s blinks at least once"
+    from an.adapters.cutout import compile as cm
+
+    seen = {}
+    real = cm.saccade_track
+
+    def spy(entity_id, **kw):
+        seen[entity_id] = kw.get("blink_windows")
+        return real(entity_id, **kw)
+
+    monkeypatch.setattr(cm, "saccade_track", spy)
+    root, mall = rigs
+    compile_shot(_shot("g", "g", duration=12.0), mall=mall, fps=24, strict_assets=True)
+    assert seen["g"] == _blink_windows("g", 12.0) and seen["g"], "12 s blinks at least once"
+
+
+def test_the_closed_lid_takes_the_heads_skin_not_a_reseeded_palette(tmp_path):
+    """Review B2: a rig built with `--seed` ≠ name got a lid of another tone,
+    because `add_gaze` re-derived the palette from a seed the descriptor did
+    not carry. The fill now comes off the head art."""
+    import re
+
+    new_character(tmp_path, name="lidtest", seed="someone-else", use_dicebear=False, gaze=False)
+    raw = json.loads((tmp_path / "lidtest" / "character.json").read_text(encoding="utf-8"))
+    raw["metadata"].pop("seed", None)
+    (tmp_path / "lidtest" / "character.json").write_text(json.dumps(raw), encoding="utf-8")
+    add_gaze(tmp_path / "lidtest")
+    head = (tmp_path / "lidtest" / "parts" / "head.svg").read_text(encoding="utf-8")
+    skin = re.search(r'<circle[^>]*fill="(#[0-9a-fA-F]{6})"', head).group(1)
+    lid = (tmp_path / "lidtest" / "parts" / "eye_l_closed.svg").read_text(encoding="utf-8")
+    assert f'fill="{skin}"' in lid, (skin, lid)
+
+
+def test_add_gaze_refuses_a_baked_face(tmp_path):
+    new_character(tmp_path, name="b", seed="b", use_dicebear=False, gaze=False)
+    p = tmp_path / "b" / "character.json"
+    raw = json.loads(p.read_text(encoding="utf-8")); raw["face_overlay"] = False
+    p.write_text(json.dumps(raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="baked into the head art"):
+        add_gaze(tmp_path / "b")
+
+
+def test_pupils_require_closed_lid_art(rigs):
+    """Review A11: `closed` art is mandatory once pupils exist — enforced by
+    validate, not only by construction."""
+    import shutil
+
+    root, _ = rigs
+    src = root / "assets" / "characters" / "g"
+    dst = root / "assets" / "characters" / "nolid"
+    shutil.copytree(src, dst)
+    raw = json.loads((dst / "character.json").read_text(encoding="utf-8"))
+    del raw["skins"]["default"]["slots"]["left_eye"]["closed"]
+    (dst / "character.json").write_text(json.dumps(raw), encoding="utf-8")
+    report = validate_character(dst, name="nolid")
+    assert any(f.severity == "error" and "closed-lid" in f.description for f in report.findings)
+
+
+def test_a_procedural_rig_warns_for_a_preset_without_a_mouth_form():
+    """Review B20: the bound-axis filter must not swallow the 'no descriptor'
+    warning for `skeptical`/`thinking`/`neutral` (no mouth form)."""
+    from an.adapters.cutout.compile import CutoutCompileWarning
+
+    shot = Shot(id="s", style="cutout", duration=1.0, entities=[AssetRef(kind="character", id="p", store="characters", ref="p-v1")], actions=[expression("p", "skeptical")])
+    with pytest.warns(CutoutCompileWarning, match="no descriptor"):
+        compile_shot(shot, mall={"characters": {}}, fps=24)

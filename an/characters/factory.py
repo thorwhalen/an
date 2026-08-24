@@ -18,6 +18,7 @@ problem routes the way every other verifier's does (an#78).
 from __future__ import annotations
 
 import hashlib
+import re
 import json
 import shutil
 import textwrap
@@ -376,6 +377,16 @@ def _synthesize_pupil(path: Path, *, side: str) -> Path:
     return path
 
 
+def _skin_fill_of(head_svg: Path) -> str | None:
+    """The first solid fill of the head art's first circle/ellipse — the face's
+    skin tone on every rig this factory synthesizes; ``None`` if none is found.
+    """
+    if not head_svg.is_file():
+        return None
+    m = re.search(r"<(?:circle|ellipse)[^>]*fill=\"(#[0-9a-fA-F]{6})\"", head_svg.read_text(encoding="utf-8"))
+    return m.group(1) if m else None
+
+
 def gaze_travel_for(rx: float = EYE_RX, ry: float = EYE_RY, pupil_r: float = PUPIL_R) -> dict[str, float]:
     """The pupil's travel per axis, in view-box units: the sclera's clearance
     minus the pupil's radius — the compile-time clamp that keeps the pupil
@@ -408,10 +419,20 @@ def add_gaze(char_dir: str | Path, *, skin: str | None = None) -> Path:
     desc_path = char_dir / "character.json"
     raw = json.loads(desc_path.read_text(encoding="utf-8"))
     desc = CharacterDescriptor.model_validate(migrate(raw, kind="CharacterDescriptor"))
+    if not desc.face_overlay:
+        raise ValueError(
+            f"{desc.name!r} has its face baked into the head art (face_overlay: false): "
+            "the rig builder draws no overlay eye, so an eye stack would never show. "
+            "`an character promote` a hand-drawn rig with overlay face parts first."
+        )
     parts = char_dir / "parts"
     if skin is None:
-        seed = str(desc.metadata.get("seed") or desc.metadata.get("dicebear_seed") or desc.name)
-        skin = _palette_for_seed(seed)[0]
+        # The lid's fill is the HEAD's skin — read off the head art, never
+        # re-derived from a seed the descriptor may not carry (an#99 review:
+        # a rig built with `--seed` ≠ name got a lid of another tone).
+        skin = _skin_fill_of(parts / "head.svg") or _palette_for_seed(
+            str(desc.metadata.get("seed") or desc.metadata.get("dicebear_seed") or desc.name)
+        )[0]
     for side in ("l", "r"):
         _synthesize_sclera(parts / f"sclera_{side}.svg", side=side)
         _synthesize_pupil(parts / f"pupil_{side}.svg", side=side)
@@ -442,7 +463,10 @@ def add_gaze(char_dir: str | Path, *, skin: str | None = None) -> Path:
                 by_name[slot_name].draw_order = order
             skin_.slots[slot_name] = {stem: Attachment(path=f"parts/{stem}.svg", anchor=(0.5, 0.5), x=x, y=y)}
         # The lid draws above the pupil: bump it once (idempotent on a rig that
-        # already has the stack; the mouth and brows already sit above).
+        # already has the stack). On the default rig the lid then TIES the
+        # mouth's order and the tie-break is by name, which puts `left_eye`
+        # under the mouth and `right_eye` over it — harmless, they never
+        # overlap, but do not read the numbers as a strict stack.
         eye.draw_order = base + 1
     desc.gaze_travel = gaze_travel_for()
     desc.metadata["gaze_stack"] = "an#99"

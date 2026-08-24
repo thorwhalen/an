@@ -305,8 +305,6 @@ def _build_gaze(work: Path) -> Path:
     scene has — so the left pane is a rig WITHOUT the stack, whose eyes are
     the single pre-Wave-6 drawing and cannot move), the sweep plus ambient
     saccades on the right (a rig with the stack)."""
-    from an.characters.factory import add_gaze
-
     actions = (
         "\n```yaml actions\n"
         "- kind: expression\n  target: maya\n  axes: {gaze_x: -1.0}\n  duration: 1.0\n  blend: 0.3\n"
@@ -721,9 +719,11 @@ DEMOS: tuple[Demo, ...] = (
             "pane: the eye is one drawing with the pupil baked in, so nothing "
             "moves; gaze is a validated no-op there) and on a rig WITH it (right "
             "pane: sclera, pupil and lid are three slots; the pupils follow the "
-            "sweep, clamped inside the white by the descriptor's travel, and "
-            "between the sweeps they make small ambient saccades of their own, "
-            "seeded by the character's name). Blinks still close over the pupil "
+            "sweep, clamped inside the white by the descriptor's travel; the "
+            "ambient saccades every pupil rig makes, seeded by the character's "
+            "name, ride underneath — at this size they are a pixel or two, so "
+            "watch the full-rate mp4 rather than the GIF for them). Blinks still "
+            "close over the pupil "
             "because the closed lid is a filled drawing."
         ),
         how=(

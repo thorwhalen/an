@@ -50,7 +50,7 @@ BROW_HEIGHT_TRAVEL: float = 10.0
 #: Brow rotation per unit of `brow_angle_*`, radians. Art direction.
 BROW_ANGLE_TRAVEL: float = 0.35
 #: Pupil travel per unit of `gaze_*`, in view-box units — the default when a
-#: descriptor declares no travel of its own (PR-D wires the pupil layer).
+#: descriptor declares no travel of its own (`add_gaze` writes `gaze_travel`).
 GAZE_TRAVEL: float = 6.0
 #: On a rig whose eye squashes instead of swapping art, a lid offset scales
 #: the eye by this much per unit.

@@ -2539,13 +2539,16 @@ def _add_face_clips(
         # ...and an axis the rig binds nothing to (gaze on a rig without
         # pupils, an#99) contributes nothing either: the document stays the one
         # the rig had, and `an character validate` says why.
-        bound = {b.axis for b in binding_for(desc)} if desc is not None else set()
-        spans = [
-            sp
-            for sp in spans
-            if sp.intensity > 0
-            and (sp.mouth_form or any(a in bound for a in sp.offsets()))
-        ]
+        if desc is None:
+            spans = [sp for sp in spans if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)]
+        else:
+            bound = {b.axis for b in binding_for(desc)}
+            spans = [
+                sp
+                for sp in spans
+                if sp.intensity > 0
+                and (sp.mouth_form or any(a in bound for a in sp.offsets()))
+            ]
         has_pupils = desc is not None and bool(_pupil_paths(vocab, entity.id))
         if (not spans and not has_pupils) or desc is None:
             if spans and desc is None:

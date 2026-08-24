@@ -29,6 +29,7 @@ an render my-scene                                        # re-renders only the 
 an character new maya --seed maya-warm                    # generate a DiceBear-backed character
 an character new bob --offline                            # offline-only: deterministic geometric fallback
 an character mouths maya                                  # regenerate the 9-shape mouth set + its viseme@happy / viseme@sad variants
+an character add-gaze maya                                # give an older character the sclera/pupil/lid eye stack (new ones have it)
 an character validate maya                                # check parts, mouth set, pivots
 an character silhouette maya --other bob                  # silhouette test (IoU score)
 an character preview maya --open-browser                  # HTML viewer cycling all 9 visemes
@@ -166,7 +167,7 @@ The patches are validated against the schema and persisted; affected shots' cach
 |---|---|
 | **Renderer Protocol** | `an.adapters.Renderer` — Cutout (real), Manim (real if installed), Remotion (skeleton), Whiteboard (stub) |
 | **Cutout backend** | `an.adapters.cutout.compile_shot` → `CutoutSceneJSON` → PixiJS v7 in headless Chromium → ffmpeg mux |
-| **Character rig** | Ellipse head + per-id palette (skin/clothing/hair) + eyebrows and eyelids driven by the compile-time face solver (`expression` actions, ten presets, the dialogue `[emotion]` sugar; `viseme@<form>` mouth-set variants) + white-sclera eyes (blinks compiled as channels — an eyelid swap where the rig has closed-eye art, a squash otherwise) + bezier-curved mouth (9 viseme shapes) |
+| **Character rig** | Ellipse head + per-id palette (skin/clothing/hair) + eyebrows and eyelids driven by the compile-time face solver (`expression` actions, ten presets, the dialogue `[emotion]` sugar; `viseme@<form>` mouth-set variants) + eyes as a sclera/pupil/lid stack (the pupils follow `gaze_x`/`gaze_y` and make seeded ambient saccades; blinks compiled as channels — an eyelid swap where the rig has closed-eye art, a squash otherwise; `an character add-gaze` gives an older rig the stack) + bezier-curved mouth (9 viseme shapes) |
 | **TTS Protocol** | `OfflineTTS` (silent placeholder), `ElevenLabsTTS` (real, needs `ELEVEN_API_KEY`) |
 | **Lip-sync Protocol** | `OfflineLipSync` (char-distribution), `WhisperLipSync` (word-aligned via faster-whisper), `RhubarbLipSync` (phoneme-aligned), `WordTimingsLipSync` (driven by an injected `WordTimingProvider` — skip transcription entirely when the caller already has authoritative word timings) |
 | **Verifier Protocol** | `LayoutLintVerifier`, `MediaQualityVerifier`, `VisionLMVerifier` (Claude vision), `HumanInTheLoopVerifier` |

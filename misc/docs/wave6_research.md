@@ -406,7 +406,7 @@ unverified. The pupil stays inside the white by **clamping at compile time**: tr
 sclera clearance minus pupil radius, a descriptor number, not a renderer feature.
 
 **The eye becomes three sibling slots** per side: `left_sclera` (white fill, draw order 5)
-→ `left_pupil` (7) → `left_eye` (the existing slot, now the *lid*, drawn above the pupil).
+→ `left_pupil` (6, as built — the addendum has the rule) → `left_eye` (the existing slot, now the *lid*, drawn above the pupil).
 Factory art: `open` becomes outline-only with a transparent interior; `closed` becomes a
 **filled** skin-tone lid (a stroke-only closed eye would show the pupil through it);
 `sclera_l/r.svg` and `pupil_l/r.svg` are two new synthesizers. The `eyelid` set is untouched

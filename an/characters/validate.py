@@ -27,6 +27,7 @@ from typing import Iterator
 from an.base import swap_set_name_problem
 from an.ir.migrate import migrate
 from an.characters.schema import (
+    EYELID_CHANNEL,
     VISEME_CHANNEL,
     CHARACTER_DOCUMENT_KIND,
     MOUTH_SHAPES,
@@ -380,6 +381,22 @@ def _check_gaze_stack(
             "moves nothing on it",
             f"Run `an character add-gaze {who}` to add the eye stack.",
         )
+        return
+    # Once pupils exist, `closed` art is MANDATORY: the blink squash scales the
+    # lid node only, so a rig without closed art would squash the outline while
+    # the white and the pupil stayed put (research §9).
+    skin = descriptor.skins.get("default")
+    closed = descriptor.asset_sets.get(EYELID_CHANNEL, {}).get("CLOSED")
+    for eye_slot in ("left_eye", "right_eye"):
+        attachments = (skin.slots.get(eye_slot) if skin else None) or {}
+        if closed not in attachments:
+            report.add(
+                BLOCKING,
+                f"character.json#skins.default.slots.{eye_slot}",
+                f"{who} has pupil slots but {eye_slot!r} carries no closed-lid attachment "
+                f"({closed!r}); a blink would squash the lid outline over a pupil that stays put",
+                f"Run `an character add-gaze {who}` (it draws a filled closed lid), or add the art.",
+            )
 
 
 def _check_mouth_variants(
