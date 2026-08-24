@@ -31,12 +31,26 @@ the sidecar as `1.0`) is the dominance carrier; cached tracks keep `1.0` until r
    the apex; Rhubarb's `maxExtensionDuration = 6_cs`), clamped at 0; the apex *is* the swap; a
    word-final open vowel before a gap decays to `X` ~120 ms after its last key.
 4. **Minimum hold — the condenser, last.** It **holds and votes**; it never drops. Windows of
-   at least `min_hold_s` start at each key that clears the previous window; within a window
-   the largest `raw_span × dominance` shape shows, **placed at the window start** (no delay,
-   and a 10 ms /t/ that arrives first cannot own the hold). `[(0,X),(.30,B),(.34,A),(.38,D),
-   (.80,X)]` → `[(0,X),(.30,D),(.80,X)]`; the old `continue` loop gave `[X, B, X]`. Keep
-   `min_hold_s = 0.14` until measured (Rhubarb's floor is 0.08 s; one frame is the floor below
-   which nothing registers). The terminal rest key stays an invariant.
+   at least ``min_hold_s`` open at each cue that clears the previous window; every cue in the
+   window — the opener included — votes with the length of its span **inside the window**
+   times its dominance (Rhubarb's own "highest total duration within the candidate range"),
+   and the winner shows **at the window start**. A member whose span runs past the window
+   and lost is not dropped: it opens the next window at the window's end, delayed — the hold
+   doing its job. `[(0,X),(.30,B),(.34,A),(.38,D),(.80,X)]` → `[(0,X),(.30,D),(.80,X)]`;
+   the old `continue` loop gave `[X, B, X]`. Keep `min_hold_s = 0.14` until measured
+   (Rhubarb's floor is 0.08 s; one frame is the floor below which nothing registers). The
+   terminal rest key stays an invariant — and since an#97 the clip **window** is frame-ceiled
+   so that rest is actually sampled (a 0.71 s line's rest at 0.71 s fell between frames 17
+   and 18 and the mouth stayed open after the line). Shipped as
+   `an/adapters/cutout/coarticulate.py`; `compile.COARTICULATION_ENABLED = False` reproduces
+   the old condenser for a side-by-side and nothing else.
+
+**What the keyframe count honestly does.** Against the RAW provider track the passes thin
+the mouth to the hold's ceiling (~7/s at 0.14 s). Against the OLD condenser the count goes
+**up** on a dense track (`dialogue`: raw ~17/s → old 5.8/s → passes 7.3/s), because the old
+loop had fewer keyframes only by dropping the closures and open vowels a viewer reads; the
+vote keeps one shape per window and never loses one. "Fewer keyframes" is a claim about the
+raw track, never about the old condenser.
 
 Order matters: (1) before (4) so a one-frame /t/ never wins a window; (3) before (4) so the
 hold is measured on shifted times.

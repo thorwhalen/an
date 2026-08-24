@@ -414,6 +414,55 @@ def _build_stepped_timing(work: Path) -> Path:
     return out
 
 
+def _build_lipsync_coarticulation(work: Path) -> Path:
+    """The same line twice, side by side: the pre-an#97 condenser (left) against
+    the co-articulation passes (right). The mouth ART is identical; only which
+    shape shows, and when, differs."""
+    from an.adapters.cutout import compile as compile_mod
+
+    line = "Hold the shape, then vote. The vowel wins the window."
+    # The synthesized rig's chin sits behind the torso; an absolute `set` on
+    # the head's y (rest minus a lift) puts the whole mouth in the pane. The
+    # rest is read off a compile so the value is the rig's, not a guess.
+    from an.adapters.cutout.compile import compile_shot
+    from an.ir.schema import AssetRef, Shot
+    from an.project import load
+
+    probe = _project(work / "probe", scene_md=_meta("probe", 1.0) + "\n" + _shot("p", 1.0) + "\n" + _entities("maya"), characters=("maya",))
+    shot = Shot(id="p", style="cutout", duration=1.0, entities=[AssetRef(kind="character", id="maya", store="characters", ref="maya")])
+    js = compile_shot(shot, mall=load(probe).mall, fps=DEMO_FPS, width=DEMO_RESOLUTION[0], height=DEMO_RESOLUTION[1])
+    ent = next(c for c in js.scene.children if c.name == "maya")
+    head_rest_y = next(c for c in ent.children if c.name == "head").transform.y
+    lifted = head_rest_y - 16
+    md = (
+        _meta("Lip-sync co-articulation: hold and vote", 4.0)
+        + "\n"
+        + _shot("s1", 4.0)
+        + "\n"
+        + _entities("maya")
+        + f"\n```yaml actions\n- kind: set\n  target: maya/head\n  property: y\n  value: {lifted:g}\n  at: 0.0\n```\n"
+        + f"\n```dialogue\nmaya: {line}\n```\n"
+    )
+    original = compile_mod.COARTICULATION_ENABLED
+    compile_mod.COARTICULATION_ENABLED = False
+    try:
+        before = _render(_project(work / "before", scene_md=md, characters=("maya",)))
+    finally:
+        compile_mod.COARTICULATION_ENABLED = original
+    after = _render(_project(work / "after", scene_md=md, characters=("maya",)))
+    out = work / "side_by_side.mp4"
+    subprocess.run(
+        [
+            "ffmpeg", "-v", "error", "-y", "-i", str(before), "-i", str(after),
+            "-filter_complex",
+            f"[0:v]crop={PANE_CROP}[a];[1:v]crop={PANE_CROP}[b];[a][b]hstack=inputs=2",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out),
+        ],
+        check=True,
+    )
+    return out
+
+
 def _copy_example(rel: str) -> Callable[[Path], Path]:
     def build(work: Path) -> Path:
         src = REPO_ROOT / rel
@@ -557,6 +606,29 @@ DEMOS: tuple[Demo, ...] = (
             "cannot resolve is refused before any render with the reason named."
         ),
         build=_build_play,
+    ),
+    Demo(
+        slug="lipsync-coarticulation",
+        title="Lip-sync co-articulation: hold and vote",
+        shows=(
+            "The same line twice, side by side, cropped to the face: the OLD "
+            "condenser on the left — every mouth shape arriving inside a 0.14 s "
+            "window was dropped, so a consonant cluster collapsed to whichever "
+            "shape came first and the closures and open vowels a viewer reads "
+            "were the ones lost — against the co-articulation passes on the "
+            "right: duplicates merged, sub-frame tongue shapes dropped, every "
+            "shape two frames ahead of its sound, a beat to close before rest, "
+            "and a hold that VOTES (the longest, most lip-heavy shape in the "
+            "window wins). The mouth art is identical in both panes; only which "
+            "shape shows, and when, differs (an#97)."
+        ),
+        how=(
+            "`an render` — the passes are the product; the left pane flips "
+            "`an.adapters.cutout.compile.COARTICULATION_ENABLED` for one render, "
+            "the way the bench's levers rebind a module global. The rules live in "
+            "`an/adapters/cutout/coarticulate.py` (doctested)."
+        ),
+        build=_build_lipsync_coarticulation,
     ),
     Demo(
         slug="stepped-timing",

@@ -145,7 +145,7 @@ an/
 |---|---|---|
 | `Renderer` | per-shot mp4 production | `CutoutRenderer` (real), `ManimRenderer` (real when manim installed), `RemotionRenderer` (skeleton), `WhiteboardRenderer` (stub) |
 | `TTSProvider` | text → audio | `OfflineTTS` (silent placeholder), `ElevenLabsTTS` (real, needs `ELEVEN_API_KEY`) |
-| `LipSyncProvider` | audio → viseme track | `OfflineLipSync` (char-distribution), `WhisperLipSync` (word-aligned, needs `faster-whisper`), `RhubarbLipSync` (phoneme-aligned, needs `rhubarb` binary) |
+| `LipSyncProvider` | audio → viseme track (+ `words` when the provider has them, an#96) | `OfflineLipSync` (char-distribution), `WhisperLipSync` (word-aligned, needs `faster-whisper`), `RhubarbLipSync` (phoneme-aligned, needs `rhubarb` binary; recognizer follows the language). The compiler runs `an/adapters/cutout/coarticulate.py` over the raw track before emission (an#97): merge, suppress sub-frame tongue shapes, two-frame lead, decay before rest, and a minimum hold that votes |
 | `Verifier` | verify IR ± render | `LayoutLintVerifier`, `MediaQualityVerifier`, `VisionLMVerifier`, `HumanInTheLoopVerifier` |
 
 All four protocols are runtime-checkable; new implementations register via factories or `register_renderer(...)`.

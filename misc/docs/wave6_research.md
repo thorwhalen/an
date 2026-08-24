@@ -544,6 +544,19 @@ shows **`C`, not `D`**: today's condenser drops the `D` and `A` of "shape" insid
 window, which is precisely the defect PR-B's vote changes. The "Rhubarb" and "Lip sync"
 paragraphs of §1 are the pre-#101 record and stay as written.
 
+**Landed in PR-B (an#97).** The four passes as described, with two corrections from building
+them: the vote weights each member by its span **inside the window** (a long vowel no longer
+out-votes the shape that owned the window from beyond it) and a losing member that runs past
+the window opens the next one — Rhubarb's segmentation exactly; and the keyframe-count
+claim below is true against the RAW track only — against the old condenser the count
+**rises** (`dialogue`: raw ~17/s → 5.8/s → 7.3/s), because that loop was cheaper only by
+dropping the shapes a viewer reads. A pre-existing defect surfaced on the way: the terminal
+rest at `line.duration` was never *sampled* when the line ended between frames (frame 17 at
+0.708 s, frame 18 outside a 0.71 s window), so `single_character` had its mouth stuck open
+after the line; the clip window is frame-ceiled now. The legibility cassette is scaffolded
+(prompt, parser, frozen strips, replay-only test) but **not recorded** — no API key was
+available to the session; the live test is one command for a human with one.
+
 **Word-timing retention** (landed first; no pixel, no cache key). `VisemeTrack.words:
 list[WordTiming] | None` on the audio dataclass; whisper and `WordTimingsLipSync` fill it,
 offline and Rhubarb leave `None`. Persist in the **existing** viseme sidecar payload
