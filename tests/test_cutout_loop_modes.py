@@ -9,8 +9,9 @@ Tier 1 is a golden table, always run: it pins the spec itself, including the thr
 edge cases that are easy to get subtly wrong.
 
 Tier 2 runs the same table through the real `wrapTime` in `runtime.js` under node,
-and skips when node is absent. It is the only thing standing between "we ported it"
-and "we ported it correctly" — the repo has no JS test harness otherwise.
+and skips when node is absent. The same extraction pattern also pins
+`evaluateChannel` (`test_cutout_channel_parity.py`) and executes `applyPose` /
+`applyProperty` (`test_loud_discards.py`).
 """
 
 from __future__ import annotations

@@ -35,9 +35,9 @@ from an.adapters.cutout.compile import (
     _runtime_node_paths,
     CutoutCompileError,
     CutoutCompileWarning,
+    RUNTIME_APPLIED_PROPERTIES,
     compile_shot,
 )
-from an.adapters.cutout.pose import _ALLOWED_NODE_PROPS, UNRENDERED_PROPS
 from an.audio.pipeline import AudioPipelineError, produce_audio_for_scene
 from an.ir.schema import (
     AssetRef,
@@ -493,37 +493,25 @@ def test_the_runtime_raises_on_an_unknown_target():
     )
 
 
-def test_the_python_allow_list_is_a_subset_with_a_declared_gap():
-    """SUBSET, not equality — and the gap must be exactly what is declared.
+def test_the_runtime_switch_matches_what_the_compiler_can_emit():
+    """EQUALITY against the compile-side SSOT — the drift gate, rehomed.
 
-    An earlier version asserted equality, and "fixing" the failure by widening
-    `_ALLOWED_NODE_PROPS` made things worse: `apply_pose` routes every allowed
-    property into `TransformParams`, which has no `alpha` and no `viseme` field,
-    so it accepted them and then died with a raw dataclass `TypeError` instead
-    of its own informative `KeyError`. Advertising a capability you do not have
-    is the same defect class as discarding one you do.
+    This assertion used to be a subset-with-declared-gap against the Python
+    applier's allow-list (`pose._ALLOWED_NODE_PROPS` / `UNRENDERED_PROPS`).
+    That applier is gone (an#86): application is single-model in `runtime.js`,
+    and the honest Python-side vocabulary is *what the compiler can emit* —
+    `RUNTIME_APPLIED_PROPERTIES`, derived from the rest-value SSOT plus the
+    discrete channel names. A property the runtime applies that the compiler
+    cannot emit is dead runtime code; a property the compiler emits that the
+    runtime does not apply is a hard render failure. Both directions fail here.
     """
-    allowed = set(_ALLOWED_NODE_PROPS)
     runtime = _runtime_switch_cases()
-    assert allowed - {"rotation_rad", "rotation"} <= runtime, (
-        f"pose.py claims properties the runtime does not apply: "
-        f"{sorted(allowed - {'rotation_rad', 'rotation'} - runtime)}"
+    assert runtime == set(RUNTIME_APPLIED_PROPERTIES), (
+        "the runtime's applyProperty switch and the compiler's emittable "
+        "vocabulary drifted apart. Runtime-only: "
+        f"{sorted(runtime - set(RUNTIME_APPLIED_PROPERTIES))}; compiler-only: "
+        f"{sorted(set(RUNTIME_APPLIED_PROPERTIES) - runtime)}"
     )
-    assert runtime - allowed == set(UNRENDERED_PROPS), (
-        "the gap between the two evaluators changed and is no longer what "
-        f"UNRENDERED_PROPS declares: {sorted(runtime - allowed)}"
-    )
-
-
-def test_apply_pose_cannot_be_asked_for_a_property_it_would_crash_on():
-    """The concrete failure the subset relationship prevents."""
-    from an.adapters.cutout.pose import apply_pose
-    from an.adapters.cutout.scene import Node, SceneGraph
-
-    g = SceneGraph(Node("r"))
-    for prop in sorted(UNRENDERED_PROPS):
-        with pytest.raises(KeyError, match="unknown pose property"):
-            apply_pose(g, {("r", prop): 0.5})
 
 
 def test_the_iterate_prompt_enumerates_the_legal_properties():

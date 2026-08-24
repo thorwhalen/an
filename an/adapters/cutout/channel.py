@@ -4,9 +4,27 @@ A channel holds a sorted list of `Keyframe`s. ``evaluate(channel, t)`` does a
 binary search to find the surrounding keyframes, applies the easing for that
 segment, and lerps between the two values.
 
-Phase 2A supports **numeric values only** (int / float). Vector values
-(positions as `(x, y)` pairs), color tweens, and string-attachment swaps
-arrive in 2B.
+**This module is the executable spec of ``runtime.js``'s ``evaluateChannel``**
+— the browser implementation must stay behaviourally identical, and
+``tests/test_cutout_channel_parity.py`` runs the real extracted JS against this
+one to pin it (the same harness pattern that pins ``wrapTime``).
+
+Two value classes, two rules:
+
+- **Numeric** (``int``/``float``, excluding ``bool``): true interpolation
+  through the segment's easing.
+- **Everything else** (strings — viseme codes, swap keys): the value holds
+  ``a`` for the whole segment ``[a.time, b.time)`` and switches exactly at
+  ``b.time`` via segment advance. **Easing does not apply** — the snap is on
+  the raw segment position, never the eased one, because an overshooting
+  cubic-bezier easing crosses 1.0 mid-segment and would show the *second* key
+  early (or flap A→B→A within one segment). Step semantics is a theorem here,
+  not a convention. The easing is still *validated* (an unknown spec raises)
+  so a typo'd easing name stays loud on every channel.
+
+``bool`` keyframe values are refused upstream by the compiler
+(``compile.py::_check_keyframe_value``): Python's ``isinstance(True, int)``
+would lerp what JS's ``typeof`` snaps.
 
 >>> ch = Channel("a", "x", [Keyframe(0.0, 0.0), Keyframe(1.0, 10.0)])
 >>> evaluate(ch, 0.5)
@@ -15,6 +33,11 @@ arrive in 2B.
 0.0
 >>> evaluate(ch, 99.0)  # after last → clamps to last value
 10.0
+>>> sw = Channel("a", "hands", [Keyframe(0.0, "fist"), Keyframe(1.0, "open")])
+>>> evaluate(sw, 0.999)  # holds the first key for the whole segment
+'fist'
+>>> evaluate(sw, 1.0)  # switches exactly at the keyframe
+'open'
 """
 
 from __future__ import annotations
@@ -85,18 +108,18 @@ def evaluate(channel: Channel, t: float) -> Any:
     if span <= 0.0:
         return b.value
     u = (t - a.time) / span
+    # Validated for every segment (a typo'd easing name must raise on a swap
+    # channel too), but *applied* only to numeric values — see module docstring.
     eased = apply_easing(a.easing, u)
-    return _lerp(a.value, b.value, eased)
+    if _is_numeric(a.value) and _is_numeric(b.value):
+        return a.value + (b.value - a.value) * eased
+    # Non-numeric: snap on the RAW segment position, which the search above
+    # keeps strictly < 1 inside a segment — so the value switches exactly at
+    # b.time via segment advance, regardless of easing.
+    return b.value if u >= 1.0 else a.value
 
 
-def _lerp(a: Any, b: Any, t: float) -> Any:
-    """Linear interpolation between ``a`` and ``b`` at parameter ``t``.
-
-    Numeric values get true interpolation. Non-numeric values (strings, enums
-    used by viseme channels) snap: stay at ``a`` until ``t`` reaches the next
-    keyframe (``t >= 1.0``). Pair non-numeric channels with ``easing="step"``
-    so the snap happens at the keyframe boundary.
-    """
-    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
-        return a + (b - a) * t
-    return b if t >= 1.0 else a
+def _is_numeric(v: Any) -> bool:
+    """True for values that interpolate. ``bool`` deliberately does not:
+    Python's ``bool ⊂ int`` would lerp what JS's ``typeof`` snaps."""
+    return isinstance(v, (int, float)) and not isinstance(v, bool)

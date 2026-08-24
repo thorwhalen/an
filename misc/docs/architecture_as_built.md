@@ -90,13 +90,14 @@ an/
 ├── adapters/                Renderer Protocol implementations
 │   ├── _base.py             Renderer Protocol, RendererRegistry, RenderContext, RenderResult
 │   ├── cutout/              the v0.1 backend (real)
-│   │   ├── transform.py     Matrix3x3, TransformParams, decompose/compose
 │   │   ├── easing.py        named presets + cubic-Bézier + dispatcher
-│   │   ├── scene.py         Node tree as MutableMapping[str, Node], Slot, Visual
 │   │   ├── channel.py       Keyframe, Channel, binary-search evaluation
-│   │   ├── pose.py          Pose: dict[(target, prop), value] + apply_pose, merge_poses
-│   │   ├── clip.py          Clip + LoopMode, evaluate(clip, t) -> Pose
+│   │   ├── clip.py          Clip + LoopMode + Pose/merge_poses, evaluate(clip, t) -> Pose
 │   │   ├── timeline.py      Track, PlacedClip, Timeline, evaluate_timeline -> Pose
+│   │   │                    (these four are the EXECUTABLE SPEC of the runtime's
+│   │   │                    evaluation — application is runtime.js only; the Python
+│   │   │                    applier and scene graph were deleted in an#86, with
+│   │   │                    node-backed parity tests pinning evaluateChannel+wrapTime)
 │   │   ├── serialize.py     Pydantic models for the JS-runtime JSON contract
 │   │   ├── compile.py       Shot -> CutoutSceneJSON (the bridge)
 │   │   ├── render.py        Playwright headless capture + ffmpeg mux + audio overlay

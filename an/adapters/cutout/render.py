@@ -376,10 +376,12 @@ class CutoutRenderer:
                     )
 
                 # Probed on EVERY render, judged only when enforcement is on.
-                # Collecting it unconditionally is what puts the blink phases
-                # and the filter inventory into provenance, where the metrics
-                # ledger can stamp them; a fact recorded only under a flag is a
-                # fact missing from every row that matters.
+                # Collecting it unconditionally puts the blink phases and the
+                # filter inventory into RenderResult.provenance. (An earlier
+                # version of this comment claimed the metrics ledger stamps
+                # them; it does not — `SceneCapture.determinism` is declared
+                # and never populated, and no ledger row carries a determinism
+                # key. The provenance record on the render result is real.)
                 determinism = _determinism_report(page)
 
                 total_frames = max(1, int(round(shot.duration * ctx.fps)))

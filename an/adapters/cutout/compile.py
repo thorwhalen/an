@@ -54,7 +54,6 @@ from an.adapters.cutout.serialize import (
     KeyframeJSON,
     NodeJSON,
     PlacedClipJSON,
-    SlotJSON,
     TimelineJSON,
     TrackJSON,
     TransformJSON,
@@ -62,8 +61,6 @@ from an.adapters.cutout.serialize import (
 )
 from an.characters.schema import (
     CHARACTER_DOCUMENT_KIND,
-    MOUTH_SHAPES,
-    REQUIRED_PARTS,
     VISEME_CHANNEL,
     Attachment,
     Bone,
@@ -133,14 +130,28 @@ def _property_rest_values() -> dict[str, float]:
         and not isinstance(field.default, bool)
     }
     # `rotation_rad` is an accepted alias for `rotation` in the runtime's
-    # property switch and in `pose.py`; it is not a schema field, so it has to
-    # be added here rather than derived.
+    # property switch; it is not a schema field, so it has to be added here
+    # rather than derived.
     rest["rotation_rad"] = rest["rotation"]
     return rest
 
 
 #: See :func:`_property_rest_values`.
 _PROPERTY_REST_VALUES: dict[str, float] = _property_rest_values()
+
+
+#: Every property name the JS runtime's ``applyProperty`` switch implements —
+#: the numeric transform vocabulary (the rest-value SSOT above) plus the
+#: discrete channel name(s) the compiler emits. This is the Python side of the
+#: two-evaluator drift gate: ``tests/test_loud_discards.py`` extracts the
+#: runtime's actual switch cases and asserts exact equality with this set, in
+#: both directions. It replaced ``pose.py``'s allow-list when the Python
+#: applier was deleted (an#86) — the compiler, not a dead applier, is what the
+#: runtime must agree with. The swap generalisation (an#87) will shrink this
+#: to the numeric vocabulary when ``viseme`` stops being a static case.
+RUNTIME_APPLIED_PROPERTIES: frozenset[str] = frozenset(_PROPERTY_REST_VALUES) | {
+    VISEME_CHANNEL
+}
 
 
 class CutoutCompileError(ValueError):
@@ -632,7 +643,6 @@ def _build_character_subtree(
     char_node = NodeJSON(
         name=entity.id,
         transform=TransformJSON(),
-        slots={"root": SlotJSON(name="root")},
         children=children,
     )
     if "head" in parts:
@@ -642,7 +652,6 @@ def _build_character_subtree(
         for child in char_node.children:
             if child.name != "head":
                 continue
-            child.slots["mouth"] = SlotJSON(name="mouth", x=0, y=14)
             # Hair: rounded band atop the head.
             child.children.append(
                 NodeJSON(
@@ -1039,7 +1048,6 @@ def _build_svg_character_subtree(
     return NodeJSON(
         name=entity.id,
         transform=TransformJSON(),
-        slots={"root": SlotJSON(name="root")},
         children=children_of.get("", []),
     )
 
@@ -1135,6 +1143,27 @@ def _compile_one(
     raise TypeError(f"unsupported FlatAction.action type: {type(action).__name__}")
 
 
+def _check_keyframe_value(value: Any, *, target: str, prop: str) -> Any:
+    """Refuse keyframe values the two evaluators would disagree on.
+
+    ``bool`` is the trap: Python's ``isinstance(True, int)`` would lerp it while
+    JS's ``typeof true === 'boolean'`` snaps it — a channel whose value
+    interpolates in the spec and snaps in the browser. ``None`` is the other:
+    the Python spec would carry it into the pose while the runtime drops null
+    values (``runtime.js`` ``evaluateTimeline``), so the two sides render
+    different pictures. Neither has a meaning worth keeping: a discrete state
+    is a string key, a numeric one is an ``int``/``float``.
+    """
+    if value is None or isinstance(value, bool):
+        raise CutoutCompileError(
+            f"keyframe on {target!r}:{prop!r} has value {value!r}; keyframe "
+            "values must be numbers (int/float) or string keys — bool and None "
+            "evaluate differently in the Python spec and the JS runtime, so "
+            "the compiler refuses them rather than pick a side silently."
+        )
+    return value
+
+
 def _build_anim_for(flat: FlatAction, anim_id: str) -> AnimationClipJSON:
     action = flat.action
     if isinstance(action, TweenAction):
@@ -1142,6 +1171,10 @@ def _build_anim_for(flat: FlatAction, anim_id: str) -> AnimationClipJSON:
             action.from_value
             if action.from_value is not None
             else _rest_value_for(action.property, action.target)
+        )
+        _check_keyframe_value(from_value, target=action.target, prop=action.property)
+        _check_keyframe_value(
+            action.to_value, target=action.target, prop=action.property
         )
         return AnimationClipJSON(
             name=anim_id,
@@ -1162,6 +1195,7 @@ def _build_anim_for(flat: FlatAction, anim_id: str) -> AnimationClipJSON:
             ],
         )
     if isinstance(action, SetAction):
+        _check_keyframe_value(action.value, target=action.target, prop=action.property)
         return AnimationClipJSON(
             name=anim_id,
             duration=0.001,

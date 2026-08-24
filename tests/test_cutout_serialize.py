@@ -14,7 +14,6 @@ from an.adapters.cutout.serialize import (
     KeyframeJSON,
     NodeJSON,
     PlacedClipJSON,
-    SlotJSON,
     TimelineJSON,
     TrackJSON,
     VisualJSON,
@@ -32,7 +31,6 @@ def _full_scene() -> CutoutSceneJSON:
                 NodeJSON(
                     name="charlie",
                     visual=VisualJSON(kind="rect", width=80, height=120, color="#aabbcc"),
-                    slots={"mouth": SlotJSON(name="mouth", x=0, y=15)},
                     children=[
                         NodeJSON(name="left_arm"),
                         NodeJSON(name="right_arm"),

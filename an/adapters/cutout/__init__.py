@@ -1,8 +1,10 @@
 """Cutout-style 2D animation backend.
 
-Phase 2A ships the Python-side substrate: scene graph, animations, timeline,
-JSON serialization. The actual mp4 rendering (JS runtime + headless capture)
-arrives in Phases 2B/2C.
+The render path is ``compile.py`` → ``serialize.py`` → ``render.py`` →
+``runtime.js`` (the browser evaluates and applies every frame). The Python
+evaluation chain (``easing``/``channel``/``clip``/``timeline``) is kept as the
+executable spec of the runtime's semantics, pinned by node-backed parity tests;
+application lives in ``runtime.js`` alone (an#86).
 
 >>> from an.adapters.cutout import CutoutRenderer, compile_shot
 >>> CutoutRenderer().name
@@ -20,8 +22,6 @@ from an.adapters.cutout.serialize import (
     KeyframeJSON,
     NodeJSON,
     PlacedClipJSON,
-    RigJSON,
-    SkinJSON,
     TimelineJSON,
     TrackJSON,
     VisualJSON,
@@ -35,8 +35,6 @@ __all__ = [
     "CutoutSceneJSON",
     "NodeJSON",
     "VisualJSON",
-    "RigJSON",
-    "SkinJSON",
     "AnimationClipJSON",
     "ChannelJSON",
     "KeyframeJSON",

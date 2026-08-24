@@ -23,10 +23,31 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, TypeAlias
 
 from an.adapters.cutout.channel import Channel
 from an.adapters.cutout.channel import evaluate as _evaluate_channel
-from an.adapters.cutout.pose import Pose
+
+
+#: Mapping of (target_path, property_name) -> value — the universal output of
+#: animation evaluation. Application happens in ``runtime.js`` (``applyPose``);
+#: the Python side only ever *produces* poses (an#86 deleted the Python
+#: applier, which structurally could not apply swap or alpha values).
+Pose: TypeAlias = dict[tuple[str, str], Any]
+
+
+def merge_poses(*poses: Pose) -> Pose:
+    """Merge multiple poses with **override semantics** (later wins per key).
+
+    Used by the timeline to combine concurrent clips on the same target.
+
+    >>> merge_poses({("a", "x"): 1.0}, {("a", "x"): 2.0, ("a", "y"): 3.0})
+    {('a', 'x'): 2.0, ('a', 'y'): 3.0}
+    """
+    out: Pose = {}
+    for p in poses:
+        out.update(p)
+    return out
 
 
 class LoopMode(str, Enum):

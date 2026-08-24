@@ -45,9 +45,14 @@ def test_character_entity_creates_subtree():
     part_names = [c.name for c in char.children]
     assert "head" in part_names
     assert "torso" in part_names
-    # Head node has a mouth slot for lip-sync (Phase 4).
+    # Head has a mouth CHILD NODE for lip-sync — the node path
+    # charlie/head/mouth is what viseme channels target. (This used to also
+    # assert the vestigial NodeJSON.slots entry; that field was serialized
+    # dead weight the runtime never read, deleted in an#86.)
     head = next(c for c in char.children if c.name == "head")
-    assert "mouth" in head.slots
+    mouth = next((c for c in head.children if c.name == "mouth"), None)
+    assert mouth is not None
+    assert mouth.visual is not None and mouth.visual.kind == "mouth"
 
 
 def test_character_uses_store_provided_parts_when_present():
@@ -141,3 +146,31 @@ def test_compile_output_round_trips_through_serialize():
     j = compile_shot(shot)
     j2 = from_dict(to_dict(j))
     assert j == j2
+
+
+def test_compiler_refuses_bool_and_none_keyframe_values():
+    """The two value classes the spec and the runtime evaluate differently.
+
+    Python would lerp a bool (``bool ⊂ int``) where JS's ``typeof`` snaps it;
+    the Python spec carries ``None`` into the pose where the runtime drops
+    null values. The compiler refuses both at emission (an#86).
+    """
+    import pytest as _pytest
+
+    from an.adapters.cutout.compile import CutoutCompileError
+    from an.ir.schema import SetAction, TweenAction
+
+    def _shot(action):
+        return Shot(id="s", style="cutout", duration=1.0, actions=[action])
+
+    for bad in (True, False, None):
+        with _pytest.raises(CutoutCompileError, match="bool and None"):
+            compile_shot(_shot(SetAction(target="a", property="x", value=bad)))
+    with _pytest.raises(CutoutCompileError, match="bool and None"):
+        compile_shot(
+            _shot(
+                TweenAction(
+                    target="a", property="x", from_value=0.0, to_value=True
+                )
+            )
+        )
