@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.idle &mdash; an 0.1.48 documentation</title>
+  <title>an.characters.idle &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=b5e87a2a"></script>
+      <script src="../../../_static/documentation_options.js?v=1190fe33"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -270,19 +270,23 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">closure_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_BLINK_CLOSURE_S</span><span class="p">,</span>
     <span class="n">duration_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_BLINK_DURATION_S</span><span class="p">,</span>
-    <span class="n">eye_l_slot</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eye_l"</span><span class="p">,</span>
-    <span class="n">eye_r_slot</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eye_r"</span><span class="p">,</span>
-    <span class="n">open_attachment_l</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eye_l_open"</span><span class="p">,</span>
-    <span class="n">closed_attachment_l</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eye_l_closed"</span><span class="p">,</span>
-    <span class="n">open_attachment_r</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eye_r_open"</span><span class="p">,</span>
-    <span class="n">closed_attachment_r</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eye_r_closed"</span><span class="p">,</span>
+    <span class="n">eye_l_slot</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"left_eye"</span><span class="p">,</span>
+    <span class="n">eye_r_slot</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"right_eye"</span><span class="p">,</span>
+    <span class="n">open_attachment_l</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"open"</span><span class="p">,</span>
+    <span class="n">closed_attachment_l</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"closed"</span><span class="p">,</span>
+    <span class="n">open_attachment_r</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"open"</span><span class="p">,</span>
+    <span class="n">closed_attachment_r</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"closed"</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"blink"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IdleAnimation</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Step-animation that snaps both eye slots closed → open.</span>
 
-<span class="sd">    The closure is split: at t=0 both eyes open, at t=close-down they swap</span>
-<span class="sd">    to closed, at t=duration they swap back to open. With defaults this is</span>
-<span class="sd">    open → closed at 0.05s → open at 0.13s within an 0.18s envelope.</span>
+<span class="sd">    The closure is centred: open → closed at ``(duration - closure) / 2`` →</span>
+<span class="sd">    open again ``closure`` later. With the defaults (0.13s closure in an</span>
+<span class="sd">    0.18s envelope) that is closed at 0.025s, open at 0.155s. (An earlier</span>
+<span class="sd">    docstring claimed 0.05/0.13 — numbers from an older closure value; and</span>
+<span class="sd">    the slot/attachment defaults were the stale pre-0.2.0 spellings</span>
+<span class="sd">    ``eye_l``/``eye_l_open``, unnoticed for as long as nothing consumed</span>
+<span class="sd">    ``descriptor.animations`` — both fixed in an#87.)</span>
 <span class="sd">    """</span>
     <span class="n">close_in</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="p">(</span><span class="n">duration_s</span> <span class="o">-</span> <span class="n">closure_s</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
     <span class="n">close_out</span> <span class="o">=</span> <span class="n">close_in</span> <span class="o">+</span> <span class="n">closure_s</span>

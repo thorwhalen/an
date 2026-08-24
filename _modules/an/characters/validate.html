@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.validate &mdash; an 0.1.48 documentation</title>
+  <title>an.characters.validate &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=b5e87a2a"></script>
+      <script src="../../../_static/documentation_options.js?v=1190fe33"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -198,7 +198,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">swap_set_name_problem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CHARACTER_DOCUMENT_KIND</span><span class="p">,</span>
     <span class="n">MOUTH_SHAPES</span><span class="p">,</span>
     <span class="n">REQUIRED_PARTS</span><span class="p">,</span>
     <span class="n">CharacterDescriptor</span><span class="p">,</span>
@@ -367,8 +370,16 @@
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">descriptor</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate_json</span><span class="p">(</span>
-                <span class="n">desc_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+            <span class="c1"># Validate the MIGRATED document — the one the compiler renders.</span>
+            <span class="c1"># Both committed corpus rigs are 0.1.0 on disk; read raw, the</span>
+            <span class="c1"># 0.3.0 model default `eyelid` set would be checked against</span>
+            <span class="c1"># un-renamed `eye_l_open` attachments and every one of them would</span>
+            <span class="c1"># fail its own validator (an#87 review).</span>
+            <span class="n">descriptor</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+                <span class="n">migrate</span><span class="p">(</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">desc_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)),</span>
+                    <span class="n">kind</span><span class="o">=</span><span class="n">CHARACTER_DOCUMENT_KIND</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
@@ -396,6 +407,8 @@
     <span class="k">for</span> <span class="n">rel</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_iter_parts</span><span class="p">(</span><span class="n">parts_dir</span><span class="o">.</span><span class="n">parent</span><span class="p">):</span>
         <span class="n">_check_part</span><span class="p">(</span><span class="n">rel</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
 
+    <span class="n">_check_asset_sets</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">who</span><span class="p">)</span>
+    <span class="n">_check_face_overlay_declaration</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">who</span><span class="p">)</span>
     <span class="n">_check_joint_names</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -409,6 +422,158 @@
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">report</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_asset_sets</span><span class="p">(</span>
+    <span class="n">directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">descriptor</span><span class="p">:</span> <span class="n">CharacterDescriptor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">VerificationReport</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">who</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Every asset-set key must be swappable, and swap without moving (an#87).</span>
+
+<span class="sd">    Three checks per declared channel:</span>
+
+<span class="sd">    - **Every key's attachment name resolves in at least one slot of the</span>
+<span class="sd">      active skin** — BLOCKING, because the compiler's projection silently</span>
+<span class="sd">      omits an unresolvable key, and a channel then freezes on it (the old</span>
+<span class="sd">      silent-freeze bug, now a loud runtime error for hand-written scenes and</span>
+<span class="sd">      a dropped-with-warning for compiled ones — either way the art package</span>
+<span class="sd">      is what is wrong).</span>
+<span class="sd">    - **A key whose attachment resolves but whose FILE is missing** —</span>
+<span class="sd">      ADVISORY, the inventory-gap class (`a rig without a blink still</span>
+<span class="sd">      renders`); it escalates only when a shot actually uses the key.</span>
+<span class="sd">    - **Attachments within one set+slot that declare differing geometry**</span>
+<span class="sd">      (anchor / offset / explicit box) — ADVISORY, because the swap carries</span>
+<span class="sd">      texture only: the node's transform and fit box are baked from the</span>
+<span class="sd">      default attachment, so a key drawn at a different anchor lands</span>
+<span class="sd">      somewhere its author did not put it.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">skin</span> <span class="o">=</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">skins</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default"</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">next</span><span class="p">(</span>
+        <span class="nb">iter</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">skins</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">skin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">for</span> <span class="n">channel</span><span class="p">,</span> <span class="n">key_map</span> <span class="ow">in</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">asset_sets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="n">swap_set_name_problem</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">BLOCKING</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"character.json#asset_sets.</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> declares an asset set that cannot be a swap-set name: "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"Rename the set; the transform vocabulary and '/' / '::' are "</span>
+                <span class="s2">"reserved."</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">attachment_name</span> <span class="ow">in</span> <span class="n">key_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">holding_slots</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">slot_name</span>
+                <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">attachments</span> <span class="ow">in</span> <span class="n">skin</span><span class="o">.</span><span class="n">slots</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">attachment_name</span> <span class="ow">in</span> <span class="n">attachments</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">holding_slots</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="n">BLOCKING</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"character.json#asset_sets.</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2">'s </span><span class="si">{</span><span class="n">channel</span><span class="si">!r}</span><span class="s2"> set maps </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2"> to attachment "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">attachment_name</span><span class="si">!r}</span><span class="s2">, which no slot of the skin carries — "</span>
+                    <span class="s2">"the key can never be swapped to"</span><span class="p">,</span>
+                    <span class="s2">"Name an attachment that exists in a slot, or drop the key."</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">slot_name</span> <span class="ow">in</span> <span class="n">holding_slots</span><span class="p">:</span>
+                <span class="n">att</span> <span class="o">=</span> <span class="n">skin</span><span class="o">.</span><span class="n">slots</span><span class="p">[</span><span class="n">slot_name</span><span class="p">][</span><span class="n">attachment_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="n">att</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                    <span class="c1"># BLOCKING when this is the slot's default (or only)</span>
+                    <span class="c1"># art — the slot then draws NOTHING and the compiler</span>
+                    <span class="c1"># records a fallback; ADVISORY for a spare key, the</span>
+                    <span class="c1"># inventory-gap class ("a rig without a blink still</span>
+                    <span class="c1"># renders"), which escalates only when a shot uses it.</span>
+                    <span class="n">default_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">attachment</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">slots</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">slot_name</span><span class="p">),</span>
+                        <span class="kc">None</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">only_art</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">skin</span><span class="o">.</span><span class="n">slots</span><span class="p">[</span><span class="n">slot_name</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span>
+                    <span class="n">severity</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">BLOCKING</span>
+                        <span class="k">if</span> <span class="n">only_art</span> <span class="ow">or</span> <span class="n">attachment_name</span> <span class="o">==</span> <span class="n">default_name</span>
+                        <span class="k">else</span> <span class="n">ADVISORY</span>
+                    <span class="p">)</span>
+                    <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                        <span class="n">severity</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">att</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2">'s </span><span class="si">{</span><span class="n">channel</span><span class="si">!r}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2"> resolves to </span><span class="si">{</span><span class="n">att</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">, "</span>
+                        <span class="s2">"which is not on disk; "</span>
+                        <span class="o">+</span> <span class="p">(</span>
+                            <span class="s2">"it is the slot's default art, so the slot draws nothing"</span>
+                            <span class="k">if</span> <span class="n">severity</span> <span class="o">==</span> <span class="n">BLOCKING</span>
+                            <span class="k">else</span> <span class="s2">"a shot that uses the key will drop it (fatal "</span>
+                            <span class="s2">"under strict_assets)"</span>
+                        <span class="p">),</span>
+                        <span class="s2">"Draw the file, or drop the key from the set."</span><span class="p">,</span>
+                    <span class="p">)</span>
+        <span class="c1"># Geometry consistency, per slot the channel projects onto.</span>
+        <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">attachments</span> <span class="ow">in</span> <span class="n">skin</span><span class="o">.</span><span class="n">slots</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">in_set</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">attachments</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">key_map</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">attachments</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_set</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">geometries</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">anchor</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">in_set</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">geometries</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="n">ADVISORY</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"character.json#asset_sets.</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2">'s </span><span class="si">{</span><span class="n">channel</span><span class="si">!r}</span><span class="s2"> set attachments in slot "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">slot_name</span><span class="si">!r}</span><span class="s2"> declare differing geometry "</span>
+                    <span class="s2">"(anchor/offset/box) — a swap carries texture only, so "</span>
+                    <span class="s2">"every key renders with the DEFAULT attachment's "</span>
+                    <span class="s2">"placement and fit box"</span><span class="p">,</span>
+                    <span class="s2">"Give the set's attachments identical geometry, or "</span>
+                    <span class="s2">"accept that per-key placement is not yet expressible."</span><span class="p">,</span>
+                <span class="p">)</span>
+
+
+<span class="c1">#: Provenance values that historically MEANT a baked face. The compiler no</span>
+<span class="c1">#: longer reads them (the declared `face_overlay` field does the job, an#87);</span>
+<span class="c1">#: this check is what keeps a hand-authored current-schema descriptor honest.</span>
+<span class="n">_BAKED_FACE_PROVENANCES</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"dicebear"</span><span class="p">,</span> <span class="s2">"external_avatar"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_face_overlay_declaration</span><span class="p">(</span>
+    <span class="n">descriptor</span><span class="p">:</span> <span class="n">CharacterDescriptor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">VerificationReport</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">who</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A baked-face provenance with `face_overlay=True` is almost certainly a</span>
+<span class="sd">    mistake — the overlay eyes/brows/mouth will draw over the baked face.</span>
+
+<span class="sd">    Before 0.3.0 the provenance string WAS the switch; a descriptor written</span>
+<span class="sd">    to that convention at the current schema version declares the opposite</span>
+<span class="sd">    of what its author meant, and nothing infers it any more (a declared</span>
+<span class="sd">    fact is only worth having if nothing second-guesses it). Advisory, since</span>
+<span class="sd">    a hand-drawn "external" avatar with real overlay parts is legitimate.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">face_overlay</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">provenance</span> <span class="o">=</span> <span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"art_provenance"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">provenance</span> <span class="ow">in</span> <span class="n">_BAKED_FACE_PROVENANCES</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">ADVISORY</span><span class="p">,</span>
+            <span class="s2">"character.json#face_overlay"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> declares face_overlay=true but its art_provenance is "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">provenance</span><span class="si">!r}</span><span class="s2">, which usually means the face is baked into the "</span>
+            <span class="s2">"head art — the overlay eyes/brows/mouth will draw over it"</span><span class="p">,</span>
+            <span class="s2">"Set face_overlay: false if the face is baked in (the compiler "</span>
+            <span class="s2">"reads only that field now), or leave it if the avatar really "</span>
+            <span class="s2">"has separate face parts."</span><span class="p">,</span>
+        <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_joint_names</span><span class="p">(</span>

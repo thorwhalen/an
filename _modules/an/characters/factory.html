@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.factory &mdash; an 0.1.48 documentation</title>
+  <title>an.characters.factory &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=b5e87a2a"></script>
+      <script src="../../../_static/documentation_options.js?v=1190fe33"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -363,12 +363,16 @@
     <span class="n">_synthesize_brow</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"brow_l.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"l"</span><span class="p">)</span>
     <span class="n">_synthesize_brow</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"brow_r.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
 
-    <span class="c1"># Step 6: descriptor</span>
+    <span class="c1"># Step 6: descriptor. `face_overlay` is DECLARED here (an#87): a DiceBear</span>
+    <span class="c1"># avatar has its face baked into the head SVG, so the overlay face parts</span>
+    <span class="c1"># and the viseme channel are suppressed by this fact — the compiler no</span>
+    <span class="c1"># longer sniffs metadata.art_provenance, which is provenance again.</span>
     <span class="n">descriptor</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
         <span class="n">display_name</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span>
         <span class="n">voice_ref</span><span class="o">=</span><span class="n">voice_ref</span><span class="p">,</span>
         <span class="n">source_svg</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span>
+        <span class="n">face_overlay</span><span class="o">=</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"art_provenance"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"dicebear"</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">metadata</span><span class="p">,</span> <span class="s2">"pivots_detected"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">pivots</span><span class="o">.</span><span class="n">keys</span><span class="p">())},</span>
         <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
     <span class="p">)</span>

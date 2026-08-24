@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.48 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=b5e87a2a"></script>
+      <script src="../../../../_static/documentation_options.js?v=1190fe33"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -204,9 +204,11 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRANSFORM_PROPERTIES</span><span class="p">,</span> <span class="n">swap_set_name_problem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlatAction</span><span class="p">,</span> <span class="n">flatten</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Action</span><span class="p">,</span>
@@ -235,6 +237,7 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CHARACTER_DOCUMENT_KIND</span><span class="p">,</span>
+    <span class="n">MOUTH_SHAPES</span><span class="p">,</span>
     <span class="n">VISEME_CHANNEL</span><span class="p">,</span>
     <span class="n">Attachment</span><span class="p">,</span>
     <span class="n">Bone</span><span class="p">,</span>
@@ -280,6 +283,15 @@
 <span class="c1"># Cap viseme keyframe density to ~7Hz; reduces "twitchy" mouth at full speed.</span>
 <span class="n">_MIN_VISEME_GAP_S</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.14</span>
 
+<span class="c1">#: The procedural (drawn) mouth's swap vocabulary, DECLARED as data on its</span>
+<span class="c1">#: visual exactly as the runtime declares it (`g._anDrawSets = {viseme: ...}`)</span>
+<span class="c1">#: and as an SVG mouth carries its projection. A drawn mouth has no textures,</span>
+<span class="c1">#: so each key maps to itself — the code the runtime's shape table draws. The</span>
+<span class="c1">#: compiler never branches on the set's NAME: the drawn mouth is just a node</span>
+<span class="c1">#: whose visual carries a `viseme` set (an#87).</span>
+<span class="n">PROCEDURAL_MOUTH_KEYS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span> <span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">MOUTH_SHAPES</span><span class="p">}</span>
+<span class="n">PROCEDURAL_MOUTH_SETS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="n">VISEME_CHANNEL</span><span class="p">})</span>
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_property_rest_values</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Rest ("identity") value per animatable property, derived from the schema.</span>
@@ -314,18 +326,17 @@
 <span class="n">_PROPERTY_REST_VALUES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">_property_rest_values</span><span class="p">()</span>
 
 
-<span class="c1">#: Every property name the JS runtime's ``applyProperty`` switch implements —</span>
-<span class="c1">#: the numeric transform vocabulary (the rest-value SSOT above) plus the</span>
-<span class="c1">#: discrete channel name(s) the compiler emits. This is the Python side of the</span>
-<span class="c1">#: two-evaluator drift gate: ``tests/test_loud_discards.py`` extracts the</span>
-<span class="c1">#: runtime's actual switch cases and asserts exact equality with this set, in</span>
-<span class="c1">#: both directions. It replaced ``pose.py``'s allow-list when the Python</span>
-<span class="c1">#: applier was deleted (an#86) — the compiler, not a dead applier, is what the</span>
-<span class="c1">#: runtime must agree with. The swap generalisation (an#87) will shrink this</span>
-<span class="c1">#: to the numeric vocabulary when ``viseme`` stops being a static case.</span>
-<span class="n">RUNTIME_APPLIED_PROPERTIES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">_PROPERTY_REST_VALUES</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span>
-    <span class="n">VISEME_CHANNEL</span>
-<span class="p">}</span>
+<span class="c1">#: Every property name the JS runtime's ``applyProperty`` STATIC switch</span>
+<span class="c1">#: implements — exactly the numeric transform vocabulary (the rest-value SSOT</span>
+<span class="c1">#: above). This is the Python side of the two-evaluator drift gate:</span>
+<span class="c1">#: ``tests/test_loud_discards.py`` extracts the runtime's actual switch cases</span>
+<span class="c1">#: and asserts exact equality with this set, in both directions. It replaced</span>
+<span class="c1">#: ``pose.py``'s allow-list when the Python applier was deleted (an#86).</span>
+<span class="c1">#: Any OTHER property is a swap-set name, applied dynamically through the</span>
+<span class="c1">#: node's ``asset_sets`` projection (an#87) — ``viseme`` left the static</span>
+<span class="c1">#: switch when that landed, which is precisely what makes it a conventional</span>
+<span class="c1">#: set name rather than control flow.</span>
+<span class="n">RUNTIME_APPLIED_PROPERTIES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">_PROPERTY_REST_VALUES</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="CutoutCompileError">
@@ -421,6 +432,121 @@
     <span class="k">return</span> <span class="n">paths</span>
 
 
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_SwapVocabulary</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What the built scene can swap, and what the descriptors declare.</span>
+
+<span class="sd">    The compiler's one source of swap truth for a shot (an#87), built AFTER</span>
+<span class="sd">    the scene tree so ``node_sets`` reflects what actually resolved:</span>
+
+<span class="sd">    - ``node_sets`` — node path → set name → {KEY: texture alias}: the per-slot</span>
+<span class="sd">      projections stamped on each visual (``VisualJSON.asset_sets``). The</span>
+<span class="sd">      procedural drawn mouth is in here too — it declares its set on its</span>
+<span class="sd">      visual like everything else, so nothing below names a set specially.</span>
+<span class="sd">    - ``node_asset_ids`` — node path → the visual's default texture alias,</span>
+<span class="sd">      which is what makes a set's REST key derivable (the key whose alias is</span>
+<span class="sd">      the default attachment).</span>
+<span class="sd">    - ``declared`` — entity id → set name → declared keys, from the MIGRATED</span>
+<span class="sd">      descriptor. Declared-but-unresolved (art missing) is the escalation</span>
+<span class="sd">      case; undeclared is an authoring error. Entities without a descriptor</span>
+<span class="sd">      are absent, and their built nodes' sets ARE their declaration.</span>
+<span class="sd">    - ``paths`` — every node path the runtime will index (targets check).</span>
+<span class="sd">    """</span>
+
+    <span class="n">node_sets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span>
+    <span class="n">node_asset_ids</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">declared</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span>
+    <span class="n">paths</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">swap_capable_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">set_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Node paths under ``entity_id`` that can apply ``set_name``."""</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">p</span>
+            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">sets</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_sets</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">entity_id</span> <span class="ow">and</span> <span class="n">set_name</span> <span class="ow">in</span> <span class="n">sets</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">rest_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">set_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The key a node shows at rest for ``set_name``, or None.</span>
+
+<span class="sd">        The key whose alias is the visual's default texture — for an SVG</span>
+<span class="sd">        mouth the slot's default attachment, for the drawn mouth (whose keys</span>
+<span class="sd">        map to themselves) the runtime's initial ``X``. Derived, so a viseme</span>
+<span class="sd">        vocabulary other than Rhubarb's (MPEG-4 numbers, Azure names) still</span>
+<span class="sd">        knows how to close the mouth.</span>
+<span class="sd">        """</span>
+        <span class="n">key_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">set_name</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">asset_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_asset_ids</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">key_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">alias</span> <span class="o">==</span> <span class="n">asset_id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">key</span>
+        <span class="k">if</span> <span class="n">asset_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"X"</span> <span class="ow">in</span> <span class="n">key_map</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"X"</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_swap_vocabulary</span><span class="p">(</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">NodeJSON</span><span class="p">,</span> <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_SwapVocabulary</span><span class="p">:</span>
+    <span class="n">node_sets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">node_asset_ids</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">walk</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">NodeJSON</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">prefix</span> <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">"root"</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">visual</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">asset_sets</span><span class="p">:</span>
+                <span class="n">node_sets</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">asset_sets</span>
+                <span class="n">node_asset_ids</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">asset_id</span>
+            <span class="n">child_prefix</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">child_prefix</span> <span class="o">=</span> <span class="s2">""</span>  <span class="c1"># skip the synthetic root, as the runtime does</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">walk</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">child_prefix</span><span class="p">)</span>
+
+    <span class="n">walk</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+
+    <span class="n">declared</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">chars_store</span> <span class="o">=</span> <span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"characters"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">!=</span> <span class="s2">"character"</span> <span class="ow">or</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">chars_store</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">desc_data</span> <span class="o">=</span> <span class="n">chars_store</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">desc_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">desc_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"CharacterDescriptor"</span>
+        <span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+            <span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">desc_data</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="n">CHARACTER_DOCUMENT_KIND</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">asset_sets</span><span class="p">:</span>
+            <span class="n">problem</span> <span class="o">=</span> <span class="n">swap_set_name_problem</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># The reservation check (an#87): a set named `alpha` would be</span>
+                <span class="c1"># applied by the runtime's static switch, never as a swap —</span>
+                <span class="c1"># the descriptor would declare a capability the pipeline</span>
+                <span class="c1"># silently routes elsewhere.</span>
+                <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"character </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="si">!r}</span><span class="s2"> declares an asset set that "</span>
+                    <span class="sa">f</span><span class="s2">"cannot be a swap-set name: </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2">. Transform "</span>
+                    <span class="sa">f</span><span class="s2">"properties are: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">TRANSFORM_PROPERTIES</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+        <span class="n">declared</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">channel</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="k">for</span> <span class="n">channel</span><span class="p">,</span> <span class="n">keys</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">asset_sets</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">_SwapVocabulary</span><span class="p">(</span>
+        <span class="n">node_sets</span><span class="o">=</span><span class="n">node_sets</span><span class="p">,</span>
+        <span class="n">node_asset_ids</span><span class="o">=</span><span class="n">node_asset_ids</span><span class="p">,</span>
+        <span class="n">declared</span><span class="o">=</span><span class="n">declared</span><span class="p">,</span>
+        <span class="n">paths</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">_runtime_node_paths</span><span class="p">(</span><span class="n">root</span><span class="p">)),</span>
+    <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_raise_or_warn_on_asset_fallbacks</span><span class="p">(</span>
     <span class="n">shot_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">],</span>
@@ -492,20 +618,27 @@
     <span class="n">scene_root</span> <span class="o">=</span> <span class="n">_build_scene_root</span><span class="p">(</span>
         <span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">,</span> <span class="n">textures</span><span class="o">=</span><span class="n">textures</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span>
     <span class="p">)</span>
-    <span class="n">_raise_or_warn_on_asset_fallbacks</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">resolutions</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict_assets</span><span class="p">)</span>
-    <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span> <span class="o">=</span> <span class="n">_compile_actions</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">,</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+    <span class="n">vocab</span> <span class="o">=</span> <span class="n">_swap_vocabulary</span><span class="p">(</span><span class="n">scene_root</span><span class="p">,</span> <span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">)</span>
+    <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span> <span class="o">=</span> <span class="n">_compile_actions</span><span class="p">(</span>
+        <span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">,</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span>
+    <span class="p">)</span>
     <span class="c1"># Phase 4: emit a viseme channel per dialogue line that has a viseme_track.</span>
     <span class="n">_add_viseme_clips</span><span class="p">(</span>
         <span class="n">shot</span><span class="p">,</span>
         <span class="n">animations</span><span class="p">,</span>
         <span class="n">tracks</span><span class="p">,</span>
         <span class="n">mall</span><span class="o">=</span><span class="n">mall</span><span class="p">,</span>
-        <span class="n">node_paths</span><span class="o">=</span><span class="n">_runtime_node_paths</span><span class="p">(</span><span class="n">scene_root</span><span class="p">),</span>
+        <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="c1"># Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale</span>
     <span class="c1"># animation on the synthetic scene root so directors get visible camera</span>
     <span class="c1"># behavior without writing channels by hand.</span>
     <span class="n">_add_camera_clips</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">)</span>
+    <span class="c1"># AFTER action + viseme compilation, deliberately: a swap key the timeline</span>
+    <span class="c1"># actually USES whose art is missing is recorded as a fallback during</span>
+    <span class="c1"># those passes (usage-aware escalation, an#87), and this is the one place</span>
+    <span class="c1"># that decides warn-vs-raise for every fallback.</span>
+    <span class="n">_raise_or_warn_on_asset_fallbacks</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">resolutions</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict_assets</span><span class="p">)</span>
 
     <span class="n">timeline</span> <span class="o">=</span> <span class="n">TimelineJSON</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">tracks</span><span class="o">=</span><span class="n">tracks</span><span class="p">)</span>
 
@@ -876,7 +1009,11 @@
                     <span class="n">name</span><span class="o">=</span><span class="s2">"mouth"</span><span class="p">,</span>
                     <span class="n">transform</span><span class="o">=</span><span class="n">TransformJSON</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">14.0</span><span class="p">),</span>
                     <span class="n">visual</span><span class="o">=</span><span class="n">VisualJSON</span><span class="p">(</span>
-                        <span class="n">kind</span><span class="o">=</span><span class="s2">"mouth"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">22.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#552222"</span>
+                        <span class="n">kind</span><span class="o">=</span><span class="s2">"mouth"</span><span class="p">,</span>
+                        <span class="n">width</span><span class="o">=</span><span class="mf">22.0</span><span class="p">,</span>
+                        <span class="n">height</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span>
+                        <span class="n">color</span><span class="o">=</span><span class="s2">"#552222"</span><span class="p">,</span>
+                        <span class="n">asset_sets</span><span class="o">=</span><span class="p">{</span><span class="n">VISEME_CHANNEL</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">PROCEDURAL_MOUTH_KEYS</span><span class="p">)},</span>
                     <span class="p">),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
@@ -1136,12 +1273,15 @@
     <span class="c1"># If the head art has its own face baked in (DiceBear / hand-drawn full</span>
     <span class="c1"># avatars), the separate eye/brow/mouth sprites double up with the baked</span>
     <span class="c1"># features. Lip-sync stays audio-only for these; hand-rig for dialogue.</span>
-    <span class="n">head_has_face</span> <span class="o">=</span> <span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"art_provenance"</span>
-    <span class="p">)</span> <span class="ow">in</span> <span class="n">_FACE_BAKED_PROVENANCES</span>
+    <span class="c1"># `face_overlay` is the DECLARED fact (0.3.0, an#87) — the old vendor-name</span>
+    <span class="c1"># check on metadata.art_provenance lives on only inside the migration.</span>
+    <span class="n">head_has_face</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">desc</span><span class="o">.</span><span class="n">face_overlay</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_register</span><span class="p">(</span><span class="n">attachment_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attachment</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">alias</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">attachment_name</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register</span><span class="p">(</span><span class="n">slot_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attachment_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attachment</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="c1"># Slot-qualified on purpose: attachment names are a PER-SLOT namespace</span>
+        <span class="c1"># (both eye slots carry `open`/`closed`), and the old `{entity}.{name}`</span>
+        <span class="c1"># alias space was silently first-wins on cross-slot collision.</span>
+        <span class="n">alias</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">slot_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">attachment_name</span><span class="si">}</span><span class="s2">"</span>
         <span class="k">return</span> <span class="n">_register_texture</span><span class="p">(</span><span class="n">textures</span><span class="p">,</span> <span class="n">alias</span><span class="p">,</span> <span class="n">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">attachment</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
 
     <span class="c1"># Every attachment in the skin is registered, not just the active one, so a</span>
@@ -1162,7 +1302,7 @@
             <span class="k">if</span> <span class="n">probe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">probe</span><span class="p">(</span><span class="n">src</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="n">missing_art</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">slot_name</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">att</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
                 <span class="k">continue</span>
-            <span class="n">resolved_here</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_register</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">att</span><span class="p">)</span>
+            <span class="n">resolved_here</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_register</span><span class="p">(</span><span class="n">slot_name</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">att</span><span class="p">)</span>
         <span class="n">aliases</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolved_here</span>
 
     <span class="n">nodes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NodeJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1205,14 +1345,27 @@
             <span class="n">fit</span><span class="o">=</span><span class="n">CONTAIN_FIT</span><span class="p">,</span>
             <span class="o">**</span><span class="p">({</span><span class="s2">"width"</span><span class="p">:</span> <span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span> <span class="s2">"height"</span><span class="p">:</span> <span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">k</span><span class="p">}</span> <span class="k">if</span> <span class="n">extent</span> <span class="k">else</span> <span class="p">{}),</span>
         <span class="p">)</span>
-        <span class="c1"># The lip-sync channel swaps textures on the mouth by key.</span>
-        <span class="n">viseme_set</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">asset_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">VISEME_CHANNEL</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">slot</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"mouth"</span> <span class="ow">and</span> <span class="n">viseme_set</span><span class="p">:</span>
-            <span class="n">visual</span><span class="o">.</span><span class="n">viseme_assets</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">key</span><span class="p">:</span> <span class="n">aliases</span><span class="p">[</span><span class="n">slot</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="n">name</span><span class="p">]</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">viseme_set</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">[</span><span class="n">slot</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
-            <span class="p">}</span>
+        <span class="c1"># The per-slot PROJECTION of the descriptor's asset_sets (an#87): a</span>
+        <span class="c1"># channel projects onto every slot whose attachments its keys name —</span>
+        <span class="c1"># `viseme` lands on the mouth because the mouth's attachments carry</span>
+        <span class="c1"># the viseme map's values, `eyelid` lands on BOTH eye slots because</span>
+        <span class="c1"># both carry `open`/`closed`. No slot names appear here: the skin is</span>
+        <span class="c1"># the binding. Keys whose art did not resolve are absent from the map</span>
+        <span class="c1"># (an inventory gap — `_record_missing_parts` records it; a key a</span>
+        <span class="c1"># channel actually USES escalates via the fallback machinery).</span>
+        <span class="n">projected</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">channel</span><span class="p">:</span> <span class="n">resolved</span>
+            <span class="k">for</span> <span class="n">channel</span><span class="p">,</span> <span class="n">key_map</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">asset_sets</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">resolved</span> <span class="o">:=</span> <span class="p">{</span>
+                    <span class="n">key</span><span class="p">:</span> <span class="n">aliases</span><span class="p">[</span><span class="n">slot</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="n">name</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">key_map</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">[</span><span class="n">slot</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">projected</span><span class="p">:</span>
+            <span class="n">visual</span><span class="o">.</span><span class="n">asset_sets</span> <span class="o">=</span> <span class="n">projected</span>
 
         <span class="n">node</span> <span class="o">=</span> <span class="n">NodeJSON</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">slot</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -1241,9 +1394,36 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_compile_actions</span><span class="p">(</span>
-    <span class="n">actions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Action</span><span class="p">],</span> <span class="n">shot_duration</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">actions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Action</span><span class="p">],</span>
+    <span class="n">shot_duration</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">TrackJSON</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""Flatten authoring actions and convert to per-action animation clips."""</span>
+<span class="w">    </span><span class="sd">"""Flatten authoring actions and convert to animation clips.</span>
+
+<span class="sd">    Tweens and plays compile per action. **Set actions compile per</span>
+<span class="sd">    (target, property) group into step channels that HOLD from each set until</span>
+<span class="sd">    the next action on that target/property** — the next set joins the same</span>
+<span class="sd">    channel as a keyframe; a tween ends the hold at its start; with nothing</span>
+<span class="sd">    following, the hold runs to the shot end (an#87) — the viseme-clip shape.</span>
+
+<span class="sd">    Precedence at an instant where both apply is fixed by TRACK ORDER, which</span>
+<span class="sd">    the evaluators read later-wins: every hold clip is placed BEFORE the</span>
+<span class="sd">    track's per-action clips, so **an active tween governs** — at the shared</span>
+<span class="sd">    handoff instant the tween's first frame shows (an end-inclusive hold</span>
+<span class="sd">    listed after the tween used to mask it, measured), and a set authored</span>
+<span class="sd">    inside a running tween's window takes effect when that window ends, not</span>
+<span class="sd">    mid-tween. The previous</span>
+<span class="sd">    per-set 0.001s placement window had two defects: a set at a</span>
+<span class="sd">    non-frame-aligned time (``at=3.02`` @30fps, window [3.02, 3.021] between</span>
+<span class="sd">    samples) silently never fired, and when one did fire its persistence was</span>
+<span class="sd">    an accident of stateful forward rendering, false under backward scrubbing.</span>
+
+<span class="sd">    ``vocab`` (when compiling a real shot) enables the swap checks: an</span>
+<span class="sd">    authored action on a non-transform property must name a declared asset</span>
+<span class="sd">    set and key of its target — see :func:`_check_swap_action`.</span>
+<span class="sd">    """</span>
     <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">placed_by_track</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">PlacedClipJSON</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -1251,22 +1431,83 @@
     <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
         <span class="n">flat_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">action</span><span class="p">))</span>
 
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">flat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">flat_list</span><span class="p">):</span>
-        <span class="n">anim_id</span><span class="p">,</span> <span class="n">track_root</span><span class="p">,</span> <span class="n">placed</span> <span class="o">=</span> <span class="n">_compile_one</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">ordinal</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">anim_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Built a fresh animation; register it.</span>
-            <span class="p">(</span><span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">],)</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">animations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">anim_id</span><span class="p">,</span> <span class="n">_build_anim_for</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">anim_id</span><span class="p">)),</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">anim_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">animations</span><span class="p">:</span>
-                <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">_build_anim_for</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">anim_id</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># idempotent: ensure registered</span>
-                <span class="k">pass</span>
-        <span class="c1"># Always register: rebuild map cleanly</span>
+    <span class="n">swap_props</span> <span class="o">=</span> <span class="n">_swap_property_names</span><span class="p">(</span><span class="n">flat_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vocab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">flat_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">flat</span>
+            <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">flat_list</span>
+            <span class="k">if</span> <span class="n">_check_swap_action</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="n">set_groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">tween_starts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">hold_by_track</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">PlacedClipJSON</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">ordinal</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">flat_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="n">SetAction</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="p">)</span>
+            <span class="n">set_groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flat</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="n">TweenAction</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="p">)</span>
+            <span class="n">tween_starts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flat</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">anim_id</span><span class="p">,</span> <span class="n">track_root</span><span class="p">,</span> <span class="n">placed</span> <span class="o">=</span> <span class="n">_compile_one</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">ordinal</span><span class="o">=</span><span class="n">ordinal</span><span class="p">)</span>
+        <span class="n">ordinal</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="n">anim_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">anim_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">animations</span><span class="p">:</span>
-            <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">_build_anim_for</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">anim_id</span><span class="p">)</span>
+            <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">_build_anim_for</span><span class="p">(</span>
+                <span class="n">flat</span><span class="p">,</span> <span class="n">anim_id</span><span class="p">,</span> <span class="n">swap_properties</span><span class="o">=</span><span class="n">swap_props</span>
+            <span class="p">)</span>
         <span class="n">placed_by_track</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">track_root</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">placed</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="p">),</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">set_groups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">boundaries</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tween_starts</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="p">),</span> <span class="p">[]))</span>
+        <span class="c1"># A set holds until the NEXT ACTION on the same (target, property):</span>
+        <span class="c1"># the next set joins the same channel as a keyframe, but a tween ends</span>
+        <span class="c1"># the hold at its start so the tween governs from there and its end</span>
+        <span class="c1"># value persists after it (the runtime's stateful hold, unchanged).</span>
+        <span class="c1"># Holding to the shot end regardless would let a `set` placed AFTER</span>
+        <span class="c1"># the tween clips in the track mask the tween for the whole shot —</span>
+        <span class="c1"># measured, and the most common authoring shape ("set the start</span>
+        <span class="c1"># pose, then animate") was a no-op tween (an#87 review).</span>
+        <span class="n">runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">runs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">runs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;=</span> <span class="n">b</span> <span class="o">&lt;=</span> <span class="n">flat</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">boundaries</span><span class="p">):</span>
+                <span class="n">runs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flat</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">flat</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">:</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="n">run</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">boundaries</span> <span class="k">if</span> <span class="n">b</span> <span class="o">&gt;=</span> <span class="n">first</span><span class="p">),</span> <span class="n">shot_duration</span><span class="p">)</span>
+            <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__set__</span><span class="si">{</span><span class="n">ordinal</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">ordinal</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">kfs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">run</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">value</span>
+                <span class="n">_check_keyframe_value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="n">prop</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">flat</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;</span> <span class="n">shot_duration</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"set on </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2">:</span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> at t=</span><span class="si">{</span><span class="n">flat</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s2"> is past "</span>
+                        <span class="sa">f</span><span class="s2">"the shot's end (</span><span class="si">{</span><span class="n">shot_duration</span><span class="si">}</span><span class="s2">s) and can never show."</span><span class="p">,</span>
+                        <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+                        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="n">kfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">flat</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">first</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">end</span> <span class="o">-</span> <span class="n">first</span><span class="p">)</span>
+            <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
+                <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+                <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">prop</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">kfs</span><span class="p">)],</span>
+            <span class="p">)</span>
+            <span class="n">hold_by_track</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">_track_root_of</span><span class="p">(</span><span class="n">target</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">PlacedClipJSON</span><span class="p">(</span><span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">first</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">)</span>
+            <span class="p">)</span>
+    <span class="c1"># Holds FIRST in every track — see the docstring: later-wins evaluation</span>
+    <span class="c1"># must let an active tween override a hold at the shared instant.</span>
+    <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">holds</span> <span class="ow">in</span> <span class="n">hold_by_track</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">placed_by_track</span><span class="p">[</span><span class="n">root</span><span class="p">]</span> <span class="o">=</span> <span class="n">holds</span> <span class="o">+</span> <span class="n">placed_by_track</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="c1"># Re-pass: every referenced animation must actually exist.</span>
     <span class="c1">#</span>
@@ -1297,7 +1538,11 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_compile_one</span><span class="p">(</span>
     <span class="n">flat</span><span class="p">:</span> <span class="n">FlatAction</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ordinal</span><span class="p">:</span> <span class="nb">int</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">PlacedClipJSON</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Convert one FlatAction into (animation_id, track_root, placed)."""</span>
+<span class="w">    </span><span class="sd">"""Convert one non-set FlatAction into (animation_id, track_root, placed).</span>
+
+<span class="sd">    Set actions never reach here — they compile per (target, property) group</span>
+<span class="sd">    in :func:`_compile_actions` (an#87).</span>
+<span class="sd">    """</span>
     <span class="n">action</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">TweenAction</span><span class="p">):</span>
         <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__tween__</span><span class="si">{</span><span class="n">ordinal</span><span class="si">}</span><span class="s2">"</span>
@@ -1305,12 +1550,6 @@
             <span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
             <span class="n">start_time</span><span class="o">=</span><span class="n">flat</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
             <span class="n">duration</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">anim_id</span><span class="p">,</span> <span class="n">_track_root_of</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">),</span> <span class="n">placed</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">SetAction</span><span class="p">):</span>
-        <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__set__</span><span class="si">{</span><span class="n">ordinal</span><span class="si">}</span><span class="s2">"</span>
-        <span class="n">placed</span> <span class="o">=</span> <span class="n">PlacedClipJSON</span><span class="p">(</span>
-            <span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">flat</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">0.001</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">anim_id</span><span class="p">,</span> <span class="n">_track_root_of</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">),</span> <span class="n">placed</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">PlayAction</span><span class="p">):</span>
@@ -1347,7 +1586,24 @@
     <span class="k">return</span> <span class="n">value</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_build_anim_for</span><span class="p">(</span><span class="n">flat</span><span class="p">:</span> <span class="n">FlatAction</span><span class="p">,</span> <span class="n">anim_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnimationClipJSON</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_swap_property_names</span><span class="p">(</span><span class="n">flat_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Property names in ``flat_list`` that are swap sets, not transforms.</span>
+
+<span class="sd">    A property outside the transform vocabulary names an asset set (an#87).</span>
+<span class="sd">    Derived from the actions rather than the descriptors so the STEP-EASING</span>
+<span class="sd">    rule below applies even when compiling without a mall.</span>
+<span class="sd">    """</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">flat_list</span><span class="p">:</span>
+        <span class="n">prop</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="s2">"property"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prop</span> <span class="ow">and</span> <span class="n">prop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_PROPERTY_REST_VALUES</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_anim_for</span><span class="p">(</span>
+    <span class="n">flat</span><span class="p">:</span> <span class="n">FlatAction</span><span class="p">,</span> <span class="n">anim_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">swap_properties</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnimationClipJSON</span><span class="p">:</span>
     <span class="n">action</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">TweenAction</span><span class="p">):</span>
         <span class="n">from_value</span> <span class="o">=</span> <span class="p">(</span>
@@ -1359,6 +1615,33 @@
         <span class="n">_check_keyframe_value</span><span class="p">(</span>
             <span class="n">action</span><span class="o">.</span><span class="n">to_value</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">property</span>
         <span class="p">)</span>
+        <span class="n">easing</span> <span class="o">=</span> <span class="n">_easing_to_json</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">easing</span><span class="p">)</span>
+        <span class="c1"># Only an easing the author actually WROTE earns a warning:</span>
+        <span class="c1"># TweenAction's default is 'ease_in_out', so a swap tween with no</span>
+        <span class="c1"># easing given would otherwise be told it "asked for" one.</span>
+        <span class="n">authored_non_step</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">action</span><span class="o">.</span><span class="n">property</span> <span class="ow">in</span> <span class="n">swap_properties</span>
+            <span class="ow">and</span> <span class="s2">"easing"</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">model_fields_set</span>
+            <span class="ow">and</span> <span class="n">easing</span> <span class="o">!=</span> <span class="s2">"step"</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">property</span> <span class="ow">in</span> <span class="n">swap_properties</span><span class="p">:</span>
+            <span class="n">easing</span> <span class="o">=</span> <span class="s2">"step"</span>
+        <span class="k">if</span> <span class="n">authored_non_step</span><span class="p">:</span>
+            <span class="c1"># Swap channels are stepped by FORMAT, not by taste — Spine's</span>
+            <span class="c1"># attachment keyframes carry {time, name} and no curve field at</span>
+            <span class="c1"># all. The evaluator already refuses to ease a non-numeric value</span>
+            <span class="c1"># (the snap is time-based, an#86), so forcing step here changes</span>
+            <span class="c1"># no pixel; what it changes is honesty — the serialized scene</span>
+            <span class="c1"># says what will happen. Warn so the author learns the rule</span>
+            <span class="c1"># rather than wondering where their easing went.</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"tween on </span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="si">!r}</span><span class="s2">:</span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="si">!r}</span><span class="s2"> asked for "</span>
+                <span class="sa">f</span><span class="s2">"easing </span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">easing</span><span class="si">!r}</span><span class="s2">, but </span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="si">!r}</span><span class="s2"> is a swap "</span>
+                <span class="s2">"set and swap channels are always step-interpolated (a "</span>
+                <span class="s2">"discrete key cannot be eased). Compiling with easing='step'."</span><span class="p">,</span>
+                <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
             <span class="n">duration</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
@@ -1367,32 +1650,147 @@
                     <span class="n">target</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
                     <span class="nb">property</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="p">,</span>
                     <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span>
-                        <span class="n">KeyframeJSON</span><span class="p">(</span>
-                            <span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-                            <span class="n">value</span><span class="o">=</span><span class="n">from_value</span><span class="p">,</span>
-                            <span class="n">easing</span><span class="o">=</span><span class="n">_easing_to_json</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">easing</span><span class="p">),</span>
-                        <span class="p">),</span>
+                        <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">from_value</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="n">easing</span><span class="p">),</span>
                         <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">to_value</span><span class="p">),</span>
                     <span class="p">],</span>
                 <span class="p">)</span>
             <span class="p">],</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">SetAction</span><span class="p">):</span>
-        <span class="n">_check_keyframe_value</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
-            <span class="n">duration</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
-            <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
-                <span class="n">ChannelJSON</span><span class="p">(</span>
-                    <span class="n">target</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
-                    <span class="nb">property</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="p">,</span>
-                    <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span>
-                        <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">)</span>
-                    <span class="p">],</span>
-                <span class="p">)</span>
-            <span class="p">],</span>
-        <span class="p">)</span>
     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unsupported anim build for </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_swap_action</span><span class="p">(</span>
+    <span class="n">flat</span><span class="p">:</span> <span class="n">FlatAction</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span><span class="p">,</span>
+    <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Validate one authored action's swap references; decide if it compiles.</span>
+
+<span class="sd">    Returns True to keep the action, False to drop it (with a fallback record</span>
+<span class="sd">    — the usage-aware escalation of an#87: a key the author USES whose art is</span>
+<span class="sd">    missing is a wrong picture wearing a right one's clothes, so it joins the</span>
+<span class="sd">    an#33/#76 machinery and turns fatal under ``strict_assets``; an inventory</span>
+<span class="sd">    gap nobody references stays a non-fatal 'incomplete').</span>
+
+<span class="sd">    Raises for the mistakes that are never a stand-in: an undeclared set, an</span>
+<span class="sd">    undeclared key, a target that cannot carry the set. Transform properties</span>
+<span class="sd">    pass through untouched — their targets stay runtime-checked, as before.</span>
+<span class="sd">    """</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span>
+    <span class="n">prop</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"property"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">prop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">_PROPERTY_REST_VALUES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="p">(</span><span class="n">SetAction</span><span class="p">,</span> <span class="n">TweenAction</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">target</span>
+    <span class="n">entity_id</span> <span class="o">=</span> <span class="n">_track_root_of</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[</span><span class="n">action</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">SetAction</span><span class="p">)</span>
+        <span class="k">else</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">from_value</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">to_value</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">declared_sets</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">declared</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">declared_sets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># No descriptor: what the BUILT nodes declare is the vocabulary — the</span>
+        <span class="c1"># procedural rig's drawn mouth carries its `viseme` set on its visual,</span>
+        <span class="c1"># exactly as an SVG rig's projections do. Exact key match, like every</span>
+        <span class="c1"># other set: a lowercase code used to be silently drawn as rest.</span>
+        <span class="n">declared_sets</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">sets</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">entity_id</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">set_name</span><span class="p">,</span> <span class="n">key_map</span> <span class="ow">in</span> <span class="n">sets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">declared_sets</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">set_name</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">())</span>
+                    <span class="n">declared_sets</span><span class="p">[</span><span class="n">set_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">declared_sets</span><span class="p">[</span><span class="n">set_name</span><span class="p">]</span> <span class="o">|</span> <span class="nb">frozenset</span><span class="p">(</span>
+                        <span class="n">key_map</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">declared_sets</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"action targets </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2">:</span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2">, which is not a transform "</span>
+                <span class="sa">f</span><span class="s2">"property, and </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2"> declares no asset sets (no "</span>
+                <span class="s2">"descriptor, and no built node carries a set). Transform "</span>
+                <span class="sa">f</span><span class="s2">"properties are: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">TRANSFORM_PROPERTIES</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">prop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">declared_sets</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"action targets </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2">:</span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2">, but </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2">'s "</span>
+            <span class="sa">f</span><span class="s2">"descriptor declares no asset set named </span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> (it has: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">declared_sets</span><span class="p">)</span><span class="si">}</span><span class="s2">). A property that is not a transform "</span>
+            <span class="s2">"must name a declared swap set."</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">declared_sets</span><span class="p">[</span><span class="n">prop</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"action sets </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2">:</span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> to </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2">, which is not a "</span>
+                <span class="sa">f</span><span class="s2">"declared key of that set (it has: "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">declared_sets</span><span class="p">[</span><span class="n">prop</span><span class="p">])</span><span class="si">}</span><span class="s2">)."</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">paths</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"action targets </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2">, which is not a node in the built "</span>
+            <span class="sa">f</span><span class="s2">"scene. Known paths: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">vocab</span><span class="o">.</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">node_map</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">node_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">capable</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">swap_capable_paths</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">capable</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"action targets </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2">:</span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2">, but the </span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> set "</span>
+                <span class="sa">f</span><span class="s2">"resolves on </span><span class="si">{</span><span class="n">capable</span><span class="si">}</span><span class="s2">, not on that node. Target one of "</span>
+                <span class="s2">"those paths."</span>
+            <span class="p">)</span>
+        <span class="n">_record_used_swap_fallback</span><span class="p">(</span>
+            <span class="n">resolutions</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"the </span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> set is declared but none of its art resolved, "</span>
+                <span class="sa">f</span><span class="s2">"so the authored swap on </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2"> cannot be shown; the "</span>
+                <span class="s2">"channel was dropped"</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_map</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="n">_record_used_swap_fallback</span><span class="p">(</span>
+            <span class="n">resolutions</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"the authored swap uses key(s) </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> of the </span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"set, whose art did not resolve on </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2"> (resolved "</span>
+                <span class="sa">f</span><span class="s2">"keys: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">node_map</span><span class="p">)</span><span class="si">}</span><span class="s2">); the channel was dropped"</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_record_used_swap_fallback</span><span class="p">(</span>
+    <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A USED swap key with missing art joins the fallback bucket (an#87).</span>
+
+<span class="sd">    fallback=True is the load-bearing bit: `_raise_or_warn_on_asset_fallbacks`</span>
+<span class="sd">    only surfaces fallback entries, so this is what makes the drop audible by</span>
+<span class="sd">    default and fatal under ``strict_assets`` — where an unreferenced</span>
+<span class="sd">    inventory gap stays a mute 'incomplete' record, deliberately.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">resolutions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">resolutions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">AssetResolutionJSON</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">entity_id</span><span class="p">,</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">"swap"</span><span class="p">,</span>
+            <span class="n">store</span><span class="o">=</span><span class="s2">"characters"</span><span class="p">,</span>
+            <span class="n">ref</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">resolved</span><span class="o">=</span><span class="s2">"dropped"</span><span class="p">,</span>
+            <span class="n">fallback</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="n">detail</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_easing_to_json</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
@@ -1415,15 +1813,20 @@
 <span class="c1"># -----------------------------------------------------------------------------</span>
 
 
-<span class="n">_FACE_BAKED_PROVENANCES</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"dicebear"</span><span class="p">,</span> <span class="s2">"external_avatar"</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_face_baked_speakers</span><span class="p">(</span><span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return the entity ids whose backing descriptor has a face baked in.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_baked_face_speakers</span><span class="p">(</span><span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the entity ids whose backing descriptor declares a baked face.</span>
 
 <span class="sd">    Used to suppress viseme channels for characters that don't have an</span>
 <span class="sd">    overlay mouth node (DiceBear / external avatars). See</span>
 <span class="sd">    ``_build_svg_character_subtree`` for the matching scene-tree branch.</span>
+
+<span class="sd">    Reads the **migrated, validated** descriptor's declared ``face_overlay``</span>
+<span class="sd">    fact — the predecessor read the RAW store dict's ``art_provenance`` with</span>
+<span class="sd">    no ``kind`` guard, so (a) a migration-seeded field was invisible to it,</span>
+<span class="sd">    and (b) a legacy ``parts``-rig carrying ``art_provenance="dicebear"`` got</span>
+<span class="sd">    a full procedural mouth built and its viseme channel suppressed — a drawn</span>
+<span class="sd">    mouth that never moved, silently. Only descriptor-backed entities can</span>
+<span class="sd">    declare a baked face now; the two consumer sites read one model.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">mall</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
@@ -1436,13 +1839,18 @@
         <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">chars_store</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">desc</span> <span class="o">=</span> <span class="n">chars_store</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span>
+            <span class="n">desc_data</span> <span class="o">=</span> <span class="n">chars_store</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">desc_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">desc_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"CharacterDescriptor"</span>
+        <span class="p">):</span>
             <span class="k">continue</span>
-        <span class="n">provenance</span> <span class="o">=</span> <span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metadata"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"art_provenance"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">provenance</span> <span class="ow">in</span> <span class="n">_FACE_BAKED_PROVENANCES</span><span class="p">:</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+            <span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">desc_data</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="n">CHARACTER_DOCUMENT_KIND</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">desc</span><span class="o">.</span><span class="n">face_overlay</span><span class="p">:</span>
             <span class="n">out</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span>
 
@@ -1453,38 +1861,46 @@
     <span class="n">tracks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TrackJSON</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">node_paths</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""For each dialogue line with a viseme_track, emit a step-channel that</span>
-<span class="sd">    drives ``&lt;speaker&gt;/head/mouth:viseme`` over the line's time span.</span>
+<span class="w">    </span><span class="sd">"""For each dialogue line with a viseme_track, emit a step swap channel on</span>
+<span class="sd">    every node of the speaker that can apply the ``viseme`` set.</span>
 
 <span class="sd">    Side-effects ``animations`` (adds named clips) and ``tracks`` (appends to</span>
 <span class="sd">    or creates the speaker's track).</span>
 
+<span class="sd">    The target is discovered from the BUILT scene, not a path literal (an#87):</span>
+<span class="sd">    a node applies ``viseme`` when its visual carries the set's projection (an</span>
+<span class="sd">    SVG mouth) or is the procedural drawn mouth. The old</span>
+<span class="sd">    ``f"{speaker}/head/mouth"`` literal was the last place the compiler</span>
+<span class="sd">    hardcoded where a mouth lives.</span>
+
 <span class="sd">    Two kinds of speaker get no viseme channel, for the same reason: there is no</span>
 <span class="sd">    mouth node for it to target.</span>
 
-<span class="sd">    - Speakers backed by a face-baked descriptor (``art_provenance`` of</span>
-<span class="sd">      ``"dicebear"`` or ``"external_avatar"``) — the face is drawn into the head</span>
-<span class="sd">      SVG, so there is no overlay mouth.</span>
-<span class="sd">    - **Speakers whose mouth node is not in the built scene.** One condition,</span>
-<span class="sd">      two cases that are indistinguishable from here: the off-screen-narrator</span>
-<span class="sd">      idiom (a speaker deliberately not an entity — the standing workaround</span>
-<span class="sd">      while ``Shot.narration`` is unimplemented), and a character who IS on</span>
-<span class="sd">      screen but whose rig has no head, which an entity-membership check misses</span>
-<span class="sd">      and sends to a hard render failure.</span>
+<span class="sd">    - Speakers whose descriptor declares ``face_overlay=False`` (DiceBear /</span>
+<span class="sd">      external avatars) — the face is drawn into the head SVG, so there is no</span>
+<span class="sd">      overlay mouth.</span>
+<span class="sd">    - **Speakers with no viseme-capable node in the built scene.** One</span>
+<span class="sd">      condition, two cases that are indistinguishable from here: the</span>
+<span class="sd">      off-screen-narrator idiom (a speaker deliberately not an entity — the</span>
+<span class="sd">      standing workaround while ``Shot.narration`` is unimplemented), and a</span>
+<span class="sd">      character who IS on screen but whose rig has no mouth, which an</span>
+<span class="sd">      entity-membership check misses and sends to a hard render failure.</span>
 
 <span class="sd">    The second kind WARNS rather than passing in silence, because it cannot be</span>
 <span class="sd">    told apart from a typo: ``speaker="charlei"`` against an on-screen</span>
 <span class="sd">    ``charlie`` otherwise loses its lip-sync quietly while the audio still</span>
 <span class="sd">    plays. Naming the scene's actual mouths makes the typo obvious.</span>
+
+<span class="sd">    Codes are upper-cased at EMISSION (the Rhubarb convention) — case used to</span>
+<span class="sd">    be normalised in the runtime's sprite path only, so a lowercase ``'a'``</span>
+<span class="sd">    swapped correctly on an SVG rig and silently drew rest on a procedural</span>
+<span class="sd">    one. And a code the target cannot show is DROPPED here with a warning,</span>
+<span class="sd">    never carried into the scene: the runtime now throws on an unknown swap</span>
+<span class="sd">    key (the loud half of an#87), so compiled scenes must be total.</span>
 <span class="sd">    """</span>
-    <span class="n">face_baked</span> <span class="o">=</span> <span class="n">_face_baked_speakers</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">)</span>
-    <span class="c1"># `is not None`, not truthiness: a shot with no entities has an EMPTY path</span>
-    <span class="c1"># set, and that is precisely a scene where no speaker has a mouth. Treating</span>
-    <span class="c1"># empty as "cannot check" let the emptiest case through to a hard render</span>
-    <span class="c1"># failure — which is how this was caught.</span>
-    <span class="n">paths</span> <span class="o">=</span> <span class="n">node_paths</span>
+    <span class="n">face_baked</span> <span class="o">=</span> <span class="n">_baked_face_speakers</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">)</span>
     <span class="n">track_lookup</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TrackJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="o">.</span><span class="n">target_root</span><span class="p">:</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">}</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span><span class="o">.</span><span class="n">keyframes</span><span class="p">:</span>
@@ -1495,70 +1911,131 @@
         <span class="n">speaker</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">speaker</span>
         <span class="k">if</span> <span class="n">speaker</span> <span class="ow">in</span> <span class="n">face_baked</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">speaker</span><span class="si">}</span><span class="s2">/head/mouth"</span>
-        <span class="k">if</span> <span class="n">paths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
-            <span class="n">mouths</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paths</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/head/mouth"</span><span class="p">))</span>
+        <span class="n">mouth_paths</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">vocab</span><span class="o">.</span><span class="n">swap_capable_paths</span><span class="p">(</span><span class="n">speaker</span><span class="p">,</span> <span class="n">VISEME_CHANNEL</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">vocab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">[]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mouth_paths</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">vocab</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">all_mouths</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">sets</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">VISEME_CHANNEL</span> <span class="ow">in</span> <span class="n">sets</span>
+            <span class="p">)</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> dialogue line </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is spoken by </span><span class="si">{</span><span class="n">speaker</span><span class="si">!r}</span><span class="s2">, which "</span>
-                <span class="sa">f</span><span class="s2">"has no mouth node (</span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2"> is not in the scene): it gets audio "</span>
-                <span class="s2">"but no lip-sync. Expected for an off-screen narrator. If it was "</span>
-                <span class="sa">f</span><span class="s2">"not, the scene's mouths are: </span><span class="si">{</span><span class="n">mouths</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> dialogue line </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is spoken by </span><span class="si">{</span><span class="n">speaker</span><span class="si">!r}</span><span class="s2">, "</span>
+                <span class="s2">"which has no viseme-capable mouth node in the scene: it gets "</span>
+                <span class="s2">"audio but no lip-sync. Expected for an off-screen narrator. "</span>
+                <span class="sa">f</span><span class="s2">"If it was not, the scene's mouths are: </span><span class="si">{</span><span class="n">all_mouths</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
                 <span class="n">CutoutCompileWarning</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">continue</span>
-        <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__viseme__</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span>
 
         <span class="c1"># Build viseme keyframes (step-easing) — but cap density so adjacent</span>
         <span class="c1"># keyframes are at least _MIN_VISEME_GAP_S apart. Reduces the</span>
         <span class="c1"># "twitchy" look of per-character distribution at high densities.</span>
-        <span class="n">raw</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">float</span><span class="p">(</span><span class="n">kf</span><span class="o">.</span><span class="n">time</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">kf</span><span class="o">.</span><span class="n">viseme</span><span class="p">))</span> <span class="k">for</span> <span class="n">kf</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span><span class="o">.</span><span class="n">keyframes</span><span class="p">]</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">kf</span><span class="o">.</span><span class="n">time</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">kf</span><span class="o">.</span><span class="n">viseme</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">kf</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span><span class="o">.</span><span class="n">keyframes</span>
+        <span class="p">]</span>
         <span class="n">condensed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">condensed</span> <span class="ow">and</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">condensed</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">_MIN_VISEME_GAP_S</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">condensed</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
-        <span class="n">kfs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">KeyframeJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">condensed</span><span class="p">:</span>
-            <span class="n">t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
-            <span class="n">kfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">))</span>
-        <span class="c1"># Always end with rest so the mouth closes when the line stops.</span>
-        <span class="k">if</span> <span class="n">kfs</span> <span class="ow">and</span> <span class="n">kfs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">:</span>
-            <span class="n">kfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">"X"</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">))</span>
 
-        <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
-            <span class="n">duration</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
-            <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
-                <span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"viseme"</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">kfs</span><span class="p">),</span>
-            <span class="p">],</span>
-        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">mouth_paths</span><span class="p">:</span>
+            <span class="n">mapped</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="n">VISEME_CHANNEL</span><span class="p">])</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">rest_key</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">VISEME_CHANNEL</span><span class="p">)</span>
+            <span class="n">usable</span> <span class="o">=</span> <span class="p">[(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">condensed</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mapped</span><span class="p">]</span>
+            <span class="n">dropped</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">v</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">condensed</span><span class="p">}</span> <span class="o">-</span> <span class="n">mapped</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dropped</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> dialogue line </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: viseme code(s) "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dropped</span><span class="si">}</span><span class="s2"> have no resolved art on </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2"> (it has: "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">mapped</span><span class="p">)</span><span class="si">}</span><span class="s2">); those keyframes were dropped, so the "</span>
+                    <span class="s2">"mouth holds its previous shape through them."</span><span class="p">,</span>
+                    <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">rest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> dialogue line </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2"> has no "</span>
+                    <span class="s2">"rest key in its viseme set (no key maps to the node's "</span>
+                    <span class="s2">"default attachment, and there is no 'X'), so no viseme "</span>
+                    <span class="s2">"channel was emitted for it — a mouth that cannot close "</span>
+                    <span class="s2">"should not start talking."</span><span class="p">,</span>
+                    <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">kfs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">KeyframeJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">usable</span>
+                <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">line</span><span class="o">.</span><span class="n">duration</span>
+            <span class="p">]</span>
+            <span class="c1"># The rest key is an INVARIANT, not a conditionally-appended</span>
+            <span class="c1"># keyframe: a raw keyframe landing at (or clamping to) exactly</span>
+            <span class="c1"># line.duration used to suppress the append, freezing the mouth</span>
+            <span class="c1"># in its last viseme forever after the line. And it is DERIVED</span>
+            <span class="c1"># (the key whose art is the node's default attachment), not the</span>
+            <span class="c1"># literal 'X' — a set keyed by MPEG-4 numbers or Azure names</span>
+            <span class="c1"># closes its mouth too.</span>
+            <span class="n">kfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">rest</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">))</span>
 
-        <span class="n">placed</span> <span class="o">=</span> <span class="n">PlacedClipJSON</span><span class="p">(</span>
-            <span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
-            <span class="n">start_time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">start</span><span class="p">),</span>
-            <span class="n">duration</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="n">track</span> <span class="o">=</span> <span class="n">track_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">speaker</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">track</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">track</span> <span class="o">=</span> <span class="n">TrackJSON</span><span class="p">(</span><span class="n">target_root</span><span class="o">=</span><span class="n">speaker</span><span class="p">,</span> <span class="n">clips</span><span class="o">=</span><span class="p">[])</span>
-            <span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
-            <span class="n">track_lookup</span><span class="p">[</span><span class="n">speaker</span><span class="p">]</span> <span class="o">=</span> <span class="n">track</span>
-        <span class="n">track</span><span class="o">.</span><span class="n">clips</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">placed</span><span class="p">)</span>
+            <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__viseme__</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span><span class="w"> </span><span class="s1">'.'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
+                <span class="n">duration</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">ChannelJSON</span><span class="p">(</span>
+                        <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">VISEME_CHANNEL</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">kfs</span>
+                    <span class="p">),</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">track</span> <span class="o">=</span> <span class="n">track_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">speaker</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">track</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">track</span> <span class="o">=</span> <span class="n">TrackJSON</span><span class="p">(</span><span class="n">target_root</span><span class="o">=</span><span class="n">speaker</span><span class="p">,</span> <span class="n">clips</span><span class="o">=</span><span class="p">[])</span>
+                <span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
+                <span class="n">track_lookup</span><span class="p">[</span><span class="n">speaker</span><span class="p">]</span> <span class="o">=</span> <span class="n">track</span>
+            <span class="n">track</span><span class="o">.</span><span class="n">clips</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">PlacedClipJSON</span><span class="p">(</span>
+                    <span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
+                    <span class="n">start_time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">start</span><span class="p">),</span>
+                    <span class="n">duration</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="c1"># Emotion-driven eyebrow expression — set both brows' rotation while</span>
-        <span class="c1"># the line is active, restore to neutral at the end.</span>
+        <span class="c1"># the line is active, restore to neutral at the end. Node existence is</span>
+        <span class="c1"># checked (an#87): a rig whose brow art failed to resolve drops the</span>
+        <span class="c1"># node silently, and an unchecked channel then hard-crashed at frame</span>
+        <span class="c1"># time in applyPose — the exact policy the mouth check above exists</span>
+        <span class="c1"># for, previously applied to only one of the two emissions.</span>
         <span class="n">emotion</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">emotion</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">emotion</span> <span class="ow">in</span> <span class="n">_EMOTION_BROWS</span><span class="p">:</span>
+            <span class="n">track</span> <span class="o">=</span> <span class="n">track_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">speaker</span><span class="p">)</span>
             <span class="n">tilt_l</span><span class="p">,</span> <span class="n">tilt_r</span> <span class="o">=</span> <span class="n">_EMOTION_BROWS</span><span class="p">[</span><span class="n">emotion</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">brow_name</span><span class="p">,</span> <span class="n">tilt</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"left_brow"</span><span class="p">,</span> <span class="n">tilt_l</span><span class="p">),</span> <span class="p">(</span><span class="s2">"right_brow"</span><span class="p">,</span> <span class="n">tilt_r</span><span class="p">)):</span>
+                <span class="n">brow_target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">speaker</span><span class="si">}</span><span class="s2">/head/</span><span class="si">{</span><span class="n">brow_name</span><span class="si">}</span><span class="s2">"</span>
+                <span class="k">if</span> <span class="n">vocab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">brow_target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">paths</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> dialogue line </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> carries emotion "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">emotion</span><span class="si">!r}</span><span class="s2">, but </span><span class="si">{</span><span class="n">brow_target</span><span class="si">!r}</span><span class="s2"> is not in the built "</span>
+                        <span class="s2">"scene (brow art missing?); its channel was not "</span>
+                        <span class="s2">"emitted."</span><span class="p">,</span>
+                        <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+                        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
                 <span class="n">emo_anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__emo__</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">brow_name</span><span class="si">}</span><span class="s2">"</span>
                 <span class="n">animations</span><span class="p">[</span><span class="n">emo_anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
                     <span class="n">name</span><span class="o">=</span><span class="n">emo_anim_id</span><span class="p">,</span>
                     <span class="n">duration</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
                     <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
                         <span class="n">ChannelJSON</span><span class="p">(</span>
-                            <span class="n">target</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">speaker</span><span class="si">}</span><span class="s2">/head/</span><span class="si">{</span><span class="n">brow_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                            <span class="n">target</span><span class="o">=</span><span class="n">brow_target</span><span class="p">,</span>
                             <span class="nb">property</span><span class="o">=</span><span class="s2">"rotation"</span><span class="p">,</span>
                             <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span>
                                 <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">tilt</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">),</span>
@@ -1569,6 +2046,10 @@
                         <span class="p">)</span>
                     <span class="p">],</span>
                 <span class="p">)</span>
+                <span class="k">if</span> <span class="n">track</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">track</span> <span class="o">=</span> <span class="n">TrackJSON</span><span class="p">(</span><span class="n">target_root</span><span class="o">=</span><span class="n">speaker</span><span class="p">,</span> <span class="n">clips</span><span class="o">=</span><span class="p">[])</span>
+                    <span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
+                    <span class="n">track_lookup</span><span class="p">[</span><span class="n">speaker</span><span class="p">]</span> <span class="o">=</span> <span class="n">track</span>
                 <span class="n">track</span><span class="o">.</span><span class="n">clips</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">PlacedClipJSON</span><span class="p">(</span>
                         <span class="n">animation_id</span><span class="o">=</span><span class="n">emo_anim_id</span><span class="p">,</span>

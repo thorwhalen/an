@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.stores &mdash; an 0.1.49 documentation</title>
+  <title>an.base &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -162,7 +162,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">an.stores</li>
+      <li class="breadcrumb-item active">an.base</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -171,106 +171,187 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for an.stores</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""Project mall: a dict of dol-backed `MutableMapping` stores.</span>
+  <h1>Source code for an.base</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Core types, constants, and re-exports for an.</span>
 
-<span class="sd">The mall is the unit of persistence in an. Every long-lived state — assets</span>
-<span class="sd">(characters, environments, voices, styles), the scene file pair, intermediate</span>
-<span class="sd">artifacts (audio, viseme tracks, per-shot mp4s), final output, and the agent's</span>
-<span class="sd">decision log — is keyed inside a store. Stores are dol-backed so the same call</span>
-<span class="sd">sites work against filesystem, SQLite, S3, etc.</span>
+<span class="sd">This module is the *type vocabulary* shared across the package: schema versions,</span>
+<span class="sd">default render parameters, easing presets, type aliases for paths and time. Heavy</span>
+<span class="sd">data classes (the Pydantic IR models, the Renderer/Verifier protocols) live in</span>
+<span class="sd">their own subpackages and are re-exported from `an` itself.</span>
 
-<span class="sd">&gt;&gt;&gt; import tempfile</span>
-<span class="sd">&gt;&gt;&gt; from pathlib import Path</span>
-<span class="sd">&gt;&gt;&gt; with tempfile.TemporaryDirectory() as d:</span>
-<span class="sd">...     mall = build_project_mall(d, ensure=True)</span>
-<span class="sd">...     sorted(mall.keys()) == [</span>
-<span class="sd">...         'audio', 'characters', 'decisions', 'environments',</span>
-<span class="sd">...         'output', 'previews', 'scenes', 'shots', 'styles',</span>
-<span class="sd">...         'visemes', 'voices',</span>
-<span class="sd">...     ]</span>
-<span class="sd">True</span>
+<span class="sd">Keep this module small and dependency-light. Everything here should import in a</span>
+<span class="sd">fraction of a second so the CLI is snappy.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">MutableMapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypeAlias</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.stores.characters</span><span class="w"> </span><span class="kn">import</span> <span class="n">CharactersStore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.stores.decisions</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionLogStore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.stores.environments</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnvironmentsStore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.stores.scenes</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScenesStore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.stores.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">StylesStore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.stores.voices</span><span class="w"> </span><span class="kn">import</span> <span class="n">VoicesStore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.stores.artifacts</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">AudioArtifactStore</span><span class="p">,</span>
-    <span class="n">OutputStore</span><span class="p">,</span>
-    <span class="n">PreviewArtifactStore</span><span class="p">,</span>
-    <span class="n">ShotArtifactStore</span><span class="p">,</span>
-    <span class="n">VisemeArtifactStore</span><span class="p">,</span>
+<span class="c1"># -- Versioning ---------------------------------------------------------------</span>
+
+<span class="c1">#: Current Scene IR schema version. Bump on additive changes; on breaking</span>
+<span class="c1">#: changes, also bump COMPATIBLE_VERSION and add a migration in `ir.migrate`.</span>
+<span class="n">SCHEMA_VERSION</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.1.0"</span>
+
+<span class="c1">#: Minimum Scene IR version this code can still read without migration.</span>
+<span class="n">COMPATIBLE_VERSION</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.1.0"</span>
+
+
+<span class="c1"># -- Render defaults ----------------------------------------------------------</span>
+
+<span class="n">DEFAULT_FPS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">DEFAULT_RESOLUTION</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1920</span><span class="p">,</span> <span class="mi">1080</span><span class="p">)</span>
+<span class="n">DEFAULT_DURATION</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>  <span class="c1"># seconds, used when a shot omits one</span>
+
+<span class="c1">#: Render at this many times the declared resolution, then resolve back with an</span>
+<span class="c1">#: exact block mean. **1 is off, and off is free**: the un-supersampled path</span>
+<span class="c1">#: keeps Chromium's own PNG bytes and pays nothing.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Here rather than in `an.adapters.cutout.supersample`, where the rest of the</span>
+<span class="c1">#: mechanism lives, because `an/adapters/_base.py` needs it for</span>
+<span class="c1">#: `RenderContext`'s default and importing the cutout package from there is a</span>
+<span class="c1">#: real cycle (`_base` -&gt; `cutout` -&gt; `render` -&gt; `_base`), not a hypothetical</span>
+<span class="c1">#: one. `an/base.py` imports nothing from `an`.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The default stays 1 deliberately. Supersampling ships OPT-IN with its A/B</span>
+<span class="c1">#: committed (an#58, discussion #52), per the standing rule that a default</span>
+<span class="c1">#: chosen by taste ships opt-in and the flip is its own one-line change.</span>
+<span class="n">DEFAULT_SUPERSAMPLE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+
+
+<span class="c1"># -- Delivery -----------------------------------------------------------------</span>
+
+<span class="c1">#: Put the mp4's `moov` atom in front of `mdat`, so a player can start before</span>
+<span class="c1">#: the file has finished downloading.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Here, and not beside one of the ffmpeg calls, because **three separate</span>
+<span class="c1">#: commands build the one file a user receives** -- the frame mux</span>
+<span class="c1">#: (`_ffmpeg_mux`), the audio mux (`_ffmpeg_add_audio`) and the concat</span>
+<span class="c1">#: (`_ffmpeg_concat`) -- and each of the last two re-lays the container with</span>
+<span class="c1">#: `-c copy`, which writes `moov` LAST. The flag was on the first of those</span>
+<span class="c1">#: alone, which reads as done and delivers nothing: it applied only to</span>
+<span class="c1">#: `silent.mp4`, a per-shot intermediate that is never handed to anyone.</span>
+<span class="c1">#: Measured on a local example render (these mp4s are gitignored build</span>
+<span class="c1">#: products; `git ls-files` tracks exactly one, and it is moov-last too):</span>
+<span class="c1">#: `.an/render_work/shot_s1/silent.mp4` is `ftyp moov free mdat`, while the</span>
+<span class="c1">#: per-shot mp4, `artifacts/shots/*.mp4` and `output/main.mp4` are all</span>
+<span class="c1">#: `ftyp free mdat moov`. Single-shot and multi-shot alike; an#57's</span>
+<span class="c1">#: "single-shot ones keep it" is wrong, because the `shutil.copy` branch</span>
+<span class="c1">#: copies a file that already lost it.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Deliberately NOT part of `DETERMINISTIC_X264_ARGS`. That tuple is an</span>
+<span class="c1">#: `ENCODE_ENV_PATHS` comparability key (an/bench/compare.py:98), and this flag</span>
+<span class="c1">#: moves no number the panel reads: with `-c copy` it is a container rewrite,</span>
+<span class="c1">#: not a re-encode. Verified on ffmpeg 8.1 -- elementary-stream sha256</span>
+<span class="c1">#: identical, video/audio packet totals identical, file size identical,</span>
+<span class="c1">#: decoded YUV sha256 identical, wall time unchanged.</span>
+<span class="n">MP4_FASTSTART_ARGS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"-movflags"</span><span class="p">,</span> <span class="s2">"+faststart"</span><span class="p">)</span>
+
+
+<span class="c1"># -- Easing -------------------------------------------------------------------</span>
+
+<span class="c1">#: Named easing presets. Renderers should accept these and the cubic-Bézier</span>
+<span class="c1">#: 4-tuple form `[cx1, cy1, cx2, cy2]`. Names follow the GSAP / CSS convention.</span>
+<span class="n">EASING_PRESETS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"linear"</span><span class="p">,</span>
+    <span class="s2">"ease"</span><span class="p">,</span>
+    <span class="s2">"ease_in"</span><span class="p">,</span>
+    <span class="s2">"ease_out"</span><span class="p">,</span>
+    <span class="s2">"ease_in_out"</span><span class="p">,</span>
+    <span class="s2">"step"</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"CharactersStore"</span><span class="p">,</span>
-    <span class="s2">"EnvironmentsStore"</span><span class="p">,</span>
-    <span class="s2">"VoicesStore"</span><span class="p">,</span>
-    <span class="s2">"StylesStore"</span><span class="p">,</span>
-    <span class="s2">"ScenesStore"</span><span class="p">,</span>
-    <span class="s2">"AudioArtifactStore"</span><span class="p">,</span>
-    <span class="s2">"VisemeArtifactStore"</span><span class="p">,</span>
-    <span class="s2">"ShotArtifactStore"</span><span class="p">,</span>
-    <span class="s2">"PreviewArtifactStore"</span><span class="p">,</span>
-    <span class="s2">"OutputStore"</span><span class="p">,</span>
-    <span class="s2">"DecisionLogStore"</span><span class="p">,</span>
-    <span class="s2">"build_project_mall"</span><span class="p">,</span>
+
+<span class="c1"># -- Animatable transform vocabulary -----------------------------------------</span>
+
+<span class="c1">#: The property names the cutout runtime animates NUMERICALLY. Any other</span>
+<span class="c1">#: property on a set/tween names a swap SET declared by the target entity's</span>
+<span class="c1">#: descriptor (an#87). This is the SSOT the three consumers share so the IR</span>
+<span class="c1">#: validator, the character validator and the compiler cannot drift: the</span>
+<span class="c1">#: compiler derives its rest-value table from ``TransformJSON`` and a test</span>
+<span class="c1">#: asserts that derivation equals this set. Lives here because ``an.base`` is</span>
+<span class="c1">#: the one module all three layers may import.</span>
+<span class="n">TRANSFORM_PROPERTIES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"x"</span><span class="p">,</span>
+        <span class="s2">"y"</span><span class="p">,</span>
+        <span class="s2">"rotation"</span><span class="p">,</span>
+        <span class="s2">"rotation_rad"</span><span class="p">,</span>
+        <span class="s2">"scale_x"</span><span class="p">,</span>
+        <span class="s2">"scale_y"</span><span class="p">,</span>
+        <span class="s2">"skew_x"</span><span class="p">,</span>
+        <span class="s2">"skew_y"</span><span class="p">,</span>
+        <span class="s2">"pivot_x"</span><span class="p">,</span>
+        <span class="s2">"pivot_y"</span><span class="p">,</span>
+        <span class="s2">"alpha"</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1">#: Characters within which a swap-set name is not addressable: ``/`` would read</span>
+<span class="c1">#: as a path segment and ``::`` is the runtime's pose-key separator.</span>
+<span class="n">SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="s2">"::"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="swap_set_name_problem">
+<a class="viewcode-back" href="../../module_docs/an/base.html#an.base.swap_set_name_problem">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">swap_set_name_problem</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Why ``name`` cannot be a swap-set name, or ``None`` if it can.</span>
+
+<span class="sd">    &gt;&gt;&gt; swap_set_name_problem("hands") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; swap_set_name_problem("alpha")</span>
+<span class="sd">    "'alpha' is a transform property; the runtime's static switch would shadow the set"</span>
+<span class="sd">    &gt;&gt;&gt; swap_set_name_problem("a::b")</span>
+<span class="sd">    "'a::b' contains '::', which is reserved"</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">TRANSFORM_PROPERTIES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is a transform property; the runtime's static switch "</span>
+            <span class="s2">"would shadow the set"</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> contains </span><span class="si">{</span><span class="n">bad</span><span class="si">!r}</span><span class="s2">, which is reserved"</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"a swap-set name may not be empty"</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<span class="c1"># -- Type aliases -------------------------------------------------------------</span>
+
+<span class="c1">#: Slash-delimited node path, e.g. ``"charlie/head/mouth"``.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The example matters: an unknown target now RAISES rather than being skipped,</span>
+<span class="c1">#: and the long-standing ``"charlie/torso/left_arm"`` illustration names a node</span>
+<span class="c1">#: no rig actually builds — the cutout rigs are flat, so arms are siblings of</span>
+<span class="c1">#: the torso, not children of it.</span>
+<span class="n">PathStr</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="nb">str</span>
+
+<span class="c1">#: Time in seconds. Floats at the IR boundary; rational time is used internally</span>
+<span class="c1">#: only inside the audio pipeline where drift matters.</span>
+<span class="n">Seconds</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="nb">float</span>
+
+<span class="c1">#: Either an easing preset name or a 4-tuple cubic-Bézier control [cx1,cy1,cx2,cy2].</span>
+<span class="n">EasingSpec</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+
+
+<span class="c1"># -- Style enum ---------------------------------------------------------------</span>
+
+<span class="c1">#: The renderer-style of a shot. The orchestrator uses this to pick an adapter.</span>
+<span class="n">StyleName</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span>
+    <span class="s2">"cutout"</span><span class="p">,</span>
+    <span class="s2">"manim"</span><span class="p">,</span>
+    <span class="s2">"motion_graphics"</span><span class="p">,</span>
+    <span class="s2">"whiteboard"</span><span class="p">,</span>
 <span class="p">]</span>
 
-
-<div class="viewcode-block" id="build_project_mall">
-<a class="viewcode-back" href="../../module_docs/an/stores.html#an.build_project_mall">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">build_project_mall</span><span class="p">(</span>
-    <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ensure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">MutableMapping</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Build the standard project mall over ``project_dir``.</span>
-
-<span class="sd">    Pass ``ensure=True`` to create the per-store directories on disk if they</span>
-<span class="sd">    don't exist. Pass keyword overrides to swap in alternate stores (e.g. an</span>
-<span class="sd">    in-memory `dict` for tests).</span>
-<span class="sd">    """</span>
-    <span class="n">pdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">ensure</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="s2">"assets/characters"</span><span class="p">,</span>
-            <span class="s2">"assets/environments"</span><span class="p">,</span>
-            <span class="s2">"assets/voices"</span><span class="p">,</span>
-            <span class="s2">"assets/styles"</span><span class="p">,</span>
-            <span class="s2">"ir"</span><span class="p">,</span>
-            <span class="s2">"artifacts/audio"</span><span class="p">,</span>
-            <span class="s2">"artifacts/visemes"</span><span class="p">,</span>
-            <span class="s2">"artifacts/shots"</span><span class="p">,</span>
-            <span class="s2">"artifacts/previews"</span><span class="p">,</span>
-            <span class="s2">"output"</span><span class="p">,</span>
-            <span class="s2">".an"</span><span class="p">,</span>
-        <span class="p">):</span>
-            <span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="n">sub</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">mall</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"characters"</span><span class="p">:</span> <span class="n">CharactersStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"characters"</span><span class="p">),</span>
-        <span class="s2">"environments"</span><span class="p">:</span> <span class="n">EnvironmentsStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"environments"</span><span class="p">),</span>
-        <span class="s2">"voices"</span><span class="p">:</span> <span class="n">VoicesStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"voices"</span><span class="p">),</span>
-        <span class="s2">"styles"</span><span class="p">:</span> <span class="n">StylesStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"styles"</span><span class="p">),</span>
-        <span class="s2">"scenes"</span><span class="p">:</span> <span class="n">ScenesStore</span><span class="p">(</span><span class="n">pdir</span><span class="p">),</span>
-        <span class="s2">"audio"</span><span class="p">:</span> <span class="n">AudioArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"audio"</span><span class="p">),</span>
-        <span class="s2">"visemes"</span><span class="p">:</span> <span class="n">VisemeArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"visemes"</span><span class="p">),</span>
-        <span class="s2">"shots"</span><span class="p">:</span> <span class="n">ShotArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"shots"</span><span class="p">),</span>
-        <span class="s2">"previews"</span><span class="p">:</span> <span class="n">PreviewArtifactStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"previews"</span><span class="p">),</span>
-        <span class="s2">"output"</span><span class="p">:</span> <span class="n">OutputStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">"output"</span><span class="p">),</span>
-        <span class="s2">"decisions"</span><span class="p">:</span> <span class="n">DecisionLogStore</span><span class="p">(</span><span class="n">pdir</span> <span class="o">/</span> <span class="s2">".an"</span> <span class="o">/</span> <span class="s2">"decisions.jsonl"</span><span class="p">),</span>
-    <span class="p">}</span>
-    <span class="n">mall</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">mall</span></div>
-
+<span class="n">SUPPORTED_STYLES</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"cutout"</span><span class="p">,</span>
+    <span class="s2">"manim"</span><span class="p">,</span>
+    <span class="s2">"motion_graphics"</span><span class="p">,</span>
+    <span class="s2">"whiteboard"</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 
            </div>

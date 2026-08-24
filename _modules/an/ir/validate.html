@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.validate &mdash; an 0.1.48 documentation</title>
+  <title>an.ir.validate &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=b5e87a2a"></script>
+      <script src="../../../_static/documentation_options.js?v=1190fe33"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -192,6 +192,9 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRANSFORM_PROPERTIES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">flatten</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span>
 
 
@@ -290,6 +293,109 @@
 <span class="n">_DRAWABLE_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"character"</span><span class="p">,</span> <span class="s2">"environment"</span><span class="p">})</span>
 <span class="n">_CONFIGURING_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"voice"</span><span class="p">,</span> <span class="s2">"style"</span><span class="p">})</span>
 
+<span class="c1">#: Any property outside the transform vocabulary on a set/tween names a swap</span>
+<span class="c1">#: SET, which must be declared by the target entity's descriptor (an#87). The</span>
+<span class="c1">#: vocabulary itself is the shared SSOT in ``an.base`` (importable by every</span>
+<span class="c1">#: layer); the compiler's rest-value table is asserted equal to it by test.</span>
+<span class="n">_TRANSFORM_PROPERTIES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">TRANSFORM_PROPERTIES</span>
+
+<span class="c1">#: The swap sets a descriptor-less (procedural) rig supports — declared as</span>
+<span class="c1">#: data on its drawn mouth by the compiler (`PROCEDURAL_MOUTH_SETS`). This</span>
+<span class="c1">#: layer cannot import the adapter, so the value is duplicated here and</span>
+<span class="c1">#: pinned against the compiler's constant by ``tests/test_swap_channels.py``.</span>
+<span class="n">_PROCEDURAL_SWAP_SETS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"viseme"</span><span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_swap_references</span><span class="p">(</span>
+    <span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">,</span> <span class="n">available_characters</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A set/tween on a non-transform property must name a declared asset set</span>
+<span class="sd">    and key of its target entity's descriptor — checked HERE, before the</span>
+<span class="sd">    author pays for TTS or a Chromium launch, because compile raises on it</span>
+<span class="sd">    (an#87). Same charter as `_check_renderable`; needs the store, so it runs</span>
+<span class="sd">    from `validate_semantic`'s shot loop.</span>
+
+<span class="sd">    Descriptor-less (procedural) entities get a carve-out for `viseme` — the</span>
+<span class="sd">    compiler validates its codes against the drawn-mouth shapes — and an</span>
+<span class="sd">    error for anything else, matching the compiler's verdicts.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">available_characters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">refs_by_entity</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">e</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">ref</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"character"</span>
+    <span class="p">}</span>
+    <span class="c1"># Flattened, like the compiler: the documented `start:` idiom wraps every</span>
+    <span class="c1"># leaf in a `sequence`, so walking only top-level actions would miss the</span>
+    <span class="c1"># common case (an#87 review) — an authoring-time gate that only sees the</span>
+    <span class="c1"># top level is a gate with a hole in it.</span>
+    <span class="n">leaves</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">flatten</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">leaves</span><span class="p">:</span>
+        <span class="n">prop</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"property"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">_TRANSFORM_PROPERTIES</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+        <span class="n">entity_id</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">refs_by_entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">)</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="n">available_characters</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">candidate</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"CharacterDescriptor"</span>
+            <span class="p">):</span>
+                <span class="c1"># The MIGRATED document, as the compiler reads it: every</span>
+                <span class="c1"># committed pre-0.3.0 descriptor has no `asset_sets` on disk</span>
+                <span class="c1"># (0.1.0 carries `viseme_map`; `eyelid` is migration-seeded),</span>
+                <span class="c1"># so the raw dict would refuse swaps the compiler accepts.</span>
+                <span class="n">desc</span> <span class="o">=</span> <span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">prop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_PROCEDURAL_SWAP_SETS</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"error"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/actions/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"property </span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> is not a transform, and "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2"> has no descriptor declaring asset sets — "</span>
+                    <span class="s2">"compiling this shot raises. Procedural rigs support "</span>
+                    <span class="sa">f</span><span class="s2">"exactly </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_PROCEDURAL_SWAP_SETS</span><span class="p">)</span><span class="si">}</span><span class="s2"> on their mouth."</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">declared</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asset_sets"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">prop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">declared</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="s2">"error"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/actions/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"property </span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> names no declared asset set of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2"> (it has: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">declared</span><span class="p">)</span><span class="si">}</span><span class="s2">) — compiling "</span>
+                <span class="s2">"this shot raises."</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">declared</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">v</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"from_value"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"to_value"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"error"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/actions/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2"> is not a declared key of </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2">'s "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> set (it has: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span><span class="si">}</span><span class="s2">) — compiling "</span>
+                    <span class="s2">"this shot raises."</span><span class="p">,</span>
+                <span class="p">)</span>
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_renderable</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Report, at validate time, what compile and render will refuse.</span>
@@ -358,8 +464,10 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Cross-field semantic checks. Pass live stores in for cross-store checks.</span>
 
-<span class="sd">    Both ``available_voices`` and ``available_characters`` accept any mapping;</span>
-<span class="sd">    only their ``__contains__`` is consulted. Pass ``None`` to skip those checks.</span>
+<span class="sd">    Both ``available_voices`` and ``available_characters`` accept any mapping.</span>
+<span class="sd">    Voices are consulted via ``__contains__`` only; characters additionally</span>
+<span class="sd">    via ``__getitem__`` (the swap-reference check reads descriptor dicts,</span>
+<span class="sd">    an#87). Pass ``None`` to skip those checks.</span>
 <span class="sd">    """</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">ValidationReport</span><span class="p">()</span>
 
@@ -388,6 +496,7 @@
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/duration"</span><span class="p">,</span> <span class="s2">"shot duration must be &gt; 0"</span><span class="p">)</span>
 
         <span class="n">_check_renderable</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
+        <span class="n">_check_swap_references</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">available_characters</span><span class="p">)</span>
 
         <span class="c1"># Entity references resolve?</span>
         <span class="k">if</span> <span class="n">available_characters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

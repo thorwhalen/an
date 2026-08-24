@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.schema &mdash; an 0.1.48 documentation</title>
+  <title>an.characters.schema &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=b5e87a2a"></script>
+      <script src="../../../_static/documentation_options.js?v=1190fe33"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -200,8 +200,10 @@
 <span class="sd">- **animations** — built-in idle loops (breath, blink) keyed by name.</span>
 
 <span class="sd">A slot's name **is** its scene-graph node name, which is why the face slots read</span>
-<span class="sd">``left_eye`` rather than ``eye_l``; attachment names are a separate namespace and</span>
-<span class="sd">keep the file-derived spelling.</span>
+<span class="sd">``left_eye`` rather than ``eye_l``; attachment names are a separate, per-slot</span>
+<span class="sd">namespace — file-derived for single-attachment slots, and shared key-like names</span>
+<span class="sd">(``open``/``closed`` on both eye slots, 0.3.0) where one swap set must drive</span>
+<span class="sd">several slots.</span>
 
 <span class="sd">&gt;&gt;&gt; char = CharacterDescriptor(name="maya")</span>
 <span class="sd">&gt;&gt;&gt; char.asset_sets["viseme"]["A"]</span>
@@ -224,7 +226,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentKind</span><span class="p">,</span> <span class="n">register_kind</span><span class="p">,</span> <span class="n">register_migration</span>
 
 
-<span class="n">CHARACTER_SCHEMA_VERSION</span> <span class="o">=</span> <span class="s2">"0.2.0"</span>
+<span class="n">CHARACTER_SCHEMA_VERSION</span> <span class="o">=</span> <span class="s2">"0.3.0"</span>
 
 <span class="c1">#: The descriptor is a schema-versioned document in its own right, with its own</span>
 <span class="c1">#: version field. Registered here rather than in :mod:`an.ir.migrate` because</span>
@@ -248,17 +250,31 @@
 <span class="c1">#: because Rhubarb emits A-X; lowercase attachment names by convention.</span>
 <span class="n">DEFAULT_VISEME_MAP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span> <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">MOUTH_SHAPES</span><span class="p">}</span>
 
-<span class="c1">#: The swap channel lip-sync drives. Named because Wave 5 generalises swaps to</span>
-<span class="c1">#: `hands`, `body_facing`, `eyelid` and more; `viseme` is a conventional set</span>
-<span class="c1">#: name, not a special case in control flow.</span>
+<span class="c1">#: The swap channel lip-sync drives. `viseme` is a conventional set name, not</span>
+<span class="c1">#: a special case in control flow (an#87): the compiler projects EVERY</span>
+<span class="c1">#: `asset_sets` channel onto the slots whose attachments its keys name, and</span>
+<span class="c1">#: the runtime applies any projected channel the same way.</span>
 <span class="n">VISEME_CHANNEL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"viseme"</span>
+
+<span class="c1">#: The swap channel blinks drive. One set serves BOTH eye slots because the</span>
+<span class="c1">#: eye slots share per-slot attachment names (`open` / `closed`) — the 0.3.0</span>
+<span class="c1">#: migration renamed them from the file-derived `eye_l_open` spelling for</span>
+<span class="c1">#: exactly this: a set's keys are looked up per slot, so slots that a single</span>
+<span class="c1">#: channel must drive together need attachment names in common.</span>
+<span class="n">EYELID_CHANNEL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eyelid"</span>
+
+<span class="c1">#: Default eyelid-state → attachment-name mapping, shared by both eye slots.</span>
+<span class="n">DEFAULT_EYELID_MAP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"OPEN"</span><span class="p">:</span> <span class="s2">"open"</span><span class="p">,</span> <span class="s2">"CLOSED"</span><span class="p">:</span> <span class="s2">"closed"</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="default_asset_sets">
 <a class="viewcode-back" href="../../../module_docs/an/characters/schema.html#an.characters.default_asset_sets">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">default_asset_sets</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""``{channel: {key: attachment_name}}`` for a freshly-built character."""</span>
-    <span class="k">return</span> <span class="p">{</span><span class="n">VISEME_CHANNEL</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DEFAULT_VISEME_MAP</span><span class="p">)}</span></div>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">VISEME_CHANNEL</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DEFAULT_VISEME_MAP</span><span class="p">),</span>
+        <span class="n">EYELID_CHANNEL</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DEFAULT_EYELID_MAP</span><span class="p">),</span>
+    <span class="p">}</span></div>
 
 
 
@@ -501,6 +517,19 @@
     <span class="c1">#: quietly stops being carried. Pinned by test.</span>
     <span class="n">source</span><span class="p">:</span> <span class="n">AssetSource</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
+    <span class="c1">#: Whether this character's face is drawn as separate overlay parts</span>
+    <span class="c1">#: (eyes, brows, mouth as their own slots — the default) or baked into the</span>
+    <span class="c1">#: head art (DiceBear / external avatars). ``False`` suppresses the face</span>
+    <span class="c1">#: overlay slots at rig build AND the viseme/emotion channels at dialogue</span>
+    <span class="c1">#: compile — a baked face has no overlay mouth to drive.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: This is a **declared fact**, replacing the old vendor-name check on</span>
+    <span class="c1">#: ``metadata.art_provenance`` (an#87): provenance says where art came</span>
+    <span class="c1">#: from; this says what the art IS. The 0.2.0 → 0.3.0 migration derives it</span>
+    <span class="c1">#: from the provenance string once, and ``art_provenance`` reverts to pure</span>
+    <span class="c1">#: provenance/licensing metadata.</span>
+    <span class="n">face_overlay</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
     <span class="c1">#: Free-form metadata (dicebear style/seed, etc.). Schema-evolution</span>
     <span class="c1">#: friendly: anything an external tool wants to record can land here.</span>
     <span class="c1">#:</span>
@@ -603,6 +632,109 @@
     <span class="k">return</span> <span class="n">doc</span>
 
 
+<span class="c1">#: Eye attachment-name renames carried by 0.2.0 -&gt; 0.3.0: both eye slots take</span>
+<span class="c1">#: the shared per-slot keys `open`/`closed` so ONE `eyelid` set can project</span>
+<span class="c1">#: onto both. Keyed per slot because the old names were per-side.</span>
+<span class="n">_EYE_ATTACHMENT_RENAMES_0_3_0</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"left_eye"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"eye_l_open"</span><span class="p">:</span> <span class="s2">"open"</span><span class="p">,</span> <span class="s2">"eye_l_closed"</span><span class="p">:</span> <span class="s2">"closed"</span><span class="p">},</span>
+    <span class="s2">"right_eye"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"eye_r_open"</span><span class="p">:</span> <span class="s2">"open"</span><span class="p">,</span> <span class="s2">"eye_r_closed"</span><span class="p">:</span> <span class="s2">"closed"</span><span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1">#: `metadata.art_provenance` values that mean the face is baked into the head</span>
+<span class="c1">#: art. Consumed ONLY by the 0.3.0 migration below — live code reads the</span>
+<span class="c1">#: declared `face_overlay` field instead (an#87). `external_avatar` never had</span>
+<span class="c1">#: a writer; it is kept here so any hand-authored descriptor carrying it</span>
+<span class="c1">#: migrates the way the old special case treated it.</span>
+<span class="n">_FACE_BAKED_PROVENANCES_0_3_0</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"dicebear"</span><span class="p">,</span> <span class="s2">"external_avatar"</span><span class="p">)</span>
+
+
+<span class="nd">@register_migration</span><span class="p">(</span><span class="n">CHARACTER_DOCUMENT_KIND</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"0.2.0"</span><span class="p">,</span> <span class="s2">"0.3.0"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_character_0_2_0_to_0_3_0</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Four coherent changes, one migration (an#87).</span>
+
+<span class="sd">    (a) ``face_overlay`` becomes a declared fact, derived once from the old</span>
+<span class="sd">    ``metadata.art_provenance`` vendor-name check; (b) eye attachment names</span>
+<span class="sd">    become the shared per-slot keys ``open``/``closed`` (paths unchanged);</span>
+<span class="sd">    (c) ``asset_sets`` gains the ``eyelid`` channel; (d) stored idle-animation</span>
+<span class="sd">    tracks are repaired — the 0.2.0 migration renamed slots in ``slots`` and</span>
+<span class="sd">    ``skins`` but never touched ``animations``, so every stored descriptor</span>
+<span class="sd">    carried stale ``slot:eye_l.attachment`` targets (latent only because</span>
+<span class="sd">    nothing consumed the field; PlayAction resolution makes it live).</span>
+
+<span class="sd">    &gt;&gt;&gt; out = _character_0_2_0_to_0_3_0(</span>
+<span class="sd">    ...     {"schema_version": "0.2.0",</span>
+<span class="sd">    ...      "metadata": {"art_provenance": "dicebear"},</span>
+<span class="sd">    ...      "skins": {"default": {"slots": {"left_eye": {"eye_l_open": {"path": "parts/eye_l_open.svg"}}}}},</span>
+<span class="sd">    ...      "slots": [{"name": "left_eye", "bone": "head", "attachment": "eye_l_open"}],</span>
+<span class="sd">    ...      "animations": {"blink": {"name": "blink", "tracks": [</span>
+<span class="sd">    ...          {"target": "slot:eye_l.attachment", "type": "step",</span>
+<span class="sd">    ...           "frames": [[0.0, "eye_l_open"], [0.05, "eye_l_closed"]]}]}}}</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; out["face_overlay"], out["schema_version"]</span>
+<span class="sd">    (False, '0.3.0')</span>
+<span class="sd">    &gt;&gt;&gt; list(out["skins"]["default"]["slots"]["left_eye"])</span>
+<span class="sd">    ['open']</span>
+<span class="sd">    &gt;&gt;&gt; out["slots"][0]["attachment"]</span>
+<span class="sd">    'open'</span>
+<span class="sd">    &gt;&gt;&gt; out["animations"]["blink"]["tracks"][0]["target"]</span>
+<span class="sd">    'slot:left_eye.attachment'</span>
+<span class="sd">    &gt;&gt;&gt; [f[1] for f in out["animations"]["blink"]["tracks"][0]["frames"]]</span>
+<span class="sd">    ['open', 'closed']</span>
+<span class="sd">    &gt;&gt;&gt; out["asset_sets"]["eyelid"]</span>
+<span class="sd">    {'OPEN': 'open', 'CLOSED': 'closed'}</span>
+<span class="sd">    """</span>
+    <span class="c1"># (a) the declared face fact, from the retired vendor-name check.</span>
+    <span class="n">provenance</span> <span class="o">=</span> <span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metadata"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"art_provenance"</span><span class="p">)</span>
+    <span class="n">doc</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"face_overlay"</span><span class="p">,</span> <span class="n">provenance</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_FACE_BAKED_PROVENANCES_0_3_0</span><span class="p">)</span>
+
+    <span class="c1"># (b) per-slot eye attachment keys, in skins and slot defaults.</span>
+    <span class="n">flat_renames</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">old</span><span class="p">:</span> <span class="n">new</span>
+        <span class="k">for</span> <span class="n">per_slot</span> <span class="ow">in</span> <span class="n">_EYE_ATTACHMENT_RENAMES_0_3_0</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">per_slot</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">skin</span> <span class="ow">in</span> <span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"skins"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">slots</span> <span class="o">=</span> <span class="n">skin</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slots"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">skin</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">slots</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">renames</span> <span class="ow">in</span> <span class="n">_EYE_ATTACHMENT_RENAMES_0_3_0</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">attachments</span> <span class="o">=</span> <span class="n">slots</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">slot_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attachments</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">renames</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">old</span> <span class="ow">in</span> <span class="n">attachments</span><span class="p">:</span>
+                    <span class="n">attachments</span><span class="p">[</span><span class="n">new</span><span class="p">]</span> <span class="o">=</span> <span class="n">attachments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slots"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">slot</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">slot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attachment"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">flat_renames</span><span class="p">:</span>
+            <span class="n">slot</span><span class="p">[</span><span class="s2">"attachment"</span><span class="p">]</span> <span class="o">=</span> <span class="n">flat_renames</span><span class="p">[</span><span class="n">slot</span><span class="p">[</span><span class="s2">"attachment"</span><span class="p">]]</span>
+
+    <span class="c1"># (c) the eyelid set, only where absent — a hand-authored one wins.</span>
+    <span class="n">asset_sets</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"asset_sets"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">asset_sets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">asset_sets</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">EYELID_CHANNEL</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DEFAULT_EYELID_MAP</span><span class="p">))</span>
+
+    <span class="c1"># (d) repair stored animation tracks: the 0.2.0 slot renames, applied to</span>
+    <span class="c1"># the targets 0.2.0 missed, plus the (b) attachment renames in frames.</span>
+    <span class="k">for</span> <span class="n">anim</span> <span class="ow">in</span> <span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"animations"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">tracks</span> <span class="o">=</span> <span class="n">anim</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tracks"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">anim</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">tracks</span> <span class="ow">or</span> <span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">track</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">track</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"target"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"slot:"</span><span class="p">):</span>
+                <span class="n">rest</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">"slot:"</span><span class="p">)</span> <span class="p">:]</span>
+                <span class="n">slot_name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">prop</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">slot_name</span> <span class="ow">in</span> <span class="n">_SLOT_RENAMES_0_2_0</span><span class="p">:</span>
+                    <span class="n">track</span><span class="p">[</span><span class="s2">"target"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"slot:</span><span class="si">{</span><span class="n">_SLOT_RENAMES_0_2_0</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s2">"</span>
+                <span class="n">track</span><span class="p">[</span><span class="s2">"frames"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">flat_renames</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">track</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frames"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span>
+                <span class="p">]</span>
+
+    <span class="n">doc</span><span class="p">[</span><span class="s2">"schema_version"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"0.3.0"</span>
+    <span class="k">return</span> <span class="n">doc</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_default_bones</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Bone</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""The 7-bone default rig: root, torso, head, two arms, two legs.</span>
 
@@ -640,10 +772,13 @@
 <span class="sd">    **A slot's name IS its scene-graph node name.** The face slots read</span>
 <span class="sd">    ``left_eye`` rather than ``eye_l`` for that reason and no other: node paths</span>
 <span class="sd">    are the authoring surface (``scene.md`` targets ``charlie/left_eye:...``, and</span>
-<span class="sd">    the blink code and the doc-targeting test both address them), so the</span>
-<span class="sd">    alternative was a slot-to-node rename table — and a rename table is where a</span>
-<span class="sd">    field quietly stops being carried. Attachment names are a *separate*</span>
-<span class="sd">    namespace and keep the file-derived spelling (``eye_l_open``).</span>
+<span class="sd">    the doc-targeting test addresses them), so the alternative was a</span>
+<span class="sd">    slot-to-node rename table — and a rename table is where a field quietly</span>
+<span class="sd">    stops being carried. Attachment names are a *separate*, per-slot namespace:</span>
+<span class="sd">    single-attachment slots keep the file-derived spelling (``brow_l``), while</span>
+<span class="sd">    slots that one swap channel must drive **together** share key-like names —</span>
+<span class="sd">    both eye slots carry ``open``/``closed`` (0.3.0) so the single ``eyelid``</span>
+<span class="sd">    set projects onto each. Paths keep the file spelling either way.</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"leg_l"</span><span class="p">),</span>
@@ -652,8 +787,8 @@
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"arm_l"</span><span class="p">),</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"arm_r"</span><span class="p">),</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"head"</span><span class="p">),</span>
-        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"left_eye"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"eye_l_open"</span><span class="p">),</span>
-        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"right_eye"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"eye_r_open"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"left_eye"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"open"</span><span class="p">),</span>
+        <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"right_eye"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"open"</span><span class="p">),</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"mouth"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"mouth_x"</span><span class="p">),</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"left_brow"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"brow_l"</span><span class="p">),</span>
         <span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"right_brow"</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="s2">"brow_r"</span><span class="p">),</span>
@@ -755,11 +890,13 @@
             <span class="p">)</span>
         <span class="p">}</span>
 
-    <span class="c1"># Eye slots have two attachments (open + closed).</span>
+    <span class="c1"># Eye slots have two attachments. Their names are the shared per-slot</span>
+    <span class="c1"># keys `open`/`closed` (NOT the file stems) so the one `eyelid` set can</span>
+    <span class="c1"># project onto both slots; the paths keep the file spelling.</span>
     <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">stem</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"left_eye"</span><span class="p">,</span> <span class="s2">"eye_l"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"right_eye"</span><span class="p">,</span> <span class="s2">"eye_r"</span><span class="p">)):</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">FACE_OFFSETS</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span>
         <span class="n">slots</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span>
                 <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"parts/</span><span class="si">{</span><span class="n">stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"open"</span><span class="p">,</span> <span class="s2">"closed"</span><span class="p">)</span>

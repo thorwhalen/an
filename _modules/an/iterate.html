@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.iterate &mdash; an 0.1.48 documentation</title>
+  <title>an.iterate &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=b5e87a2a"></script>
+      <script src="../../_static/documentation_options.js?v=1190fe33"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -325,11 +325,14 @@
 <span class="s2">        "kind" MUST be one of: character, environment, voice, style.</span>
 <span class="s2">        "prop" is declared by the IR but NOT rendered — it raises. Do not emit one.</span>
 <span class="s2">      - actions: list of action dicts (kind ∈ {tween, set, play, sequence, parallel, delay, loop})</span>
-<span class="s2">        A tween/set action's "property" MUST be one of:</span>
+<span class="s2">        A tween/set action's "property" is EITHER a transform:</span>
 <span class="s2">          x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, skew_y,</span>
 <span class="s2">          pivot_x, pivot_y, alpha</span>
-<span class="s2">        Anything else (opacity, visible, color, tint, width, ...) is NOT</span>
-<span class="s2">        implemented and now FAILS THE RENDER — it used to be silently ignored.</span>
+<span class="s2">        OR the name of a swap set the target character's descriptor declares</span>
+<span class="s2">        in asset_sets (e.g. "viseme", "eyelid", "hands"), used with a "set"</span>
+<span class="s2">        action whose "value" is one of that set's declared KEYS. Any other</span>
+<span class="s2">        property (opacity, visible, color, tint, width, ...) is refused at</span>
+<span class="s2">        compile with the declared sets listed. Never invent a set or a key.</span>
 <span class="s2">        "alpha" is the fade primitive and cascades to a character's parts.</span>
 <span class="s2">        A tween with no "from" starts at the property's rest value: 1.0 for</span>
 <span class="s2">        scale_x / scale_y / alpha, 0.0 for the rest.</span>

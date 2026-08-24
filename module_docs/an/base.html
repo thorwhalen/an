@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.base &mdash; an 0.1.48 documentation</title>
+  <title>an.base &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=b5e87a2a"></script>
+      <script src="../../_static/documentation_options.js?v=1190fe33"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -87,8 +87,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.base.MP4_FASTSTART_ARGS"><code class="docutils literal notranslate"><span class="pre">MP4_FASTSTART_ARGS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.PathStr"><code class="docutils literal notranslate"><span class="pre">PathStr</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.SCHEMA_VERSION"><code class="docutils literal notranslate"><span class="pre">SCHEMA_VERSION</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.base.SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS"><code class="docutils literal notranslate"><span class="pre">SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.Seconds"><code class="docutils literal notranslate"><span class="pre">Seconds</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.StyleName"><code class="docutils literal notranslate"><span class="pre">StyleName</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.base.TRANSFORM_PROPERTIES"><code class="docutils literal notranslate"><span class="pre">TRANSFORM_PROPERTIES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.base.swap_set_name_problem"><code class="docutils literal notranslate"><span class="pre">swap_set_name_problem()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="bench.html">an.bench</a></li>
@@ -273,6 +276,18 @@ the torso, not children of it.</p>
 changes, also bump COMPATIBLE_VERSION and add a migration in <cite>ir.migrate</cite>.</p>
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="an.base.SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS">
+<span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('/',</span> <span class="pre">'::')</span></span><a class="headerlink" href="#an.base.SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">/</span></code> would read
+as a path segment and <code class="docutils literal notranslate"><span class="pre">::</span></code> is the runtime’s pose-key separator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Characters within which a swap-set name is not addressable</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="an.base.Seconds">
 <span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">Seconds</span></span><a class="headerlink" href="#an.base.Seconds" title="Link to this definition"></a></dt>
@@ -285,6 +300,32 @@ only inside the audio pipeline where drift matters.</p>
 <span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">StyleName</span></span><a class="headerlink" href="#an.base.StyleName" title="Link to this definition"></a></dt>
 <dd><p>The renderer-style of a shot. The orchestrator uses this to pick an adapter.</p>
 <p>alias of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Literal</span></code>[‘cutout’, ‘manim’, ‘motion_graphics’, ‘whiteboard’]</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.base.TRANSFORM_PROPERTIES">
+<span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">TRANSFORM_PROPERTIES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'alpha',</span> <span class="pre">'pivot_x',</span> <span class="pre">'pivot_y',</span> <span class="pre">'rotation',</span> <span class="pre">'rotation_rad',</span> <span class="pre">'scale_x',</span> <span class="pre">'scale_y',</span> <span class="pre">'skew_x',</span> <span class="pre">'skew_y',</span> <span class="pre">'x',</span> <span class="pre">'y'})</span></span><a class="headerlink" href="#an.base.TRANSFORM_PROPERTIES" title="Link to this definition"></a></dt>
+<dd><p>The property names the cutout runtime animates NUMERICALLY. Any other
+property on a set/tween names a swap SET declared by the target entity’s
+descriptor (an#87). This is the SSOT the three consumers share so the IR
+validator, the character validator and the compiler cannot drift: the
+compiler derives its rest-value table from <code class="docutils literal notranslate"><span class="pre">TransformJSON</span></code> and a test
+asserts that derivation equals this set. Lives here because <code class="docutils literal notranslate"><span class="pre">an.base</span></code> is
+the one module all three layers may import.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.base.swap_set_name_problem">
+<span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">swap_set_name_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/an/base.html#swap_set_name_problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.base.swap_set_name_problem" title="Link to this definition"></a></dt>
+<dd><p>Why <code class="docutils literal notranslate"><span class="pre">name</span></code> cannot be a swap-set name, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if it can.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">swap_set_name_problem</span><span class="p">(</span><span class="s2">"hands"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">swap_set_name_problem</span><span class="p">(</span><span class="s2">"alpha"</span><span class="p">)</span>
+<span class="go">"'alpha' is a transform property; the runtime's static switch would shadow the set"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">swap_set_name_problem</span><span class="p">(</span><span class="s2">"a::b"</span><span class="p">)</span>
+<span class="go">"'a::b' contains '::', which is reserved"</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

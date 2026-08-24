@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.palette &mdash; an 0.1.48 documentation</title>
+  <title>an.bench.palette &mdash; an 0.1.49 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=b5e87a2a"></script>
+      <script src="../../../_static/documentation_options.js?v=1190fe33"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -384,8 +384,15 @@
             <span class="c1"># visual.color here is the #888888 schema default on every one.</span>
             <span class="k">if</span> <span class="n">visual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asset_id"</span><span class="p">):</span>
                 <span class="n">referenced_aliases</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">visual</span><span class="p">[</span><span class="s2">"asset_id"</span><span class="p">]))</span>
-            <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="p">(</span><span class="n">visual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"viseme_assets"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-                <span class="n">referenced_aliases</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">alias</span><span class="p">))</span>
+            <span class="c1"># Every key of every swap set can reach the screen mid-shot, so</span>
+            <span class="c1"># all of them join the reference palette. (This read `viseme_assets`</span>
+            <span class="c1"># until an#87 generalised the field; a stale key here degrades</span>
+            <span class="c1"># SILENTLY — `or {}` — into an under-collected palette, which is</span>
+            <span class="c1"># why `tests/test_bench_palette.py` pins a compiled scene's swap</span>
+            <span class="c1"># aliases flowing through.)</span>
+            <span class="k">for</span> <span class="n">key_map</span> <span class="ow">in</span> <span class="p">(</span><span class="n">visual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asset_sets"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="p">(</span><span class="n">key_map</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">referenced_aliases</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">alias</span><span class="p">))</span>
 
     <span class="c1"># A viseme set declares all nine mouth shapes while a given render paints</span>
     <span class="c1"># only some, so the SVG half makes the palette a SUPERSET. That is the safe</span>
