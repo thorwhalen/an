@@ -1223,7 +1223,15 @@ def _compile_actions(
     (target, property) group into step channels that HOLD from each set until
     the next action on that target/property** — the next set joins the same
     channel as a keyframe; a tween ends the hold at its start; with nothing
-    following, the hold runs to the shot end (an#87) — the viseme-clip shape. The previous
+    following, the hold runs to the shot end (an#87) — the viseme-clip shape.
+
+    Precedence at an instant where both apply is fixed by TRACK ORDER, which
+    the evaluators read later-wins: every hold clip is placed BEFORE the
+    track's per-action clips, so **an active tween governs** — at the shared
+    handoff instant the tween's first frame shows (an end-inclusive hold
+    listed after the tween used to mask it, measured), and a set authored
+    inside a running tween's window takes effect when that window ends, not
+    mid-tween. The previous
     per-set 0.001s placement window had two defects: a set at a
     non-frame-aligned time (``at=3.02`` @30fps, window [3.02, 3.021] between
     samples) silently never fired, and when one did fire its persistence was
@@ -1250,6 +1258,7 @@ def _compile_actions(
 
     set_groups: dict[tuple[str, str], list[FlatAction]] = {}
     tween_starts: dict[tuple[str, str], list[float]] = {}
+    hold_by_track: dict[str, list[PlacedClipJSON]] = {}
     ordinal = 0
     for flat in flat_list:
         if isinstance(flat.action, SetAction):
@@ -1293,6 +1302,13 @@ def _compile_actions(
             for flat in run:
                 value = flat.action.value
                 _check_keyframe_value(value, target=target, prop=prop)
+                if flat.start > shot_duration:
+                    warnings.warn(
+                        f"set on {target!r}:{prop!r} at t={flat.start} is past "
+                        f"the shot's end ({shot_duration}s) and can never show.",
+                        CutoutCompileWarning,
+                        stacklevel=3,
+                    )
                 kfs.append(
                     KeyframeJSON(time=flat.start - first, value=value, easing="step")
                 )
@@ -1302,9 +1318,13 @@ def _compile_actions(
                 duration=duration,
                 channels=[ChannelJSON(target=target, property=prop, keyframes=kfs)],
             )
-            placed_by_track.setdefault(_track_root_of(target), []).append(
+            hold_by_track.setdefault(_track_root_of(target), []).append(
                 PlacedClipJSON(animation_id=anim_id, start_time=first, duration=duration)
             )
+    # Holds FIRST in every track — see the docstring: later-wins evaluation
+    # must let an active tween override a hold at the shared instant.
+    for root, holds in hold_by_track.items():
+        placed_by_track[root] = holds + placed_by_track.get(root, [])
 
     # Re-pass: every referenced animation must actually exist.
     #

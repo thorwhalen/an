@@ -930,3 +930,50 @@ def test_the_0_3_0_migration_repairs_stored_animation_tracks():
     (track,) = out["animations"]["blink"]["tracks"]
     assert track["target"] == "slot:right_eye.attachment"
     assert [v for _, v in track["frames"]] == ["open", "closed"]
+
+
+def test_an_active_tween_governs_over_a_hold_at_the_shared_instant(gale_store):
+    """Two precedence facts the skeptic pass measured (an#87):
+
+    - at the exact handoff instant (an end-inclusive hold meeting a tween's
+      start — the common frame-aligned case) the TWEEN's first frame shows;
+    - a set authored inside a running tween's window takes effect when the
+      window ends, not mid-tween.
+
+    Both follow from hold clips being placed before per-action clips in the
+    track, which later-wins evaluation turns into "an active tween governs".
+    """
+    from an.ir.compose import delay, sequence
+
+    scene = compile_shot(
+        _shot(
+            [
+                SetAction(target="gale/torso", property="x", value=50.0, at=0.0),
+                sequence(
+                    delay(1.0),
+                    TweenAction(
+                        target="gale/torso", property="x", from_value=0.0,
+                        to_value=100.0, duration=1.0, easing="linear",
+                    ),
+                ),
+                SetAction(target="gale/torso", property="x", value=-7.0, at=1.5),
+            ],
+            duration=3.0,
+        ),
+        mall={"characters": gale_store},
+    )
+    tl = _python_timeline(scene)
+    key = ("gale/torso", "x")
+    assert _evaluate(tl, 0.9)[key] == 50.0
+    assert _evaluate(tl, 1.0)[key] == 0.0  # the tween's first frame, not 50
+    assert _evaluate(tl, 1.75)[key] == pytest.approx(75.0)  # tween governs
+    assert _evaluate(tl, 2.0)[key] == pytest.approx(100.0)
+    assert _evaluate(tl, 2.5)[key] == -7.0  # the in-window set resumes after
+
+
+def test_a_set_past_the_shot_end_warns(gale_store):
+    with pytest.warns(CutoutCompileWarning, match="past the shot's end"):
+        compile_shot(
+            _shot([SetAction(target="gale/torso", property="x", value=1.0, at=9.0)]),
+            mall={"characters": gale_store},
+        )
