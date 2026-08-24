@@ -1,5 +1,5 @@
 {
-  "blessed_at": "2026-08-23T21:17:38Z",
+  "blessed_at": "2026-08-24T16:06:35Z",
   "chromium_build": "140.0.7339.16",
   "criterion": "sha256 of the DECODED RGB array, never the file bytes: Chromium 1187 -> 1223 changes every PNG file and zero pixels.",
   "fps": 24,
@@ -15,32 +15,32 @@
       "time": 0.0
     },
     {
-      "bytes": 5428,
+      "bytes": 5561,
       "file": "f0070-chromium140.0.7339.16.png",
       "frame_key": "f0070",
       "index": 70,
       "local_index": 70,
-      "sha256": "ebe8e3cb0dd24cd12790aee2f6e1001b1e54a67df683ef335fce0c377bbc5997",
+      "sha256": "952242d9080651fec54b5f3d9f28acde1d26226935a8adacf5c31ecf8ee23578",
       "shot_id": "s1",
       "time": 2.9167
     }
   ],
   "git": {
-    "branch": "wave4-rig-contract",
+    "branch": "wave5-blinks",
     "dirty": true,
-    "sha": "32f6476bcf0d1ef5e37920bbd30a297d6f4d9ec4"
+    "sha": "da5db60614e7294423fc3e3957fb4395aae83362"
   },
-  "reason": "Wave 4 (an#73/#74/#75): the compiler builds the scene from the descriptor's rig instead of seven module constants. Parts are placed at the artist's own joints and uniformly scaled to their own art, so aspect distortion goes from 3.929x worst-case to 1.000 on every sprite. graded_field's scene.md re-authored (scale 4.0/2.5 -> 2.551/1.884) to keep the gradient covering the same share of frame now that its box comes from the art. Procedural goldens verified byte-identical.",
+  "reason": "an#88: blinks are compiled channels; promote_demo f0070 now shows maya's closed-eye art (eyelid swap) where the runtime squashed the open eye \u2014 the one golden the move changes (single_character's compiled squash is byte-identical)",
   "removed": [],
   "resolution": [
     480,
     360
   ],
   "scene": "promote_demo",
-  "scene_contract_sha256": "f77e342381bdf6982a60e17ad2b6db70475b068bc7727b4f4aec712818dd62f2",
+  "scene_contract_sha256": "d0f6ea42daf7a5f5b7df6738f7cf22b8175518c651c27069a775dde3141e4870",
   "shot_ids": [
     "s1"
   ],
   "source": "examples/promote_demo",
-  "what_moves": "the idle animation near the end of the shot (224 px). Measured: frame 0 against duration/2 differs by exactly ZERO pixels here, so the obvious second time would have blessed one image twice."
+  "what_moves": "a blink \u2014 the compiled eyelid swap shows the closed-eye art at t=2.9167 (an earlier note blamed 'the idle animation', which nothing on the render path consumes). Measured: frame 0 against duration/2 differs by exactly ZERO pixels here, so the obvious second time would have blessed one image twice."
 }

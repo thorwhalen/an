@@ -676,54 +676,15 @@
         if (!app || !scene) return false;
         const pose = evaluateTimeline(t);
         applyPose(pose);
-        applyProceduralBlinks(t);
         app.render();
         return true;
     };
 
-    // ------------------------------------------------------------------------
-    // Procedural eye blinks — auto-blinks every ~3-5s. Pure JS, no IR
-    // involvement; the runtime owns this so dialogue stays focused on speech.
-    // ------------------------------------------------------------------------
-
-    const _BLINK_PERIOD_S = 4.0;   // baseline interval between blinks
-    const _BLINK_DUR_S    = 0.14;  // total close+open duration
-
-    function applyProceduralBlinks(t) {
-        // Find every */head/<eye> path and squash its scale_y near blink times.
-        // For per-character variety, offset each character's blink schedule
-        // by a deterministic phase derived from its name.
-        // .sort() is a determinism CONTRACT — see preloadAssets. Safe unsorted
-        // today only because each iteration writes an independent node, which is
-        // an invariant of the loop BODY that nothing states or checks.
-        for (const path of Object.keys(nodeIndex).sort()) {
-            // Match "<entity>/head/(left_eye|right_eye)".
-            const m = path.match(/^([^/]+)\/head\/(left_eye|right_eye)$/);
-            if (!m) continue;
-            const entity = m[1];
-            const phase = (_strHash(entity) % 1000) / 1000.0; // 0..1
-            const phased_t = t + phase * _BLINK_PERIOD_S;
-            const cycle = phased_t % _BLINK_PERIOD_S;
-            const node = nodeIndex[path];
-            if (cycle < _BLINK_DUR_S) {
-                // Sine half-cycle: 1 → 0.05 → 1 over BLINK_DUR_S
-                const u = cycle / _BLINK_DUR_S;
-                const closed = Math.sin(u * Math.PI);   // 0 → 1 → 0
-                node.scale.y = 1.0 - 0.95 * closed;
-            } else if (node.scale.y !== 1.0) {
-                node.scale.y = 1.0;
-            }
-        }
-    }
-
-    function _strHash(s) {
-        let h = 0;
-        for (let i = 0; i < s.length; i++) {
-            h = ((h << 5) - h) + s.charCodeAt(i);
-            h |= 0;
-        }
-        return Math.abs(h);
-    }
+    // Blinks are COMPILED channels since an#88 — see compile.py's
+    // `_add_blink_clips`. This file used to run a post-pose pass that matched
+    // eye nodes by regex and forced scale.y every frame, which is why an
+    // authored eye scale_y could never reach the screen. The phase-per-entity
+    // fact that pass owned now lives in the compiled scene's meta.blink_phases.
 
     // ------------------------------------------------------------------------
     // Determinism probe (an#37).
@@ -754,17 +715,6 @@
     NS.anDeterminismReport = function () {
         const stage = app ? app.stage : null;
         const shared = (window.PIXI && PIXI.Ticker) ? PIXI.Ticker.shared : null;
-        const blinkPhases = {};
-        for (const path of Object.keys(nodeIndex).sort()) {
-            const m = path.match(/^([^/]+)\/head\/(left_eye|right_eye)$/);
-            if (m && !(m[1] in blinkPhases)) {
-                // Recorded, not fixed: the phase is a pure function of the
-                // entity NAME, so renaming a corpus character silently
-                // re-phases every blink and moves every pixel metric. Stamping
-                // it turns that into a visible diff.
-                blinkPhases[m[1]] = (_strHash(m[1]) % 1000) / 1000.0;
-            }
-        }
         return {
             page: (window.location && window.location.pathname) || null,
             runtime_version: RUNTIME_VERSION,
@@ -773,7 +723,6 @@
             shared_ticker_started: !!(shared && shared.started),
             stage_filter_count: (stage && stage.filters) ? stage.filters.length : 0,
             filtered_node_paths: _filteredNodePaths(),
-            blink_phases: blinkPhases,
             node_count: Object.keys(nodeIndex).length,
         };
     };

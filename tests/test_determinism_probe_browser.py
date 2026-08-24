@@ -70,12 +70,3 @@ def test_the_live_probe_reports_every_field_the_checker_requires(live_report):
     assert not missing, f"the live probe did not report {missing}"
     assert live_report["page"].endswith("index.html")
 
-
-def test_the_blink_phase_is_stamped_per_entity(live_report):
-    """The hazard nothing warns about, recorded so a rename is a visible diff."""
-    assert live_report["blink_phases"], (
-        "a one-character scene must report its blink phase — the value that "
-        "silently re-phases every blink when a corpus entity is renamed"
-    )
-    assert set(live_report["blink_phases"]) == {"charlie"}
-    assert all(0.0 <= v < 1.0 for v in live_report["blink_phases"].values())

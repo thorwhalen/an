@@ -132,7 +132,8 @@ an/
     └── cutout_runtime/
         ├── index.html       loads PixiJS v7 + runtime.js
         ├── runtime.js       applySwap (the ONE swap path — any declared set, viseme incl.),
-        │                    drawMouthShape, applyProceduralBlinks, channel/timeline eval
+        │                    drawMouthShape, channel/timeline eval (blinks are compiled
+        │                    channels since an#88 — no runtime blink pass)
         └── README.md
 ```
 

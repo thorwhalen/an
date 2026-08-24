@@ -47,7 +47,6 @@ def _clean_report(**overrides) -> dict:
         "shared_ticker_started": False,
         "stage_filter_count": 0,
         "filtered_node_paths": [],
-        "blink_phases": {"charlie": 0.123},
         "node_count": 12,
     }
     report.update(overrides)
@@ -208,10 +207,26 @@ def test_the_blink_phase_dependence_on_the_entity_name_is_recorded():
     character silently re-phases every blink and moves every pixel metric.
     Recording the phases per entity does not prevent it — it makes it a visible
     diff in the ledger instead of an unexplained metric shift.
+
+    Since an#88 the blink is a COMPILED channel, so the stamp lives in the
+    compiled scene's meta, is carried into `RenderResult.provenance`, and is
+    written into every bench ledger row (the runtime's probe no longer owns
+    the fact).
     """
+    from an.adapters.cutout.compile import blink_phase, compile_shot
+    from an.ir.schema import AssetRef, Shot
+
+    shot = Shot(
+        id="s",
+        style="cutout",
+        duration=1.0,
+        entities=[AssetRef(kind="character", id="charlie", store="characters", ref="c")],
+    )
+    scene = compile_shot(shot, mall={"characters": {}})
+    assert scene.meta.blink_phases == {"charlie": blink_phase("charlie")}
+    assert 0.0 <= scene.meta.blink_phases["charlie"] < 1.0
     src = RUNTIME_JS.read_text(encoding="utf-8")
-    body = src.split("NS.anDeterminismReport", 1)[1]
-    assert "blink_phases:" in body
+    assert "blink_phases" not in src.split("NS.anDeterminismReport", 1)[1]
 
 
 # ------------------------------------------------------ the Playwright probe
@@ -291,13 +306,12 @@ def test_a_probe_that_cannot_run_is_a_breach_not_a_pass(monkeypatch):
 def test_a_clean_report_is_returned_for_provenance(monkeypatch):
     """Collected on every render, not only under the flag.
 
-    The blink phases and the filter inventory belong in the metrics ledger's
-    provenance row; a fact recorded only when a flag is set is a fact missing
-    from every row that matters.
+    The filter inventory belongs in the render's provenance; a fact recorded
+    only when a flag is set is a fact missing from every row that matters.
     """
     from an.adapters.cutout.render import _determinism_report
 
     monkeypatch.delenv(AN_DETERMINISTIC_ENV_VAR, raising=False)
     report = _determinism_report(_FakePage(_clean_report()))
     assert report["violations"] == []
-    assert report["blink_phases"] == {"charlie": 0.123}
+    assert report["filtered_node_paths"] == []

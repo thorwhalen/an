@@ -181,9 +181,10 @@ DFLT_FIXTURES: dict[str, Fixture] = {
         expect_visual_kinds=frozenset({"rect", "ellipse"}),
         golden_frames=(0.0, 1.0),
         golden_note=(
-            "a blink. Only 253 pixels differ, and that is the point: blinks "
-            "occupy 3.5% of frames, so frame 0 against duration/2 is a "
-            "pixel-identical pair on this scene."
+            "a blink (the compiled scale_y squash on the procedural eyes). Only "
+            "253 pixels differ, and that is the point: blinks occupy 3.5% of "
+            "frames, so frame 0 against duration/2 is a pixel-identical pair "
+            "on this scene."
         ),
     ),
     "promote_demo": Fixture(
@@ -192,9 +193,11 @@ DFLT_FIXTURES: dict[str, Fixture] = {
         expect_visual_kinds=frozenset({"svg_sprite"}),
         golden_frames=(0.0, 2.9167),
         golden_note=(
-            "the idle animation near the end of the shot (224 px). Measured: "
-            "frame 0 against duration/2 differs by exactly ZERO pixels here, "
-            "so the obvious second time would have blessed one image twice."
+            "a blink — the compiled eyelid swap shows the closed-eye art at "
+            "t=2.9167 (an earlier note blamed 'the idle animation', which "
+            "nothing on the render path consumes). Measured: frame 0 against "
+            "duration/2 differs by exactly ZERO pixels here, so the obvious "
+            "second time would have blessed one image twice."
         ),
     ),
     "graded_field": Fixture(

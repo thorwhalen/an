@@ -165,7 +165,7 @@ The patches are validated against the schema and persisted; affected shots' cach
 |---|---|
 | **Renderer Protocol** | `an.adapters.Renderer` — Cutout (real), Manim (real if installed), Remotion (skeleton), Whiteboard (stub) |
 | **Cutout backend** | `an.adapters.cutout.compile_shot` → `CutoutSceneJSON` → PixiJS v7 in headless Chromium → ffmpeg mux |
-| **Character rig** | Ellipse head + per-id palette (skin/clothing/hair) + eyebrows (emotion-driven) + white-sclera eyes (procedural blinks) + bezier-curved mouth (9 viseme shapes) |
+| **Character rig** | Ellipse head + per-id palette (skin/clothing/hair) + eyebrows (emotion-driven) + white-sclera eyes (blinks compiled as channels — an eyelid swap where the rig has closed-eye art, a squash otherwise) + bezier-curved mouth (9 viseme shapes) |
 | **TTS Protocol** | `OfflineTTS` (silent placeholder), `ElevenLabsTTS` (real, needs `ELEVEN_API_KEY`) |
 | **Lip-sync Protocol** | `OfflineLipSync` (char-distribution), `WhisperLipSync` (word-aligned via faster-whisper), `RhubarbLipSync` (phoneme-aligned), `WordTimingsLipSync` (driven by an injected `WordTimingProvider` — skip transcription entirely when the caller already has authoritative word timings) |
 | **Verifier Protocol** | `LayoutLintVerifier`, `MediaQualityVerifier`, `VisionLMVerifier` (Claude vision), `HumanInTheLoopVerifier` |
