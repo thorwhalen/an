@@ -29,9 +29,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from an.adapters.cutout.clip import Clip
+from an.adapters.cutout.clip import Clip, Pose, merge_poses
 from an.adapters.cutout.clip import evaluate as _evaluate_clip
-from an.adapters.cutout.pose import Pose, merge_poses
 
 
 @dataclass(slots=True)

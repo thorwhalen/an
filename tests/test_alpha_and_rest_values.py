@@ -163,7 +163,9 @@ def _runtime_switch_cases() -> set[str]:
     body = re.search(r"function applyProperty\([^)]*\)\s*\{(.*?)\n    \}", src, re.S)
     assert body, "applyProperty not found in runtime.js"
     text = re.sub(r"//[^\n]*", "", body.group(1))  # strip line comments
-    return set(re.findall(r"case\s+'([a-z_]+)'\s*:", text))
+    # Both quote styles: a double-quoted `case "tint":` is legal JS, and a
+    # single-quote-only extractor is blind to it (an#86 adversarial review).
+    return set(re.findall(r"case\s+['\"]([a-z_]+)['\"]\s*:", text))
 
 
 def test_every_runtime_property_has_a_rest_value_unless_it_is_discrete():

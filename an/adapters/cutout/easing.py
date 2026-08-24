@@ -106,7 +106,17 @@ def cubic_bezier(cx1: float, cy1: float, cx2: float, cy2: float, t: float) -> fl
     def by(u: float) -> float:
         return 3 * (1 - u) ** 2 * u * cy1 + 3 * (1 - u) * u * u * cy2 + u**3
 
-    # Newton's method to find u such that bx(u) = t
+    # Newton's method to find u such that bx(u) = t.
+    #
+    # Structurally IDENTICAL to runtime.js::cubicBezier on purpose: always 8
+    # iterations, break only on a degenerate derivative, clamp each step. This
+    # function is the spec of that port, and the two are compared bit-for-bit
+    # by the parity battery — an earlier version had an extra
+    # |u_new - u| < 1e-9 early-convergence break the JS side lacked, which
+    # left the two a ULP apart in `eased`; harmless for the snap rule, but a
+    # numeric channel lerping large magnitudes amplifies a ULP of easing by
+    # (b - a), so "behaviourally identical" was false at the 1e9 scale (found
+    # by the an#86 adversarial review; the loops now match).
     u = t
     for _ in range(8):
         f = bx(u) - t
@@ -119,9 +129,6 @@ def cubic_bezier(cx1: float, cy1: float, cx2: float, cy2: float, t: float) -> fl
             u_new = 0.0
         elif u_new > 1.0:
             u_new = 1.0
-        if abs(u_new - u) < 1e-9:
-            u = u_new
-            break
         u = u_new
     return by(u)
 

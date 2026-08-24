@@ -1,10 +1,22 @@
 """JSON contract between the Python compiler and the (future) JS runtime.
 
-These Pydantic models describe **exactly** the JSON shape the Phase 2B
-PixiJS runtime will consume. Phase 2A produces these objects via
-``compile_shot``; Phase 2B reads them. The schema is deliberately separate
-from the cutout-internal Python types (`scene.Node`, `clip.Clip`, etc.) so
-the Python side can evolve internally without breaking the runtime contract.
+These Pydantic models describe **exactly** the JSON shape the PixiJS runtime
+consumes — nothing more. ``compile_shot`` produces these objects; the runtime
+reads them. The schema is deliberately separate from the cutout-internal
+Python evaluation types (`clip.Clip`, `channel.Channel`) so the Python side
+can evolve internally without breaking the runtime contract.
+
+This file used to carry a sketched Spine-flavoured swap vocabulary
+(``SkinJSON``, ``RigJSON``, ``CutoutSceneJSON.rigs``, ``SlotJSON``/
+``NodeJSON.slots``, ``current_attachment``) that nothing populated and nothing
+read — deleted in an#86 so the *real* swap mechanism (``VisualJSON``'s
+per-node asset maps driven by step channels) is the only one the contract
+describes. A few declared-but-unwired scalars remain (``PlacedClipJSON.blend_in``
+/ ``blend_out`` — recorded, never applied; ``VisualJSON.texture_id``): the same
+debt class at smaller scale, kept only because they are field-shaped
+placeholders rather than a parallel *vocabulary* for a capability that shipped
+elsewhere. Do not add more; a new field needs its producer and its consumer in
+the same change.
 
 >>> j = CutoutSceneJSON(
 ...     meta={"fps": 30, "width": 1920, "height": 1080, "duration": 5.0},
@@ -98,17 +110,6 @@ class VisualJSON(_JSONModel):
     anchor_x: float = 0.5
     anchor_y: float = 0.5
     color: str = "#888888"
-    current_attachment: str | None = None
-
-
-class SlotJSON(_JSONModel):
-    """Attachment point on a node."""
-
-    name: str
-    x: float = 0.0
-    y: float = 0.0
-    rotation: float = 0.0
-    current_attachment: str | None = None
 
 
 class NodeJSON(_JSONModel):
@@ -117,27 +118,7 @@ class NodeJSON(_JSONModel):
     name: str
     transform: TransformJSON = Field(default_factory=TransformJSON)
     visual: VisualJSON | None = None
-    slots: dict[str, SlotJSON] = Field(default_factory=dict)
     children: list["NodeJSON"] = Field(default_factory=list)
-
-
-# -----------------------------------------------------------------------------
-# Rigs (per-character skin definitions; mostly a 2B+ concern, sketched here)
-# -----------------------------------------------------------------------------
-
-
-class SkinJSON(_JSONModel):
-    """A named skin: slot path → attachment dict."""
-
-    name: str
-    attachments: dict[str, dict[str, Any]] = Field(default_factory=dict)
-
-
-class RigJSON(_JSONModel):
-    """Rig definition for one character: root node path + skins."""
-
-    root_node: str
-    skins: dict[str, SkinJSON] = Field(default_factory=dict)
 
 
 # -----------------------------------------------------------------------------
@@ -284,7 +265,6 @@ class CutoutSceneJSON(_JSONModel):
     version: str = "0.1.0"
     meta: CutoutSceneMetaJSON = Field(default_factory=CutoutSceneMetaJSON)
     scene: NodeJSON
-    rigs: dict[str, RigJSON] = Field(default_factory=dict)
     animations: dict[str, AnimationClipJSON] = Field(default_factory=dict)
     timeline: TimelineJSON
     assets: AssetsJSON = Field(default_factory=AssetsJSON)

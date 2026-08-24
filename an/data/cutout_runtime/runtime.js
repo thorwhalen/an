@@ -100,12 +100,23 @@
         const span = b.time - a.time;
         if (span <= 0) return b.value;
         const u = (t - a.time) / span;
+        // Validated for every segment (a typo'd easing name must raise on a
+        // swap channel too), but APPLIED only to numeric values.
         const eased = applyEasing(a.easing, u);
         if (typeof a.value === 'number' && typeof b.value === 'number') {
             return a.value + (b.value - a.value) * eased;
         }
-        // Non-numeric (e.g. viseme codes): snap at the keyframe boundary.
-        return eased >= 1.0 ? b.value : a.value;
+        // Non-numeric (viseme codes, swap keys): snap on TIME, never on the
+        // eased or raw parameter. The value is `a` for exactly
+        // [a.time, b.time): easing cannot move the boundary (the old
+        // eased-snap rule let an overshooting cubic bezier show the SECOND
+        // key early, or flap A->B->A within one segment), and time has no
+        // intermediate arithmetic (a raw-u snap is one float division away
+        // from wrong: (t - a.time) / span can round up to 1.0 while
+        // t < b.time). Mirror of an/adapters/cutout/channel.py::evaluate —
+        // that function is the spec, and tests/test_cutout_channel_parity.py
+        // pins the identity.
+        return t >= b.time ? b.value : a.value;
     }
 
     // ------------------------------------------------------------------------
