@@ -17,3 +17,6 @@ python misc/demos/build_demos.py
 ```
 
 Offline, free and deterministic — see `misc/demos/README.md` on `main`.
+
+Last regenerated from `main` at c563c16 (an 0.1.53), 2026-08-24 — adds the Wave 5 clips
+(`swap-channels`, `play-animation`, `stepped-timing`).
