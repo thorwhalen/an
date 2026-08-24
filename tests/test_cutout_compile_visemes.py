@@ -72,7 +72,10 @@ def test_viseme_track_added_to_speaker_track():
     maya_tracks = [t for t in j.timeline.tracks if t.target_root == "maya"]
     assert len(maya_tracks) == 1
     # The placed viseme clip starts at line.start (0.0) and lasts duration (1.0).
-    placed = maya_tracks[0].clips[0]
+    # By id, not position: blink clips sit first on the entity's track (an#88).
+    placed = next(
+        p for p in maya_tracks[0].clips if p.animation_id.startswith("__viseme__")
+    )
     assert placed.start_time == pytest.approx(0.0)
     assert placed.duration == pytest.approx(1.0)
 
