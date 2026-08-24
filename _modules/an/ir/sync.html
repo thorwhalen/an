@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.50 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f2b49961"></script>
+      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/play.html">an.characters.play</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
@@ -412,10 +413,9 @@
 <span class="sd">    Supported entry shapes (one per item in the YAML list):</span>
 <span class="sd">      - ``{kind: tween, target, property, to, duration, [from_], [easing], [start]}``</span>
 <span class="sd">      - ``{kind: set,   target, property, value, [at]}``</span>
-<span class="sd">      - ``{kind: play,  ...}`` is **rejected**: named reusable animations have</span>
-<span class="sd">        nowhere to be defined, so the compiler refuses every ``PlayAction``.</span>
-<span class="sd">        Accepting one here would let it round-trip through ``scene.md`` and fail</span>
-<span class="sd">        later, at render, having looked valid the whole way.</span>
+<span class="sd">      - ``{kind: play,  target, animation, [duration], [speed], [loop], [start]}``</span>
+<span class="sd">        — resolved at compile against the target entity's descriptor</span>
+<span class="sd">        ``animations`` (an#7). ``loop`` omitted means the animation's own.</span>
 
 <span class="sd">    A leaf action with a ``start`` key is wrapped in ``sequence(delay(start),</span>
 <span class="sd">    action)`` so flatten yields the correct absolute time. ``set`` uses ``at``</span>
@@ -458,21 +458,24 @@
                 <span class="n">at</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"at"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"play"</span><span class="p">:</span>
-            <span class="c1"># Refused here rather than at compile time. `scene.md` is the</span>
-            <span class="c1"># authoring surface — the SSOT an author actually edits — so a</span>
-            <span class="c1"># `play` accepted here round-trips through the IR, survives</span>
-            <span class="c1"># `an validate`, and only dies at compile, having looked valid the</span>
-            <span class="c1"># entire way. The earliest layer that can see the mistake reports it.</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"actions[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">]: `play` references a named animation, and named "</span>
-                <span class="s2">"reusable animations are not implemented — nothing can define "</span>
-                <span class="s2">"one, so the compiler refuses every `play`. Use tween / set, or "</span>
-                <span class="s2">"sequence / parallel to compose them. See "</span>
-                <span class="s2">"https://github.com/thorwhalen/an/issues/7"</span>
+            <span class="c1"># `{kind: play, target, animation, [duration], [speed], [loop],</span>
+            <span class="c1"># [start]}` — resolved at compile against the target entity's</span>
+            <span class="c1"># descriptor `animations` (an#7). This reader accepted the shape</span>
+            <span class="c1"># from the start, then #24 made it refuse (nothing resolved a</span>
+            <span class="c1"># play) while the writer below kept emitting it — three days of</span>
+            <span class="c1"># a project's own scene.md failing to parse, ended here.</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="n">_compose</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+                <span class="n">item</span><span class="p">[</span><span class="s2">"target"</span><span class="p">],</span>
+                <span class="n">item</span><span class="p">[</span><span class="s2">"animation"</span><span class="p">],</span>
+                <span class="n">duration</span><span class="o">=</span><span class="p">(</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"duration"</span><span class="p">])</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">),</span>
+                <span class="n">speed</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"speed"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+                <span class="n">loop</span><span class="o">=</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"loop"</span><span class="p">])</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"loop"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"actions[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">].kind must be one of tween/set; got </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"actions[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">].kind must be one of tween/set/play; got </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="n">start</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">action</span> <span class="o">=</span> <span class="n">_compose</span><span class="o">.</span><span class="n">sequence</span><span class="p">(</span><span class="n">_compose</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">start</span><span class="p">)),</span> <span class="n">action</span><span class="p">)</span>
@@ -636,8 +639,8 @@
                 <span class="n">entry</span><span class="p">[</span><span class="s2">"duration"</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">duration</span>
             <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">speed</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
                 <span class="n">entry</span><span class="p">[</span><span class="s2">"speed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">leaf</span><span class="o">.</span><span class="n">speed</span>
-            <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">loop</span><span class="p">:</span>
-                <span class="n">entry</span><span class="p">[</span><span class="s2">"loop"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">leaf</span><span class="o">.</span><span class="n">loop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">entry</span><span class="p">[</span><span class="s2">"loop"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">leaf</span><span class="o">.</span><span class="n">loop</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">entry</span><span class="p">[</span><span class="s2">"start"</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>

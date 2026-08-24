@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.50 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=f2b49961"></script>
+      <script src="../../../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../characters/idle.html">an.characters.idle</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/licenses.html">an.characters.licenses</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/play.html">an.characters.play</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/promote.html">an.characters.promote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/record.html">an.characters.record</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/schema.html">an.characters.schema</a></li>
@@ -200,7 +201,9 @@ placeholder rect parts when the character store has no sidecar art yet).</p></li
 absolute times.</p></li>
 <li><p><strong>Compile each FlatAction to PlacedClipJSON entries</strong> on the appropriate
 track. Tween → a 2-keyframe AnimationClipJSON + a PlacedClipJSON. Set →
-a 1-keyframe step-easing clip. Play → reference an existing animation.</p></li>
+a step channel that HOLDS until the next action on the same
+target/property. Play → a per-instance clip (<code class="docutils literal notranslate"><span class="pre">__play__{n}</span></code>) resolved
+from the target’s descriptor animation (an#7).</p></li>
 </ol>
 <p>The compiler is deterministic and side-effect-free (it doesn’t write to the
 mall). It reads only.</p>

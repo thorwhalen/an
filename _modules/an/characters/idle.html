@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.idle &mdash; an 0.1.50 documentation</title>
+  <title>an.characters.idle &mdash; an 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f2b49961"></script>
+      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/play.html">an.characters.play</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
@@ -184,12 +185,21 @@
 <span class="sd">The functions return :class:`an.characters.IdleAnimation` instances ready</span>
 <span class="sd">to drop into :attr:`CharacterDescriptor.animations`.</span>
 
-<span class="sd">**None of this drives what renders today.** The blink you see is compiled by</span>
+<span class="sd">**Nothing here renders on its own.** Descriptor ``animations`` are seeded</span>
+<span class="sd">by ``model_post_init`` and reach the screen ONLY through an authored ``play``</span>
+<span class="sd">action (an#7: ``play("maya", "idle_breath")`` renders exactly what</span>
+<span class="sd">:func:`breath_animation` returns — resolved by :mod:`an.characters.play`),</span>
+<span class="sd">never automatically. The blink you see without one is compiled by</span>
 <span class="sd">``an.adapters.cutout.compile._add_blink_clips`` (an#88) from a fixed</span>
-<span class="sd">entity-name-phase schedule (period 4.0 s); descriptor ``animations`` are</span>
-<span class="sd">seeded by ``model_post_init`` and consumed by nothing on the render path until</span>
-<span class="sd">``PlayAction`` resolution lands (an#7). ``random_blink_schedule`` has no</span>
-<span class="sd">caller either — it is the seeded alternative that resolution may adopt.</span>
+<span class="sd">entity-name-phase schedule (period 4.0 s). ``random_blink_schedule`` has no</span>
+<span class="sd">caller — it is the seeded alternative the compiled blink could adopt.</span>
+
+<span class="sd">One documented number is not what a ``play`` shows: the "4-second period"</span>
+<span class="sd">above is ``DEFAULT_BREATH_PERIOD_S``, but the seeded ``idle_breath`` also</span>
+<span class="sd">carries the 6 s weight shift, and :func:`evaluate_track` divides by the</span>
+<span class="sd">ANIMATION's duration — ``max(4, 6)`` — so every sine track in it runs a 6 s</span>
+<span class="sd">cycle. A per-track period is the fix; until then, ``include_weight_shift=False``</span>
+<span class="sd">gives the 4 s breath the numbers describe.</span>
 
 <span class="sd">&gt;&gt;&gt; a = breath_animation()</span>
 <span class="sd">&gt;&gt;&gt; a.name</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.50 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f2b49961"></script>
+      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/play.html">an.characters.play</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
@@ -337,14 +338,26 @@
 <div class="viewcode-block" id="PlayAction">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.PlayAction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PlayAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Play a named animation clip on a target."""</span>
+<span class="w">    </span><span class="sd">"""Play a named animation of the target entity's descriptor (an#7).</span>
+
+<span class="sd">    ``animation`` names an entry of ``CharacterDescriptor.animations`` (the</span>
+<span class="sd">    seeded ``idle_breath`` and ``blink``, or anything an author adds); the</span>
+<span class="sd">    compiler resolves its tracks into channels on the entity's nodes.</span>
+<span class="sd">    ``duration`` widens/narrows the placement window; ``None`` means the</span>
+<span class="sd">    animation's own duration — or, when the resolved ``loop`` is true, the</span>
+<span class="sd">    rest of the shot, because a loop bounded by its own natural duration</span>
+<span class="sd">    never loops. ``loop`` overrides the animation's declared ``loop``</span>
+<span class="sd">    (``None`` = use the descriptor's). Inside a ``sequence`` a play with</span>
+<span class="sd">    ``duration=None`` has ZERO width (:func:`an.ir.compose.duration_of`):</span>
+<span class="sd">    the next sibling starts at the same instant.</span>
+<span class="sd">    """</span>
 
     <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"play"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"play"</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">PathStr</span>
-    <span class="n">animation</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># animation id</span>
-    <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># None = use clip's natural duration</span>
+    <span class="n">animation</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># a key of the entity descriptor's `animations`</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># None = the animation's natural duration</span>
     <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">loop</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+    <span class="n">loop</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># None = the descriptor animation's own `loop`</span></div>
 
 
 

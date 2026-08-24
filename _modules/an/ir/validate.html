@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.validate &mdash; an 0.1.50 documentation</title>
+  <title>an.ir.validate &mdash; an 0.1.51 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f2b49961"></script>
+      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/play.html">an.characters.play</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
@@ -193,6 +194,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRANSFORM_PROPERTIES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.play</span><span class="w"> </span><span class="kn">import</span> <span class="n">art_exists_for</span><span class="p">,</span> <span class="n">play_problems</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">CharacterDescriptor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">flatten</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span>
@@ -310,10 +313,13 @@
     <span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">,</span> <span class="n">available_characters</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""A set/tween on a non-transform property must name a declared asset set</span>
-<span class="sd">    and key of its target entity's descriptor — checked HERE, before the</span>
-<span class="sd">    author pays for TTS or a Chromium launch, because compile raises on it</span>
-<span class="sd">    (an#87). Same charter as `_check_renderable`; needs the store, so it runs</span>
-<span class="sd">    from `validate_semantic`'s shot loop.</span>
+<span class="sd">    and key of its target entity's descriptor, and a `play` must resolve</span>
+<span class="sd">    against that descriptor's animations — checked HERE, before the author</span>
+<span class="sd">    pays for TTS or a Chromium launch, because compile raises on both</span>
+<span class="sd">    (an#87, an#7). Same charter as `_check_renderable`; needs the store, so</span>
+<span class="sd">    it runs from `validate_semantic`'s shot loop — and ONLY then: with</span>
+<span class="sd">    `available_characters=None` neither check runs, so a bare</span>
+<span class="sd">    `validate_semantic(scene)` passes a play the compiler will refuse.</span>
 
 <span class="sd">    Descriptor-less (procedural) entities get a carve-out for `viseme` — the</span>
 <span class="sd">    compiler validates its codes against the drawn-mouth shapes — and an</span>
@@ -322,6 +328,53 @@
     <span class="k">if</span> <span class="n">available_characters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
     <span class="n">refs_by_entity</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">ref</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"character"</span><span class="p">}</span>
+    <span class="c1"># `play` (an#7): resolved against the target entity's MIGRATED descriptor</span>
+    <span class="c1"># by `an.characters.play` — the SAME code the compiler resolves with, so</span>
+    <span class="c1"># validate's verdict is compile's (an unknown bone property, a bone with</span>
+    <span class="c1"># no slot of its own, art missing for a frame, a face slot suppressed by</span>
+    <span class="c1"># `face_overlay=false` all used to pass here and raise there). Art is</span>
+    <span class="c1"># checked when the store has a filesystem root; a dict store assumes</span>
+    <span class="c1"># presence, as the compiler's part probe does.</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">flatten</span><span class="p">(</span><span class="n">action</span><span class="p">):</span>
+            <span class="n">leaf</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">leaf</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"play"</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">entity_id</span> <span class="o">=</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">leaf</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">refs_by_entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">)</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">candidate</span> <span class="o">=</span> <span class="n">available_characters</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                    <span class="n">candidate</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">candidate</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"CharacterDescriptor"</span>
+                <span class="p">):</span>
+                    <span class="n">desc</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+                        <span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"error"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/actions/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"`play` names animation </span><span class="si">{</span><span class="n">leaf</span><span class="o">.</span><span class="n">animation</span><span class="si">!r}</span><span class="s2"> on </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2">, "</span>
+                    <span class="s2">"which has no descriptor — named animations live in a "</span>
+                    <span class="s2">"character's descriptor `animations`; compiling this shot raises."</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">problem</span> <span class="ow">in</span> <span class="n">play_problems</span><span class="p">(</span>
+                <span class="n">desc</span><span class="p">,</span>
+                <span class="n">leaf</span><span class="o">.</span><span class="n">animation</span><span class="p">,</span>
+                <span class="n">art_exists</span><span class="o">=</span><span class="n">art_exists_for</span><span class="p">(</span><span class="n">available_characters</span><span class="p">,</span> <span class="n">ref</span><span class="p">),</span>
+            <span class="p">):</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"error"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/actions/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"`play` of </span><span class="si">{</span><span class="n">leaf</span><span class="o">.</span><span class="n">animation</span><span class="si">!r}</span><span class="s2"> on </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2"> cannot "</span>
+                    <span class="sa">f</span><span class="s2">"resolve: </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2"> — compiling this shot raises."</span><span class="p">,</span>
+                <span class="p">)</span>
     <span class="c1"># Flattened, like the compiler: the documented `start:` idiom wraps every</span>
     <span class="c1"># leaf in a `sequence`, so walking only top-level actions would miss the</span>
     <span class="c1"># common case (an#87 review) — an authoring-time gate that only sees the</span>
@@ -441,15 +494,6 @@
             <span class="s2">"speaker as the workaround."</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"play"</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">"error"</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/actions/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-                <span class="s2">"`play` references a named animation, which nothing can define — "</span>
-                <span class="s2">"compiling this shot raises. Use tween / set, or sequence / "</span>
-                <span class="s2">"parallel to compose them."</span><span class="p">,</span>
-            <span class="p">)</span>
 
 
 <div class="viewcode-block" id="validate_semantic">
@@ -464,8 +508,11 @@
 
 <span class="sd">    Both ``available_voices`` and ``available_characters`` accept any mapping.</span>
 <span class="sd">    Voices are consulted via ``__contains__`` only; characters additionally</span>
-<span class="sd">    via ``__getitem__`` (the swap-reference check reads descriptor dicts,</span>
-<span class="sd">    an#87). Pass ``None`` to skip those checks.</span>
+<span class="sd">    via ``__getitem__`` (the swap-reference and `play` checks read descriptor</span>
+<span class="sd">    dicts, an#87 / an#7). Pass ``None`` to skip those checks — and know that</span>
+<span class="sd">    skipping them is what it sounds like: a `play` or a swap the compiler</span>
+<span class="sd">    will refuse passes silently without the store (the CLI, `an validate`,</span>
+<span class="sd">    always passes it).</span>
 <span class="sd">    """</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">ValidationReport</span><span class="p">()</span>
 
