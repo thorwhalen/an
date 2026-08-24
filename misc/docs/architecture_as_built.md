@@ -372,7 +372,7 @@ What genuinely remains, in rough priority order:
 4. **Multi-scene projects.** `"main"` is the only key the scenes store supports.
 5. **A real `an validate` for everything the renderer refuses.** The pre-flight
    now reports the four IR-level refusals (unknown `camera.move`, `prop`
-   entities, `narration`, `play`), but it duplicates the compiler's camera list
+   entities, `narration`; `play` is resolved against the target's descriptor animations since an#7), but it duplicates the compiler's camera list
    rather than sharing it, and it cannot see rig-level problems — a speaker
    whose character has no head is only discovered at compile time.
 

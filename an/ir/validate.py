@@ -139,6 +139,44 @@ def _check_swap_references(
     if available_characters is None:
         return
     refs_by_entity = {e.id: e.ref for e in shot.entities if e.kind == "character"}
+    # `play` (an#7): the named animation must be declared by the target
+    # entity's MIGRATED descriptor — the compiler raises otherwise, so
+    # validate says so first, before any TTS or Chromium spend.
+    for k, action in enumerate(shot.actions):
+        for flat in flatten(action):
+            leaf = flat.action
+            if getattr(leaf, "kind", None) != "play":
+                continue
+            entity_id = (getattr(leaf, "target", "") or "").split("/", 1)[0]
+            ref = refs_by_entity.get(entity_id)
+            desc = None
+            if ref is not None:
+                try:
+                    candidate = available_characters[ref]
+                except (KeyError, TypeError):
+                    candidate = None
+                if (
+                    isinstance(candidate, dict)
+                    and candidate.get("kind") == "CharacterDescriptor"
+                ):
+                    desc = migrate(dict(candidate), kind="CharacterDescriptor")
+            declared = sorted((desc or {}).get("animations") or {})
+            if desc is None:
+                report.add(
+                    "error",
+                    f"{path}/actions/{k}",
+                    f"`play` names animation {leaf.animation!r} on {entity_id!r}, "
+                    "which has no descriptor — named animations live in a "
+                    "character's descriptor `animations`; compiling this shot raises.",
+                )
+            elif leaf.animation not in declared:
+                report.add(
+                    "error",
+                    f"{path}/actions/{k}",
+                    f"`play` names animation {leaf.animation!r}, which "
+                    f"{entity_id!r}'s descriptor does not declare (it has: "
+                    f"{declared}) — compiling this shot raises.",
+                )
     # Flattened, like the compiler: the documented `start:` idiom wraps every
     # leaf in a `sequence`, so walking only top-level actions would miss the
     # common case (an#87 review) — an authoring-time gate that only sees the
@@ -258,15 +296,6 @@ def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
             "speaker as the workaround.",
         )
 
-    for k, action in enumerate(shot.actions):
-        if getattr(action, "kind", None) == "play":
-            report.add(
-                "error",
-                f"{path}/actions/{k}",
-                "`play` references a named animation, which nothing can define — "
-                "compiling this shot raises. Use tween / set, or sequence / "
-                "parallel to compose them.",
-            )
 
 
 def validate_semantic(

@@ -79,9 +79,9 @@ def play(
     *,
     duration: Seconds | None = None,
     speed: float = 1.0,
-    loop: bool = False,
+    loop: bool | None = None,
 ) -> PlayAction:
-    """Play a named animation clip on a target."""
+    """Play a named animation of the target entity's descriptor (an#7)."""
     return PlayAction(
         target=target,
         animation=animation,

@@ -32,7 +32,7 @@ CLI surface:
 Python surface (everything in `an.__all__`):
 
 - Scene IR: `SceneIR`, `Shot`, `Dialogue`, `AssetRef`, `Camera`, `Resolution`, `Meta`.
-- Composition: `sequence`, `parallel`, `delay`, `loop`, `tween`, `set_`, `flatten`. **`play` is exported but unusable**: named reusable animations have nowhere to be defined, so a `play` action raises at compile time rather than compiling to a clip that animates nothing (#7).
+- Composition: `sequence`, `parallel`, `delay`, `loop`, `tween`, `set_`, `play`, `flatten`. **`play` resolves against the target character's descriptor `animations`** (an#7): `play("maya", "idle_breath", duration=4.0)` compiles the seeded breath (torso bob + head tilt) into channels around the rig's rest pose; `play("maya", "blink")` swaps the eyelids through the same swap path as compiled blinks. `loop=None` uses the animation's own `loop`; an undeclared name is refused at compile (and by `an validate`) with the declared ones listed.
 - Project: `init`, `load`, `save`, `Project`, `build_project_mall`.
 - Sync: `markdown_to_ir`, `ir_to_markdown`.
 - Validation: `validate_schema`, `validate_semantic`.
@@ -53,7 +53,7 @@ Backends registered: `cutout` (real, with face rig + emotion-driven eyebrows + c
   - **`kind: prop` is declared by the IR but NOT rendered** — the compiler raises rather than dropping it. Props land in Wave 7 of #9. Do not put one in a scene.
   - An environment override may only carry keys the renderer reads (`sky_color`, `ground_color`, `ground_y`); anything else raises rather than being silently discarded.
   - **A ref the stores can't supply gets a stand-in, and says so.** A character with no descriptor renders the placeholder rig; an environment ref that is neither a store entry nor a built-in preset (`park`/`indoor`/`night`/`sunset`/`default`) renders the default backdrop. Both warn, and both are recorded per entity in the compiled scene's `asset_resolution`. Pass `--strict-assets` to make them fatal.
-- ` ```yaml actions ` — list of `tween` / `set` action dicts (**not `play`** — see below). Optional `start` (seconds) wraps a leaf in `sequence(delay(start), action)` so flatten gives correct absolute times.
+- ` ```yaml actions ` — list of `tween` / `set` / `play` action dicts. Optional `start` (seconds) wraps a leaf in `sequence(delay(start), action)` so flatten gives correct absolute times. `{kind: play, target: maya, animation: idle_breath, duration: 4.0}` plays a descriptor animation (`loop`/`speed` optional); its natural duration counts as 0 inside a `sequence`, so give it an explicit `duration` when something must follow it.
   - **Transform properties:** `x`, `y`, `rotation`, `rotation_rad`, `scale_x`, `scale_y`, `skew_x`, `skew_y`, `pivot_x`, `pivot_y`, `alpha`. Any other property names a **swap set** (next bullets) and is refused at compile unless the target's descriptor declares it.
   - **`alpha` is the entrance/exit primitive** — it cascades, so a tween on the character root fades every part of it. `{kind: tween, target: charlie, property: alpha, to: 0.0, duration: 1.0}`.
   - **A `tween` with no `from` starts from the property's *rest* value**, which is `1.0` for `scale_x` / `scale_y` / `alpha` and `0.0` for the rest — not `0.0` for everything.

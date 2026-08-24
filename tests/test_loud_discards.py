@@ -631,7 +631,9 @@ def test_validate_reports_every_scene_the_pipeline_refuses(name):
                   resolution=Resolution(width=64, height=48)),
         timeline=[_UNRENDERABLE_SHOTS[name]()],
     )
-    report = validate_semantic(scene)
+    # An empty characters store: `play` is judged against the target's
+    # descriptor (an#7), and a character with none cannot play anything.
+    report = validate_semantic(scene, available_characters={})
     assert not report.passed, f"validate says a {name} scene is fine; it cannot render"
     assert any(f.severity == "error" for f in report.findings), (
         "must be an error — the pipeline raises, so a warning understates it"
@@ -692,26 +694,35 @@ def test_an_empty_camera_move_is_treated_like_any_other_unusable_value():
 
 # ------------------------- 11. the authoring surface refuses it first
 
-def test_scene_md_refuses_play_at_the_authoring_surface():
+def test_scene_md_accepts_play_and_the_mistake_is_caught_where_it_can_be_seen():
     """The layer principle, applied to the surface an author actually edits.
 
-    `scene.md` is the SSOT a human writes. A `play` accepted here round-trips
-    through the IR, survives `an validate`, and dies at compile — having looked
-    valid the whole way. This was the one finding no reviewer lens caught.
+    Before an#7 `scene.md` REFUSED every `play`, because nothing could define
+    a named animation. Now it parses (and round-trips), and the mistake that
+    remains — naming an animation the target's descriptor does not declare —
+    is reported by `an validate` (given the characters store) and refused at
+    compile, each naming the declared animations. A procedural character has
+    no descriptor, so it can play nothing.
     """
     from an.ir.sync import markdown_to_ir
+    from an.ir.validate import validate_semantic
 
     md = (
         "# Test\n\n"
         "```yaml meta\ntitle: t\nduration: 1.0\nfps: 12\n```\n\n"
         "## Shot s1 (cutout)\n\n"
         "```yaml shot\nduration: 1.0\n```\n\n"
+        "```yaml entities\n- kind: character\n  id: charlie\n  store: characters\n  ref: c-v1\n```\n\n"
         "```yaml actions\n"
         "- {kind: play, target: charlie, animation: walk, duration: 1.0}\n"
         "```\n"
     )
-    with pytest.raises(ValueError, match="play"):
-        markdown_to_ir(md)
+    scene = markdown_to_ir(md)  # accepted at the authoring surface
+    assert scene.timeline[0].actions[0].kind == "play"
+    report = validate_semantic(scene, available_characters={})
+    assert not report.passed and any("walk" in f.description for f in report.findings)
+    with pytest.raises(CutoutCompileError, match="walk"):
+        compile_shot(scene.timeline[0], mall={"characters": {}})
 
 
 def test_scene_md_still_accepts_the_actions_that_work():

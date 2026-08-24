@@ -13,9 +13,10 @@ to drop into :attr:`CharacterDescriptor.animations`.
 **None of this drives what renders today.** The blink you see is compiled by
 ``an.adapters.cutout.compile._add_blink_clips`` (an#88) from a fixed
 entity-name-phase schedule (period 4.0 s); descriptor ``animations`` are
-seeded by ``model_post_init`` and consumed by nothing on the render path until
-``PlayAction`` resolution lands (an#7). ``random_blink_schedule`` has no
-caller either — it is the seeded alternative that resolution may adopt.
+seeded by ``model_post_init`` and reached ONLY through an authored ``play``
+action (an#7: ``play("maya", "idle_breath")``), never automatically.
+``random_blink_schedule`` has no caller — it is the seeded alternative the
+compiled blink could adopt.
 
 >>> a = breath_animation()
 >>> a.name

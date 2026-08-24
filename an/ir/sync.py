@@ -278,21 +278,23 @@ def _extract_actions_block(text: str) -> list:
                 at=float(item.get("at", 0.0)),
             )
         elif kind == "play":
-            # Refused here rather than at compile time. `scene.md` is the
-            # authoring surface — the SSOT an author actually edits — so a
-            # `play` accepted here round-trips through the IR, survives
-            # `an validate`, and only dies at compile, having looked valid the
-            # entire way. The earliest layer that can see the mistake reports it.
-            raise ValueError(
-                f"actions[{i}]: `play` references a named animation, and named "
-                "reusable animations are not implemented — nothing can define "
-                "one, so the compiler refuses every `play`. Use tween / set, or "
-                "sequence / parallel to compose them. See "
-                "https://github.com/thorwhalen/an/issues/7"
+            # `{kind: play, target, animation, [duration], [speed], [loop],
+            # [start]}` — resolved at compile against the target entity's
+            # descriptor `animations` (an#7). The writer below has emitted
+            # this shape for a long time; the reader refused it until
+            # resolution existed, which left the pair asymmetric.
+            action = _compose.play(
+                item["target"],
+                item["animation"],
+                duration=(
+                    float(item["duration"]) if item.get("duration") is not None else None
+                ),
+                speed=float(item.get("speed", 1.0)),
+                loop=(bool(item["loop"]) if item.get("loop") is not None else None),
             )
         else:
             raise ValueError(
-                f"actions[{i}].kind must be one of tween/set; got {kind!r}"
+                f"actions[{i}].kind must be one of tween/set/play; got {kind!r}"
             )
         if start is not None and float(start) > 0:
             action = _compose.sequence(_compose.delay(float(start)), action)
@@ -453,8 +455,8 @@ def _actions_to_yaml_list(actions: list) -> list[dict]:
                 entry["duration"] = leaf.duration
             if leaf.speed != 1.0:
                 entry["speed"] = leaf.speed
-            if leaf.loop:
-                entry["loop"] = True
+            if leaf.loop is not None:
+                entry["loop"] = bool(leaf.loop)
             if start is not None:
                 entry["start"] = start
             out.append(entry)
