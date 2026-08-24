@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.factory &mdash; an 0.1.55 documentation</title>
+  <title>an.characters.factory &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -225,7 +231,11 @@
     <span class="n">fetch_dicebear</span><span class="p">,</span>
     <span class="n">wrap_dicebear_for_an</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.mouth_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_default_mouths</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.mouth_set</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DEFAULT_MOUTH_VARIANTS</span><span class="p">,</span>
+    <span class="n">mouth_attachment_name</span><span class="p">,</span>
+    <span class="n">write_default_mouths</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CharacterDescriptor</span><span class="p">,</span>
     <span class="n">MOUTH_SHAPES</span><span class="p">,</span>
@@ -283,8 +293,16 @@
     <span class="n">use_dicebear</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">acknowledge_attribution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">mouth_variants</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Build a complete character on disk.</span>
+
+<span class="sd">    ``mouth_variants`` (an#98) — ``{form: smile offset}`` — writes one more</span>
+<span class="sd">    9-shape mouth set per form (``mouth_&lt;shape&gt;_&lt;form&gt;.svg``) and declares it</span>
+<span class="sd">    as the ``viseme@&lt;form&gt;`` swap set, with its attachments in the default</span>
+<span class="sd">    skin's ``mouth`` slot, so an expression preset preferring that form</span>
+<span class="sd">    selects it. ``None`` means :data:`~an.characters.mouth_set.DEFAULT_MOUTH_VARIANTS`</span>
+<span class="sd">    (happy, sad); ``{}`` means the neutral set only.</span>
 
 <span class="sd">    Steps:</span>
 
@@ -354,8 +372,9 @@
     <span class="n">_write_leg_part</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"leg_l.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"l"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#3a3a4a"</span><span class="p">)</span>
     <span class="n">_write_leg_part</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"leg_r.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"r"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#3a3a4a"</span><span class="p">)</span>
 
-    <span class="c1"># Step 4: default mouths</span>
-    <span class="n">write_default_mouths</span><span class="p">(</span><span class="n">mouth_dir</span><span class="p">)</span>
+    <span class="c1"># Step 4: default mouths, plus the form variants (an#98)</span>
+    <span class="n">variants</span> <span class="o">=</span> <span class="n">DEFAULT_MOUTH_VARIANTS</span> <span class="k">if</span> <span class="n">mouth_variants</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mouth_variants</span><span class="p">)</span>
+    <span class="n">write_default_mouths</span><span class="p">(</span><span class="n">mouth_dir</span><span class="p">,</span> <span class="n">variants</span><span class="o">=</span><span class="n">variants</span><span class="p">)</span>
 
     <span class="c1"># Step 5: derived parts (eyes, brows)</span>
     <span class="n">_synthesize_eye_open</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"eye_l_open.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"l"</span><span class="p">)</span>
@@ -378,9 +397,46 @@
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">metadata</span><span class="p">,</span> <span class="s2">"pivots_detected"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">pivots</span><span class="o">.</span><span class="n">keys</span><span class="p">())},</span>
         <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">declare_mouth_variants</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="n">variants</span><span class="p">)</span>
     <span class="n">desc_path</span> <span class="o">=</span> <span class="n">out</span> <span class="o">/</span> <span class="s2">"character.json"</span>
     <span class="n">desc_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">desc_path</span></div>
+
+
+
+<div class="viewcode-block" id="declare_mouth_variants">
+<a class="viewcode-back" href="../../../module_docs/an/characters/factory.html#an.characters.declare_mouth_variants">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">declare_mouth_variants</span><span class="p">(</span><span class="n">descriptor</span><span class="p">:</span> <span class="n">CharacterDescriptor</span><span class="p">,</span> <span class="n">variants</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Declare a ``viseme@&lt;form&gt;`` set per variant on ``descriptor`` — the set's</span>
+<span class="sd">    keys map to ``mouth_&lt;shape&gt;_&lt;form&gt;`` attachments, which are added to the</span>
+<span class="sd">    default skin's ``mouth`` slot with the neutral mouth's geometry. The</span>
+<span class="sd">    neutral set is the SSOT for which shapes exist; a variant mirrors it.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">VISEME_CHANNEL</span>
+
+    <span class="n">neutral</span> <span class="o">=</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">asset_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">VISEME_CHANNEL</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">skin</span> <span class="o">=</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">skins</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">skin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="s2">"mouth"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skin</span><span class="o">.</span><span class="n">slots</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">mouth_slot</span> <span class="o">=</span> <span class="n">skin</span><span class="o">.</span><span class="n">slots</span><span class="p">[</span><span class="s2">"mouth"</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">:</span>
+        <span class="n">key_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">attachment</span> <span class="ow">in</span> <span class="n">neutral</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># From the KEY, never the attachment name: a promoted hand rig maps</span>
+            <span class="c1"># `X` to `mouth_shut`, and only `mouth_x_&lt;form&gt;.svg` is ever drawn.</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">shape</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MOUTH_SHAPES</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">variant_name</span> <span class="o">=</span> <span class="n">mouth_attachment_name</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">form</span><span class="p">)</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="n">mouth_slot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attachment</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">mouth_slot</span><span class="p">[</span><span class="n">variant_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span>
+                <span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"parts/mouth/</span><span class="si">{</span><span class="n">variant_name</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">}</span>
+            <span class="p">)</span>
+            <span class="n">key_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">variant_name</span>
+        <span class="k">if</span> <span class="n">key_map</span><span class="p">:</span>
+            <span class="n">descriptor</span><span class="o">.</span><span class="n">asset_sets</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">VISEME_CHANNEL</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">form</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">key_map</span></div>
 
 
 

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.corpus &mdash; an 0.1.55 documentation</title>
+  <title>an.bench.corpus &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -412,6 +418,29 @@
         <span class="n">expect_visual_kinds</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">({</span><span class="s2">"svg_sprite"</span><span class="p">}),</span>
         <span class="n">golden_frames</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span>
         <span class="n">golden_note</span><span class="o">=</span><span class="s2">"the head plate rotating through 0.3 rad (1,187 px)."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"expressions"</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">CORPUS_DIRNAME</span><span class="si">}</span><span class="s2">/expressions"</span><span class="p">,</span>
+        <span class="n">expect_visual_kinds</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">({</span><span class="s2">"svg_sprite"</span><span class="p">}),</span>
+        <span class="n">golden_frames</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="mf">0.125</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)),</span>
+        <span class="n">golden_note</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"eight 0.25 s shots of one silent synthesized character holding one "</span>
+            <span class="s2">"expression preset each (neutral, happy, sad, angry, surprised, "</span>
+            <span class="s2">"afraid, thinking, skeptical — the two presets whose faces differ "</span>
+            <span class="s2">"only by a mouth form the silent rest does not show, disgusted and "</span>
+            <span class="s2">"amused, are left out), sampled at each shot's mid-frame (an#98). "</span>
+            <span class="s2">"What moves between goldens is the FACE SOLVER's output alone: brow "</span>
+            <span class="s2">"height and angle, the eyelid key, and the mouth form's rest. The "</span>
+            <span class="s2">"character is named `face` because its seeded blink phase puts no "</span>
+            <span class="s2">"blink window inside any 0.25 s shot (the blink clock restarts per "</span>
+            <span class="s2">"shot), so no golden straddles a blink; "</span>
+            <span class="s2">"it is lowered by an absolute `set face y` so the head clears the "</span>
+            <span class="s2">"frame's top edge at 320x240. Its rig is committed whole (parts and "</span>
+            <span class="s2">"descriptor, `viseme@happy`/`viseme@sad` variants included) and has "</span>
+            <span class="s2">"no pupil layer yet — PR-D re-blesses these eight once the eye stack "</span>
+            <span class="s2">"lands. The pairwise distinguishability test in "</span>
+            <span class="s2">"tests/test_expression_goldens.py reads these same PNGs."</span>
+        <span class="p">),</span>
     <span class="p">),</span>
     <span class="s2">"aa_probe"</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">(</span>
         <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">CORPUS_DIRNAME</span><span class="si">}</span><span class="s2">/aa_probe"</span><span class="p">,</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.run &mdash; an 0.1.55 documentation</title>
+  <title>an.bench.run &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -726,6 +732,46 @@
 <span class="c1">#: boolean and the number are the same evidence read two ways.</span>
 <span class="n">GOLDEN_METRIC_KEY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"min_ssim_win8_vs_golden"</span>
 <span class="n">GOLDEN_TRIPWIRE_KEY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"golden_identity"</span>
+<span class="n">PAIRWISE_METRIC_KEY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"expression_min_pairwise_changed_px"</span>
+<span class="c1">#: A pairwise minimum needs two frames; every fixture pins at least two, so on</span>
+<span class="c1">#: a real capture this row is always measured (the render-side panel may not</span>
+<span class="c1">#: be null — `tests/test_bench_capture.py`).</span>
+<span class="n">MIN_PINNED_FRAMES_FOR_PAIRWISE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+<div class="viewcode-block" id="pinned_frames_min_pairwise_changed_px">
+<a class="viewcode-back" href="../../../module_docs/an/bench/run.html#an.bench.pinned_frames_min_pairwise_changed_px">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pinned_frames_min_pairwise_changed_px</span><span class="p">(</span><span class="n">capture</span><span class="p">:</span> <span class="n">SceneCapture</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Value</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``expression_min_pairwise_changed_px`` for one scene: decode the pinned</span>
+<span class="sd">    frames from today's render and take the minimum over every pair of the</span>
+<span class="sd">    count of pixels that differ (an#98). On a two-frame scene that is the</span>
+<span class="sd">    pair's own change; `unavailable`, never zero, only when a scene pins a</span>
+<span class="sd">    single frame, which the fixture rule forbids."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.png</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_png</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">MIN_PINNED_FRAMES_FOR_PAIRWISE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">unavailable</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the scene pins </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span><span class="si">}</span><span class="s2"> frame(s); a pairwise minimum needs "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">MIN_PINNED_FRAMES_FOR_PAIRWISE</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">frames</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">resolve_frames</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">times</span><span class="p">):</span>
+        <span class="n">frames</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_png</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">frame_png_path</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">ref</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">MIN_PINNED_FRAMES_FOR_PAIRWISE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">unavailable</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the scene's </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span><span class="si">}</span><span class="s2"> pinned times resolve to </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span><span class="si">}</span><span class="s2"> distinct "</span>
+            <span class="sa">f</span><span class="s2">"frame(s); a pairwise minimum needs </span><span class="si">{</span><span class="n">MIN_PINNED_FRAMES_FOR_PAIRWISE</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">frames</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">changed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">frames</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">!=</span> <span class="n">frames</span><span class="p">[</span><span class="n">b</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">best</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">changed</span> <span class="o">&lt;</span> <span class="n">best</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">best</span> <span class="o">=</span> <span class="p">(</span><span class="n">changed</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">changed</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">best</span>
+    <span class="k">return</span> <span class="n">measured</span><span class="p">(</span><span class="n">changed</span><span class="p">,</span> <span class="n">closest_pair</span><span class="o">=</span><span class="p">[</span><span class="n">G</span><span class="o">.</span><span class="n">frame_key</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">G</span><span class="o">.</span><span class="n">frame_key</span><span class="p">(</span><span class="n">b</span><span class="p">)])</span></div>
+
 
 <span class="c1">#: Said when a run blessed the goldens it would otherwise have compared against.</span>
 <span class="n">JUST_BLESSED_DETAIL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
@@ -964,6 +1010,9 @@
                 <span class="p">)</span>
             <span class="n">metric_value</span><span class="p">,</span> <span class="n">tripwire_value</span> <span class="o">=</span> <span class="n">_golden_values</span><span class="p">(</span><span class="n">golden</span><span class="p">)</span>
             <span class="n">values</span><span class="p">[</span><span class="n">GOLDEN_METRIC_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">metric_value</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">PAIRWISE_METRIC_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">pinned_frames_min_pairwise_changed_px</span><span class="p">(</span>
+                <span class="n">capture</span><span class="p">,</span> <span class="n">fixture</span><span class="o">.</span><span class="n">golden_frames</span>
+            <span class="p">)</span>
             <span class="n">scene_prov</span><span class="p">[</span><span class="s2">"golden"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="o">**</span><span class="n">golden</span><span class="p">,</span>
                 <span class="s2">"chromium_build"</span><span class="p">:</span> <span class="n">chromium_build</span><span class="p">,</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.55 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -1268,6 +1274,61 @@
                 <span class="s2">"REFUTED: only the global-moment reduction is blind. Killing "</span>
                 <span class="s2">"SSIM outright would have discarded the best numpy-only detector "</span>
                 <span class="s2">"available."</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"expression_min_pairwise_changed_px"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"B"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">"diagnostic"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"pixels"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The smallest number of pixels by which any two of the scene's "</span>
+                <span class="s2">"pinned frames differ in TODAY'S render — on `expressions`, the "</span>
+                <span class="s2">"closest pair of presets; a collapse of two emotions onto one "</span>
+                <span class="s2">"face drives it to zero (an#98). On a two-frame scene it is that "</span>
+                <span class="s2">"pair's own change, measured rather than withheld: a render-side "</span>
+                <span class="s2">"row is never null on a real capture."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"Not a quality dial: larger is not better beyond 'the presets "</span>
+                    <span class="s2">"are apart'. It exists so a regression that makes two "</span>
+                    <span class="s2">"expressions render alike moves a ledger number instead of "</span>
+                    <span class="s2">"waiting for someone to look."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"not_applicable"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"computed on the pre-encode PNGs; no encode change can reach it"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"AA-off moves every edge on every pinned frame, so the count "</span>
+                        <span class="s2">"of differing pixels between two frames moves with it in an "</span>
+                        <span class="s2">"undeclared direction — measured on the lane: it MOVED under "</span>
+                        <span class="s2">"`supersample` when first declared `not_applicable`. Gated, "</span>
+                        <span class="s2">"not predicted: the delta is uninterpretable, not good or bad. "</span>
+                        <span class="s2">"Family B's witness is `min_ssim_win8_vs_golden`."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"same as disabled_aa: an edge-quality lever softens every "</span>
+                        <span class="s2">"edge on every pinned frame and the pairwise count moves "</span>
+                        <span class="s2">"with it; not a face-solver lever, no declared sign"</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Measured at the first bless (an#98): 106 px between `thinking` and "</span>
+                <span class="s2">"`skeptical`, the two asymmetric presets, and 384 px at the far end. "</span>
+                <span class="s2">"`tests/test_expression_goldens.py` pins half the minimum on the "</span>
+                <span class="s2">"COMMITTED goldens; this row reports the same quantity on the live "</span>
+                <span class="s2">"render, so the ledger sees it before a re-bless does."</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>

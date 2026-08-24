@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.validate &mdash; an 0.1.55 documentation</title>
+  <title>an.characters.validate &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -203,6 +209,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">swap_set_name_problem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">VISEME_CHANNEL</span><span class="p">,</span>
     <span class="n">CHARACTER_DOCUMENT_KIND</span><span class="p">,</span>
     <span class="n">MOUTH_SHAPES</span><span class="p">,</span>
     <span class="n">REQUIRED_PARTS</span><span class="p">,</span>
@@ -410,6 +417,8 @@
         <span class="n">_check_part</span><span class="p">(</span><span class="n">rel</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
 
     <span class="n">_check_asset_sets</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">who</span><span class="p">)</span>
+
+    <span class="n">_check_mouth_variants</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">who</span><span class="p">)</span>
     <span class="n">_check_face_overlay_declaration</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">who</span><span class="p">)</span>
     <span class="n">_check_joint_names</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
 
@@ -537,6 +546,58 @@
                     <span class="s2">"Give the set's attachments identical geometry, or "</span>
                     <span class="s2">"accept that per-key placement is not yet expressible."</span><span class="p">,</span>
                 <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_mouth_variants</span><span class="p">(</span>
+    <span class="n">descriptor</span><span class="p">:</span> <span class="n">CharacterDescriptor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">VerificationReport</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">who</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The `viseme@&lt;form&gt;` variant sets (an#98), three rules:</span>
+
+<span class="sd">    - a variant must name a known expression preset's mouth form — BLOCKING,</span>
+<span class="sd">      because nothing can ever select a form no preset prefers;</span>
+<span class="sd">    - a variant lacking keys the neutral set has — ADVISORY: a line using</span>
+<span class="sd">      those keys falls back to the neutral set (with a warning) rather than</span>
+<span class="sd">      showing the variant;</span>
+<span class="sd">    - an overlay face that declares a variant but no neutral ``viseme`` set —</span>
+<span class="sd">      BLOCKING: the resolver's fallback has nowhere to land and a speaking</span>
+<span class="sd">      line raises.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.binding</span><span class="w"> </span><span class="kn">import</span> <span class="n">declared_mouth_variants</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.presets</span><span class="w"> </span><span class="kn">import</span> <span class="n">PRESETS</span>
+
+    <span class="n">forms_known</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">mouth_form</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">PRESETS</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">mouth_form</span><span class="p">}</span>
+    <span class="n">neutral</span> <span class="o">=</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">asset_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">VISEME_CHANNEL</span><span class="p">)</span>
+    <span class="n">variants</span> <span class="o">=</span> <span class="n">declared_mouth_variants</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">form</span><span class="p">,</span> <span class="n">set_name</span> <span class="ow">in</span> <span class="n">variants</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">form</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">forms_known</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">BLOCKING</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"character.json#asset_sets.</span><span class="si">{</span><span class="n">set_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> declares </span><span class="si">{</span><span class="n">set_name</span><span class="si">!r}</span><span class="s2">, but no expression preset prefers a "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">form</span><span class="si">!r}</span><span class="s2"> mouth form (forms: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">forms_known</span><span class="p">)</span><span class="si">}</span><span class="s2">) — nothing can select it"</span><span class="p">,</span>
+                <span class="s2">"Name a preset's form, or drop the set."</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">neutral</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">neutral</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">asset_sets</span><span class="p">[</span><span class="n">set_name</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="n">ADVISORY</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"character.json#asset_sets.</span><span class="si">{</span><span class="n">set_name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2">'s </span><span class="si">{</span><span class="n">set_name</span><span class="si">!r}</span><span class="s2"> lacks the keys </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> the neutral set "</span>
+                    <span class="s2">"has; a line using them shows the neutral mouth instead (with a warning)"</span><span class="p">,</span>
+                    <span class="s2">"Draw the missing shapes for the variant, or accept the fallback."</span><span class="p">,</span>
+                <span class="p">)</span>
+    <span class="k">if</span> <span class="n">variants</span> <span class="ow">and</span> <span class="n">neutral</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">face_overlay</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">BLOCKING</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"character.json#asset_sets.</span><span class="si">{</span><span class="n">VISEME_CHANNEL</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> declares mouth variants </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">variants</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="si">}</span><span class="s2"> but no neutral "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">VISEME_CHANNEL</span><span class="si">!r}</span><span class="s2"> set — a line whose expression has no variant has no "</span>
+            <span class="s2">"mouth to fall back on and raises"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"Declare the </span><span class="si">{</span><span class="n">VISEME_CHANNEL</span><span class="si">!r}</span><span class="s2"> set."</span><span class="p">,</span>
+        <span class="p">)</span>
 
 
 <span class="c1">#: Provenance values that historically MEANT a baked face. The compiler no</span>

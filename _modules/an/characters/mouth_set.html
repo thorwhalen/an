@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.mouth_set &mdash; an 0.1.55 documentation</title>
+  <title>an.characters.mouth_set &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -261,15 +267,21 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">canvas</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
     <span class="n">palette</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">smile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Render one mouth shape as an SVG document string."""</span>
+<span class="w">    </span><span class="sd">"""Render one mouth shape as an SVG document string.</span>
+
+<span class="sd">    ``smile`` is added to the shape's own corner upturn (positive = smile,</span>
+<span class="sd">    negative = frown) — the one knob behind a ``viseme@&lt;form&gt;`` variant set</span>
+<span class="sd">    (an#98): every shape keeps its opening, only the corners move.</span>
+<span class="sd">    """</span>
     <span class="n">cw</span><span class="p">,</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">canvas</span>
     <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">cw</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">ch</span> <span class="o">/</span> <span class="mf">2.0</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">_SHAPES</span><span class="p">[</span><span class="n">shape</span><span class="p">]</span>
 
     <span class="n">half_w</span> <span class="o">=</span> <span class="p">(</span><span class="n">cw</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"width"</span><span class="p">]))</span> <span class="o">/</span> <span class="mf">2.0</span>
     <span class="n">half_h</span> <span class="o">=</span> <span class="p">(</span><span class="n">ch</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"height"</span><span class="p">]))</span> <span class="o">/</span> <span class="mf">2.0</span>
-    <span class="n">smile_y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"smile"</span><span class="p">])</span> <span class="o">*</span> <span class="n">half_h</span> <span class="o">*</span> <span class="mf">1.5</span>
+    <span class="n">smile_y</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"smile"</span><span class="p">])</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">smile</span><span class="p">)))</span> <span class="o">*</span> <span class="n">half_h</span> <span class="o">*</span> <span class="mf">1.5</span>
     <span class="n">open_amt</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"open"</span><span class="p">])</span>
 
     <span class="c1"># Top lip: lifted slightly with smile offset; its control point is above.</span>
@@ -327,6 +339,26 @@
     <span class="p">)</span>
 
 
+<span class="c1">#: The mouth-form variants a synthesized character gets by default: a</span>
+<span class="c1">#: `viseme@&lt;form&gt;` set per entry, its shapes drawn with this corner upturn</span>
+<span class="c1">#: added (an#98). Every preset that prefers a form the character lacks falls</span>
+<span class="c1">#: back to `viseme` with a warning, so the default covers the two forms the</span>
+<span class="c1">#: most-authored presets (`happy`/`amused`, `sad`) ask for.</span>
+<span class="n">DEFAULT_MOUTH_VARIANTS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"happy"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="s2">"sad"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.35</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="mouth_attachment_name">
+<a class="viewcode-back" href="../../../module_docs/an/characters/mouth_set.html#an.characters.mouth_attachment_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mouth_attachment_name</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The attachment (and file stem) of one mouth drawing.</span>
+
+<span class="sd">    &gt;&gt;&gt; mouth_attachment_name("a"), mouth_attachment_name("a", "happy")</span>
+<span class="sd">    ('mouth_a', 'mouth_a_happy')</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">form</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
 <div class="viewcode-block" id="generate_default_mouths">
 <a class="viewcode-back" href="../../../module_docs/an/characters/mouth_set.html#an.characters.generate_default_mouths">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">generate_default_mouths</span><span class="p">(</span>
@@ -334,18 +366,22 @@
     <span class="n">canvas</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_MOUTH_VIEWBOX</span><span class="p">,</span>
     <span class="n">palette</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">shapes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">MOUTH_SHAPES</span><span class="p">,</span>
+    <span class="n">smile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return ``{"mouth_&lt;letter&gt;": &lt;svg-string&gt;, ...}`` for every shape.</span>
+<span class="w">    </span><span class="sd">"""Return ``{"mouth_&lt;letter&gt;[_&lt;form&gt;]": &lt;svg-string&gt;, ...}`` for every shape.</span>
 
 <span class="sd">    &gt;&gt;&gt; svgs = generate_default_mouths()</span>
 <span class="sd">    &gt;&gt;&gt; 'mouth_x' in svgs and 'viewBox' in svgs['mouth_x']</span>
 <span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; sorted(generate_default_mouths(shapes=["a"], smile=0.35, form="happy"))</span>
+<span class="sd">    ['mouth_a_happy']</span>
 <span class="sd">    """</span>
     <span class="n">pal</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_DEFAULT_PALETTE</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">palette</span><span class="p">:</span>
         <span class="n">pal</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">palette</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span>
-        <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">_shape_svg</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">canvas</span><span class="o">=</span><span class="n">canvas</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">pal</span><span class="p">)</span>
+        <span class="n">mouth_attachment_name</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">form</span><span class="p">):</span> <span class="n">_shape_svg</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">canvas</span><span class="o">=</span><span class="n">canvas</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">pal</span><span class="p">,</span> <span class="n">smile</span><span class="o">=</span><span class="n">smile</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">shapes</span>
     <span class="p">}</span></div>
 
@@ -359,20 +395,28 @@
     <span class="n">canvas</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_MOUTH_VIEWBOX</span><span class="p">,</span>
     <span class="n">palette</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">shapes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">MOUTH_SHAPES</span><span class="p">,</span>
+    <span class="n">variants</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Write the default mouth SVGs into ``out_dir`` (created if missing).</span>
+<span class="w">    </span><span class="sd">"""Write the default mouth SVGs into ``out_dir`` (created if missing),</span>
+<span class="sd">    plus one ``mouth_&lt;shape&gt;_&lt;form&gt;.svg`` per shape for every ``variants``</span>
+<span class="sd">    entry (``{form: smile offset}``; ``None`` = none).</span>
 
-<span class="sd">    Returns the list of paths written, sorted by shape order.</span>
+<span class="sd">    Returns the list of paths written: the neutral set in shape order, then</span>
+<span class="sd">    each variant's.</span>
 <span class="sd">    """</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
     <span class="n">out</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">written</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">svg</span> <span class="ow">in</span> <span class="n">generate_default_mouths</span><span class="p">(</span>
-        <span class="n">canvas</span><span class="o">=</span><span class="n">canvas</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span> <span class="n">shapes</span><span class="o">=</span><span class="n">shapes</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">out</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.svg"</span>
-        <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
-        <span class="n">written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">batches</span> <span class="o">=</span> <span class="p">[</span><span class="n">generate_default_mouths</span><span class="p">(</span><span class="n">canvas</span><span class="o">=</span><span class="n">canvas</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span> <span class="n">shapes</span><span class="o">=</span><span class="n">shapes</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">form</span><span class="p">,</span> <span class="n">smile</span> <span class="ow">in</span> <span class="p">(</span><span class="n">variants</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">batches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">generate_default_mouths</span><span class="p">(</span><span class="n">canvas</span><span class="o">=</span><span class="n">canvas</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span> <span class="n">shapes</span><span class="o">=</span><span class="n">shapes</span><span class="p">,</span> <span class="n">smile</span><span class="o">=</span><span class="n">smile</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batches</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">svg</span> <span class="ow">in</span> <span class="n">batch</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">out</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.svg"</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+            <span class="n">written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">written</span></div>
 
 </pre></div>

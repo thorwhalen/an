@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.coarticulate &mdash; an 0.1.55 documentation</title>
+  <title>an.adapters.cutout.coarticulate &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -316,7 +322,9 @@
 
 <div class="viewcode-block" id="suppress_weak">
 <a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.suppress_weak">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">suppress_weak</span><span class="p">(</span><span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_weak_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">suppress_weak</span><span class="p">(</span>
+    <span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_weak_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Drop a weak (low-dominance) cue that would show for less than ``max_weak_s``.</span>
 
 <span class="sd">    &gt;&gt;&gt; raw = [(0.0, "X"), (0.20, "D"), (0.40, "B"), (0.43, "D"), (0.80, "X")]</span>
@@ -330,7 +338,11 @@
 <span class="sd">    """</span>
     <span class="n">cues</span> <span class="o">=</span> <span class="n">_cues</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
     <span class="n">spans</span> <span class="o">=</span> <span class="n">_spans</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
-    <span class="n">kept</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">span</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">spans</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">dominance</span> <span class="o">&lt;</span> <span class="n">WEAK_BELOW</span> <span class="ow">and</span> <span class="n">span</span> <span class="o">&lt;</span> <span class="n">max_weak_s</span><span class="p">)]</span>
+    <span class="n">kept</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">c</span>
+        <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">span</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">spans</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">dominance</span> <span class="o">&lt;</span> <span class="n">WEAK_BELOW</span> <span class="ow">and</span> <span class="n">span</span> <span class="o">&lt;</span> <span class="n">max_weak_s</span><span class="p">)</span>
+    <span class="p">]</span>
     <span class="k">return</span> <span class="n">merge_duplicates</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span></div>
 
 
@@ -362,7 +374,9 @@
 
 <div class="viewcode-block" id="decay">
 <a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.decay">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">decay</span><span class="p">(</span><span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">decay_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">rest</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"X"</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">decay</span><span class="p">(</span>
+    <span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">decay_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">rest</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"X"</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Give a shape ``decay_s`` to close: a rest arriving sooner than that after</span>
 <span class="sd">    the shape before it is pushed out to ``decay_s``, never past the next cue</span>
 <span class="sd">    and never past ``end`` (a rest pushed to ``end`` is where the line closes).</span>
@@ -391,7 +405,9 @@
 
 <div class="viewcode-block" id="condense">
 <a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.condense">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">condense</span><span class="p">(</span><span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_hold_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">condense</span><span class="p">(</span>
+    <span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_hold_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Enforce a minimum hold by voting, never by dropping.</span>
 
 <span class="sd">    Windows of ``min_hold_s`` open at each cue that clears the previous window.</span>
@@ -460,9 +476,13 @@
         <span class="n">window_end</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">min_hold_s</span>
         <span class="n">members</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Cue</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">carried</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">carried</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">ends</span><span class="p">[</span><span class="n">carried_idx</span><span class="p">],</span> <span class="n">window_end</span><span class="p">)</span> <span class="o">-</span> <span class="n">start</span><span class="p">)))</span>
+            <span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">carried</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">ends</span><span class="p">[</span><span class="n">carried_idx</span><span class="p">],</span> <span class="n">window_end</span><span class="p">)</span> <span class="o">-</span> <span class="n">start</span><span class="p">))</span>
+            <span class="p">)</span>
         <span class="n">j</span> <span class="o">=</span> <span class="n">i</span>
-        <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cues</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">cues</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">window_end</span> <span class="o">-</span> <span class="n">_EDGE_EPS</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">members</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">==</span> <span class="n">i</span><span class="p">)):</span>
+        <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cues</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="n">cues</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">window_end</span> <span class="o">-</span> <span class="n">_EDGE_EPS</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">members</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span>
+        <span class="p">):</span>
             <span class="n">overlap</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">ends</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">window_end</span><span class="p">)</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">cues</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">start</span><span class="p">))</span>
             <span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">cues</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">overlap</span><span class="p">))</span>
             <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -529,7 +549,13 @@
     <span class="n">cues</span> <span class="o">=</span> <span class="n">lead</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">lead_s</span><span class="o">=</span><span class="n">lead_s</span><span class="p">)</span>
     <span class="n">cues</span> <span class="o">=</span> <span class="n">decay</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">decay_s</span><span class="o">=</span><span class="n">decay_s</span><span class="p">,</span> <span class="n">rest</span><span class="o">=</span><span class="n">rest</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">condense</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">min_hold_s</span><span class="o">=</span><span class="n">min_hold_s</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cues_in</span> <span class="ow">and</span> <span class="n">cues_in</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">rest</span> <span class="ow">and</span> <span class="n">out</span> <span class="ow">and</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">!=</span> <span class="n">rest</span><span class="p">:</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">cues_in</span>
+        <span class="ow">and</span> <span class="n">cues_in</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">rest</span>
+        <span class="ow">and</span> <span class="n">out</span>
+        <span class="ow">and</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">!=</span> <span class="n">rest</span>
+    <span class="p">):</span>
         <span class="c1"># The closing rest lost its last window (or the decay pushed it onto</span>
         <span class="c1"># the end): the line still closes, at `end`.</span>
         <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Cue</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">end</span><span class="p">),</span> <span class="n">rest</span><span class="p">,</span> <span class="n">cues_in</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">intensity</span><span class="p">))</span>

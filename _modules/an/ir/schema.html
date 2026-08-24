@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.55 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -362,6 +368,44 @@
 
 
 
+<span class="c1">#: Default ramp in/out of an expression, seconds (0 = cut). The dialogue</span>
+<span class="c1">#: `[emotion]` sugar uses its own in `an.expression.provider`.</span>
+<span class="n">DFLT_EXPRESSION_BLEND_S</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.15</span>
+
+
+<div class="viewcode-block" id="ExpressionAction">
+<a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.ExpressionAction">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExpressionAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Hold a facial expression on an entity (an#98, epic #9 Wave 6).</span>
+
+<span class="sd">    ``preset`` names one of :data:`an.expression.presets.PRESETS`; ``axes``</span>
+<span class="sd">    are per-axis overrides layered on it (axis units, see</span>
+<span class="sd">    :mod:`an.expression.axes`); ``None`` + no axes is a cheap "return to</span>
+<span class="sd">    rest". ``duration=None`` runs to the shot end (the looping-play rule) and</span>
+<span class="sd">    is **zero-width in a sequence**, like ``play``. ``blend`` ramps the</span>
+<span class="sd">    intensity in and out; two overlapping expressions cross-fade because the</span>
+<span class="sd">    face solver sums offsets. The dialogue ``speaker [emotion]: …`` bracket is</span>
+<span class="sd">    sugar for one of these over the line, desugared in memory only.</span>
+
+<span class="sd">    A leaf action, flattened like ``play``: the compiler resolves it in the</span>
+<span class="sd">    face solver (one channel per ``(node, property)``), never per action.</span>
+
+<span class="sd">    The ramp is a min over the two ends, so a span shorter than ``2·blend``</span>
+<span class="sd">    never reaches full intensity (a 0.2 s expression at the default 0.15 s</span>
+<span class="sd">    blend peaks at 0.67) and a ``duration=0`` expression shows only where a</span>
+<span class="sd">    frame lands on it with ``blend=0`` — cut the blend for a flash.</span>
+<span class="sd">    """</span>
+
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"expression"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"expression"</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">PathStr</span>  <span class="c1"># the ENTITY; the binding picks the nodes</span>
+    <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">axes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">intensity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># None = to the shot end</span>
+    <span class="n">blend</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">DFLT_EXPRESSION_BLEND_S</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="SequenceAction">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.SequenceAction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SequenceAction</span><span class="p">(</span><span class="n">_ActionBase</span><span class="p">):</span>
@@ -409,6 +453,7 @@
         <span class="n">SetAction</span><span class="p">,</span>
         <span class="n">TweenAction</span><span class="p">,</span>
         <span class="n">PlayAction</span><span class="p">,</span>
+        <span class="n">ExpressionAction</span><span class="p">,</span>
         <span class="n">SequenceAction</span><span class="p">,</span>
         <span class="n">ParallelAction</span><span class="p">,</span>
         <span class="n">DelayAction</span><span class="p">,</span>

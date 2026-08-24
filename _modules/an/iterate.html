@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.iterate &mdash; an 0.1.55 documentation</title>
+  <title>an.iterate &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -326,7 +332,7 @@
 <span class="s2">      - entities: list of {kind, id, store, ref, ...}</span>
 <span class="s2">        "kind" MUST be one of: character, environment, voice, style.</span>
 <span class="s2">        "prop" is declared by the IR but NOT rendered — it raises. Do not emit one.</span>
-<span class="s2">      - actions: list of action dicts (kind ∈ {tween, set, play, sequence, parallel, delay, loop})</span>
+<span class="s2">      - actions: list of action dicts (kind ∈ {tween, set, play, expression, sequence, parallel, delay, loop})</span>
 <span class="s2">        A tween/set action's "property" is EITHER a transform:</span>
 <span class="s2">          x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, skew_y,</span>
 <span class="s2">          pivot_x, pivot_y, alpha</span>
@@ -343,6 +349,14 @@
 <span class="s2">        descriptor animations ("idle_breath", "blink", or any it declares);</span>
 <span class="s2">        an animation the descriptor does not declare fails the compile —</span>
 <span class="s2">        never invent a name.</span>
+<span class="s2">        An "expression" action ({kind: expression, target: &lt;entity&gt;, preset: &lt;name&gt;,</span>
+<span class="s2">        [axes: {axis: value}], [intensity], [duration], [blend]}) holds a facial</span>
+<span class="s2">        expression on a character: brows, eyelids, and the mouth's set for any</span>
+<span class="s2">        dialogue under it. Presets: neutral, happy, sad, angry, surprised, afraid,</span>
+<span class="s2">        disgusted, thinking, skeptical, amused — an unknown preset fails validation.</span>
+<span class="s2">        Axes (offsets in [-1, 1]; lids in [-1, 0.5]): brow_height_l/r, brow_angle_l/r,</span>
+<span class="s2">        lid_open_l/r, gaze_x, gaze_y. "duration" omitted = to the shot end. A</span>
+<span class="s2">        character whose descriptor says face_overlay: false cannot take one.</span>
 <span class="s2">      - dialogue: list of {speaker, text, emotion, voice_ref, start, duration, ...}</span>
 <span class="s2">      - narration: list (same shape as dialogue, no speaker pin).</span>
 <span class="s2">        NOT IMPLEMENTED — the audio pipeline walks dialogue only, and a shot with</span>
@@ -354,9 +368,9 @@
 <span class="s2">  "meta/title"                              → top-level meta field</span>
 <span class="s2">  "timeline/0/duration"                     → first shot's duration</span>
 <span class="s2">  "timeline/1/dialogue/0/text"              → second shot, first dialogue line, text</span>
-<span class="s2">  "timeline/1/dialogue/0/emotion"           → set the emotion ("happy" | "sad" | "angry"</span>
-<span class="s2">                                              | "surprised" | "skeptical" | "amused"</span>
-<span class="s2">                                              | "thinking" | "neutral")</span>
+<span class="s2">  "timeline/1/dialogue/0/emotion"           → set the emotion (a preset name: "happy" | "sad"</span>
+<span class="s2">                                              | "angry" | "surprised" | "afraid" | "disgusted"</span>
+<span class="s2">                                              | "skeptical" | "amused" | "thinking" | "neutral")</span>
 
 <span class="s2">Patch operations:</span>
 

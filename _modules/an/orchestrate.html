@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.orchestrate &mdash; an 0.1.55 documentation</title>
+  <title>an.orchestrate &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -192,7 +198,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.validate</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -254,28 +260,18 @@
 
 <div class="viewcode-block" id="render_project">
 <a class="viewcode-back" href="../../module_docs/an/orchestrate.html#an.orchestrate.render_project">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">render_project</span><span class="p">(</span>
-    <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"main"</span><span class="p">,</span>
-    <span class="n">tts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
-    <span class="n">lipsync</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"offline"</span><span class="p">,</span>
-    <span class="n">parallel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">strict_assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Render the project's scene to a single mp4 under ``output/``.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_project</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render the project's scene to a single mp4 under ``output/`` — the</span>
+<span class="sd">    orchestrator's name for :func:`an.render.render_project`, every keyword</span>
+<span class="sd">    forwarded.</span>
 
-<span class="sd">    ``strict_assets`` refuses a stand-in for a declared asset the stores do not</span>
-<span class="sd">    supply, rather than drawing one and succeeding (an#33).</span>
+<span class="sd">    It used to re-declare the leaf's parameters, and the two drifted: the CLI</span>
+<span class="sd">    (`an render`) passed `supersample`, `pix_fmt`, `step_hz` and `language`</span>
+<span class="sd">    here from the day each flag landed, and this wrapper refused all four with</span>
+<span class="sd">    a ``TypeError`` — invisible because the CLI test stubbed THIS function</span>
+<span class="sd">    rather than the leaf (an#98 review). A pass-through cannot drift.</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">_render_project</span><span class="p">(</span>
-        <span class="n">project_dir</span><span class="p">,</span>
-        <span class="n">output_name</span><span class="o">=</span><span class="n">output_name</span><span class="p">,</span>
-        <span class="n">tts</span><span class="o">=</span><span class="n">tts</span><span class="p">,</span>
-        <span class="n">lipsync</span><span class="o">=</span><span class="n">lipsync</span><span class="p">,</span>
-        <span class="n">parallel</span><span class="o">=</span><span class="n">parallel</span><span class="p">,</span>
-        <span class="n">strict_assets</span><span class="o">=</span><span class="n">strict_assets</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">_render_project</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 

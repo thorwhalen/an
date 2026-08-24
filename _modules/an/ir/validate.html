@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.validate &mdash; an 0.1.55 documentation</title>
+  <title>an.ir.validate &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -197,6 +203,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRANSFORM_PROPERTIES</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.play</span><span class="w"> </span><span class="kn">import</span> <span class="n">art_exists_for</span><span class="p">,</span> <span class="n">play_problems</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">CharacterDescriptor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.binding</span><span class="w"> </span><span class="kn">import</span> <span class="n">expression_problems</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">flatten</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span>
@@ -376,6 +383,49 @@
                     <span class="sa">f</span><span class="s2">"`play` of </span><span class="si">{</span><span class="n">leaf</span><span class="o">.</span><span class="n">animation</span><span class="si">!r}</span><span class="s2"> on </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2"> cannot "</span>
                     <span class="sa">f</span><span class="s2">"resolve: </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2"> — compiling this shot raises."</span><span class="p">,</span>
                 <span class="p">)</span>
+    <span class="c1"># `expression` (an#98) and the dialogue `[emotion]` sugar resolve through</span>
+    <span class="c1"># `an.expression.binding.expression_problems` — the SAME function the face</span>
+    <span class="c1"># solver raises with. An unknown preset used to be silence.</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">flatten</span><span class="p">(</span><span class="n">action</span><span class="p">):</span>
+            <span class="n">leaf</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">leaf</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"expression"</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">entity_id</span> <span class="o">=</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">leaf</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">entity_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">refs_by_entity</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"error"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/actions/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"`expression` targets </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2">, which is not a character "</span>
+                    <span class="sa">f</span><span class="s2">"entity of this shot (entities: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">refs_by_entity</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">) "</span>
+                    <span class="s2">"— it would compile to nothing."</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="n">_descriptor_for</span><span class="p">(</span><span class="n">refs_by_entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">),</span> <span class="n">available_characters</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">problem</span> <span class="ow">in</span> <span class="n">expression_problems</span><span class="p">(</span>
+                <span class="n">desc</span><span class="p">,</span> <span class="n">preset</span><span class="o">=</span><span class="n">leaf</span><span class="o">.</span><span class="n">preset</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">leaf</span><span class="o">.</span><span class="n">axes</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">entity_id</span>
+            <span class="p">):</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"error"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/actions/</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"`expression` on </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2"> cannot resolve: </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2"> — "</span>
+                    <span class="s2">"compiling this shot raises."</span><span class="p">,</span>
+                <span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">):</span>
+        <span class="n">emotion</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">emotion</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">emotion</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">_descriptor_for</span><span class="p">(</span><span class="n">refs_by_entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">speaker</span><span class="p">),</span> <span class="n">available_characters</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">problem</span> <span class="ow">in</span> <span class="n">expression_problems</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">preset</span><span class="o">=</span><span class="n">emotion</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">speaker</span><span class="p">):</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/dialogue/</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">/emotion"</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">desc</span><span class="o">.</span><span class="n">face_overlay</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="s2">"warning"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/dialogue/</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">/emotion"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">speaker</span><span class="si">!r}</span><span class="s2"> has its face baked into the head art "</span>
+                <span class="s2">"(face_overlay: false), so the [emotion] on this line moves "</span>
+                <span class="s2">"nothing; the audio still plays."</span><span class="p">,</span>
+            <span class="p">)</span>
     <span class="c1"># Flattened, like the compiler: the documented `start:` idiom wraps every</span>
     <span class="c1"># leaf in a `sequence`, so walking only top-level actions would miss the</span>
     <span class="c1"># common case (an#87 review) — an authoring-time gate that only sees the</span>
@@ -447,6 +497,21 @@
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> set (it has: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span><span class="si">}</span><span class="s2">) — compiling "</span>
                     <span class="s2">"this shot raises."</span><span class="p">,</span>
                 <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_descriptor_for</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">available_characters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CharacterDescriptor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The MIGRATED descriptor a store holds for ``ref``, or ``None``."""</span>
+    <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">available_characters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">available_characters</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">candidate</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"CharacterDescriptor"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+            <span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_renderable</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.cli &mdash; an 0.1.55 documentation</title>
+  <title>an.characters.cli &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -226,6 +232,7 @@
     <span class="n">offline</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">acknowledge_attribution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">mouth_variants</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"happy,sad"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Create a new character at ``out_dir``/``name``.</span>
 
@@ -240,9 +247,16 @@
 <span class="sd">    offline: skip DiceBear and use the deterministic geometric fallback</span>
 <span class="sd">    acknowledge_attribution: accept the attribution duty of a CC BY style</span>
 <span class="sd">    overwrite: replace an existing directory at the target</span>
+<span class="sd">    mouth_variants: comma-separated mouth forms to draw as `viseme@&lt;form&gt;`</span>
+<span class="sd">        sets (an#98) — a form an expression preset prefers (happy, sad, angry,</span>
+<span class="sd">        surprised, afraid, disgusted); "" for the neutral set only</span>
 <span class="sd">    """</span>
     <span class="n">target</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
     <span class="n">target</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">variants</span> <span class="o">=</span> <span class="n">_parse_variants</span><span class="p">(</span><span class="n">mouth_variants</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">style</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DICEBEAR_STYLES</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">"unknown DiceBear style: </span><span class="si">{</span><span class="n">style</span><span class="si">!r}</span><span class="s2">. Known: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DICEBEAR_STYLES</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">try</span><span class="p">:</span>
@@ -255,6 +269,7 @@
             <span class="n">use_dicebear</span><span class="o">=</span><span class="ow">not</span> <span class="n">offline</span><span class="p">,</span>
             <span class="n">acknowledge_attribution</span><span class="o">=</span><span class="n">acknowledge_attribution</span><span class="p">,</span>
             <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+            <span class="n">mouth_variants</span><span class="o">=</span><span class="n">variants</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># A licence refusal is a message for a human, not a traceback. The</span>
@@ -272,26 +287,65 @@
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">palette</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">variants</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"happy,sad"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Regenerate the default 9-shape mouth set for ``name``.</span>
+<span class="w">    </span><span class="sd">"""Regenerate the default 9-shape mouth set for ``name``, plus its</span>
+<span class="sd">    `viseme@&lt;form&gt;` variants, and declare them in the descriptor.</span>
 
 <span class="sd">    Useful when you want to reset a character's mouth art to the offline</span>
-<span class="sd">    fallback (e.g. after experimenting with hand-drawn mouths).</span>
+<span class="sd">    fallback (e.g. after experimenting with hand-drawn mouths), or to give a</span>
+<span class="sd">    pre-an#98 character the variant sets its expressions prefer.</span>
 
 <span class="sd">    name: character id</span>
 <span class="sd">    out_dir: parent directory; defaults to ./assets/characters</span>
 <span class="sd">    palette: optional JSON string to override colors, e.g. '{"lip":"#a44"}'</span>
+<span class="sd">    variants: comma-separated mouth forms (see `an character new`); "" = none</span>
 <span class="sd">    """</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">"parts"</span> <span class="o">/</span> <span class="s2">"mouth"</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">declare_mouth_variants</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">CharacterDescriptor</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate</span>
+
+    <span class="n">char_dir</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">char_dir</span> <span class="o">/</span> <span class="s2">"parts"</span> <span class="o">/</span> <span class="s2">"mouth"</span>
     <span class="n">palette_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">palette</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">palette_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">palette</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">"invalid palette JSON: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
-    <span class="n">written</span> <span class="o">=</span> <span class="n">write_default_mouths</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette_dict</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">variant_map</span> <span class="o">=</span> <span class="n">_parse_variants</span><span class="p">(</span><span class="n">variants</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">written</span> <span class="o">=</span> <span class="n">write_default_mouths</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="n">palette_dict</span><span class="p">,</span> <span class="n">variants</span><span class="o">=</span><span class="n">variant_map</span><span class="p">)</span>
+    <span class="n">desc_path</span> <span class="o">=</span> <span class="n">char_dir</span> <span class="o">/</span> <span class="s2">"character.json"</span>
+    <span class="k">if</span> <span class="n">desc_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">variant_map</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">desc_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">migrate</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">))</span>
+        <span class="n">declare_mouth_variants</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">variant_map</span><span class="p">)</span>
+        <span class="n">desc_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">"wrote </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">written</span><span class="p">)</span><span class="si">}</span><span class="s2"> mouth shapes to </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">"</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_variants</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``"happy,sad"`` → ``{form: smile offset}``; unknown forms are refused."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.mouth_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_MOUTH_VARIANTS</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.presets</span><span class="w"> </span><span class="kn">import</span> <span class="n">PRESETS</span>
+
+    <span class="n">forms</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">mouth_form</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">PRESETS</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">mouth_form</span><span class="p">}</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">forms</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">form</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown mouth form </span><span class="si">{</span><span class="n">form</span><span class="si">!r}</span><span class="s2">; the presets prefer: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">form</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_MOUTH_VARIANTS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">_VARIANT_SMILE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="c1">#: Corner upturn per mouth form for the forms without a default variant</span>
+<span class="c1">#: (art direction; the same knob `DEFAULT_MOUTH_VARIANTS` sets for happy/sad).</span>
+<span class="n">_VARIANT_SMILE</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"angry"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="s2">"surprised"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"afraid"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.15</span><span class="p">,</span> <span class="s2">"disgusted"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="validate">

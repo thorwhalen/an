@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.expression.provider &mdash; an 0.1.56 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="an.genre" href="../genre.html" />
+    <link rel="prev" title="an.expression.presets" href="presets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/play.html">an.characters.play</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="presets.html">an.expression.presets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.expression.provider</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.expression.provider.AxisCurve"><code class="docutils literal notranslate"><span class="pre">AxisCurve</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.expression.provider.DIALOGUE_EMOTION_BLEND_S"><code class="docutils literal notranslate"><span class="pre">DIALOGUE_EMOTION_BLEND_S</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.expression.provider.DefaultExpressionProvider"><code class="docutils literal notranslate"><span class="pre">DefaultExpressionProvider</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.expression.provider.DefaultExpressionProvider.mouth_preset_at"><code class="docutils literal notranslate"><span class="pre">DefaultExpressionProvider.mouth_preset_at()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.expression.provider.ExpressionProvider"><code class="docutils literal notranslate"><span class="pre">ExpressionProvider</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.expression.provider.ExpressionSpan"><code class="docutils literal notranslate"><span class="pre">ExpressionSpan</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.expression.provider.ExpressionSpan.offsets"><code class="docutils literal notranslate"><span class="pre">ExpressionSpan.offsets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.expression.provider.ExpressionSpan.source"><code class="docutils literal notranslate"><span class="pre">ExpressionSpan.source</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.expression.provider.ExpressionSpan.weight_at"><code class="docutils literal notranslate"><span class="pre">ExpressionSpan.weight_at()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.expression.provider.expression_spans"><code class="docutils literal notranslate"><span class="pre">expression_spans()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.expression.provider.flatten_expressions"><code class="docutils literal notranslate"><span class="pre">flatten_expressions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">an.expression.provider</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/an/expression/provider.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-an.expression.provider">
+<span id="an-expression-provider"></span><h1>an.expression.provider<a class="headerlink" href="#module-an.expression.provider" title="Link to this heading"></a></h1>
+<p>The expression provider: authored leaves + dialogue sugar → per-axis curves (an#98).</p>
+<p>The face solver in the cutout compiler sums contributors per <code class="docutils literal notranslate"><span class="pre">(node,</span>
+<span class="pre">property)</span></code> at compile time. It gets those contributors from an
+<a class="reference internal" href="#an.expression.provider.ExpressionProvider" title="an.expression.provider.ExpressionProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExpressionProvider</span></code></a> — the seam an audio- or vision-driven source
+plugs into later. The default provider composes, for one entity of one shot:</p>
+<ul class="simple">
+<li><p>every <code class="docutils literal notranslate"><span class="pre">expression</span></code> leaf action (flattened out of the shot’s composition
+tree with its absolute times);</p></li>
+<li><p>the <strong>dialogue sugar</strong>: a line’s <code class="docutils literal notranslate"><span class="pre">[emotion]</span></code> becomes an expression over
+the line, <strong>in memory only</strong> — never written into <code class="docutils literal notranslate"><span class="pre">shot.actions</span></code> or the
+scenes store, or the md writer would emit the emotion twice.</p></li>
+</ul>
+<p>Each span ramps its intensity in and out over <code class="docutils literal notranslate"><span class="pre">blend</span></code> seconds (0 = cut);
+two overlapping spans cross-fade because the sum is additive. Curves are
+sampled per frame, so the solver and this module agree on time by
+construction.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssetRef</span><span class="p">,</span> <span class="n">Dialogue</span><span class="p">,</span> <span class="n">Shot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">expression</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shot</span> <span class="o">=</span> <span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">"cutout"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">entities</span><span class="o">=</span><span class="p">[</span><span class="n">AssetRef</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"character"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"c"</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="s2">"characters"</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s2">"c"</span><span class="p">)],</span>
+<span class="gp">... </span>            <span class="n">actions</span><span class="o">=</span><span class="p">[</span><span class="n">expression</span><span class="p">(</span><span class="s2">"c"</span><span class="p">,</span> <span class="s2">"angry"</span><span class="p">,</span> <span class="n">blend</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">preset</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">expression_spans</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">)]</span>
+<span class="go">['angry']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">curves</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">axis</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">DefaultExpressionProvider</span><span class="p">()</span><span class="o">.</span><span class="n">curves</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">4</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">curves</span><span class="p">[</span><span class="s2">"brow_angle_l"</span><span class="p">]</span><span class="o">.</span><span class="n">samples</span>
+<span class="go">(-0.8, -0.8, -0.8, -0.8, -0.8)</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="an.expression.provider.AxisCurve">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.expression.provider.</span></span><span class="sig-name descname"><span class="pre">AxisCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/expression/provider.html#AxisCurve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.expression.provider.AxisCurve" title="Link to this definition"></a></dt>
+<dd><p>One axis sampled at the frame times <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1/fps,</span> <span class="pre">…,</span> <span class="pre">n/fps</span></code> (offline, deterministic).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.expression.provider.DIALOGUE_EMOTION_BLEND_S">
+<span class="sig-prename descclassname"><span class="pre">an.expression.provider.</span></span><span class="sig-name descname"><span class="pre">DIALOGUE_EMOTION_BLEND_S</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.15</span></span><a class="headerlink" href="#an.expression.provider.DIALOGUE_EMOTION_BLEND_S" title="Link to this definition"></a></dt>
+<dd><p>The <cite>[emotion]</cite> sugar ramps in and out over this; it is a comment on the
+line, not a cut.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.expression.provider.DefaultExpressionProvider">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.expression.provider.</span></span><span class="sig-name descname"><span class="pre">DefaultExpressionProvider</span></span><a class="reference internal" href="../../../_modules/an/expression/provider.html#DefaultExpressionProvider"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.expression.provider.DefaultExpressionProvider" title="Link to this definition"></a></dt>
+<dd><p>Sum of the shot’s expression spans on the entity, ramped, per frame.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="an.expression.provider.DefaultExpressionProvider.mouth_preset_at">
+<span class="sig-name descname"><span class="pre">mouth_preset_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/expression/provider.html#DefaultExpressionProvider.mouth_preset_at"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.expression.provider.DefaultExpressionProvider.mouth_preset_at" title="Link to this definition"></a></dt>
+<dd><p>The preset whose mouth form is in force at <code class="docutils literal notranslate"><span class="pre">t</span></code>: the heaviest span
+at <code class="docutils literal notranslate"><span class="pre">t</span></code> that prefers a form, or <code class="docutils literal notranslate"><span class="pre">None</span></code> (the neutral set).</p>
+<p>Whole-line by construction when called at a line’s start — the solver
+asks once per line, never per frame, so at most one mouth swap
+property is live per instant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.expression.provider.ExpressionProvider">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.expression.provider.</span></span><span class="sig-name descname"><span class="pre">ExpressionProvider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/expression/provider.html#ExpressionProvider"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.expression.provider.ExpressionProvider" title="Link to this definition"></a></dt>
+<dd><p>The seam: whatever produces per-axis curves for one entity of one shot.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.expression.provider.ExpressionSpan">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.expression.provider.</span></span><span class="sig-name descname"><span class="pre">ExpressionSpan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'action'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/expression/provider.html#ExpressionSpan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.expression.provider.ExpressionSpan" title="Link to this definition"></a></dt>
+<dd><p>One expression contributor on one entity, in absolute shot time.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="an.expression.provider.ExpressionSpan.offsets">
+<span class="sig-name descname"><span class="pre">offsets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/expression/provider.html#ExpressionSpan.offsets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.expression.provider.ExpressionSpan.offsets" title="Link to this definition"></a></dt>
+<dd><p>The unscaled axis offsets this span asks for.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.expression.provider.ExpressionSpan.source">
+<span class="sig-name descname"><span class="pre">source</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'action'</span></span><a class="headerlink" href="#an.expression.provider.ExpressionSpan.source" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;action&quot;</span></code> for an authored leaf, <code class="docutils literal notranslate"><span class="pre">&quot;dialogue&quot;</span></code> for the <cite>[emotion]</cite> sugar.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="an.expression.provider.ExpressionSpan.weight_at">
+<span class="sig-name descname"><span class="pre">weight_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../_modules/an/expression/provider.html#ExpressionSpan.weight_at"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.expression.provider.ExpressionSpan.weight_at" title="Link to this definition"></a></dt>
+<dd><p>The ramped intensity at <code class="docutils literal notranslate"><span class="pre">t</span></code>: 0 outside, ramping over <code class="docutils literal notranslate"><span class="pre">blend</span></code> at each end.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.expression.provider.expression_spans">
+<span class="sig-prename descclassname"><span class="pre">an.expression.provider.</span></span><span class="sig-name descname"><span class="pre">expression_spans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.expression.provider.ExpressionSpan" title="an.expression.provider.ExpressionSpan"><span class="pre">ExpressionSpan</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/expression/provider.html#expression_spans"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.expression.provider.expression_spans" title="Link to this definition"></a></dt>
+<dd><p>Every expression contributor on <code class="docutils literal notranslate"><span class="pre">entity_id</span></code>: authored leaves, then
+dialogue sugar. <code class="docutils literal notranslate"><span class="pre">duration=None</span></code> runs to the shot end (the looping-play
+rule); a span never extends past the shot.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.expression.provider.flatten_expressions">
+<span class="sig-prename descclassname"><span class="pre">an.expression.provider.</span></span><span class="sig-name descname"><span class="pre">flatten_expressions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/expression/provider.html#flatten_expressions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.expression.provider.flatten_expressions" title="Link to this definition"></a></dt>
+<dd><p>The shot’s <code class="docutils literal notranslate"><span class="pre">expression</span></code> leaves with absolute times (other leaves dropped).</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="presets.html" class="btn btn-neutral float-left" title="an.expression.presets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../genre.html" class="btn btn-neutral float-right" title="an.genre" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

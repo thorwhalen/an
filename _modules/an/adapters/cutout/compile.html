@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.55 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -216,6 +222,18 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRANSFORM_PROPERTIES</span><span class="p">,</span> <span class="n">swap_set_name_problem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.coarticulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">coarticulate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.axes</span><span class="w"> </span><span class="kn">import</span> <span class="n">LID_KEY_CLOSED</span><span class="p">,</span> <span class="n">LID_KEY_OPEN</span><span class="p">,</span> <span class="n">lid_key</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.binding</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LID_SQUASH_GAIN</span><span class="p">,</span>
+    <span class="n">ChannelBinding</span><span class="p">,</span>
+    <span class="n">ExpressionResolutionError</span><span class="p">,</span>
+    <span class="n">SetBinding</span><span class="p">,</span>
+    <span class="n">binding_for</span><span class="p">,</span>
+    <span class="n">expression_problems</span><span class="p">,</span>
+    <span class="n">resolve_mouth_set</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.presets</span><span class="w"> </span><span class="kn">import</span> <span class="n">mouth_form_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultExpressionProvider</span><span class="p">,</span> <span class="n">ExpressionProvider</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.play</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BoneTrack</span><span class="p">,</span>
     <span class="n">PlayResolutionError</span><span class="p">,</span>
@@ -230,6 +248,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Action</span><span class="p">,</span>
     <span class="n">AssetRef</span><span class="p">,</span>
+    <span class="n">ExpressionAction</span><span class="p">,</span>
     <span class="n">PlayAction</span><span class="p">,</span>
     <span class="n">SetAction</span><span class="p">,</span>
     <span class="n">Shot</span><span class="p">,</span>
@@ -499,18 +518,9 @@
 <span class="c1">#: refuses instead: see :func:`_rest_value_for`.</span>
 <span class="n">_DFLT_PROPERTY_REST_VALUE</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
-<span class="c1"># Emotion → (left_brow_tilt, right_brow_tilt) in radians. Mirrored so the</span>
-<span class="c1"># brows look symmetric for happy/sad and asymmetric for surprise/skepticism.</span>
-<span class="n">_EMOTION_BROWS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"neutral"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-    <span class="s2">"happy"</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">),</span>  <span class="c1"># outer ends raised</span>
-    <span class="s2">"sad"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.20</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.20</span><span class="p">),</span>  <span class="c1"># inner ends raised, outer drops</span>
-    <span class="s2">"angry"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.30</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.30</span><span class="p">),</span>  <span class="c1"># furrowed</span>
-    <span class="s2">"surprised"</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span>  <span class="c1"># both up high</span>
-    <span class="s2">"skeptical"</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.20</span><span class="p">,</span> <span class="mf">0.10</span><span class="p">),</span>  <span class="c1"># one brow raised</span>
-    <span class="s2">"amused"</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.10</span><span class="p">,</span> <span class="mf">0.10</span><span class="p">),</span>
-    <span class="s2">"thinking"</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.10</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-<span class="p">}</span>
+<span class="c1"># The emotion → brow-tilt table that lived here is retired (an#98): `[emotion]`</span>
+<span class="c1"># is sugar for an `expression` leaf, resolved by the face solver</span>
+<span class="c1"># (`_add_face_clips`) from `an.expression.presets`.</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_runtime_node_paths</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">NodeJSON</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -733,8 +743,13 @@
     <span class="n">background</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"#ffffff"</span><span class="p">,</span>
     <span class="n">strict_assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">expression_provider</span><span class="p">:</span> <span class="n">ExpressionProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CutoutSceneJSON</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Compile a single cutout-style `Shot` to its JS-runtime JSON form.</span>
+
+<span class="sd">    ``expression_provider`` (an#98) is the seam that turns authored</span>
+<span class="sd">    ``expression`` leaves and dialogue ``[emotion]`` sugar into per-axis</span>
+<span class="sd">    curves for the face solver; ``None`` is :class:`DefaultExpressionProvider`.</span>
 
 <span class="sd">    ``step_hz`` (an#89) resamples every authored **tween** onto a SHOT-wide</span>
 <span class="sd">    pose grid of that many updates per second (multiples of ``1/step_hz`` on</span>
@@ -786,6 +801,7 @@
         <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
         <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">provider</span> <span class="o">=</span> <span class="n">expression_provider</span> <span class="ow">or</span> <span class="n">DefaultExpressionProvider</span><span class="p">()</span>
     <span class="c1"># Phase 4: emit a viseme channel per dialogue line that has a viseme_track.</span>
     <span class="n">_add_viseme_clips</span><span class="p">(</span>
         <span class="n">shot</span><span class="p">,</span>
@@ -794,10 +810,13 @@
         <span class="n">mall</span><span class="o">=</span><span class="n">mall</span><span class="p">,</span>
         <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span>
         <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
+        <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="c1"># Blinks (an#88): compiled per eye, ahead of everything authored.</span>
-    <span class="n">blink_phases</span> <span class="o">=</span> <span class="n">_add_blink_clips</span><span class="p">(</span>
-        <span class="n">shot</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span> <span class="n">mall</span><span class="o">=</span><span class="n">mall</span>
+    <span class="c1"># The face (an#98): blinks, expressions and the silent mouth form — one</span>
+    <span class="c1"># channel per (node, property), ahead of everything authored. An entity</span>
+    <span class="c1"># nothing expresses on gets its blink clips exactly as before (an#88).</span>
+    <span class="n">blink_phases</span> <span class="o">=</span> <span class="n">_add_face_clips</span><span class="p">(</span>
+        <span class="n">shot</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span> <span class="n">mall</span><span class="o">=</span><span class="n">mall</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span>
     <span class="p">)</span>
     <span class="c1"># Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale</span>
     <span class="c1"># animation on the synthetic scene root so directors get visible camera</span>
@@ -1586,6 +1605,9 @@
     <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
         <span class="n">flat_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">action</span><span class="p">))</span>
 
+    <span class="c1"># `expression` leaves (an#98) are the face solver's input, not clips of</span>
+    <span class="c1"># their own: `_add_face_clips` sums them per (node, property).</span>
+    <span class="n">flat_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">flat_list</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="n">ExpressionAction</span><span class="p">)]</span>
     <span class="n">swap_props</span> <span class="o">=</span> <span class="n">_swap_property_names</span><span class="p">(</span><span class="n">flat_list</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">vocab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">flat_list</span> <span class="o">=</span> <span class="p">[</span>
@@ -2244,9 +2266,17 @@
     <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="n">provider</span><span class="p">:</span> <span class="n">ExpressionProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""For each dialogue line with a viseme_track, emit a step swap channel on</span>
-<span class="sd">    every node of the speaker that can apply the ``viseme`` set.</span>
+<span class="sd">    every node of the speaker that can apply the line's mouth set.</span>
+
+<span class="sd">    The mouth SET is selected per line (an#98): the expression in force at the</span>
+<span class="sd">    line's start prefers a ``viseme@&lt;form&gt;`` variant, and</span>
+<span class="sd">    :func:`an.expression.binding.resolve_mouth_set` — shared with ``an</span>
+<span class="sd">    validate`` — decides whether the character can honour it (declared and</span>
+<span class="sd">    covering the line's keys), falls back to ``viseme`` with a warning, or</span>
+<span class="sd">    raises. Whole-line, so at most one mouth swap property is live per instant.</span>
 
 <span class="sd">    The provider's raw track goes through the co-articulation passes first</span>
 <span class="sd">    (`an.adapters.cutout.coarticulate`, an#97): duplicates merged, sub-frame</span>
@@ -2311,8 +2341,43 @@
         <span class="n">speaker</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">speaker</span>
         <span class="k">if</span> <span class="n">speaker</span> <span class="ow">in</span> <span class="n">face_baked</span><span class="p">:</span>
             <span class="k">continue</span>
+        <span class="n">set_name</span> <span class="o">=</span> <span class="n">VISEME_CHANNEL</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">descriptors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">speaker</span><span class="p">)</span> <span class="k">if</span> <span class="n">vocab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="s2">"mouth_preset_at"</span><span class="p">):</span>
+            <span class="n">preset</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">mouth_preset_at</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">speaker</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">start</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">preset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">keys_used</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">kf</span><span class="o">.</span><span class="n">viseme</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">kf</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span><span class="o">.</span><span class="n">keyframes</span><span class="p">}</span>
+                <span class="c1"># The terminal rest is a key the line USES (appended below), so</span>
+                <span class="c1"># a variant without it must not be selected (an#98 review).</span>
+                <span class="n">keys_used</span> <span class="o">|=</span> <span class="p">{</span>
+                    <span class="n">r</span>
+                    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">swap_capable_paths</span><span class="p">(</span><span class="n">speaker</span><span class="p">,</span> <span class="n">VISEME_CHANNEL</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">r</span> <span class="o">:=</span> <span class="n">_mouth_rest_key</span><span class="p">(</span><span class="n">vocab</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">VISEME_CHANNEL</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="p">}</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">set_name</span> <span class="o">=</span> <span class="n">resolve_mouth_set</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">preset</span><span class="p">,</span> <span class="n">keys_used</span><span class="o">=</span><span class="n">keys_used</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">speaker</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">ExpressionResolutionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+                <span class="k">if</span> <span class="n">set_name</span> <span class="o">!=</span> <span class="n">VISEME_CHANNEL</span><span class="p">:</span>
+                    <span class="c1"># Declared is not resolved: a variant key whose art is</span>
+                    <span class="c1"># missing on disk is dropped from the node's projection,</span>
+                    <span class="c1"># and a line that then holds its previous shape through</span>
+                    <span class="c1"># the missing key is worse than the neutral set.</span>
+                    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">swap_capable_paths</span><span class="p">(</span><span class="n">speaker</span><span class="p">,</span> <span class="n">set_name</span><span class="p">):</span>
+                        <span class="n">resolved</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">set_name</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
+                        <span class="n">missing</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">keys_used</span> <span class="o">-</span> <span class="n">resolved</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+                            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> dialogue line </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">set_name</span><span class="si">!r}</span><span class="s2"> on "</span>
+                                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">p</span><span class="si">!r}</span><span class="s2"> resolved without </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> (art missing on "</span>
+                                <span class="sa">f</span><span class="s2">"disk); the neutral </span><span class="si">{</span><span class="n">VISEME_CHANNEL</span><span class="si">!r}</span><span class="s2"> set is used instead."</span><span class="p">,</span>
+                                <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+                                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                            <span class="p">)</span>
+                            <span class="n">set_name</span> <span class="o">=</span> <span class="n">VISEME_CHANNEL</span>
+                            <span class="k">break</span>
         <span class="n">mouth_paths</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">vocab</span><span class="o">.</span><span class="n">swap_capable_paths</span><span class="p">(</span><span class="n">speaker</span><span class="p">,</span> <span class="n">VISEME_CHANNEL</span><span class="p">)</span>
+            <span class="n">vocab</span><span class="o">.</span><span class="n">swap_capable_paths</span><span class="p">(</span><span class="n">speaker</span><span class="p">,</span> <span class="n">set_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">vocab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="p">[]</span>
         <span class="p">)</span>
@@ -2352,8 +2417,8 @@
                 <span class="n">condensed</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">mouth_paths</span><span class="p">:</span>
-            <span class="n">mapped</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="n">VISEME_CHANNEL</span><span class="p">])</span>
-            <span class="n">rest</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">rest_key</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">VISEME_CHANNEL</span><span class="p">)</span>
+            <span class="n">mapped</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="n">set_name</span><span class="p">])</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="n">_mouth_rest_key</span><span class="p">(</span><span class="n">vocab</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">set_name</span><span class="p">)</span>
             <span class="n">usable</span> <span class="o">=</span> <span class="p">[(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">condensed</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mapped</span><span class="p">]</span>
             <span class="n">dropped</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">v</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">condensed</span><span class="p">}</span> <span class="o">-</span> <span class="n">mapped</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">dropped</span><span class="p">:</span>
@@ -2403,7 +2468,7 @@
                 <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
                 <span class="n">duration</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">)),</span>
                 <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
-                    <span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">VISEME_CHANNEL</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">kfs</span><span class="p">),</span>
+                    <span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">set_name</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">kfs</span><span class="p">),</span>
                 <span class="p">],</span>
             <span class="p">)</span>
             <span class="n">track</span> <span class="o">=</span> <span class="n">track_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">speaker</span><span class="p">)</span>
@@ -2419,122 +2484,57 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="c1"># Emotion-driven eyebrow expression — set both brows' rotation while</span>
-        <span class="c1"># the line is active, restore to neutral at the end. Node existence is</span>
-        <span class="c1"># checked (an#87): a rig whose brow art failed to resolve drops the</span>
-        <span class="c1"># node silently, and an unchecked channel then hard-crashed at frame</span>
-        <span class="c1"># time in applyPose — the exact policy the mouth check above exists</span>
-        <span class="c1"># for, previously applied to only one of the two emissions.</span>
-        <span class="n">emotion</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">emotion</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">emotion</span> <span class="ow">in</span> <span class="n">_EMOTION_BROWS</span><span class="p">:</span>
-            <span class="n">track</span> <span class="o">=</span> <span class="n">track_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">speaker</span><span class="p">)</span>
-            <span class="n">tilt_l</span><span class="p">,</span> <span class="n">tilt_r</span> <span class="o">=</span> <span class="n">_EMOTION_BROWS</span><span class="p">[</span><span class="n">emotion</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">brow_name</span><span class="p">,</span> <span class="n">tilt</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"left_brow"</span><span class="p">,</span> <span class="n">tilt_l</span><span class="p">),</span> <span class="p">(</span><span class="s2">"right_brow"</span><span class="p">,</span> <span class="n">tilt_r</span><span class="p">)):</span>
-                <span class="n">brow_target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">speaker</span><span class="si">}</span><span class="s2">/head/</span><span class="si">{</span><span class="n">brow_name</span><span class="si">}</span><span class="s2">"</span>
-                <span class="k">if</span> <span class="n">vocab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">brow_target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">paths</span><span class="p">:</span>
-                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> dialogue line </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> carries emotion "</span>
-                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">emotion</span><span class="si">!r}</span><span class="s2">, but </span><span class="si">{</span><span class="n">brow_target</span><span class="si">!r}</span><span class="s2"> is not in the built "</span>
-                        <span class="s2">"scene (brow art missing?); its channel was not "</span>
-                        <span class="s2">"emitted."</span><span class="p">,</span>
-                        <span class="n">CutoutCompileWarning</span><span class="p">,</span>
-                        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="k">continue</span>
-                <span class="n">emo_anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__emo__</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">brow_name</span><span class="si">}</span><span class="s2">"</span>
-                <span class="n">animations</span><span class="p">[</span><span class="n">emo_anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
-                    <span class="n">name</span><span class="o">=</span><span class="n">emo_anim_id</span><span class="p">,</span>
-                    <span class="n">duration</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
-                    <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
-                        <span class="n">ChannelJSON</span><span class="p">(</span>
-                            <span class="n">target</span><span class="o">=</span><span class="n">brow_target</span><span class="p">,</span>
-                            <span class="nb">property</span><span class="o">=</span><span class="s2">"rotation"</span><span class="p">,</span>
-                            <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span>
-                                <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">tilt</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">),</span>
-                                <span class="n">KeyframeJSON</span><span class="p">(</span>
-                                    <span class="n">time</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span>
-                                <span class="p">),</span>
-                            <span class="p">],</span>
-                        <span class="p">)</span>
-                    <span class="p">],</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">track</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">track</span> <span class="o">=</span> <span class="n">TrackJSON</span><span class="p">(</span><span class="n">target_root</span><span class="o">=</span><span class="n">speaker</span><span class="p">,</span> <span class="n">clips</span><span class="o">=</span><span class="p">[])</span>
-                    <span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">track</span><span class="p">)</span>
-                    <span class="n">track_lookup</span><span class="p">[</span><span class="n">speaker</span><span class="p">]</span> <span class="o">=</span> <span class="n">track</span>
-                <span class="n">track</span><span class="o">.</span><span class="n">clips</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">PlacedClipJSON</span><span class="p">(</span>
-                        <span class="n">animation_id</span><span class="o">=</span><span class="n">emo_anim_id</span><span class="p">,</span>
-                        <span class="n">start_time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">start</span><span class="p">),</span>
-                        <span class="n">duration</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_mouth_rest_key</span><span class="p">(</span><span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">set_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The rest key of a mouth set on ``target``: derived from the node's default</span>
+<span class="sd">    attachment for the neutral set; a ``viseme@&lt;form&gt;`` variant closes on the</span>
+<span class="sd">    same KEY the neutral set closes on (its art is the variant's), or on ``X``.</span>
+<span class="sd">    """</span>
+    <span class="n">rest</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">rest_key</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">set_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rest</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">rest</span>
+    <span class="k">if</span> <span class="n">set_name</span> <span class="o">!=</span> <span class="n">VISEME_CHANNEL</span><span class="p">:</span>
+        <span class="n">neutral_rest</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">rest_key</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">VISEME_CHANNEL</span><span class="p">)</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">set_name</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">neutral_rest</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">neutral_rest</span>
+        <span class="k">if</span> <span class="s2">"X"</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"X"</span>
+    <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="c1"># -----------------------------------------------------------------------------</span>
-<span class="c1"># Blinks: compiled per eye (an#88)</span>
+<span class="c1"># Blinks: compiled per eye (an#88) — emitted by the face solver below</span>
 <span class="c1"># -----------------------------------------------------------------------------</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_add_blink_clips</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_eye_paths</span><span class="p">(</span><span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">p</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">paths</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">entity_id</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">EYE_NODE_NAMES</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_blink_placements</span><span class="p">(</span>
     <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span>
+    <span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">],</span>
-    <span class="n">tracks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TrackJSON</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span><span class="p">,</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Emit blink clips per eye node of every character; return the phases</span>
-<span class="sd">    used, per entity, for the compiled scene's meta.</span>
-
-<span class="sd">    A character whose descriptor declares ``face_overlay=False`` never</span>
-<span class="sd">    blinks, whatever eye nodes the rig builder produced — the policy lives</span>
-<span class="sd">    here, not in a naming coincidence of the rig builder.</span>
-
-<span class="sd">    Mechanism splits by what the eye can do (research §6):</span>
-
-<span class="sd">    - an eye whose visual projects the ``eyelid`` set with both ``OPEN`` and</span>
-<span class="sd">      ``CLOSED`` resolved, and whose rest attachment IS the open one, swaps</span>
-<span class="sd">      ART — a step channel through the one swap implementation, CLOSED for</span>
-<span class="sd">      the central half of each blink window;</span>
-<span class="sd">    - any other eye (the procedural drawn eye; a descriptor rig without</span>
-<span class="sd">      closed-eye art) gets the sine SQUASH the runtime used to apply, as a</span>
-<span class="sd">      ``scale_y`` channel sampled at the frame times — a tween, not a swap,</span>
-<span class="sd">      so "one swap implementation" holds without contortions;</span>
-<span class="sd">    - an eye that rests CLOSED (a sleeping character) does not blink at all:</span>
-<span class="sd">      the author closed it, and the old runtime never opened it either.</span>
-
-<span class="sd">    **One clip per blink window, not one whole-shot fill.** Outside a window</span>
-<span class="sd">    the pose then carries NO eye value, so an authored eye channel's end</span>
-<span class="sd">    value persists exactly as every other property's does (the runtime's</span>
-<span class="sd">    stateful hold); a whole-shot ``1.0`` fill snapped an authored ``scale_y``</span>
-<span class="sd">    back the frame after its tween ended (an#88 review). Each clip is</span>
-<span class="sd">    extended to the first frame time at or after the window's end so the</span>
-<span class="sd">    return-to-rest keyframe is applied on a rendered frame — the runtime's</span>
-<span class="sd">    per-frame reset, reproduced at exactly the frames that matter.</span>
-
-<span class="sd">    The clips go at the FRONT of the entity's track: later-wins evaluation</span>
-<span class="sd">    then lets an authored eye channel override a blink, where the old</span>
-<span class="sd">    post-pose reset clobbered any authored ``scale_y`` on every frame.</span>
-<span class="sd">    """</span>
-    <span class="n">phases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">baked</span> <span class="o">=</span> <span class="n">_baked_face_speakers</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">)</span>
-    <span class="n">track_lookup</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TrackJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="o">.</span><span class="n">target_root</span><span class="p">:</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">}</span>
-    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">!=</span> <span class="s2">"character"</span> <span class="ow">or</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">baked</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="n">eyes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-            <span class="n">p</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">paths</span>
-            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span>
-            <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">EYE_NODE_NAMES</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">eyes</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="n">windows</span> <span class="o">=</span> <span class="n">_blink_windows</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
-        <span class="n">phases</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">blink_phase</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-        <span class="n">placed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">PlacedClipJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PlacedClipJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The an#88 blink clips of one entity, VERBATIM — ``None`` when it has no</span>
+<span class="sd">    eye node (nothing blinks), else the placements (possibly empty). The body of</span>
+<span class="sd">    the an#88 emitter (`_add_blink_clips`, retired in an#98), so the face solver</span>
+<span class="sd">    can hand an entity nothing expresses on exactly the clips it always had: same ids, same exact-time</span>
+<span class="sd">    keyframes, so every corpus scene's contract hash is unchanged (an#98)."""</span>
+    <span class="n">eyes</span> <span class="o">=</span> <span class="n">_eye_paths</span><span class="p">(</span><span class="n">vocab</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">eyes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">windows</span> <span class="o">=</span> <span class="n">_blink_windows</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+    <span class="n">placed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">PlacedClipJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="kc">True</span><span class="p">:</span>  <span class="c1"># indentation kept for a byte-for-byte move of the body below</span>
         <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">eyes</span><span class="p">:</span>
             <span class="n">eyelid</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">EYELID_CHANNEL</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
             <span class="n">has_art</span> <span class="o">=</span> <span class="s2">"OPEN"</span> <span class="ow">in</span> <span class="n">eyelid</span> <span class="ow">and</span> <span class="s2">"CLOSED"</span> <span class="ow">in</span> <span class="n">eyelid</span>
@@ -2597,6 +2597,132 @@
                         <span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">clip_start</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
+    <span class="k">return</span> <span class="n">placed</span>
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># The face solver (an#98): one channel per (node, property), summed at compile time</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compress_linear</span><span class="p">(</span><span class="n">times</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">KeyframeJSON</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Keyframes for a per-frame sampled curve, dropping the interior of constant</span>
+<span class="sd">    runs (linear easing between equal endpoints reproduces them exactly)."""</span>
+    <span class="n">kfs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">KeyframeJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">keep</span><span class="p">:</span>
+            <span class="n">kfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">times</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">value</span><span class="o">=</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"linear"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">kfs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_lid_blink_at</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">windows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""−1 inside a blink's closed span (the central half of its window), else</span>
+<span class="sd">    +inf — the blink is a contributor that can only CLOSE, so outside a blink</span>
+<span class="sd">    it must not cap a positive (wide) offset (the first draft returned 0 here</span>
+<span class="sd">    and the `WIDE` rung of the ladder was unreachable, an#98 review)."""</span>
+    <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">_EYELID_CLOSED_SPAN</span>
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+        <span class="n">span</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="o">+</span> <span class="n">lo</span> <span class="o">*</span> <span class="n">span</span> <span class="o">&lt;=</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">start</span> <span class="o">+</span> <span class="n">hi</span> <span class="o">*</span> <span class="n">span</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_blink_squash_at</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">windows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">_BLINK_DEPTH</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mf">1.0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_face_clips</span><span class="p">(</span>
+    <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span>
+    <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">],</span>
+    <span class="n">tracks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TrackJSON</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span><span class="p">,</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">provider</span><span class="p">:</span> <span class="n">ExpressionProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Emit the face of every character: blinks, expressions, the silent mouth</span>
+<span class="sd">    form — **exactly one channel per (node, property)**, summed at compile</span>
+<span class="sd">    time, placed at the FRONT of the entity's track like blinks (an#88), so an</span>
+<span class="sd">    authored channel on a face node still wins by later-wins evaluation.</span>
+
+<span class="sd">    Two paths, decided per entity by whether anything expresses on it:</span>
+
+<span class="sd">    - **Nothing does** (no `expression` leaf, no `[emotion]` line): the an#88</span>
+<span class="sd">      blink clips, verbatim, through :func:`_blink_placements` — same ids,</span>
+<span class="sd">      same exact-time keyframes — so every pre-Wave-6 scene's compiled</span>
+<span class="sd">      document is byte-identical and the corpus contract hashes hold.</span>
+<span class="sd">    - **Something does**: the solver samples every frame. Brows: ``rest + Σ</span>
+<span class="sd">      axis·gain`` on the bound ``(node, property)`` (the descriptor's binding,</span>
+<span class="sd">      default from its slots). Lids: ``lid(t) = min(lid_expr(t), lid_blink(t))``</span>
+<span class="sd">      read off the eyelid ladder on rigs with closed art, or a scaled squash on</span>
+<span class="sd">      rigs without — so a blink always closes and a sleepy `half` never masks</span>
+<span class="sd">      one. The mouth's silent form: a hold on ``viseme@&lt;form&gt;``'s rest key</span>
+<span class="sd">      over the expression's span, outside the entity's dialogue lines (lines</span>
+<span class="sd">      carry their own channel, `_add_viseme_clips`).</span>
+
+<span class="sd">    A baked face (``face_overlay: false``) refuses an authored expression with</span>
+<span class="sd">    the same reasons ``an validate`` reports, and warns on the dialogue sugar.</span>
+<span class="sd">    Returns the blink phases used, per entity, for the compiled scene's meta.</span>
+<span class="sd">    """</span>
+    <span class="n">provider</span> <span class="o">=</span> <span class="n">provider</span> <span class="ow">or</span> <span class="n">DefaultExpressionProvider</span><span class="p">()</span>
+    <span class="n">phases</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">baked</span> <span class="o">=</span> <span class="n">_baked_face_speakers</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">)</span>
+    <span class="n">track_lookup</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TrackJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="o">.</span><span class="n">target_root</span><span class="p">:</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">}</span>
+    <span class="n">spans_of</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="s2">"spans"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">!=</span> <span class="s2">"character"</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">spans</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">spans_of</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">))</span> <span class="k">if</span> <span class="n">spans_of</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">baked</span><span class="p">:</span>
+            <span class="n">authored</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spans</span> <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">"action"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">authored</span><span class="p">:</span>
+                <span class="n">problems</span> <span class="o">=</span> <span class="n">expression_problems</span><span class="p">(</span>
+                    <span class="n">vocab</span><span class="o">.</span><span class="n">descriptors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">),</span> <span class="n">preset</span><span class="o">=</span><span class="n">authored</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">preset</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ExpressionResolutionError</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">problems</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">spans</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> has its face baked into the head "</span>
+                    <span class="s2">"art (face_overlay: false), so the [emotion] on its dialogue moves "</span>
+                    <span class="s2">"nothing; the audio still plays."</span><span class="p">,</span>
+                    <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">descriptors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spans</span><span class="p">:</span>
+                <span class="n">problems</span> <span class="o">=</span> <span class="n">expression_problems</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">preset</span><span class="o">=</span><span class="n">sp</span><span class="o">.</span><span class="n">preset</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">sp</span><span class="o">.</span><span class="n">axes</span><span class="p">,</span> <span class="n">who</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ExpressionResolutionError</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">problems</span><span class="p">)))</span>
+        <span class="c1"># A span that asks for nothing — `preset: None` with no axes, or</span>
+        <span class="c1"># `intensity: 0` — is not a contributor: the entity keeps its verbatim</span>
+        <span class="c1"># blink clips rather than a rest-valued face clip (an#98 review).</span>
+        <span class="n">spans</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spans</span> <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">intensity</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">offsets</span><span class="p">()</span> <span class="ow">or</span> <span class="n">sp</span><span class="o">.</span><span class="n">mouth_form</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">spans</span> <span class="ow">or</span> <span class="n">desc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">spans</span> <span class="ow">and</span> <span class="n">desc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> has no descriptor (a procedural "</span>
+                    <span class="s2">"rig), so its expression has no binding and moves nothing."</span><span class="p">,</span>
+                    <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">placed</span> <span class="o">=</span> <span class="n">_blink_placements</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">placed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">phases</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">blink_phase</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">placed</span> <span class="o">=</span> <span class="n">_solve_face</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span> <span class="n">spans</span><span class="o">=</span><span class="n">spans</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_eye_paths</span><span class="p">(</span><span class="n">vocab</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+                <span class="n">phases</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">blink_phase</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">placed</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="n">track</span> <span class="o">=</span> <span class="n">track_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
@@ -2606,6 +2732,180 @@
             <span class="n">track_lookup</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">track</span>
         <span class="n">track</span><span class="o">.</span><span class="n">clips</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">placed</span>
     <span class="k">return</span> <span class="n">phases</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_solve_face</span><span class="p">(</span>
+    <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span>
+    <span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">desc</span><span class="p">:</span> <span class="n">CharacterDescriptor</span><span class="p">,</span>
+    <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">],</span>
+    <span class="n">tracks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TrackJSON</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span><span class="p">,</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">provider</span><span class="p">:</span> <span class="n">ExpressionProvider</span><span class="p">,</span>
+    <span class="n">spans</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PlacedClipJSON</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The solved face of one expressed-on entity: one clip, one channel per key."""</span>
+    <span class="n">curves</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">axis</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">provider</span><span class="o">.</span><span class="n">curves</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">)}</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span> <span class="o">*</span> <span class="n">fps</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="o">/</span> <span class="n">fps</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">entity_scale</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">windows</span> <span class="o">=</span> <span class="n">_blink_windows</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+    <span class="c1"># Authored channels on face nodes win; say so once per (target, property).</span>
+    <span class="n">authored</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">track</span><span class="o">.</span><span class="n">target_root</span> <span class="o">!=</span> <span class="n">entity_id</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">clip</span> <span class="ow">in</span> <span class="n">track</span><span class="o">.</span><span class="n">clips</span><span class="p">:</span>
+            <span class="n">anim</span> <span class="o">=</span> <span class="n">animations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">clip</span><span class="o">.</span><span class="n">animation_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">anim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">authored</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">ch</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">ch</span><span class="o">.</span><span class="n">property</span><span class="p">)</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">anim</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
+
+    <span class="n">offsets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">lid_expr</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">binding_for</span><span class="p">(</span><span class="n">desc</span><span class="p">):</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">curves</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="p">(</span><span class="n">samples</span> <span class="o">+</span> <span class="p">[</span><span class="n">samples</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)[:</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity_id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">slot_node_path</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">slot</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">paths</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># the rig builder did not build the slot (suppressed / no art)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">ChannelBinding</span><span class="p">):</span>
+            <span class="n">gain</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">gain</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">rig_scaled</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">acc</span> <span class="o">=</span> <span class="n">offsets</span><span class="o">.</span><span class="n">setdefault</span><span class="p">((</span><span class="n">path</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">property</span><span class="p">),</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">acc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">gain</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">SetBinding</span><span class="p">):</span>
+            <span class="n">acc</span> <span class="o">=</span> <span class="n">lid_expr</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">acc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="n">channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ChannelJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">prop</span><span class="p">),</span> <span class="n">acc</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">offsets</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span> <span class="ow">in</span> <span class="n">authored</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2">: an authored channel on </span><span class="si">{</span><span class="n">path</span><span class="si">!r}</span><span class="s2">:</span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"overrides the expression's </span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s2"> on that node (authored wins)."</span><span class="p">,</span>
+                <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">vocab</span><span class="o">.</span><span class="n">node_transforms</span><span class="p">[</span><span class="n">path</span><span class="p">],</span> <span class="n">prop</span><span class="p">))</span>
+        <span class="n">channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">prop</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">_compress_linear</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="p">[</span><span class="n">rest</span> <span class="o">+</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">acc</span><span class="p">]))</span>
+        <span class="p">)</span>
+    <span class="c1"># Lids: every eye node, expression or not — a blink is a lid contributor.</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_eye_paths</span><span class="p">(</span><span class="n">vocab</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">):</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">lid_expr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">eyelid</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">EYELID_CHANNEL</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">has_art</span> <span class="o">=</span> <span class="n">LID_KEY_OPEN</span> <span class="ow">in</span> <span class="n">eyelid</span> <span class="ow">and</span> <span class="n">LID_KEY_CLOSED</span> <span class="ow">in</span> <span class="n">eyelid</span>
+        <span class="n">rest_key</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">rest_key</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">EYELID_CHANNEL</span><span class="p">)</span> <span class="k">if</span> <span class="n">has_art</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">has_art</span> <span class="ow">and</span> <span class="n">rest_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">LID_KEY_OPEN</span><span class="p">):</span>
+            <span class="k">continue</span>  <span class="c1"># rests closed: the author's call, not a blink's</span>
+        <span class="k">if</span> <span class="n">has_art</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">EYELID_CHANNEL</span><span class="p">)</span> <span class="ow">in</span> <span class="n">authored</span><span class="p">:</span>
+                <span class="k">continue</span>  <span class="c1"># an authored eye channel overrides the lid entirely (an#88)</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">lid_key</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">expr</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">_lid_blink_at</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">windows</span><span class="p">)),</span> <span class="n">available</span><span class="o">=</span><span class="n">eyelid</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">times</span><span class="p">)]</span>
+            <span class="n">kfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">value</span><span class="o">=</span><span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">keys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">keys</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">kfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">times</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">value</span><span class="o">=</span><span class="n">keys</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">))</span>
+            <span class="n">channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">EYELID_CHANNEL</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">kfs</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"scale_y"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">authored</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">rest_sy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vocab</span><span class="o">.</span><span class="n">node_transforms</span><span class="p">[</span><span class="n">path</span><span class="p">]</span><span class="o">.</span><span class="n">scale_y</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">max</span><span class="p">(</span><span class="mf">0.05</span> <span class="o">*</span> <span class="n">rest_sy</span><span class="p">,</span> <span class="n">rest_sy</span> <span class="o">*</span> <span class="n">_blink_squash_at</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">windows</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">LID_SQUASH_GAIN</span> <span class="o">*</span> <span class="n">expr</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="s2">"scale_y"</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">_compress_linear</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">values</span><span class="p">)))</span>
+
+    <span class="n">placed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">PlacedClipJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">channels</span><span class="p">:</span>
+        <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__face__</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">entity_id</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">channels</span><span class="p">)</span>
+        <span class="n">placed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PlacedClipJSON</span><span class="p">(</span><span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">))</span>
+
+    <span class="c1"># The silent mouth form: hold the variant's rest key over each expression</span>
+    <span class="c1"># span, outside this entity's dialogue lines — and, whenever any variant is</span>
+    <span class="c1"># in play, hold the NEUTRAL set's rest over the whole shot at the very</span>
+    <span class="c1"># front, so the mouth returns to neutral art when a variant span or a</span>
+    <span class="c1"># variant-set line ends (the runtime keeps the last texture a property set;</span>
+    <span class="c1"># with nothing re-asserting `viseme` the mouth stayed on `X_happy` for the</span>
+    <span class="c1"># rest of the shot, an#98 review). Two properties live at one instant</span>
+    <span class="c1"># resolve by NAME order in the runtime (`viseme@…` sorts after `viseme`),</span>
+    <span class="c1"># so the variant wins wherever it is live and neutral shows elsewhere.</span>
+    <span class="c1"># Each hold ends one frame BEFORE a line's first frame and starts one</span>
+    <span class="c1"># frame AFTER the line clip's last frame, so no frame carries both a hold</span>
+    <span class="c1"># and the line's own key.</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">fps</span>
+    <span class="n">line_windows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">speaker</span> <span class="o">==</span> <span class="n">entity_id</span> <span class="ow">and</span> <span class="n">l</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">l</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span> <span class="o">*</span> <span class="n">fps</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">)</span> <span class="o">/</span> <span class="n">fps</span>  <span class="c1"># the clip's inclusive last frame</span>
+            <span class="n">line_windows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+    <span class="n">variant_used</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">mouth_form</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spans</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">speaker</span> <span class="o">==</span> <span class="n">entity_id</span> <span class="ow">and</span> <span class="n">l</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="s2">"emotion"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">variant_used</span> <span class="o">=</span> <span class="n">variant_used</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="n">mouth_form_of</span><span class="p">((</span><span class="n">l</span><span class="o">.</span><span class="n">emotion</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">hold_clips</span><span class="p">(</span><span class="n">set_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rest</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">spans_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spans_</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">ha</span><span class="p">,</span> <span class="n">hb</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_subtract_intervals</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">line_windows</span><span class="p">)):</span>
+                <span class="c1"># Snap to frames: start on the first frame at/after `ha` (one</span>
+                <span class="c1"># frame after a line's last frame when `ha` is that frame),</span>
+                <span class="c1"># end on the last frame strictly before `hb`'s line.</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">ha</span> <span class="o">*</span> <span class="n">fps</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">)</span> <span class="o">/</span> <span class="n">fps</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">lw_end</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-9</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">lw_end</span> <span class="ow">in</span> <span class="n">line_windows</span><span class="p">):</span>
+                    <span class="n">start</span> <span class="o">+=</span> <span class="n">frame</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">hb</span> <span class="o">*</span> <span class="n">fps</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">)</span> <span class="o">/</span> <span class="n">fps</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">lw_start</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-9</span> <span class="k">for</span> <span class="n">lw_start</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">line_windows</span><span class="p">)</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">&gt;</span> <span class="n">hb</span> <span class="o">+</span> <span class="mf">1e-9</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">lw_start</span> <span class="o">-</span> <span class="mf">1e-9</span> <span class="o">&lt;=</span> <span class="n">end</span> <span class="o">&lt;=</span> <span class="n">lw_end</span> <span class="o">+</span> <span class="mf">1e-9</span> <span class="k">for</span> <span class="n">lw_start</span><span class="p">,</span> <span class="n">lw_end</span> <span class="ow">in</span> <span class="n">line_windows</span><span class="p">):</span>
+                    <span class="n">end</span> <span class="o">-=</span> <span class="n">frame</span>
+                <span class="k">if</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1e-9</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">dur</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+                <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__face_mouth__</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">entity_id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span><span class="w"> </span><span class="s1">'.'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+                <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
+                    <span class="n">duration</span><span class="o">=</span><span class="n">dur</span><span class="p">,</span>
+                    <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">set_name</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span><span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">rest</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">)])],</span>
+                <span class="p">)</span>
+                <span class="n">placed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PlacedClipJSON</span><span class="p">(</span><span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">dur</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">variant_used</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">swap_capable_paths</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">VISEME_CHANNEL</span><span class="p">):</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="n">_mouth_rest_key</span><span class="p">(</span><span class="n">vocab</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">VISEME_CHANNEL</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rest</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">hold_clips</span><span class="p">(</span><span class="n">VISEME_CHANNEL</span><span class="p">,</span> <span class="n">rest</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="p">[(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">))],</span> <span class="s2">"neutral"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">sp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spans</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">mouth_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sp</span><span class="o">.</span><span class="n">source</span> <span class="o">!=</span> <span class="s2">"action"</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">set_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">VISEME_CHANNEL</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">mouth_form</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">vocab</span><span class="o">.</span><span class="n">swap_capable_paths</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">set_name</span><span class="p">):</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="n">_mouth_rest_key</span><span class="p">(</span><span class="n">vocab</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">set_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">hold_clips</span><span class="p">(</span><span class="n">set_name</span><span class="p">,</span> <span class="n">rest</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="p">[(</span><span class="n">sp</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">end</span><span class="p">)],</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">placed</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_subtract_intervals</span><span class="p">(</span><span class="n">span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">holes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``span`` minus every hole, as sorted disjoint intervals."""</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cursor</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">span</span>
+    <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="nb">min</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">h</span><span class="p">))</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">holes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="o">&lt;=</span> <span class="n">cursor</span> <span class="ow">or</span> <span class="n">a</span> <span class="o">&gt;=</span> <span class="n">end</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="n">cursor</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">cursor</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cursor</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">cursor</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span>
 
 
 <span class="c1"># -----------------------------------------------------------------------------</span>

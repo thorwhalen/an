@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.idle &mdash; an 0.1.55 documentation</title>
+  <title>an.characters.idle &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -125,6 +125,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ir/assets.html">an.ir.assets</a></li>
@@ -199,7 +205,7 @@ by <code class="docutils literal notranslate"><span class="pre">model_post_init<
 action (an#7: <code class="docutils literal notranslate"><span class="pre">play(&quot;maya&quot;,</span> <span class="pre">&quot;idle_breath&quot;)</span></code> renders exactly what
 <a class="reference internal" href="#an.characters.idle.breath_animation" title="an.characters.idle.breath_animation"><code class="xref py py-func docutils literal notranslate"><span class="pre">breath_animation()</span></code></a> returns — resolved by <a class="reference internal" href="play.html#module-an.characters.play" title="an.characters.play"><code class="xref py py-mod docutils literal notranslate"><span class="pre">an.characters.play</span></code></a>),
 never automatically. The blink you see without one is compiled by
-<code class="docutils literal notranslate"><span class="pre">an.adapters.cutout.compile._add_blink_clips</span></code> (an#88) from a fixed
+<code class="docutils literal notranslate"><span class="pre">an.adapters.cutout.compile._add_face_clips</span></code> (an#88, via <code class="docutils literal notranslate"><span class="pre">_blink_placements</span></code>) from a fixed
 entity-name-phase schedule (period 4.0 s). <code class="docutils literal notranslate"><span class="pre">random_blink_schedule</span></code> has no
 caller — it is the seeded alternative the compiled blink could adopt.</p>
 <p>One documented number is not what a <code class="docutils literal notranslate"><span class="pre">play</span></code> shows: the “4-second period”

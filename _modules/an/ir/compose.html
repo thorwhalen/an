@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.compose &mdash; an 0.1.55 documentation</title>
+  <title>an.ir.compose &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -116,6 +116,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -208,8 +214,10 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">EasingSpec</span><span class="p">,</span> <span class="n">PathStr</span><span class="p">,</span> <span class="n">Seconds</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DFLT_EXPRESSION_BLEND_S</span><span class="p">,</span>
     <span class="n">Action</span><span class="p">,</span>
     <span class="n">DelayAction</span><span class="p">,</span>
+    <span class="n">ExpressionAction</span><span class="p">,</span>
     <span class="n">LoopAction</span><span class="p">,</span>
     <span class="n">ParallelAction</span><span class="p">,</span>
     <span class="n">PlayAction</span><span class="p">,</span>
@@ -286,6 +294,38 @@
 
 
 
+<div class="viewcode-block" id="expression">
+<a class="viewcode-back" href="../../../module_docs/an/ir/compose.html#an.expression">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">expression</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">PathStr</span><span class="p">,</span>
+    <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">axes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">intensity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">blend</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="n">DFLT_EXPRESSION_BLEND_S</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExpressionAction</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Hold a facial expression on an entity (an#98).</span>
+
+<span class="sd">    ``duration=None`` runs to the shot end and counts as **zero** in a</span>
+<span class="sd">    ``sequence``, like ``play``:</span>
+
+<span class="sd">    &gt;&gt;&gt; [f.start for f in flatten(sequence(expression("a", "happy"), delay(1.0), expression("a", "sad")))]</span>
+<span class="sd">    [0.0, 1.0]</span>
+<span class="sd">    &gt;&gt;&gt; flatten(expression("a", "angry", duration=2.0))[0].end</span>
+<span class="sd">    2.0</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">ExpressionAction</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+        <span class="n">preset</span><span class="o">=</span><span class="n">preset</span><span class="p">,</span>
+        <span class="n">axes</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">axes</span> <span class="ow">or</span> <span class="p">{}),</span>
+        <span class="n">intensity</span><span class="o">=</span><span class="n">intensity</span><span class="p">,</span>
+        <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+        <span class="n">blend</span><span class="o">=</span><span class="n">blend</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
 <span class="c1"># -----------------------------------------------------------------------------</span>
 <span class="c1"># Combinators — build composition trees.</span>
 <span class="c1"># -----------------------------------------------------------------------------</span>
@@ -350,7 +390,7 @@
         <span class="k">return</span> <span class="mf">0.0</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">TweenAction</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">action</span><span class="o">.</span><span class="n">duration</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">PlayAction</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="p">(</span><span class="n">PlayAction</span><span class="p">,</span> <span class="n">ExpressionAction</span><span class="p">)):</span>
         <span class="k">return</span> <span class="n">action</span><span class="o">.</span><span class="n">duration</span> <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">DelayAction</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">action</span><span class="o">.</span><span class="n">duration</span>
@@ -382,7 +422,7 @@
 
     <span class="n">start</span><span class="p">:</span> <span class="n">Seconds</span>
     <span class="n">end</span><span class="p">:</span> <span class="n">Seconds</span>
-    <span class="n">action</span><span class="p">:</span> <span class="n">Action</span>  <span class="c1"># always a leaf: SetAction | TweenAction | PlayAction</span></div>
+    <span class="n">action</span><span class="p">:</span> <span class="n">Action</span>  <span class="c1"># always a leaf: SetAction | TweenAction | PlayAction | ExpressionAction</span></div>
 
 
 
@@ -411,7 +451,7 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">TweenAction</span><span class="p">):</span>
         <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FlatAction</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">t</span> <span class="o">+</span> <span class="n">action</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">t</span> <span class="o">+</span> <span class="n">action</span><span class="o">.</span><span class="n">duration</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">PlayAction</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="p">(</span><span class="n">PlayAction</span><span class="p">,</span> <span class="n">ExpressionAction</span><span class="p">)):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">duration</span> <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span>
         <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FlatAction</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">t</span> <span class="o">+</span> <span class="n">d</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">t</span> <span class="o">+</span> <span class="n">d</span>

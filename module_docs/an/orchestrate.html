@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.orchestrate &mdash; an 0.1.55 documentation</title>
+  <title>an.orchestrate &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../_static/documentation_options.js?v=9d458db5"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -119,6 +119,12 @@
 <li class="toctree-l1"><a class="reference internal" href="data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ir/assets.html">an.ir.assets</a></li>
@@ -237,10 +243,15 @@ own alignment store, instead of letting <code class="docutils literal notranslat
 
 <dl class="py function">
 <dt class="sig sig-object py" id="an.orchestrate.render_project">
-<span class="sig-prename descclassname"><span class="pre">an.orchestrate.</span></span><span class="sig-name descname"><span class="pre">render_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'main'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'offline'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lipsync</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'offline'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_assets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/an/orchestrate.html#render_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.orchestrate.render_project" title="Link to this definition"></a></dt>
-<dd><p>Render the project’s scene to a single mp4 under <code class="docutils literal notranslate"><span class="pre">output/</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">strict_assets</span></code> refuses a stand-in for a declared asset the stores do not
-supply, rather than drawing one and succeeding (an#33).</p>
+<span class="sig-prename descclassname"><span class="pre">an.orchestrate.</span></span><span class="sig-name descname"><span class="pre">render_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/an/orchestrate.html#render_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.orchestrate.render_project" title="Link to this definition"></a></dt>
+<dd><p>Render the project’s scene to a single mp4 under <code class="docutils literal notranslate"><span class="pre">output/</span></code> — the
+orchestrator’s name for <a class="reference internal" href="render.html#an.render.render_project" title="an.render.render_project"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.render.render_project()</span></code></a>, every keyword
+forwarded.</p>
+<p>It used to re-declare the leaf’s parameters, and the two drifted: the CLI
+(<cite>an render</cite>) passed <cite>supersample</cite>, <cite>pix_fmt</cite>, <cite>step_hz</cite> and <cite>language</cite>
+here from the day each flag landed, and this wrapper refused all four with
+a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> — invisible because the CLI test stubbed THIS function
+rather than the leaf (an#98 review). A pass-through cannot drift.</p>
 </dd></dl>
 
 <dl class="py function">

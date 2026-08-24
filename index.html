@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to an’s documentation! &mdash; an 0.1.55 documentation</title>
+  <title>Welcome to an’s documentation! &mdash; an 0.1.56 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=aabd07df"></script>
+      <script src="_static/documentation_options.js?v=9d458db5"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -118,6 +118,12 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/ir/assets.html">an.ir.assets</a></li>
@@ -751,10 +757,12 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.BenchError"><code class="docutils literal notranslate"><span class="pre">BenchError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.GOLDEN_METRIC_KEY"><code class="docutils literal notranslate"><span class="pre">GOLDEN_METRIC_KEY</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.JUST_BLESSED_DETAIL"><code class="docutils literal notranslate"><span class="pre">JUST_BLESSED_DETAIL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.MIN_PINNED_FRAMES_FOR_PAIRWISE"><code class="docutils literal notranslate"><span class="pre">MIN_PINNED_FRAMES_FOR_PAIRWISE</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.conversion_distance"><code class="docutils literal notranslate"><span class="pre">conversion_distance()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.format_panel"><code class="docutils literal notranslate"><span class="pre">format_panel()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.lossless_reference"><code class="docutils literal notranslate"><span class="pre">lossless_reference()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.naming_git_state"><code class="docutils literal notranslate"><span class="pre">naming_git_state()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.pinned_frames_min_pairwise_changed_px"><code class="docutils literal notranslate"><span class="pre">pinned_frames_min_pairwise_changed_px()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.run_bench"><code class="docutils literal notranslate"><span class="pre">run_bench()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.shot_policy_provenance"><code class="docutils literal notranslate"><span class="pre">shot_policy_provenance()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/bench/run.html#an.bench.run.viseme_keyframes_per_second"><code class="docutils literal notranslate"><span class="pre">viseme_keyframes_per_second()</span></code></a></li>
@@ -805,6 +813,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/characters/factory.html">an.characters.factory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/characters/factory.html#an.characters.factory.declare_mouth_variants"><code class="docutils literal notranslate"><span class="pre">declare_mouth_variants()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/characters/factory.html#an.characters.factory.new_character"><code class="docutils literal notranslate"><span class="pre">new_character()</span></code></a></li>
 </ul>
 </li>
@@ -826,8 +835,10 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/characters/mouth_set.html#an.characters.mouth_set.DEFAULT_MOUTH_VARIANTS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_MOUTH_VARIANTS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/characters/mouth_set.html#an.characters.mouth_set.DEFAULT_MOUTH_VIEWBOX"><code class="docutils literal notranslate"><span class="pre">DEFAULT_MOUTH_VIEWBOX</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/characters/mouth_set.html#an.characters.mouth_set.generate_default_mouths"><code class="docutils literal notranslate"><span class="pre">generate_default_mouths()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/characters/mouth_set.html#an.characters.mouth_set.mouth_attachment_name"><code class="docutils literal notranslate"><span class="pre">mouth_attachment_name()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/characters/mouth_set.html#an.characters.mouth_set.write_default_mouths"><code class="docutils literal notranslate"><span class="pre">write_default_mouths()</span></code></a></li>
 </ul>
 </li>
@@ -932,6 +943,81 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/determinism.html#an.determinism.determinism_enforced"><code class="docutils literal notranslate"><span class="pre">determinism_enforced()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression.html">an.expression</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.Axis"><code class="docutils literal notranslate"><span class="pre">Axis</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.AxisCurve"><code class="docutils literal notranslate"><span class="pre">AxisCurve</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.ChannelBinding"><code class="docutils literal notranslate"><span class="pre">ChannelBinding</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.DefaultExpressionProvider"><code class="docutils literal notranslate"><span class="pre">DefaultExpressionProvider</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.ExpressionProvider"><code class="docutils literal notranslate"><span class="pre">ExpressionProvider</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.ExpressionResolutionError"><code class="docutils literal notranslate"><span class="pre">ExpressionResolutionError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.ExpressionSpan"><code class="docutils literal notranslate"><span class="pre">ExpressionSpan</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.Preset"><code class="docutils literal notranslate"><span class="pre">Preset</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.SetBinding"><code class="docutils literal notranslate"><span class="pre">SetBinding</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.binding_for"><code class="docutils literal notranslate"><span class="pre">binding_for()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.clamp_axes"><code class="docutils literal notranslate"><span class="pre">clamp_axes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.declared_mouth_variants"><code class="docutils literal notranslate"><span class="pre">declared_mouth_variants()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.default_binding"><code class="docutils literal notranslate"><span class="pre">default_binding()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.expression_problems"><code class="docutils literal notranslate"><span class="pre">expression_problems()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.expression_spans"><code class="docutils literal notranslate"><span class="pre">expression_spans()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.from_blendshapes"><code class="docutils literal notranslate"><span class="pre">from_blendshapes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.known_presets"><code class="docutils literal notranslate"><span class="pre">known_presets()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.lid_key"><code class="docutils literal notranslate"><span class="pre">lid_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.mouth_form_of"><code class="docutils literal notranslate"><span class="pre">mouth_form_of()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.preset_axes"><code class="docutils literal notranslate"><span class="pre">preset_axes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.resolve_mouth_set"><code class="docutils literal notranslate"><span class="pre">resolve_mouth_set()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression.html#an.expression.variant_set_name"><code class="docutils literal notranslate"><span class="pre">variant_set_name()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/axes.html">an.expression.axes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/axes.html#an.expression.axes.AXES"><code class="docutils literal notranslate"><span class="pre">AXES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/axes.html#an.expression.axes.Axis"><code class="docutils literal notranslate"><span class="pre">Axis</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/axes.html#an.expression.axes.INTENSITY_AXIS"><code class="docutils literal notranslate"><span class="pre">INTENSITY_AXIS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/axes.html#an.expression.axes.LID_KEY_WIDE"><code class="docutils literal notranslate"><span class="pre">LID_KEY_WIDE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/axes.html#an.expression.axes.LID_WIDE_ABOVE"><code class="docutils literal notranslate"><span class="pre">LID_WIDE_ABOVE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/axes.html#an.expression.axes.MOUTH_FORM_AXIS"><code class="docutils literal notranslate"><span class="pre">MOUTH_FORM_AXIS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/axes.html#an.expression.axes.clamp_axes"><code class="docutils literal notranslate"><span class="pre">clamp_axes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/axes.html#an.expression.axes.lid_key"><code class="docutils literal notranslate"><span class="pre">lid_key()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/binding.html">an.expression.binding</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.BROW_ANGLE_TRAVEL"><code class="docutils literal notranslate"><span class="pre">BROW_ANGLE_TRAVEL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.BROW_HEIGHT_TRAVEL"><code class="docutils literal notranslate"><span class="pre">BROW_HEIGHT_TRAVEL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.ChannelBinding"><code class="docutils literal notranslate"><span class="pre">ChannelBinding</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.ExpressionResolutionError"><code class="docutils literal notranslate"><span class="pre">ExpressionResolutionError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.GAZE_TRAVEL"><code class="docutils literal notranslate"><span class="pre">GAZE_TRAVEL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.LID_SQUASH_GAIN"><code class="docutils literal notranslate"><span class="pre">LID_SQUASH_GAIN</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.SetBinding"><code class="docutils literal notranslate"><span class="pre">SetBinding</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.binding_for"><code class="docutils literal notranslate"><span class="pre">binding_for()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.declared_mouth_variants"><code class="docutils literal notranslate"><span class="pre">declared_mouth_variants()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.default_binding"><code class="docutils literal notranslate"><span class="pre">default_binding()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.expression_problems"><code class="docutils literal notranslate"><span class="pre">expression_problems()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.preset_axes"><code class="docutils literal notranslate"><span class="pre">preset_axes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.resolve_mouth_set"><code class="docutils literal notranslate"><span class="pre">resolve_mouth_set()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.touches_gaze"><code class="docutils literal notranslate"><span class="pre">touches_gaze()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/binding.html#an.expression.binding.variant_set_name"><code class="docutils literal notranslate"><span class="pre">variant_set_name()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/blendshapes.html">an.expression.blendshapes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/blendshapes.html#an.expression.blendshapes.from_blendshapes"><code class="docutils literal notranslate"><span class="pre">from_blendshapes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/presets.html">an.expression.presets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/presets.html#an.expression.presets.Preset"><code class="docutils literal notranslate"><span class="pre">Preset</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/presets.html#an.expression.presets.known_presets"><code class="docutils literal notranslate"><span class="pre">known_presets()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/presets.html#an.expression.presets.mouth_form_of"><code class="docutils literal notranslate"><span class="pre">mouth_form_of()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/presets.html#an.expression.presets.preset_axes"><code class="docutils literal notranslate"><span class="pre">preset_axes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/an/expression/provider.html">an.expression.provider</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/provider.html#an.expression.provider.AxisCurve"><code class="docutils literal notranslate"><span class="pre">AxisCurve</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/provider.html#an.expression.provider.DIALOGUE_EMOTION_BLEND_S"><code class="docutils literal notranslate"><span class="pre">DIALOGUE_EMOTION_BLEND_S</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/provider.html#an.expression.provider.DefaultExpressionProvider"><code class="docutils literal notranslate"><span class="pre">DefaultExpressionProvider</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/provider.html#an.expression.provider.ExpressionProvider"><code class="docutils literal notranslate"><span class="pre">ExpressionProvider</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/provider.html#an.expression.provider.ExpressionSpan"><code class="docutils literal notranslate"><span class="pre">ExpressionSpan</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/provider.html#an.expression.provider.expression_spans"><code class="docutils literal notranslate"><span class="pre">expression_spans()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/expression/provider.html#an.expression.provider.flatten_expressions"><code class="docutils literal notranslate"><span class="pre">flatten_expressions()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/an/ir.html">an.ir</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir.html#an.ir.AssetRef"><code class="docutils literal notranslate"><span class="pre">AssetRef</span></code></a></li>
@@ -946,6 +1032,7 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir.html#an.ir.ValidationFinding"><code class="docutils literal notranslate"><span class="pre">ValidationFinding</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir.html#an.ir.ValidationReport"><code class="docutils literal notranslate"><span class="pre">ValidationReport</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir.html#an.ir.delay"><code class="docutils literal notranslate"><span class="pre">delay()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir.html#an.ir.expression"><code class="docutils literal notranslate"><span class="pre">expression()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir.html#an.ir.flatten"><code class="docutils literal notranslate"><span class="pre">flatten()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir.html#an.ir.ir_to_markdown"><code class="docutils literal notranslate"><span class="pre">ir_to_markdown()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir.html#an.ir.kind_of"><code class="docutils literal notranslate"><span class="pre">kind_of()</span></code></a></li>
@@ -974,6 +1061,7 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/compose.html#an.ir.compose.FlatAction"><code class="docutils literal notranslate"><span class="pre">FlatAction</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/compose.html#an.ir.compose.delay"><code class="docutils literal notranslate"><span class="pre">delay()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/compose.html#an.ir.compose.duration_of"><code class="docutils literal notranslate"><span class="pre">duration_of()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/compose.html#an.ir.compose.expression"><code class="docutils literal notranslate"><span class="pre">expression()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/compose.html#an.ir.compose.flatten"><code class="docutils literal notranslate"><span class="pre">flatten()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/compose.html#an.ir.compose.loop"><code class="docutils literal notranslate"><span class="pre">loop()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/compose.html#an.ir.compose.parallel"><code class="docutils literal notranslate"><span class="pre">parallel()</span></code></a></li>
@@ -1000,8 +1088,10 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.Action"><code class="docutils literal notranslate"><span class="pre">Action</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.AssetRef"><code class="docutils literal notranslate"><span class="pre">AssetRef</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.Camera"><code class="docutils literal notranslate"><span class="pre">Camera</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.DFLT_EXPRESSION_BLEND_S"><code class="docutils literal notranslate"><span class="pre">DFLT_EXPRESSION_BLEND_S</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.DelayAction"><code class="docutils literal notranslate"><span class="pre">DelayAction</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.Dialogue"><code class="docutils literal notranslate"><span class="pre">Dialogue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.ExpressionAction"><code class="docutils literal notranslate"><span class="pre">ExpressionAction</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.LoopAction"><code class="docutils literal notranslate"><span class="pre">LoopAction</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.Meta"><code class="docutils literal notranslate"><span class="pre">Meta</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/an/ir/schema.html#an.ir.schema.Narration"><code class="docutils literal notranslate"><span class="pre">Narration</span></code></a></li>
@@ -1195,7 +1285,7 @@
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-<p>Release: 0.1.55</p>
+<p>Release: 0.1.56</p>
 <p>Last change: Aug 24, 2026</p>
 </section>
 
