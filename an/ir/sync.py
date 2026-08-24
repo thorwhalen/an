@@ -292,7 +292,9 @@ def _extract_actions_block(text: str) -> list:
                 item["target"],
                 item["animation"],
                 duration=(
-                    float(item["duration"]) if item.get("duration") is not None else None
+                    float(item["duration"])
+                    if item.get("duration") is not None
+                    else None
                 ),
                 speed=float(item.get("speed", 1.0)),
                 loop=(bool(item["loop"]) if item.get("loop") is not None else None),

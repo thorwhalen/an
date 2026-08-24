@@ -1766,8 +1766,7 @@ def _resolve_play(
         )
     except PlayResolutionError as e:
         raise CutoutCompileError(
-            f"play of {action.animation!r} on {entity_id!r}: "
-            + "; ".join(e.problems)
+            f"play of {action.animation!r} on {entity_id!r}: " + "; ".join(e.problems)
         ) from e
     anim = resolved.animation
     k = vocab.entity_scale.get(entity_id, 1.0)
@@ -1792,18 +1791,24 @@ def _resolve_play(
             scale = rt.unit * (k if rt.rig_scaled else 1.0)
             if rt.track.type == "sine":
                 kfs = [
-                    KeyframeJSON(time=t, value=rest_value + dev * scale, easing="linear")
+                    KeyframeJSON(
+                        time=t, value=rest_value + dev * scale, easing="linear"
+                    )
                     for t, dev in sampled_deviations(rt.track, duration, fps)
                 ]
             else:
                 easing = "step" if rt.track.type == "step" else "linear"
                 kfs = [
                     KeyframeJSON(
-                        time=float(ft), value=rest_value + float(fv) * scale, easing=easing
+                        time=float(ft),
+                        value=rest_value + float(fv) * scale,
+                        easing=easing,
                     )
                     for ft, fv in rt.track.frames
                 ]
-            channels.append(ChannelJSON(target=path, property=rt.property, keyframes=kfs))
+            channels.append(
+                ChannelJSON(target=path, property=rt.property, keyframes=kfs)
+            )
         else:
             channels.append(
                 ChannelJSON(
