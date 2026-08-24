@@ -74,6 +74,7 @@ def render(
     supersample: int = 1,
     pix_fmt: str = "",
     step_hz: float = 0.0,
+    language: str = "en",
 ) -> str:
     """Render the project at ``project_dir`` to a single mp4.
 
@@ -101,6 +102,10 @@ def render(
         default) uses the scene's own `meta.step_hz`, which is unset (smooth)
         unless the author declared one. The camera, blinks, `play` clips and
         swap channels are never stepped by this
+    language: the dialogue's language (BCP-47) for providers that select
+        behaviour by it — Rhubarb's recognizer today: English (the default)
+        uses `pocketSphinx` with the transcript, anything else `phonetic`
+        without one (an#96)
     """
     parallel_arg: int | str | None
     if not parallel:
@@ -122,6 +127,7 @@ def render(
         supersample=supersample,
         pix_fmt=pix_fmt or None,
         step_hz=step_hz or None,
+        language=language,
     )
     return f"rendered: {output_path}"
 

@@ -47,10 +47,15 @@ RECOGNIZERS: frozenset[str] = frozenset({_ENGLISH_RECOGNIZER, _PHONETIC_RECOGNIZ
 def recognizer_for(language: str) -> str:
     """The Rhubarb recognizer for a BCP-47 language tag (primary subtag only).
 
-    >>> recognizer_for("en"), recognizer_for("en-GB"), recognizer_for("fr")
-    ('pocketSphinx', 'pocketSphinx', 'phonetic')
+    Accepts the POSIX locale spelling too (``en_US``); an empty tag is refused
+    rather than read as "non-English" (an#96 review).
+
+    >>> recognizer_for("en"), recognizer_for("en-GB"), recognizer_for("en_US"), recognizer_for("fr")
+    ('pocketSphinx', 'pocketSphinx', 'pocketSphinx', 'phonetic')
     """
-    primary = language.split("-", 1)[0].lower()
+    primary = language.replace("_", "-").split("-", 1)[0].strip().lower()
+    if not primary:
+        raise ValueError("language must be a BCP-47 tag such as 'en' or 'fr'; got ''")
     return _ENGLISH_RECOGNIZER if primary in ENGLISH_LANGUAGES else _PHONETIC_RECOGNIZER
 
 

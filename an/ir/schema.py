@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from an.base import (
     COMPATIBLE_VERSION,
@@ -246,6 +246,15 @@ class WordTimingIR(_IRModel):
     text: str
     start: Seconds
     end: Seconds
+
+    @model_validator(mode="after")
+    def _ordered(self) -> "WordTimingIR":
+        if self.start < 0 or self.end < self.start:
+            raise ValueError(
+                f"word timing {self.text!r} must satisfy 0 <= start <= end; "
+                f"got start={self.start}, end={self.end}"
+            )
+        return self
 
 
 class Dialogue(_IRModel):

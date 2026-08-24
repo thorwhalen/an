@@ -179,10 +179,21 @@ def _to_ir_viseme_track(track: VisemeTrack) -> IRVisemeTrack:
 
 
 def _to_ir_word_timings(track: VisemeTrack) -> list[WordTimingIR] | None:
-    """The track's word timings as IR models, or ``None`` when it has none."""
+    """The track's word timings as IR models, or ``None`` when it has none.
+
+    Clamped to ``[0, track.duration]`` the way the visemes are: transcribers
+    "occasionally round the last word's end past the audio's actual length",
+    and a caption cue reads ``line.start + word.end`` (an#96 review).
+    """
     if track.words is None:
         return None
-    return [WordTimingIR(text=w[0], start=float(w[1]), end=float(w[2])) for w in track.words]
+    out = []
+    for text, start, end in track.words:
+        hi = float(track.duration) if track.duration else float(end)
+        e = min(max(0.0, float(end)), hi)
+        s = min(max(0.0, float(start)), e)
+        out.append(WordTimingIR(text=text, start=s, end=e))
+    return out
 
 
 def _emits_word_timings(lipsync: LipSyncProvider) -> bool:
@@ -247,6 +258,14 @@ def _load_or_align(
             # Fall through to recompute; cache content was malformed.
             pass
     track = lipsync.align(audio, transcript)
+    if _emits_word_timings(lipsync) and track.words is None:
+        # The declaration is what `already_done` trusts: a provider that
+        # claims words and returns none would be re-aligned on every run,
+        # silently — the exact loop the flag exists to prevent (an#96 review).
+        raise AudioPipelineError(
+            f"lip-sync provider {lipsync.name!r} declares emits_word_timings but "
+            "returned a track with words=None; set the flag False or fill words."
+        )
     if mall is not None and "visemes" in mall:
         payload = {
             "visemes": [asdict(v) for v in track.visemes],

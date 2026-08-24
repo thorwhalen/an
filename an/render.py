@@ -73,6 +73,7 @@ def render_project(
     supersample: int = DEFAULT_SUPERSAMPLE,
     pix_fmt: str | None = None,
     step_hz: float | None = None,
+    language: str = "en",
 ) -> Path:
     """Render every shot in ``project_dir``'s scene and concatenate to one mp4.
 
@@ -101,6 +102,10 @@ def render_project(
     of that many updates per second — 15 at 30 fps is "on twos". ``None`` uses
     the scene's declaration, which is itself ``None`` (smooth) by default.
 
+    ``language`` (BCP-47) reaches lip-sync providers that select behaviour by
+    it when ``lipsync`` is a provider *name* — Rhubarb's recognizer (an#96). A
+    provider *instance* carries its own.
+
     Returns the absolute path of the final output file (under ``output/``).
     """
     project: Project = load(project_dir)
@@ -116,6 +121,7 @@ def render_project(
         supersample=supersample,
         pix_fmt=pix_fmt,
         step_hz=step_hz,
+        language=language,
     )
 
 
@@ -133,6 +139,7 @@ def render(
     supersample: int = DEFAULT_SUPERSAMPLE,
     pix_fmt: str | None = None,
     step_hz: float | None = None,
+    language: str = "en",
 ) -> Path:
     """Lower-level: render a loaded ``Project`` to mp4.
 
@@ -192,7 +199,7 @@ def render(
 
         tts_provider = make_tts(tts) if isinstance(tts, str) else tts
         lipsync_provider = (
-            make_lipsync(lipsync) if isinstance(lipsync, str) else lipsync
+            make_lipsync(lipsync, language=language) if isinstance(lipsync, str) else lipsync
         )
 
         produce_audio_for_scene(

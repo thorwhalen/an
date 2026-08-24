@@ -8,7 +8,7 @@ misc/bench/golden/<scene>/f0006-chromium140.0.7339.16.png
 misc/bench/golden/<scene>/bless-chromium140.0.7339.16.json
 ```
 
-Twelve PNGs, two per scene, 43 KB in total.
+Two PNGs per corpus scene (a few KB each).
 
 ## The criterion is `sha256` of the decoded array, never the file bytes
 
@@ -120,8 +120,13 @@ while building this corpus:
 
 ## The fixtures
 
-The four bench-owned scenes live in `../corpus/` and are **committed whole** —
-no `prepare` step, no build products. A metrics fixture has to hold still: if
+The bench-owned scenes live in `../corpus/` and are **committed whole** — no
+`prepare` step, no build products. One rule the speaking scene added (an#96):
+the bench renders with `auto_audio=False`, so a scene that *speaks* must commit
+its `ir/scene.json` with the offline provider's visemes stamped, via a per-scene
+carve-out from `.gitignore`'s `misc/bench/corpus/*/ir/` rule — `dialogue` is the
+precedent; without it the scene is mute on a clean checkout and its mid-line
+golden a lie. A metrics fixture has to hold still: if
 its pixels depended on a generator elsewhere in the repo, every change to that
 generator would force a re-bless. (`promote_demo` legitimately has a prepare
 step; exercising `an.characters.promote` is part of what that scene is for.)

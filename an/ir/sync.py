@@ -115,7 +115,7 @@ def markdown_to_ir(md_text: str) -> SceneIR:
     shots: list[Shot] = []
     for shot_id, style, body in parts["__shots__"]:
         shot_yaml = _extract_yaml_block(body, "shot") or {}
-        dialogue_block = _extract_dialogue_block(body)
+        dialogue_block = _extract_dialogue_block(body, shot_id=shot_id)
         entities_block = _extract_entities_block(body)
         actions_block = _extract_actions_block(body)
         shot_kwargs: dict[str, Any] = {
@@ -184,7 +184,7 @@ _DIALOGUE_LINE_RE = re.compile(
 )
 
 
-def _extract_dialogue_block(text: str) -> list[Dialogue]:
+def _extract_dialogue_block(text: str, *, shot_id: str | None = None) -> list[Dialogue]:
     """Parse a ```dialogue block.
 
     Each non-empty, non-comment line follows ``speaker[emotion]: text`` where
@@ -209,8 +209,9 @@ def _extract_dialogue_block(text: str) -> list[Dialogue]:
                 continue
             match = _DIALOGUE_LINE_RE.match(line)
             if not match:
+                where = f"shot {shot_id!r}: " if shot_id else ""
                 raise ValueError(
-                    f"dialogue line {line!r} is not `speaker: text` or "
+                    f"{where}dialogue line {line!r} is not `speaker: text` or "
                     "`speaker [emotion]: text` — speaker ids are `[\\w-]+`, and "
                     "the emotion goes in square brackets. A line that does not "
                     "parse is refused rather than dropped, so a typo cannot "

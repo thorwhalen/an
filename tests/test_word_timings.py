@@ -150,6 +150,51 @@ def test_already_done_realigns_a_wordless_line_once_for_a_word_provider():
     produce_audio_for_scene(scene, tts=_TTS(), lipsync=ls)  # and then it is done
 
 
+def test_whisper_puts_its_words_on_the_track(monkeypatch):
+    """The other of the two word providers, with a fake model in place of
+    faster-whisper (the real test module skips without a cached model)."""
+    from types import SimpleNamespace as NS
+
+    from an.audio import whisper_lipsync as wl
+
+    class _Model:
+        def transcribe(self, path, **kw):
+            seg = NS(words=[NS(word="Hold", start=0.05, end=0.30), NS(word="it", start=0.35, end=0.5)])
+            return [seg], None
+
+    ls = wl.WhisperLipSync()
+    monkeypatch.setattr(ls, "_get_model", lambda: _Model())
+    track = ls.align(_TTS().synthesize("Hold it"), "Hold it")
+    assert ls.emits_word_timings is True
+    assert track.words == [("Hold", 0.05, 0.30), ("it", 0.35, 0.5)]
+    assert track.visemes, "the visemes are still derived from the same words"
+
+
+def test_a_provider_that_claims_words_but_returns_none_fails_loudly():
+    """Otherwise `already_done` is never true and the line re-aligns forever."""
+    from an.audio.pipeline import AudioPipelineError
+
+    class _Liar(_WordlessLipSync):
+        name = "liar"
+        emits_word_timings = True
+
+    with pytest.raises(AudioPipelineError, match="emits_word_timings"):
+        produce_audio_for_dialogue(Dialogue(speaker="a", text="hi"), {"audio": {}, "visemes": {}}, tts=_TTS(), lipsync=_Liar())
+
+
+def test_word_timings_are_clamped_to_the_clip_like_visemes_are():
+    """A transcriber rounding the last word past the audio's end must not put
+    a caption cue past the line (an#96 review)."""
+    scene = _scene()
+    produce_audio_for_scene(scene, tts=_TTS(), lipsync=WordTimingsLipSync(StaticWordTimings([("late", 0.9, 1.4), ("later", 1.5, 1.6)])))
+    words = scene.timeline[0].dialogue[0].word_timings
+    assert [(w.start, w.end) for w in words] == [(0.9, 1.0), (1.0, 1.0)]
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        WordTimingIR(text="x", start=0.5, end=0.2)
+
+
 def test_scene_md_never_carries_word_timings():
     """JSON-only, like visemes: the md writer emits `speaker [emotion]: text`."""
     from an.ir.sync import ir_to_markdown, markdown_to_ir
