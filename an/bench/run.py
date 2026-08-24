@@ -730,7 +730,9 @@ def run_bench(
                 # blink and moves every pixel metric; this makes that a
                 # visible diff in the row instead of an unexplained shift.
                 "blink_phases": {
-                    s.shot_id: dict((s.scene_json.get("meta") or {}).get("blink_phases") or {})
+                    s.shot_id: dict(
+                        (s.scene_json.get("meta") or {}).get("blink_phases") or {}
+                    )
                     for s in capture.shots
                 },
                 "n_drawable_entities": sum(

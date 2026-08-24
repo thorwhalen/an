@@ -2023,7 +2023,8 @@ def _add_blink_clips(
         eyes = sorted(
             p
             for p in vocab.paths
-            if p.split("/", 1)[0] == entity.id and p.rsplit("/", 1)[-1] in EYE_NODE_NAMES
+            if p.split("/", 1)[0] == entity.id
+            and p.rsplit("/", 1)[-1] in EYE_NODE_NAMES
         )
         if not eyes:
             continue
@@ -2053,10 +2054,13 @@ def _add_blink_clips(
                     for time, key in ((t_closed, "CLOSED"), (t_open, "OPEN")):
                         if clip_start < time <= clip_end:
                             kfs.append(
-                                KeyframeJSON(time=time - clip_start, value=key, easing="step")
+                                KeyframeJSON(
+                                    time=time - clip_start, value=key, easing="step"
+                                )
                             )
                     prop = EYELID_CHANNEL
                 else:
+
                     def squash(time: float) -> float:
                         u = (time - start) / span
                         if u <= 0.0 or u >= 1.0:
@@ -2077,9 +2081,7 @@ def _add_blink_clips(
                         if clip_start <= time <= clip_end
                     ]
                     prop = "scale_y"
-                anim_id = (
-                    f"__blink__{shot.id}_{path.replace('/', '.')}_{len(placed)}"
-                )
+                anim_id = f"__blink__{shot.id}_{path.replace('/', '.')}_{len(placed)}"
                 duration = max(0.001, clip_end - clip_start)
                 animations[anim_id] = AnimationClipJSON(
                     name=anim_id,
