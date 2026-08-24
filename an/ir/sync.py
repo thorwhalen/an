@@ -269,7 +269,7 @@ def _extract_actions_block(text: str) -> list:
                 f"each entry under `yaml actions` must be a mapping; got {item!r}"
             )
         kind = item.get("kind")
-        start = item.pop("start", None) if kind in ("tween", "play") else None
+        start = item.pop("start", None) if kind in ("tween", "play", "expression") else None
         if kind == "tween":
             target = item["target"]
             property_ = item["property"]
@@ -310,9 +310,30 @@ def _extract_actions_block(text: str) -> list:
                 speed=float(item.get("speed", 1.0)),
                 loop=(bool(item["loop"]) if item.get("loop") is not None else None),
             )
+        elif kind == "expression":
+            # `{kind: expression, target, [preset], [axes], [intensity],
+            # [duration], [blend], [start]}` (an#98). Landed with its writer
+            # and round trip in one commit: the writer skips unknown leaves
+            # silently, so a parser-only entry would vanish from scene.md on
+            # the next sync and then from the JSON on the next md edit.
+            raw_axes = item.get("axes") or {}
+            if not isinstance(raw_axes, dict):
+                raise ValueError(f"actions[{i}].axes must be a mapping; got {raw_axes!r}")
+            action = _compose.expression(
+                item["target"],
+                item.get("preset"),
+                axes={str(k): float(v) for k, v in raw_axes.items()},
+                intensity=float(item.get("intensity", 1.0)),
+                duration=(
+                    float(item["duration"])
+                    if item.get("duration") is not None
+                    else None
+                ),
+                blend=float(item["blend"]) if item.get("blend") is not None else _compose.DFLT_EXPRESSION_BLEND_S,
+            )
         else:
             raise ValueError(
-                f"actions[{i}].kind must be one of tween/set/play; got {kind!r}"
+                f"actions[{i}].kind must be one of tween/set/play/expression; got {kind!r}"
             )
         if start is not None and float(start) > 0:
             action = _compose.sequence(_compose.delay(float(start)), action)
@@ -423,7 +444,9 @@ def _actions_to_yaml_list(actions: list) -> list[dict]:
     no data loss, just no markdown round-trip).
     """
     from an.ir.schema import (
+        DFLT_EXPRESSION_BLEND_S,
         DelayAction,
+        ExpressionAction,
         PlayAction,
         SequenceAction,
         SetAction,
@@ -479,6 +502,21 @@ def _actions_to_yaml_list(actions: list) -> list[dict]:
                 entry["speed"] = leaf.speed
             if leaf.loop is not None:
                 entry["loop"] = bool(leaf.loop)
+            if start is not None:
+                entry["start"] = start
+            out.append(entry)
+        elif isinstance(leaf, ExpressionAction):
+            entry = {"kind": "expression", "target": leaf.target}
+            if leaf.preset is not None:
+                entry["preset"] = leaf.preset
+            if leaf.axes:
+                entry["axes"] = dict(leaf.axes)
+            if leaf.intensity != 1.0:
+                entry["intensity"] = leaf.intensity
+            if leaf.duration is not None:
+                entry["duration"] = leaf.duration
+            if leaf.blend != DFLT_EXPRESSION_BLEND_S:
+                entry["blend"] = leaf.blend
             if start is not None:
                 entry["start"] = start
             out.append(entry)

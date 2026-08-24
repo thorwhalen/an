@@ -541,6 +541,36 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
 #: boolean and the number are the same evidence read two ways.
 GOLDEN_METRIC_KEY: str = "min_ssim_win8_vs_golden"
 GOLDEN_TRIPWIRE_KEY: str = "golden_identity"
+PAIRWISE_METRIC_KEY: str = "expression_min_pairwise_changed_px"
+#: Below this many pinned frames the pairwise minimum is a single pair's change.
+MIN_PINNED_FRAMES_FOR_PAIRWISE: int = 3
+
+
+def pinned_frames_min_pairwise_changed_px(capture: SceneCapture, times) -> Value:
+    """``expression_min_pairwise_changed_px`` for one scene: decode the pinned
+    frames from today's render and take the minimum over every pair of the
+    count of pixels that differ (an#98). `unavailable`, never zero, when the
+    scene pins too few frames for a pairwise minimum to mean anything."""
+    from itertools import combinations
+
+    from an.bench.png import read_png
+
+    if len(times) < MIN_PINNED_FRAMES_FOR_PAIRWISE:
+        return unavailable(
+            f"the scene pins {len(times)} frame(s); a pairwise minimum needs at "
+            f"least {MIN_PINNED_FRAMES_FOR_PAIRWISE} to say anything about two of "
+            "them collapsing onto one picture"
+        )
+    frames = {}
+    for ref in G.resolve_frames(capture, times):
+        frames[ref.index] = read_png(G.frame_png_path(capture, ref)).astype(int)
+    best = None
+    for a, b in combinations(sorted(frames), 2):
+        changed = int((frames[a] != frames[b]).any(axis=-1).sum())
+        if best is None or changed < best[0]:
+            best = (changed, a, b)
+    changed, a, b = best
+    return measured(changed, closest_pair=[G.frame_key(a), G.frame_key(b)])
 
 #: Said when a run blessed the goldens it would otherwise have compared against.
 JUST_BLESSED_DETAIL: str = (
@@ -768,6 +798,9 @@ def run_bench(
                 )
             metric_value, tripwire_value = _golden_values(golden)
             values[GOLDEN_METRIC_KEY] = metric_value
+            values[PAIRWISE_METRIC_KEY] = pinned_frames_min_pairwise_changed_px(
+                capture, fixture.golden_frames
+            )
             scene_prov["golden"] = {
                 **golden,
                 "chromium_build": chromium_build,

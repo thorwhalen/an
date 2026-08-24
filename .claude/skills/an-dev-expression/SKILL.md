@@ -9,6 +9,22 @@ Design of record: `misc/docs/wave6_research.md` (§3–§10, §14). This skill i
 an agent must not re-derive. Where this skill and the code disagree, the code wins and both
 get fixed.
 
+## 0. As built (PR-C, an#98) — the names to reach for
+
+- `an.expression`: `AXES`, `lid_key`, `PRESETS`/`preset_axes`/`known_presets`, `default_binding`/`binding_for`,
+  `resolve_mouth_set`, `expression_problems`, `DefaultExpressionProvider` (`curves`, `spans`, `mouth_preset_at`),
+  `BLENDSHAPE_V2_NAMES`/`from_blendshapes`. The combinator is `an.ir.expression` (NOT re-exported at `an.` — that
+  name is this subpackage).
+- The solver: `_add_face_clips` → `_solve_face` in `an/adapters/cutout/compile.py`; untouched entities go through
+  `_blink_placements` (the an#88 body, verbatim). `_add_viseme_clips` asks the provider for the preset at the line's
+  start and `resolve_mouth_set` for the set; silent spans hold the variant's rest via `__face_mouth__` clips.
+- Gains: `BROW_HEIGHT_TRAVEL = 10` (view-box units, rig-scaled), `BROW_ANGLE_TRAVEL = 0.35` rad,
+  `LID_SQUASH_GAIN = 0.5`; the brow-angle sign is `-travel` left / `+travel` right (PixiJS is clockwise-positive).
+- Variants: `an character new --mouth-variants happy,sad` (the default), `an character mouths --variants angry`;
+  `DEFAULT_MOUTH_VARIANTS` in `an/characters/mouth_set.py`; `declare_mouth_variants` in the factory.
+- Measurement: corpus `expressions` (eight goldens), `tests/test_expression_goldens.py` (pairwise ≥ 53 px in the
+  face crop), ledger `expression_min_pairwise_changed_px`. The emotion cassette is NOT recorded yet.
+
 ## 1. The axes (ten ship; offsets over the built rest)
 
 | axis | range / rest | drives |
@@ -67,7 +83,7 @@ desugars **in memory only** to an `ExpressionAction` over the line — never int
 `sync.py` parser **and** writer (the writer skips unknown leaves *silently* — land it with
 the schema, in the same commit, with its round trip), `validate.py`, `iterate.py`'s grammar,
 and the compiler's dispatch (`_compile_one` / `_build_anim_for` raise `TypeError` on an
-unknown leaf). An unknown preset is a validate **error**. Every name `_EMOTION_BROWS`
+unknown leaf). An unknown preset is a validate **error**. Every name the retired brow-tilt table
 accepted (`neutral happy sad angry surprised skeptical amused thinking`) stays a preset —
 live content authors `amused`.
 

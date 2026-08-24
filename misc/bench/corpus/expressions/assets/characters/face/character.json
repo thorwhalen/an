@@ -1,0 +1,739 @@
+{
+  "schema_version": "0.3.0",
+  "kind": "CharacterDescriptor",
+  "name": "face",
+  "display_name": "Face",
+  "view_box": [
+    0,
+    0,
+    1024,
+    1024
+  ],
+  "voice_ref": null,
+  "source_svg": "face.svg",
+  "bones": [
+    {
+      "name": "root",
+      "parent": null,
+      "x": 512.0,
+      "y": 980.0,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "pivot": "root"
+    },
+    {
+      "name": "torso",
+      "parent": "root",
+      "x": 0.0,
+      "y": -300.0,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "pivot": "hip"
+    },
+    {
+      "name": "head",
+      "parent": "torso",
+      "x": 0.0,
+      "y": -260.0,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "pivot": "neck"
+    },
+    {
+      "name": "arm_l",
+      "parent": "torso",
+      "x": -90.0,
+      "y": -240.0,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "pivot": "shoulder_l"
+    },
+    {
+      "name": "arm_r",
+      "parent": "torso",
+      "x": 90.0,
+      "y": -240.0,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "pivot": "shoulder_r"
+    },
+    {
+      "name": "leg_l",
+      "parent": "root",
+      "x": -50.0,
+      "y": -10.0,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "pivot": "hip_l"
+    },
+    {
+      "name": "leg_r",
+      "parent": "root",
+      "x": 50.0,
+      "y": -10.0,
+      "rotation_deg": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "pivot": "hip_r"
+    }
+  ],
+  "slots": [
+    {
+      "name": "leg_l",
+      "bone": "leg_l",
+      "draw_order": 0,
+      "attachment": "leg_l"
+    },
+    {
+      "name": "leg_r",
+      "bone": "leg_r",
+      "draw_order": 0,
+      "attachment": "leg_r"
+    },
+    {
+      "name": "torso",
+      "bone": "torso",
+      "draw_order": 1,
+      "attachment": "torso"
+    },
+    {
+      "name": "arm_l",
+      "bone": "arm_l",
+      "draw_order": 2,
+      "attachment": "arm_l"
+    },
+    {
+      "name": "arm_r",
+      "bone": "arm_r",
+      "draw_order": 2,
+      "attachment": "arm_r"
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "draw_order": 4,
+      "attachment": "head"
+    },
+    {
+      "name": "left_eye",
+      "bone": "head",
+      "draw_order": 6,
+      "attachment": "open"
+    },
+    {
+      "name": "right_eye",
+      "bone": "head",
+      "draw_order": 6,
+      "attachment": "open"
+    },
+    {
+      "name": "mouth",
+      "bone": "head",
+      "draw_order": 7,
+      "attachment": "mouth_x"
+    },
+    {
+      "name": "left_brow",
+      "bone": "head",
+      "draw_order": 8,
+      "attachment": "brow_l"
+    },
+    {
+      "name": "right_brow",
+      "bone": "head",
+      "draw_order": 8,
+      "attachment": "brow_r"
+    }
+  ],
+  "skins": {
+    "default": {
+      "name": "default",
+      "slots": {
+        "torso": {
+          "torso": {
+            "path": "parts/torso.svg",
+            "anchor": [
+              0.5,
+              1.0
+            ],
+            "x": 0.0,
+            "y": 0.0,
+            "width": null,
+            "height": null
+          }
+        },
+        "head": {
+          "head": {
+            "path": "parts/head.svg",
+            "anchor": [
+              0.5,
+              0.78
+            ],
+            "x": 0.0,
+            "y": 0.0,
+            "width": null,
+            "height": null
+          }
+        },
+        "arm_l": {
+          "arm_l": {
+            "path": "parts/arm_l.svg",
+            "anchor": [
+              0.5,
+              0.0
+            ],
+            "x": 0.0,
+            "y": 0.0,
+            "width": null,
+            "height": null
+          }
+        },
+        "arm_r": {
+          "arm_r": {
+            "path": "parts/arm_r.svg",
+            "anchor": [
+              0.5,
+              0.0
+            ],
+            "x": 0.0,
+            "y": 0.0,
+            "width": null,
+            "height": null
+          }
+        },
+        "leg_l": {
+          "leg_l": {
+            "path": "parts/leg_l.svg",
+            "anchor": [
+              0.5,
+              0.0
+            ],
+            "x": 0.0,
+            "y": 0.0,
+            "width": null,
+            "height": null
+          }
+        },
+        "leg_r": {
+          "leg_r": {
+            "path": "parts/leg_r.svg",
+            "anchor": [
+              0.5,
+              0.0
+            ],
+            "x": 0.0,
+            "y": 0.0,
+            "width": null,
+            "height": null
+          }
+        },
+        "left_brow": {
+          "brow_l": {
+            "path": "parts/brow_l.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": -41.6,
+            "y": -53.4,
+            "width": null,
+            "height": null
+          }
+        },
+        "right_brow": {
+          "brow_r": {
+            "path": "parts/brow_r.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 41.6,
+            "y": -53.4,
+            "width": null,
+            "height": null
+          }
+        },
+        "left_eye": {
+          "open": {
+            "path": "parts/eye_l_open.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": -41.6,
+            "y": -17.8,
+            "width": null,
+            "height": null
+          },
+          "closed": {
+            "path": "parts/eye_l_closed.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": -41.6,
+            "y": -17.8,
+            "width": null,
+            "height": null
+          }
+        },
+        "right_eye": {
+          "open": {
+            "path": "parts/eye_r_open.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 41.6,
+            "y": -17.8,
+            "width": null,
+            "height": null
+          },
+          "closed": {
+            "path": "parts/eye_r_closed.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 41.6,
+            "y": -17.8,
+            "width": null,
+            "height": null
+          }
+        },
+        "mouth": {
+          "mouth_a": {
+            "path": "parts/mouth/mouth_a.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_b": {
+            "path": "parts/mouth/mouth_b.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_c": {
+            "path": "parts/mouth/mouth_c.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_d": {
+            "path": "parts/mouth/mouth_d.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_e": {
+            "path": "parts/mouth/mouth_e.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_f": {
+            "path": "parts/mouth/mouth_f.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_g": {
+            "path": "parts/mouth/mouth_g.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_h": {
+            "path": "parts/mouth/mouth_h.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_x": {
+            "path": "parts/mouth/mouth_x.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_a_happy": {
+            "path": "parts/mouth/mouth_a_happy.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_b_happy": {
+            "path": "parts/mouth/mouth_b_happy.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_c_happy": {
+            "path": "parts/mouth/mouth_c_happy.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_d_happy": {
+            "path": "parts/mouth/mouth_d_happy.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_e_happy": {
+            "path": "parts/mouth/mouth_e_happy.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_f_happy": {
+            "path": "parts/mouth/mouth_f_happy.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_g_happy": {
+            "path": "parts/mouth/mouth_g_happy.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_h_happy": {
+            "path": "parts/mouth/mouth_h_happy.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_x_happy": {
+            "path": "parts/mouth/mouth_x_happy.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_a_sad": {
+            "path": "parts/mouth/mouth_a_sad.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_b_sad": {
+            "path": "parts/mouth/mouth_b_sad.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_c_sad": {
+            "path": "parts/mouth/mouth_c_sad.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_d_sad": {
+            "path": "parts/mouth/mouth_d_sad.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_e_sad": {
+            "path": "parts/mouth/mouth_e_sad.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_f_sad": {
+            "path": "parts/mouth/mouth_f_sad.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_g_sad": {
+            "path": "parts/mouth/mouth_g_sad.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_h_sad": {
+            "path": "parts/mouth/mouth_h_sad.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          },
+          "mouth_x_sad": {
+            "path": "parts/mouth/mouth_x_sad.svg",
+            "anchor": [
+              0.5,
+              0.5
+            ],
+            "x": 0.0,
+            "y": 41.6,
+            "width": null,
+            "height": null
+          }
+        }
+      }
+    }
+  },
+  "asset_sets": {
+    "viseme": {
+      "A": "mouth_a",
+      "B": "mouth_b",
+      "C": "mouth_c",
+      "D": "mouth_d",
+      "E": "mouth_e",
+      "F": "mouth_f",
+      "G": "mouth_g",
+      "H": "mouth_h",
+      "X": "mouth_x"
+    },
+    "eyelid": {
+      "OPEN": "open",
+      "CLOSED": "closed"
+    },
+    "viseme@happy": {
+      "A": "mouth_a_happy",
+      "B": "mouth_b_happy",
+      "C": "mouth_c_happy",
+      "D": "mouth_d_happy",
+      "E": "mouth_e_happy",
+      "F": "mouth_f_happy",
+      "G": "mouth_g_happy",
+      "H": "mouth_h_happy",
+      "X": "mouth_x_happy"
+    },
+    "viseme@sad": {
+      "A": "mouth_a_sad",
+      "B": "mouth_b_sad",
+      "C": "mouth_c_sad",
+      "D": "mouth_d_sad",
+      "E": "mouth_e_sad",
+      "F": "mouth_f_sad",
+      "G": "mouth_g_sad",
+      "H": "mouth_h_sad",
+      "X": "mouth_x_sad"
+    }
+  },
+  "animations": {
+    "idle_breath": {
+      "name": "idle_breath",
+      "duration": 6.0,
+      "loop": true,
+      "tracks": [
+        {
+          "target": "bone:torso.y",
+          "type": "sine",
+          "amplitude": 2.0,
+          "phase": 0.0,
+          "frames": []
+        },
+        {
+          "target": "bone:head.rotation_deg",
+          "type": "sine",
+          "amplitude": 0.5,
+          "phase": 0.25,
+          "frames": []
+        },
+        {
+          "target": "bone:torso.x",
+          "type": "sine",
+          "amplitude": 1.5,
+          "phase": 0.5,
+          "frames": []
+        }
+      ]
+    },
+    "blink": {
+      "name": "blink",
+      "duration": 0.18,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "slot:left_eye.attachment",
+          "type": "step",
+          "amplitude": 0.0,
+          "phase": 0.0,
+          "frames": [
+            [
+              0.0,
+              "open"
+            ],
+            [
+              0.024999999999999994,
+              "closed"
+            ],
+            [
+              0.155,
+              "open"
+            ]
+          ]
+        },
+        {
+          "target": "slot:right_eye.attachment",
+          "type": "step",
+          "amplitude": 0.0,
+          "phase": 0.0,
+          "frames": [
+            [
+              0.0,
+              "open"
+            ],
+            [
+              0.024999999999999994,
+              "closed"
+            ],
+            [
+              0.155,
+              "open"
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "source": null,
+  "face_overlay": true,
+  "metadata": {
+    "art_provenance": "fallback_geometric",
+    "pivots_detected": [
+      "root",
+      "neck",
+      "shoulder_l",
+      "shoulder_r"
+    ]
+  }
+}

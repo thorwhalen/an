@@ -336,7 +336,7 @@ maya [amused]: Because the pigeons trust us.
 ```
 ```
 
-The `[emotion]` brackets on dialogue lines map to `_EMOTION_BROWS` in compile.py: `neutral / happy / sad / angry / surprised / skeptical / amused / thinking`. Other emotions silently fall through to neutral.
+The `[emotion]` brackets on dialogue lines are sugar for an `expression` leaf over the line (an#98): `an/expression/presets.py` holds the presets (`neutral / happy / sad / angry / surprised / afraid / disgusted / thinking / skeptical / amused`), the face solver `_add_face_clips` in compile.py sums them into one channel per `(node, property)` — brows, lids, and the mouth's `viseme@<form>` set — and an unknown name is a validate error, not a silent neutral.
 
 ---
 

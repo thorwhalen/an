@@ -32,8 +32,10 @@ from typing import Any
 
 from an.base import EasingSpec, PathStr, Seconds
 from an.ir.schema import (
+    DFLT_EXPRESSION_BLEND_S,
     Action,
     DelayAction,
+    ExpressionAction,
     LoopAction,
     ParallelAction,
     PlayAction,
@@ -101,6 +103,35 @@ def play(
     )
 
 
+def expression(
+    target: PathStr,
+    preset: str | None = None,
+    *,
+    axes: dict[str, float] | None = None,
+    intensity: float = 1.0,
+    duration: Seconds | None = None,
+    blend: Seconds = DFLT_EXPRESSION_BLEND_S,
+) -> ExpressionAction:
+    """Hold a facial expression on an entity (an#98).
+
+    ``duration=None`` runs to the shot end and counts as **zero** in a
+    ``sequence``, like ``play``:
+
+    >>> [f.start for f in flatten(sequence(expression("a", "happy"), delay(1.0), expression("a", "sad")))]
+    [0.0, 1.0]
+    >>> flatten(expression("a", "angry", duration=2.0))[0].end
+    2.0
+    """
+    return ExpressionAction(
+        target=target,
+        preset=preset,
+        axes=dict(axes or {}),
+        intensity=intensity,
+        duration=duration,
+        blend=blend,
+    )
+
+
 # -----------------------------------------------------------------------------
 # Combinators — build composition trees.
 # -----------------------------------------------------------------------------
@@ -151,7 +182,7 @@ def duration_of(action: Action) -> Seconds:
         return 0.0
     if isinstance(action, TweenAction):
         return action.duration
-    if isinstance(action, PlayAction):
+    if isinstance(action, (PlayAction, ExpressionAction)):
         return action.duration if action.duration is not None else 0.0
     if isinstance(action, DelayAction):
         return action.duration
@@ -180,7 +211,7 @@ class FlatAction:
 
     start: Seconds
     end: Seconds
-    action: Action  # always a leaf: SetAction | TweenAction | PlayAction
+    action: Action  # always a leaf: SetAction | TweenAction | PlayAction | ExpressionAction
 
 
 def flatten(action: Action, *, start: Seconds = 0.0) -> list[FlatAction]:
@@ -205,7 +236,7 @@ def _flatten_into(action: Action, t: Seconds, out: list[FlatAction]) -> Seconds:
     if isinstance(action, TweenAction):
         out.append(FlatAction(start=t, end=t + action.duration, action=action))
         return t + action.duration
-    if isinstance(action, PlayAction):
+    if isinstance(action, (PlayAction, ExpressionAction)):
         d = action.duration if action.duration is not None else 0.0
         out.append(FlatAction(start=t, end=t + d, action=action))
         return t + d

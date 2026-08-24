@@ -85,15 +85,21 @@ def _shape_svg(
     *,
     canvas: tuple[int, int],
     palette: dict[str, str],
+    smile: float = 0.0,
 ) -> str:
-    """Render one mouth shape as an SVG document string."""
+    """Render one mouth shape as an SVG document string.
+
+    ``smile`` is added to the shape's own corner upturn (positive = smile,
+    negative = frown) — the one knob behind a ``viseme@<form>`` variant set
+    (an#98): every shape keeps its opening, only the corners move.
+    """
     cw, ch = canvas
     cx, cy = cw / 2.0, ch / 2.0
     s = _SHAPES[shape]
 
     half_w = (cw * float(s["width"])) / 2.0
     half_h = (ch * float(s["height"])) / 2.0
-    smile_y = float(s["smile"]) * half_h * 1.5
+    smile_y = max(-1.0, min(1.0, float(s["smile"]) + float(smile))) * half_h * 1.5
     open_amt = float(s["open"])
 
     # Top lip: lifted slightly with smile offset; its control point is above.
@@ -151,23 +157,44 @@ def _shape_svg(
     )
 
 
+#: The mouth-form variants a synthesized character gets by default: a
+#: `viseme@<form>` set per entry, its shapes drawn with this corner upturn
+#: added (an#98). Every preset that prefers a form the character lacks falls
+#: back to `viseme` with a warning, so the default covers the two forms the
+#: most-authored presets (`happy`/`amused`, `sad`) ask for.
+DEFAULT_MOUTH_VARIANTS: dict[str, float] = {"happy": 0.35, "sad": -0.35}
+
+
+def mouth_attachment_name(shape: str, form: str | None = None) -> str:
+    """The attachment (and file stem) of one mouth drawing.
+
+    >>> mouth_attachment_name("a"), mouth_attachment_name("a", "happy")
+    ('mouth_a', 'mouth_a_happy')
+    """
+    return f"mouth_{shape}" if form is None else f"mouth_{shape}_{form}"
+
+
 def generate_default_mouths(
     *,
     canvas: tuple[int, int] = DEFAULT_MOUTH_VIEWBOX,
     palette: dict[str, str] | None = None,
     shapes: Iterable[str] = MOUTH_SHAPES,
+    smile: float = 0.0,
+    form: str | None = None,
 ) -> dict[str, str]:
-    """Return ``{"mouth_<letter>": <svg-string>, ...}`` for every shape.
+    """Return ``{"mouth_<letter>[_<form>]": <svg-string>, ...}`` for every shape.
 
     >>> svgs = generate_default_mouths()
     >>> 'mouth_x' in svgs and 'viewBox' in svgs['mouth_x']
     True
+    >>> sorted(generate_default_mouths(shapes=["a"], smile=0.35, form="happy"))
+    ['mouth_a_happy']
     """
     pal = dict(_DEFAULT_PALETTE)
     if palette:
         pal.update(palette)
     return {
-        f"mouth_{shape}": _shape_svg(shape, canvas=canvas, palette=pal)
+        mouth_attachment_name(shape, form): _shape_svg(shape, canvas=canvas, palette=pal, smile=smile)
         for shape in shapes
     }
 
@@ -178,18 +205,26 @@ def write_default_mouths(
     canvas: tuple[int, int] = DEFAULT_MOUTH_VIEWBOX,
     palette: dict[str, str] | None = None,
     shapes: Iterable[str] = MOUTH_SHAPES,
+    variants: dict[str, float] | None = None,
 ) -> list[Path]:
-    """Write the default mouth SVGs into ``out_dir`` (created if missing).
+    """Write the default mouth SVGs into ``out_dir`` (created if missing),
+    plus one ``mouth_<shape>_<form>.svg`` per shape for every ``variants``
+    entry (``{form: smile offset}``; ``None`` = none).
 
-    Returns the list of paths written, sorted by shape order.
+    Returns the list of paths written: the neutral set in shape order, then
+    each variant's.
     """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
-    for name, svg in generate_default_mouths(
-        canvas=canvas, palette=palette, shapes=shapes
-    ).items():
-        path = out / f"{name}.svg"
-        path.write_text(svg, encoding="utf-8")
-        written.append(path)
+    batches = [generate_default_mouths(canvas=canvas, palette=palette, shapes=shapes)]
+    for form, smile in (variants or {}).items():
+        batches.append(
+            generate_default_mouths(canvas=canvas, palette=palette, shapes=shapes, smile=smile, form=form)
+        )
+    for batch in batches:
+        for name, svg in batch.items():
+            path = out / f"{name}.svg"
+            path.write_text(svg, encoding="utf-8")
+            written.append(path)
     return written

@@ -49,7 +49,11 @@ from an.characters.dicebear import (
     fetch_dicebear,
     wrap_dicebear_for_an,
 )
-from an.characters.mouth_set import write_default_mouths
+from an.characters.mouth_set import (
+    DEFAULT_MOUTH_VARIANTS,
+    mouth_attachment_name,
+    write_default_mouths,
+)
 from an.characters.schema import (
     CharacterDescriptor,
     MOUTH_SHAPES,
@@ -105,8 +109,16 @@ def new_character(
     use_dicebear: bool = True,
     acknowledge_attribution: bool = False,
     overwrite: bool = False,
+    mouth_variants: Optional[dict[str, float]] = None,
 ) -> Path:
     """Build a complete character on disk.
+
+    ``mouth_variants`` (an#98) — ``{form: smile offset}`` — writes one more
+    9-shape mouth set per form (``mouth_<shape>_<form>.svg``) and declares it
+    as the ``viseme@<form>`` swap set, with its attachments in the default
+    skin's ``mouth`` slot, so an expression preset preferring that form
+    selects it. ``None`` means :data:`~an.characters.mouth_set.DEFAULT_MOUTH_VARIANTS`
+    (happy, sad); ``{}`` means the neutral set only.
 
     Steps:
 
@@ -176,8 +188,9 @@ def new_character(
     _write_leg_part(parts_dir / "leg_l.svg", side="l", color="#3a3a4a")
     _write_leg_part(parts_dir / "leg_r.svg", side="r", color="#3a3a4a")
 
-    # Step 4: default mouths
-    write_default_mouths(mouth_dir)
+    # Step 4: default mouths, plus the form variants (an#98)
+    variants = DEFAULT_MOUTH_VARIANTS if mouth_variants is None else dict(mouth_variants)
+    write_default_mouths(mouth_dir, variants=variants)
 
     # Step 5: derived parts (eyes, brows)
     _synthesize_eye_open(parts_dir / "eye_l_open.svg", side="l")
@@ -200,9 +213,39 @@ def new_character(
         metadata={**metadata, "pivots_detected": list(pivots.keys())},
         source=source,
     )
+    declare_mouth_variants(descriptor, variants)
     desc_path = out / "character.json"
     desc_path.write_text(descriptor.model_dump_json(indent=2), encoding="utf-8")
     return desc_path
+
+
+def declare_mouth_variants(descriptor: CharacterDescriptor, variants: dict[str, float]) -> None:
+    """Declare a ``viseme@<form>`` set per variant on ``descriptor`` — the set's
+    keys map to ``mouth_<shape>_<form>`` attachments, which are added to the
+    default skin's ``mouth`` slot with the neutral mouth's geometry. The
+    neutral set is the SSOT for which shapes exist; a variant mirrors it.
+    """
+    from an.characters.schema import VISEME_CHANNEL
+
+    neutral = descriptor.asset_sets.get(VISEME_CHANNEL) or {}
+    skin = descriptor.skins.get("default")
+    if skin is None or "mouth" not in skin.slots:
+        return
+    mouth_slot = skin.slots["mouth"]
+    for form in variants:
+        key_map: dict[str, str] = {}
+        for key, attachment in neutral.items():
+            shape = attachment[len("mouth_"):] if attachment.startswith("mouth_") else key.lower()
+            variant_name = mouth_attachment_name(shape, form)
+            template = mouth_slot.get(attachment)
+            if template is None:
+                continue
+            mouth_slot[variant_name] = template.model_copy(
+                update={"path": f"parts/mouth/{variant_name}.svg"}
+            )
+            key_map[key] = variant_name
+        if key_map:
+            descriptor.asset_sets[f"{VISEME_CHANNEL}@{form}"] = key_map
 
 
 # -----------------------------------------------------------------------------

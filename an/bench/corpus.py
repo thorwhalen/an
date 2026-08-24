@@ -231,6 +231,28 @@ DFLT_FIXTURES: dict[str, Fixture] = {
         golden_frames=(0.0, 0.25),
         golden_note="the head plate rotating through 0.3 rad (1,187 px).",
     ),
+    "expressions": Fixture(
+        path=f"{CORPUS_DIRNAME}/expressions",
+        expect_visual_kinds=frozenset({"svg_sprite"}),
+        golden_frames=tuple(0.125 + 0.25 * k for k in range(8)),
+        golden_note=(
+            "eight 0.25 s shots of one silent synthesized character holding one "
+            "expression preset each (neutral, happy, sad, angry, surprised, "
+            "afraid, thinking, skeptical — the two presets whose faces differ "
+            "only by a mouth form the silent rest does not show, disgusted and "
+            "amused, are left out), sampled at each shot's mid-frame (an#98). "
+            "What moves between goldens is the FACE SOLVER's output alone: brow "
+            "height and angle, the eyelid key, and the mouth form's rest. The "
+            "character is named `face` because its seeded blink phase puts no "
+            "blink window inside the 2 s scene, so no golden straddles a blink; "
+            "it is lowered by an absolute `set face y` so the head clears the "
+            "frame's top edge at 320x240. Its rig is committed whole (parts and "
+            "descriptor, `viseme@happy`/`viseme@sad` variants included) and has "
+            "no pupil layer yet — PR-D re-blesses these eight once the eye stack "
+            "lands. The pairwise distinguishability test in "
+            "tests/test_expression_goldens.py reads these same PNGs."
+        ),
+    ),
     "aa_probe": Fixture(
         path=f"{CORPUS_DIRNAME}/aa_probe",
         expect_visual_kinds=frozenset({"rect"}),

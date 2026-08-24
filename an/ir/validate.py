@@ -21,6 +21,7 @@ from pydantic import ValidationError
 from an.base import TRANSFORM_PROPERTIES
 from an.characters.play import art_exists_for, play_problems
 from an.characters.schema import CharacterDescriptor
+from an.expression.binding import expression_problems
 from an.ir.compose import flatten
 from an.ir.migrate import migrate
 from an.ir.schema import SceneIR
@@ -191,6 +192,40 @@ def _check_swap_references(
                     f"`play` of {leaf.animation!r} on {entity_id!r} cannot "
                     f"resolve: {problem} — compiling this shot raises.",
                 )
+    # `expression` (an#98) and the dialogue `[emotion]` sugar resolve through
+    # `an.expression.binding.expression_problems` — the SAME function the face
+    # solver raises with. An unknown preset used to be silence.
+    for k, action in enumerate(shot.actions):
+        for flat in flatten(action):
+            leaf = flat.action
+            if getattr(leaf, "kind", None) != "expression":
+                continue
+            entity_id = (getattr(leaf, "target", "") or "").split("/", 1)[0]
+            desc = _descriptor_for(refs_by_entity.get(entity_id), available_characters)
+            for problem in expression_problems(
+                desc, preset=leaf.preset, axes=leaf.axes, who=entity_id
+            ):
+                report.add(
+                    "error",
+                    f"{path}/actions/{k}",
+                    f"`expression` on {entity_id!r} cannot resolve: {problem} — "
+                    "compiling this shot raises.",
+                )
+    for j, line in enumerate(shot.dialogue):
+        emotion = (line.emotion or "").strip().lower()
+        if not emotion:
+            continue
+        desc = _descriptor_for(refs_by_entity.get(line.speaker), available_characters)
+        for problem in expression_problems(None, preset=emotion, who=line.speaker):
+            report.add("error", f"{path}/dialogue/{j}/emotion", problem)
+        if desc is not None and not desc.face_overlay:
+            report.add(
+                "warning",
+                f"{path}/dialogue/{j}/emotion",
+                f"{line.speaker!r} has its face baked into the head art "
+                "(face_overlay: false), so the [emotion] on this line moves "
+                "nothing; the audio still plays.",
+            )
     # Flattened, like the compiler: the documented `start:` idiom wraps every
     # leaf in a `sequence`, so walking only top-level actions would miss the
     # common case (an#87 review) — an authoring-time gate that only sees the
@@ -262,6 +297,21 @@ def _check_swap_references(
                     f"{prop!r} set (it has: {sorted(keys)}) — compiling "
                     "this shot raises.",
                 )
+
+
+def _descriptor_for(ref, available_characters) -> CharacterDescriptor | None:
+    """The MIGRATED descriptor a store holds for ``ref``, or ``None``."""
+    if ref is None or available_characters is None:
+        return None
+    try:
+        candidate = available_characters[ref]
+    except (KeyError, TypeError):
+        return None
+    if isinstance(candidate, dict) and candidate.get("kind") == "CharacterDescriptor":
+        return CharacterDescriptor.model_validate(
+            migrate(dict(candidate), kind="CharacterDescriptor")
+        )
+    return None
 
 
 def _check_renderable(shot, path: str, report: "ValidationReport") -> None:

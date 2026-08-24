@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
 from an.ir.schema import SceneIR
 from an.ir.validate import (
@@ -70,28 +70,18 @@ def validate_project(project_dir: str | Path) -> ValidationReport:
     return schema_report.merge(semantic_report)
 
 
-def render_project(
-    project_dir: str | Path,
-    *,
-    output_name: str = "main",
-    tts: str = "offline",
-    lipsync: str = "offline",
-    parallel: int | str | None = None,
-    strict_assets: bool = False,
-) -> Path:
-    """Render the project's scene to a single mp4 under ``output/``.
+def render_project(project_dir: str | Path, **kwargs: Any) -> Path:
+    """Render the project's scene to a single mp4 under ``output/`` — the
+    orchestrator's name for :func:`an.render.render_project`, every keyword
+    forwarded.
 
-    ``strict_assets`` refuses a stand-in for a declared asset the stores do not
-    supply, rather than drawing one and succeeding (an#33).
+    It used to re-declare the leaf's parameters, and the two drifted: the CLI
+    (`an render`) passed `supersample`, `pix_fmt`, `step_hz` and `language`
+    here from the day each flag landed, and this wrapper refused all four with
+    a ``TypeError`` — invisible because the CLI test stubbed THIS function
+    rather than the leaf (an#98 review). A pass-through cannot drift.
     """
-    return _render_project(
-        project_dir,
-        output_name=output_name,
-        tts=tts,
-        lipsync=lipsync,
-        parallel=parallel,
-        strict_assets=strict_assets,
-    )
+    return _render_project(project_dir, **kwargs)
 
 
 def orchestrate(

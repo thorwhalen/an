@@ -138,7 +138,7 @@ The IR shape (relevant fields):
       - entities: list of {kind, id, store, ref, ...}
         "kind" MUST be one of: character, environment, voice, style.
         "prop" is declared by the IR but NOT rendered — it raises. Do not emit one.
-      - actions: list of action dicts (kind ∈ {tween, set, play, sequence, parallel, delay, loop})
+      - actions: list of action dicts (kind ∈ {tween, set, play, expression, sequence, parallel, delay, loop})
         A tween/set action's "property" is EITHER a transform:
           x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, skew_y,
           pivot_x, pivot_y, alpha
@@ -155,6 +155,14 @@ The IR shape (relevant fields):
         descriptor animations ("idle_breath", "blink", or any it declares);
         an animation the descriptor does not declare fails the compile —
         never invent a name.
+        An "expression" action ({kind: expression, target: <entity>, preset: <name>,
+        [axes: {axis: value}], [intensity], [duration], [blend]}) holds a facial
+        expression on a character: brows, eyelids, and the mouth's set for any
+        dialogue under it. Presets: neutral, happy, sad, angry, surprised, afraid,
+        disgusted, thinking, skeptical, amused — an unknown preset fails validation.
+        Axes (offsets in [-1, 1]; lids in [-1, 0.5]): brow_height_l/r, brow_angle_l/r,
+        lid_open_l/r, gaze_x, gaze_y. "duration" omitted = to the shot end. A
+        character whose descriptor says face_overlay: false cannot take one.
       - dialogue: list of {speaker, text, emotion, voice_ref, start, duration, ...}
       - narration: list (same shape as dialogue, no speaker pin).
         NOT IMPLEMENTED — the audio pipeline walks dialogue only, and a shot with
@@ -166,9 +174,9 @@ Path syntax for patches: slash-delimited, list indices are integers. Examples:
   "meta/title"                              → top-level meta field
   "timeline/0/duration"                     → first shot's duration
   "timeline/1/dialogue/0/text"              → second shot, first dialogue line, text
-  "timeline/1/dialogue/0/emotion"           → set the emotion ("happy" | "sad" | "angry"
-                                              | "surprised" | "skeptical" | "amused"
-                                              | "thinking" | "neutral")
+  "timeline/1/dialogue/0/emotion"           → set the emotion (a preset name: "happy" | "sad"
+                                              | "angry" | "surprised" | "afraid" | "disgusted"
+                                              | "skeptical" | "amused" | "thinking" | "neutral")
 
 Patch operations:
 

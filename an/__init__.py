@@ -29,6 +29,8 @@ from an.ir import (
     set_,
     tween,
     play,
+    # `expression` (the combinator) is deliberately NOT re-exported here: the
+    # name is the `an.expression` subpackage. Reach it as `an.ir.expression`.
     sequence,
     parallel,
     delay,
