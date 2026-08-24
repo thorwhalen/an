@@ -312,23 +312,49 @@ def _build_gaze(work: Path) -> Path:
         "- kind: expression\n  target: maya\n  axes: {gaze_y: 1.0}\n  duration: 1.0\n  blend: 0.3\n  start: 2.0\n"
         "```\n"
     )
-    md = _meta("Gaze: an authored sweep, with and without the eye stack", 3.5) + "\n" + _shot("s1", 3.5) + "\n" + _entities("maya") + actions
+    md = (
+        _meta("Gaze: an authored sweep, with and without the eye stack", 3.5)
+        + "\n"
+        + _shot("s1", 3.5)
+        + "\n"
+        + _entities("maya")
+        + actions
+    )
     clips = []
     for variant, gaze in (("without", False), ("with", True)):
         project = work / variant
         (project / "assets" / "characters").mkdir(parents=True, exist_ok=True)
         from an.characters import new_character
 
-        new_character(project / "assets" / "characters", name="maya", seed="maya", use_dicebear=False, overwrite=True, gaze=gaze)
+        new_character(
+            project / "assets" / "characters",
+            name="maya",
+            seed="maya",
+            use_dicebear=False,
+            overwrite=True,
+            gaze=gaze,
+        )
         (project / "scene.md").write_text(md, encoding="utf-8")
         clips.append(_render(project))
     out = work / "side_by_side.mp4"
     subprocess.run(
         [
-            "ffmpeg", "-v", "error", "-y", "-i", str(clips[0]), "-i", str(clips[1]),
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-i",
+            str(clips[0]),
+            "-i",
+            str(clips[1]),
             "-filter_complex",
             f"[0:v]crop={FACE_CROP}[a];[1:v]crop={FACE_CROP}[b];[a][b]hstack=inputs=2",
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out),
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-an",
+            str(out),
         ],
         check=True,
     )
@@ -345,7 +371,14 @@ def _build_gaze_plus_expression(work: Path) -> Path:
         "- kind: expression\n  target: charlie\n  axes: {gaze_x: 1.0}\n  duration: 1.2\n  blend: 0.4\n  start: 1.7\n"
         "```\n"
     )
-    md = _meta("Gaze plus expression", 3.0) + "\n" + _shot("s1", 3.0) + "\n" + _entities("charlie") + actions
+    md = (
+        _meta("Gaze plus expression", 3.0)
+        + "\n"
+        + _shot("s1", 3.0)
+        + "\n"
+        + _entities("charlie")
+        + actions
+    )
     return _render(_project(work, scene_md=md, characters=("charlie",)))
 
 

@@ -76,7 +76,9 @@ def gaze_seed(entity_id: str) -> int:
     >>> gaze_seed("gale") == gaze_seed("gale") and gaze_seed("gale") != gaze_seed("nora")
     True
     """
-    from an.adapters.cutout.compile import _js_string_hash  # the blink's hash; lazy: compile imports this module
+    from an.adapters.cutout.compile import (
+        _js_string_hash,
+    )  # the blink's hash; lazy: compile imports this module
 
     return _js_string_hash(entity_id) ^ GAZE_SALT
 
@@ -105,7 +107,13 @@ def saccade_track(
     t = 0.0
     x = y = 0.0
     while True:
-        fixation = min(FIXATION_MAX_S, max(FIXATION_MIN_S, rng.gammavariate(FIXATION_GAMMA_SHAPE, FIXATION_GAMMA_SCALE_S)))
+        fixation = min(
+            FIXATION_MAX_S,
+            max(
+                FIXATION_MIN_S,
+                rng.gammavariate(FIXATION_GAMMA_SHAPE, FIXATION_GAMMA_SCALE_S),
+            ),
+        )
         t += fixation
         if t >= duration:
             break
@@ -116,7 +124,10 @@ def saccade_track(
         ty = (1.0 - CENTRE_PULL) * y + rng.uniform(-reach, reach) * VERTICAL_FRACTION
         tx, ty = max(-1.0, min(1.0, tx)), max(-1.0, min(1.0, ty))
         jump_t = t
-        if windows and math.hypot(tx - x, ty - y) >= BLINK_COUPLED_AMPLITUDE * amplitude:
+        if (
+            windows
+            and math.hypot(tx - x, ty - y) >= BLINK_COUPLED_AMPLITUDE * amplitude
+        ):
             centres = [(a + b) / 2.0 for a, b in windows]
             nearest = min(centres, key=lambda c: abs(c - t))
             if abs(nearest - t) <= BLINK_COUPLING_WINDOW_S:

@@ -358,7 +358,10 @@ def _synthesize_eye_closed(path: Path, *, side: str, fill: str | None = None) ->
     lid = ""
     if fill is not None:
         lid = f'<ellipse cx="{cx}" cy="{cy}" rx="{EYE_RX}" ry="{EYE_RY}" fill="{fill}" stroke="none"/>'
-    inner = lid + f'<path d="M {cx - 14} {cy + 2} Q {cx} {cy + 8} {cx + 14} {cy + 2}" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    inner = (
+        lid
+        + f'<path d="M {cx - 14} {cy + 2} Q {cx} {cy + 8} {cx + 14} {cy + 2}" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    )
     path.write_text(_eye_svg(inner, gid=f"eye_{side}_closed"), encoding="utf-8")
     return path
 
@@ -383,11 +386,16 @@ def _skin_fill_of(head_svg: Path) -> str | None:
     """
     if not head_svg.is_file():
         return None
-    m = re.search(r"<(?:circle|ellipse)[^>]*fill=\"(#[0-9a-fA-F]{6})\"", head_svg.read_text(encoding="utf-8"))
+    m = re.search(
+        r"<(?:circle|ellipse)[^>]*fill=\"(#[0-9a-fA-F]{6})\"",
+        head_svg.read_text(encoding="utf-8"),
+    )
     return m.group(1) if m else None
 
 
-def gaze_travel_for(rx: float = EYE_RX, ry: float = EYE_RY, pupil_r: float = PUPIL_R) -> dict[str, float]:
+def gaze_travel_for(
+    rx: float = EYE_RX, ry: float = EYE_RY, pupil_r: float = PUPIL_R
+) -> dict[str, float]:
     """The pupil's travel per axis, in view-box units: the sclera's clearance
     minus the pupil's radius — the semi-axes of the inner ellipse the gaze
     axes' unit circle maps onto. The compiler clamps the summed gaze to 0.95
@@ -410,7 +418,9 @@ def _is_factory_eye(path: Path, *, side: str, state: str) -> bool:
     return f'id="eye_{side}_{state}"' in svg and f'viewBox="0 0 {w} {h}"' in svg
 
 
-def add_gaze(char_dir: str | Path, *, skin: str | None = None, overwrite_eyes: bool = False) -> Path:
+def add_gaze(
+    char_dir: str | Path, *, skin: str | None = None, overwrite_eyes: bool = False
+) -> Path:
     """Give a character the eye stack (an#99): three sibling slots per eye under
     the head — ``<side>_sclera`` (white fill) below ``<side>_pupil`` below
     ``<side>_eye`` (the existing slot, now the lid, drawn above the pupil) —
@@ -452,12 +462,16 @@ def add_gaze(char_dir: str | Path, *, skin: str | None = None, overwrite_eyes: b
     by_name = {s.name: s for s in desc.slots}
     for eye_slot in ("left_eye", "right_eye"):
         if eye_slot not in by_name:
-            raise ValueError(f"{desc.name!r} has no {eye_slot!r} slot; the eye stack sits under it")
+            raise ValueError(
+                f"{desc.name!r} has no {eye_slot!r} slot; the eye stack sits under it"
+            )
     foreign = [
         f"eye_{side}_{state}.svg"
         for side in ("l", "r")
         for state in ("open", "closed")
-        if not _is_factory_eye(parts / f"eye_{side}_{state}.svg", side=side, state=state)
+        if not _is_factory_eye(
+            parts / f"eye_{side}_{state}.svg", side=side, state=state
+        )
     ]
     if foreign and not overwrite_eyes:
         raise ValueError(
@@ -471,13 +485,22 @@ def add_gaze(char_dir: str | Path, *, skin: str | None = None, overwrite_eyes: b
         # The lid's fill is the HEAD's skin — read off the head art, never
         # re-derived from a seed the descriptor may not carry (an#99 review:
         # a rig built with `--seed` ≠ name got a lid of another tone).
-        skin = _skin_fill_of(parts / "head.svg") or _palette_for_seed(
-            str(desc.metadata.get("seed") or desc.metadata.get("dicebear_seed") or desc.name)
-        )[0]
+        skin = (
+            _skin_fill_of(parts / "head.svg")
+            or _palette_for_seed(
+                str(
+                    desc.metadata.get("seed")
+                    or desc.metadata.get("dicebear_seed")
+                    or desc.name
+                )
+            )[0]
+        )
     for side in ("l", "r"):
         _synthesize_sclera(parts / f"sclera_{side}.svg", side=side)
         _synthesize_pupil(parts / f"pupil_{side}.svg", side=side)
-        _synthesize_eye_open(parts / f"eye_{side}_open.svg", side=side, outline_only=True)
+        _synthesize_eye_open(
+            parts / f"eye_{side}_open.svg", side=side, outline_only=True
+        )
         _synthesize_eye_closed(parts / f"eye_{side}_closed.svg", side=side, fill=skin)
     had_stack = "left_pupil" in by_name or "right_pupil" in by_name
     for side, eye_slot in (("l", "left_eye"), ("r", "right_eye")):
@@ -492,11 +515,17 @@ def add_gaze(char_dir: str | Path, *, skin: str | None = None, overwrite_eyes: b
             slot_name = f"{eye_slot.split('_')[0]}_{kind}"
             stem = f"{kind}_{side}"
             if slot_name not in by_name:
-                desc.slots.append(Slot(name=slot_name, bone=eye.bone, draw_order=order, attachment=stem))
+                desc.slots.append(
+                    Slot(
+                        name=slot_name, bone=eye.bone, draw_order=order, attachment=stem
+                    )
+                )
                 by_name[slot_name] = desc.slots[-1]
             else:
                 by_name[slot_name].draw_order = order
-            skin_.slots[slot_name] = {stem: Attachment(path=f"parts/{stem}.svg", anchor=(0.5, 0.5), x=x, y=y)}
+            skin_.slots[slot_name] = {
+                stem: Attachment(path=f"parts/{stem}.svg", anchor=(0.5, 0.5), x=x, y=y)
+            }
         # The lid draws above the pupil: bump it once (idempotent on a rig that
         # already has the stack). On the default rig the lid then TIES the
         # mouth's order and the tie-break is by name, which puts `left_eye`

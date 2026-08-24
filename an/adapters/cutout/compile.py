@@ -2545,7 +2545,11 @@ def _add_face_clips(
         # pupils, an#99) contributes nothing either: the document stays the one
         # the rig had, and `an character validate` says why.
         if desc is None or not spans:
-            spans = [sp for sp in spans if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)]
+            spans = [
+                sp
+                for sp in spans
+                if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)
+            ]
         else:
             try:
                 bound = {b.axis for b in binding_for(desc)}
@@ -2631,7 +2635,9 @@ def _solve_face(
     # the entity name, sample-and-held at frame times — only where the rig
     # has pupils to move (the binding is what says so).
     if _pupil_paths(vocab, entity_id):
-        steps = saccade_track(entity_id, duration=float(shot.duration), fps=fps, blink_windows=windows)
+        steps = saccade_track(
+            entity_id, duration=float(shot.duration), fps=fps, blink_windows=windows
+        )
         sx, sy = [0.0] * n, [0.0] * n
         j = 0
         for i, t in enumerate(times):
@@ -2639,7 +2645,7 @@ def _solve_face(
                 j += 1
             sx[i], sy[i] = steps[j].x, steps[j].y
         for axis, jitter in (("gaze_x", sx), ("gaze_y", sy)):
-            base = (curves.get(axis) or [0.0] * n)
+            base = curves.get(axis) or [0.0] * n
             base = (base + [base[-1]] * n)[:n]
             curves[axis] = [max(-1.0, min(1.0, base[i] + jitter[i])) for i in range(n)]
     if "gaze_x" in curves or "gaze_y" in curves:
