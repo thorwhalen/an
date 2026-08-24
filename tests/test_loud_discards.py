@@ -230,7 +230,7 @@ def test_an_off_screen_speaker_warns_and_emits_no_channel():
         duration=1.0,
         dialogue=[_spoken_line("narrator")],
     )
-    with pytest.warns(CutoutCompileWarning, match="no mouth node"):
+    with pytest.warns(CutoutCompileWarning, match="no viseme-capable mouth node"):
         scene = compile_shot(shot)
     targets = {ch.target for a in scene.animations.values() for ch in a.channels}
     assert not any(t.startswith("narrator") for t in targets), (

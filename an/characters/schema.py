@@ -50,7 +50,7 @@ from an.ir.assets import AssetSource
 from an.ir.migrate import DocumentKind, register_kind, register_migration
 
 
-CHARACTER_SCHEMA_VERSION = "0.2.0"
+CHARACTER_SCHEMA_VERSION = "0.3.0"
 
 #: The descriptor is a schema-versioned document in its own right, with its own
 #: version field. Registered here rather than in :mod:`an.ir.migrate` because
@@ -74,15 +74,29 @@ MOUTH_SHAPES: tuple[str, ...] = ("a", "b", "c", "d", "e", "f", "g", "h", "x")
 #: because Rhubarb emits A-X; lowercase attachment names by convention.
 DEFAULT_VISEME_MAP: dict[str, str] = {s.upper(): f"mouth_{s}" for s in MOUTH_SHAPES}
 
-#: The swap channel lip-sync drives. Named because Wave 5 generalises swaps to
-#: `hands`, `body_facing`, `eyelid` and more; `viseme` is a conventional set
-#: name, not a special case in control flow.
+#: The swap channel lip-sync drives. `viseme` is a conventional set name, not
+#: a special case in control flow (an#87): the compiler projects EVERY
+#: `asset_sets` channel onto the slots whose attachments its keys name, and
+#: the runtime applies any projected channel the same way.
 VISEME_CHANNEL: str = "viseme"
+
+#: The swap channel blinks drive. One set serves BOTH eye slots because the
+#: eye slots share per-slot attachment names (`open` / `closed`) — the 0.3.0
+#: migration renamed them from the file-derived `eye_l_open` spelling for
+#: exactly this: a set's keys are looked up per slot, so slots that a single
+#: channel must drive together need attachment names in common.
+EYELID_CHANNEL: str = "eyelid"
+
+#: Default eyelid-state → attachment-name mapping, shared by both eye slots.
+DEFAULT_EYELID_MAP: dict[str, str] = {"OPEN": "open", "CLOSED": "closed"}
 
 
 def default_asset_sets() -> dict[str, dict[str, str]]:
     """``{channel: {key: attachment_name}}`` for a freshly-built character."""
-    return {VISEME_CHANNEL: dict(DEFAULT_VISEME_MAP)}
+    return {
+        VISEME_CHANNEL: dict(DEFAULT_VISEME_MAP),
+        EYELID_CHANNEL: dict(DEFAULT_EYELID_MAP),
+    }
 
 
 #: Required body parts. A character missing any of these can't be rendered
@@ -304,6 +318,19 @@ class CharacterDescriptor(_CharModel):
     #: quietly stops being carried. Pinned by test.
     source: AssetSource | None = None
 
+    #: Whether this character's face is drawn as separate overlay parts
+    #: (eyes, brows, mouth as their own slots — the default) or baked into the
+    #: head art (DiceBear / external avatars). ``False`` suppresses the face
+    #: overlay slots at rig build AND the viseme/emotion channels at dialogue
+    #: compile — a baked face has no overlay mouth to drive.
+    #:
+    #: This is a **declared fact**, replacing the old vendor-name check on
+    #: ``metadata.art_provenance`` (an#87): provenance says where art came
+    #: from; this says what the art IS. The 0.2.0 → 0.3.0 migration derives it
+    #: from the provenance string once, and ``art_provenance`` reverts to pure
+    #: provenance/licensing metadata.
+    face_overlay: bool = True
+
     #: Free-form metadata (dicebear style/seed, etc.). Schema-evolution
     #: friendly: anything an external tool wants to record can land here.
     #:
@@ -402,6 +429,109 @@ def _character_0_1_0_to_0_2_0(doc: dict[str, Any]) -> dict[str, Any]:
     return doc
 
 
+#: Eye attachment-name renames carried by 0.2.0 -> 0.3.0: both eye slots take
+#: the shared per-slot keys `open`/`closed` so ONE `eyelid` set can project
+#: onto both. Keyed per slot because the old names were per-side.
+_EYE_ATTACHMENT_RENAMES_0_3_0: dict[str, dict[str, str]] = {
+    "left_eye": {"eye_l_open": "open", "eye_l_closed": "closed"},
+    "right_eye": {"eye_r_open": "open", "eye_r_closed": "closed"},
+}
+
+#: `metadata.art_provenance` values that mean the face is baked into the head
+#: art. Consumed ONLY by the 0.3.0 migration below — live code reads the
+#: declared `face_overlay` field instead (an#87). `external_avatar` never had
+#: a writer; it is kept here so any hand-authored descriptor carrying it
+#: migrates the way the old special case treated it.
+_FACE_BAKED_PROVENANCES_0_3_0: tuple[str, ...] = ("dicebear", "external_avatar")
+
+
+@register_migration(CHARACTER_DOCUMENT_KIND.name, "0.2.0", "0.3.0")
+def _character_0_2_0_to_0_3_0(doc: dict[str, Any]) -> dict[str, Any]:
+    """Four coherent changes, one migration (an#87).
+
+    (a) ``face_overlay`` becomes a declared fact, derived once from the old
+    ``metadata.art_provenance`` vendor-name check; (b) eye attachment names
+    become the shared per-slot keys ``open``/``closed`` (paths unchanged);
+    (c) ``asset_sets`` gains the ``eyelid`` channel; (d) stored idle-animation
+    tracks are repaired — the 0.2.0 migration renamed slots in ``slots`` and
+    ``skins`` but never touched ``animations``, so every stored descriptor
+    carried stale ``slot:eye_l.attachment`` targets (latent only because
+    nothing consumed the field; PlayAction resolution makes it live).
+
+    >>> out = _character_0_2_0_to_0_3_0(
+    ...     {"schema_version": "0.2.0",
+    ...      "metadata": {"art_provenance": "dicebear"},
+    ...      "skins": {"default": {"slots": {"left_eye": {"eye_l_open": {"path": "parts/eye_l_open.svg"}}}}},
+    ...      "slots": [{"name": "left_eye", "bone": "head", "attachment": "eye_l_open"}],
+    ...      "animations": {"blink": {"name": "blink", "tracks": [
+    ...          {"target": "slot:eye_l.attachment", "type": "step",
+    ...           "frames": [[0.0, "eye_l_open"], [0.05, "eye_l_closed"]]}]}}}
+    ... )
+    >>> out["face_overlay"], out["schema_version"]
+    (False, '0.3.0')
+    >>> list(out["skins"]["default"]["slots"]["left_eye"])
+    ['open']
+    >>> out["slots"][0]["attachment"]
+    'open'
+    >>> out["animations"]["blink"]["tracks"][0]["target"]
+    'slot:left_eye.attachment'
+    >>> [f[1] for f in out["animations"]["blink"]["tracks"][0]["frames"]]
+    ['open', 'closed']
+    >>> out["asset_sets"]["eyelid"]
+    {'OPEN': 'open', 'CLOSED': 'closed'}
+    """
+    # (a) the declared face fact, from the retired vendor-name check.
+    provenance = (doc.get("metadata") or {}).get("art_provenance")
+    doc.setdefault("face_overlay", provenance not in _FACE_BAKED_PROVENANCES_0_3_0)
+
+    # (b) per-slot eye attachment keys, in skins and slot defaults.
+    flat_renames = {
+        old: new
+        for per_slot in _EYE_ATTACHMENT_RENAMES_0_3_0.values()
+        for old, new in per_slot.items()
+    }
+    for skin in (doc.get("skins") or {}).values():
+        slots = skin.get("slots") if isinstance(skin, dict) else None
+        if not isinstance(slots, dict):
+            continue
+        for slot_name, renames in _EYE_ATTACHMENT_RENAMES_0_3_0.items():
+            attachments = slots.get(slot_name)
+            if not isinstance(attachments, dict):
+                continue
+            for old, new in renames.items():
+                if old in attachments:
+                    attachments[new] = attachments.pop(old)
+    for slot in doc.get("slots") or ():
+        if isinstance(slot, dict) and slot.get("attachment") in flat_renames:
+            slot["attachment"] = flat_renames[slot["attachment"]]
+
+    # (c) the eyelid set, only where absent — a hand-authored one wins.
+    asset_sets = doc.setdefault("asset_sets", {})
+    if isinstance(asset_sets, dict):
+        asset_sets.setdefault(EYELID_CHANNEL, dict(DEFAULT_EYELID_MAP))
+
+    # (d) repair stored animation tracks: the 0.2.0 slot renames, applied to
+    # the targets 0.2.0 missed, plus the (b) attachment renames in frames.
+    for anim in (doc.get("animations") or {}).values():
+        tracks = anim.get("tracks") if isinstance(anim, dict) else None
+        for track in tracks or ():
+            if not isinstance(track, dict):
+                continue
+            target = track.get("target")
+            if isinstance(target, str) and target.startswith("slot:"):
+                rest = target[len("slot:") :]
+                slot_name, _, prop = rest.partition(".")
+                if slot_name in _SLOT_RENAMES_0_2_0:
+                    track["target"] = f"slot:{_SLOT_RENAMES_0_2_0[slot_name]}.{prop}"
+                track["frames"] = [
+                    [t, flat_renames.get(v, v) if isinstance(v, str) else v]
+                    for t, v in (track.get("frames") or ())
+                ]
+
+    doc["schema_version"] = "0.3.0"
+    return doc
+
+
 def _default_bones() -> list[Bone]:
     """The 7-bone default rig: root, torso, head, two arms, two legs.
 
@@ -439,10 +569,13 @@ def _default_slots() -> list[Slot]:
     **A slot's name IS its scene-graph node name.** The face slots read
     ``left_eye`` rather than ``eye_l`` for that reason and no other: node paths
     are the authoring surface (``scene.md`` targets ``charlie/left_eye:...``, and
-    the blink code and the doc-targeting test both address them), so the
-    alternative was a slot-to-node rename table — and a rename table is where a
-    field quietly stops being carried. Attachment names are a *separate*
-    namespace and keep the file-derived spelling (``eye_l_open``).
+    the doc-targeting test addresses them), so the alternative was a
+    slot-to-node rename table — and a rename table is where a field quietly
+    stops being carried. Attachment names are a *separate*, per-slot namespace:
+    single-attachment slots keep the file-derived spelling (``brow_l``), while
+    slots that one swap channel must drive **together** share key-like names —
+    both eye slots carry ``open``/``closed`` (0.3.0) so the single ``eyelid``
+    set projects onto each. Paths keep the file spelling either way.
     """
     return [
         Slot(name="leg_l", bone="leg_l", draw_order=0, attachment="leg_l"),
@@ -451,8 +584,8 @@ def _default_slots() -> list[Slot]:
         Slot(name="arm_l", bone="arm_l", draw_order=2, attachment="arm_l"),
         Slot(name="arm_r", bone="arm_r", draw_order=2, attachment="arm_r"),
         Slot(name="head", bone="head", draw_order=4, attachment="head"),
-        Slot(name="left_eye", bone="head", draw_order=6, attachment="eye_l_open"),
-        Slot(name="right_eye", bone="head", draw_order=6, attachment="eye_r_open"),
+        Slot(name="left_eye", bone="head", draw_order=6, attachment="open"),
+        Slot(name="right_eye", bone="head", draw_order=6, attachment="open"),
         Slot(name="mouth", bone="head", draw_order=7, attachment="mouth_x"),
         Slot(name="left_brow", bone="head", draw_order=8, attachment="brow_l"),
         Slot(name="right_brow", bone="head", draw_order=8, attachment="brow_r"),
@@ -551,11 +684,13 @@ def _default_skin() -> Skin:
             )
         }
 
-    # Eye slots have two attachments (open + closed).
+    # Eye slots have two attachments. Their names are the shared per-slot
+    # keys `open`/`closed` (NOT the file stems) so the one `eyelid` set can
+    # project onto both slots; the paths keep the file spelling.
     for slot_name, stem in (("left_eye", "eye_l"), ("right_eye", "eye_r")):
         x, y = FACE_OFFSETS[slot_name]
         slots[slot_name] = {
-            f"{stem}_{state}": Attachment(
+            state: Attachment(
                 path=f"parts/{stem}_{state}.svg", anchor=(0.5, 0.5), x=x, y=y
             )
             for state in ("open", "closed")

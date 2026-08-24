@@ -220,6 +220,7 @@ def validate_character(
     for rel, path in _iter_parts(parts_dir.parent):
         _check_part(rel, path, report)
 
+    _check_asset_sets(directory, descriptor, report, who=who)
     _check_joint_names(directory, descriptor, report)
 
     if descriptor is not None and descriptor.source is None:
@@ -232,6 +233,93 @@ def validate_character(
             "backwards through finished work.",
         )
     return report
+
+
+def _check_asset_sets(
+    directory: Path,
+    descriptor: CharacterDescriptor | None,
+    report: VerificationReport,
+    *,
+    who: str,
+) -> None:
+    """Every asset-set key must be swappable, and swap without moving (an#87).
+
+    Three checks per declared channel:
+
+    - **Every key's attachment name resolves in at least one slot of the
+      active skin** — BLOCKING, because the compiler's projection silently
+      omits an unresolvable key, and a channel then freezes on it (the old
+      silent-freeze bug, now a loud runtime error for hand-written scenes and
+      a dropped-with-warning for compiled ones — either way the art package
+      is what is wrong).
+    - **A key whose attachment resolves but whose FILE is missing** —
+      ADVISORY, the inventory-gap class (`a rig without a blink still
+      renders`); it escalates only when a shot actually uses the key.
+    - **Attachments within one set+slot that declare differing geometry**
+      (anchor / offset / explicit box) — ADVISORY, because the swap carries
+      texture only: the node's transform and fit box are baked from the
+      default attachment, so a key drawn at a different anchor lands
+      somewhere its author did not put it.
+    """
+    if descriptor is None:
+        return
+    skin = descriptor.skins.get("default") or next(
+        iter(descriptor.skins.values()), None
+    )
+    if skin is None:
+        return
+    for channel, key_map in descriptor.asset_sets.items():
+        for key, attachment_name in key_map.items():
+            holding_slots = [
+                slot_name
+                for slot_name, attachments in skin.slots.items()
+                if attachment_name in attachments
+            ]
+            if not holding_slots:
+                report.add(
+                    BLOCKING,
+                    f"character.json#asset_sets.{channel}.{key}",
+                    f"{who}'s {channel!r} set maps {key!r} to attachment "
+                    f"{attachment_name!r}, which no slot of the skin carries — "
+                    "the key can never be swapped to",
+                    "Name an attachment that exists in a slot, or drop the key.",
+                )
+                continue
+            for slot_name in holding_slots:
+                att = skin.slots[slot_name][attachment_name]
+                if not (directory / att.path).exists():
+                    report.add(
+                        ADVISORY,
+                        f"{att.path}",
+                        f"{who}'s {channel!r}.{key!r} resolves to {att.path}, "
+                        "which is not on disk; a shot that uses the key will "
+                        "drop it (fatal under strict_assets)",
+                        "Draw the file, or drop the key from the set.",
+                    )
+        # Geometry consistency, per slot the channel projects onto.
+        for slot_name, attachments in skin.slots.items():
+            in_set = [
+                attachments[name]
+                for name in key_map.values()
+                if name in attachments
+            ]
+            if len(in_set) < 2:
+                continue
+            geometries = {
+                (a.anchor, a.x, a.y, a.width, a.height) for a in in_set
+            }
+            if len(geometries) > 1:
+                report.add(
+                    ADVISORY,
+                    f"character.json#asset_sets.{channel}",
+                    f"{who}'s {channel!r} set attachments in slot "
+                    f"{slot_name!r} declare differing geometry "
+                    "(anchor/offset/box) — a swap carries texture only, so "
+                    "every key renders with the DEFAULT attachment's "
+                    "placement and fit box",
+                    "Give the set's attachments identical geometry, or "
+                    "accept that per-key placement is not yet expressible.",
+                )
 
 
 def _check_joint_names(

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
@@ -61,6 +62,7 @@ from an.adapters.cutout.serialize import (
 )
 from an.characters.schema import (
     CHARACTER_DOCUMENT_KIND,
+    MOUTH_SHAPES,
     VISEME_CHANNEL,
     Attachment,
     Bone,
@@ -140,18 +142,17 @@ def _property_rest_values() -> dict[str, float]:
 _PROPERTY_REST_VALUES: dict[str, float] = _property_rest_values()
 
 
-#: Every property name the JS runtime's ``applyProperty`` switch implements —
-#: the numeric transform vocabulary (the rest-value SSOT above) plus the
-#: discrete channel name(s) the compiler emits. This is the Python side of the
-#: two-evaluator drift gate: ``tests/test_loud_discards.py`` extracts the
-#: runtime's actual switch cases and asserts exact equality with this set, in
-#: both directions. It replaced ``pose.py``'s allow-list when the Python
-#: applier was deleted (an#86) — the compiler, not a dead applier, is what the
-#: runtime must agree with. The swap generalisation (an#87) will shrink this
-#: to the numeric vocabulary when ``viseme`` stops being a static case.
-RUNTIME_APPLIED_PROPERTIES: frozenset[str] = frozenset(_PROPERTY_REST_VALUES) | {
-    VISEME_CHANNEL
-}
+#: Every property name the JS runtime's ``applyProperty`` STATIC switch
+#: implements — exactly the numeric transform vocabulary (the rest-value SSOT
+#: above). This is the Python side of the two-evaluator drift gate:
+#: ``tests/test_loud_discards.py`` extracts the runtime's actual switch cases
+#: and asserts exact equality with this set, in both directions. It replaced
+#: ``pose.py``'s allow-list when the Python applier was deleted (an#86).
+#: Any OTHER property is a swap-set name, applied dynamically through the
+#: node's ``asset_sets`` projection (an#87) — ``viseme`` left the static
+#: switch when that landed, which is precisely what makes it a conventional
+#: set name rather than control flow.
+RUNTIME_APPLIED_PROPERTIES: frozenset[str] = frozenset(_PROPERTY_REST_VALUES)
 
 
 class CutoutCompileError(ValueError):
@@ -241,6 +242,97 @@ def _runtime_node_paths(node: NodeJSON, prefix: str = "") -> set[str]:
     return paths
 
 
+@dataclass(frozen=True)
+class _SwapVocabulary:
+    """What the built scene can swap, and what the descriptors declare.
+
+    The compiler's one source of swap truth for a shot (an#87), built AFTER
+    the scene tree so ``node_sets`` reflects what actually resolved:
+
+    - ``node_sets`` — node path → set name → {KEY: texture alias}: the per-slot
+      projections stamped on each visual (``VisualJSON.asset_sets``).
+    - ``procedural_mouths`` — node paths whose visual is the procedural drawn
+      mouth; those apply the ``viseme`` set by redrawing rather than texture
+      swap, with the runtime's shape table as the key domain.
+    - ``declared`` — entity id → set name → declared keys, from the MIGRATED
+      descriptor. Declared-but-unresolved (art missing) is the escalation
+      case; undeclared is an authoring error.
+    - ``paths`` — every node path the runtime will index (targets check).
+    """
+
+    node_sets: dict[str, dict[str, dict[str, str]]]
+    procedural_mouths: frozenset[str]
+    declared: dict[str, dict[str, frozenset[str]]]
+    paths: frozenset[str]
+
+    def swap_capable_paths(self, entity_id: str, set_name: str) -> list[str]:
+        """Node paths under ``entity_id`` that can apply ``set_name``."""
+        out = [
+            p
+            for p, sets in self.node_sets.items()
+            if p.split("/", 1)[0] == entity_id and set_name in sets
+        ]
+        if set_name == VISEME_CHANNEL:
+            out += [
+                p
+                for p in self.procedural_mouths
+                if p.split("/", 1)[0] == entity_id
+            ]
+        return sorted(out)
+
+
+def _swap_vocabulary(
+    root: NodeJSON, shot: Shot, mall: Mapping[str, Mapping]
+) -> _SwapVocabulary:
+    node_sets: dict[str, dict[str, dict[str, str]]] = {}
+    procedural_mouths: set[str] = set()
+
+    def walk(node: NodeJSON, prefix: str) -> None:
+        path = f"{prefix}/{node.name}" if prefix else node.name
+        if prefix or node.name != "root":
+            v = node.visual
+            if v is not None:
+                if v.asset_sets:
+                    node_sets[path] = v.asset_sets
+                if v.kind == "mouth":
+                    procedural_mouths.add(path)
+            child_prefix = path
+        else:
+            child_prefix = ""  # skip the synthetic root, as the runtime does
+        for child in node.children:
+            walk(child, child_prefix)
+
+    walk(root, "")
+
+    declared: dict[str, dict[str, frozenset[str]]] = {}
+    chars_store = mall.get("characters") or {}
+    for entity in shot.entities:
+        if entity.kind != "character" or entity.ref not in chars_store:
+            continue
+        try:
+            desc_data = chars_store[entity.ref]
+        except KeyError:
+            continue
+        if (
+            not isinstance(desc_data, dict)
+            or desc_data.get("kind") != "CharacterDescriptor"
+        ):
+            continue
+        desc = CharacterDescriptor.model_validate(
+            migrate(dict(desc_data), kind=CHARACTER_DOCUMENT_KIND.name)
+        )
+        declared[entity.id] = {
+            channel: frozenset(keys) for channel, keys in desc.asset_sets.items()
+        }
+
+    return _SwapVocabulary(
+        node_sets=node_sets,
+        procedural_mouths=frozenset(procedural_mouths),
+        declared=declared,
+        paths=frozenset(_runtime_node_paths(root)),
+    )
+
+
 def _raise_or_warn_on_asset_fallbacks(
     shot_id: str,
     resolutions: list[AssetResolutionJSON],
@@ -310,20 +402,27 @@ def compile_shot(
     scene_root = _build_scene_root(
         shot, mall, textures=textures, resolutions=resolutions
     )
-    _raise_or_warn_on_asset_fallbacks(shot.id, resolutions, strict=strict_assets)
-    animations, tracks = _compile_actions(shot.actions, shot.duration)
+    vocab = _swap_vocabulary(scene_root, shot, mall)
+    animations, tracks = _compile_actions(
+        shot.actions, shot.duration, vocab=vocab, resolutions=resolutions
+    )
     # Phase 4: emit a viseme channel per dialogue line that has a viseme_track.
     _add_viseme_clips(
         shot,
         animations,
         tracks,
         mall=mall,
-        node_paths=_runtime_node_paths(scene_root),
+        vocab=vocab,
     )
     # Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale
     # animation on the synthetic scene root so directors get visible camera
     # behavior without writing channels by hand.
     _add_camera_clips(shot, animations, tracks)
+    # AFTER action + viseme compilation, deliberately: a swap key the timeline
+    # actually USES whose art is missing is recorded as a fallback during
+    # those passes (usage-aware escalation, an#87), and this is the one place
+    # that decides warn-vs-raise for every fallback.
+    _raise_or_warn_on_asset_fallbacks(shot.id, resolutions, strict=strict_assets)
 
     timeline = TimelineJSON(duration=shot.duration, tracks=tracks)
 
@@ -953,12 +1052,15 @@ def _build_svg_character_subtree(
     # If the head art has its own face baked in (DiceBear / hand-drawn full
     # avatars), the separate eye/brow/mouth sprites double up with the baked
     # features. Lip-sync stays audio-only for these; hand-rig for dialogue.
-    head_has_face = (desc.metadata or {}).get(
-        "art_provenance"
-    ) in _FACE_BAKED_PROVENANCES
+    # `face_overlay` is the DECLARED fact (0.3.0, an#87) — the old vendor-name
+    # check on metadata.art_provenance lives on only inside the migration.
+    head_has_face = not desc.face_overlay
 
-    def _register(attachment_name: str, attachment: Attachment) -> str:
-        alias = f"{entity.id}.{attachment_name}"
+    def _register(slot_name: str, attachment_name: str, attachment: Attachment) -> str:
+        # Slot-qualified on purpose: attachment names are a PER-SLOT namespace
+        # (both eye slots carry `open`/`closed`), and the old `{entity}.{name}`
+        # alias space was silently first-wins on cross-slot collision.
+        alias = f"{entity.id}.{slot_name}.{attachment_name}"
         return _register_texture(textures, alias, _svg_asset_src(ref, attachment.path))
 
     # Every attachment in the skin is registered, not just the active one, so a
@@ -979,7 +1081,7 @@ def _build_svg_character_subtree(
             if probe is not None and not probe(src)[0]:
                 missing_art.append((slot_name, name, att.path))
                 continue
-            resolved_here[name] = _register(name, att)
+            resolved_here[name] = _register(slot_name, name, att)
         aliases[slot_name] = resolved_here
 
     nodes: dict[str, NodeJSON] = {}
@@ -1022,14 +1124,27 @@ def _build_svg_character_subtree(
             fit=CONTAIN_FIT,
             **({"width": extent[0] * k, "height": extent[1] * k} if extent else {}),
         )
-        # The lip-sync channel swaps textures on the mouth by key.
-        viseme_set = desc.asset_sets.get(VISEME_CHANNEL) or {}
-        if slot.name == "mouth" and viseme_set:
-            visual.viseme_assets = {
-                key: aliases[slot.name][name]
-                for key, name in viseme_set.items()
-                if name in aliases[slot.name]
-            }
+        # The per-slot PROJECTION of the descriptor's asset_sets (an#87): a
+        # channel projects onto every slot whose attachments its keys name —
+        # `viseme` lands on the mouth because the mouth's attachments carry
+        # the viseme map's values, `eyelid` lands on BOTH eye slots because
+        # both carry `open`/`closed`. No slot names appear here: the skin is
+        # the binding. Keys whose art did not resolve are absent from the map
+        # (an inventory gap — `_record_missing_parts` records it; a key a
+        # channel actually USES escalates via the fallback machinery).
+        projected = {
+            channel: resolved
+            for channel, key_map in desc.asset_sets.items()
+            if (
+                resolved := {
+                    key: aliases[slot.name][name]
+                    for key, name in key_map.items()
+                    if name in aliases[slot.name]
+                }
+            )
+        }
+        if projected:
+            visual.asset_sets = projected
 
         node = NodeJSON(
             name=slot.name,
@@ -1058,9 +1173,26 @@ def _build_svg_character_subtree(
 
 
 def _compile_actions(
-    actions: list[Action], shot_duration: float
+    actions: list[Action],
+    shot_duration: float,
+    *,
+    vocab: _SwapVocabulary | None = None,
+    resolutions: list[AssetResolutionJSON] | None = None,
 ) -> tuple[dict[str, AnimationClipJSON], list[TrackJSON]]:
-    """Flatten authoring actions and convert to per-action animation clips."""
+    """Flatten authoring actions and convert to animation clips.
+
+    Tweens and plays compile per action. **Set actions compile per
+    (target, property) group into ONE step channel that HOLDS from the first
+    ``at`` to the shot end** (an#87) — the viseme-clip shape. The previous
+    per-set 0.001s placement window had two defects: a set at a
+    non-frame-aligned time (``at=3.02`` @30fps, window [3.02, 3.021] between
+    samples) silently never fired, and when one did fire its persistence was
+    an accident of stateful forward rendering, false under backward scrubbing.
+
+    ``vocab`` (when compiling a real shot) enables the swap checks: an
+    authored action on a non-transform property must name a declared asset
+    set and key of its target — see :func:`_check_swap_action`.
+    """
     animations: dict[str, AnimationClipJSON] = {}
     placed_by_track: dict[str, list[PlacedClipJSON]] = {}
 
@@ -1068,22 +1200,50 @@ def _compile_actions(
     for action in actions:
         flat_list.extend(flatten(action))
 
-    for i, flat in enumerate(flat_list):
-        anim_id, track_root, placed = _compile_one(flat, ordinal=i)
-        if anim_id is not None:
-            # Built a fresh animation; register it.
-            (animations[anim_id],) = (
-                animations.get(anim_id, _build_anim_for(flat, anim_id)),
-            )
-            if anim_id not in animations:
-                animations[anim_id] = _build_anim_for(flat, anim_id)
-            else:
-                # idempotent: ensure registered
-                pass
-        # Always register: rebuild map cleanly
+    swap_props = _swap_property_names(flat_list)
+    if vocab is not None:
+        flat_list = [
+            flat
+            for flat in flat_list
+            if _check_swap_action(flat, vocab=vocab, resolutions=resolutions)
+        ]
+
+    set_groups: dict[tuple[str, str], list[FlatAction]] = {}
+    ordinal = 0
+    for flat in flat_list:
+        if isinstance(flat.action, SetAction):
+            key = (flat.action.target, flat.action.property)
+            set_groups.setdefault(key, []).append(flat)
+            continue
+        anim_id, track_root, placed = _compile_one(flat, ordinal=ordinal)
+        ordinal += 1
         if anim_id is not None and anim_id not in animations:
-            animations[anim_id] = _build_anim_for(flat, anim_id)
+            animations[anim_id] = _build_anim_for(
+                flat, anim_id, swap_properties=swap_props
+            )
         placed_by_track.setdefault(track_root, []).append(placed)
+
+    for (target, prop), group in set_groups.items():
+        group.sort(key=lambda f: f.start)
+        first = group[0].start
+        anim_id = f"__set__{ordinal}"
+        ordinal += 1
+        kfs = []
+        for flat in group:
+            value = flat.action.value
+            _check_keyframe_value(value, target=target, prop=prop)
+            kfs.append(
+                KeyframeJSON(time=flat.start - first, value=value, easing="step")
+            )
+        duration = max(0.001, shot_duration - first)
+        animations[anim_id] = AnimationClipJSON(
+            name=anim_id,
+            duration=duration,
+            channels=[ChannelJSON(target=target, property=prop, keyframes=kfs)],
+        )
+        placed_by_track.setdefault(_track_root_of(target), []).append(
+            PlacedClipJSON(animation_id=anim_id, start_time=first, duration=duration)
+        )
 
     # Re-pass: every referenced animation must actually exist.
     #
@@ -1114,7 +1274,11 @@ def _compile_actions(
 def _compile_one(
     flat: FlatAction, *, ordinal: int
 ) -> tuple[str | None, str, PlacedClipJSON]:
-    """Convert one FlatAction into (animation_id, track_root, placed)."""
+    """Convert one non-set FlatAction into (animation_id, track_root, placed).
+
+    Set actions never reach here — they compile per (target, property) group
+    in :func:`_compile_actions` (an#87).
+    """
     action = flat.action
     if isinstance(action, TweenAction):
         anim_id = f"__tween__{ordinal}"
@@ -1122,12 +1286,6 @@ def _compile_one(
             animation_id=anim_id,
             start_time=flat.start,
             duration=action.duration,
-        )
-        return anim_id, _track_root_of(action.target), placed
-    if isinstance(action, SetAction):
-        anim_id = f"__set__{ordinal}"
-        placed = PlacedClipJSON(
-            animation_id=anim_id, start_time=flat.start, duration=0.001
         )
         return anim_id, _track_root_of(action.target), placed
     if isinstance(action, PlayAction):
@@ -1164,7 +1322,24 @@ def _check_keyframe_value(value: Any, *, target: str, prop: str) -> Any:
     return value
 
 
-def _build_anim_for(flat: FlatAction, anim_id: str) -> AnimationClipJSON:
+def _swap_property_names(flat_list: list[FlatAction]) -> frozenset[str]:
+    """Property names in ``flat_list`` that are swap sets, not transforms.
+
+    A property outside the transform vocabulary names an asset set (an#87).
+    Derived from the actions rather than the descriptors so the STEP-EASING
+    rule below applies even when compiling without a mall.
+    """
+    out = set()
+    for flat in flat_list:
+        prop = getattr(flat.action, "property", None)
+        if prop and prop not in _PROPERTY_REST_VALUES:
+            out.add(prop)
+    return frozenset(out)
+
+
+def _build_anim_for(
+    flat: FlatAction, anim_id: str, *, swap_properties: frozenset[str] = frozenset()
+) -> AnimationClipJSON:
     action = flat.action
     if isinstance(action, TweenAction):
         from_value = (
@@ -1176,6 +1351,24 @@ def _build_anim_for(flat: FlatAction, anim_id: str) -> AnimationClipJSON:
         _check_keyframe_value(
             action.to_value, target=action.target, prop=action.property
         )
+        easing = _easing_to_json(action.easing)
+        if action.property in swap_properties and easing != "step":
+            # Swap channels are stepped by FORMAT, not by taste — Spine's
+            # attachment keyframes carry {time, name} and no curve field at
+            # all. The evaluator already refuses to ease a non-numeric value
+            # (the snap is time-based, an#86), so forcing step here changes
+            # no pixel; what it changes is honesty — the serialized scene
+            # says what will happen. Warn so the author learns the rule
+            # rather than wondering where their easing went.
+            warnings.warn(
+                f"tween on {action.target!r}:{action.property!r} asked for "
+                f"easing {action.easing!r}, but {action.property!r} is a swap "
+                "set and swap channels are always step-interpolated (a "
+                "discrete key cannot be eased). Compiling with easing='step'.",
+                CutoutCompileWarning,
+                stacklevel=2,
+            )
+            easing = "step"
         return AnimationClipJSON(
             name=anim_id,
             duration=action.duration,
@@ -1184,32 +1377,148 @@ def _build_anim_for(flat: FlatAction, anim_id: str) -> AnimationClipJSON:
                     target=action.target,
                     property=action.property,
                     keyframes=[
-                        KeyframeJSON(
-                            time=0.0,
-                            value=from_value,
-                            easing=_easing_to_json(action.easing),
-                        ),
+                        KeyframeJSON(time=0.0, value=from_value, easing=easing),
                         KeyframeJSON(time=action.duration, value=action.to_value),
                     ],
                 )
             ],
         )
-    if isinstance(action, SetAction):
-        _check_keyframe_value(action.value, target=action.target, prop=action.property)
-        return AnimationClipJSON(
-            name=anim_id,
-            duration=0.001,
-            channels=[
-                ChannelJSON(
-                    target=action.target,
-                    property=action.property,
-                    keyframes=[
-                        KeyframeJSON(time=0.0, value=action.value, easing="step")
-                    ],
-                )
-            ],
-        )
     raise TypeError(f"unsupported anim build for {type(action).__name__}")
+
+
+def _check_swap_action(
+    flat: FlatAction,
+    *,
+    vocab: _SwapVocabulary,
+    resolutions: list[AssetResolutionJSON] | None,
+) -> bool:
+    """Validate one authored action's swap references; decide if it compiles.
+
+    Returns True to keep the action, False to drop it (with a fallback record
+    — the usage-aware escalation of an#87: a key the author USES whose art is
+    missing is a wrong picture wearing a right one's clothes, so it joins the
+    an#33/#76 machinery and turns fatal under ``strict_assets``; an inventory
+    gap nobody references stays a non-fatal 'incomplete').
+
+    Raises for the mistakes that are never a stand-in: an undeclared set, an
+    undeclared key, a target that cannot carry the set. Transform properties
+    pass through untouched — their targets stay runtime-checked, as before.
+    """
+    action = flat.action
+    prop = getattr(action, "property", None)
+    if prop is None or prop in _PROPERTY_REST_VALUES:
+        return True
+    if not isinstance(action, (SetAction, TweenAction)):
+        return True
+    target = action.target
+    entity_id = _track_root_of(target)
+    values = (
+        [action.value]
+        if isinstance(action, SetAction)
+        else [v for v in (action.from_value, action.to_value) if v is not None]
+    )
+
+    declared_sets = vocab.declared.get(entity_id)
+    if declared_sets is None:
+        # No descriptor: the only swap a procedural rig supports is `viseme`
+        # on its drawn mouth, whose key domain is the runtime's shape table.
+        if prop == VISEME_CHANNEL and target in vocab.procedural_mouths:
+            shapes = {s.upper() for s in MOUTH_SHAPES}
+            for v in values:
+                if str(v).upper() not in shapes:
+                    raise CutoutCompileError(
+                        f"action sets {target!r}:{prop!r} to {v!r}, which is "
+                        "not a drawable mouth shape (known: "
+                        f"{sorted(shapes)})."
+                    )
+            return True
+        capable = vocab.swap_capable_paths(entity_id, prop) if prop else []
+        raise CutoutCompileError(
+            f"action targets {target!r}:{prop!r}, which is not a transform "
+            f"property, and {entity_id!r} has no descriptor declaring asset "
+            "sets. Procedural rigs support exactly one swap: `viseme` on "
+            f"their mouth node{f' ({capable})' if capable else ''}. "
+            f"Transform properties are: {sorted(_PROPERTY_REST_VALUES)}."
+        )
+
+    if prop not in declared_sets:
+        raise CutoutCompileError(
+            f"action targets {target!r}:{prop!r}, but {entity_id!r}'s "
+            f"descriptor declares no asset set named {prop!r} (it has: "
+            f"{sorted(declared_sets)}). A property that is not a transform "
+            "must name a declared swap set."
+        )
+    for v in values:
+        if not isinstance(v, str) or v not in declared_sets[prop]:
+            raise CutoutCompileError(
+                f"action sets {target!r}:{prop!r} to {v!r}, which is not a "
+                f"declared key of that set (it has: "
+                f"{sorted(declared_sets[prop])})."
+            )
+    if target not in vocab.paths:
+        raise CutoutCompileError(
+            f"action targets {target!r}, which is not a node in the built "
+            f"scene. Known paths: {sorted(vocab.paths)}"
+        )
+
+    node_map = vocab.node_sets.get(target, {}).get(prop)
+    if node_map is None:
+        capable = vocab.swap_capable_paths(entity_id, prop)
+        if capable:
+            raise CutoutCompileError(
+                f"action targets {target!r}:{prop!r}, but the {prop!r} set "
+                f"resolves on {capable}, not on that node. Target one of "
+                "those paths."
+            )
+        _record_used_swap_fallback(
+            resolutions, entity_id, target, prop, detail=(
+                f"the {prop!r} set is declared but none of its art resolved, "
+                f"so the authored swap on {target!r} cannot be shown; the "
+                "channel was dropped"
+            ),
+        )
+        return False
+    missing = [str(v) for v in values if str(v) not in node_map]
+    if missing:
+        _record_used_swap_fallback(
+            resolutions, entity_id, target, prop, detail=(
+                f"the authored swap uses key(s) {missing} of the {prop!r} "
+                f"set, whose art did not resolve on {target!r} (resolved "
+                f"keys: {sorted(node_map)}); the channel was dropped"
+            ),
+        )
+        return False
+    return True
+
+
+def _record_used_swap_fallback(
+    resolutions: list[AssetResolutionJSON] | None,
+    entity_id: str,
+    target: str,
+    prop: str,
+    *,
+    detail: str,
+) -> None:
+    """A USED swap key with missing art joins the fallback bucket (an#87).
+
+    fallback=True is the load-bearing bit: `_raise_or_warn_on_asset_fallbacks`
+    only surfaces fallback entries, so this is what makes the drop audible by
+    default and fatal under ``strict_assets`` — where an unreferenced
+    inventory gap stays a mute 'incomplete' record, deliberately.
+    """
+    if resolutions is None:
+        return
+    resolutions.append(
+        AssetResolutionJSON(
+            id=entity_id,
+            kind="swap",
+            store="characters",
+            ref=f"{target}:{prop}",
+            resolved="dropped",
+            fallback=True,
+            detail=detail,
+        )
+    )
 
 
 def _easing_to_json(spec: Any) -> Any:
@@ -1232,15 +1541,20 @@ def _track_root_of(target: str) -> str:
 # -----------------------------------------------------------------------------
 
 
-_FACE_BAKED_PROVENANCES: tuple[str, ...] = ("dicebear", "external_avatar")
-
-
-def _face_baked_speakers(shot: Shot, mall: Mapping[str, Mapping] | None) -> set[str]:
-    """Return the entity ids whose backing descriptor has a face baked in.
+def _baked_face_speakers(shot: Shot, mall: Mapping[str, Mapping] | None) -> set[str]:
+    """Return the entity ids whose backing descriptor declares a baked face.
 
     Used to suppress viseme channels for characters that don't have an
     overlay mouth node (DiceBear / external avatars). See
     ``_build_svg_character_subtree`` for the matching scene-tree branch.
+
+    Reads the **migrated, validated** descriptor's declared ``face_overlay``
+    fact — the predecessor read the RAW store dict's ``art_provenance`` with
+    no ``kind`` guard, so (a) a migration-seeded field was invisible to it,
+    and (b) a legacy ``parts``-rig carrying ``art_provenance="dicebear"`` got
+    a full procedural mouth built and its viseme channel suppressed — a drawn
+    mouth that never moved, silently. Only descriptor-backed entities can
+    declare a baked face now; the two consumer sites read one model.
     """
     if not mall:
         return set()
@@ -1253,13 +1567,18 @@ def _face_baked_speakers(shot: Shot, mall: Mapping[str, Mapping] | None) -> set[
         if ref is None or ref not in chars_store:
             continue
         try:
-            desc = chars_store[ref]
+            desc_data = chars_store[ref]
         except KeyError:
             continue
-        if not isinstance(desc, dict):
+        if (
+            not isinstance(desc_data, dict)
+            or desc_data.get("kind") != "CharacterDescriptor"
+        ):
             continue
-        provenance = (desc.get("metadata") or {}).get("art_provenance")
-        if provenance in _FACE_BAKED_PROVENANCES:
+        desc = CharacterDescriptor.model_validate(
+            migrate(dict(desc_data), kind=CHARACTER_DOCUMENT_KIND.name)
+        )
+        if not desc.face_overlay:
             out.add(entity.id)
     return out
 
@@ -1270,38 +1589,46 @@ def _add_viseme_clips(
     tracks: list[TrackJSON],
     *,
     mall: Mapping[str, Mapping] | None = None,
-    node_paths: set[str] | None = None,
+    vocab: _SwapVocabulary | None = None,
 ) -> None:
-    """For each dialogue line with a viseme_track, emit a step-channel that
-    drives ``<speaker>/head/mouth:viseme`` over the line's time span.
+    """For each dialogue line with a viseme_track, emit a step swap channel on
+    every node of the speaker that can apply the ``viseme`` set.
 
     Side-effects ``animations`` (adds named clips) and ``tracks`` (appends to
     or creates the speaker's track).
 
+    The target is discovered from the BUILT scene, not a path literal (an#87):
+    a node applies ``viseme`` when its visual carries the set's projection (an
+    SVG mouth) or is the procedural drawn mouth. The old
+    ``f"{speaker}/head/mouth"`` literal was the last place the compiler
+    hardcoded where a mouth lives.
+
     Two kinds of speaker get no viseme channel, for the same reason: there is no
     mouth node for it to target.
 
-    - Speakers backed by a face-baked descriptor (``art_provenance`` of
-      ``"dicebear"`` or ``"external_avatar"``) — the face is drawn into the head
-      SVG, so there is no overlay mouth.
-    - **Speakers whose mouth node is not in the built scene.** One condition,
-      two cases that are indistinguishable from here: the off-screen-narrator
-      idiom (a speaker deliberately not an entity — the standing workaround
-      while ``Shot.narration`` is unimplemented), and a character who IS on
-      screen but whose rig has no head, which an entity-membership check misses
-      and sends to a hard render failure.
+    - Speakers whose descriptor declares ``face_overlay=False`` (DiceBear /
+      external avatars) — the face is drawn into the head SVG, so there is no
+      overlay mouth.
+    - **Speakers with no viseme-capable node in the built scene.** One
+      condition, two cases that are indistinguishable from here: the
+      off-screen-narrator idiom (a speaker deliberately not an entity — the
+      standing workaround while ``Shot.narration`` is unimplemented), and a
+      character who IS on screen but whose rig has no mouth, which an
+      entity-membership check misses and sends to a hard render failure.
 
     The second kind WARNS rather than passing in silence, because it cannot be
     told apart from a typo: ``speaker="charlei"`` against an on-screen
     ``charlie`` otherwise loses its lip-sync quietly while the audio still
     plays. Naming the scene's actual mouths makes the typo obvious.
+
+    Codes are upper-cased at EMISSION (the Rhubarb convention) — case used to
+    be normalised in the runtime's sprite path only, so a lowercase ``'a'``
+    swapped correctly on an SVG rig and silently drew rest on a procedural
+    one. And a code the target cannot show is DROPPED here with a warning,
+    never carried into the scene: the runtime now throws on an unknown swap
+    key (the loud half of an#87), so compiled scenes must be total.
     """
-    face_baked = _face_baked_speakers(shot, mall)
-    # `is not None`, not truthiness: a shot with no entities has an EMPTY path
-    # set, and that is precisely a scene where no speaker has a mouth. Treating
-    # empty as "cannot check" let the emptiest case through to a hard render
-    # failure — which is how this was caught.
-    paths = node_paths
+    face_baked = _baked_face_speakers(shot, mall)
     track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
     for i, line in enumerate(shot.dialogue):
         if line.viseme_track is None or not line.viseme_track.keyframes:
@@ -1312,70 +1639,134 @@ def _add_viseme_clips(
         speaker = line.speaker
         if speaker in face_baked:
             continue
-        target = f"{speaker}/head/mouth"
-        if paths is not None and target not in paths:
-            mouths = sorted(p for p in paths if p.endswith("/head/mouth"))
+        mouth_paths = (
+            vocab.swap_capable_paths(speaker, VISEME_CHANNEL)
+            if vocab is not None
+            else []
+        )
+        if not mouth_paths:
+            if vocab is None:
+                continue
+            all_mouths = sorted(
+                {
+                    p
+                    for p, sets in vocab.node_sets.items()
+                    if VISEME_CHANNEL in sets
+                }
+                | set(vocab.procedural_mouths)
+            )
             warnings.warn(
-                f"shot {shot.id!r} dialogue line {i} is spoken by {speaker!r}, which "
-                f"has no mouth node ({target!r} is not in the scene): it gets audio "
-                "but no lip-sync. Expected for an off-screen narrator. If it was "
-                f"not, the scene's mouths are: {mouths or 'none'}.",
+                f"shot {shot.id!r} dialogue line {i} is spoken by {speaker!r}, "
+                "which has no viseme-capable mouth node in the scene: it gets "
+                "audio but no lip-sync. Expected for an off-screen narrator. "
+                f"If it was not, the scene's mouths are: {all_mouths or 'none'}.",
                 CutoutCompileWarning,
                 stacklevel=2,
             )
             continue
-        anim_id = f"__viseme__{shot.id}_{i}"
 
         # Build viseme keyframes (step-easing) — but cap density so adjacent
         # keyframes are at least _MIN_VISEME_GAP_S apart. Reduces the
         # "twitchy" look of per-character distribution at high densities.
-        raw = [(float(kf.time), str(kf.viseme)) for kf in line.viseme_track.keyframes]
+        raw = [
+            (float(kf.time), str(kf.viseme).upper())
+            for kf in line.viseme_track.keyframes
+        ]
         condensed: list[tuple[float, str]] = []
         for t, v in raw:
             if condensed and (t - condensed[-1][0]) < _MIN_VISEME_GAP_S:
                 continue
             condensed.append((t, v))
-        kfs: list[KeyframeJSON] = []
-        for t, v in condensed:
-            t = max(0.0, min(line.duration, t))
-            kfs.append(KeyframeJSON(time=t, value=v, easing="step"))
-        # Always end with rest so the mouth closes when the line stops.
-        if kfs and kfs[-1].time < line.duration:
+
+        for target in mouth_paths:
+            if target in vocab.procedural_mouths and target not in vocab.node_sets:
+                mapped = {s.upper() for s in MOUTH_SHAPES}
+            else:
+                mapped = set(vocab.node_sets[target][VISEME_CHANNEL])
+            usable = [(t, v) for t, v in condensed if v in mapped]
+            dropped = sorted({v for _, v in condensed} - mapped)
+            if dropped:
+                warnings.warn(
+                    f"shot {shot.id!r} dialogue line {i}: viseme code(s) "
+                    f"{dropped} have no resolved art on {target!r} (it has: "
+                    f"{sorted(mapped)}); those keyframes were dropped, so the "
+                    "mouth holds its previous shape through them.",
+                    CutoutCompileWarning,
+                    stacklevel=2,
+                )
+            if "X" not in mapped:
+                warnings.warn(
+                    f"shot {shot.id!r} dialogue line {i}: {target!r} cannot "
+                    "show the rest shape 'X', so no viseme channel was "
+                    "emitted for it — a mouth that cannot close should not "
+                    "start talking.",
+                    CutoutCompileWarning,
+                    stacklevel=2,
+                )
+                continue
+            kfs: list[KeyframeJSON] = [
+                KeyframeJSON(time=max(0.0, t), value=v, easing="step")
+                for t, v in usable
+                if t < line.duration
+            ]
+            # The rest key is an INVARIANT, not a conditionally-appended
+            # keyframe: a raw keyframe landing at (or clamping to) exactly
+            # line.duration used to suppress the append, freezing the mouth
+            # in its last viseme forever after the line.
             kfs.append(KeyframeJSON(time=line.duration, value="X", easing="step"))
 
-        animations[anim_id] = AnimationClipJSON(
-            name=anim_id,
-            duration=line.duration,
-            channels=[
-                ChannelJSON(target=target, property="viseme", keyframes=kfs),
-            ],
-        )
-
-        placed = PlacedClipJSON(
-            animation_id=anim_id,
-            start_time=float(line.start),
-            duration=float(line.duration),
-        )
-        track = track_lookup.get(speaker)
-        if track is None:
-            track = TrackJSON(target_root=speaker, clips=[])
-            tracks.append(track)
-            track_lookup[speaker] = track
-        track.clips.append(placed)
+            anim_id = f"__viseme__{shot.id}_{i}_{target.replace('/', '.')}"
+            animations[anim_id] = AnimationClipJSON(
+                name=anim_id,
+                duration=line.duration,
+                channels=[
+                    ChannelJSON(
+                        target=target, property=VISEME_CHANNEL, keyframes=kfs
+                    ),
+                ],
+            )
+            track = track_lookup.get(speaker)
+            if track is None:
+                track = TrackJSON(target_root=speaker, clips=[])
+                tracks.append(track)
+                track_lookup[speaker] = track
+            track.clips.append(
+                PlacedClipJSON(
+                    animation_id=anim_id,
+                    start_time=float(line.start),
+                    duration=float(line.duration),
+                )
+            )
 
         # Emotion-driven eyebrow expression — set both brows' rotation while
-        # the line is active, restore to neutral at the end.
+        # the line is active, restore to neutral at the end. Node existence is
+        # checked (an#87): a rig whose brow art failed to resolve drops the
+        # node silently, and an unchecked channel then hard-crashed at frame
+        # time in applyPose — the exact policy the mouth check above exists
+        # for, previously applied to only one of the two emissions.
         emotion = (line.emotion or "").lower().strip()
         if emotion in _EMOTION_BROWS:
+            track = track_lookup.get(speaker)
             tilt_l, tilt_r = _EMOTION_BROWS[emotion]
             for brow_name, tilt in (("left_brow", tilt_l), ("right_brow", tilt_r)):
+                brow_target = f"{speaker}/head/{brow_name}"
+                if vocab is not None and brow_target not in vocab.paths:
+                    warnings.warn(
+                        f"shot {shot.id!r} dialogue line {i} carries emotion "
+                        f"{emotion!r}, but {brow_target!r} is not in the built "
+                        "scene (brow art missing?); its channel was not "
+                        "emitted.",
+                        CutoutCompileWarning,
+                        stacklevel=2,
+                    )
+                    continue
                 emo_anim_id = f"__emo__{shot.id}_{i}_{brow_name}"
                 animations[emo_anim_id] = AnimationClipJSON(
                     name=emo_anim_id,
                     duration=line.duration,
                     channels=[
                         ChannelJSON(
-                            target=f"{speaker}/head/{brow_name}",
+                            target=brow_target,
                             property="rotation",
                             keyframes=[
                                 KeyframeJSON(time=0.0, value=tilt, easing="step"),
@@ -1386,6 +1777,10 @@ def _add_viseme_clips(
                         )
                     ],
                 )
+                if track is None:
+                    track = TrackJSON(target_root=speaker, clips=[])
+                    tracks.append(track)
+                    track_lookup[speaker] = track
                 track.clips.append(
                     PlacedClipJSON(
                         animation_id=emo_anim_id,

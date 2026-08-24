@@ -149,10 +149,14 @@
             return makeEllipse(visualSpec);
         }
         if (visualSpec.kind === 'mouth') {
-            // Mouth gets initialized to the rest viseme; the viseme channel
-            // re-shapes it via setVisemeOnMouth on the parent node.
+            // Procedural drawn mouth, initialized to the rest viseme. Its
+            // swap vocabulary is DECLARED on the object (an#87): _anDrawSets
+            // maps a set name to the redraw function, so the generic swap
+            // path applies `viseme` here the same way it swaps textures on a
+            // sprite — the set name is convention, not control flow.
             const g = new PIXI.Graphics();
             drawMouthShape(g, 'X');
+            g._anDrawSets = { viseme: drawMouthShape };
             return g;
         }
         if (visualSpec.kind === 'eye') {
@@ -209,10 +213,11 @@
         const ax = visualSpec.anchor_x != null ? visualSpec.anchor_x : 0.5;
         const ay = visualSpec.anchor_y != null ? visualSpec.anchor_y : 0.5;
         sprite.anchor.set(ax, ay);
-        // Stash viseme map + asset_id on the sprite so setVisemeOnMouth can
-        // swap textures without re-walking the scene graph.
-        if (visualSpec.viseme_assets) {
-            sprite._anVisemeAssets = visualSpec.viseme_assets;
+        // Stash the node's swap-set projection ({set: {KEY: asset_id}}) on
+        // the sprite so a swap channel can find its textures without
+        // re-walking the scene graph. `viseme` is just one such set (an#87).
+        if (visualSpec.asset_sets) {
+            sprite._anAssetSets = visualSpec.asset_sets;
         }
         sprite._anAssetId = visualSpec.asset_id;
         return sprite;
@@ -344,7 +349,19 @@
     const _TONGUE_COLOR = 0xb04848;
 
     function drawMouthShape(g, visemeCode) {
-        const s = VISEME_SHAPES[visemeCode] || VISEME_SHAPES.X;
+        // Loud on an unknown code, like every other bad swap key (an#87).
+        // The old `|| VISEME_SHAPES.X` fallback silently drew the closed
+        // mouth for typos AND for lowercase codes (the sprite path used to
+        // upper-case, this one never did) — the compiler now normalises case
+        // at emission and validates codes, so anything unknown arriving here
+        // is a hand-written scene's mistake and deserves a diagnosis.
+        const s = VISEME_SHAPES[visemeCode];
+        if (!s) {
+            throw new Error(
+                'unknown mouth shape ' + JSON.stringify(visemeCode) +
+                '. Known: ' + JSON.stringify(Object.keys(VISEME_SHAPES).sort())
+            );
+        }
         const w = s.w, h = s.h;
         const halfW = w / 2;
         const halfH = h / 2;
@@ -378,33 +395,49 @@
         }
     }
 
-    function setVisemeOnMouth(node, visemeCode) {
-        // Phase 11b first: if the mouth visual is an SVG Sprite, swap the
-        // texture by mapping the viseme code through the sprite's
-        // ``_anVisemeAssets`` map.
-        const sprite = node.children && node.children.find(
-            c => c instanceof PIXI.Sprite && c._anVisemeAssets
-        );
-        if (sprite) {
-            const assetId = sprite._anVisemeAssets[String(visemeCode).toUpperCase()];
-            if (assetId && PIXI.Assets && PIXI.Assets.get) {
-                const tex = PIXI.Assets.get(assetId);
-                if (tex) {
-                    sprite.texture = tex;
-                    // Re-fit: under 'contain' the scale belongs to the texture,
-                    // not to the sprite, so a swap must recompute it. Without
-                    // this every viseme after the first inherits the rest
-                    // shape's scale — silently, and only visible as a mouth
-                    // that is subtly the wrong size on some frames.
-                    refitToBox(sprite);
-                }
-            }
+    // The ONE swap implementation (an#87). A property outside applyProperty's
+    // static switch names a swap SET; the node's visual child declares which
+    // sets it can apply — `_anAssetSets` ({set: {KEY: asset_id}}, texture
+    // swap) or `_anDrawSets` ({set: redrawFn}, procedural redraw). `viseme`
+    // is just a conventional set name carried by mouths.
+    //
+    // The value domain is as loud as the target and property domains: an
+    // unknown key THROWS naming node, set, and the known keys — the old
+    // viseme path silently kept the previous texture, which is the defect
+    // class an#87 closes. Compiled scenes never reach the throw (the
+    // compiler validates and drops with a warning); a hand-written scene
+    // gets a diagnosis instead of a frozen mouth.
+    function applySwap(child, node, prop, value) {
+        const key = String(value);
+        if (child._anDrawSets && child._anDrawSets[prop]) {
+            child._anDrawSets[prop](child, key);
             return;
         }
-        // Legacy procedural path: re-shape the mouth Graphics.
-        const g = node.children && node.children.find(c => c instanceof PIXI.Graphics);
-        if (!g) return;
-        drawMouthShape(g, visemeCode);
+        const map = child._anAssetSets[prop];
+        const assetId = map[key];
+        if (assetId === undefined) {
+            throw new Error(
+                'unknown key ' + JSON.stringify(key) + ' for swap set ' +
+                JSON.stringify(prop) + ' on ' + JSON.stringify(node.name) +
+                '. Known keys: ' + JSON.stringify(Object.keys(map).sort())
+            );
+        }
+        const tex = PIXI.Assets.get(assetId);
+        if (!tex) {
+            throw new Error(
+                'swap set ' + JSON.stringify(prop) + ' on ' +
+                JSON.stringify(node.name) + ' resolves key ' +
+                JSON.stringify(key) + ' to texture ' + JSON.stringify(assetId) +
+                ', which is not loaded.'
+            );
+        }
+        child.texture = tex;
+        // Re-fit: under 'contain' the scale belongs to the texture, not to
+        // the sprite, so a swap must recompute it. Without this every key
+        // after the first inherits the previous texture's scale — silently,
+        // and only visible as art that is subtly the wrong size on some
+        // frames.
+        refitToBox(child);
     }
 
     function applyProperty(node, prop, value) {
@@ -420,20 +453,30 @@
             case 'pivot_x': node.pivot.x = value; break;
             case 'pivot_y': node.pivot.y = value; break;
             case 'alpha': node.alpha = value; break;
-            case 'viseme': setVisemeOnMouth(node, value); break;
-            default:
-                // Loud, not silent. "Forward compat" was the stated reason for
-                // ignoring these, but the Python side already raises on an
-                // unknown pose property, so silence here was a one-sided
-                // asymmetry rather than a policy — and it meant a tween on a
-                // property this switch does not implement (`opacity`, `visible`)
-                // rendered as nothing at all, with no diagnostic anywhere.
+            default: {
+                // Not a transform: the property names a swap set (an#87).
+                // Apply it if this node's visual declares the set; otherwise
+                // throw. Loud, not silent — "forward compat" was the stated
+                // reason for ignoring unknown properties once, but silence
+                // meant a channel rendered as nothing with no diagnostic.
+                const child = (node.children || []).find(
+                    c => c._anAssetSets || c._anDrawSets
+                );
+                const sets = child
+                    ? Object.assign({}, child._anDrawSets, child._anAssetSets)
+                    : {};
+                if (sets[prop]) {
+                    applySwap(child, node, prop, value);
+                    break;
+                }
                 throw new Error(
                     'unknown animated property ' + JSON.stringify(prop) +
                     ' on ' + JSON.stringify(node.name) + '. The runtime applies: ' +
                     'x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, ' +
-                    'skew_y, pivot_x, pivot_y, alpha, viseme.'
+                    'skew_y, pivot_x, pivot_y, alpha — plus this node\'s swap ' +
+                    'sets: ' + JSON.stringify(Object.keys(sets).sort()) + '.'
                 );
+            }
         }
     }
 

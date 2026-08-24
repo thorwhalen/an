@@ -91,19 +91,23 @@ def blink_animation(
     *,
     closure_s: float = DEFAULT_BLINK_CLOSURE_S,
     duration_s: float = DEFAULT_BLINK_DURATION_S,
-    eye_l_slot: str = "eye_l",
-    eye_r_slot: str = "eye_r",
-    open_attachment_l: str = "eye_l_open",
-    closed_attachment_l: str = "eye_l_closed",
-    open_attachment_r: str = "eye_r_open",
-    closed_attachment_r: str = "eye_r_closed",
+    eye_l_slot: str = "left_eye",
+    eye_r_slot: str = "right_eye",
+    open_attachment_l: str = "open",
+    closed_attachment_l: str = "closed",
+    open_attachment_r: str = "open",
+    closed_attachment_r: str = "closed",
     name: str = "blink",
 ) -> IdleAnimation:
     """Step-animation that snaps both eye slots closed → open.
 
-    The closure is split: at t=0 both eyes open, at t=close-down they swap
-    to closed, at t=duration they swap back to open. With defaults this is
-    open → closed at 0.05s → open at 0.13s within an 0.18s envelope.
+    The closure is centred: open → closed at ``(duration - closure) / 2`` →
+    open again ``closure`` later. With the defaults (0.13s closure in an
+    0.18s envelope) that is closed at 0.025s, open at 0.155s. (An earlier
+    docstring claimed 0.05/0.13 — numbers from an older closure value; and
+    the slot/attachment defaults were the stale pre-0.2.0 spellings
+    ``eye_l``/``eye_l_open``, unnoticed for as long as nothing consumed
+    ``descriptor.animations`` — both fixed in an#87.)
     """
     close_in = max(0.0, (duration_s - closure_s) / 2.0)
     close_out = close_in + closure_s

@@ -99,7 +99,9 @@ an/
 │   │   │                    applier and scene graph were deleted in an#86, with
 │   │   │                    node-backed parity tests pinning evaluateChannel+wrapTime)
 │   │   ├── serialize.py     Pydantic models for the JS-runtime JSON contract
-│   │   ├── compile.py       Shot -> CutoutSceneJSON (the bridge)
+│   │   │                    (VisualJSON.asset_sets = per-node swap-set projection, an#87)
+│   │   ├── compile.py       Shot -> CutoutSceneJSON (the bridge); projects asset_sets
+│   │   │                    onto slots, validates authored swaps, sets -> hold channels
 │   │   ├── render.py        Playwright headless capture + ffmpeg mux + audio overlay
 │   │   │                    (rasteriser PINNED — `DETERMINISTIC_CHROMIUM_ARGS`, an#31)
 │   │   └── runtime_files.py importlib.resources locator for the bundled JS runtime
@@ -129,7 +131,8 @@ an/
 └── data/                    bundled non-Python resources
     └── cutout_runtime/
         ├── index.html       loads PixiJS v7 + runtime.js
-        ├── runtime.js       drawMouthShape, applyProceduralBlinks, channel/timeline eval
+        ├── runtime.js       applySwap (the ONE swap path — any declared set, viseme incl.),
+        │                    drawMouthShape, applyProceduralBlinks, channel/timeline eval
         └── README.md
 ```
 
