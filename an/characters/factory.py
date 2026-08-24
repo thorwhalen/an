@@ -1,18 +1,18 @@
-"""High-level entry points: build, validate, and inspect a character.
+"""High-level entry points: build and inspect a character.
 
 The :func:`new_character` function wires together fetching/wrapping art,
 slicing it into per-part SVGs, generating the default mouth set, and
 writing a complete character directory + ``character.json`` descriptor.
 
-The :func:`validate_character` function checks completeness against
-:data:`an.characters.REQUIRED_PARTS` and the 9-shape mouth set.
+Checking one is :mod:`an.characters.validate`'s job, not this module's — it
+opens every part and reports :class:`an.verify._base.Finding` s, so a character
+problem routes the way every other verifier's does (an#78).
 
->>> import tempfile, json, pathlib
->>> # validate_character on an empty dir gives a list of complaints:
+>>> import tempfile
 >>> with tempfile.TemporaryDirectory() as d:
-...     report = validate_character(d, name='nobody')
-...     report.passed
-False
+...     descriptor_path = new_character(d, name='nobody', use_dicebear=False)
+...     descriptor_path.parent.name, descriptor_path.name
+('nobody', 'character.json')
 """
 
 from __future__ import annotations
