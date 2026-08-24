@@ -288,6 +288,8 @@ class Shot(_IRModel):
     dialogue: list[Dialogue] = Field(default_factory=list)
     narration: list[Narration] = Field(default_factory=list)
     options: dict[str, Any] = Field(default_factory=dict)
+    #: Per-shot override of :attr:`Meta.step_hz` (``None`` = inherit).
+    step_hz: float | None = None
 
 
 # -----------------------------------------------------------------------------
@@ -305,6 +307,15 @@ class Meta(_IRModel):
     resolution: Resolution = Field(default_factory=Resolution)
     default_style: StyleName = "cutout"
     notes: str = ""
+    #: Stepped timing for AUTHORED TWEENS, in pose updates per second; ``None``
+    #: (the default) leaves every tween smooth. At 30 fps, ``15`` is "on twos"
+    #: and ``10`` "on threes" — the character-animation practice Spider-Verse
+    #: made famous (characters on twos, simulation on ones). The camera is
+    #: exempt by construction, as are swap channels (already stepped by
+    #: format), compiled blinks and ``play`` clips: only `tween` curves are
+    #: resampled, onto a scene-wide grid. A shot's own ``step_hz`` overrides
+    #: this. Validated ``0 < step_hz <= fps`` (an#89).
+    step_hz: float | None = None
 
 
 class SceneIR(_IRModel):

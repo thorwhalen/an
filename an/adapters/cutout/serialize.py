@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_serializer
 
 
 class _JSONModel(BaseModel):
@@ -269,6 +269,19 @@ class CutoutSceneMetaJSON(_JSONModel):
     #: unexplained metric shift. (The runtime's determinism probe used to
     #: carry this; the fact moved with the mechanism.)
     blink_phases: dict[str, float] = Field(default_factory=dict)
+    #: The stepped-timing policy the shot's tweens were compiled under
+    #: (an#89); ``None`` = smooth. **Serialized only when set**: the compiled
+    #: document is the bench's scene contract (`scene_contract_sha256`), so a
+    #: `null` here would move every committed row's hash for a knob nobody
+    #: turned. Inert to the runtime; read by the ledger.
+    step_hz: float | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_unset_step_hz(self, handler):
+        data = handler(self)
+        if isinstance(data, dict) and data.get("step_hz") is None:
+            data.pop("step_hz", None)
+        return data
 
 
 class CutoutSceneJSON(_JSONModel):

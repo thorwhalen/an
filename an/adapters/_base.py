@@ -64,6 +64,10 @@ class RenderContext:
     #: stays 4:2:0 for a PRODUCT reason and not an encoder one: High 4:4:4
     #: Predictive is refused by many hardware decoders, browsers and platforms.
     pix_fmt: str | None = None
+    #: Scene-level stepped-timing policy for authored tweens (an#89); a shot's
+    #: own ``step_hz`` overrides it. ``None`` = smooth. Reaches the compiled
+    #: document's ``meta.step_hz`` (only when set) and per-shot provenance.
+    step_hz: float | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 

@@ -520,6 +520,23 @@ Docs caveat to carry: a stepped character under a **translating** camera slides/
 in screen space (Sony built tooling around exactly this); an's camera is scale-only
 today — the raise site at `_add_camera_clips` already documents that limit.
 
+**Landed in the PR-E branch (2026-08-24), with two corrections to the design above.**
+(1) The grid is *scene-wide* (multiples of `1/step_hz` on the shot's clock), not
+per-tween: "on twos" is a property of the frames, so a tween starting off-grid updates at
+the next grid point. (2) **The bench lever did not ship, on measurement, and the design's
+"so the ledger + a human can judge the default flip" was wrong about the ledger.** A
+render-side lever can count at most families A+B+F (C/D/E/G are gated whenever the
+reference frames move); forced `step_hz=15` over the corpus leaves the two tween-less
+scenes byte-identical and moves every family on the other four with the *content* — pose
+changed, so the references changed — in both directions (A: +1.0/-1.4/-7.0/0.0%;
+F: -1.1/-4.4/+0.1/-2.5%; C/D/E/G swing up to +148%). No counting family has a direction;
+the instrument is per-frame and cannot see a temporal choice. Same shape as `pix_fmt`
+(an#72): product knob shipped, no registered mutation, the numbers recorded in the
+`an-dev-bench` skill. The human instrument is the `stepped-timing` demo; the default flip
+is a human's call alone. Also: `meta.step_hz` is serialized only when set, so no bless
+record or ledger row was invalidated — the "additive, bench-readable" stamp above would
+have moved every contract hash as a `null`.
+
 ---
 
 ## 11. Vocabulary and the licence correction

@@ -131,6 +131,11 @@ def markdown_to_ir(md_text: str) -> SceneIR:
             shot_kwargs["camera"] = shot_yaml["camera"]
         if "options" in shot_yaml:
             shot_kwargs["options"] = shot_yaml["options"]
+        # Whitelisted, like `camera`: this reader enumerates shot keys, so a
+        # field added to `Shot` that is not named here silently drops on read
+        # (and the writer above enumerates too, so on write) — an#89.
+        if "step_hz" in shot_yaml:
+            shot_kwargs["step_hz"] = shot_yaml["step_hz"]
         shots.append(Shot(**shot_kwargs))
 
     if meta.duration == 0.0:
@@ -348,6 +353,8 @@ def ir_to_markdown(scene: SceneIR) -> str:
         },
         "default_style": scene.meta.default_style,
     }
+    if scene.meta.step_hz is not None:
+        meta_dict["step_hz"] = scene.meta.step_hz
     parts.append("```yaml meta")
     parts.append(yaml.safe_dump(meta_dict, sort_keys=False).rstrip())
     parts.append("```\n")
@@ -358,6 +365,8 @@ def ir_to_markdown(scene: SceneIR) -> str:
     for shot in scene.timeline:
         parts.append(f"## Shot {shot.id} ({shot.style})\n")
         shot_yaml: dict[str, Any] = {"duration": shot.duration}
+        if shot.step_hz is not None:
+            shot_yaml["step_hz"] = shot.step_hz
         if shot.camera is not None:
             shot_yaml["camera"] = shot.camera.model_dump(exclude_none=True)
         if shot.options:

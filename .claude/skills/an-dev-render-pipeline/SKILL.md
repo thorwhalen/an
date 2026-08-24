@@ -23,7 +23,7 @@ about measuring them. Any change here that could move a pixel needs the
 
 ```
 an.render.render(project, …)
-  └ RenderContext(fps, resolution, work_dir, mall, strict_assets, supersample)
+  └ RenderContext(fps, resolution, work_dir, mall, strict_assets, supersample, step_hz)
      ↑ per-render knobs live HERE — see §6 for why anywhere else refuses metrics
      │
      ├ per shot (thread pool, DEFAULT_PARALLEL_CAP=4, one Chromium each)

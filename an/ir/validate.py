@@ -312,6 +312,22 @@ def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
 
 
 
+def _check_step_hz(
+    step_hz: float | None, *, fps: int, path: str, report: "ValidationReport"
+) -> None:
+    """``0 < step_hz <= fps`` (an#89): a pose grid finer than the frame rate
+    cannot be shown, and zero or negative is not a rate."""
+    if step_hz is None:
+        return
+    if not (0 < step_hz <= fps):
+        report.add(
+            "error",
+            path,
+            f"step_hz must satisfy 0 < step_hz <= fps ({fps}); got {step_hz!r}. "
+            f"At {fps} fps, {fps / 2:g} is 'on twos' and {fps / 3:g} 'on threes'.",
+        )
+
+
 def validate_semantic(
     scene: SceneIR,
     *,
@@ -334,6 +350,7 @@ def validate_semantic(
         report.add("error", "meta/duration", "duration must be non-negative")
     if scene.meta.fps <= 0:
         report.add("error", "meta/fps", "fps must be positive")
+    _check_step_hz(scene.meta.step_hz, fps=scene.meta.fps, path="meta/step_hz", report=report)
     if not scene.timeline:
         report.add(
             "warning",
@@ -345,6 +362,9 @@ def validate_semantic(
     seen_shot_ids: set[str] = set()
     for i, shot in enumerate(scene.timeline):
         path = f"timeline/{i}"
+        _check_step_hz(
+            shot.step_hz, fps=scene.meta.fps, path=f"{path}/step_hz", report=report
+        )
         if not shot.id:
             report.add("error", f"{path}/id", "shot id may not be empty")
         elif shot.id in seen_shot_ids:

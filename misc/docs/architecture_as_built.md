@@ -373,6 +373,14 @@ What genuinely remains, in rough priority order:
    moving their mouths. Hand-rigging (see `examples/promote_demo/`) is the
    production path today.
 4. **Multi-scene projects.** `"main"` is the only key the scenes store supports.
+4b. **The default timing is smooth, and the ledger cannot argue otherwise.**
+   `step_hz` (an#89) steps authored tweens on demand (`Meta.step_hz` /
+   `Shot.step_hz` / `an render --step-hz`), camera and blinks exempt by
+   construction. Whether to flip the default to "on twos" is a temporal,
+   aesthetic judgement: measured, the bench's per-frame families move with the
+   pose content and in both directions under stepping, so no lever could be
+   registered (the `pix_fmt` precedent). A flip is a one-line PR on a human
+   side-by-side (`stepped-timing` demo), and it has not been made.
 5. **A real `an validate` for everything the renderer refuses.** The pre-flight
    now reports the four IR-level refusals (unknown `camera.move`, `prop`
    entities, `narration`; `play` is resolved against the target's descriptor animations since an#7), but it duplicates the compiler's camera list

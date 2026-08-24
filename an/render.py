@@ -72,6 +72,7 @@ def render_project(
     strict_assets: bool = False,
     supersample: int = DEFAULT_SUPERSAMPLE,
     pix_fmt: str | None = None,
+    step_hz: float | None = None,
 ) -> Path:
     """Render every shot in ``project_dir``'s scene and concatenate to one mp4.
 
@@ -95,6 +96,11 @@ def render_project(
     with an exact block mean. **Opt-in, and 1 is free** — at 1 nothing is
     decoded and Chromium's own bytes reach disk. See :func:`render`.
 
+    ``step_hz`` overrides the scene's ``meta.step_hz`` for this render (a shot's
+    own ``step_hz`` still wins): authored tweens are resampled onto a pose grid
+    of that many updates per second — 15 at 30 fps is "on twos". ``None`` uses
+    the scene's declaration, which is itself ``None`` (smooth) by default.
+
     Returns the absolute path of the final output file (under ``output/``).
     """
     project: Project = load(project_dir)
@@ -109,6 +115,7 @@ def render_project(
         strict_assets=strict_assets,
         supersample=supersample,
         pix_fmt=pix_fmt,
+        step_hz=step_hz,
     )
 
 
@@ -125,6 +132,7 @@ def render(
     strict_assets: bool = False,
     supersample: int = DEFAULT_SUPERSAMPLE,
     pix_fmt: str | None = None,
+    step_hz: float | None = None,
 ) -> Path:
     """Lower-level: render a loaded ``Project`` to mp4.
 
@@ -217,6 +225,7 @@ def render(
         strict_assets=strict_assets,
         supersample=supersample,
         pix_fmt=pix_fmt,
+        step_hz=step_hz if step_hz is not None else scene.meta.step_hz,
     )
 
     shots = list(scene.timeline)

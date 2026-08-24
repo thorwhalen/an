@@ -359,6 +359,50 @@ def _build_play(work: Path) -> Path:
     return _render(work)
 
 
+#: The demo's step rate. At DEMO_FPS=24 "on twos" is 12 Hz — exactly GIF_FPS, so
+#: a 12 fps GIF of it is indistinguishable from smooth. 6 Hz ("on fours") holds
+#: each pose for two GIF frames, which is the least stepping the gallery format
+#: can show. Stated here so the demo text never claims "twos" for what is shown.
+STEPPED_DEMO_HZ: float = 6.0
+
+
+def _build_stepped_timing(work: Path) -> Path:
+    """Smooth (left) against stepped (right): the same scene rendered twice,
+    once with `step_hz` and once without, side by side (an#89). The camera
+    push-in is smooth in BOTH halves — it is exempt by construction."""
+    md = (
+        _meta("Stepped timing: on fours, camera on ones", 3.0)
+        + "\n"
+        + _shot("s1", 3.0, camera="push_in")
+        + "\n"
+        + _entities("charlie")
+        + "\n```yaml actions\n"
+        "- kind: tween\n  target: charlie\n  property: x\n  from: -160\n"
+        "  to: 160\n  duration: 3.0\n  easing: ease_in_out\n"
+        "- kind: tween\n  target: charlie/arm_l\n  property: rotation\n"
+        "  to: 1.2\n  duration: 1.5\n  easing: ease_in_out\n"
+        "- kind: tween\n  target: charlie/arm_l\n  property: rotation\n"
+        "  from: 1.2\n  to: 0.0\n  duration: 1.5\n  start: 1.5\n"
+        "```\n"
+    )
+    smooth = _render(_project(work / "smooth", scene_md=md, characters=("charlie",)))
+    stepped = _render(
+        _project(work / "stepped", scene_md=md, characters=("charlie",)),
+        step_hz=STEPPED_DEMO_HZ,
+    )
+    out = work / "side_by_side.mp4"
+    subprocess.run(
+        [
+            "ffmpeg", "-v", "error", "-y",
+            "-i", str(smooth), "-i", str(stepped),
+            "-filter_complex", "[0:v][1:v]hstack=inputs=2",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out),
+        ],
+        check=True,
+    )
+    return out
+
+
 def _copy_example(rel: str) -> Callable[[Path], Path]:
     def build(work: Path) -> Path:
         src = REPO_ROOT / rel
@@ -502,6 +546,25 @@ DEMOS: tuple[Demo, ...] = (
             "cannot resolve is refused before any render with the reason named."
         ),
         build=_build_play,
+    ),
+    Demo(
+        slug="stepped-timing",
+        title="Stepped timing: on fours, camera on ones",
+        shows=(
+            "The same shot twice, side by side: smooth on the left, `step_hz: 6` "
+            "on the right — the character's slide and arm swing update six times "
+            "a second and HOLD between updates, while the camera push-in stays "
+            "smooth in both halves because the camera is exempt by construction. "
+            "(6 Hz, 'on fours' at 24 fps, is the least stepping a 12 fps GIF can "
+            "show; 'on twos' would be 12 Hz here and invisible in this format.)"
+        ),
+        how=(
+            "`step_hz: 6` in `yaml meta` (or per shot in `yaml shot`), or "
+            "`an render <dir> --step-hz 6`. Tweens are resampled onto a scene-wide "
+            "pose grid of step-eased keyframes; blinks, `play` clips, swap "
+            "channels and the camera are never stepped (an#89)."
+        ),
+        build=_build_stepped_timing,
     ),
     Demo(
         slug="svg-promote",

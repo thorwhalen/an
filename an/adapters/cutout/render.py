@@ -302,6 +302,7 @@ class CutoutRenderer:
         pix_fmt = _check_pix_fmt(ctx.pix_fmt)
         from playwright.sync_api import sync_playwright  # local: optional dep
 
+        step_hz = effective_step_hz(shot, ctx)
         scene_json = compile_shot(
             shot,
             mall=ctx.mall,
@@ -309,6 +310,7 @@ class CutoutRenderer:
             width=ctx.resolution[0],
             height=ctx.resolution[1],
             strict_assets=ctx.strict_assets,
+            step_hz=step_hz,
         )
 
         job = _stage_job(ctx.work_dir, shot.id, scene_json, mall=ctx.mall)
@@ -427,8 +429,29 @@ class CutoutRenderer:
                 # carried here so a renamed character is a visible provenance
                 # diff rather than an unexplained metric shift.
                 "blink_phases": dict(scene_json.meta.blink_phases),
+                # The stepped-timing policy the tweens were compiled under
+                # (an#89); None = smooth. Recorded so a stepped render is a
+                # visible provenance fact, not a mystery in the motion.
+                "step_hz": scene_json.meta.step_hz,
             },
         )
+
+
+def effective_step_hz(shot: Shot, ctx: RenderContext) -> float | None:
+    """The stepped-timing policy a shot renders under (an#89): the shot's own
+    ``step_hz`` when it declares one, else the scene's (``ctx.step_hz``), else
+    ``None`` — smooth. The compiler stamps whatever this returns.
+
+    >>> from pathlib import Path
+    >>> ctx = RenderContext(mall={}, work_dir=Path("."), step_hz=15.0)
+    >>> effective_step_hz(Shot(id="s"), ctx)
+    15.0
+    >>> effective_step_hz(Shot(id="s", step_hz=10.0), ctx)
+    10.0
+    >>> effective_step_hz(Shot(id="s"), RenderContext(mall={}, work_dir=Path("."))) is None
+    True
+    """
+    return shot.step_hz if shot.step_hz is not None else ctx.step_hz
 
 
 # -----------------------------------------------------------------------------

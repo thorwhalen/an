@@ -177,7 +177,12 @@ def _compile_scene_to(
     height = scene.meta.resolution.height or DEFAULT_RESOLUTION[1]
 
     scene_json = compile_shot(
-        shot, mall=project.mall, fps=fps, width=width, height=height
+        shot,
+        mall=project.mall,
+        fps=fps,
+        width=width,
+        height=height,
+        step_hz=shot.step_hz if shot.step_hz is not None else scene.meta.step_hz,
     )
     _stage_scene_assets(scene_json, project.mall, runtime_target)
 

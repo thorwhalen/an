@@ -73,6 +73,7 @@ def render(
     strict_assets: bool = False,
     supersample: int = 1,
     pix_fmt: str = "",
+    step_hz: float = 0.0,
 ) -> str:
     """Render the project at ``project_dir`` to a single mp4.
 
@@ -95,6 +96,11 @@ def render(
         only reaches 10.15. It is opt-in for a PRODUCT reason and not an encoder
         one: High 4:4:4 Predictive is refused by many hardware decoders,
         browsers and platforms, so a 4:4:4 file is one some viewers cannot play
+    step_hz: stepped timing for authored tweens — pose updates per second, on a
+        scene-wide grid (15 at 30 fps is "on twos", 10 "on threes"). 0 (the
+        default) uses the scene's own `meta.step_hz`, which is unset (smooth)
+        unless the author declared one. The camera, blinks, `play` clips and
+        swap channels are never stepped by this
     """
     parallel_arg: int | str | None
     if not parallel:
@@ -115,6 +121,7 @@ def render(
         strict_assets=strict_assets,
         supersample=supersample,
         pix_fmt=pix_fmt or None,
+        step_hz=step_hz or None,
     )
     return f"rendered: {output_path}"
 

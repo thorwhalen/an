@@ -735,6 +735,15 @@ def run_bench(
                     )
                     for s in capture.shots
                 },
+                # Additive (an#89): the stepped-timing policy each shot's tweens
+                # were compiled under; None = smooth. A lever that steps the
+                # corpus moves `scene_contract_sha256` by construction (the
+                # resampled keyframes ARE the contract), and this is the
+                # positive fingerprint that says the movement was the lever's.
+                "step_hz": {
+                    s.shot_id: (s.scene_json.get("meta") or {}).get("step_hz")
+                    for s in capture.shots
+                },
                 "n_drawable_entities": sum(
                     contract.count_drawable_entities(s.scene_json)
                     for s in capture.shots
