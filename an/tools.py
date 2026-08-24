@@ -97,7 +97,7 @@ def render(
         one: High 4:4:4 Predictive is refused by many hardware decoders,
         browsers and platforms, so a 4:4:4 file is one some viewers cannot play
     step_hz: stepped timing for authored tweens — pose updates per second, on a
-        scene-wide grid (15 at 30 fps is "on twos", 10 "on threes"). 0 (the
+        shot-wide grid (15 at 30 fps is "on twos", 10 "on threes"). 0 (the
         default) uses the scene's own `meta.step_hz`, which is unset (smooth)
         unless the author declared one. The camera, blinks, `play` clips and
         swap channels are never stepped by this

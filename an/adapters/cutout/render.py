@@ -42,7 +42,7 @@ from an.determinism import capture_violations, determinism_enforced
 from an.adapters.cutout.compile import compile_shot
 from an.adapters.cutout.runtime_files import runtime_dir
 from an.adapters.cutout.serialize import to_dict
-from an.ir.schema import Shot
+from an.ir.schema import Shot, resolve_step_hz
 
 
 # Tunables — exposed as module constants per the no-magic-numbers rule.
@@ -451,7 +451,7 @@ def effective_step_hz(shot: Shot, ctx: RenderContext) -> float | None:
     >>> effective_step_hz(Shot(id="s"), RenderContext(mall={}, work_dir=Path("."))) is None
     True
     """
-    return shot.step_hz if shot.step_hz is not None else ctx.step_hz
+    return resolve_step_hz(shot, ctx.step_hz)
 
 
 # -----------------------------------------------------------------------------

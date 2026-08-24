@@ -97,8 +97,8 @@ def test_unset_step_hz_is_absent_from_scene_md_and_reads_back_as_none():
     assert back.meta.step_hz is None and back.timeline[0].step_hz is None
 
 
-@pytest.mark.parametrize("bad", [0.0, -5.0, 31.0, 1e9])
-def test_validate_refuses_a_rate_outside_zero_to_fps(bad):
+@pytest.mark.parametrize("bad", [31.0, 1e9])
+def test_validate_refuses_a_rate_above_fps(bad):
     scene = SceneIR(meta=Meta(title="t", duration=2.0, fps=30, step_hz=bad), timeline=[_shot()])
     report = validate_semantic(scene)
     assert not report.passed
@@ -106,6 +106,60 @@ def test_validate_refuses_a_rate_outside_zero_to_fps(bad):
     per_shot = SceneIR(meta=Meta(title="t", duration=2.0, fps=30), timeline=[_shot(step_hz=bad)])
     report = validate_semantic(per_shot)
     assert any(f.ir_path == "timeline/0/step_hz" for f in report.findings if f.severity == "error")
+
+
+@pytest.mark.parametrize("bad", [0.0, -5.0])
+def test_the_schema_refuses_a_non_positive_rate(bad):
+    """`Field(gt=0)`: a scene declaring `step_hz: -5` fails at LOAD, before any
+    path that skips validate can reach the compiler."""
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        Meta(title="t", step_hz=bad)
+    with pytest.raises(ValidationError):
+        Shot(id="s", step_hz=bad)
+
+
+@pytest.mark.parametrize("bad", [0.0, -5.0, 31.0, float("nan"), float("inf")])
+def test_the_compiler_refuses_the_same_range_because_a_render_never_validates(bad):
+    """`an render --step-hz -5` bypasses both the schema (the value never
+    touches the scene) and validate (a render does not run it). Before this
+    guard, a non-positive rate spun `step_times` forever — a hang in a worker
+    thread, not an error (an#89 review)."""
+    from an.adapters.cutout.compile import CutoutCompileError
+
+    shot = _shot([tween("c", "x", to=1.0, duration=1.0)])
+    with pytest.raises(CutoutCompileError, match="step_hz"):
+        compile_shot(shot, mall={"characters": {}}, fps=30, step_hz=bad)
+    with pytest.raises(ValueError):
+        step_times(0.0, 1.0, bad if bad <= 0 else -1.0)
+
+
+def test_the_compiler_checks_against_the_fps_it_compiles_with():
+    """Validate compares with `meta.fps`, but `render_project(fps=12)` compiles
+    with 12: a 15 Hz grid the scene called fine is finer than those frames."""
+    from an.adapters.cutout.compile import CutoutCompileError
+
+    shot = _shot([tween("c", "x", to=1.0, duration=1.0)])
+    assert len(_tween_channel(_compile(shot, fps=30, step_hz=15.0)).keyframes) == 16
+    with pytest.raises(CutoutCompileError, match="step_hz"):
+        compile_shot(shot, mall={"characters": {}}, fps=12, step_hz=15.0)
+
+
+def test_a_non_positive_fps_is_reported_once_not_as_a_step_hz_riddle():
+    scene = SceneIR(meta=Meta(title="t", duration=1.0, fps=0, step_hz=15.0), timeline=[_shot(step_hz=15.0)])
+    paths = [f.ir_path for f in validate_semantic(scene).findings if f.severity == "error"]
+    assert "meta/fps" in paths and not any(p.endswith("step_hz") for p in paths)
+
+
+@pytest.mark.parametrize("prop", sorted(__import__("an.adapters.cutout.compile", fromlist=["_PROPERTY_REST_VALUES"])._PROPERTY_REST_VALUES))
+def test_every_transform_property_is_stepped_not_just_x(prop):
+    """A mutant exempting `alpha` from stepping survived a suite that only ever
+    stepped `x` (an#89 review)."""
+    shot = _shot([tween("c", prop, to=0.5, duration=1.0)])
+    kfs = _tween_channel(_compile(shot, step_hz=10.0)).keyframes
+    assert len(kfs) == 11 and all(k.easing == "step" for k in kfs)
+    assert all(isinstance(k.value, float) for k in kfs)
 
 
 @pytest.mark.parametrize("good", [None, 30.0, 15.0, 10.0, 0.5])
@@ -117,9 +171,10 @@ def test_validate_accepts_none_and_rates_up_to_fps(good):
 # --------------------------------------------------------------- the grid
 
 
-def test_step_times_are_a_scene_wide_grid_not_the_tweens_own():
+def test_step_times_are_a_shot_wide_grid_not_the_tweens_own():
     """A tween starting at 0.05 s under a 10 Hz grid updates at 0.1, 0.2 ... on
-    the SHOT's clock (local 0.05, 0.15 ...), plus its own start and end."""
+    the SHOT's clock (local 0.05, 0.15 ...), plus its own start and end. Shots
+    compile independently, so the grid is per shot and restarts at a cut."""
     assert step_times(0.0, 0.3, 10) == [0.0, 0.1, 0.2, 0.3]
     assert [round(t, 6) for t in step_times(0.05, 0.3, 10)] == [0.0, 0.05, 0.15, 0.25, 0.3]
     # Aligned start: the grid point AT the start is the start, not a duplicate.
@@ -139,7 +194,14 @@ def test_off_leaves_the_compiled_document_and_its_contract_hash_untouched():
     assert "step_hz" not in doc["meta"]
     assert from_dict(doc).meta.step_hz is None
     assert len(_tween_channel(from_dict(doc)).keyframes) == 2
-    assert scene_contract_sha256(doc) == scene_contract_sha256(to_dict(_compile(shot, step_hz=None)))
+    # The document carries no trace of the knob, so its contract hash is the
+    # pre-#89 one. (An earlier draft compared the hash against itself —
+    # `step_hz=None` IS the default — which asserted nothing; the key-absence
+    # check above is what goes red when the wrap serializer is removed, and
+    # the six committed ledger rows' hashes were verified equal at landing.)
+    assert scene_contract_sha256(doc) == scene_contract_sha256(
+        {**doc, "meta": {k: v for k, v in doc["meta"].items() if k != "step_hz"}}
+    )
 
 
 def test_on_resamples_each_tween_onto_step_eased_keyframes_of_the_smooth_curve():
@@ -161,7 +223,7 @@ def test_on_resamples_each_tween_onto_step_eased_keyframes_of_the_smooth_curve()
     assert 0.0 < kfs[7].value < 100.0
 
 
-def test_a_delayed_tween_snaps_to_the_scene_grid():
+def test_a_delayed_tween_snaps_to_the_shot_grid():
     """`sequence(delay(0.05), tween)` under 10 Hz: updates at shot times 0.1,
     0.2 ... — clip-local 0.05, 0.15 ... — because "on twos" is a property of
     the frames, not of each tween's private clock."""
@@ -193,10 +255,13 @@ def test_swap_tweens_blinks_and_plays_are_not_resampled(tmp_path):
 
     shutil.copytree(FIXTURES / "gale", tmp_path / "gale")
     store = CharactersStore(tmp_path)
+    # 6 s, not 3: gale's first compiled blink lands at ~3.4 s, so a 3 s shot
+    # emits NO blink clip and the exemption below was vacuous for blinks
+    # (an#89 review). The presence assertion keeps it from going vacuous again.
     shot = Shot(
         id="s",
         style="cutout",
-        duration=3.0,
+        duration=6.0,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
         actions=[
             tween("gale/left_hand", "hands", to="palm", duration=1.0, from_="fist"),
@@ -205,6 +270,8 @@ def test_swap_tweens_blinks_and_plays_are_not_resampled(tmp_path):
     )
     on = compile_shot(shot, mall={"characters": store}, step_hz=10.0, fps=24)
     off = compile_shot(shot, mall={"characters": store}, fps=24)
+    kinds = {aid.split("__")[1] for aid in on.animations}
+    assert {"blink", "play", "tween"} <= kinds, kinds
     for aid in on.animations:
         if aid.startswith("__tween__"):
             assert len(on.animations[aid].channels[0].keyframes) == 2  # swap: untouched
@@ -224,6 +291,11 @@ def test_a_tween_shorter_than_one_step_is_a_single_step_to_its_end():
 def test_the_shot_overrides_the_scene_and_the_scene_the_default():
     from an.adapters._base import RenderContext
     from an.adapters.cutout.render import effective_step_hz
+    from an.ir.schema import resolve_step_hz
+
+    # One rule, stated once in the IR layer; the renderer and preview call it.
+    assert resolve_step_hz(Shot(id="s", step_hz=10.0), 15.0) == 10.0
+    assert resolve_step_hz(Shot(id="s"), 15.0) == 15.0
 
     ctx = RenderContext(mall={}, work_dir=Path("."), step_hz=15.0)
     assert effective_step_hz(Shot(id="s"), ctx) == 15.0
@@ -280,11 +352,20 @@ def test_the_cli_maps_zero_to_the_scene_declaration(monkeypatch):
 
 def test_the_bench_row_records_the_policy_per_shot():
     """Additive scene provenance, like `blink_phases`: the compiled meta's
-    `step_hz` (None when smooth) per shot, so a stepped row says so."""
-    from an.bench import run as run_mod
+    `step_hz` (None when smooth) per shot, so a stepped row says so. Asserted
+    on the function the row is built from, with stand-in captures — an earlier
+    draft grepped `run.py`'s source text, which a renamed key passed."""
+    from types import SimpleNamespace as NS
 
-    src = Path(run_mod.__file__).read_text(encoding="utf-8")
-    assert '"step_hz": {' in src and '.get("step_hz")' in src
+    from an.bench.run import shot_policy_provenance
+
+    stepped = _compile(_shot([tween("c", "x", to=1.0, duration=1.0)]), step_hz=12.0)
+    smooth = _compile(_shot([tween("c", "x", to=1.0, duration=1.0)]))
+    prov = shot_policy_provenance(
+        [NS(shot_id="a", scene_json=to_dict(stepped)), NS(shot_id="b", scene_json=to_dict(smooth))]
+    )
+    assert prov["step_hz"] == {"a": 12.0, "b": None}
+    assert set(prov["blink_phases"]) == {"a", "b"}
 
 
 def test_twos_and_threes_are_what_the_docs_say_they_are():

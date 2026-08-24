@@ -608,6 +608,35 @@ def naming_git_state(git: dict, *, blessed: bool, root: Path) -> dict:
     return git_state(root) if blessed else git
 
 
+def shot_policy_provenance(shots) -> dict[str, dict[str, Any]]:
+    """The per-shot COMPILE POLICIES a scene rendered under, keyed by shot id.
+
+    Additive scene-provenance facts read off each staged ``scene_json``'s
+    ``meta``; ``shots`` is any iterable of objects with ``shot_id`` and
+    ``scene_json`` (a :class:`~an.bench.capture.ShotCapture`, or a stand-in).
+
+    - ``blink_phases`` (an#88): the per-entity blink phase each shot was
+      compiled with. A renamed corpus character re-phases every blink and
+      moves every pixel metric; this makes that a visible diff in the row
+      instead of an unexplained shift.
+    - ``step_hz`` (an#89): the stepped-timing policy each shot's tweens were
+      compiled under; ``None`` = smooth (the meta key is absent then, by the
+      serializer). Stepping moves ``scene_contract_sha256`` by construction —
+      the resampled keyframes ARE the contract — and this says the movement
+      was a timing policy, not a mystery.
+
+    >>> from types import SimpleNamespace as NS
+    >>> shot_policy_provenance([NS(shot_id="s1", scene_json={"meta": {"step_hz": 12.0, "blink_phases": {"a": 0.5}}}),
+    ...                         NS(shot_id="s2", scene_json={"meta": {}})])
+    {'blink_phases': {'s1': {'a': 0.5}, 's2': {}}, 'step_hz': {'s1': 12.0, 's2': None}}
+    """
+    metas = {s.shot_id: (s.scene_json.get("meta") or {}) for s in shots}
+    return {
+        "blink_phases": {sid: dict(m.get("blink_phases") or {}) for sid, m in metas.items()},
+        "step_hz": {sid: m.get("step_hz") for sid, m in metas.items()},
+    }
+
+
 def run_bench(
     *,
     scenes: dict[str, Fixture] | None = None,
@@ -725,25 +754,7 @@ def run_bench(
                     s.shot_id: contract.scene_contract_sha256(s.scene_json)
                     for s in capture.shots
                 },
-                # Additive (an#88): the per-entity blink phase each shot was
-                # compiled with. A renamed corpus character re-phases every
-                # blink and moves every pixel metric; this makes that a
-                # visible diff in the row instead of an unexplained shift.
-                "blink_phases": {
-                    s.shot_id: dict(
-                        (s.scene_json.get("meta") or {}).get("blink_phases") or {}
-                    )
-                    for s in capture.shots
-                },
-                # Additive (an#89): the stepped-timing policy each shot's tweens
-                # were compiled under; None = smooth. A lever that steps the
-                # corpus moves `scene_contract_sha256` by construction (the
-                # resampled keyframes ARE the contract), and this is the
-                # positive fingerprint that says the movement was the lever's.
-                "step_hz": {
-                    s.shot_id: (s.scene_json.get("meta") or {}).get("step_hz")
-                    for s in capture.shots
-                },
+                **shot_policy_provenance(capture.shots),
                 "n_drawable_entities": sum(
                     contract.count_drawable_entities(s.scene_json)
                     for s in capture.shots

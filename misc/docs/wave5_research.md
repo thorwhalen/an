@@ -520,22 +520,34 @@ Docs caveat to carry: a stepped character under a **translating** camera slides/
 in screen space (Sony built tooling around exactly this); an's camera is scale-only
 today — the raise site at `_add_camera_clips` already documents that limit.
 
-**Landed in the PR-E branch (2026-08-24), with two corrections to the design above.**
-(1) The grid is *scene-wide* (multiples of `1/step_hz` on the shot's clock), not
+**Landed in #95 (2026-08-24), with three corrections to the design above.**
+(1) The grid is *shot-wide* (multiples of `1/step_hz` on the shot's clock, shared by every
+tween in the shot; it restarts at a cut because shots compile independently), not
 per-tween: "on twos" is a property of the frames, so a tween starting off-grid updates at
-the next grid point. (2) **The bench lever did not ship, on measurement, and the design's
-"so the ledger + a human can judge the default flip" was wrong about the ledger.** A
-render-side lever can count at most families A+B+F (C/D/E/G are gated whenever the
-reference frames move); forced `step_hz=15` over the corpus leaves the two tween-less
-scenes byte-identical and moves every family on the other four with the *content* — pose
-changed, so the references changed — in both directions (A: +1.0/-1.4/-7.0/0.0%;
-F: -1.1/-4.4/+0.1/-2.5%; C/D/E/G swing up to +148%). No counting family has a direction;
-the instrument is per-frame and cannot see a temporal choice. Same shape as `pix_fmt`
-(an#72): product knob shipped, no registered mutation, the numbers recorded in the
-`an-dev-bench` skill. The human instrument is the `stepped-timing` demo; the default flip
-is a human's call alone. Also: `meta.step_hz` is serialized only when set, so no bless
-record or ledger row was invalidated — the "additive, bench-readable" stamp above would
-have moved every contract hash as a `null`.
+the next grid point. The mechanism is sample-and-hold of the eased curve at grid instants
+— not the hold → fast-transition retiming of an animator's twos; that is the "naive
+quantisation" mode epic #9 Decision 5 flags, and it is what v1 ships, disclosed.
+(2) **The bench lever did not ship, and the design's "so the ledger + a human can judge
+the default flip" was wrong about the ledger — twice over.** Structurally: stepping moves
+`scene_contract_sha256` on every scene with a tween (the resampled keyframes are the
+contract), and that hash is a scene comparability key, so `bench-compare` refuses a stepped
+row before any family is examined — one step earlier than `pix_fmt` (an#72), which stayed
+comparable and failed its exam. By measurement (outside the comparer, `step_hz=12` — "on
+twos" at the corpus's 24 fps; a first pass at 15 Hz was a 1.6-frame grid and is
+superseded): the two tween-less scenes are identical to the pixel (`source_pixels_sha256`
+unchanged); on the other four every golden frame is byte-identical (goldens sit on even
+frames, which are grid points, where the stepped pose IS the smooth one), family A has no
+direction (+0.02/−5.2/−3.4/−0.0%), family F moves one way (`video_stream_bytes`
+−5.2/−5.4/−6.2/−5.9% — one counting family, not three), and C/D/E/G move with the content
+both ways (`encode_ringing_excess` +158%/−22%). The instrument is per-frame and cannot see
+a temporal choice; what it can say is that per-frame quality is untouched and the encode
+5–6% cheaper. Product knob shipped, no registered mutation, numbers in the `an-dev-bench`
+skill; the human instrument is the `stepped-timing` demo, its frame strip committed at
+`misc/docs/step_hz_side_by_side.png`; the flip is the maintainer's call on that alone.
+(3) `meta.step_hz` is serialized only when set, so no bless record or ledger row was
+invalidated — the "additive, bench-readable" stamp above would have moved every contract
+hash as a `null`. And the range is guarded in the compiler too, not only in validate: a
+render never runs validate, and a non-positive rate spun the grid walk forever.
 
 ---
 
@@ -623,7 +635,7 @@ re-blesses exactly two.
   re-bless of the two blink goldens (three-row protocol), golden_note fix.
 - **PR-D — PlayAction resolution (an#7).** §9 exactly; closes #7.
 - **PR-E — step_hz opt-in + lever + ledger evidence.** §10; the default flip is NOT
-  here — separate one-line PR gated on ledger + human side-by-side agreeing.
+  here — separate one-line PR gated on ledger + human side-by-side agreeing. **As landed (#95): no lever — see the §10 addendum; the ledger half of the flip gate is withdrawn on measurement.**
 
 The done-when amendments, recorded: the "golden frames unchanged" clause takes a
 deliberate exception for the two blink goldens (PR-C, §6); the "missing swap file fails

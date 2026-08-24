@@ -316,8 +316,10 @@ def _check_step_hz(
     step_hz: float | None, *, fps: int, path: str, report: "ValidationReport"
 ) -> None:
     """``0 < step_hz <= fps`` (an#89): a pose grid finer than the frame rate
-    cannot be shown, and zero or negative is not a rate."""
-    if step_hz is None:
+    cannot be shown, and zero or negative is not a rate. The schema already
+    refuses ``<= 0`` (``Field(gt=0)``) and the compiler re-checks the whole
+    range, because a render never runs validate."""
+    if step_hz is None or fps <= 0:  # fps <= 0 is already its own error
         return
     if not (0 < step_hz <= fps):
         report.add(

@@ -12,7 +12,8 @@ Strategy:
    `tween`/`set`/`play`/composition produces leaf `FlatAction`s with
    absolute times.
 3. **Compile each FlatAction to PlacedClipJSON entries** on the appropriate
-   track. Tween → a 2-keyframe AnimationClipJSON + a PlacedClipJSON. Set →
+   track. Tween → a 2-keyframe AnimationClipJSON + a PlacedClipJSON (or, under
+   ``step_hz``, a grid of step-eased keyframes — an#89). Set →
    a step channel that HOLDS until the next action on the same
    target/property. Play → a per-instance clip (``__play__{n}``) resolved
    from the target's descriptor animation (an#7).
@@ -537,12 +538,18 @@ def compile_shot(
 ) -> CutoutSceneJSON:
     """Compile a single cutout-style `Shot` to its JS-runtime JSON form.
 
-    ``step_hz`` (an#89) resamples every authored **tween** onto a scene-wide
-    pose grid of that many updates per second, each keyframe step-eased, so
-    the character holds each pose for the frames between grid points — "on
-    twos" at half the frame rate, "on threes" at a third. ``None`` (default)
-    leaves tweens smooth and the compiled document byte-identical to before
-    the knob existed. Exempt by construction, because they are separate
+    ``step_hz`` (an#89) resamples every authored **tween** onto a SHOT-wide
+    pose grid of that many updates per second (multiples of ``1/step_hz`` on
+    this shot's clock, shared by every tween in the shot; the grid restarts at
+    a cut), each keyframe step-eased, so the character holds each pose for the
+    frames between grid points — "on twos" at half the frame rate, "on threes"
+    at a third. It is sample-and-hold of the eased curve at the grid instants,
+    not a retiming into holds and fast transitions. ``None`` (default) leaves
+    tweens smooth and the compiled document byte-identical to before the knob
+    existed; anything else must satisfy ``0 < step_hz <= fps`` — checked HERE
+    as well as by ``an validate``, because a render never runs validate and a
+    non-positive rate used to spin ``step_times`` forever (an#89 review).
+    Exempt by construction, because they are separate
     emission sites rather than string-sniffed: the camera (`_add_camera_clips`
     — a stepped character under a translating camera slides in screen space,
     which is why the practice keeps cameras on ones), compiled blinks, `play`
@@ -560,6 +567,11 @@ def compile_shot(
     """
     if shot.style != "cutout":
         raise ValueError(f"compile_shot expects style='cutout'; got {shot.style!r}")
+    if step_hz is not None and not (math.isfinite(step_hz) and 0 < step_hz <= fps):
+        raise CutoutCompileError(
+            f"step_hz must satisfy 0 < step_hz <= fps ({fps}); got {step_hz!r}. "
+            f"At {fps} fps, {fps / 2:g} is 'on twos' and {fps / 3:g} 'on threes'."
+        )
     mall = mall or {}
 
     textures: dict[str, AssetJSON] = {}
@@ -1619,6 +1631,10 @@ def _build_anim_for(
             KeyframeJSON(time=0.0, value=from_value, easing=easing),
             KeyframeJSON(time=action.duration, value=action.to_value),
         ]
+        # The CONTRACT is this guard: swap properties are never stepped here
+        # (they are stepped by format). `_stepped_keyframes`' own non-numeric
+        # early return is the defence behind it, so the two are redundant by
+        # design — drop this one and the swap test still passes (an#89 review).
         if step_hz is not None and action.property not in swap_properties:
             keyframes = _stepped_keyframes(
                 keyframes, start=flat.start, duration=action.duration, step_hz=step_hz
@@ -1640,12 +1656,16 @@ def _build_anim_for(
 def step_times(start: float, duration: float, step_hz: float) -> list[float]:
     """Clip-local times at which a stepped tween updates its pose (an#89).
 
-    The grid is SCENE-wide — multiples of ``1/step_hz`` on the shot's clock —
-    not the tween's own: "on twos" means every character changes pose on the
-    same frames, so a tween starting at 0.033 s updates at the next grid point,
-    not 0.033 s later. Local 0 (the tween's start) and ``duration`` (where the
-    end value lands) are always present, so a tween shorter than one step is a
-    single step to its end value.
+    The grid is SHOT-wide — multiples of ``1/step_hz`` on the shot's clock,
+    shared by every tween in the shot — not the tween's own: "on twos" means
+    every character changes pose on the same frames, so a tween starting at
+    0.033 s updates at the next grid point, not 0.033 s later. (Shots compile
+    independently, so the grid restarts at each cut.) Local 0 (the tween's
+    start) and ``duration`` (where the end value lands) are always present, so
+    a tween shorter than one step is a single step to its end value.
+
+    ``step_hz`` must be positive: with a non-positive rate the walk below never
+    reaches ``duration`` — an infinite loop, not an error — so it is refused.
 
     >>> step_times(0.0, 0.3, 10)
     [0.0, 0.1, 0.2, 0.3]
@@ -1654,6 +1674,8 @@ def step_times(start: float, duration: float, step_hz: float) -> list[float]:
     >>> step_times(0.0, 0.02, 10)
     [0.0, 0.02]
     """
+    if not step_hz > 0:
+        raise ValueError(f"step_hz must be positive; got {step_hz!r}")
     eps = 1e-9
     j = math.ceil(start * step_hz - eps)
     times = [0.0]
@@ -1696,7 +1718,7 @@ def _stepped_keyframes(
         ],
     )
     return [
-        KeyframeJSON(time=t, value=evaluate(channel, t), easing="step")
+        KeyframeJSON(time=t, value=float(evaluate(channel, t)), easing="step")
         for t in step_times(start, duration, step_hz)
     ]
 

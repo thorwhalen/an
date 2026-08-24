@@ -67,6 +67,13 @@ class RenderContext:
     #: Scene-level stepped-timing policy for authored tweens (an#89); a shot's
     #: own ``step_hz`` overrides it. ``None`` = smooth. Reaches the compiled
     #: document's ``meta.step_hz`` (only when set) and per-shot provenance.
+    #:
+    #: The one deliberate exception to the rule two fields up ("a field on the
+    #: compiled scene document moves `scene_contract_sha256`"): unlike
+    #: `supersample`, this knob CHANGES the compiled document — the resampled
+    #: keyframes are the contract — so the hash moves whenever it is set no
+    #: matter where the knob lives, and a document that carries its own timing
+    #: policy is the honest one. Omit-when-unset keeps the unset case free.
     step_hz: float | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 

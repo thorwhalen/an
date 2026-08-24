@@ -560,7 +560,7 @@ DEMOS: tuple[Demo, ...] = (
         ),
         how=(
             "`step_hz: 6` in `yaml meta` (or per shot in `yaml shot`), or "
-            "`an render <dir> --step-hz 6`. Tweens are resampled onto a scene-wide "
+            "`an render <dir> --step-hz 6`. Tweens are resampled onto a shot-wide "
             "pose grid of step-eased keyframes; blinks, `play` clips, swap "
             "channels and the camera are never stepped (an#89)."
         ),
