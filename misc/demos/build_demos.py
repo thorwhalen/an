@@ -179,17 +179,19 @@ def _build_lipsync(work: Path) -> Path:
     return _render(_project(work, scene_md=md, characters=("maya",)))
 
 
-#: The emotions the demo grid shows, in reading order. `_EMOTION_BROWS` knows
-#: eight; these four are the ones whose brow deltas are furthest apart.
+#: The emotions the demo grid shows, in reading order — four of the ten
+#: presets in `an.expression.presets`, the ones whose faces are furthest apart.
 GRID_EMOTIONS: tuple[str, ...] = ("neutral", "happy", "angry", "surprised")
 
 #: Head-and-shoulders, as an ffmpeg `crop` expression applied to one pane. The
 #: rig places the character centred, head in the upper half, so this is a
 #: property of the rig rather than of any one scene.
 PANE_CROP: str = "in_w/3:in_h/2:in_w/3:0"
+#: Tighter: the head alone, for the face demos where a brow move is the subject.
+FACE_CROP: str = "in_w/4:in_h/3:3*in_w/8:0"
 
 
-def _tile_2x2(clips: list[Path], out: Path) -> Path:
+def _tile_2x2(clips: list[Path], out: Path, *, crop: str = PANE_CROP) -> Path:
     """Play four equal-sized clips at once, in a 2x2 grid.
 
     Side by side rather than one after another, because a brow tilt of 0.15 rad
@@ -204,7 +206,7 @@ def _tile_2x2(clips: list[Path], out: Path) -> Path:
         inputs += ["-i", str(clip)]
     # Crop EACH pane before stacking, not the grid afterwards: one crop over a
     # 2x2 grid straddles the seam between panes.
-    crops = "".join(f"[{i}:v]crop={PANE_CROP}[p{i}];" for i in range(len(clips)))
+    crops = "".join(f"[{i}:v]crop={crop}[p{i}];" for i in range(len(clips)))
     panes = "".join(f"[p{i}]" for i in range(len(clips)))
     subprocess.run(
         [
@@ -226,22 +228,60 @@ def _tile_2x2(clips: list[Path], out: Path) -> Path:
     return out
 
 
-def _build_emotion(work: Path) -> Path:
-    """Four one-shot renders of the same line, played simultaneously."""
-    line = "I did not expect that."
+def _expression_grid(work: Path, presets: tuple[str, ...], *, line: str | None) -> Path:
+    """Four one-shot renders, one preset each, played simultaneously — silent
+    (the expression alone) or all saying `line` (the mouth form under it)."""
     clips: list[Path] = []
-    for emo in GRID_EMOTIONS:
+    for preset in presets:
         md = (
-            _meta(f"emotion: {emo}", 2.0)
+            _meta(f"expression: {preset}", 2.0)
             + "\n"
             + _shot("s1", 2.0)
             + "\n"
             + _entities("charlie")
-            + f"\n```dialogue\ncharlie [{emo}]: {line}\n```\n"
+            + f"\n```yaml actions\n- kind: expression\n  target: charlie\n  preset: {preset}\n  blend: 0.25\n```\n"
+            + (f"\n```dialogue\ncharlie: {line}\n```\n" if line else "")
         )
-        pane = work / emo
+        pane = work / preset
         clips.append(_render(_project(pane, scene_md=md, characters=("charlie",))))
-    return _tile_2x2(clips, work / "grid.mp4")
+    return _tile_2x2(clips, work / "grid.mp4", crop=FACE_CROP)
+
+
+def _build_expressions(work: Path) -> Path:
+    return _expression_grid(work, GRID_EMOTIONS, line=None)
+
+
+def _build_expressions_more(work: Path) -> Path:
+    return _expression_grid(work, ("sad", "afraid", "thinking", "skeptical"), line=None)
+
+
+def _build_emotion_visemes(work: Path) -> Path:
+    """The same line twice, side by side: the neutral mouth set on the left,
+    the `viseme@happy` variant the `happy` preset selects on the right."""
+    line = "Every shape you see is the same shape, drawn twice."
+    clips: list[Path] = []
+    for preset in ("neutral", "happy"):
+        md = (
+            _meta(f"mouth form: {preset}", 3.0)
+            + "\n"
+            + _shot("s1", 3.0)
+            + "\n"
+            + _entities("maya")
+            + f"\n```yaml actions\n- kind: expression\n  target: maya\n  preset: {preset}\n  blend: 0.0\n```\n"
+            + f"\n```dialogue\nmaya: {line}\n```\n"
+        )
+        clips.append(_render(_project(work / preset, scene_md=md, characters=("maya",))))
+    out = work / "side_by_side.mp4"
+    subprocess.run(
+        [
+            "ffmpeg", "-v", "error", "-y", "-i", str(clips[0]), "-i", str(clips[1]),
+            "-filter_complex",
+            f"[0:v]crop={FACE_CROP}[a];[1:v]crop={FACE_CROP}[b];[a][b]hstack=inputs=2",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out),
+        ],
+        check=True,
+    )
+    return out
 
 
 def _build_camera(work: Path) -> Path:
@@ -540,28 +580,70 @@ DEMOS: tuple[Demo, ...] = (
         build=_build_lipsync,
     ),
     Demo(
-        slug="emotion",
-        title="One line, four emotions",
+        slug="expressions",
+        title="Four expressions, one silent character",
         shows=(
-            "The same sentence read four ways. Emotion is a field on the dialogue "
-            "line, not a separate animation — and it is honestly narrow today: it "
-            "moves the eyebrows, for the duration of the line, and nothing else. "
-            "A silent character has no expression at all. Wave 6 of #9 is where that "
-            "becomes a parameter vocabulary.\n\n"
-            "Panes, reading order: **neutral · happy** on top, **angry · surprised** "
-            "below. They play at once because a brow tilt of 0.15 rad is a few "
-            "pixels — sequentially you would have to hold the previous face in your "
-            "head."
+            "A character holding an expression with nothing to say. Panes, reading "
+            "order: **neutral · happy** on top, **angry · surprised** below. What "
+            "moves is the face solver's output: brow height and angle (the two sides "
+            "rotate in opposite screen directions for one axis sign), the eyelid key "
+            "off one threshold ladder, and the mouth's resting form — `happy` selects "
+            "the character's `viseme@happy` set, so its closed mouth is a different "
+            "drawing. The blend ramps in over 0.25 s. They play at once because a brow "
+            "move is a few pixels; sequentially you would have to hold the previous "
+            "face in your head."
         ),
         how=(
-            "`charlie [happy]: …` in the dialogue block → `_EMOTION_BROWS` in "
-            "`an/adapters/cutout/compile.py`. Four separate renders, cropped to the "
-            "face and tiled — **no labels are burned in**, because `drawtext` needs a "
-            "freetype-enabled ffmpeg and this script must run on whichever one you "
-            "have. `an` could not label the clip itself either: there is no text "
-            "visual kind until Wave 8 of #9."
+            "`- kind: expression / target: charlie / preset: angry` in the shot's "
+            "`yaml actions` (or `an.ir.expression('charlie', 'angry')`). Presets live in "
+            "`an/expression/presets.py`; the solver is `_add_face_clips` in "
+            "`an/adapters/cutout/compile.py`, one channel per (node, property). Four "
+            "separate renders, cropped to the face and tiled — no labels are burned in."
         ),
-        build=_build_emotion,
+        build=_build_expressions,
+    ),
+    Demo(
+        slug="expressions-more",
+        title="Four more: sad, afraid, thinking, skeptical",
+        shows=(
+            "The other half of the vocabulary that a cutout face can carry. Panes, "
+            "reading order: **sad · afraid** on top, **thinking · skeptical** below. "
+            "`thinking` and `skeptical` are asymmetric — one brow up, the other "
+            "not — and prefer no mouth form, so they keep the neutral mouth; `sad` "
+            "selects `viseme@sad`. The two presets not shown anywhere, `disgusted` and "
+            "`amused`, differ from their neighbours mainly by a mouth form the silent "
+            "rest barely shows — a limit of the medium, said here rather than hidden. "
+            "`afraid` prefers a `viseme@afraid` set no default character draws, so its "
+            "mouth here is the neutral one (a speaking line would say so in a warning)."
+        ),
+        how=(
+            "Same as above with the other preset names; `axes: {brow_height_l: 0.5}` "
+            "layers a per-axis override on any preset, `intensity: 0.5` scales the "
+            "whole thing. `an validate` refuses an unknown preset or axis by name."
+        ),
+        build=_build_expressions_more,
+    ),
+    Demo(
+        slug="emotion-visemes",
+        title="The same line under two mouth forms",
+        shows=(
+            "One line spoken twice, side by side, cropped to the face: the neutral "
+            "mouth set on the left, the `viseme@happy` variant on the right, selected "
+            "for the whole line by the `happy` expression the character holds. Every "
+            "viseme keyframe is identical in both panes — same times, same keys — "
+            "and only which SET the key indexes differs at the mouth; the brows and "
+            "lids carry the preset too, as in every expression. A character without the variant "
+            "falls back to the neutral set with a warning naming what was missing; "
+            "`an character new` draws `happy` and `sad` variants by default and "
+            "`an character mouths --variants angry` adds more."
+        ),
+        how=(
+            "`- kind: expression / target: maya / preset: happy` over a shot with a "
+            "dialogue line → `resolve_mouth_set` in `an/expression/binding.py` picks "
+            "`viseme@happy`, and `_add_viseme_clips` emits the line's channel on that "
+            "property. The brows and lids move too; watch the mouth's corners."
+        ),
+        build=_build_emotion_visemes,
     ),
     Demo(
         slug="camera",

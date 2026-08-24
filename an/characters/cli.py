@@ -48,6 +48,7 @@ def new(
     offline: bool = False,
     acknowledge_attribution: bool = False,
     overwrite: bool = False,
+    mouth_variants: str = "happy,sad",
 ) -> str:
     """Create a new character at ``out_dir``/``name``.
 
@@ -62,9 +63,16 @@ def new(
     offline: skip DiceBear and use the deterministic geometric fallback
     acknowledge_attribution: accept the attribution duty of a CC BY style
     overwrite: replace an existing directory at the target
+    mouth_variants: comma-separated mouth forms to draw as `viseme@<form>`
+        sets (an#98) — a form an expression preset prefers (happy, sad, angry,
+        surprised, afraid, disgusted); "" for the neutral set only
     """
     target = _resolve_target(out_dir)
     target.mkdir(parents=True, exist_ok=True)
+    try:
+        variants = _parse_variants(mouth_variants)
+    except ValueError as e:
+        return str(e)
     if style not in DICEBEAR_STYLES:
         return f"unknown DiceBear style: {style!r}. Known: {', '.join(DICEBEAR_STYLES)}"
     try:
@@ -77,6 +85,7 @@ def new(
             use_dicebear=not offline,
             acknowledge_attribution=acknowledge_attribution,
             overwrite=overwrite,
+            mouth_variants=variants,
         )
     except ValueError as e:
         # A licence refusal is a message for a human, not a traceback. The
@@ -91,25 +100,64 @@ def mouths(
     name: str,
     out_dir: str = "",
     palette: str = "",
+    variants: str = "happy,sad",
 ) -> str:
-    """Regenerate the default 9-shape mouth set for ``name``.
+    """Regenerate the default 9-shape mouth set for ``name``, plus its
+    `viseme@<form>` variants, and declare them in the descriptor.
 
     Useful when you want to reset a character's mouth art to the offline
-    fallback (e.g. after experimenting with hand-drawn mouths).
+    fallback (e.g. after experimenting with hand-drawn mouths), or to give a
+    pre-an#98 character the variant sets its expressions prefer.
 
     name: character id
     out_dir: parent directory; defaults to ./assets/characters
     palette: optional JSON string to override colors, e.g. '{"lip":"#a44"}'
+    variants: comma-separated mouth forms (see `an character new`); "" = none
     """
-    target = _resolve_target(out_dir) / name / "parts" / "mouth"
+    from an.characters.factory import declare_mouth_variants
+    from an.characters.schema import CharacterDescriptor
+    from an.ir.migrate import migrate
+
+    char_dir = _resolve_target(out_dir) / name
+    target = char_dir / "parts" / "mouth"
     palette_dict: dict[str, str] | None = None
     if palette:
         try:
             palette_dict = json.loads(palette)
         except json.JSONDecodeError as e:
             return f"invalid palette JSON: {e}"
-    written = write_default_mouths(target, palette=palette_dict)
+    try:
+        variant_map = _parse_variants(variants)
+    except ValueError as e:
+        return str(e)
+    written = write_default_mouths(target, palette=palette_dict, variants=variant_map)
+    desc_path = char_dir / "character.json"
+    if desc_path.is_file() and variant_map:
+        raw = json.loads(desc_path.read_text(encoding="utf-8"))
+        desc = CharacterDescriptor.model_validate(migrate(raw, kind="CharacterDescriptor"))
+        declare_mouth_variants(desc, variant_map)
+        desc_path.write_text(desc.model_dump_json(indent=2), encoding="utf-8")
     return f"wrote {len(written)} mouth shapes to {target}"
+
+
+def _parse_variants(spec: str) -> dict[str, float]:
+    """``"happy,sad"`` → ``{form: smile offset}``; unknown forms are refused."""
+    from an.characters.mouth_set import DEFAULT_MOUTH_VARIANTS
+    from an.expression.presets import PRESETS
+
+    forms = [f.strip().lower() for f in spec.split(",") if f.strip()]
+    known = {p.mouth_form for p in PRESETS.values() if p.mouth_form}
+    out: dict[str, float] = {}
+    for form in forms:
+        if form not in known:
+            raise ValueError(f"unknown mouth form {form!r}; the presets prefer: {', '.join(sorted(known))}")
+        out[form] = DEFAULT_MOUTH_VARIANTS.get(form, _VARIANT_SMILE.get(form, 0.0))
+    return out
+
+
+#: Corner upturn per mouth form for the forms without a default variant
+#: (art direction; the same knob `DEFAULT_MOUTH_VARIANTS` sets for happy/sad).
+_VARIANT_SMILE: dict[str, float] = {"angry": -0.25, "surprised": 0.0, "afraid": -0.15, "disgusted": -0.3}
 
 
 def validate(name: str, out_dir: str = "") -> str:

@@ -126,12 +126,18 @@ both load-bearing: `.gitignore` excludes every `examples/*/assets/`, and a
 metrics fixture has to hold still — a fixture whose pixels depend on a generator
 elsewhere in the repo needs a re-bless every time that generator changes.
 
-New corpus scenes go there too. Give each one two `golden_frames` and a
+New corpus scenes go there too. Give each one at least two `golden_frames` (the
+rule is at-least-two since an#98: `expressions` pins eight, one per preset, and
+the bless refusal of pixel-identical pairs is pairwise) and a
 `golden_note` saying what moves between them — and if the scene **speaks**,
 commit its `ir/scene.json` with the offline visemes stamped, through a
 per-scene carve-out from `.gitignore`'s `misc/bench/corpus/*/ir/` rule: the
 bench renders with `auto_audio=False`, so without it the scene is mute on a
-clean checkout (`dialogue`, an#96, is the precedent). A fixture under
+clean checkout (`dialogue`, an#96, is the precedent). Every scene also feeds
+`expression_min_pairwise_changed_px` (family B, diagnostic, counts nothing; gated
+under the two edge levers because it moves with every edge): the smallest pixel
+distance between any two pinned frames of today's render — on a two-frame scene
+that pair's own change — the ledger's view of `tests/test_expression_goldens.py`. A fixture under
 `examples/` that gains dialogue gets the opposite treatment: its `prepare`
 regenerates the staged IR from the md, so a developer who ran the example
 (`auto_audio=True` persists visemes) cannot move the fixture's contract hash.

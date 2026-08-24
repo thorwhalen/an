@@ -27,6 +27,7 @@ from typing import Iterator
 from an.base import swap_set_name_problem
 from an.ir.migrate import migrate
 from an.characters.schema import (
+    VISEME_CHANNEL,
     CHARACTER_DOCUMENT_KIND,
     MOUTH_SHAPES,
     REQUIRED_PARTS,
@@ -232,6 +233,8 @@ def validate_character(
         _check_part(rel, path, report)
 
     _check_asset_sets(directory, descriptor, report, who=who)
+
+    _check_mouth_variants(descriptor, report, who=who)
     _check_face_overlay_declaration(descriptor, report, who=who)
     _check_joint_names(directory, descriptor, report)
 
@@ -358,6 +361,58 @@ def _check_asset_sets(
                     "Give the set's attachments identical geometry, or "
                     "accept that per-key placement is not yet expressible.",
                 )
+
+
+def _check_mouth_variants(
+    descriptor: CharacterDescriptor | None, report: VerificationReport, *, who: str
+) -> None:
+    """The `viseme@<form>` variant sets (an#98), three rules:
+
+    - a variant must name a known expression preset's mouth form — BLOCKING,
+      because nothing can ever select a form no preset prefers;
+    - a variant lacking keys the neutral set has — ADVISORY: a line using
+      those keys falls back to the neutral set (with a warning) rather than
+      showing the variant;
+    - an overlay face that declares a variant but no neutral ``viseme`` set —
+      BLOCKING: the resolver's fallback has nowhere to land and a speaking
+      line raises.
+    """
+    if descriptor is None:
+        return
+    from an.expression.binding import declared_mouth_variants
+    from an.expression.presets import PRESETS
+
+    forms_known = {p.mouth_form for p in PRESETS.values() if p.mouth_form}
+    neutral = descriptor.asset_sets.get(VISEME_CHANNEL)
+    variants = declared_mouth_variants(descriptor)
+    for form, set_name in variants.items():
+        if form not in forms_known:
+            report.add(
+                BLOCKING,
+                f"character.json#asset_sets.{set_name}",
+                f"{who} declares {set_name!r}, but no expression preset prefers a "
+                f"{form!r} mouth form (forms: {sorted(forms_known)}) — nothing can select it",
+                "Name a preset's form, or drop the set.",
+            )
+        if neutral is not None:
+            missing = sorted(set(neutral) - set(descriptor.asset_sets[set_name]))
+            if missing:
+                report.add(
+                    ADVISORY,
+                    f"character.json#asset_sets.{set_name}",
+                    f"{who}'s {set_name!r} lacks the keys {missing} the neutral set "
+                    "has; a line using them shows the neutral mouth instead (with a warning)",
+                    "Draw the missing shapes for the variant, or accept the fallback.",
+                )
+    if variants and neutral is None and descriptor.face_overlay:
+        report.add(
+            BLOCKING,
+            f"character.json#asset_sets.{VISEME_CHANNEL}",
+            f"{who} declares mouth variants {sorted(variants.values())} but no neutral "
+            f"{VISEME_CHANNEL!r} set — a line whose expression has no variant has no "
+            "mouth to fall back on and raises",
+            f"Declare the {VISEME_CHANNEL!r} set.",
+        )
 
 
 #: Provenance values that historically MEANT a baked face. The compiler no

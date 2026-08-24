@@ -40,6 +40,18 @@ from typing import Any, Callable
 
 from an.base import TRANSFORM_PROPERTIES, swap_set_name_problem
 from an.adapters.cutout.coarticulate import coarticulate
+from an.expression.axes import LID_KEY_CLOSED, LID_KEY_OPEN, lid_key
+from an.expression.binding import (
+    LID_SQUASH_GAIN,
+    ChannelBinding,
+    ExpressionResolutionError,
+    SetBinding,
+    binding_for,
+    expression_problems,
+    resolve_mouth_set,
+)
+from an.expression.presets import mouth_form_of
+from an.expression.provider import DefaultExpressionProvider, ExpressionProvider
 from an.characters.play import (
     BoneTrack,
     PlayResolutionError,
@@ -54,6 +66,7 @@ from an.ir.compose import FlatAction, flatten
 from an.ir.schema import (
     Action,
     AssetRef,
+    ExpressionAction,
     PlayAction,
     SetAction,
     Shot,
@@ -314,18 +327,9 @@ def _rest_value_for(prop: str, target: str) -> float:
 #: refuses instead: see :func:`_rest_value_for`.
 _DFLT_PROPERTY_REST_VALUE: float | None = None
 
-# Emotion → (left_brow_tilt, right_brow_tilt) in radians. Mirrored so the
-# brows look symmetric for happy/sad and asymmetric for surprise/skepticism.
-_EMOTION_BROWS: dict[str, tuple[float, float]] = {
-    "neutral": (0.0, 0.0),
-    "happy": (-0.15, 0.15),  # outer ends raised
-    "sad": (0.20, -0.20),  # inner ends raised, outer drops
-    "angry": (0.30, -0.30),  # furrowed
-    "surprised": (-0.25, 0.25),  # both up high
-    "skeptical": (-0.20, 0.10),  # one brow raised
-    "amused": (-0.10, 0.10),
-    "thinking": (0.10, 0.0),
-}
+# The emotion → brow-tilt table that lived here is retired (an#98): `[emotion]`
+# is sugar for an `expression` leaf, resolved by the face solver
+# (`_add_face_clips`) from `an.expression.presets`.
 
 
 def _runtime_node_paths(node: NodeJSON, prefix: str = "") -> set[str]:
@@ -546,8 +550,13 @@ def compile_shot(
     background: str = "#ffffff",
     strict_assets: bool = False,
     step_hz: float | None = None,
+    expression_provider: ExpressionProvider | None = None,
 ) -> CutoutSceneJSON:
     """Compile a single cutout-style `Shot` to its JS-runtime JSON form.
+
+    ``expression_provider`` (an#98) is the seam that turns authored
+    ``expression`` leaves and dialogue ``[emotion]`` sugar into per-axis
+    curves for the face solver; ``None`` is :class:`DefaultExpressionProvider`.
 
     ``step_hz`` (an#89) resamples every authored **tween** onto a SHOT-wide
     pose grid of that many updates per second (multiples of ``1/step_hz`` on
@@ -599,6 +608,7 @@ def compile_shot(
         fps=fps,
         step_hz=step_hz,
     )
+    provider = expression_provider or DefaultExpressionProvider()
     # Phase 4: emit a viseme channel per dialogue line that has a viseme_track.
     _add_viseme_clips(
         shot,
@@ -607,10 +617,13 @@ def compile_shot(
         mall=mall,
         vocab=vocab,
         fps=fps,
+        provider=provider,
     )
-    # Blinks (an#88): compiled per eye, ahead of everything authored.
-    blink_phases = _add_blink_clips(
-        shot, animations, tracks, vocab=vocab, fps=fps, mall=mall
+    # The face (an#98): blinks, expressions and the silent mouth form — one
+    # channel per (node, property), ahead of everything authored. An entity
+    # nothing expresses on gets its blink clips exactly as before (an#88).
+    blink_phases = _add_face_clips(
+        shot, animations, tracks, vocab=vocab, fps=fps, mall=mall, provider=provider
     )
     # Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale
     # animation on the synthetic scene root so directors get visible camera
@@ -1398,6 +1411,9 @@ def _compile_actions(
     for action in actions:
         flat_list.extend(flatten(action))
 
+    # `expression` leaves (an#98) are the face solver's input, not clips of
+    # their own: `_add_face_clips` sums them per (node, property).
+    flat_list = [f for f in flat_list if not isinstance(f.action, ExpressionAction)]
     swap_props = _swap_property_names(flat_list)
     if vocab is not None:
         flat_list = [
@@ -2053,9 +2069,17 @@ def _add_viseme_clips(
     mall: Mapping[str, Mapping] | None = None,
     vocab: _SwapVocabulary | None = None,
     fps: int = 30,
+    provider: ExpressionProvider | None = None,
 ) -> None:
     """For each dialogue line with a viseme_track, emit a step swap channel on
-    every node of the speaker that can apply the ``viseme`` set.
+    every node of the speaker that can apply the line's mouth set.
+
+    The mouth SET is selected per line (an#98): the expression in force at the
+    line's start prefers a ``viseme@<form>`` variant, and
+    :func:`an.expression.binding.resolve_mouth_set` — shared with ``an
+    validate`` — decides whether the character can honour it (declared and
+    covering the line's keys), falls back to ``viseme`` with a warning, or
+    raises. Whole-line, so at most one mouth swap property is live per instant.
 
     The provider's raw track goes through the co-articulation passes first
     (`an.adapters.cutout.coarticulate`, an#97): duplicates merged, sub-frame
@@ -2120,8 +2144,43 @@ def _add_viseme_clips(
         speaker = line.speaker
         if speaker in face_baked:
             continue
+        set_name = VISEME_CHANNEL
+        desc = vocab.descriptors.get(speaker) if vocab is not None else None
+        if desc is not None and provider is not None and hasattr(provider, "mouth_preset_at"):
+            preset = provider.mouth_preset_at(shot, speaker, float(line.start))
+            if preset is not None:
+                keys_used = {str(kf.viseme).upper() for kf in line.viseme_track.keyframes}
+                # The terminal rest is a key the line USES (appended below), so
+                # a variant without it must not be selected (an#98 review).
+                keys_used |= {
+                    r
+                    for p in vocab.swap_capable_paths(speaker, VISEME_CHANNEL)
+                    if (r := _mouth_rest_key(vocab, p, VISEME_CHANNEL)) is not None
+                }
+                try:
+                    set_name = resolve_mouth_set(desc, preset, keys_used=keys_used, who=speaker)
+                except ExpressionResolutionError as e:
+                    raise CutoutCompileError(str(e)) from e
+                if set_name != VISEME_CHANNEL:
+                    # Declared is not resolved: a variant key whose art is
+                    # missing on disk is dropped from the node's projection,
+                    # and a line that then holds its previous shape through
+                    # the missing key is worse than the neutral set.
+                    for p in vocab.swap_capable_paths(speaker, set_name):
+                        resolved = set(vocab.node_sets[p].get(set_name) or {})
+                        missing = sorted(keys_used - resolved)
+                        if missing:
+                            warnings.warn(
+                                f"shot {shot.id!r} dialogue line {i}: {set_name!r} on "
+                                f"{p!r} resolved without {missing} (art missing on "
+                                f"disk); the neutral {VISEME_CHANNEL!r} set is used instead.",
+                                CutoutCompileWarning,
+                                stacklevel=2,
+                            )
+                            set_name = VISEME_CHANNEL
+                            break
         mouth_paths = (
-            vocab.swap_capable_paths(speaker, VISEME_CHANNEL)
+            vocab.swap_capable_paths(speaker, set_name)
             if vocab is not None
             else []
         )
@@ -2161,8 +2220,8 @@ def _add_viseme_clips(
                 condensed.append((t, v))
 
         for target in mouth_paths:
-            mapped = set(vocab.node_sets[target][VISEME_CHANNEL])
-            rest = vocab.rest_key(target, VISEME_CHANNEL)
+            mapped = set(vocab.node_sets[target][set_name])
+            rest = _mouth_rest_key(vocab, target, set_name)
             usable = [(t, v) for t, v in condensed if v in mapped]
             dropped = sorted({v for _, v in condensed} - mapped)
             if dropped:
@@ -2212,7 +2271,7 @@ def _add_viseme_clips(
                 name=anim_id,
                 duration=max(window, float(line.duration)),
                 channels=[
-                    ChannelJSON(target=target, property=VISEME_CHANNEL, keyframes=kfs),
+                    ChannelJSON(target=target, property=set_name, keyframes=kfs),
                 ],
             )
             track = track_lookup.get(speaker)
@@ -2228,122 +2287,57 @@ def _add_viseme_clips(
                 )
             )
 
-        # Emotion-driven eyebrow expression — set both brows' rotation while
-        # the line is active, restore to neutral at the end. Node existence is
-        # checked (an#87): a rig whose brow art failed to resolve drops the
-        # node silently, and an unchecked channel then hard-crashed at frame
-        # time in applyPose — the exact policy the mouth check above exists
-        # for, previously applied to only one of the two emissions.
-        emotion = (line.emotion or "").lower().strip()
-        if emotion in _EMOTION_BROWS:
-            track = track_lookup.get(speaker)
-            tilt_l, tilt_r = _EMOTION_BROWS[emotion]
-            for brow_name, tilt in (("left_brow", tilt_l), ("right_brow", tilt_r)):
-                brow_target = f"{speaker}/head/{brow_name}"
-                if vocab is not None and brow_target not in vocab.paths:
-                    warnings.warn(
-                        f"shot {shot.id!r} dialogue line {i} carries emotion "
-                        f"{emotion!r}, but {brow_target!r} is not in the built "
-                        "scene (brow art missing?); its channel was not "
-                        "emitted.",
-                        CutoutCompileWarning,
-                        stacklevel=2,
-                    )
-                    continue
-                emo_anim_id = f"__emo__{shot.id}_{i}_{brow_name}"
-                animations[emo_anim_id] = AnimationClipJSON(
-                    name=emo_anim_id,
-                    duration=line.duration,
-                    channels=[
-                        ChannelJSON(
-                            target=brow_target,
-                            property="rotation",
-                            keyframes=[
-                                KeyframeJSON(time=0.0, value=tilt, easing="step"),
-                                KeyframeJSON(
-                                    time=line.duration, value=0.0, easing="step"
-                                ),
-                            ],
-                        )
-                    ],
-                )
-                if track is None:
-                    track = TrackJSON(target_root=speaker, clips=[])
-                    tracks.append(track)
-                    track_lookup[speaker] = track
-                track.clips.append(
-                    PlacedClipJSON(
-                        animation_id=emo_anim_id,
-                        start_time=float(line.start),
-                        duration=float(line.duration),
-                    )
-                )
+
+def _mouth_rest_key(vocab: _SwapVocabulary, target: str, set_name: str) -> str | None:
+    """The rest key of a mouth set on ``target``: derived from the node's default
+    attachment for the neutral set; a ``viseme@<form>`` variant closes on the
+    same KEY the neutral set closes on (its art is the variant's), or on ``X``.
+    """
+    rest = vocab.rest_key(target, set_name)
+    if rest is not None:
+        return rest
+    if set_name != VISEME_CHANNEL:
+        neutral_rest = vocab.rest_key(target, VISEME_CHANNEL)
+        keys = vocab.node_sets.get(target, {}).get(set_name) or {}
+        if neutral_rest in keys:
+            return neutral_rest
+        if "X" in keys:
+            return "X"
+    return None
 
 
 # -----------------------------------------------------------------------------
-# Blinks: compiled per eye (an#88)
+# Blinks: compiled per eye (an#88) — emitted by the face solver below
 # -----------------------------------------------------------------------------
 
 
-def _add_blink_clips(
+def _eye_paths(vocab: _SwapVocabulary, entity_id: str) -> list[str]:
+    return sorted(
+        p
+        for p in vocab.paths
+        if p.split("/", 1)[0] == entity_id and p.rsplit("/", 1)[-1] in EYE_NODE_NAMES
+    )
+
+
+def _blink_placements(
     shot: Shot,
+    entity_id: str,
     animations: dict[str, AnimationClipJSON],
-    tracks: list[TrackJSON],
     *,
     vocab: _SwapVocabulary,
     fps: int,
-    mall: Mapping[str, Mapping] | None = None,
-) -> dict[str, float]:
-    """Emit blink clips per eye node of every character; return the phases
-    used, per entity, for the compiled scene's meta.
-
-    A character whose descriptor declares ``face_overlay=False`` never
-    blinks, whatever eye nodes the rig builder produced — the policy lives
-    here, not in a naming coincidence of the rig builder.
-
-    Mechanism splits by what the eye can do (research §6):
-
-    - an eye whose visual projects the ``eyelid`` set with both ``OPEN`` and
-      ``CLOSED`` resolved, and whose rest attachment IS the open one, swaps
-      ART — a step channel through the one swap implementation, CLOSED for
-      the central half of each blink window;
-    - any other eye (the procedural drawn eye; a descriptor rig without
-      closed-eye art) gets the sine SQUASH the runtime used to apply, as a
-      ``scale_y`` channel sampled at the frame times — a tween, not a swap,
-      so "one swap implementation" holds without contortions;
-    - an eye that rests CLOSED (a sleeping character) does not blink at all:
-      the author closed it, and the old runtime never opened it either.
-
-    **One clip per blink window, not one whole-shot fill.** Outside a window
-    the pose then carries NO eye value, so an authored eye channel's end
-    value persists exactly as every other property's does (the runtime's
-    stateful hold); a whole-shot ``1.0`` fill snapped an authored ``scale_y``
-    back the frame after its tween ended (an#88 review). Each clip is
-    extended to the first frame time at or after the window's end so the
-    return-to-rest keyframe is applied on a rendered frame — the runtime's
-    per-frame reset, reproduced at exactly the frames that matter.
-
-    The clips go at the FRONT of the entity's track: later-wins evaluation
-    then lets an authored eye channel override a blink, where the old
-    post-pose reset clobbered any authored ``scale_y`` on every frame.
-    """
-    phases: dict[str, float] = {}
-    baked = _baked_face_speakers(shot, mall)
-    track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
-    for entity in shot.entities:
-        if entity.kind != "character" or entity.id in baked:
-            continue
-        eyes = sorted(
-            p
-            for p in vocab.paths
-            if p.split("/", 1)[0] == entity.id
-            and p.rsplit("/", 1)[-1] in EYE_NODE_NAMES
-        )
-        if not eyes:
-            continue
-        windows = _blink_windows(entity.id, shot.duration)
-        phases[entity.id] = blink_phase(entity.id)
-        placed: list[PlacedClipJSON] = []
+) -> list[PlacedClipJSON] | None:
+    """The an#88 blink clips of one entity, VERBATIM — ``None`` when it has no
+    eye node (nothing blinks), else the placements (possibly empty). The body of
+    the an#88 emitter (`_add_blink_clips`, retired in an#98), so the face solver
+    can hand an entity nothing expresses on exactly the clips it always had: same ids, same exact-time
+    keyframes, so every corpus scene's contract hash is unchanged (an#98)."""
+    eyes = _eye_paths(vocab, entity_id)
+    if not eyes:
+        return None
+    windows = _blink_windows(entity_id, shot.duration)
+    placed: list[PlacedClipJSON] = []
+    if True:  # indentation kept for a byte-for-byte move of the body below
         for path in eyes:
             eyelid = vocab.node_sets.get(path, {}).get(EYELID_CHANNEL) or {}
             has_art = "OPEN" in eyelid and "CLOSED" in eyelid
@@ -2406,6 +2400,132 @@ def _add_blink_clips(
                         animation_id=anim_id, start_time=clip_start, duration=duration
                     )
                 )
+    return placed
+
+
+# -----------------------------------------------------------------------------
+# The face solver (an#98): one channel per (node, property), summed at compile time
+# -----------------------------------------------------------------------------
+
+
+def _compress_linear(times: list[float], values: list[float]) -> list[KeyframeJSON]:
+    """Keyframes for a per-frame sampled curve, dropping the interior of constant
+    runs (linear easing between equal endpoints reproduces them exactly)."""
+    kfs: list[KeyframeJSON] = []
+    n = len(times)
+    for i in range(n):
+        keep = i == 0 or i == n - 1 or values[i] != values[i - 1] or values[i] != values[i + 1]
+        if keep:
+            kfs.append(KeyframeJSON(time=times[i], value=values[i], easing="linear"))
+    return kfs
+
+
+def _lid_blink_at(t: float, windows: list[tuple[float, float]]) -> float:
+    """−1 inside a blink's closed span (the central half of its window), else
+    +inf — the blink is a contributor that can only CLOSE, so outside a blink
+    it must not cap a positive (wide) offset (the first draft returned 0 here
+    and the `WIDE` rung of the ladder was unreachable, an#98 review)."""
+    lo, hi = _EYELID_CLOSED_SPAN
+    for start, end in windows:
+        span = end - start
+        if start + lo * span <= t < start + hi * span:
+            return -1.0
+    return math.inf
+
+
+def _blink_squash_at(t: float, windows: list[tuple[float, float]]) -> float:
+    for start, end in windows:
+        if start < t < end:
+            u = (t - start) / (end - start)
+            return 1.0 - _BLINK_DEPTH * math.sin(u * math.pi)
+    return 1.0
+
+
+def _add_face_clips(
+    shot: Shot,
+    animations: dict[str, AnimationClipJSON],
+    tracks: list[TrackJSON],
+    *,
+    vocab: _SwapVocabulary,
+    fps: int,
+    mall: Mapping[str, Mapping] | None = None,
+    provider: ExpressionProvider | None = None,
+) -> dict[str, float]:
+    """Emit the face of every character: blinks, expressions, the silent mouth
+    form — **exactly one channel per (node, property)**, summed at compile
+    time, placed at the FRONT of the entity's track like blinks (an#88), so an
+    authored channel on a face node still wins by later-wins evaluation.
+
+    Two paths, decided per entity by whether anything expresses on it:
+
+    - **Nothing does** (no `expression` leaf, no `[emotion]` line): the an#88
+      blink clips, verbatim, through :func:`_blink_placements` — same ids,
+      same exact-time keyframes — so every pre-Wave-6 scene's compiled
+      document is byte-identical and the corpus contract hashes hold.
+    - **Something does**: the solver samples every frame. Brows: ``rest + Σ
+      axis·gain`` on the bound ``(node, property)`` (the descriptor's binding,
+      default from its slots). Lids: ``lid(t) = min(lid_expr(t), lid_blink(t))``
+      read off the eyelid ladder on rigs with closed art, or a scaled squash on
+      rigs without — so a blink always closes and a sleepy `half` never masks
+      one. The mouth's silent form: a hold on ``viseme@<form>``'s rest key
+      over the expression's span, outside the entity's dialogue lines (lines
+      carry their own channel, `_add_viseme_clips`).
+
+    A baked face (``face_overlay: false``) refuses an authored expression with
+    the same reasons ``an validate`` reports, and warns on the dialogue sugar.
+    Returns the blink phases used, per entity, for the compiled scene's meta.
+    """
+    provider = provider or DefaultExpressionProvider()
+    phases: dict[str, float] = {}
+    baked = _baked_face_speakers(shot, mall)
+    track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
+    spans_of = getattr(provider, "spans", None)
+    for entity in shot.entities:
+        if entity.kind != "character":
+            continue
+        spans = list(spans_of(shot, entity.id)) if spans_of is not None else []
+        if entity.id in baked:
+            authored = [sp for sp in spans if sp.source == "action"]
+            if authored:
+                problems = expression_problems(
+                    vocab.descriptors.get(entity.id), preset=authored[0].preset, who=entity.id
+                )
+                raise CutoutCompileError(str(ExpressionResolutionError(entity.id, problems)))
+            if spans:
+                warnings.warn(
+                    f"shot {shot.id!r}: {entity.id!r} has its face baked into the head "
+                    "art (face_overlay: false), so the [emotion] on its dialogue moves "
+                    "nothing; the audio still plays.",
+                    CutoutCompileWarning,
+                    stacklevel=2,
+                )
+            continue
+        desc = vocab.descriptors.get(entity.id)
+        if desc is not None:
+            for sp in spans:
+                problems = expression_problems(desc, preset=sp.preset, axes=sp.axes, who=entity.id)
+                if problems:
+                    raise CutoutCompileError(str(ExpressionResolutionError(entity.id, problems)))
+        # A span that asks for nothing — `preset: None` with no axes, or
+        # `intensity: 0` — is not a contributor: the entity keeps its verbatim
+        # blink clips rather than a rest-valued face clip (an#98 review).
+        spans = [sp for sp in spans if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)]
+        if not spans or desc is None:
+            if spans and desc is None:
+                warnings.warn(
+                    f"shot {shot.id!r}: {entity.id!r} has no descriptor (a procedural "
+                    "rig), so its expression has no binding and moves nothing.",
+                    CutoutCompileWarning,
+                    stacklevel=2,
+                )
+            placed = _blink_placements(shot, entity.id, animations, vocab=vocab, fps=fps)
+            if placed is None:
+                continue
+            phases[entity.id] = blink_phase(entity.id)
+        else:
+            placed = _solve_face(shot, entity.id, desc, animations, tracks, vocab=vocab, fps=fps, provider=provider, spans=spans)
+            if _eye_paths(vocab, entity.id):
+                phases[entity.id] = blink_phase(entity.id)
         if not placed:
             continue
         track = track_lookup.get(entity.id)
@@ -2415,6 +2535,180 @@ def _add_blink_clips(
             track_lookup[entity.id] = track
         track.clips[:0] = placed
     return phases
+
+
+def _solve_face(
+    shot: Shot,
+    entity_id: str,
+    desc: CharacterDescriptor,
+    animations: dict[str, AnimationClipJSON],
+    tracks: list[TrackJSON],
+    *,
+    vocab: _SwapVocabulary,
+    fps: int,
+    provider: ExpressionProvider,
+    spans,
+) -> list[PlacedClipJSON]:
+    """The solved face of one expressed-on entity: one clip, one channel per key."""
+    curves = {c.axis: list(c.samples) for c in provider.curves(shot, entity_id, fps=fps)}
+    n = int(math.ceil(float(shot.duration) * fps - 1e-9)) + 1
+    times = [f / fps for f in range(n)]
+    k = vocab.entity_scale.get(entity_id, 1.0)
+    windows = _blink_windows(entity_id, shot.duration)
+    # Authored channels on face nodes win; say so once per (target, property).
+    authored: set[tuple[str, str]] = set()
+    for track in tracks:
+        if track.target_root != entity_id:
+            continue
+        for clip in track.clips:
+            anim = animations.get(clip.animation_id)
+            if anim is not None:
+                authored.update((ch.target, ch.property) for ch in anim.channels)
+
+    offsets: dict[tuple[str, str], list[float]] = {}
+    lid_expr: dict[str, list[float]] = {}
+    for b in binding_for(desc):
+        samples = curves.get(b.axis)
+        if samples is None:
+            continue
+        samples = (samples + [samples[-1]] * n)[:n]
+        path = f"{entity_id}/{slot_node_path(desc, b.slot)}"
+        if path not in vocab.paths:
+            continue  # the rig builder did not build the slot (suppressed / no art)
+        if isinstance(b, ChannelBinding):
+            gain = b.gain * (k if b.rig_scaled else 1.0)
+            acc = offsets.setdefault((path, b.property), [0.0] * n)
+            for i in range(n):
+                acc[i] += samples[i] * gain
+        elif isinstance(b, SetBinding):
+            acc = lid_expr.setdefault(path, [0.0] * n)
+            for i in range(n):
+                acc[i] += samples[i]
+
+    channels: list[ChannelJSON] = []
+    for (path, prop), acc in sorted(offsets.items()):
+        if (path, prop) in authored:
+            warnings.warn(
+                f"shot {shot.id!r}: an authored channel on {path!r}:{prop!r} "
+                f"overrides the expression's {prop} on that node (authored wins).",
+                CutoutCompileWarning,
+                stacklevel=3,
+            )
+        rest = float(getattr(vocab.node_transforms[path], prop))
+        channels.append(
+            ChannelJSON(target=path, property=prop, keyframes=_compress_linear(times, [rest + v for v in acc]))
+        )
+    # Lids: every eye node, expression or not — a blink is a lid contributor.
+    for path in _eye_paths(vocab, entity_id):
+        expr = lid_expr.get(path, [0.0] * n)
+        eyelid = vocab.node_sets.get(path, {}).get(EYELID_CHANNEL) or {}
+        has_art = LID_KEY_OPEN in eyelid and LID_KEY_CLOSED in eyelid
+        rest_key = vocab.rest_key(path, EYELID_CHANNEL) if has_art else None
+        if has_art and rest_key not in (None, LID_KEY_OPEN):
+            continue  # rests closed: the author's call, not a blink's
+        if has_art:
+            if (path, EYELID_CHANNEL) in authored:
+                continue  # an authored eye channel overrides the lid entirely (an#88)
+            keys = [lid_key(min(expr[i], _lid_blink_at(t, windows)), available=eyelid) for i, t in enumerate(times)]
+            kfs = [KeyframeJSON(time=times[0], value=keys[0], easing="step")]
+            for i in range(1, n):
+                if keys[i] != keys[i - 1]:
+                    kfs.append(KeyframeJSON(time=times[i], value=keys[i], easing="step"))
+            channels.append(ChannelJSON(target=path, property=EYELID_CHANNEL, keyframes=kfs))
+        else:
+            if (path, "scale_y") in authored:
+                continue
+            rest_sy = float(vocab.node_transforms[path].scale_y)
+            values = [
+                max(0.05 * rest_sy, rest_sy * _blink_squash_at(t, windows) * (1.0 + LID_SQUASH_GAIN * expr[i]))
+                for i, t in enumerate(times)
+            ]
+            channels.append(ChannelJSON(target=path, property="scale_y", keyframes=_compress_linear(times, values)))
+
+    placed: list[PlacedClipJSON] = []
+    if channels:
+        anim_id = f"__face__{shot.id}_{entity_id}"
+        duration = max(0.001, times[-1])
+        animations[anim_id] = AnimationClipJSON(name=anim_id, duration=duration, channels=channels)
+        placed.append(PlacedClipJSON(animation_id=anim_id, start_time=0.0, duration=duration))
+
+    # The silent mouth form: hold the variant's rest key over each expression
+    # span, outside this entity's dialogue lines — and, whenever any variant is
+    # in play, hold the NEUTRAL set's rest over the whole shot at the very
+    # front, so the mouth returns to neutral art when a variant span or a
+    # variant-set line ends (the runtime keeps the last texture a property set;
+    # with nothing re-asserting `viseme` the mouth stayed on `X_happy` for the
+    # rest of the shot, an#98 review). Two properties live at one instant
+    # resolve by NAME order in the runtime (`viseme@…` sorts after `viseme`),
+    # so the variant wins wherever it is live and neutral shows elsewhere.
+    # Each hold ends one frame BEFORE a line's first frame and starts one
+    # frame AFTER the line clip's last frame, so no frame carries both a hold
+    # and the line's own key.
+    frame = 1.0 / fps
+    line_windows = []
+    for l in shot.dialogue:
+        if l.speaker == entity_id and l.start is not None and l.duration is not None:
+            a = float(l.start)
+            end = a + math.ceil(float(l.duration) * fps - 1e-9) / fps  # the clip's inclusive last frame
+            line_windows.append((a, end))
+    variant_used = any(sp.mouth_form for sp in spans)
+    for l in shot.dialogue:
+        if l.speaker == entity_id and l.start is not None and getattr(l, "emotion", None):
+            variant_used = variant_used or bool(mouth_form_of((l.emotion or "").strip().lower()))
+
+    def hold_clips(set_name: str, rest: str, target: str, spans_: list[tuple[float, float]], tag: str) -> None:
+        for j, (a, b) in enumerate(spans_):
+            for k, (ha, hb) in enumerate(_subtract_intervals((a, b), line_windows)):
+                # Snap to frames: start on the first frame at/after `ha` (one
+                # frame after a line's last frame when `ha` is that frame),
+                # end on the last frame strictly before `hb`'s line.
+                start = math.ceil(ha * fps - 1e-9) / fps
+                if any(abs(start - lw_end) < 1e-9 for _, lw_end in line_windows):
+                    start += frame
+                end = min(shot.duration, math.ceil(hb * fps - 1e-9) / fps)
+                if any(abs(end - lw_start) < 1e-9 for lw_start, _ in line_windows) or end > hb + 1e-9 and any(lw_start - 1e-9 <= end <= lw_end + 1e-9 for lw_start, lw_end in line_windows):
+                    end -= frame
+                if end - start < -1e-9:
+                    continue
+                dur = max(0.001, end - start)
+                anim_id = f"__face_mouth__{shot.id}_{entity_id}_{tag}_{j}_{k}_{target.replace('/', '.')}"
+                animations[anim_id] = AnimationClipJSON(
+                    name=anim_id,
+                    duration=dur,
+                    channels=[ChannelJSON(target=target, property=set_name, keyframes=[KeyframeJSON(time=0.0, value=rest, easing="step")])],
+                )
+                placed.append(PlacedClipJSON(animation_id=anim_id, start_time=start, duration=dur))
+
+    if variant_used:
+        for target in vocab.swap_capable_paths(entity_id, VISEME_CHANNEL):
+            rest = _mouth_rest_key(vocab, target, VISEME_CHANNEL)
+            if rest is not None:
+                hold_clips(VISEME_CHANNEL, rest, target, [(0.0, float(shot.duration))], "neutral")
+    for idx, sp in enumerate(spans):
+        if sp.mouth_form is None or sp.source != "action":
+            continue
+        set_name = f"{VISEME_CHANNEL}@{sp.mouth_form}"
+        for target in vocab.swap_capable_paths(entity_id, set_name):
+            rest = _mouth_rest_key(vocab, target, set_name)
+            if rest is None:
+                continue
+            hold_clips(set_name, rest, target, [(sp.start, sp.end)], str(idx))
+    return placed
+
+
+def _subtract_intervals(span: tuple[float, float], holes: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    """``span`` minus every hole, as sorted disjoint intervals."""
+    out: list[tuple[float, float]] = []
+    cursor, end = span
+    for a, b in sorted((min(h), max(h)) for h in holes):
+        if b <= cursor or a >= end:
+            continue
+        if a > cursor:
+            out.append((cursor, a))
+        cursor = max(cursor, b)
+    if cursor < end:
+        out.append((cursor, end))
+    return out
 
 
 # -----------------------------------------------------------------------------

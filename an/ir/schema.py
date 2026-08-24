@@ -168,6 +168,41 @@ class PlayAction(_ActionBase):
     loop: bool | None = None  # None = the descriptor animation's own `loop`
 
 
+#: Default ramp in/out of an expression, seconds (0 = cut). The dialogue
+#: `[emotion]` sugar uses its own in `an.expression.provider`.
+DFLT_EXPRESSION_BLEND_S: float = 0.15
+
+
+class ExpressionAction(_ActionBase):
+    """Hold a facial expression on an entity (an#98, epic #9 Wave 6).
+
+    ``preset`` names one of :data:`an.expression.presets.PRESETS`; ``axes``
+    are per-axis overrides layered on it (axis units, see
+    :mod:`an.expression.axes`); ``None`` + no axes is a cheap "return to
+    rest". ``duration=None`` runs to the shot end (the looping-play rule) and
+    is **zero-width in a sequence**, like ``play``. ``blend`` ramps the
+    intensity in and out; two overlapping expressions cross-fade because the
+    face solver sums offsets. The dialogue ``speaker [emotion]: …`` bracket is
+    sugar for one of these over the line, desugared in memory only.
+
+    A leaf action, flattened like ``play``: the compiler resolves it in the
+    face solver (one channel per ``(node, property)``), never per action.
+
+    The ramp is a min over the two ends, so a span shorter than ``2·blend``
+    never reaches full intensity (a 0.2 s expression at the default 0.15 s
+    blend peaks at 0.67) and a ``duration=0`` expression shows only where a
+    frame lands on it with ``blend=0`` — cut the blend for a flash.
+    """
+
+    kind: Literal["expression"] = "expression"
+    target: PathStr  # the ENTITY; the binding picks the nodes
+    preset: str | None = None
+    axes: dict[str, float] = Field(default_factory=dict)
+    intensity: float = Field(default=1.0, ge=0.0, le=1.0)
+    duration: Seconds | None = Field(default=None, ge=0.0)  # None = to the shot end
+    blend: Seconds = Field(default=DFLT_EXPRESSION_BLEND_S, ge=0.0)
+
+
 class SequenceAction(_ActionBase):
     """Composition: run children one after the other."""
 
@@ -203,6 +238,7 @@ Action = Annotated[
         SetAction,
         TweenAction,
         PlayAction,
+        ExpressionAction,
         SequenceAction,
         ParallelAction,
         DelayAction,

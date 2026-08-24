@@ -150,23 +150,25 @@ def test_the_copy_leaves_the_previous_render_behind(tmp_path):
 # --------------------------------------------------------------- an#38 additions
 
 
-def test_every_fixture_declares_two_golden_frames_and_says_what_moves():
+def test_every_fixture_declares_at_least_two_golden_frames_and_says_what_moves():
     """MUTATION: drop `golden_frames` (or `golden_note`) from any one fixture.
 
-    Two frames, because one cannot notice a scene that renders its first instant
-    correctly and then stops. And a recorded reason, because "pick a time where
-    something moved" is a rule that decays into a habit — measured on
+    Two frames at least, because one cannot notice a scene that renders its
+    first instant correctly and then stops (`expressions` pins eight, one per
+    preset — the bless refusal of pixel-identical pairs is pairwise, so more
+    than two is allowed, an#98). And a recorded reason, because "pick a time
+    where something moved" is a rule that decays into a habit — measured on
     `promote_demo`, frame 0 and the `duration/2` frame differ by exactly ZERO
     pixels, so the obvious choice blesses one picture twice.
     """
     from an.bench.golden import REQUIRED_GOLDEN_FRAMES
 
     for name, fixture in DFLT_FIXTURES.items():
-        assert len(fixture.golden_frames) == REQUIRED_GOLDEN_FRAMES, (
+        assert len(fixture.golden_frames) >= REQUIRED_GOLDEN_FRAMES, (
             f"{name} declares {len(fixture.golden_frames)} golden frames"
         )
         assert fixture.golden_note.strip(), f"{name} does not say what moves"
-        assert fixture.golden_frames[0] != fixture.golden_frames[1], (
+        assert len(set(fixture.golden_frames)) == len(fixture.golden_frames), (
             f"{name} pins the same time twice"
         )
 

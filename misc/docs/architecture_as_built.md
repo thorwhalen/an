@@ -8,7 +8,7 @@
 
 ## 1. The story in 30 seconds
 
-You write a `scene.md`. You run `an render <dir>`. An mp4 lands in `output/main.mp4` with audible dialogue, a sky/grass background, two distinct cartoon characters, animated mouths over real ElevenLabs speech aligned by Whisper word-timestamps, eye-blinks, emotion-driven eyebrows, and a slow camera push-in.
+You write a `scene.md`. You run `an render <dir>`. An mp4 lands in `output/main.mp4` with audible dialogue, a sky/grass background, two distinct cartoon characters, animated mouths over real ElevenLabs speech aligned by Whisper word-timestamps, eye-blinks, faces driven by the expression solver (each line's `[emotion]`, or an `expression` action), and a slow camera push-in.
 
 You say `an iterate <dir> "make Maya's response more affectionate"`. Claude (Opus 4.7) returns surgical JSON patches against the IR, validates them against the schema, persists, and invalidates only the affected shot's cache so the next render only redoes that shot.
 
@@ -336,7 +336,7 @@ maya [amused]: Because the pigeons trust us.
 ```
 ```
 
-The `[emotion]` brackets on dialogue lines map to `_EMOTION_BROWS` in compile.py: `neutral / happy / sad / angry / surprised / skeptical / amused / thinking`. Other emotions silently fall through to neutral.
+The `[emotion]` brackets on dialogue lines are sugar for an `expression` leaf over the line (an#98): `an/expression/presets.py` holds the presets (`neutral / happy / sad / angry / surprised / afraid / disgusted / thinking / skeptical / amused`), the face solver `_add_face_clips` in compile.py sums them into one channel per `(node, property)` — brows, lids, and the mouth's `viseme@<form>` set — and an unknown name is a validate error, not a silent neutral.
 
 ---
 

@@ -333,6 +333,14 @@ class CharacterDescriptor(_CharModel):
     #: provenance/licensing metadata.
     face_overlay: bool = True
 
+    #: How expression axes reach this rig (an#98), as a list of binding dicts —
+    #: ``{"axis", "slot", "property", "gain"[, "rig_scaled"]}`` for a transform
+    #: channel, ``{"axis", "slot", "set_family"}`` for a swap set. ``None`` means
+    #: the default binding derived from the slots the rig has
+    #: (:func:`an.expression.binding.default_binding`). Additive: no schema bump,
+    #: and a pre-Wave-6 descriptor reads back unchanged.
+    expression_binding: Optional[list[dict[str, Any]]] = None
+
     #: Free-form metadata (dicebear style/seed, etc.). Schema-evolution
     #: friendly: anything an external tool wants to record can land here.
     #:

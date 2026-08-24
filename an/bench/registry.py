@@ -1077,6 +1077,61 @@ METRICS: dict[str, MetricSpec] = {
             ),
         ),
         _spec(
+            key="expression_min_pairwise_changed_px",
+            family="B",
+            role="diagnostic",
+            unit="pixels",
+            sentence=(
+                "The smallest number of pixels by which any two of the scene's "
+                "pinned frames differ in TODAY'S render — on `expressions`, the "
+                "closest pair of presets; a collapse of two emotions onto one "
+                "face drives it to zero (an#98). On a two-frame scene it is that "
+                "pair's own change, measured rather than withheld: a render-side "
+                "row is never null on a real capture."
+            ),
+            optimum=Optimum(
+                kind="guard",
+                note=(
+                    "Not a quality dial: larger is not better beyond 'the presets "
+                    "are apart'. It exists so a regression that makes two "
+                    "expressions render alike moves a ledger number instead of "
+                    "waiting for someone to look."
+                ),
+            ),
+            predictions={
+                "high_crf": Prediction(
+                    "not_applicable",
+                    reason="computed on the pre-encode PNGs; no encode change can reach it",
+                ),
+                "disabled_aa": Prediction(
+                    None,
+                    gate=(
+                        "AA-off moves every edge on every pinned frame, so the count "
+                        "of differing pixels between two frames moves with it in an "
+                        "undeclared direction — measured on the lane: it MOVED under "
+                        "`supersample` when first declared `not_applicable`. Gated, "
+                        "not predicted: the delta is uninterpretable, not good or bad. "
+                        "Family B's witness is `min_ssim_win8_vs_golden`."
+                    ),
+                ),
+                "supersample": Prediction(
+                    None,
+                    gate=(
+                        "same as disabled_aa: an edge-quality lever softens every "
+                        "edge on every pinned frame and the pairwise count moves "
+                        "with it; not a face-solver lever, no declared sign"
+                    ),
+                ),
+            },
+            notes=(
+                "Measured at the first bless (an#98): 106 px between `thinking` and "
+                "`skeptical`, the two asymmetric presets, and 384 px at the far end. "
+                "`tests/test_expression_goldens.py` pins half the minimum on the "
+                "COMMITTED goldens; this row reports the same quantity on the live "
+                "render, so the ledger sees it before a re-bless does.",
+            ),
+        ),
+        _spec(
             key="video_stream_bytes",
             family="F",
             unreviewed=True,
