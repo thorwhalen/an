@@ -5,6 +5,20 @@ Linux/Windows: download from the project's GitHub releases.
 
 Falls back gracefully (raises a clear error) if the binary is missing — the
 default ``OfflineLipSync`` keeps the pipeline functional in the meantime.
+
+**The recognizer follows the language** (an#96, epic #9 defect 5a). Rhubarb has
+two: ``pocketSphinx`` — its default, "use for English recordings", the only one
+that reads ``--dialogFile`` (it builds a dialog language model and mixes it 90/10
+with the default) — and ``phonetic``, "use for non-English recordings", which
+``UNUSED(dialog)``s the transcript at source. This module used to pass
+``-r phonetic`` **and** ``--dialogFile`` unconditionally: English speech from an
+English transcript ran the language-independent recognizer and the transcript
+it wrote to disk was never read. Now ``recognizer=None`` (the default) resolves
+per ``language`` — ``"en"`` → ``pocketSphinx`` with the dialog file, anything
+else → ``phonetic`` and **no transcript is written** (a file nothing reads is a
+lie waiting for the next reader). An explicit ``recognizer`` still overrides.
+``name`` carries the recognizer so the viseme cache key changes with it and no
+stale ``phonetic`` track replays.
 """
 
 from __future__ import annotations
@@ -20,25 +34,72 @@ from an.audio.tts import AudioClip
 
 
 _DEFAULT_TIMEOUT_S: float = 60.0
-_RECOGNIZER: str = "phonetic"  # works well without a dialog file
+#: Rhubarb's own default and its English recognizer — the one that reads the
+#: dialog file.
+_ENGLISH_RECOGNIZER: str = "pocketSphinx"
+#: Language-independent; ignores the dialog file at source.
+_PHONETIC_RECOGNIZER: str = "phonetic"
+#: The languages `pocketSphinx` (CMU Sphinx US English acoustic model) covers.
+ENGLISH_LANGUAGES: frozenset[str] = frozenset({"en"})
+RECOGNIZERS: frozenset[str] = frozenset({_ENGLISH_RECOGNIZER, _PHONETIC_RECOGNIZER})
+
+
+def recognizer_for(language: str) -> str:
+    """The Rhubarb recognizer for a BCP-47 language tag (primary subtag only).
+
+    Accepts the POSIX locale spelling too (``en_US``); an empty tag is refused
+    rather than read as "non-English" (an#96 review).
+
+    >>> recognizer_for("en"), recognizer_for("en-GB"), recognizer_for("en_US"), recognizer_for("fr")
+    ('pocketSphinx', 'pocketSphinx', 'pocketSphinx', 'phonetic')
+    """
+    primary = language.replace("_", "-").split("-", 1)[0].strip().lower()
+    if not primary:
+        raise ValueError("language must be a BCP-47 tag such as 'en' or 'fr'; got ''")
+    return _ENGLISH_RECOGNIZER if primary in ENGLISH_LANGUAGES else _PHONETIC_RECOGNIZER
 
 
 class RhubarbLipSync:
-    """Wrap the rhubarb CLI. Implements the ``LipSyncProvider`` protocol."""
+    """Wrap the rhubarb CLI. Implements the ``LipSyncProvider`` protocol.
 
-    name: str = "rhubarb"
+    >>> RhubarbLipSync(binary_path="/bin/rhubarb").recognizer
+    'pocketSphinx'
+    >>> RhubarbLipSync(binary_path="/bin/rhubarb", language="de").recognizer
+    'phonetic'
+    >>> RhubarbLipSync(binary_path="/bin/rhubarb", language="de").name
+    'rhubarb:phonetic'
+    """
+
     convention: str = "rhubarb"
 
     def __init__(
         self,
         *,
         binary_path: str | None = None,
-        recognizer: str = _RECOGNIZER,
+        language: str = "en",
+        recognizer: str | None = None,
         timeout_s: float = _DEFAULT_TIMEOUT_S,
     ) -> None:
         self.binary_path = binary_path or shutil.which("rhubarb")
-        self.recognizer = recognizer
+        self.language = language
+        chosen = recognizer if recognizer is not None else recognizer_for(language)
+        if chosen not in RECOGNIZERS:
+            raise ValueError(
+                f"unknown rhubarb recognizer {chosen!r}; known: {sorted(RECOGNIZERS)}"
+            )
+        self.recognizer = chosen
         self.timeout_s = timeout_s
+
+    @property
+    def name(self) -> str:
+        # The recognizer is part of the identity: it changes the track, so it
+        # must change the viseme cache key (the pipeline hashes `name`).
+        return f"rhubarb:{self.recognizer}"
+
+    @property
+    def uses_dialog_file(self) -> bool:
+        """Whether the chosen recognizer reads a transcript at all."""
+        return self.recognizer == _ENGLISH_RECOGNIZER
 
     def align(self, audio: AudioClip, transcript: str) -> VisemeTrack:
         if not self.binary_path:
@@ -56,22 +117,13 @@ class RhubarbLipSync:
                 audio_path = d / "audio.wav"
                 audio_path.write_bytes(audio.bytes_)
 
-            dialog_path = d / "transcript.txt"
-            dialog_path.write_text(transcript, encoding="utf-8")
             out_json = d / "out.json"
-
-            cmd = [
-                self.binary_path,
-                "-f",
-                "json",
-                "-r",
-                self.recognizer,
-                "--dialogFile",
-                str(dialog_path),
-                "-o",
-                str(out_json),
-                str(audio_path),
-            ]
+            cmd = [self.binary_path, "-f", "json", "-r", self.recognizer]
+            if self.uses_dialog_file:
+                dialog_path = d / "transcript.txt"
+                dialog_path.write_text(transcript, encoding="utf-8")
+                cmd += ["--dialogFile", str(dialog_path)]
+            cmd += ["-o", str(out_json), str(audio_path)]
             try:
                 subprocess.run(
                     cmd,

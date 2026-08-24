@@ -245,7 +245,7 @@ def test_the_delivered_mp4_puts_moov_before_mdat(tmp_path):
     `_ffmpeg_concat` reaches by `shutil.copy`, so only the shot mux can fix it)
     and the concatenated one.
 
-    Two separate legs deliberately: five of the six bench corpus scenes are
+    Two separate legs deliberately: all but one of the bench corpus scenes are
     single-shot, so a multi-shot-only assertion would leave the common case
     untested.
     """

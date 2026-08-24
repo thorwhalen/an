@@ -31,10 +31,14 @@ TTS_FACTORIES: dict[str, Callable[[], TTSProvider]] = {
     "mac_say": lambda: MacSayTTS(),
 }
 
-LIPSYNC_FACTORIES: dict[str, Callable[[], LipSyncProvider]] = {
-    "offline": lambda: OfflineLipSync(),
-    "rhubarb": lambda: RhubarbLipSync(),
-    "whisper": lambda: WhisperLipSync(),
+#: The language a provider aligns for when the caller says nothing. Only
+#: Rhubarb reads it today (its recognizer follows the language, an#96).
+DEFAULT_LANGUAGE: str = "en"
+
+LIPSYNC_FACTORIES: dict[str, Callable[..., LipSyncProvider]] = {
+    "offline": lambda **_: OfflineLipSync(),
+    "rhubarb": lambda *, language=DEFAULT_LANGUAGE: RhubarbLipSync(language=language),
+    "whisper": lambda **_: WhisperLipSync(),
 }
 
 
@@ -51,10 +55,14 @@ def make_tts(name: str) -> TTSProvider:
         ) from None
 
 
-def make_lipsync(name: str) -> LipSyncProvider:
-    """Instantiate a LipSync provider by name."""
+def make_lipsync(name: str, *, language: str = DEFAULT_LANGUAGE) -> LipSyncProvider:
+    """Instantiate a LipSync provider by name.
+
+    ``language`` (BCP-47) reaches providers that select behaviour by language —
+    Rhubarb's recognizer today; a future aligner's weight allowlist.
+    """
     try:
-        return LIPSYNC_FACTORIES[name]()
+        return LIPSYNC_FACTORIES[name](language=language)
     except KeyError:
         raise ValueError(
             f"unknown LipSync provider {name!r}; known: {sorted(LIPSYNC_FACTORIES)}"

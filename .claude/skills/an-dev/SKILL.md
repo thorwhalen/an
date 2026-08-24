@@ -73,7 +73,7 @@ Read `misc/docs/architecture_as_built.md` for the full map. The pieces that didn
 The four Protocols live in `an.audio.tts.TTSProvider`, `an.audio.lipsync.LipSyncProvider`, `an.verify._base.Verifier`, and `an.adapters._base.Renderer`. To add a new one:
 
 1. Implement the Protocol in a new file under the matching subpackage.
-2. Register it in the factory: `an.audio.providers.TTS_FACTORIES` / `LIPSYNC_FACTORIES`, or for renderers via `an.adapters._base.register_renderer(MyRenderer())` at module import.
+2. Register it in the factory: `an.audio.providers.TTS_FACTORIES` / `LIPSYNC_FACTORIES` (a LipSync factory must accept the keyword `language` — `lambda **_: MyLipSync()` if it ignores it — because `make_lipsync(name, language=)` passes it to every factory, an#96), or for renderers via `an.adapters._base.register_renderer(MyRenderer())` at module import.
 3. Export it from the subpackage's `__init__.py`.
 4. Add skip-if-deps-missing tests under `tests/test_<my>.py`.
 

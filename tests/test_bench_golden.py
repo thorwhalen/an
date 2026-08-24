@@ -426,8 +426,8 @@ def test_every_bless_record_carries_a_reason_and_a_criterion():
 def test_the_golden_gate_is_green_on_a_real_render_of_the_committed_corpus():
     """The committed goldens still describe what `an` renders today.
 
-    One scene rather than six, because this lane is opt-in and the point here is
-    that the gate WIRES UP — the pixel-level agreement of all six is what
+    One scene rather than all of them, because this lane is opt-in and the point
+    here is that the gate WIRES UP — the pixel-level agreement of every scene is what
     `test_every_committed_golden_decodes_and_matches_its_bless_record` covers,
     for free, in the default leg.
 

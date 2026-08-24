@@ -48,8 +48,19 @@ class OrchestratorReport:
 
 
 def validate_project(project_dir: str | Path) -> ValidationReport:
-    """Schema + semantic validation of the scene at ``project_dir``."""
-    project: Project = load(project_dir)
+    """Schema + semantic validation of the scene at ``project_dir``.
+
+    A ``scene.md`` that does not PARSE — a dialogue line in no accepted shape
+    (an#96), a malformed YAML block — is a Finding, not a traceback: `an
+    validate` exists to print findings, and it used to be the one tool that
+    stack-dumped on the error it should report.
+    """
+    try:
+        project: Project = load(project_dir)
+    except ValueError as e:
+        report = ValidationReport()
+        report.add("error", "scene.md", f"scene.md does not parse: {e}")
+        return report
     schema_report = validate_schema(project.scene)
     semantic_report = validate_semantic(
         project.scene,
@@ -92,6 +103,7 @@ def orchestrate(
     tts: str | object = "offline",
     lipsync: str | object = "offline",
     parallel: int | str | None = None,
+    language: str = "en",
 ) -> OrchestratorReport:
     """Run the full pipeline. Returns a structured outcome.
 
@@ -149,6 +161,7 @@ def orchestrate(
             output_name=output_name,
             tts=tts,
             lipsync=lipsync,
+            language=language,
             parallel=parallel,
         )
     except Exception as e:

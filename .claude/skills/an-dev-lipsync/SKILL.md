@@ -85,9 +85,12 @@ impossible to swallow.
 
 ## 7. What the bench can and cannot see
 
-Only one corpus scene speaks and its golden samples *outside* the line, so a condenser change
-moves zero committed pixels: the `dialogue` corpus scene (a golden **inside** the line) lands
-before any pass does, blessed on the old condenser, then re-blessed "condenser holds". The
+Before an#96 only one corpus scene spoke and its golden sampled *outside* the line, so a
+condenser change moved zero committed pixels. `misc/bench/corpus/dialogue/` (an#96) has a
+golden **inside** the line — frame 14, on the `h`/`a` of "shape", where today's condenser
+shows `C` having dropped the `D` and `A` inside its window; the vote changes that frame, and
+it is re-blessed "condenser holds" when it does. `promote_demo` renders mute in the bench by
+design (no visemes stamped in its IR). The
 two standing numbers: viseme keyframes per second of dialogue (from compiled `__viseme__`
 clips, trailing rest excluded) must fall; the legibility score from the cassetted judge
 (a dense 8-frame strip inside the line, "could you read this mouth is saying `<text>`", 1–5)

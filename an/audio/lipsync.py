@@ -32,22 +32,38 @@ class Viseme:
     intensity: float = 1.0
 
 
-@dataclass(slots=True)
-class VisemeTrack:
-    """Aligned viseme sequence produced by a LipSyncProvider."""
-
-    visemes: list[Viseme] = field(default_factory=list)
-    convention: str = "rhubarb"  # "rhubarb", "azure22", "mpeg4", etc.
-    duration: float = 0.0
-
-
 #: One word's slice in time. Tuple form keeps providers cheap.
 WordTiming = tuple[str, float, float]  # (text, start_s, end_s)
 
 
+@dataclass(slots=True)
+class VisemeTrack:
+    """Aligned viseme sequence produced by a LipSyncProvider.
+
+    ``words`` carries the word timings the provider aligned from, when it had
+    any (whisper, :class:`~an.audio.injectable_lipsync.WordTimingsLipSync`);
+    ``None`` for providers that never see words (offline, Rhubarb — whose JSON
+    is mouth cues only). Retained since an#96 rather than discarded after the
+    viseme conversion: captions (Wave 8) and any consumer that wants to know
+    *which word* a mouth shape belongs to read them from the IR.
+    """
+
+    visemes: list[Viseme] = field(default_factory=list)
+    convention: str = "rhubarb"  # "rhubarb", "azure22", "mpeg4", etc.
+    duration: float = 0.0
+    words: list[WordTiming] | None = None
+
+
 @runtime_checkable
 class LipSyncProvider(Protocol):
-    """Audio + transcript → aligned viseme track."""
+    """Audio + transcript → aligned viseme track.
+
+    A provider that fills ``VisemeTrack.words`` also declares
+    ``emits_word_timings = True`` (a plain class attribute, absent means
+    False). The audio pipeline reads it to decide whether a line whose
+    ``word_timings`` are missing needs re-alignment — without the flag, a
+    provider that cannot supply words would re-align every line forever.
+    """
 
     name: str
     convention: str  # which viseme convention this provider emits

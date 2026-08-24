@@ -115,7 +115,7 @@ def markdown_to_ir(md_text: str) -> SceneIR:
     shots: list[Shot] = []
     for shot_id, style, body in parts["__shots__"]:
         shot_yaml = _extract_yaml_block(body, "shot") or {}
-        dialogue_block = _extract_dialogue_block(body)
+        dialogue_block = _extract_dialogue_block(body, shot_id=shot_id)
         entities_block = _extract_entities_block(body)
         actions_block = _extract_actions_block(body)
         shot_kwargs: dict[str, Any] = {
@@ -184,7 +184,7 @@ _DIALOGUE_LINE_RE = re.compile(
 )
 
 
-def _extract_dialogue_block(text: str) -> list[Dialogue]:
+def _extract_dialogue_block(text: str, *, shot_id: str | None = None) -> list[Dialogue]:
     """Parse a ```dialogue block.
 
     Each non-empty, non-comment line follows ``speaker[emotion]: text`` where
@@ -193,6 +193,10 @@ def _extract_dialogue_block(text: str) -> list[Dialogue]:
         charlie: Hello.
         charlie [happy]: Hello!
         maya [skeptical]: Sure.
+
+    A line that matches none of those shapes is a **parse error**, not a skip:
+    this parser used to drop it silently, and ``examples/promote_demo`` was mute
+    for months because its one line read ``maya (warm): …`` (an#96).
     """
     out: list[Dialogue] = []
     for m in _FENCE_RE.finditer(text):
@@ -205,7 +209,14 @@ def _extract_dialogue_block(text: str) -> list[Dialogue]:
                 continue
             match = _DIALOGUE_LINE_RE.match(line)
             if not match:
-                continue
+                where = f"shot {shot_id!r}: " if shot_id else ""
+                raise ValueError(
+                    f"{where}dialogue line {line!r} is not `speaker: text` or "
+                    "`speaker [emotion]: text` — speaker ids are `[\\w-]+`, and "
+                    "the emotion goes in square brackets. A line that does not "
+                    "parse is refused rather than dropped, so a typo cannot "
+                    "silence a character."
+                )
             kwargs: dict[str, Any] = {
                 "speaker": match.group("speaker").strip(),
                 "text": match.group("text").strip(),

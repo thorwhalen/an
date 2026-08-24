@@ -532,7 +532,19 @@ window; (c) before (d) so the hold is measured on shifted times. Keep `min_hold_
 until measured; Rhubarb's floor is 0.08 s, one frame (~0.04 s) is the floor below which
 nothing registers.
 
-**Word-timing retention** (lands first; no pixel, no cache key). `VisemeTrack.words:
+**Landed in #101 (PR-A, 2026-08-24).** Word timings retained (`VisemeTrack.words`,
+`Dialogue.word_timings`, the sidecar's `"words"` under the unchanged key); the Rhubarb
+recognizer follows the language, with `an render --language` reaching the factory; the
+parser refuses an unmatched dialogue line; `misc/bench/corpus/dialogue/` blessed. Two
+deviations from the plan above, both deliberate: `promote_demo`'s line was repaired so it
+*parses*, but **no visemes were stamped into its committed IR** — doing so moved its
+contract hash with zero pixel change, the #98 hazard — so in the bench it still renders
+mute and `dialogue` is the wave's one mid-line golden; and the `dialogue` golden at frame 14
+shows **`C`, not `D`**: today's condenser drops the `D` and `A` of "shape" inside `C`'s
+window, which is precisely the defect PR-B's vote changes. The "Rhubarb" and "Lip sync"
+paragraphs of §1 are the pre-#101 record and stay as written.
+
+**Word-timing retention** (landed first; no pixel, no cache key). `VisemeTrack.words:
 list[WordTiming] | None` on the audio dataclass; whisper and `WordTimingsLipSync` fill it,
 offline and Rhubarb leave `None`. Persist in the **existing** viseme sidecar payload
 (`pipeline.py:222-227`, add `"words"`); the key is unchanged (words are a function of the
@@ -637,7 +649,7 @@ what moves pixels.
   would retire every committed ledger row as evidence even with zero pixel change. The
   acceptance is therefore **JSON identity**: no corpus scene authors an emotion (verified —
   `rg '\[' misc/bench/corpus/*/scene.md` finds nothing), the solver emits blink clips verbatim
-  for untouched entities (§6), and all six corpus contract hashes are asserted equal to the
+  for untouched entities (§6), and all seven corpus contract hashes are asserted equal to the
   committed ledger row's before bless.
 - **PR-D — gaze.** The eye stack in the factory (sclera / pupil / filled lid), `GAZE_PARTS`,
   `an character add-gaze`, `gaze_x/gaze_y` as expression axes plus the seeded saccade

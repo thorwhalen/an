@@ -164,7 +164,7 @@ Project.load(dir)
 └─ render() in an/render.py
    ├─ if any dialogue & auto_audio:
    │     produce_audio_for_scene(scene, mall, tts=…, lipsync=…)
-   │     ↳ stamps dialogue.audio_ref + dialogue.viseme_ref + dialogue.start + dialogue.duration
+   │     ↳ stamps dialogue.audio_ref + dialogue.viseme_ref + dialogue.start + dialogue.duration + dialogue.word_timings (the provider's words, line-relative, when it has any — an#96)
    │     ↳ persists wav bytes to mall["audio"][hash], visemes JSON to mall["visemes"][hash]
    │     ↳ writes scene back to mall["scenes"]["main"] (mtime equalized)
    │

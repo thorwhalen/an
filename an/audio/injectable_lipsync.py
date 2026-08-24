@@ -104,6 +104,9 @@ class WordTimingsLipSync:
         # invalidates the viseme cache.
         return f"word-timings:{getattr(self.provider, 'name', 'unknown')}"
 
+    #: Built from words, so the track carries them (an#96).
+    emits_word_timings: bool = True
+
     def align(self, audio: AudioClip, transcript: str) -> VisemeTrack:
         words = list(self.provider.words_for(audio, transcript=transcript))
         return VisemeTrack(
@@ -116,4 +119,5 @@ class WordTimingsLipSync:
             ),
             convention=self.convention,
             duration=audio.duration,
+            words=words,
         )

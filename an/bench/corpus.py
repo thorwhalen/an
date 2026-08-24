@@ -95,6 +95,16 @@ def _prepare_promote_demo(project_dir: Path) -> None:
     from an.characters import promote
 
     promote(project_dir, entity="raw_maya", as_="maya-promoted", overwrite=True)
+    # The IR is regenerated from `scene.md` in the staged copy. Since an#96 the
+    # scene has a dialogue line, and `python examples/promote_demo/build.py`
+    # (auto_audio=True) stamps visemes into the committed `ir/scene.json` —
+    # which would move this fixture's contract hash with developer state.
+    # The bench renders with auto_audio=False and this scene's picture has no
+    # visemes in it by design; dropping the staged IR makes that a property of
+    # the fixture rather than of whoever last ran the example.
+    ir = project_dir / "ir" / "scene.json"
+    if ir.exists():
+        ir.unlink()
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,6 +235,25 @@ DFLT_FIXTURES: dict[str, Fixture] = {
         golden_note=(
             "the fourth bar sweeping horizontally (4,200 px). The three angled "
             "bars are pinned and do not move — they are the AA subject."
+        ),
+    ),
+    "dialogue": Fixture(
+        path=f"{CORPUS_DIRNAME}/dialogue",
+        expect_visual_kinds=frozenset({"rect", "ellipse", "mouth", "eye"}),
+        golden_frames=(0.0, 0.6),
+        golden_note=(
+            "the mouth mid-line: frame 14 sits on the `h`/`a` of 'shape' and "
+            "TODAY'S condenser shows `C` there, having dropped the `D` and `A` "
+            "that follow inside its 0.14 s window — the drop-instead-of-hold "
+            "defect PR-B (an#97) replaces with a vote, which is what will move "
+            "this frame. The head is lifted 34 px above its rest by an absolute "
+            "`set` so the placeholder rig's mouth clears the torso (127 px "
+            "differ between the pair). The second golden sits INSIDE the spoken "
+            "interval, which no other corpus scene does: `single_character` "
+            "samples after its line ends and `promote_demo` renders mute in the "
+            "bench (no visemes in its IR, by design). The visemes are the "
+            "offline provider's, stamped into the committed ir/scene.json; the "
+            "bench renders with auto_audio=False and reads them from there."
         ),
     ),
     "multi_shot": Fixture(

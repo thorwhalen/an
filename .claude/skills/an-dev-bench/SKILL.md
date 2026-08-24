@@ -127,7 +127,14 @@ metrics fixture has to hold still — a fixture whose pixels depend on a generat
 elsewhere in the repo needs a re-bless every time that generator changes.
 
 New corpus scenes go there too. Give each one two `golden_frames` and a
-`golden_note` saying what moves between them.
+`golden_note` saying what moves between them — and if the scene **speaks**,
+commit its `ir/scene.json` with the offline visemes stamped, through a
+per-scene carve-out from `.gitignore`'s `misc/bench/corpus/*/ir/` rule: the
+bench renders with `auto_audio=False`, so without it the scene is mute on a
+clean checkout (`dialogue`, an#96, is the precedent). A fixture under
+`examples/` that gains dialogue gets the opposite treatment: its `prepare`
+regenerates the staged IR from the md, so a developer who ran the example
+(`auto_audio=True` persists visemes) cannot move the fixture's contract hash.
 
 ## The golden gate (an#38)
 
