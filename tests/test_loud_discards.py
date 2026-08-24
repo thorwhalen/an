@@ -530,7 +530,13 @@ def test_the_iterate_prompt_enumerates_the_legal_properties():
     prompt = src[src.index("actions: list of action dicts") :][:1200]
     for prop in ("scale_x", "alpha", "pivot_y"):
         assert prop in prompt, f"the prompt does not name {prop!r} as legal"
-    assert "FAILS THE RENDER" in prompt or "fails the render" in prompt
+    # Since an#87 any other property names a swap SET: the prompt must say
+    # that an undeclared one is refused at compile, and must forbid inventing
+    # sets or keys — the model's hallucination surface moved from property
+    # names to key names.
+    assert "asset_sets" in prompt
+    assert re.search(r"refused at\s+compile", prompt)
+    assert "Never invent" in prompt
 
 
 # ------------------------------------------- 8. the docs must not advertise them

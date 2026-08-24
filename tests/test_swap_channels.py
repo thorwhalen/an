@@ -674,9 +674,9 @@ def test_the_rest_key_is_derived_from_the_default_attachment(gale_store, tmp_pat
     from an.ir.schema import Dialogue, VisemeKeyframe, VisemeTrack
 
     desc_path = tmp_path / "gale" / "character.json"
-    doc = _json.loads(desc_path.read_text())
+    doc = _json.loads(desc_path.read_text(encoding="utf-8"))
     doc["asset_sets"]["viseme"] = {"SIL": "mouth_x", "AA": "mouth_a", "EH": "mouth_c"}
-    desc_path.write_text(_json.dumps(doc))
+    desc_path.write_text(_json.dumps(doc), encoding="utf-8")
     shot = _shot()
     shot = shot.model_copy(
         update={
@@ -711,9 +711,9 @@ def test_a_set_named_like_a_transform_is_refused(gale_store, tmp_path):
     from an.characters.validate import validate_character
 
     desc_path = tmp_path / "gale" / "character.json"
-    doc = _json.loads(desc_path.read_text())
+    doc = _json.loads(desc_path.read_text(encoding="utf-8"))
     doc["asset_sets"]["alpha"] = {"a": "fist"}
-    desc_path.write_text(_json.dumps(doc))
+    desc_path.write_text(_json.dumps(doc), encoding="utf-8")
     with pytest.raises(CutoutCompileError, match="alpha"):
         compile_shot(_shot(), mall={"characters": gale_store})
     report = validate_character(tmp_path / "gale")
@@ -732,9 +732,9 @@ def test_a_baked_face_provenance_with_overlay_true_is_flagged(gale_store, tmp_pa
     from an.characters.validate import validate_character
 
     desc_path = tmp_path / "gale" / "character.json"
-    doc = _json.loads(desc_path.read_text())
+    doc = _json.loads(desc_path.read_text(encoding="utf-8"))
     doc["metadata"] = {"art_provenance": "dicebear"}
-    desc_path.write_text(_json.dumps(doc))
+    desc_path.write_text(_json.dumps(doc), encoding="utf-8")
     report = validate_character(tmp_path / "gale")
     assert any("face_overlay" in f.ir_path for f in report.findings)
 

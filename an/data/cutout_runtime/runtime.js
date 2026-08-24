@@ -413,7 +413,7 @@
         return new Error(
             'unknown key ' + JSON.stringify(key) + ' for swap set ' +
             JSON.stringify(prop) + ' on ' + JSON.stringify(node.name) +
-            '. Known keys: ' + JSON.stringify(known.slice().sort())
+            '. Known keys: ' + JSON.stringify(known)
         );
     }
 
@@ -433,7 +433,7 @@
         const map = child._anAssetSets[prop];
         const assetId = map[key];
         if (assetId === undefined) {
-            throw unknownSwapKey(node, prop, key, Object.keys(map));
+            throw unknownSwapKey(node, prop, key, Object.keys(map).sort());
         }
         const tex = PIXI.Assets.get(assetId);
         if (!tex) {
