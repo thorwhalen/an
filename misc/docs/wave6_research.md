@@ -730,6 +730,22 @@ the way: `an render` (the CLI) had raised `TypeError` since `--supersample` land
 `an.orchestrate.render_project` re-declared the leaf's parameters and fell behind while the
 CLI test stubbed it; it is a pass-through now, with a test that stubs the leaf.
 
+**Landed in PR-D (an#99).** As designed in §9, with these facts from building it: the eye stack is
+added by `an.characters.factory.add_gaze` (draw orders sclera = lid−1 … pupil = lid, lid bumped
+once; idempotent), which the factory calls by default (`new_character(gaze=True)`) and `an
+character add-gaze` exposes; `_default_slots` is untouched, so `promote` and every descriptor
+constructed without slots keep the pre-stack eye and no existing golden moved except the
+`expressions` corpus rig, re-blessed once. `gaze_travel` is `{x: 9, y: 5}` view-box units on the
+synthesized eye (rx 14 / ry 10, pupil r 5). A gaze action is an `expression` with `gaze_x`/`gaze_y`
+axes (no new leaf kind — §5's "gaze actions" are provider spans like any other). The generator
+(`an/adapters/cutout/gaze.py`) is as §9 states, its constants labelled design values; the solver
+adds its sample-and-held steps onto the gaze curves, clamped, only where the rig has pupil nodes,
+and a rig with pupils always takes the solver path (ambient saccades are a contributor like
+blinks, so its blinks are frame-quantised in the face clip). The one deviation from §9: gaze on a
+rig WITHOUT pupils is not merely "a no-op" but a byte-identical document — an axis the rig binds
+nothing to is filtered out before the solver runs. Determinism is a test compiling the same shot
+twice; `meta.gaze_seeds` is serialized only when non-empty, so pre-Wave-6 contract hashes hold.
+
 ## 15. What the adversarial pass changed
 
 One refuting pass over the synthesis (84 citations checked, 17 experiments run, five external

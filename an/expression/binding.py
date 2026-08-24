@@ -126,14 +126,12 @@ def default_binding(desc: CharacterDescriptor) -> list[Binding]:
     for axis, slot in (("lid_open_l", LEFT_EYE_SLOT), ("lid_open_r", RIGHT_EYE_SLOT)):
         if slot in slots:
             out.append(SetBinding(axis, slot, EYELID_CHANNEL))
+    travel = getattr(desc, "gaze_travel", None) or {}
+    tx, ty = float(travel.get("x", GAZE_TRAVEL)), float(travel.get("y", GAZE_TRAVEL))
     for slot in (LEFT_PUPIL_SLOT, RIGHT_PUPIL_SLOT):
         if slot in slots:
-            out.append(
-                ChannelBinding("gaze_x", slot, "x", GAZE_TRAVEL, rig_scaled=True)
-            )
-            out.append(
-                ChannelBinding("gaze_y", slot, "y", GAZE_TRAVEL, rig_scaled=True)
-            )
+            out.append(ChannelBinding("gaze_x", slot, "x", tx, rig_scaled=True))
+            out.append(ChannelBinding("gaze_y", slot, "y", ty, rig_scaled=True))
     return out
 
 
@@ -283,9 +281,10 @@ def expression_problems(
     if desc is not None and not desc.face_overlay:
         problems.append(
             f"{who!r} has its face baked into the head art (face_overlay: false), so "
-            "there is no brow, lid or pupil node for an expression to move. The "
-            "exit: `an character promote` a hand-drawn rig with overlay face parts "
-            "(or `an character new --offline`, whose synthesized face is overlay art)."
+            "there is no brow, lid or pupil node for an expression to move. Two "
+            "exits: `an character promote` a hand-drawn rig with overlay face parts "
+            "(or `an character new --offline`, whose synthesized face is overlay "
+            "art), then `an character add-gaze` for the pupils."
         )
     return problems
 

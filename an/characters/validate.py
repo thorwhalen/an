@@ -235,6 +235,7 @@ def validate_character(
     _check_asset_sets(directory, descriptor, report, who=who)
 
     _check_mouth_variants(descriptor, report, who=who)
+    _check_gaze_stack(descriptor, report, who=who)
     _check_face_overlay_declaration(descriptor, report, who=who)
     _check_joint_names(directory, descriptor, report)
 
@@ -361,6 +362,24 @@ def _check_asset_sets(
                     "Give the set's attachments identical geometry, or "
                     "accept that per-key placement is not yet expressible.",
                 )
+
+
+def _check_gaze_stack(
+    descriptor: CharacterDescriptor | None, report: VerificationReport, *, who: str
+) -> None:
+    """A rig without pupil slots takes `gaze_x`/`gaze_y` as a no-op (an#99) —
+    an `info` Finding, not a defect: the expand step is `an character add-gaze`."""
+    if descriptor is None or not descriptor.face_overlay:
+        return
+    slots = {s.name for s in descriptor.slots}
+    if not {"left_pupil", "right_pupil"} & slots:
+        report.add(
+            "info",
+            "character.json#slots",
+            f"{who} has no pupil slot, so gaze (`gaze_x`/`gaze_y`, ambient saccades) "
+            "moves nothing on it",
+            f"Run `an character add-gaze {who}` to add the eye stack.",
+        )
 
 
 def _check_mouth_variants(
