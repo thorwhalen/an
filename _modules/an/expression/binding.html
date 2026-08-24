@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.expression.binding &mdash; an 0.1.56 documentation</title>
+  <title>an.expression.binding &mdash; an 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -57,6 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/gaze.html">an.adapters.cutout.gaze</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
@@ -232,7 +233,7 @@
 <span class="c1">#: Brow rotation per unit of `brow_angle_*`, radians. Art direction.</span>
 <span class="n">BROW_ANGLE_TRAVEL</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.35</span>
 <span class="c1">#: Pupil travel per unit of `gaze_*`, in view-box units — the default when a</span>
-<span class="c1">#: descriptor declares no travel of its own (PR-D wires the pupil layer).</span>
+<span class="c1">#: descriptor declares no travel of its own (`add_gaze` writes `gaze_travel`).</span>
 <span class="n">GAZE_TRAVEL</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">6.0</span>
 <span class="c1">#: On a rig whose eye squashes instead of swapping art, a lid offset scales</span>
 <span class="c1">#: the eye by this much per unit.</span>
@@ -305,7 +306,11 @@
         <span class="p">(</span><span class="s2">"brow_height_r"</span><span class="p">,</span> <span class="n">RIGHT_BROW_SLOT</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">slot</span> <span class="ow">in</span> <span class="n">slots</span><span class="p">:</span>
-            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ChannelBinding</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">slot</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">BROW_HEIGHT_TRAVEL</span><span class="p">,</span> <span class="n">rig_scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">ChannelBinding</span><span class="p">(</span>
+                    <span class="n">axis</span><span class="p">,</span> <span class="n">slot</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">BROW_HEIGHT_TRAVEL</span><span class="p">,</span> <span class="n">rig_scaled</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
     <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">slot</span><span class="p">,</span> <span class="n">sign</span> <span class="ow">in</span> <span class="p">(</span>
         <span class="p">(</span><span class="s2">"brow_angle_l"</span><span class="p">,</span> <span class="n">LEFT_BROW_SLOT</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
         <span class="p">(</span><span class="s2">"brow_angle_r"</span><span class="p">,</span> <span class="n">RIGHT_BROW_SLOT</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
@@ -315,10 +320,16 @@
     <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">slot</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"lid_open_l"</span><span class="p">,</span> <span class="n">LEFT_EYE_SLOT</span><span class="p">),</span> <span class="p">(</span><span class="s2">"lid_open_r"</span><span class="p">,</span> <span class="n">RIGHT_EYE_SLOT</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">slot</span> <span class="ow">in</span> <span class="n">slots</span><span class="p">:</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SetBinding</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">slot</span><span class="p">,</span> <span class="n">EYELID_CHANNEL</span><span class="p">))</span>
+    <span class="n">travel</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">"gaze_travel"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">tx</span><span class="p">,</span> <span class="n">ty</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">travel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="n">GAZE_TRAVEL</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">travel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"y"</span><span class="p">,</span> <span class="n">GAZE_TRAVEL</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">travel</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">tx</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">ty</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ExpressionResolutionError</span><span class="p">(</span>
+            <span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"gaze_travel must be positive per axis, got </span><span class="si">{</span><span class="n">travel</span><span class="si">!r}</span><span class="s2">"</span><span class="p">]</span>
+        <span class="p">)</span>
     <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="p">(</span><span class="n">LEFT_PUPIL_SLOT</span><span class="p">,</span> <span class="n">RIGHT_PUPIL_SLOT</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">slot</span> <span class="ow">in</span> <span class="n">slots</span><span class="p">:</span>
-            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ChannelBinding</span><span class="p">(</span><span class="s2">"gaze_x"</span><span class="p">,</span> <span class="n">slot</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="n">GAZE_TRAVEL</span><span class="p">,</span> <span class="n">rig_scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ChannelBinding</span><span class="p">(</span><span class="s2">"gaze_y"</span><span class="p">,</span> <span class="n">slot</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="n">GAZE_TRAVEL</span><span class="p">,</span> <span class="n">rig_scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ChannelBinding</span><span class="p">(</span><span class="s2">"gaze_x"</span><span class="p">,</span> <span class="n">slot</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="n">tx</span><span class="p">,</span> <span class="n">rig_scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ChannelBinding</span><span class="p">(</span><span class="s2">"gaze_y"</span><span class="p">,</span> <span class="n">slot</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="n">rig_scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">out</span></div>
 
 
@@ -346,8 +357,10 @@
         <span class="k">if</span> <span class="n">raw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slot"</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">slots</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ExpressionResolutionError</span><span class="p">(</span>
                 <span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="p">[</span><span class="sa">f</span><span class="s2">"expression_binding maps </span><span class="si">{</span><span class="n">axis</span><span class="si">!r}</span><span class="s2"> onto slot </span><span class="si">{</span><span class="n">raw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'slot'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">, "</span>
-                 <span class="sa">f</span><span class="s2">"which the rig does not declare (slots: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">slots</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span><span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">"expression_binding maps </span><span class="si">{</span><span class="n">axis</span><span class="si">!r}</span><span class="s2"> onto slot </span><span class="si">{</span><span class="n">raw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'slot'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">, "</span>
+                    <span class="sa">f</span><span class="s2">"which the rig does not declare (slots: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">slots</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+                <span class="p">],</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="s2">"set_family"</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SetBinding</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s2">"slot"</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s2">"set_family"</span><span class="p">])))</span>
@@ -387,7 +400,7 @@
 <span class="sd">    """</span>
     <span class="n">prefix</span> <span class="o">=</span> <span class="n">VISEME_CHANNEL</span> <span class="o">+</span> <span class="s2">"@"</span>
     <span class="k">return</span> <span class="p">{</span>
-        <span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">):]:</span> <span class="n">name</span>
+        <span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="p">:]:</span> <span class="n">name</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">asset_sets</span>
         <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
     <span class="p">}</span></div>
@@ -481,9 +494,10 @@
     <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">desc</span><span class="o">.</span><span class="n">face_overlay</span><span class="p">:</span>
         <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">!r}</span><span class="s2"> has its face baked into the head art (face_overlay: false), so "</span>
-            <span class="s2">"there is no brow, lid or pupil node for an expression to move. The "</span>
-            <span class="s2">"exit: `an character promote` a hand-drawn rig with overlay face parts "</span>
-            <span class="s2">"(or `an character new --offline`, whose synthesized face is overlay art)."</span>
+            <span class="s2">"there is no brow, lid or pupil node for an expression to move. Two "</span>
+            <span class="s2">"exits: `an character promote` a hand-drawn rig with overlay face parts "</span>
+            <span class="s2">"(or `an character new --offline`, whose synthesized face is overlay "</span>
+            <span class="s2">"art), then `an character add-gaze` for the pupils."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">problems</span></div>
 

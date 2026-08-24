@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.factory &mdash; an 0.1.56 documentation</title>
+  <title>an.characters.factory &mdash; an 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -57,6 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/gaze.html">an.adapters.cutout.gaze</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
@@ -200,6 +201,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
@@ -294,8 +296,14 @@
     <span class="n">acknowledge_attribution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">mouth_variants</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">gaze</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Build a complete character on disk.</span>
+
+<span class="sd">    ``gaze`` (an#99) adds the eye stack — sclera and pupil slots under each</span>
+<span class="sd">    lid, a filled closed lid, the ``gaze_travel`` clamp — through</span>
+<span class="sd">    :func:`add_gaze`, so `gaze_x`/`gaze_y` and the ambient saccades reach the</span>
+<span class="sd">    pupils. Off, the eye is the single pre-stack drawing.</span>
 
 <span class="sd">    ``mouth_variants`` (an#98) — ``{form: smile offset}`` — writes one more</span>
 <span class="sd">    9-shape mouth set per form (``mouth_&lt;shape&gt;_&lt;form&gt;.svg``) and declares it</span>
@@ -373,7 +381,9 @@
     <span class="n">_write_leg_part</span><span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"leg_r.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">"r"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#3a3a4a"</span><span class="p">)</span>
 
     <span class="c1"># Step 4: default mouths, plus the form variants (an#98)</span>
-    <span class="n">variants</span> <span class="o">=</span> <span class="n">DEFAULT_MOUTH_VARIANTS</span> <span class="k">if</span> <span class="n">mouth_variants</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mouth_variants</span><span class="p">)</span>
+    <span class="n">variants</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">DEFAULT_MOUTH_VARIANTS</span> <span class="k">if</span> <span class="n">mouth_variants</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mouth_variants</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="n">write_default_mouths</span><span class="p">(</span><span class="n">mouth_dir</span><span class="p">,</span> <span class="n">variants</span><span class="o">=</span><span class="n">variants</span><span class="p">)</span>
 
     <span class="c1"># Step 5: derived parts (eyes, brows)</span>
@@ -398,15 +408,20 @@
         <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">declare_mouth_variants</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="n">variants</span><span class="p">)</span>
+    <span class="n">descriptor</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"seed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed_used</span>
     <span class="n">desc_path</span> <span class="o">=</span> <span class="n">out</span> <span class="o">/</span> <span class="s2">"character.json"</span>
     <span class="n">desc_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gaze</span> <span class="ow">and</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">face_overlay</span><span class="p">:</span>
+        <span class="n">add_gaze</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>  <span class="c1"># the lid's fill is read off the head art it just wrote</span>
     <span class="k">return</span> <span class="n">desc_path</span></div>
 
 
 
 <div class="viewcode-block" id="declare_mouth_variants">
 <a class="viewcode-back" href="../../../module_docs/an/characters/factory.html#an.characters.declare_mouth_variants">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">declare_mouth_variants</span><span class="p">(</span><span class="n">descriptor</span><span class="p">:</span> <span class="n">CharacterDescriptor</span><span class="p">,</span> <span class="n">variants</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">declare_mouth_variants</span><span class="p">(</span>
+    <span class="n">descriptor</span><span class="p">:</span> <span class="n">CharacterDescriptor</span><span class="p">,</span> <span class="n">variants</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Declare a ``viseme@&lt;form&gt;`` set per variant on ``descriptor`` — the set's</span>
 <span class="sd">    keys map to ``mouth_&lt;shape&gt;_&lt;form&gt;`` attachments, which are added to the</span>
 <span class="sd">    default skin's ``mouth`` slot with the neutral mouth's geometry. The</span>
@@ -488,29 +503,205 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_synthesize_eye_open</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-    <span class="n">svg</span> <span class="o">=</span> <span class="p">(</span>
+<span class="c1">#: The eye's geometry in its 64x32 canvas, shared by the four synthesizers so</span>
+<span class="c1">#: the sclera, the pupil and the lid outline agree (an#99).</span>
+<span class="n">EYE_CANVAS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="n">EYE_CENTRE</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="n">EYE_RX</span><span class="p">,</span> <span class="n">EYE_RY</span> <span class="o">=</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">10</span>
+<span class="n">PUPIL_R</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="c1">#: The parts a rig gains with `an character add-gaze`. Optional — never in</span>
+<span class="c1">#: `REQUIRED_PARTS`: a pre-Wave-6 rig without them still renders, and gaze is</span>
+<span class="c1">#: a no-op on it.</span>
+<span class="n">GAZE_PARTS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"sclera_l"</span><span class="p">,</span> <span class="s2">"sclera_r"</span><span class="p">,</span> <span class="s2">"pupil_l"</span><span class="p">,</span> <span class="s2">"pupil_r"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_eye_svg</span><span class="p">(</span><span class="n">inner</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">gid</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">EYE_CANVAS</span>
+    <span class="k">return</span> <span class="p">(</span>
         <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span>
-        <span class="sa">f</span><span class="s1">'&lt;svg xmlns="</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="s1">" viewBox="0 0 64 32" width="64" height="32"&gt;'</span>
-        <span class="sa">f</span><span class="s1">'&lt;g id="eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">_open"&gt;'</span>
-        <span class="s1">'&lt;ellipse cx="32" cy="16" rx="14" ry="10" fill="#ffffff" stroke="#222" stroke-width="2"/&gt;'</span>
-        <span class="s1">'&lt;circle cx="32" cy="16" r="5" fill="#1a1a1a"/&gt;'</span>
-        <span class="s2">"&lt;/g&gt;&lt;/svg&gt;"</span>
+        <span class="sa">f</span><span class="s1">'&lt;svg xmlns="</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="s1">" viewBox="0 0 </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s1">" width="</span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s1">" height="</span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s1">"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;g id="</span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s1">"&gt;</span><span class="si">{</span><span class="n">inner</span><span class="si">}</span><span class="s1">&lt;/g&gt;&lt;/svg&gt;'</span>
     <span class="p">)</span>
-    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_synthesize_eye_open</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outline_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The open eye. ``outline_only`` (the gaze stack, an#99) draws the outline</span>
+<span class="sd">    with a transparent interior, so the sclera and pupil slots beneath show</span>
+<span class="sd">    through; the default keeps the pre-stack single drawing (white + pupil)."""</span>
+    <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">EYE_CENTRE</span>
+    <span class="k">if</span> <span class="n">outline_only</span><span class="p">:</span>
+        <span class="n">inner</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;ellipse cx="</span><span class="si">{</span><span class="n">cx</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">cy</span><span class="si">}</span><span class="s1">" rx="</span><span class="si">{</span><span class="n">EYE_RX</span><span class="si">}</span><span class="s1">" ry="</span><span class="si">{</span><span class="n">EYE_RY</span><span class="si">}</span><span class="s1">" fill="none" stroke="#222" stroke-width="2"/&gt;'</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">inner</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s1">'&lt;ellipse cx="</span><span class="si">{</span><span class="n">cx</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">cy</span><span class="si">}</span><span class="s1">" rx="</span><span class="si">{</span><span class="n">EYE_RX</span><span class="si">}</span><span class="s1">" ry="</span><span class="si">{</span><span class="n">EYE_RY</span><span class="si">}</span><span class="s1">" fill="#ffffff" stroke="#222" stroke-width="2"/&gt;'</span>
+            <span class="sa">f</span><span class="s1">'&lt;circle cx="</span><span class="si">{</span><span class="n">cx</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">cy</span><span class="si">}</span><span class="s1">" r="</span><span class="si">{</span><span class="n">PUPIL_R</span><span class="si">}</span><span class="s1">" fill="#1a1a1a"/&gt;'</span>
+        <span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">_eye_svg</span><span class="p">(</span><span class="n">inner</span><span class="p">,</span> <span class="n">gid</span><span class="o">=</span><span class="sa">f</span><span class="s2">"eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">_open"</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">path</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_synthesize_eye_closed</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-    <span class="n">svg</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span>
-        <span class="sa">f</span><span class="s1">'&lt;svg xmlns="</span><span class="si">{</span><span class="n">SVG_NS</span><span class="si">}</span><span class="s1">" viewBox="0 0 64 32" width="64" height="32"&gt;'</span>
-        <span class="sa">f</span><span class="s1">'&lt;g id="eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">_closed"&gt;'</span>
-        <span class="s1">'&lt;path d="M 18 18 Q 32 24 46 18" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/&gt;'</span>
-        <span class="s2">"&lt;/g&gt;&lt;/svg&gt;"</span>
-    <span class="p">)</span>
-    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">svg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_synthesize_eye_closed</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fill</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The closed eye. With ``fill`` (the gaze stack) it is a FILLED skin-tone</span>
+<span class="sd">    lid — a stroke-only closed eye would show the pupil through it."""</span>
+    <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">EYE_CENTRE</span>
+    <span class="n">lid</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">fill</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lid</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;ellipse cx="</span><span class="si">{</span><span class="n">cx</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">cy</span><span class="si">}</span><span class="s1">" rx="</span><span class="si">{</span><span class="n">EYE_RX</span><span class="si">}</span><span class="s1">" ry="</span><span class="si">{</span><span class="n">EYE_RY</span><span class="si">}</span><span class="s1">" fill="</span><span class="si">{</span><span class="n">fill</span><span class="si">}</span><span class="s1">" stroke="none"/&gt;'</span>
+    <span class="n">inner</span> <span class="o">=</span> <span class="n">lid</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">'&lt;path d="M </span><span class="si">{</span><span class="n">cx</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">14</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">cy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="si">}</span><span class="s1"> Q </span><span class="si">{</span><span class="n">cx</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">cy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">8</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">cx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">14</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">cy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="si">}</span><span class="s1">" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/&gt;'</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">_eye_svg</span><span class="p">(</span><span class="n">inner</span><span class="p">,</span> <span class="n">gid</span><span class="o">=</span><span class="sa">f</span><span class="s2">"eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">_closed"</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_synthesize_sclera</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">EYE_CENTRE</span>
+    <span class="n">inner</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;ellipse cx="</span><span class="si">{</span><span class="n">cx</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">cy</span><span class="si">}</span><span class="s1">" rx="</span><span class="si">{</span><span class="n">EYE_RX</span><span class="si">}</span><span class="s1">" ry="</span><span class="si">{</span><span class="n">EYE_RY</span><span class="si">}</span><span class="s1">" fill="#ffffff" stroke="none"/&gt;'</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">_eye_svg</span><span class="p">(</span><span class="n">inner</span><span class="p">,</span> <span class="n">gid</span><span class="o">=</span><span class="sa">f</span><span class="s2">"sclera_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_synthesize_pupil</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">EYE_CENTRE</span>
+    <span class="n">inner</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;circle cx="</span><span class="si">{</span><span class="n">cx</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">cy</span><span class="si">}</span><span class="s1">" r="</span><span class="si">{</span><span class="n">PUPIL_R</span><span class="si">}</span><span class="s1">" fill="#1a1a1a"/&gt;'</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">_eye_svg</span><span class="p">(</span><span class="n">inner</span><span class="p">,</span> <span class="n">gid</span><span class="o">=</span><span class="sa">f</span><span class="s2">"pupil_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_skin_fill_of</span><span class="p">(</span><span class="n">head_svg</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The first solid fill of the head art's first circle/ellipse — the face's</span>
+<span class="sd">    skin tone on every rig this factory synthesizes; ``None`` if none is found.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">head_svg</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"&lt;(?:circle|ellipse)[^&gt;]*fill=</span><span class="se">\"</span><span class="s2">(#[0-9a-fA-F]</span><span class="si">{6}</span><span class="s2">)</span><span class="se">\"</span><span class="s2">"</span><span class="p">,</span> <span class="n">head_svg</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="gaze_travel_for">
+<a class="viewcode-back" href="../../../module_docs/an/characters/factory.html#an.characters.gaze_travel_for">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gaze_travel_for</span><span class="p">(</span><span class="n">rx</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">EYE_RX</span><span class="p">,</span> <span class="n">ry</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">EYE_RY</span><span class="p">,</span> <span class="n">pupil_r</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">PUPIL_R</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The pupil's travel per axis, in view-box units: the sclera's clearance</span>
+<span class="sd">    minus the pupil's radius — the semi-axes of the inner ellipse the gaze</span>
+<span class="sd">    axes' unit circle maps onto. The compiler clamps the summed gaze to 0.95</span>
+<span class="sd">    of that circle (`GAZE_ELLIPSE_MARGIN`), which is what keeps the pupil disc</span>
+<span class="sd">    inside the white at every angle without a runtime mask.</span>
+
+<span class="sd">    &gt;&gt;&gt; gaze_travel_for()</span>
+<span class="sd">    {'x': 9.0, 'y': 5.0}</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"x"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">rx</span> <span class="o">-</span> <span class="n">pupil_r</span><span class="p">),</span> <span class="s2">"y"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">ry</span> <span class="o">-</span> <span class="n">pupil_r</span><span class="p">)}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_factory_eye</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether an eye part is this factory's own drawing (its group id and the</span>
+<span class="sd">    64x32 canvas) — the only art `add_gaze` may overwrite."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># nothing to lose</span>
+    <span class="n">svg</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">EYE_CANVAS</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">'id="eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s1">"'</span> <span class="ow">in</span> <span class="n">svg</span> <span class="ow">and</span> <span class="sa">f</span><span class="s1">'viewBox="0 0 </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s1">"'</span> <span class="ow">in</span> <span class="n">svg</span>
+
+
+<div class="viewcode-block" id="add_gaze">
+<a class="viewcode-back" href="../../../module_docs/an/characters/factory.html#an.characters.add_gaze">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_gaze</span><span class="p">(</span><span class="n">char_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">skin</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">overwrite_eyes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Give a character the eye stack (an#99): three sibling slots per eye under</span>
+<span class="sd">    the head — ``&lt;side&gt;_sclera`` (white fill) below ``&lt;side&gt;_pupil`` below</span>
+<span class="sd">    ``&lt;side&gt;_eye`` (the existing slot, now the lid, drawn above the pupil) —</span>
+<span class="sd">    with synthesized parts, an outline-only open eye, a FILLED closed lid, the</span>
+<span class="sd">    ``gaze_travel`` clamp, and draw orders that put the lid over the pupil.</span>
+<span class="sd">    Idempotent: a rig that already has the stack is rewritten to the same</span>
+<span class="sd">    state. Returns the descriptor path.</span>
+
+<span class="sd">    The open and closed eye parts are REWRITTEN (outline-only, filled lid), so</span>
+<span class="sd">    on a rig whose eyes are not this factory's drawings — a promoted hand rig —</span>
+<span class="sd">    it refuses unless ``overwrite_eyes=True``: the stack's geometry is the</span>
+<span class="sd">    synthesized eye's, and an illustrator's eyes would be silently replaced</span>
+<span class="sd">    (an#99 review). Such a rig wants its own outline-only open eye, filled</span>
+<span class="sd">    lid, sclera and pupil parts drawn to its own geometry.</span>
+
+<span class="sd">    This is the **expand** step for a pre-Wave-6 descriptor: no migration</span>
+<span class="sd">    inserts pupil slots, because their art would be absent and absent art is</span>
+<span class="sd">    fatal under `strict_assets` — every existing character would stop</span>
+<span class="sd">    rendering on the bench.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">CharacterDescriptor</span><span class="p">,</span> <span class="n">FACE_OFFSETS</span><span class="p">,</span> <span class="n">Attachment</span><span class="p">,</span> <span class="n">Slot</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">migrate</span>
+
+    <span class="n">char_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">char_dir</span><span class="p">)</span>
+    <span class="n">desc_path</span> <span class="o">=</span> <span class="n">char_dir</span> <span class="o">/</span> <span class="s2">"character.json"</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">desc_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="n">desc</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">migrate</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">desc</span><span class="o">.</span><span class="n">face_overlay</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has its face baked into the head art (face_overlay: false): "</span>
+            <span class="s2">"the rig builder draws no overlay eye, so an eye stack would never show. "</span>
+            <span class="s2">"`an character promote` a hand-drawn rig with overlay face parts first."</span>
+        <span class="p">)</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">char_dir</span> <span class="o">/</span> <span class="s2">"parts"</span>
+    <span class="c1"># Every refusal BEFORE the first write, so a rig that errors is untouched.</span>
+    <span class="n">skin_</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">skins</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">skin_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has no default skin to add the eye stack to"</span><span class="p">)</span>
+    <span class="n">by_name</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">slots</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">eye_slot</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"left_eye"</span><span class="p">,</span> <span class="s2">"right_eye"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">eye_slot</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">by_name</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has no </span><span class="si">{</span><span class="n">eye_slot</span><span class="si">!r}</span><span class="s2"> slot; the eye stack sits under it"</span><span class="p">)</span>
+    <span class="n">foreign</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">.svg"</span>
+        <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"l"</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"open"</span><span class="p">,</span> <span class="s2">"closed"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_factory_eye</span><span class="p">(</span><span class="n">parts</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="n">side</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">foreign</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite_eyes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">'s eye art is not this factory's (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">foreign</span><span class="p">)</span><span class="si">}</span><span class="s2">): the eye "</span>
+            <span class="s2">"stack would replace a hand-drawn eye with the synthesized outline and lid. "</span>
+            <span class="s2">"Draw the rig's own outline-only open eye, filled closed lid, sclera and pupil "</span>
+            <span class="s2">"parts to its geometry, or pass overwrite_eyes=True (`--overwrite-eyes`) to "</span>
+            <span class="s2">"accept the synthesized eyes."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">skin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The lid's fill is the HEAD's skin — read off the head art, never</span>
+        <span class="c1"># re-derived from a seed the descriptor may not carry (an#99 review:</span>
+        <span class="c1"># a rig built with `--seed` ≠ name got a lid of another tone).</span>
+        <span class="n">skin</span> <span class="o">=</span> <span class="n">_skin_fill_of</span><span class="p">(</span><span class="n">parts</span> <span class="o">/</span> <span class="s2">"head.svg"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_palette_for_seed</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"seed"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">desc</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dicebear_seed"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"l"</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">):</span>
+        <span class="n">_synthesize_sclera</span><span class="p">(</span><span class="n">parts</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"sclera_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="n">side</span><span class="p">)</span>
+        <span class="n">_synthesize_pupil</span><span class="p">(</span><span class="n">parts</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"pupil_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="n">side</span><span class="p">)</span>
+        <span class="n">_synthesize_eye_open</span><span class="p">(</span><span class="n">parts</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">_open.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="n">side</span><span class="p">,</span> <span class="n">outline_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">_synthesize_eye_closed</span><span class="p">(</span><span class="n">parts</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"eye_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">_closed.svg"</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="n">side</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">skin</span><span class="p">)</span>
+    <span class="n">had_stack</span> <span class="o">=</span> <span class="s2">"left_pupil"</span> <span class="ow">in</span> <span class="n">by_name</span> <span class="ow">or</span> <span class="s2">"right_pupil"</span> <span class="ow">in</span> <span class="n">by_name</span>
+    <span class="k">for</span> <span class="n">side</span><span class="p">,</span> <span class="n">eye_slot</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"l"</span><span class="p">,</span> <span class="s2">"left_eye"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"r"</span><span class="p">,</span> <span class="s2">"right_eye"</span><span class="p">)):</span>
+        <span class="n">eye</span> <span class="o">=</span> <span class="n">by_name</span><span class="p">[</span><span class="n">eye_slot</span><span class="p">]</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">FACE_OFFSETS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">eye_slot</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="n">skin_</span><span class="o">.</span><span class="n">slots</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">eye_slot</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">existing</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"open"</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">existing</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">template</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">eye</span><span class="o">.</span><span class="n">draw_order</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">had_stack</span> <span class="k">else</span> <span class="n">eye</span><span class="o">.</span><span class="n">draw_order</span>
+        <span class="k">for</span> <span class="n">kind</span><span class="p">,</span> <span class="n">order</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"sclera"</span><span class="p">,</span> <span class="n">base</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">"pupil"</span><span class="p">,</span> <span class="n">base</span><span class="p">)):</span>
+            <span class="n">slot_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">eye_slot</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">stem</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">if</span> <span class="n">slot_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">by_name</span><span class="p">:</span>
+                <span class="n">desc</span><span class="o">.</span><span class="n">slots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Slot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">slot_name</span><span class="p">,</span> <span class="n">bone</span><span class="o">=</span><span class="n">eye</span><span class="o">.</span><span class="n">bone</span><span class="p">,</span> <span class="n">draw_order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">attachment</span><span class="o">=</span><span class="n">stem</span><span class="p">))</span>
+                <span class="n">by_name</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">slots</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">by_name</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span><span class="o">.</span><span class="n">draw_order</span> <span class="o">=</span> <span class="n">order</span>
+            <span class="n">skin_</span><span class="o">.</span><span class="n">slots</span><span class="p">[</span><span class="n">slot_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">stem</span><span class="p">:</span> <span class="n">Attachment</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"parts/</span><span class="si">{</span><span class="n">stem</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)}</span>
+        <span class="c1"># The lid draws above the pupil: bump it once (idempotent on a rig that</span>
+        <span class="c1"># already has the stack). On the default rig the lid then TIES the</span>
+        <span class="c1"># mouth's order and the tie-break is by name, which puts `left_eye`</span>
+        <span class="c1"># under the mouth and `right_eye` over it — harmless, they never</span>
+        <span class="c1"># overlap, but do not read the numbers as a strict stack.</span>
+        <span class="n">eye</span><span class="o">.</span><span class="n">draw_order</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">desc</span><span class="o">.</span><span class="n">gaze_travel</span> <span class="o">=</span> <span class="n">gaze_travel_for</span><span class="p">()</span>
+    <span class="n">desc</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"gaze_stack"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"an#99"</span>
+    <span class="n">desc_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">desc_path</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_palette_for_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>

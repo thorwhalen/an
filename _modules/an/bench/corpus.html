@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.corpus &mdash; an 0.1.56 documentation</title>
+  <title>an.bench.corpus &mdash; an 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -57,6 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/gaze.html">an.adapters.cutout.gaze</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
@@ -436,9 +437,11 @@
             <span class="s2">"shot), so no golden straddles a blink; "</span>
             <span class="s2">"it is lowered by an absolute `set face y` so the head clears the "</span>
             <span class="s2">"frame's top edge at 320x240. Its rig is committed whole (parts and "</span>
-            <span class="s2">"descriptor, `viseme@happy`/`viseme@sad` variants included) and has "</span>
-            <span class="s2">"no pupil layer yet — PR-D re-blesses these eight once the eye stack "</span>
-            <span class="s2">"lands. The pairwise distinguishability test in "</span>
+            <span class="s2">"descriptor, `viseme@happy`/`viseme@sad` variants included) and, since "</span>
+            <span class="s2">"an#99, the eye stack (sclera/pupil/lid slots, a filled closed lid, "</span>
+            <span class="s2">"`gaze_travel`), so the pupils also make their seeded ambient "</span>
+            <span class="s2">"saccades — sub-pixel at 320x240 and inside the face crop. The "</span>
+            <span class="s2">"pairwise distinguishability test in "</span>
             <span class="s2">"tests/test_expression_goldens.py reads these same PNGs."</span>
         <span class="p">),</span>
     <span class="p">),</span>

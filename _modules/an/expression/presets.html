@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.expression.presets &mdash; an 0.1.56 documentation</title>
+  <title>an.expression.presets &mdash; an 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -57,6 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/gaze.html">an.adapters.cutout.gaze</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
@@ -229,7 +230,15 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_p</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">lid</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">anchor</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Preset</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_p</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">height</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">angle</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">lid</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">form</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">anchor</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Preset</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">Preset</span><span class="p">(</span>
         <span class="n">name</span><span class="p">,</span>
         <span class="n">axes</span><span class="o">=</span><span class="p">{</span>
@@ -249,15 +258,78 @@
     <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">p</span>
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span>
         <span class="n">Preset</span><span class="p">(</span><span class="s2">"neutral"</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">{},</span> <span class="n">mouth_form</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">""</span><span class="p">),</span>
-        <span class="n">_p</span><span class="p">(</span><span class="s2">"happy"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span> <span class="n">form</span><span class="o">=</span><span class="s2">"happy"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">"6+12"</span><span class="p">),</span>
-        <span class="n">_p</span><span class="p">(</span><span class="s2">"sad"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">),</span> <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">),</span> <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span> <span class="n">form</span><span class="o">=</span><span class="s2">"sad"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">"1+4+15"</span><span class="p">),</span>
-        <span class="n">_p</span><span class="p">(</span><span class="s2">"angry"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.6</span><span class="p">),</span> <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.8</span><span class="p">),</span> <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="n">form</span><span class="o">=</span><span class="s2">"angry"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">"4+5+7+23"</span><span class="p">),</span>
-        <span class="n">_p</span><span class="p">(</span><span class="s2">"surprised"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span> <span class="n">form</span><span class="o">=</span><span class="s2">"surprised"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">"1+2+5+26"</span><span class="p">),</span>
-        <span class="n">_p</span><span class="p">(</span><span class="s2">"afraid"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">),</span> <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">form</span><span class="o">=</span><span class="s2">"afraid"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">"1+2+4+5+7+20+26"</span><span class="p">),</span>
-        <span class="n">_p</span><span class="p">(</span><span class="s2">"disgusted"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span> <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span> <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">),</span> <span class="n">form</span><span class="o">=</span><span class="s2">"disgusted"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">"9+15+17"</span><span class="p">),</span>
-        <span class="n">_p</span><span class="p">(</span><span class="s2">"thinking"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span> <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span> <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span> <span class="n">form</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">"cartoon convention"</span><span class="p">),</span>
-        <span class="n">_p</span><span class="p">(</span><span class="s2">"skeptical"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span> <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span> <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span> <span class="n">form</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">"cartoon convention"</span><span class="p">),</span>
-        <span class="n">_p</span><span class="p">(</span><span class="s2">"amused"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">),</span> <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span> <span class="n">form</span><span class="o">=</span><span class="s2">"happy"</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">"happy at ~0.6"</span><span class="p">),</span>
+        <span class="n">_p</span><span class="p">(</span>
+            <span class="s2">"happy"</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span>
+            <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+            <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span>
+            <span class="n">form</span><span class="o">=</span><span class="s2">"happy"</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="s2">"6+12"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_p</span><span class="p">(</span>
+            <span class="s2">"sad"</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">),</span>
+            <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">),</span>
+            <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span>
+            <span class="n">form</span><span class="o">=</span><span class="s2">"sad"</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="s2">"1+4+15"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_p</span><span class="p">(</span>
+            <span class="s2">"angry"</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.6</span><span class="p">),</span>
+            <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.8</span><span class="p">),</span>
+            <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+            <span class="n">form</span><span class="o">=</span><span class="s2">"angry"</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="s2">"4+5+7+23"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_p</span><span class="p">(</span>
+            <span class="s2">"surprised"</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+            <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+            <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span>
+            <span class="n">form</span><span class="o">=</span><span class="s2">"surprised"</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="s2">"1+2+5+26"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_p</span><span class="p">(</span>
+            <span class="s2">"afraid"</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">),</span>
+            <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+            <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+            <span class="n">form</span><span class="o">=</span><span class="s2">"afraid"</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="s2">"1+2+4+5+7+20+26"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_p</span><span class="p">(</span>
+            <span class="s2">"disgusted"</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span>
+            <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span>
+            <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">),</span>
+            <span class="n">form</span><span class="o">=</span><span class="s2">"disgusted"</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="s2">"9+15+17"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_p</span><span class="p">(</span>
+            <span class="s2">"thinking"</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span>
+            <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span>
+            <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span>
+            <span class="n">form</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="s2">"cartoon convention"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_p</span><span class="p">(</span>
+            <span class="s2">"skeptical"</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span>
+            <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span>
+            <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">),</span>
+            <span class="n">form</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="s2">"cartoon convention"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_p</span><span class="p">(</span>
+            <span class="s2">"amused"</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+            <span class="n">angle</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">),</span>
+            <span class="n">lid</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">),</span>
+            <span class="n">form</span><span class="o">=</span><span class="s2">"happy"</span><span class="p">,</span>
+            <span class="n">anchor</span><span class="o">=</span><span class="s2">"happy at ~0.6"</span><span class="p">,</span>
+        <span class="p">),</span>
     <span class="p">)</span>
 <span class="p">}</span>
 
@@ -304,7 +376,11 @@
     <span class="c1"># out-of-range override at half intensity is half the range, not the</span>
     <span class="c1"># whole of it (an#98 review).</span>
     <span class="n">clamped</span> <span class="o">=</span> <span class="n">clamp_axes</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">intensity</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">clamped</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">}</span></div>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">intensity</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">clamped</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="mf">0.0</span>
+    <span class="p">}</span></div>
 
 
 

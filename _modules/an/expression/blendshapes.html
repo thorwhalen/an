@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.expression.blendshapes &mdash; an 0.1.56 documentation</title>
+  <title>an.expression.blendshapes &mdash; an 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -57,6 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/gaze.html">an.adapters.cutout.gaze</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
@@ -208,23 +209,70 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.axes</span><span class="w"> </span><span class="kn">import</span> <span class="n">clamp_axes</span>
 
 <span class="n">BLENDSHAPE_V2_NAMES</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"browDownLeft"</span><span class="p">,</span> <span class="s2">"browDownRight"</span><span class="p">,</span> <span class="s2">"browInnerUp"</span><span class="p">,</span> <span class="s2">"browOuterUpLeft"</span><span class="p">,</span> <span class="s2">"browOuterUpRight"</span><span class="p">,</span>
-    <span class="s2">"cheekPuff"</span><span class="p">,</span> <span class="s2">"cheekSquintLeft"</span><span class="p">,</span> <span class="s2">"cheekSquintRight"</span><span class="p">,</span> <span class="s2">"eyeBlinkLeft"</span><span class="p">,</span> <span class="s2">"eyeBlinkRight"</span><span class="p">,</span>
-    <span class="s2">"eyeLookDownLeft"</span><span class="p">,</span> <span class="s2">"eyeLookDownRight"</span><span class="p">,</span> <span class="s2">"eyeLookInLeft"</span><span class="p">,</span> <span class="s2">"eyeLookInRight"</span><span class="p">,</span> <span class="s2">"eyeLookOutLeft"</span><span class="p">,</span>
-    <span class="s2">"eyeLookOutRight"</span><span class="p">,</span> <span class="s2">"eyeLookUpLeft"</span><span class="p">,</span> <span class="s2">"eyeLookUpRight"</span><span class="p">,</span> <span class="s2">"eyeSquintLeft"</span><span class="p">,</span> <span class="s2">"eyeSquintRight"</span><span class="p">,</span>
-    <span class="s2">"eyeWideLeft"</span><span class="p">,</span> <span class="s2">"eyeWideRight"</span><span class="p">,</span> <span class="s2">"jawForward"</span><span class="p">,</span> <span class="s2">"jawLeft"</span><span class="p">,</span> <span class="s2">"jawOpen"</span><span class="p">,</span> <span class="s2">"jawRight"</span><span class="p">,</span> <span class="s2">"mouthClose"</span><span class="p">,</span>
-    <span class="s2">"mouthDimpleLeft"</span><span class="p">,</span> <span class="s2">"mouthDimpleRight"</span><span class="p">,</span> <span class="s2">"mouthFrownLeft"</span><span class="p">,</span> <span class="s2">"mouthFrownRight"</span><span class="p">,</span> <span class="s2">"mouthFunnel"</span><span class="p">,</span>
-    <span class="s2">"mouthLeft"</span><span class="p">,</span> <span class="s2">"mouthLowerDownLeft"</span><span class="p">,</span> <span class="s2">"mouthLowerDownRight"</span><span class="p">,</span> <span class="s2">"mouthPressLeft"</span><span class="p">,</span> <span class="s2">"mouthPressRight"</span><span class="p">,</span>
-    <span class="s2">"mouthPucker"</span><span class="p">,</span> <span class="s2">"mouthRight"</span><span class="p">,</span> <span class="s2">"mouthRollLower"</span><span class="p">,</span> <span class="s2">"mouthRollUpper"</span><span class="p">,</span> <span class="s2">"mouthShrugLower"</span><span class="p">,</span>
-    <span class="s2">"mouthShrugUpper"</span><span class="p">,</span> <span class="s2">"mouthSmileLeft"</span><span class="p">,</span> <span class="s2">"mouthSmileRight"</span><span class="p">,</span> <span class="s2">"mouthStretchLeft"</span><span class="p">,</span> <span class="s2">"mouthStretchRight"</span><span class="p">,</span>
-    <span class="s2">"mouthUpperUpLeft"</span><span class="p">,</span> <span class="s2">"mouthUpperUpRight"</span><span class="p">,</span> <span class="s2">"noseSneerLeft"</span><span class="p">,</span> <span class="s2">"noseSneerRight"</span><span class="p">,</span> <span class="s2">"tongueOut"</span><span class="p">,</span>
+    <span class="s2">"browDownLeft"</span><span class="p">,</span>
+    <span class="s2">"browDownRight"</span><span class="p">,</span>
+    <span class="s2">"browInnerUp"</span><span class="p">,</span>
+    <span class="s2">"browOuterUpLeft"</span><span class="p">,</span>
+    <span class="s2">"browOuterUpRight"</span><span class="p">,</span>
+    <span class="s2">"cheekPuff"</span><span class="p">,</span>
+    <span class="s2">"cheekSquintLeft"</span><span class="p">,</span>
+    <span class="s2">"cheekSquintRight"</span><span class="p">,</span>
+    <span class="s2">"eyeBlinkLeft"</span><span class="p">,</span>
+    <span class="s2">"eyeBlinkRight"</span><span class="p">,</span>
+    <span class="s2">"eyeLookDownLeft"</span><span class="p">,</span>
+    <span class="s2">"eyeLookDownRight"</span><span class="p">,</span>
+    <span class="s2">"eyeLookInLeft"</span><span class="p">,</span>
+    <span class="s2">"eyeLookInRight"</span><span class="p">,</span>
+    <span class="s2">"eyeLookOutLeft"</span><span class="p">,</span>
+    <span class="s2">"eyeLookOutRight"</span><span class="p">,</span>
+    <span class="s2">"eyeLookUpLeft"</span><span class="p">,</span>
+    <span class="s2">"eyeLookUpRight"</span><span class="p">,</span>
+    <span class="s2">"eyeSquintLeft"</span><span class="p">,</span>
+    <span class="s2">"eyeSquintRight"</span><span class="p">,</span>
+    <span class="s2">"eyeWideLeft"</span><span class="p">,</span>
+    <span class="s2">"eyeWideRight"</span><span class="p">,</span>
+    <span class="s2">"jawForward"</span><span class="p">,</span>
+    <span class="s2">"jawLeft"</span><span class="p">,</span>
+    <span class="s2">"jawOpen"</span><span class="p">,</span>
+    <span class="s2">"jawRight"</span><span class="p">,</span>
+    <span class="s2">"mouthClose"</span><span class="p">,</span>
+    <span class="s2">"mouthDimpleLeft"</span><span class="p">,</span>
+    <span class="s2">"mouthDimpleRight"</span><span class="p">,</span>
+    <span class="s2">"mouthFrownLeft"</span><span class="p">,</span>
+    <span class="s2">"mouthFrownRight"</span><span class="p">,</span>
+    <span class="s2">"mouthFunnel"</span><span class="p">,</span>
+    <span class="s2">"mouthLeft"</span><span class="p">,</span>
+    <span class="s2">"mouthLowerDownLeft"</span><span class="p">,</span>
+    <span class="s2">"mouthLowerDownRight"</span><span class="p">,</span>
+    <span class="s2">"mouthPressLeft"</span><span class="p">,</span>
+    <span class="s2">"mouthPressRight"</span><span class="p">,</span>
+    <span class="s2">"mouthPucker"</span><span class="p">,</span>
+    <span class="s2">"mouthRight"</span><span class="p">,</span>
+    <span class="s2">"mouthRollLower"</span><span class="p">,</span>
+    <span class="s2">"mouthRollUpper"</span><span class="p">,</span>
+    <span class="s2">"mouthShrugLower"</span><span class="p">,</span>
+    <span class="s2">"mouthShrugUpper"</span><span class="p">,</span>
+    <span class="s2">"mouthSmileLeft"</span><span class="p">,</span>
+    <span class="s2">"mouthSmileRight"</span><span class="p">,</span>
+    <span class="s2">"mouthStretchLeft"</span><span class="p">,</span>
+    <span class="s2">"mouthStretchRight"</span><span class="p">,</span>
+    <span class="s2">"mouthUpperUpLeft"</span><span class="p">,</span>
+    <span class="s2">"mouthUpperUpRight"</span><span class="p">,</span>
+    <span class="s2">"noseSneerLeft"</span><span class="p">,</span>
+    <span class="s2">"noseSneerRight"</span><span class="p">,</span>
+    <span class="s2">"tongueOut"</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1">#: coefficient name → (axis, sign). Several coefficients fold onto one axis</span>
 <span class="c1">#: (`browInnerUp` raises both brows and turns both inner ends up); the rest of</span>
 <span class="c1">#: the vocabulary has no cutout meaning and maps to nothing.</span>
 <span class="n">_TO_AXES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"browInnerUp"</span><span class="p">:</span> <span class="p">((</span><span class="s2">"brow_height_l"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"brow_height_r"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"brow_angle_l"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"brow_angle_r"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+    <span class="s2">"browInnerUp"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"brow_height_l"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"brow_height_r"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"brow_angle_l"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"brow_angle_r"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+    <span class="p">),</span>
     <span class="s2">"browOuterUpLeft"</span><span class="p">:</span> <span class="p">((</span><span class="s2">"brow_height_l"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"brow_angle_l"</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)),</span>
     <span class="s2">"browOuterUpRight"</span><span class="p">:</span> <span class="p">((</span><span class="s2">"brow_height_r"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"brow_angle_r"</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)),</span>
     <span class="s2">"browDownLeft"</span><span class="p">:</span> <span class="p">((</span><span class="s2">"brow_height_l"</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"brow_angle_l"</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)),</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.cli &mdash; an 0.1.56 documentation</title>
+  <title>an.characters.cli &mdash; an 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -57,6 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/gaze.html">an.adapters.cutout.gaze</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
@@ -321,10 +322,39 @@
     <span class="n">desc_path</span> <span class="o">=</span> <span class="n">char_dir</span> <span class="o">/</span> <span class="s2">"character.json"</span>
     <span class="k">if</span> <span class="n">desc_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">variant_map</span><span class="p">:</span>
         <span class="n">raw</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">desc_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
-        <span class="n">desc</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">migrate</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">))</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+            <span class="n">migrate</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="n">declare_mouth_variants</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">variant_map</span><span class="p">)</span>
         <span class="n">desc_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">"wrote </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">written</span><span class="p">)</span><span class="si">}</span><span class="s2"> mouth shapes to </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<div class="viewcode-block" id="add_gaze">
+<a class="viewcode-back" href="../../../module_docs/an/characters/cli.html#an.characters.cli.add_gaze">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_gaze</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">overwrite_eyes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Give ``name`` the eye stack (an#99): sclera and pupil slots under each</span>
+<span class="sd">    lid, a filled closed lid, and the ``gaze_travel`` clamp — so `gaze_x` /</span>
+<span class="sd">    `gaze_y` and the ambient saccades move its pupils. The expand step for a</span>
+<span class="sd">    character made before Wave 6; idempotent on one that has it.</span>
+
+<span class="sd">    name: character id</span>
+<span class="sd">    out_dir: parent directory; defaults to ./assets/characters</span>
+<span class="sd">    overwrite_eyes: replace hand-drawn eye parts with the synthesized outline</span>
+<span class="sd">        and filled lid (refused otherwise — a promoted rig's eyes are not the</span>
+<span class="sd">        factory's to redraw)</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_gaze</span> <span class="k">as</span> <span class="n">_add_gaze</span>
+
+    <span class="n">char_dir</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">char_dir</span> <span class="o">/</span> <span class="s2">"character.json"</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"no character at </span><span class="si">{</span><span class="n">char_dir</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">_add_gaze</span><span class="p">(</span><span class="n">char_dir</span><span class="p">,</span> <span class="n">overwrite_eyes</span><span class="o">=</span><span class="n">overwrite_eyes</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"added the eye stack to </span><span class="si">{</span><span class="n">desc</span><span class="o">.</span><span class="n">parent</span><span class="si">}</span><span class="s2"> (descriptor: </span><span class="si">{</span><span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">)"</span></div>
 
 
 
@@ -338,14 +368,21 @@
     <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">forms</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">form</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown mouth form </span><span class="si">{</span><span class="n">form</span><span class="si">!r}</span><span class="s2">; the presets prefer: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"unknown mouth form </span><span class="si">{</span><span class="n">form</span><span class="si">!r}</span><span class="s2">; the presets prefer: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
         <span class="n">out</span><span class="p">[</span><span class="n">form</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_MOUTH_VARIANTS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">_VARIANT_SMILE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">out</span>
 
 
 <span class="c1">#: Corner upturn per mouth form for the forms without a default variant</span>
 <span class="c1">#: (art direction; the same knob `DEFAULT_MOUTH_VARIANTS` sets for happy/sad).</span>
-<span class="n">_VARIANT_SMILE</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"angry"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="s2">"surprised"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"afraid"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.15</span><span class="p">,</span> <span class="s2">"disgusted"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">}</span>
+<span class="n">_VARIANT_SMILE</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"angry"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="s2">"surprised"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">"afraid"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.15</span><span class="p">,</span>
+    <span class="s2">"disgusted"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">,</span>
+<span class="p">}</span>
 
 
 <div class="viewcode-block" id="validate">
@@ -620,6 +657,7 @@
 <span class="n">_dispatch_funcs</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">new</span><span class="p">,</span>
     <span class="n">mouths</span><span class="p">,</span>
+    <span class="n">add_gaze</span><span class="p">,</span>
     <span class="n">validate</span><span class="p">,</span>
     <span class="n">contract</span><span class="p">,</span>
     <span class="n">silhouette</span><span class="p">,</span>

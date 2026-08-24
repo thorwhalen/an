@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.56 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=9d458db5"></script>
+      <script src="../../../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -63,7 +63,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CutoutCompileError"><code class="docutils literal notranslate"><span class="pre">CutoutCompileError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CutoutCompileWarning"><code class="docutils literal notranslate"><span class="pre">CutoutCompileWarning</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.EYE_NODE_NAMES"><code class="docutils literal notranslate"><span class="pre">EYE_NODE_NAMES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.GAZE_ELLIPSE_MARGIN"><code class="docutils literal notranslate"><span class="pre">GAZE_ELLIPSE_MARGIN</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.PROCEDURAL_MOUTH_KEYS"><code class="docutils literal notranslate"><span class="pre">PROCEDURAL_MOUTH_KEYS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.PUPIL_NODE_NAMES"><code class="docutils literal notranslate"><span class="pre">PUPIL_NODE_NAMES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.RUNTIME_APPLIED_PROPERTIES"><code class="docutils literal notranslate"><span class="pre">RUNTIME_APPLIED_PROPERTIES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.SCENE_PX_PER_VIEW_BOX"><code class="docutils literal notranslate"><span class="pre">SCENE_PX_PER_VIEW_BOX</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.blink_phase"><code class="docutils literal notranslate"><span class="pre">blink_phase()</span></code></a></li>
@@ -73,6 +75,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gaze.html">an.adapters.cutout.gaze</a></li>
 <li class="toctree-l1"><a class="reference internal" href="render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="serialize.html">an.adapters.cutout.serialize</a></li>
@@ -279,6 +282,15 @@ names, on both the procedural and the descriptor path.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.GAZE_ELLIPSE_MARGIN">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">GAZE_ELLIPSE_MARGIN</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.95</span></span><a class="headerlink" href="#an.adapters.cutout.compile.GAZE_ELLIPSE_MARGIN" title="Link to this definition"></a></dt>
+<dd><p>The summed gaze (x, y), in axis units, is clamped to a circle of this radius
+— the declared travel maps the unit circle onto the sclera’s inner ellipse,
+and 0.95 keeps the whole pupil disc inside it at every angle (measured on
+the synthesized eye: 1.0 pokes out by 2% of the ellipse at the diagonal).</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="an.adapters.cutout.compile.PROCEDURAL_MOUTH_KEYS">
 <span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">PROCEDURAL_MOUTH_KEYS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'A':</span> <span class="pre">'A',</span> <span class="pre">'B':</span> <span class="pre">'B',</span> <span class="pre">'C':</span> <span class="pre">'C',</span> <span class="pre">'D':</span> <span class="pre">'D',</span> <span class="pre">'E':</span> <span class="pre">'E',</span> <span class="pre">'F':</span> <span class="pre">'F',</span> <span class="pre">'G':</span> <span class="pre">'G',</span> <span class="pre">'H':</span> <span class="pre">'H',</span> <span class="pre">'X':</span> <span class="pre">'X'}</span></span><a class="headerlink" href="#an.adapters.cutout.compile.PROCEDURAL_MOUTH_KEYS" title="Link to this definition"></a></dt>
 <dd><p>The procedural (drawn) mouth’s swap vocabulary, DECLARED as data on its
@@ -287,6 +299,12 @@ and as an SVG mouth carries its projection. A drawn mouth has no textures,
 so each key maps to itself — the code the runtime’s shape table draws. The
 compiler never branches on the set’s NAME: the drawn mouth is just a node
 whose visual carries a <cite>viseme</cite> set (an#87).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.PUPIL_NODE_NAMES">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">PUPIL_NODE_NAMES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'left_pupil',</span> <span class="pre">'right_pupil'})</span></span><a class="headerlink" href="#an.adapters.cutout.compile.PUPIL_NODE_NAMES" title="Link to this definition"></a></dt>
+<dd><p>The pupil nodes of the gaze stack (an#99); a rig without them takes gaze as a no-op.</p>
 </dd></dl>
 
 <dl class="py data">

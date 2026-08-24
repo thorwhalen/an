@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.cli &mdash; an 0.1.56 documentation</title>
+  <title>an.characters.cli &mdash; an 0.1.57 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9d458db5"></script>
+      <script src="../../../_static/documentation_options.js?v=393d09ac"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -60,6 +60,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/gaze.html">an.adapters.cutout.gaze</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
@@ -101,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../bench/run.html">an.bench.run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.cli</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.add_gaze"><code class="docutils literal notranslate"><span class="pre">add_gaze()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.contract"><code class="docutils literal notranslate"><span class="pre">contract()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.mouths"><code class="docutils literal notranslate"><span class="pre">mouths()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.characters.cli.new"><code class="docutils literal notranslate"><span class="pre">new()</span></code></a></li>
@@ -205,6 +207,22 @@ and returns a string for terminal display.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">silhouette</span></code>— rasterize silhouettes; for two characters, also IoU.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">preview</span></code>   — open an HTML viewer cycling visemes + idle animation.</p></li>
 </ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.cli.add_gaze">
+<span class="sig-prename descclassname"><span class="pre">an.characters.cli.</span></span><span class="sig-name descname"><span class="pre">add_gaze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_eyes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/cli.html#add_gaze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.cli.add_gaze" title="Link to this definition"></a></dt>
+<dd><p>Give <code class="docutils literal notranslate"><span class="pre">name</span></code> the eye stack (an#99): sclera and pupil slots under each
+lid, a filled closed lid, and the <code class="docutils literal notranslate"><span class="pre">gaze_travel</span></code> clamp — so <cite>gaze_x</cite> /
+<cite>gaze_y</cite> and the ambient saccades move its pupils. The expand step for a
+character made before Wave 6; idempotent on one that has it.</p>
+<p>name: character id
+out_dir: parent directory; defaults to ./assets/characters
+overwrite_eyes: replace hand-drawn eye parts with the synthesized outline</p>
+<blockquote>
+<div><p>and filled lid (refused otherwise — a promoted rig’s eyes are not the
+factory’s to redraw)</p>
+</div></blockquote>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="an.characters.cli.contract">
 <span class="sig-prename descclassname"><span class="pre">an.characters.cli.</span></span><span class="sig-name descname"><span class="pre">contract</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/cli.html#contract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.cli.contract" title="Link to this definition"></a></dt>
