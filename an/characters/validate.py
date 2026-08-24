@@ -311,12 +311,32 @@ def _check_asset_sets(
             for slot_name in holding_slots:
                 att = skin.slots[slot_name][attachment_name]
                 if not (directory / att.path).exists():
+                    # BLOCKING when this is the slot's default (or only)
+                    # art — the slot then draws NOTHING and the compiler
+                    # records a fallback; ADVISORY for a spare key, the
+                    # inventory-gap class ("a rig without a blink still
+                    # renders"), which escalates only when a shot uses it.
+                    default_name = next(
+                        (s.attachment for s in descriptor.slots if s.name == slot_name),
+                        None,
+                    )
+                    only_art = len(skin.slots[slot_name]) == 1
+                    severity = (
+                        BLOCKING
+                        if only_art or attachment_name == default_name
+                        else ADVISORY
+                    )
                     report.add(
-                        ADVISORY,
+                        severity,
                         f"{att.path}",
                         f"{who}'s {channel!r}.{key!r} resolves to {att.path}, "
-                        "which is not on disk; a shot that uses the key will "
-                        "drop it (fatal under strict_assets)",
+                        "which is not on disk; "
+                        + (
+                            "it is the slot's default art, so the slot draws nothing"
+                            if severity == BLOCKING
+                            else "a shot that uses the key will drop it (fatal "
+                            "under strict_assets)"
+                        ),
                         "Draw the file, or drop the key from the set.",
                     )
         # Geometry consistency, per slot the channel projects onto.

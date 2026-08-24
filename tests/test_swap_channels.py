@@ -61,6 +61,72 @@ def _shot(actions=(), *, duration=2.0):
     )
 
 
+def _python_timeline(scene):
+    """The compiled scene as the Python spec's Timeline, for evaluating poses."""
+    from an.adapters.cutout.channel import Channel, Keyframe
+    from an.adapters.cutout.clip import Clip
+    from an.adapters.cutout.timeline import PlacedClip, Timeline, Track
+
+    clips = {
+        aid: Clip(
+            aid,
+            duration=a.duration,
+            channels=[
+                Channel(
+                    ch.target,
+                    ch.property,
+                    [
+                        Keyframe(
+                            k.time,
+                            k.value,
+                            tuple(k.easing) if isinstance(k.easing, list) else k.easing,
+                        )
+                        for k in ch.keyframes
+                    ],
+                )
+                for ch in a.channels
+            ],
+        )
+        for aid, a in scene.animations.items()
+    }
+    return Timeline(
+        duration=scene.timeline.duration,
+        tracks=[
+            Track(
+                t.target_root,
+                [
+                    PlacedClip(clips[p.animation_id], p.start_time, p.duration, p.speed)
+                    for p in t.clips
+                ],
+            )
+            for t in scene.timeline.tracks
+        ],
+    )
+
+
+def _evaluate(tl, t):
+    from an.adapters.cutout.timeline import evaluate_timeline
+
+    return evaluate_timeline(tl, t)
+
+
+def _code_only(text: str, *, lang: str) -> str:
+    """Source with comments and string/docstring literals removed, so a set
+    name in PROSE ("hands off") is not mistaken for control flow."""
+    if lang == "js":
+        text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+        return re.sub(r"//[^\n]*", "", text)
+    import io
+    import tokenize
+
+    out = []
+    for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+        if tok.type in (tokenize.COMMENT, tokenize.STRING):
+            continue
+        out.append(tok.string)
+    return " ".join(out)
+
+
 def _channels(scene, prop):
     return [
         ch
@@ -114,14 +180,19 @@ def test_the_renderer_knows_nothing_about_the_fixture_sets():
     generic swap path. If this fails, someone special-cased a set name, which
     is the exact defect class an#87 removed for `viseme`.
     """
-    runtime = RUNTIME_JS.read_text(encoding="utf-8")
-    compiler = (
-        Path(__file__).resolve().parents[1]
-        / "an"
-        / "adapters"
-        / "cutout"
-        / "compile.py"
-    ).read_text(encoding="utf-8")
+    runtime = _code_only(RUNTIME_JS.read_text(encoding="utf-8"), lang="js")
+    compiler = _code_only(
+        (
+            Path(__file__).resolve().parents[1]
+            / "an"
+            / "adapters"
+            / "cutout"
+            / "compile.py"
+        ).read_text(encoding="utf-8"),
+        lang="py",
+    )
+    # Comments and docstrings are stripped first: "hands" is an English word,
+    # and a set name in prose is not control flow. Code tokens only.
     for name in ("hands", "body_facing", "gale"):
         assert not re.search(rf"\b{name}\b", runtime), (
             f"runtime.js mentions {name!r} — a set name became control flow"
@@ -194,6 +265,14 @@ def test_a_non_frame_aligned_numeric_set_still_fires(gale_store):
     assert placed.start_time == pytest.approx(1.02)
     assert placed.duration == pytest.approx(2.0 - 1.02)
     assert ch.keyframes[0].value == 2.0
+    # "Still fires" as EVIDENCE, not inference: through the spec evaluator the
+    # pose carries the value on every frame from the first sample after `at`
+    # — measured, the old 0.001s window hit 0 of 49 frames at 24 fps.
+    tl = _python_timeline(scene)
+    frames_with_value = [
+        i for i in range(49) if _evaluate(tl, i / 24.0).get(("gale/torso", "scale_x")) == 2.0
+    ]
+    assert frames_with_value and frames_with_value[0] == 25
 
 
 def test_trap_a_non_step_easing_on_a_swap_tween_is_forced_to_step(gale_store):
@@ -219,7 +298,7 @@ def test_trap_a_non_step_easing_on_a_swap_tween_is_forced_to_step(gale_store):
 
 
 def test_trap_b_an_undeclared_key_is_refused_naming_the_declared_ones(gale_store):
-    with pytest.raises(CutoutCompileError, match=r"fist.*palm.*point|declared key"):
+    with pytest.raises(CutoutCompileError, match=r"fist.*palm.*point"):
         compile_shot(
             _shot(
                 [SetAction(target="gale/left_hand", property="hands", value="FISTT")]
@@ -482,50 +561,12 @@ def test_a_set_holds_only_until_the_next_action_on_its_property(gale_store):
         (pytest.approx(1.8), pytest.approx(1.2)),
     ]
     # And, evaluated through the Python spec, the tween is visible at t=1.25.
-    from an.adapters.cutout.channel import Channel, Keyframe
-    from an.adapters.cutout.clip import Clip
-    from an.adapters.cutout.timeline import PlacedClip, Timeline, Track, evaluate_timeline
-
-    clips = {
-        aid: Clip(
-            aid,
-            duration=a.duration,
-            channels=[
-                Channel(
-                    ch.target,
-                    ch.property,
-                    [
-                        Keyframe(
-                            k.time,
-                            k.value,
-                            tuple(k.easing) if isinstance(k.easing, list) else k.easing,
-                        )
-                        for k in ch.keyframes
-                    ],
-                )
-                for ch in a.channels
-            ],
-        )
-        for aid, a in scene.animations.items()
-    }
-    tl = Timeline(
-        duration=3.0,
-        tracks=[
-            Track(
-                t.target_root,
-                [
-                    PlacedClip(clips[p.animation_id], p.start_time, p.duration, p.speed)
-                    for p in t.clips
-                ],
-            )
-            for t in scene.timeline.tracks
-        ],
-    )
+    tl = _python_timeline(scene)
     key = ("gale/torso", "x")
-    assert evaluate_timeline(tl, 0.5)[key] == 50.0
-    assert evaluate_timeline(tl, 1.25)[key] == pytest.approx(50.0)
-    assert evaluate_timeline(tl, 1.5)[key] == pytest.approx(100.0)
-    assert evaluate_timeline(tl, 2.5)[key] == -7.0
+    assert _evaluate(tl, 0.5)[key] == 50.0
+    assert _evaluate(tl, 1.25)[key] == pytest.approx(50.0)
+    assert _evaluate(tl, 1.5)[key] == pytest.approx(100.0)
+    assert _evaluate(tl, 2.5)[key] == -7.0
 
 
 def test_the_ir_validator_reads_the_migrated_descriptor(tmp_path):
@@ -761,3 +802,131 @@ def test_a_swap_tween_with_the_default_easing_does_not_warn(gale_store):
             mall={"characters": gale_store},
         )
     assert _channels(scene, "body_facing")[0].keyframes[0].easing == "step"
+
+
+# ------------------------------------------- pins the mutation review found missing
+
+
+def test_a_swap_on_an_unknown_node_is_refused_naming_the_known_paths(gale_store):
+    with pytest.raises(CutoutCompileError, match="gale/nowhere"):
+        compile_shot(
+            _shot([SetAction(target="gale/nowhere", property="hands", value="fist")]),
+            mall={"characters": gale_store},
+        )
+
+
+def _validate_gale(tmp_path, mutate):
+    import json as _json
+
+    from an.characters.validate import validate_character
+
+    desc_path = tmp_path / "gale" / "character.json"
+    doc = _json.loads(desc_path.read_text(encoding="utf-8"))
+    mutate(doc, tmp_path / "gale")
+    desc_path.write_text(_json.dumps(doc), encoding="utf-8")
+    return validate_character(tmp_path / "gale")
+
+
+def test_validate_blocks_a_key_whose_attachment_no_slot_carries(gale_store, tmp_path):
+    def mutate(doc, _):
+        doc["asset_sets"]["hands"]["wave"] = "hand_wave"
+
+    report = _validate_gale(tmp_path, mutate)
+    assert any(
+        f.severity == "error" and "hand_wave" in f.description for f in report.findings
+    )
+
+
+def test_validate_advises_a_spare_key_whose_file_is_missing(gale_store, tmp_path):
+    def mutate(doc, char_dir):
+        (char_dir / "parts" / "hand_point.svg").unlink()
+
+    report = _validate_gale(tmp_path, mutate)
+    hits = [f for f in report.findings if "hand_point.svg" in f.ir_path]
+    assert hits and all(f.severity == "warning" for f in hits), hits
+
+
+def test_validate_blocks_a_missing_file_that_is_the_slot_s_default_art(
+    gale_store, tmp_path
+):
+    """Research §8: blocking when the set's art is the slot's only/default
+    drawing — the slot then draws nothing — advisory for a spare key."""
+
+    def mutate(doc, char_dir):
+        (char_dir / "parts" / "hand_fist.svg").unlink()  # the slot's default
+
+    report = _validate_gale(tmp_path, mutate)
+    hits = [f for f in report.findings if "hand_fist.svg" in f.ir_path]
+    assert hits and any(f.severity == "error" for f in hits), hits
+
+
+def test_validate_advises_when_a_set_s_attachments_differ_in_geometry(
+    gale_store, tmp_path
+):
+    def mutate(doc, _):
+        doc["skins"]["default"]["slots"]["left_hand"]["point"]["anchor"] = [0.0, 0.0]
+
+    report = _validate_gale(tmp_path, mutate)
+    assert any(
+        f.severity == "warning" and "geometry" in f.description
+        for f in report.findings
+    )
+
+
+def test_the_factory_declares_face_overlay_from_the_dicebear_path(tmp_path, monkeypatch):
+    """`face_overlay` is DECLARED by the factory (an#87): False when the head
+    is a DiceBear avatar with the face baked in, True for the offline
+    geometric fallback. The DiceBear fetch is stubbed — no network."""
+    import json as _json
+
+    from an.characters import factory
+
+    offline = factory.new_character(tmp_path / "a", name="off", use_dicebear=False)
+    assert _json.loads(offline.read_text(encoding="utf-8"))["face_overlay"] is True
+
+    monkeypatch.setattr(
+        factory,
+        "fetch_dicebear",
+        lambda seed, style: (
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" '
+            'height="64"><circle cx="32" cy="32" r="30" fill="#ccc"/></svg>'
+        ),
+    )
+    monkeypatch.setattr(factory, "_check_style_is_usable", lambda *a, **k: None)
+    baked = factory.new_character(
+        tmp_path / "b", name="dice", use_dicebear=True, acknowledge_attribution=True
+    )
+    doc = _json.loads(baked.read_text(encoding="utf-8"))
+    assert doc["metadata"]["art_provenance"] == "dicebear"
+    assert doc["face_overlay"] is False
+
+
+def test_the_0_3_0_migration_repairs_stored_animation_tracks():
+    """Pinned as a test, not only the doctest: the 0.2.0 migration renamed
+    slots in `slots`/`skins` but never in `animations`, so every stored
+    descriptor carried `slot:eye_l.attachment` with `eye_l_open` frames."""
+    from an.ir.migrate import migrate
+
+    out = migrate(
+        {
+            "kind": "CharacterDescriptor",
+            "schema_version": "0.2.0",
+            "name": "x",
+            "animations": {
+                "blink": {
+                    "name": "blink",
+                    "tracks": [
+                        {
+                            "target": "slot:eye_r.attachment",
+                            "type": "step",
+                            "frames": [[0.0, "eye_r_open"], [0.05, "eye_r_closed"]],
+                        }
+                    ],
+                }
+            },
+        },
+        kind="CharacterDescriptor",
+    )
+    (track,) = out["animations"]["blink"]["tracks"]
+    assert track["target"] == "slot:right_eye.attachment"
+    assert [v for _, v in track["frames"]] == ["open", "closed"]
