@@ -281,12 +281,13 @@ measures a pipeline broken on purpose, and `--bless` under a lever is refused
 outright.
 
 
-`an/bench/mutations.py` holds the levers. **No production knob exists for any of
-them, deliberately** — a knob would have to be documented, defended, and kept
-from being switched on by accident. (an#58 ships exactly such a knob for
-supersampling, opt-in. When it lands, that sentence stops being true and must be
-rewritten rather than left to rot.) Each lever reaches an existing seam from
-outside:
+`an/bench/mutations.py` holds the levers. Two of the three have **no production
+knob**, deliberately — a knob would have to be documented, defended, and kept
+from being switched on by accident. The third, `supersample`, has one since
+an#58 (`an render --supersample N`, opt-in), and the lever now *forces the
+product's own parameter* rather than carrying a second copy of the resolve —
+a lever that reproduces the code it examines is examining itself. Each lever
+reaches an existing seam from outside:
 
 - `high_crf` rebinds `render.DETERMINISTIC_X264_ARGS`. `_ffmpeg_mux` reads that
   name as a module global at call time so the rebinding reaches the delivered
@@ -338,6 +339,7 @@ not bad.
 | `disabled_aa` | `aa_probe`, `multi_shot`, `saturated_outline` | family F's sign is scene-dependent; MSAA cannot reach axis-aligned art or an SVG sprite |
 | `pix_fmt` | **NOT REGISTERED — it failed its exam** (an#72). Three families on four scenes here, **none** in CI: family D is as-declared on all six on macOS/arm64 and contrary on three on Linux/x86-64. An encode-side ROW is `comparison_scope: "machine"`; an encode-side PREDICTION is not, and is asserted wherever the exam runs. **Family C cannot supply a witness here**, which is a real limit rather than an oversight: `chroma_edge_dCr` is the lever's headline (-21% to -75%, every scene) and references `source_png`, a build-dependent conversion — and it cannot reference the lossless leg instead, because a qp0 file's chroma is already subsampled and the metric would read ~0. **The one lever whose subject is chroma structurally cannot count a chroma witness.** It is also the lever that shows family A is blind to the encoder BY MEASUREMENT — `chroma_edge_dCr` measures chroma error at an edge and 4:4:4 removes chroma subsampling. Also the lever that shows family A is blind to the encoder BY MEASUREMENT: exactly +0.0% on all six scenes, every family-A metric |
 | `supersample` | `multi_shot`, `saturated_outline`, `single_character` | C/D/E/G are gated for **every** render lever, so the criterion is forced to A + B + F with no substitute; family A inverts on `promote_demo` (-34.8%, the sprite rasterises at 2x) and family F's three up-moves are the small ones (+0.8% to +2.8% against -4.0% to -12.2%) |
+| `step_hz` | **NOT REGISTERED — refused at comparability, and the instrument is blind to it by construction** (an#89, measured 2026-08-24: `step_hz=12` — "on twos" at the corpus's **24 fps** — forced through `render.compile_shot` against a baseline row, six scenes; a first pass at 15 Hz was a 1.6-frame grid, the "naive quantisation" mode epic #9 warns about, and is superseded). Stepping moves `scene_contract_sha256` on every scene with a tween (the resampled keyframes ARE the contract), so `bench-compare` refuses a stepped row **before any family is examined** — unlike `pix_fmt`, which stayed comparable and *failed* its exam; the numbers below were necessarily taken outside the comparer. The two scenes with no authored tween (`promote_demo`, `single_character`) are **identical to the pixel** — `source_pixels_sha256` unchanged, every metric +0.00% — which is the camera/blink/`play` exemption at the pixel level. On the four with tweens, **every golden frame is byte-identical** (`changed_px` 0 on all six; the goldens sit on even frames, which are grid points, and at a grid instant the stepped pose IS the smooth one), so family B cannot see it; family A has no direction (`edge_transition_width` +0.02% `aa_probe`, −5.2% `graded_field`, −3.4% `multi_shot`, −0.0% `saturated_outline`); family F moves one way (`video_stream_bytes` −5.2/−5.4/−6.2/−5.9%, `file_bytes` −3.3/−0.9/−4.1/−3.7%) — held frames are cheap — and would count, but it is **one** family; C/D/E/G move with the *content* (the reference frames changed pose: `encode_ringing_excess` +158% `graded_field`, −22% `multi_shot`; `flat_field_deviation` +39% `aa_probe`, −68% `saturated_outline`) and stay gated, as for every render lever. **What the ledger can honestly say about stepping: per-frame quality is untouched (two scenes bit-for-bit, every golden bit-for-bit) and the encode is 5–6% cheaper.** Whether "on twos" looks *better* is a temporal, aesthetic judgement no per-frame metric carries; the human instrument is the `stepped-timing` demo (`misc/demos/build_demos.py`, smooth ∥ stepped; frame strip committed at `misc/docs/step_hz_side_by_side.png`). The default stays smooth; a flip is a separate one-line PR the maintainer makes on that verdict alone |
 
 So the criterion is **per scene, met on at least one**, and the corpus has to
 contain a scene the lever can reach. That is what makes `aa_probe` load-bearing

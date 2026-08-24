@@ -288,6 +288,24 @@ class Shot(_IRModel):
     dialogue: list[Dialogue] = Field(default_factory=list)
     narration: list[Narration] = Field(default_factory=list)
     options: dict[str, Any] = Field(default_factory=dict)
+    #: Per-shot override of :attr:`Meta.step_hz` (``None`` = inherit).
+    step_hz: float | None = Field(default=None, gt=0)
+
+
+def resolve_step_hz(shot: "Shot", scene_step_hz: float | None) -> float | None:
+    """The stepped-timing policy ``shot`` renders under: its own ``step_hz``
+    when it declares one, else the scene's, else ``None`` (smooth). The ONE
+    statement of the shot-over-scene rule — the cutout renderer, the preview
+    and the project renderer all call it (an#89 review: three copies).
+
+    >>> resolve_step_hz(Shot(id="s", step_hz=10.0), 15.0)
+    10.0
+    >>> resolve_step_hz(Shot(id="s"), 15.0)
+    15.0
+    >>> resolve_step_hz(Shot(id="s"), None) is None
+    True
+    """
+    return shot.step_hz if shot.step_hz is not None else scene_step_hz
 
 
 # -----------------------------------------------------------------------------
@@ -305,6 +323,21 @@ class Meta(_IRModel):
     resolution: Resolution = Field(default_factory=Resolution)
     default_style: StyleName = "cutout"
     notes: str = ""
+    #: Stepped timing for AUTHORED TWEENS, in pose updates per second; ``None``
+    #: (the default) leaves every tween smooth. At 30 fps, ``15`` is "on twos"
+    #: and ``10`` "on threes" — the character-animation practice Spider-Verse
+    #: made famous (characters on twos, simulation on ones). The camera is
+    #: exempt by construction, as are swap channels (already stepped by
+    #: format), compiled blinks and ``play`` clips: only `tween` curves are
+    #: resampled — sample-and-hold of the eased curve on a SHOT-wide grid
+    #: (every tween in a shot shares it; it restarts at a cut), not a retiming
+    #: into holds and fast transitions. A tween's own START and END are always
+    #: pose changes too, so a tween that begins or ends off-grid changes pose
+    #: on that frame as well as on the grid (a ``set`` at an off-grid ``at``
+    #: likewise lands where it was authored). A shot's own ``step_hz``
+    #: overrides this. Must be positive (schema) and ``<= fps`` (validate +
+    #: compile), an#89.
+    step_hz: float | None = Field(default=None, gt=0)
 
 
 class SceneIR(_IRModel):

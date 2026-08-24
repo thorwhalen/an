@@ -23,7 +23,7 @@ about measuring them. Any change here that could move a pixel needs the
 
 ```
 an.render.render(project, …)
-  └ RenderContext(fps, resolution, work_dir, mall, strict_assets, supersample)
+  └ RenderContext(fps, resolution, work_dir, mall, strict_assets, supersample, step_hz)
      ↑ per-render knobs live HERE — see §6 for why anywhere else refuses metrics
      │
      ├ per shot (thread pool, DEFAULT_PARALLEL_CAP=4, one Chromium each)
@@ -304,6 +304,12 @@ Simulated against a real committed ledger row, for a supersample factor:
 | **a `RenderContext` field, outside the scene document** | only `runtime_sha256` moves, which is deliberately *not* a comparability key → **30 render-side entries still compare** |
 
 **Put product knobs on `RenderContext`.** It needs no `SCHEMA_VERSION` migration,
+
+The one deliberate exception is `step_hz` (an#89): it lives on `RenderContext`
+AND is stamped on the compiled scene's `meta`, because unlike a supersample it
+*changes the compiled document* — the resampled keyframes are the contract, so
+the hash moves whenever it is set no matter where the knob lives. It is
+serialized only when set, so the unset case stays free.
 and the knob **must** also be written into per-shot provenance (the dict returned
 by `CutoutRenderer.render`, beside `resolution` / `x264_args` / `chromium_args`) —
 a row that does not record it cannot be read back later.

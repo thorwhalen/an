@@ -25,6 +25,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from an.adapters.cutout.compile import compile_shot
+from an.ir.schema import resolve_step_hz
 from an.adapters.cutout.render import _serve_dir, _stage_scene_assets
 from an.adapters.cutout.runtime_files import runtime_dir
 from an.adapters.cutout.serialize import to_dict
@@ -177,7 +178,12 @@ def _compile_scene_to(
     height = scene.meta.resolution.height or DEFAULT_RESOLUTION[1]
 
     scene_json = compile_shot(
-        shot, mall=project.mall, fps=fps, width=width, height=height
+        shot,
+        mall=project.mall,
+        fps=fps,
+        width=width,
+        height=height,
+        step_hz=resolve_step_hz(shot, scene.meta.step_hz),
     )
     _stage_scene_assets(scene_json, project.mall, runtime_target)
 

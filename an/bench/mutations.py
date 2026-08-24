@@ -20,8 +20,14 @@ happens. So what a lever has to be is **declared in advance**, not bad — and t
 word "degradations" in the old first line was quietly making the stronger, false
 claim (an#56).
 
-**No production knob exists for any of this, and that is deliberate.** Each
-lever reaches an existing seam from the outside:
+**Two of the three levers have no production knob, and that is deliberate.**
+The third, ``supersample``, has had one since an#58 (``an render --supersample
+N``) and the lever now FORCES the product's own parameter rather than carrying
+a second copy of the resolve — a lever that reproduces the code it examines is
+examining itself. The inverse also exists: ``step_hz`` (an#89) is a product
+knob with **no lever**, on measurement — a per-frame instrument cannot judge a
+temporal choice (the `an-dev-bench` skill's table has the numbers). Each lever
+reaches an existing seam from the outside:
 
 - ``high_crf`` rebinds ``an.adapters.cutout.render.DETERMINISTIC_X264_ARGS``.
   ``_ffmpeg_mux`` reads that name as a module global at call time, so the
@@ -42,11 +48,9 @@ lever reaches an existing seam from the outside:
   lever must measure what the product will produce, and everything downstream
   reads the declared resolution off the STAGED SCENE, never off the files.
 
-A knob in the product would be worse than any of them: it would have to be
-documented, defended, and kept from being switched on by accident. (an#58 ships
-exactly such a knob for supersampling, opt-in — when it lands, this paragraph
-and the "no production knob exists for any of this" sentence above it stop being
-true and must be rewritten rather than left to rot.)
+A knob in the product is a cost each of the other two levers avoids: it has to
+be documented, defended, and kept from being switched on by accident — which is
+why supersampling is opt-in and off is free.
 
 **Each lever verifies that it applied.** A lever that silently failed to take
 produces a run in which nothing moved — which reads exactly like an instrument
