@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.cli &mdash; an 0.1.46 documentation</title>
+  <title>an.characters.cli &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -110,6 +110,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
@@ -199,7 +200,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">new_character</span> <span class="k">as</span> <span class="n">_new_character</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_character</span> <span class="k">as</span> <span class="n">_validate_character</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">format_report</span> <span class="k">as</span> <span class="n">_format_report</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_contract</span> <span class="k">as</span> <span class="n">_render_contract</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_character</span> <span class="k">as</span> <span class="n">_validate_character</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.mouth_set</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_default_mouths</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.dicebear</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DICEBEAR_DEFAULT_STYLE</span><span class="p">,</span>
@@ -302,7 +305,7 @@
 <span class="sd">    """</span>
     <span class="n">target</span> <span class="o">=</span> <span class="n">_resolve_target</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">_validate_character</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">report</span><span class="o">.</span><span class="n">format</span><span class="p">()</span></div>
+    <span class="k">return</span> <span class="n">_format_report</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
 
 
@@ -545,7 +548,31 @@
 
 <span class="c1"># Dispatch list. Mounted as a nested namespace ('character')</span>
 <span class="c1"># by an/__main__.py so they appear as `an character new`, etc.</span>
-<span class="n">_dispatch_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">new</span><span class="p">,</span> <span class="n">mouths</span><span class="p">,</span> <span class="n">validate</span><span class="p">,</span> <span class="n">silhouette</span><span class="p">,</span> <span class="n">preview</span><span class="p">,</span> <span class="n">record</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="contract">
+<a class="viewcode-back" href="../../../module_docs/an/characters/cli.html#an.characters.cli.contract">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">contract</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Print the art-package contract an illustrator must satisfy.</span>
+
+<span class="sd">    **Derived from the schema and the validator, never hand-written**, so it</span>
+<span class="sd">    cannot drift from what `an character validate` actually enforces — a</span>
+<span class="sd">    contract that disagrees with its checker is worse than none, because it</span>
+<span class="sd">    gets a human paid for work that cannot land.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_render_contract</span><span class="p">()</span></div>
+
+
+
+<span class="n">_dispatch_funcs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">new</span><span class="p">,</span>
+    <span class="n">mouths</span><span class="p">,</span>
+    <span class="n">validate</span><span class="p">,</span>
+    <span class="n">contract</span><span class="p">,</span>
+    <span class="n">silhouette</span><span class="p">,</span>
+    <span class="n">preview</span><span class="p">,</span>
+    <span class="n">record</span><span class="p">,</span>
+<span class="p">]</span>
 </pre></div>
 
            </div>

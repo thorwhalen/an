@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.preview &mdash; an 0.1.46 documentation</title>
+  <title>an.preview &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -113,6 +113,7 @@
 <li class="toctree-l1"><a class="reference internal" href="characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="credits.html">an.credits</a></li>
@@ -129,7 +130,12 @@
 <li class="toctree-l1"><a class="reference internal" href="ir/validate.html">an.ir.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="iterate.html">an.iterate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="orchestrate.html">an.orchestrate</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.preview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.preview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.preview.PreviewError"><code class="docutils literal notranslate"><span class="pre">PreviewError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.preview.PreviewStaging"><code class="docutils literal notranslate"><span class="pre">PreviewStaging</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.preview.preview_project"><code class="docutils literal notranslate"><span class="pre">preview_project()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="project.html">an.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="render.html">an.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores.html">an.stores</a></li>
@@ -176,8 +182,47 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-preview">
-<h1>an.preview<a class="headerlink" href="#an-preview" title="Link to this heading"></a></h1>
+  <section id="module-an.preview">
+<span id="an-preview"></span><h1>an.preview<a class="headerlink" href="#module-an.preview" title="Link to this heading"></a></h1>
+<p>Live preview server: render a project’s current scene in a browser, reloading on edit.</p>
+<p>The <a class="reference internal" href="#an.preview.preview_project" title="an.preview.preview_project"><code class="xref py py-func docutils literal notranslate"><span class="pre">preview_project()</span></code></a> function spins up a local HTTP server pointed at
+a freshly-compiled cutout scene JSON, then watches <code class="docutils literal notranslate"><span class="pre">scene.md</span></code> /
+<code class="docutils literal notranslate"><span class="pre">ir/scene.json</span></code> for changes and recompiles. The browser polls
+<code class="docutils literal notranslate"><span class="pre">scene.json</span></code> every ~500 ms (HEAD request, <code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code> header) and
+re-calls <code class="docutils literal notranslate"><span class="pre">window.anLoadScene</span></code> whenever the file changes.</p>
+<p>Lossy by design: shows the runtime canvas only — no audio mux, no final
+mp4. Use <code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">render</span></code> once you’re happy with the look.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.preview</span><span class="w"> </span><span class="kn">import</span> <span class="n">_stage_preview</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">callable</span><span class="p">(</span><span class="n">_stage_preview</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.preview.PreviewError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.preview.</span></span><span class="sig-name descname"><span class="pre">PreviewError</span></span><a class="reference internal" href="../../_modules/an/preview.html#PreviewError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.preview.PreviewError" title="Link to this definition"></a></dt>
+<dd><p>Raised when a preview cannot be staged or served.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.preview.PreviewStaging">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.preview.</span></span><span class="sig-name descname"><span class="pre">PreviewStaging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runtime_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_json_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/preview.html#PreviewStaging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.preview.PreviewStaging" title="Link to this definition"></a></dt>
+<dd><p>Outcome of staging a preview’s runtime + initial compiled scene.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.preview.preview_project">
+<span class="sig-prename descclassname"><span class="pre">an.preview.</span></span><span class="sig-name descname"><span class="pre">preview_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">shot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_browser</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poll_interval_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/preview.html#preview_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.preview.preview_project" title="Link to this definition"></a></dt>
+<dd><p>Serve a live preview of <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> from a local HTTP server.</p>
+<p>Compiles the chosen shot (default: first shot in the timeline) to its
+runtime JSON, stages the cutout JS runtime + any SVG character
+textures, and serves the result on a free port. A daemon watcher
+thread polls <code class="docutils literal notranslate"><span class="pre">scene.md</span></code> / <code class="docutils literal notranslate"><span class="pre">ir/scene.json</span></code> mtimes and recompiles
+when either changes; the browser sees the new compiled scene via its
+own ~500 ms HEAD-request poll.</p>
+<p>Blocks the calling thread until interrupted (Ctrl-C). Returns the
+base URL after teardown.</p>
+</dd></dl>
+
 </section>
 
 

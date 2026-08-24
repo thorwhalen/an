@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters &mdash; an 0.1.46 documentation</title>
+  <title>an.adapters &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -51,7 +51,31 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../an.html">an</a></li>
 <li class="toctree-l1"><a class="reference internal" href="__main__.html">an.__main__</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.ManimRenderer"><code class="docutils literal notranslate"><span class="pre">ManimRenderer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.RemotionRenderer"><code class="docutils literal notranslate"><span class="pre">RemotionRenderer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.RenderContext"><code class="docutils literal notranslate"><span class="pre">RenderContext</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.pix_fmt"><code class="docutils literal notranslate"><span class="pre">RenderContext.pix_fmt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.strict_assets"><code class="docutils literal notranslate"><span class="pre">RenderContext.strict_assets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.supersample"><code class="docutils literal notranslate"><span class="pre">RenderContext.supersample</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.RenderResult"><code class="docutils literal notranslate"><span class="pre">RenderResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.Renderer"><code class="docutils literal notranslate"><span class="pre">Renderer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.Renderer.can_render"><code class="docutils literal notranslate"><span class="pre">Renderer.can_render()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.Renderer.render"><code class="docutils literal notranslate"><span class="pre">Renderer.render()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.RendererRegistry"><code class="docutils literal notranslate"><span class="pre">RendererRegistry</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.RendererRegistry.find_for"><code class="docutils literal notranslate"><span class="pre">RendererRegistry.find_for()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.WhiteboardRenderer"><code class="docutils literal notranslate"><span class="pre">WhiteboardRenderer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.get_renderer"><code class="docutils literal notranslate"><span class="pre">get_renderer()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.list_renderers"><code class="docutils literal notranslate"><span class="pre">list_renderers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.register_renderer"><code class="docutils literal notranslate"><span class="pre">register_renderer()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="adapters/_base.html">an.adapters._base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="adapters/cutout.html">an.adapters.cutout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
@@ -113,6 +137,7 @@
 <li class="toctree-l1"><a class="reference internal" href="characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="credits.html">an.credits</a></li>
@@ -176,8 +201,141 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-adapters">
-<h1>an.adapters<a class="headerlink" href="#an-adapters" title="Link to this heading"></a></h1>
+  <section id="module-an.adapters">
+<span id="an-adapters"></span><h1>an.adapters<a class="headerlink" href="#module-an.adapters" title="Link to this heading"></a></h1>
+<p>Renderer adapters — facades over backends (cutout, Manim, Remotion, whiteboard).</p>
+<p>The Renderer Protocol and registry live in <cite>_base</cite>. Concrete backends are
+imported here so they self-register on package import. Backends with missing
+system deps still register but their <code class="docutils literal notranslate"><span class="pre">render()</span></code> raises a clear error;
+<code class="docutils literal notranslate"><span class="pre">can_render(shot)</span></code> continues to work for routing decisions.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.ManimRenderer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">ManimRenderer</span></span><a class="reference internal" href="../../_modules/an/adapters/manim_adapter.html#ManimRenderer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.ManimRenderer" title="Link to this definition"></a></dt>
+<dd><p>Manim Community Edition renderer (skeleton).</p>
+<p>Implements the <code class="docutils literal notranslate"><span class="pre">Renderer</span></code> Protocol. <code class="docutils literal notranslate"><span class="pre">can_render</span></code> is True for shots
+whose <code class="docutils literal notranslate"><span class="pre">style</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;manim&quot;</span></code>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.RemotionRenderer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">RemotionRenderer</span></span><a class="reference internal" href="../../_modules/an/adapters/remotion_adapter.html#RemotionRenderer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.RemotionRenderer" title="Link to this definition"></a></dt>
+<dd><p>Remotion-based renderer (skeleton).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.RenderContext">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">RenderContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">mall:</span> <span class="pre">~collections.abc.Mapping[str,</span> <span class="pre">~collections.abc.MutableMapping],</span> <span class="pre">work_dir:</span> <span class="pre">~pathlib.Path,</span> <span class="pre">fps:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">30,</span> <span class="pre">resolution:</span> <span class="pre">tuple[int,</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">(1920,</span> <span class="pre">1080),</span> <span class="pre">strict_assets:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">supersample:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">pix_fmt:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">extra:</span> <span class="pre">dict[str,</span> <span class="pre">~typing.Any]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/adapters/_base.html#RenderContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.RenderContext" title="Link to this definition"></a></dt>
+<dd><p>Everything a renderer needs that isn’t on the Shot itself.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mall</span></code> carries the project’s stores so the renderer can resolve assets
+by reference. <code class="docutils literal notranslate"><span class="pre">work_dir</span></code> is a scratch space; the renderer must clean up
+after itself or treat it as ephemeral.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.adapters.RenderContext.pix_fmt">
+<span class="sig-name descname"><span class="pre">pix_fmt</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.adapters.RenderContext.pix_fmt" title="Link to this definition"></a></dt>
+<dd><p>The delivered encode’s pixel format, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for the module default.
+<strong>The one first-order quality lever in the encoder</strong>: 4:2:0 -&gt; 4:4:4 cuts
+the edge-band error 11.35 -&gt; 3.79, where mathematically lossless 4:2:0
+only reaches 10.15. Losslessness buys 8%; dropping chroma subsampling
+buys 66%.</p>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code> rather than the literal, so the bench’s <cite>pix_fmt</cite> lever — which
+rebinds the module default — still reaches an unset render. The default
+stays 4:2:0 for a PRODUCT reason and not an encoder one: High 4:4:4
+Predictive is refused by many hardware decoders, browsers and platforms.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.adapters.RenderContext.strict_assets">
+<span class="sig-name descname"><span class="pre">strict_assets</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#an.adapters.RenderContext.strict_assets" title="Link to this definition"></a></dt>
+<dd><p>Refuse to draw a stand-in for a declared asset that the stores do not
+supply. Off by default so an asset-less project still renders; on for
+anything that measures pixels, where a stand-in is a different picture
+that looks like a successful render (an#33).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.adapters.RenderContext.supersample">
+<span class="sig-name descname"><span class="pre">supersample</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#an.adapters.RenderContext.supersample" title="Link to this definition"></a></dt>
+<dd><p>Render at this many times the declared resolution and resolve back with
+an exact block mean. <strong>1 means off, and off is free</strong> — Chromium’s own
+PNG bytes reach disk untouched.</p>
+<p>A <cite>RenderContext</cite> field, and that placement is load-bearing rather than
+convenient. Simulated against a real committed ledger row: as a
+<cite>render_kwargs</cite> entry it becomes a <cite>COMMON_ENV_PATHS</cite> key and <strong>all 96
+metrics are refused</strong>; as a field on the compiled scene document it moves
+<cite>scene_contract_sha256</cite> and <strong>every scene becomes incomparable</strong>; here,
+only <cite>runtime_sha256</cite> moves, which is deliberately not a comparability
+key — so 30 render-side entries still compare. It needs no
+<cite>SCHEMA_VERSION</cite> migration, and it MUST reach per-shot provenance, because
+a row that does not record it cannot be read back later.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.RenderResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">RenderResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp4_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_manifest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~typing.Any]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/adapters/_base.html#RenderResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.RenderResult" title="Link to this definition"></a></dt>
+<dd><p>Outcome of a single shot render.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.Renderer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">Renderer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/adapters/_base.html#Renderer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.Renderer" title="Link to this definition"></a></dt>
+<dd><p>Backend renderer interface.</p>
+<p>Implementations should be cheap to construct and stateless across renders;
+state belongs in the <code class="docutils literal notranslate"><span class="pre">RenderContext</span></code> or the project mall.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="an.adapters.Renderer.can_render">
+<span class="sig-name descname"><span class="pre">can_render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/an/adapters/_base.html#Renderer.can_render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.Renderer.can_render" title="Link to this definition"></a></dt>
+<dd><p>Return True if this renderer can render <code class="docutils literal notranslate"><span class="pre">shot</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="an.adapters.Renderer.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="adapters/_base.html#an.adapters._base.RenderContext" title="an.adapters._base.RenderContext"><span class="pre">RenderContext</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="adapters/_base.html#an.adapters._base.RenderResult" title="an.adapters._base.RenderResult"><span class="pre">RenderResult</span></a></span></span><a class="reference internal" href="../../_modules/an/adapters/_base.html#Renderer.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.Renderer.render" title="Link to this definition"></a></dt>
+<dd><p>Render a single shot to mp4. Idempotent given identical inputs.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.RendererRegistry">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">RendererRegistry</span></span><a class="reference internal" href="../../_modules/an/adapters/_base.html#RendererRegistry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.RendererRegistry" title="Link to this definition"></a></dt>
+<dd><p>Name-keyed registry of renderers.</p>
+<p>A module-level instance is exposed via <code class="docutils literal notranslate"><span class="pre">register_renderer</span></code> /
+<code class="docutils literal notranslate"><span class="pre">get_renderer</span></code> / <code class="docutils literal notranslate"><span class="pre">list_renderers</span></code>; callers needing isolation (tests,
+multi-tenant servers) can construct their own.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="an.adapters.RendererRegistry.find_for">
+<span class="sig-name descname"><span class="pre">find_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="adapters/_base.html#an.adapters._base.Renderer" title="an.adapters._base.Renderer"><span class="pre">Renderer</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/an/adapters/_base.html#RendererRegistry.find_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.RendererRegistry.find_for" title="Link to this definition"></a></dt>
+<dd><p>Return the first registered renderer that <code class="docutils literal notranslate"><span class="pre">can_render(shot)</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.WhiteboardRenderer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">WhiteboardRenderer</span></span><a class="reference internal" href="../../_modules/an/adapters/whiteboard.html#WhiteboardRenderer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.WhiteboardRenderer" title="Link to this definition"></a></dt>
+<dd><p>Whiteboard-style renderer (stub).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.get_renderer">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">get_renderer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="adapters/_base.html#an.adapters._base.Renderer" title="an.adapters._base.Renderer"><span class="pre">Renderer</span></a></span></span><a class="reference internal" href="../../_modules/an/adapters/_base.html#get_renderer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.get_renderer" title="Link to this definition"></a></dt>
+<dd><p>Look up a renderer by name in the default registry.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.list_renderers">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">list_renderers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/an/adapters/_base.html#list_renderers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.list_renderers" title="Link to this definition"></a></dt>
+<dd><p>Names of all renderers registered in the default registry.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.register_renderer">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">register_renderer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">renderer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="adapters/_base.html#an.adapters._base.Renderer" title="an.adapters._base.Renderer"><span class="pre">Renderer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/an/adapters/_base.html#register_renderer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.register_renderer" title="Link to this definition"></a></dt>
+<dd><p>Register a renderer in the default registry.</p>
+</dd></dl>
+
 </section>
 
 

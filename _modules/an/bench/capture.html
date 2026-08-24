@@ -1,0 +1,558 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.bench.capture &mdash; an 0.1.47 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.bench.capture</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.bench.capture</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Render one corpus fixture into a throwaway copy, and hand back its artifacts.</span>
+
+<span class="sd">Two things this module exists to get right, both of which produce plausible</span>
+<span class="sd">numbers when got wrong:</span>
+
+<span class="sd">**Render into a copy.** The render path mutates the project directory — scene</span>
+<span class="sd">mtimes, the decisions log, ``.an/render_work`` — so rendering in place makes</span>
+<span class="sd">the git sha in the ledger filename a lie about the tree that produced the row.</span>
+
+<span class="sd">**Do not inherit a stale render.** ``shutil.copytree`` of a developer's</span>
+<span class="sd">checkout would carry ``.an/render_work`` and ``output/`` across, ``frames/`` is</span>
+<span class="sd">never cleared, and ffmpeg's image2 demuxer reads the contiguous</span>
+<span class="sd">``frame_%06d.png`` run from 0 — so a longer previous render is silently</span>
+<span class="sd">appended to this one. Every encode-side metric pairs source frame *i* with</span>
+<span class="sd">decoded frame *i*, so that appends garbage to one leg and shifts nothing on the</span>
+<span class="sd">other. ``artifacts/`` is deliberately kept *except for one subdirectory*: it</span>
+<span class="sd">holds the audio cache, whose warm/cold state is recorded rather than destroyed</span>
+<span class="sd">— but ``artifacts/shots`` is ``mall["shots"]``, the previous render's per-shot</span>
+<span class="sd">mp4s, and this module's whole promise is that nothing of a previous render</span>
+<span class="sd">crosses. It is gitignored, so it does not reproduce on a clean checkout: a</span>
+<span class="sd">per-developer landmine, in the module whose docstring says the opposite.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.corpus</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BENCH_RENDER_KWARGS</span><span class="p">,</span>
+    <span class="n">Fixture</span><span class="p">,</span>
+    <span class="n">assert_render_path</span><span class="p">,</span>
+    <span class="n">iter_shot_dirs</span><span class="p">,</span>
+    <span class="n">staged_scene</span><span class="p">,</span>
+    <span class="n">visual_kinds</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.png</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_png_dimensions</span>
+
+<span class="c1">#: Copied for the render, but never these: they are the previous render's</span>
+<span class="c1">#: output, and one of them silently extends this one's frame sequence.</span>
+<span class="c1">#: Matched on the **basename**, at any depth — that is exactly what</span>
+<span class="c1">#: ``shutil.ignore_patterns`` does, and it is why ``artifacts/shots`` cannot be</span>
+<span class="c1">#: spelled here. See :data:`IGNORED_RELPATHS_ON_COPY`.</span>
+<span class="n">IGNORED_ON_COPY</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">".an"</span><span class="p">,</span> <span class="s2">"output"</span><span class="p">,</span> <span class="s2">".anima"</span><span class="p">)</span>
+
+<span class="c1">#: Excluded by their path **relative to the project root**, POSIX-spelled.</span>
+<span class="c1">#: ``mall["shots"]`` is ``&lt;project&gt;/artifacts/shots``, and ``artifacts/``</span>
+<span class="c1">#: itself is kept on purpose — it holds the audio cache, whose warm/cold state</span>
+<span class="c1">#: this module records rather than destroys.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Neither spelling belongs in :data:`IGNORED_ON_COPY`, and **both fail</span>
+<span class="c1">#: silently**. ``shutil.ignore_patterns`` returns a closure handed the NAMES</span>
+<span class="c1">#: inside one directory, which it ``fnmatch.filter``s — so ``"artifacts/shots"``</span>
+<span class="c1">#: can never match anything (no name contains a separator) and a bare</span>
+<span class="c1">#: ``"shots"`` would delete every directory of that name **anywhere** in the</span>
+<span class="c1">#: tree, a character rig's included.</span>
+<span class="n">IGNORED_RELPATHS_ON_COPY</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"artifacts/shots"</span><span class="p">,)</span>
+
+<span class="c1">#: Where the renderer leaves its per-shot working tree inside the project.</span>
+<span class="n">RENDER_WORK_RELPATH</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">".an/render_work"</span>
+
+<span class="c1">#: How a shot's frames are named on disk. One constant rather than the literal</span>
+<span class="c1">#: repeated at each glob site.</span>
+<span class="n">FRAME_PNG_GLOB</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"frame_*.png"</span>
+
+
+<div class="viewcode-block" id="distinct_png_sizes">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.distinct_png_sizes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">distinct_png_sizes</span><span class="p">(</span><span class="n">frames_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every distinct ``(width, height)`` among a shot's frame PNGs, sorted.</span>
+
+<span class="sd">    Read from each file's IHDR — 24 bytes per frame — so reading all of them</span>
+<span class="sd">    costs nothing and catches what sampling one would miss: a sequence whose</span>
+<span class="sd">    size changes partway through, which is what a half-applied supersample</span>
+<span class="sd">    produces.</span>
+
+<span class="sd">    **Recorded here, enforced elsewhere.** Rendering a fixture at a size the</span>
+<span class="sd">    scene does not declare is a legitimate thing to do —</span>
+<span class="sd">    ``misc/bench/wave3_ab.py`` patches ``runtime.js`` to ``resolution: k,</span>
+<span class="sd">    autoDensity: false`` and drives :func:`capture_fixture` directly to measure</span>
+<span class="sd">    the supersample — so this module reports what it saw and</span>
+<span class="sd">    :mod:`an.bench.run` is where the *bench's* invariant is asserted.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="nb">sorted</span><span class="p">({</span><span class="n">read_png_dimensions</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">frames_dir</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">FRAME_PNG_GLOB</span><span class="p">)})</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ShotCapture">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.ShotCapture">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ShotCapture</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One rendered shot's artifacts."""</span>
+
+    <span class="n">shot_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">frames_dir</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">scene_json</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">runtime_dir</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">frame_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="c1">#: The shot's declared duration, from the IR rather than from the staged</span>
+    <span class="c1">#: scene, so the expected frame count is derived from the same number the</span>
+    <span class="c1">#: renderer used.</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="c1">#: The distinct pixel sizes actually on disk, from each PNG's IHDR. The</span>
+    <span class="c1">#: independent half of a pair whose other half — ``SceneCapture.resolution``</span>
+    <span class="c1">#: — comes from the staged scene's ``meta`` and never from a file. Empty</span>
+    <span class="c1">#: only when the shot wrote no frames.</span>
+    <span class="n">frame_sizes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="SceneCapture">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.SceneCapture">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SceneCapture</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One fixture's whole render."""</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">prepared</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">project_dir</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">mp4</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">shots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ShotCapture</span><span class="p">]</span>
+    <span class="n">resolution</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">n_declared_entity_refs</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">visual_kinds</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">asset_resolution</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span>
+    <span class="n">audio_cache</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">wall_seconds</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">determinism</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="CaptureError">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.CaptureError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CaptureError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A capture could not produce something the metrics need."""</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ignore_for</span><span class="p">(</span><span class="n">fixture_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``copytree``'s ``ignore``, for basenames **and** project-relative paths.</span>
+
+<span class="sd">    ``copytree`` calls this once per directory with ``(that directory, the</span>
+<span class="sd">    names in it)``, so a path-shaped exclusion has to be reconstructed from the</span>
+<span class="sd">    directory it is handed — which is precisely why ``shutil.ignore_patterns``</span>
+<span class="sd">    cannot express one, and why asking it to do so is a silent no-op rather</span>
+<span class="sd">    than an error.</span>
+<span class="sd">    """</span>
+    <span class="n">by_name</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">ignore_patterns</span><span class="p">(</span><span class="o">*</span><span class="n">IGNORED_ON_COPY</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">ignore</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">here</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">fixture_dir</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Never seen: `copytree` builds every path it passes here by</span>
+            <span class="c1"># joining onto the one it was given. Raised rather than quietly</span>
+            <span class="c1"># degrading to basenames-only, because under-excluding is the</span>
+            <span class="c1"># defect this function exists to fix and it leaves no trace.</span>
+            <span class="k">raise</span> <span class="n">CaptureError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"stage_copy was asked about </span><span class="si">{</span><span class="n">path</span><span class="si">!r}</span><span class="s2">, which is not under the "</span>
+                <span class="sa">f</span><span class="s2">"fixture root </span><span class="si">{</span><span class="n">fixture_dir</span><span class="si">}</span><span class="s2">, so the path-relative exclusions "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">IGNORED_RELPATHS_ON_COPY</span><span class="si">}</span><span class="s2"> could not be applied to it"</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">here</span> <span class="o">==</span> <span class="s2">"."</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">here</span><span class="si">}</span><span class="s2">/"</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">by_name</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">names</span><span class="p">))</span> <span class="o">|</span> <span class="p">{</span>
+            <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">IGNORED_RELPATHS_ON_COPY</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">ignore</span>
+
+
+<div class="viewcode-block" id="stage_copy">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.stage_copy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stage_copy</span><span class="p">(</span><span class="n">fixture_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Copy a fixture into ``base``, leaving the previous render behind.</span>
+
+<span class="sd">    Split out of :func:`capture_fixture` so the exclusion is testable without</span>
+<span class="sd">    rendering anything — which matters, because the failure it prevents is</span>
+<span class="sd">    silent. ``frames/`` is never cleared and ffmpeg's image2 demuxer reads the</span>
+<span class="sd">    contiguous ``frame_%06d.png`` run from 0, so a longer previous render is</span>
+<span class="sd">    appended to this one's source leg and to nothing else.</span>
+
+<span class="sd">    Two kinds of exclusion, because one kind cannot say both things:</span>
+<span class="sd">    :data:`IGNORED_ON_COPY` by basename at any depth, and</span>
+<span class="sd">    :data:`IGNORED_RELPATHS_ON_COPY` by path from the project root — which is</span>
+<span class="sd">    the only way to drop ``artifacts/shots`` while keeping ``artifacts/audio``.</span>
+<span class="sd">    """</span>
+    <span class="n">base</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">work_copy</span> <span class="o">=</span> <span class="n">base</span> <span class="o">/</span> <span class="n">fixture_dir</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">if</span> <span class="n">work_copy</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">work_copy</span><span class="p">)</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">fixture_dir</span><span class="p">,</span> <span class="n">work_copy</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">_ignore_for</span><span class="p">(</span><span class="n">fixture_dir</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">work_copy</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_audio_cache_state</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">audio</span> <span class="o">=</span> <span class="n">project_dir</span> <span class="o">/</span> <span class="s2">"artifacts"</span> <span class="o">/</span> <span class="s2">"audio"</span>
+    <span class="k">return</span> <span class="s2">"warm"</span> <span class="k">if</span> <span class="n">audio</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">audio</span><span class="o">.</span><span class="n">iterdir</span><span class="p">())</span> <span class="k">else</span> <span class="s2">"cold"</span>
+
+
+<div class="viewcode-block" id="capture_fixture">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.capture_fixture">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">capture_fixture</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fixture</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">keep_render</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SceneCapture</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render ``fixture`` in a throwaway copy and return its artifacts.</span>
+
+<span class="sd">    The copy lives until the caller is done with it — the metrics read the</span>
+<span class="sd">    frames — so this is a context-free function that leaves the tree in place</span>
+<span class="sd">    and hands back the path. :func:`captured` is the scoped form.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">load</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">render</span>
+
+    <span class="n">fixture_dir</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">fixture</span><span class="o">.</span><span class="n">path</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fixture_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">CaptureError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"fixture </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> not found at </span><span class="si">{</span><span class="n">fixture_dir</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">base</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">keep_render</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">keep_render</span>
+        <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">"an-bench-</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">-"</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">work_copy</span> <span class="o">=</span> <span class="n">stage_copy</span><span class="p">(</span><span class="n">fixture_dir</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fixture</span><span class="o">.</span><span class="n">prepare</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fixture</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">work_copy</span><span class="p">)</span>
+
+    <span class="n">audio_cache</span> <span class="o">=</span> <span class="n">_audio_cache_state</span><span class="p">(</span><span class="n">work_copy</span><span class="p">)</span>
+    <span class="n">project</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">work_copy</span><span class="p">)</span>
+    <span class="n">scene</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">scene</span>
+
+    <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+    <span class="n">output_mp4</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">render</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="o">**</span><span class="n">BENCH_RENDER_KWARGS</span><span class="p">))</span>
+    <span class="n">wall</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span>
+
+    <span class="n">work_dir</span> <span class="o">=</span> <span class="n">work_copy</span> <span class="o">/</span> <span class="n">RENDER_WORK_RELPATH</span>
+    <span class="n">shots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ShotCapture</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_kinds</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">resolutions</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="c1"># TIMELINE order, never directory order — `an/render.py` concatenates the</span>
+    <span class="c1"># per-shot mp4s in `scene.timeline` order, and pairing source frames against</span>
+    <span class="c1"># the decoded concat in any other order silently measures inter-shot motion.</span>
+    <span class="n">timeline_order</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">]</span>
+    <span class="n">durations</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">shot_id</span><span class="p">,</span> <span class="n">shot_dir</span> <span class="ow">in</span> <span class="n">iter_shot_dirs</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">timeline_order</span><span class="p">):</span>
+        <span class="n">frames</span> <span class="o">=</span> <span class="n">shot_dir</span> <span class="o">/</span> <span class="s2">"frames"</span>
+        <span class="n">pngs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">frames</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">FRAME_PNG_GLOB</span><span class="p">))</span>
+        <span class="n">js</span> <span class="o">=</span> <span class="n">staged_scene</span><span class="p">(</span><span class="n">shot_dir</span><span class="p">)</span>
+        <span class="n">all_kinds</span> <span class="o">|=</span> <span class="n">visual_kinds</span><span class="p">(</span><span class="n">js</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">js</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"meta"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">resolutions</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"width"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"height"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))))</span>
+        <span class="n">shots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ShotCapture</span><span class="p">(</span>
+                <span class="n">shot_id</span><span class="o">=</span><span class="n">shot_id</span><span class="p">,</span>
+                <span class="n">frames_dir</span><span class="o">=</span><span class="n">frames</span><span class="p">,</span>
+                <span class="n">scene_json</span><span class="o">=</span><span class="n">js</span><span class="p">,</span>
+                <span class="n">runtime_dir</span><span class="o">=</span><span class="n">shot_dir</span> <span class="o">/</span> <span class="s2">"runtime"</span><span class="p">,</span>
+                <span class="n">frame_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">pngs</span><span class="p">),</span>
+                <span class="n">duration</span><span class="o">=</span><span class="n">durations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">shot_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="n">frame_sizes</span><span class="o">=</span><span class="n">distinct_png_sizes</span><span class="p">(</span><span class="n">frames</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">shots</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CaptureError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"fixture </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> produced no shots — looked under </span><span class="si">{</span><span class="n">work_dir</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">assert_render_path</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fixture</span><span class="p">,</span> <span class="n">all_kinds</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">resolutions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CaptureError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"fixture </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> rendered shots at mixed resolutions </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">resolutions</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+            <span class="s2">"every ratio-form metric means something different at each, so the "</span>
+            <span class="s2">"scene's row would pool two incompatible measurements"</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">SceneCapture</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">fixture</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+        <span class="n">prepared</span><span class="o">=</span><span class="n">fixture</span><span class="o">.</span><span class="n">prepare</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_dir</span><span class="o">=</span><span class="n">work_copy</span><span class="p">,</span>
+        <span class="n">mp4</span><span class="o">=</span><span class="n">output_mp4</span><span class="p">,</span>
+        <span class="n">shots</span><span class="o">=</span><span class="n">shots</span><span class="p">,</span>
+        <span class="n">resolution</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">resolutions</span><span class="p">)),</span>
+        <span class="n">fps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">fps</span><span class="p">),</span>
+        <span class="n">duration</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
+        <span class="n">n_declared_entity_refs</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">entities</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">),</span>
+        <span class="n">visual_kinds</span><span class="o">=</span><span class="n">all_kinds</span><span class="p">,</span>
+        <span class="n">asset_resolution</span><span class="o">=</span><span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shots</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">scene_json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asset_resolution"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])</span>
+        <span class="p">],</span>
+        <span class="n">audio_cache</span><span class="o">=</span><span class="n">audio_cache</span><span class="p">,</span>
+        <span class="n">wall_seconds</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">wall</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="expected_frame_count">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.expected_frame_count">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">expected_frame_count</span><span class="p">(</span><span class="n">duration</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The renderer's own frame-count expression, reused rather than restated.</span>
+
+<span class="sd">    ``max(1, int(round(duration * fps)))`` — and Python 3's ``round`` is</span>
+<span class="sd">    banker's rounding, so ``math.ceil`` or ``int(x + 0.5)`` silently disagrees</span>
+<span class="sd">    on every half-frame duration.</span>
+
+<span class="sd">    &gt;&gt;&gt; expected_frame_count(2.5, 24)</span>
+<span class="sd">    60</span>
+<span class="sd">    &gt;&gt;&gt; expected_frame_count(0.0, 24)</span>
+<span class="sd">    1</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">duration</span> <span class="o">*</span> <span class="n">fps</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="cleanup">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.cleanup">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">(</span><span class="n">capture</span><span class="p">:</span> <span class="n">SceneCapture</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Remove a capture's throwaway tree."""</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="n">capture</span><span class="o">.</span><span class="n">project_dir</span><span class="o">.</span><span class="n">parent</span>
+    <span class="k">if</span> <span class="n">base</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">base</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"an-bench-"</span><span class="p">):</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="dirty_paths">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.dirty_paths">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">dirty_paths</span><span class="p">(</span><span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""`git status --porcelain` lines, so a capture can prove it touched nothing."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"--porcelain"</span><span class="p">],</span>
+        <span class="n">cwd</span><span class="o">=</span><span class="n">repo_root</span><span class="p">,</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

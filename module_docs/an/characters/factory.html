@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.factory &mdash; an 0.1.46 documentation</title>
+  <title>an.characters.factory &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -105,12 +105,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dicebear.html">an.characters.dicebear</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.factory</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#an.characters.factory.ValidationReport"><code class="docutils literal notranslate"><span class="pre">ValidationReport</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#an.characters.factory.ValidationReport.format"><code class="docutils literal notranslate"><span class="pre">ValidationReport.format()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="#an.characters.factory.new_character"><code class="docutils literal notranslate"><span class="pre">new_character()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#an.characters.factory.validate_character"><code class="docutils literal notranslate"><span class="pre">validate_character()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="idle.html">an.characters.idle</a></li>
@@ -121,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -186,32 +182,20 @@
              
   <section id="module-an.characters.factory">
 <span id="an-characters-factory"></span><h1>an.characters.factory<a class="headerlink" href="#module-an.characters.factory" title="Link to this heading"></a></h1>
-<p>High-level entry points: build, validate, and inspect a character.</p>
+<p>High-level entry points: build and inspect a character.</p>
 <p>The <a class="reference internal" href="#an.characters.factory.new_character" title="an.characters.factory.new_character"><code class="xref py py-func docutils literal notranslate"><span class="pre">new_character()</span></code></a> function wires together fetching/wrapping art,
 slicing it into per-part SVGs, generating the default mouth set, and
 writing a complete character directory + <code class="docutils literal notranslate"><span class="pre">character.json</span></code> descriptor.</p>
-<p>The <a class="reference internal" href="#an.characters.factory.validate_character" title="an.characters.factory.validate_character"><code class="xref py py-func docutils literal notranslate"><span class="pre">validate_character()</span></code></a> function checks completeness against
-<code class="xref py py-data docutils literal notranslate"><span class="pre">an.characters.REQUIRED_PARTS</span></code> and the 9-shape mouth set.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">pathlib</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># validate_character on an empty dir gives a list of complaints:</span>
+<p>Checking one is <a class="reference internal" href="validate.html#module-an.characters.validate" title="an.characters.validate"><code class="xref py py-mod docutils literal notranslate"><span class="pre">an.characters.validate</span></code></a>’s job, not this module’s — it
+opens every part and reports <a class="reference internal" href="../verify/_base.html#an.verify._base.Finding" title="an.verify._base.Finding"><code class="xref py py-class docutils literal notranslate"><span class="pre">an.verify._base.Finding</span></code></a> s, so a character
+problem routes the way every other verifier’s does (an#78).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">report</span> <span class="o">=</span> <span class="n">validate_character</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">'nobody'</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="n">report</span><span class="o">.</span><span class="n">passed</span>
-<span class="go">False</span>
+<span class="gp">... </span>    <span class="n">descriptor_path</span> <span class="o">=</span> <span class="n">new_character</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">'nobody'</span><span class="p">,</span> <span class="n">use_dicebear</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">descriptor_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">descriptor_path</span><span class="o">.</span><span class="n">name</span>
+<span class="go">('nobody', 'character.json')</span>
 </pre></div>
 </div>
-<dl class="py class">
-<dt class="sig sig-object py" id="an.characters.factory.ValidationReport">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.characters.factory.</span></span><span class="sig-name descname"><span class="pre">ValidationReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_mouths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pivots_found</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/characters/factory.html#ValidationReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.factory.ValidationReport" title="Link to this definition"></a></dt>
-<dd><p>Result of <a class="reference internal" href="#an.characters.factory.validate_character" title="an.characters.factory.validate_character"><code class="xref py py-func docutils literal notranslate"><span class="pre">validate_character()</span></code></a>.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="an.characters.factory.ValidationReport.format">
-<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/factory.html#ValidationReport.format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.factory.ValidationReport.format" title="Link to this definition"></a></dt>
-<dd><p>Render a short human-readable report.</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="an.characters.factory.new_character">
 <span class="sig-prename descclassname"><span class="pre">an.characters.factory.</span></span><span class="sig-name descname"><span class="pre">new_character</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'lorelei'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dicebear</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acknowledge_attribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../_modules/an/characters/factory.html#new_character"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.factory.new_character" title="Link to this definition"></a></dt>
@@ -231,15 +215,6 @@ character is complete out of the box.</p></li>
 <p>Returns the path to the created <code class="docutils literal notranslate"><span class="pre">character.json</span></code>.</p>
 <p>Raises <code class="xref py py-class docutils literal notranslate"><span class="pre">FileExistsError</span></code> if <code class="docutils literal notranslate"><span class="pre">out_dir/name</span></code> already exists and
 <code class="docutils literal notranslate"><span class="pre">overwrite=False</span></code>.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="an.characters.factory.validate_character">
-<span class="sig-prename descclassname"><span class="pre">an.characters.factory.</span></span><span class="sig-name descname"><span class="pre">validate_character</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">char_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.characters.factory.ValidationReport" title="an.characters.factory.ValidationReport"><span class="pre">ValidationReport</span></a></span></span><a class="reference internal" href="../../../_modules/an/characters/factory.html#validate_character"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.factory.validate_character" title="Link to this definition"></a></dt>
-<dd><p>Check that a character directory is complete and well-formed.</p>
-<p>Looks for: <code class="docutils literal notranslate"><span class="pre">character.json</span></code>, all <code class="xref py py-data docutils literal notranslate"><span class="pre">REQUIRED_PARTS</span></code> under
-<code class="docutils literal notranslate"><span class="pre">parts/</span></code>, all 9 mouth shapes under <code class="docutils literal notranslate"><span class="pre">parts/mouth/</span></code>, and at least one
-pivot in the canonical SVG (if one exists).</p>
 </dd></dl>
 
 </section>

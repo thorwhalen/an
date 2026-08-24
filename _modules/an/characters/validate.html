@@ -1,0 +1,580 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.characters.validate &mdash; an 0.1.47 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.characters.validate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.characters.validate</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Whether an art package is one the compiler can actually render.</span>
+
+<span class="sd">The artist-facing contract, checked offline. Wave 4 (#78) exists because the</span>
+<span class="sd">previous check had no teeth in two separate ways:</span>
+
+<span class="sd">- **It checked file existence only.** A part that was present but drew nothing</span>
+<span class="sd">  passed, and then rendered invisibly — the one failure mode with no diagnostic</span>
+<span class="sd">  anywhere in the pipeline (``misc/docs/wave4_research.md`` §4).</span>
+<span class="sd">- **It returned a bespoke report type**, so the orchestrator's typed-error</span>
+<span class="sd">  routing did not apply to any character problem. Findings here are</span>
+<span class="sd">  :class:`an.verify._base.Finding`, the same type every verifier emits, with</span>
+<span class="sd">  ``ir_path`` pointing at the file or slot that needs the fix.</span>
+
+<span class="sd">Everything here is offline and free: no render, no browser, no network. That is</span>
+<span class="sd">the point — an illustrator should be able to run it before delivering, and a</span>
+<span class="sd">contract they cannot check themselves is a contract that gets them paid for work</span>
+<span class="sd">that cannot land.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xml.etree.ElementTree</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ET</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MOUTH_SHAPES</span><span class="p">,</span>
+    <span class="n">REQUIRED_PARTS</span><span class="p">,</span>
+    <span class="n">CharacterDescriptor</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.svg_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">SVG_NS</span><span class="p">,</span> <span class="n">extract_pivots</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.verify._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Finding</span><span class="p">,</span> <span class="n">VerificationReport</span>
+
+<span class="c1">#: Elements an art package may not contain.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Not a security perimeter — the renderer loads these files into a headless</span>
+<span class="c1">#: browser we control — but a portability one: each of these makes a part render</span>
+<span class="c1">#: differently, or not at all, depending on the rasteriser, and a part that</span>
+<span class="c1">#: depends on script execution is not a drawing.</span>
+<span class="n">PROHIBITED_ELEMENTS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"script"</span><span class="p">:</span> <span class="s2">"executable content; a part is a drawing, not a program"</span><span class="p">,</span>
+    <span class="s2">"foreignObject"</span><span class="p">:</span> <span class="s2">"embeds non-SVG content that most rasterisers drop"</span><span class="p">,</span>
+    <span class="s2">"image"</span><span class="p">:</span> <span class="s2">"raster embed; inline it or ship it as its own part"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: Elements that put ink on the canvas. A part containing none of these is</span>
+<span class="c1">#: blank, whatever else it contains.</span>
+<span class="n">DRAWABLE_ELEMENTS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">"path"</span><span class="p">,</span> <span class="s2">"rect"</span><span class="p">,</span> <span class="s2">"circle"</span><span class="p">,</span> <span class="s2">"ellipse"</span><span class="p">,</span> <span class="s2">"line"</span><span class="p">,</span> <span class="s2">"polyline"</span><span class="p">,</span> <span class="s2">"polygon"</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">,</span> <span class="s2">"use"</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1">#: Severity for a problem that stops the part rendering correctly.</span>
+<span class="n">BLOCKING</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"error"</span>
+
+<span class="c1">#: Severity for a problem worth fixing that still renders.</span>
+<span class="n">ADVISORY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"warning"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_localname</span><span class="p">(</span><span class="n">tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">tag</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"}"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="s2">"}"</span> <span class="ow">in</span> <span class="n">tag</span> <span class="k">else</span> <span class="n">tag</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iter_parts</span><span class="p">(</span><span class="n">char_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``(relative name, path)`` for every part SVG an art package ships."""</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">char_dir</span> <span class="o">/</span> <span class="s2">"parts"</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">return</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">parts</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*.svg"</span><span class="p">)):</span>
+        <span class="k">yield</span> <span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span> <span class="n">path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_part</span><span class="p">(</span><span class="n">rel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">VerificationReport</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Open one part and report what would go wrong at render time."""</span>
+    <span class="n">ir_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"parts/</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">ET</span><span class="o">.</span><span class="n">ParseError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">BLOCKING</span><span class="p">,</span>
+            <span class="n">ir_path</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2"> is not parseable XML: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">"Re-export it. A malformed part makes the asset loader never settle, "</span>
+            <span class="s2">"so the render hangs rather than failing (an#79)."</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">descendants</span> <span class="o">=</span> <span class="p">[</span><span class="n">_localname</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">iter</span><span class="p">()]</span>
+
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">why</span> <span class="ow">in</span> <span class="n">PROHIBITED_ELEMENTS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">BLOCKING</span><span class="p">,</span>
+                <span class="n">ir_path</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2"> contains &lt;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;: </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"Remove the &lt;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt;."</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">DRAWABLE_ELEMENTS</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">descendants</span><span class="p">):</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">BLOCKING</span><span class="p">,</span>
+            <span class="n">ir_path</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2"> contains no drawable element "</span>
+            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">DRAWABLE_ELEMENTS</span><span class="p">))</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+            <span class="s2">"Draw something, or delete the part and the slot that names it. A "</span>
+            <span class="s2">"geometry-less part renders invisibly with no error anywhere — the "</span>
+            <span class="s2">"failure this check exists for."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">view_box</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"viewBox"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">view_box</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">ADVISORY</span><span class="p">,</span>
+            <span class="n">ir_path</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2"> declares no viewBox, so its size depends on the rasteriser"</span><span class="p">,</span>
+            <span class="s2">"Add a viewBox matching the art's extent."</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">view_box</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">BLOCKING</span><span class="p">,</span> <span class="n">ir_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2"> has a malformed viewBox </span><span class="si">{</span><span class="n">view_box</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">BLOCKING</span><span class="p">,</span>
+            <span class="n">ir_path</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2"> has a zero-or-negative viewBox extent </span><span class="si">{</span><span class="n">view_box</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">"A zero-dimension part makes the asset loader never settle (an#79)."</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"width"</span><span class="p">),</span> <span class="n">root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"height"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">width</span> <span class="ow">and</span> <span class="n">height</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">declared</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">width</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"px"</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">height</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"px"</span><span class="p">)))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">vb_aspect</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">declared_aspect</span> <span class="o">=</span> <span class="n">declared</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">declared</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">declared</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">declared_aspect</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vb_aspect</span> <span class="o">-</span> <span class="n">declared_aspect</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">vb_aspect</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">ADVISORY</span><span class="p">,</span>
+                <span class="n">ir_path</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rel</span><span class="si">}</span><span class="s2"> rasterises at </span><span class="si">{</span><span class="n">declared</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">declared</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> but its viewBox "</span>
+                <span class="sa">f</span><span class="s2">"is </span><span class="si">{</span><span class="n">numbers</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">numbers</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">, so the art is letterboxed inside "</span>
+                <span class="sa">f</span><span class="s2">"its own texture"</span><span class="p">,</span>
+                <span class="s2">"Make width/height match the viewBox extent. This is the defect "</span>
+                <span class="s2">"an#75 fixed in `extract_part`; a hand-authored part can reintroduce it."</span><span class="p">,</span>
+            <span class="p">)</span>
+
+
+<div class="viewcode-block" id="validate_character">
+<a class="viewcode-back" href="../../../module_docs/an/characters/validate.html#an.characters.validate_character">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_character</span><span class="p">(</span>
+    <span class="n">char_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VerificationReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check an art package against the contract, offline.</span>
+
+<span class="sd">    Reports a :class:`~an.verify._base.Finding` per problem: a missing or</span>
+<span class="sd">    unparseable descriptor, absent required parts or mouth shapes, a part that</span>
+<span class="sd">    draws nothing, a prohibited construct, a letterboxed part, a joint name</span>
+<span class="sd">    colliding with a part id, and an unpopulated ``AssetSource``.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile, pathlib</span>
+<span class="sd">    &gt;&gt;&gt; with tempfile.TemporaryDirectory() as d:</span>
+<span class="sd">    ...     report = validate_character(d, name="nobody")</span>
+<span class="sd">    &gt;&gt;&gt; report.passed</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; any("character.json" in f.description for f in report.findings)</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">char_dir</span><span class="p">)</span>
+    <span class="n">who</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">directory</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">VerificationReport</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">directory</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">BLOCKING</span><span class="p">,</span> <span class="n">who</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2"> does not exist"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="n">descriptor</span><span class="p">:</span> <span class="n">CharacterDescriptor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">desc_path</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">/</span> <span class="s2">"character.json"</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">desc_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">BLOCKING</span><span class="p">,</span>
+            <span class="s2">"character.json"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> has no character.json"</span><span class="p">,</span>
+            <span class="s2">"Run `an character new`, or write one; without it nothing knows the rig."</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">descriptor</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate_json</span><span class="p">(</span>
+                <span class="n">desc_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">BLOCKING</span><span class="p">,</span> <span class="s2">"character.json"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2">'s descriptor is invalid: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="p">)</span>
+
+    <span class="n">parts_dir</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">/</span> <span class="s2">"parts"</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">REQUIRED_PARTS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">part</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">BLOCKING</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"parts/</span><span class="si">{</span><span class="n">part</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is missing required part </span><span class="si">{</span><span class="n">part</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"Draw it, or drop the slot that names it from the descriptor."</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">MOUTH_SHAPES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">parts_dir</span> <span class="o">/</span> <span class="s2">"mouth"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"mouth_</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">BLOCKING</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"parts/mouth/mouth_</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">.svg"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is missing mouth shape </span><span class="si">{</span><span class="n">shape</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"Run `an character mouths` to generate the default set."</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">rel</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_iter_parts</span><span class="p">(</span><span class="n">parts_dir</span><span class="o">.</span><span class="n">parent</span><span class="p">):</span>
+        <span class="n">_check_part</span><span class="p">(</span><span class="n">rel</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
+
+    <span class="n">_check_joint_names</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">ADVISORY</span><span class="p">,</span>
+            <span class="s2">"character.json"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> declares no AssetSource"</span><span class="p">,</span>
+            <span class="s2">"Record where the art came from. `None` means 'we made this', which is "</span>
+            <span class="s2">"a claim — and a licence defect is the only failure that reaches "</span>
+            <span class="s2">"backwards through finished work."</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">report</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_joint_names</span><span class="p">(</span>
+    <span class="n">directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">descriptor</span><span class="p">:</span> <span class="n">CharacterDescriptor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">VerificationReport</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A pivot id that is also a part id is ambiguous, structurally.</span>
+
+<span class="sd">    `_find_by_id` prefers the `&lt;g&gt;` over a same-id `&lt;circle&gt;` precisely because</span>
+<span class="sd">    this collision happens. That is a workaround for a missing namespace, and</span>
+<span class="sd">    this is the check that makes the namespace real: if a drawing calls a joint</span>
+<span class="sd">    `head` and also calls a part `head`, extraction picks one by a rule nobody</span>
+<span class="sd">    reading the drawing can see.</span>
+<span class="sd">    """</span>
+    <span class="n">canonical</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.svg"</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">canonical</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pivots</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">extract_pivots</span><span class="p">(</span><span class="n">canonical</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">ET</span><span class="o">.</span><span class="n">ParseError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="n">part_ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">stem</span> <span class="k">for</span> <span class="n">stem</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_iter_parts</span><span class="p">(</span><span class="n">directory</span><span class="p">)}</span>
+    <span class="n">part_ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">".svg"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">part_ids</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">clash</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">pivots</span> <span class="o">&amp;</span> <span class="n">part_ids</span><span class="p">):</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">ADVISORY</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">canonical</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">#</span><span class="si">{</span><span class="n">clash</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">clash</span><span class="si">!r}</span><span class="s2"> names both a joint and a part"</span><span class="p">,</span>
+            <span class="s2">"Rename the joint. Extraction resolves the collision by preferring "</span>
+            <span class="s2">"the group, which is a rule the drawing does not show."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="format_report">
+<a class="viewcode-back" href="../../../module_docs/an/characters/validate.html#an.characters.format_report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_report</span><span class="p">(</span><span class="n">report</span><span class="p">:</span> <span class="n">VerificationReport</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A short human-readable rendering, for the CLI."""</span>
+    <span class="n">verdict</span> <span class="o">=</span> <span class="s2">"OK"</span> <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">"FAILED"</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"character </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">verdict</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">findings</span><span class="p">)</span><span class="si">}</span><span class="s2"> finding(s))"</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">finding</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">findings</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  [</span><span class="si">{</span><span class="n">finding</span><span class="o">.</span><span class="n">severity</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">finding</span><span class="o">.</span><span class="n">ir_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">finding</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">finding</span><span class="o">.</span><span class="n">suggested_fix</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"      -&gt; </span><span class="si">{</span><span class="n">finding</span><span class="o">.</span><span class="n">suggested_fix</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="render_contract">
+<a class="viewcode-back" href="../../../module_docs/an/characters/validate.html#an.characters.render_contract">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_contract</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The artist-facing spec, generated from the schema and the checks above.</span>
+
+<span class="sd">    Every line here is read out of a live object: the required parts and mouth</span>
+<span class="sd">    shapes from :mod:`an.characters.schema`, the slot and attachment layout from</span>
+<span class="sd">    a freshly-built descriptor, the prohibitions from</span>
+<span class="sd">    :data:`PROHIBITED_ELEMENTS`, and the drawable set from</span>
+<span class="sd">    :data:`DRAWABLE_ELEMENTS`. Nothing is retyped, so the document and the</span>
+<span class="sd">    validator cannot disagree.</span>
+<span class="sd">    """</span>
+    <span class="n">descriptor</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"example"</span><span class="p">)</span>
+    <span class="n">skin</span> <span class="o">=</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">skins</span><span class="p">[</span><span class="s2">"default"</span><span class="p">]</span>
+    <span class="n">view_box</span> <span class="o">=</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">view_box</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"# Art package contract (character schema </span><span class="si">{</span><span class="n">descriptor</span><span class="o">.</span><span class="n">schema_version</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"Everything below is checked offline by `an character validate`."</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"## Layout"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"    &lt;name&gt;/"</span><span class="p">,</span>
+        <span class="s2">"      character.json        the descriptor: bones, slots, skins, asset_sets"</span><span class="p">,</span>
+        <span class="s2">"      &lt;name&gt;.svg            the canonical drawing, with a &lt;g id='skeleton'&gt;"</span><span class="p">,</span>
+        <span class="s2">"      parts/                one SVG per attachment"</span><span class="p">,</span>
+        <span class="s2">"        mouth/              the viseme set"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"## Coordinate space"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"All positions are in view_box units; the default is </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">view_box</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+        <span class="s2">"A bone's position is relative to its parent; an attachment's is relative"</span><span class="p">,</span>
+        <span class="s2">"to its bone. The whole rig is scaled by one uniform factor at compile"</span><span class="p">,</span>
+        <span class="s2">"time, so **aspect ratio is intrinsic to the art** — a part is placed and"</span><span class="p">,</span>
+        <span class="s2">"uniformly scaled, never stretched to fit a box."</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"## Joints"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s1">'Draw a `&lt;g id="skeleton"&gt;` of named `&lt;circle&gt;` elements; each bone names'</span><span class="p">,</span>
+        <span class="s2">"the joint it stands for, and those coordinates become the rig:"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">bone</span> <span class="ow">in</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">bones</span><span class="p">:</span>
+        <span class="n">joint</span> <span class="o">=</span> <span class="n">bone</span><span class="o">.</span><span class="n">pivot</span> <span class="ow">or</span> <span class="s2">"(no joint; keeps its default placement)"</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"    </span><span class="si">{</span><span class="n">bone</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;10</span><span class="si">}</span><span class="s2"> &lt;- </span><span class="si">{</span><span class="n">joint</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"A joint id must not also be a part id."</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"## Required parts"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"    "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">REQUIRED_PARTS</span><span class="p">),</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"    mouth/: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">'mouth_'</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">MOUTH_SHAPES</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"## Slots and their attachments"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">slots</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">draw_order</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">)):</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">skin</span><span class="o">.</span><span class="n">slots</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">slot</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"    </span><span class="si">{</span><span class="n">slot</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;11</span><span class="si">}</span><span class="s2"> bone=</span><span class="si">{</span><span class="n">slot</span><span class="o">.</span><span class="n">bone</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2"> draw_order=</span><span class="si">{</span><span class="n">slot</span><span class="o">.</span><span class="n">draw_order</span><span class="si">}</span><span class="s2">  "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">available</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"A slot's name is its scene-graph node name, which is what `scene.md`"</span><span class="p">,</span>
+        <span class="s2">"targets. Attachment names are a separate namespace and follow the files."</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"## Every part SVG"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"  - declares a viewBox, and `width`/`height` matching its extent"</span><span class="p">,</span>
+        <span class="s2">"    (otherwise the art is letterboxed inside its own texture)"</span><span class="p">,</span>
+        <span class="s2">"  - contains at least one of: "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">DRAWABLE_ELEMENTS</span><span class="p">)),</span>
+        <span class="s2">"  - contains none of:"</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">why</span> <span class="ow">in</span> <span class="n">PROHIBITED_ELEMENTS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"      &lt;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&gt; — </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"## Provenance"</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"Populate `source` unless the art is your own. A licence defect is the"</span><span class="p">,</span>
+        <span class="s2">"only failure that reaches backwards through finished work."</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

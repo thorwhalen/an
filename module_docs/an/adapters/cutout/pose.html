@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.pose &mdash; an 0.1.46 documentation</title>
+  <title>an.adapters.cutout.pose &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -59,7 +59,13 @@
 <li class="toctree-l1"><a class="reference internal" href="compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fidelity.html">an.adapters.cutout.fidelity</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.pose</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.pose.Pose"><code class="docutils literal notranslate"><span class="pre">Pose</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.pose.UNRENDERED_PROPS"><code class="docutils literal notranslate"><span class="pre">UNRENDERED_PROPS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.pose.apply_pose"><code class="docutils literal notranslate"><span class="pre">apply_pose()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.pose.merge_poses"><code class="docutils literal notranslate"><span class="pre">merge_poses()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scene.html">an.adapters.cutout.scene</a></li>
@@ -113,6 +119,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../credits.html">an.credits</a></li>
@@ -176,8 +183,61 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-adapters-cutout-pose">
-<h1>an.adapters.cutout.pose<a class="headerlink" href="#an-adapters-cutout-pose" title="Link to this heading"></a></h1>
+  <section id="module-an.adapters.cutout.pose">
+<span id="an-adapters-cutout-pose"></span><h1>an.adapters.cutout.pose<a class="headerlink" href="#module-an.adapters.cutout.pose" title="Link to this heading"></a></h1>
+<p>Pose: a snapshot of property values to apply to a scene graph.</p>
+<p>A pose is the universal output of animation evaluation. Channels evaluate to
+a (target, property, value) triple; clips collect them into a <cite>Pose</cite>; the
+timeline merges multiple clips’ poses; finally <cite>apply_pose</cite> mutates the scene
+graph.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.scene</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">SceneGraph</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformParams</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="s2">"r"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="s2">"c"</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">SceneGraph</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">apply_pose</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="p">{(</span><span class="s2">"r/c"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">):</span> <span class="mf">42.0</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span><span class="p">[</span><span class="s2">"r/c"</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">x</span>
+<span class="go">42.0</span>
+</pre></div>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.pose.Pose">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.pose.</span></span><span class="sig-name descname"><span class="pre">Pose</span></span><a class="headerlink" href="#an.adapters.cutout.pose.Pose" title="Link to this definition"></a></dt>
+<dd><p>Mapping of (target_path, property_name) -&gt; value.</p>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>], <code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.pose.UNRENDERED_PROPS">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.pose.</span></span><span class="sig-name descname"><span class="pre">UNRENDERED_PROPS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'alpha',</span> <span class="pre">'viseme'})</span></span><a class="headerlink" href="#an.adapters.cutout.pose.UNRENDERED_PROPS" title="Link to this definition"></a></dt>
+<dd><p>Properties the JS runtime applies that this in-memory evaluator cannot.</p>
+<p>Declared rather than implied, so the parity test can assert the gap is
+exactly this and not something that crept in.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.pose.apply_pose">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.pose.</span></span><span class="sig-name descname"><span class="pre">apply_pose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="scene.html#an.adapters.cutout.scene.SceneGraph" title="an.adapters.cutout.scene.SceneGraph"><span class="pre">SceneGraph</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/pose.html#apply_pose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.pose.apply_pose" title="Link to this definition"></a></dt>
+<dd><p>Apply <code class="docutils literal notranslate"><span class="pre">pose</span></code> to <code class="docutils literal notranslate"><span class="pre">graph</span></code> in place. Marks affected subtrees dirty.</p>
+<p>Unknown targets AND unknown properties both raise <code class="docutils literal notranslate"><span class="pre">KeyError</span></code>.</p>
+<p>The target half used to be a silent skip, justified as “so optional channels
+don’t crash a render of an early-state scene” — the same reasoning the JS
+runtime used, and the same outcome: a mistyped path animated nothing, with no
+diagnostic, and looked wired. The two evaluators now behave alike.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.pose.merge_poses">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.pose.</span></span><span class="sig-name descname"><span class="pre">merge_poses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">poses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/pose.html#merge_poses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.pose.merge_poses" title="Link to this definition"></a></dt>
+<dd><p>Merge multiple poses with <strong>override semantics</strong> (later wins per key).</p>
+<p>Used by the timeline to combine concurrent clips on the same target. For
+additive blending, a later phase will introduce a separate <code class="docutils literal notranslate"><span class="pre">add_poses</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">merge_poses</span><span class="p">({(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">):</span> <span class="mf">1.0</span><span class="p">},</span> <span class="p">{(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">):</span> <span class="mf">2.0</span><span class="p">,</span> <span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">):</span> <span class="mf">3.0</span><span class="p">})</span>
+<span class="go">{('a', 'x'): 2.0, ('a', 'y'): 3.0}</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
 

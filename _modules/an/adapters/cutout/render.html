@@ -1,0 +1,1091 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.adapters.cutout.render &mdash; an 0.1.47 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.adapters.cutout.render</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.adapters.cutout.render</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Headless cutout rendering: Playwright drives the JS runtime, ffmpeg muxes.</span>
+
+<span class="sd">The flow per shot:</span>
+
+<span class="sd">1. Compile the shot to a `CutoutSceneJSON` via `compile_shot`.</span>
+<span class="sd">2. Stage a copy of the JS runtime in a per-shot work directory and write the</span>
+<span class="sd">   JSON beside it.</span>
+<span class="sd">3. Launch headless Chromium via Playwright; load `index.html`; inject the</span>
+<span class="sd">   scene via ``window.anLoadScene``.</span>
+<span class="sd">4. For each frame ``f`` in ``[0, total_frames)``: call ``window.anSetTime(f/fps)``</span>
+<span class="sd">   and screenshot the canvas to a PNG.</span>
+<span class="sd">5. Mux the PNG sequence to mp4 with ffmpeg.</span>
+
+<span class="sd">Failures are reported with concrete remediation: missing ffmpeg, missing</span>
+<span class="sd">Chromium, runtime load timeout, etc. Subprocess errors are wrapped at the</span>
+<span class="sd">facade boundary.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">http.server</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">socketserver</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenderContext</span><span class="p">,</span> <span class="n">RenderResult</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.supersample</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">NO_SUPERSAMPLE</span><span class="p">,</span>
+    <span class="n">check_factor</span><span class="p">,</span>
+    <span class="n">resolve_png_bytes</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">MP4_FASTSTART_ARGS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.determinism</span><span class="w"> </span><span class="kn">import</span> <span class="n">capture_violations</span><span class="p">,</span> <span class="n">determinism_enforced</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.compile</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_shot</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.runtime_files</span><span class="w"> </span><span class="kn">import</span> <span class="n">runtime_dir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.serialize</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shot</span>
+
+
+<span class="c1"># Tunables — exposed as module constants per the no-magic-numbers rule.</span>
+<span class="n">DEFAULT_RUNTIME_LOAD_TIMEOUT_MS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15_000</span>
+
+<span class="c1">#: Deadline for `anLoadScene`, which awaits `PIXI.Assets.load` for every declared</span>
+<span class="c1">#: texture. **A bound is required, not merely nice**: a degenerate part SVG —</span>
+<span class="c1">#: `&lt;svg/&gt;`, malformed XML, a zero-dimension root — makes `Assets.load` never</span>
+<span class="c1">#: settle, so without this the render hangs indefinitely with no error and no</span>
+<span class="c1">#: output (an#79). `page.evaluate` is not subject to Playwright's default</span>
+<span class="c1">#: timeout, so the deadline is imposed inside the page instead.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The value is a policy choice, not a measurement: it needs to sit far above a</span>
+<span class="c1">#: legitimate cold load of a few dozen small SVGs and far below "a human gave</span>
+<span class="c1">#: up". Raise it for a genuinely heavy art package rather than removing it.</span>
+<span class="n">DEFAULT_ASSET_LOAD_TIMEOUT_MS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60_000</span>
+<span class="n">DEFAULT_FRAME_PNG_PATTERN</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"frame_</span><span class="si">%06d</span><span class="s2">.png"</span>
+
+<span class="c1">#: Chromium launch flags that pin the rasteriser (an#31, research §2).</span>
+<span class="c1">#:</span>
+<span class="c1">#: **Unconditional, deliberately** — not gated behind an env var. A render whose</span>
+<span class="c1">#: rasteriser depends on ``AN_DETERMINISTIC`` is non-reproducible *by default*,</span>
+<span class="c1">#: which is the property this work exists to remove; and the flags are a</span>
+<span class="c1">#: measured no-op on today's output (0 differing pixels over both fixtures,</span>
+<span class="c1">#: verified on this repo at the commit that introduced them), so there is no</span>
+<span class="c1">#: baseline to protect by making them opt-in.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Unpinned, the same code renders differently in ways nobody would attribute</span>
+<span class="c1">#: correctly: GPU vs software rasterisation is a 1.9% / max-57 pixel difference,</span>
+<span class="c1">#: and a headed browser (reachable by a one-word local edit) differs by 1.91%.</span>
+<span class="c1">#: A band that wide hides any real regression.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Two flags are deliberately NOT here. ``--use-angle=swiftshader`` — including</span>
+<span class="c1">#: Chromium's own documented ``--use-gl=angle --use-angle=swiftshader`` form —</span>
+<span class="c1">#: moves 1.55% of pixels by up to 58/255, so it would re-baseline the corpus for</span>
+<span class="c1">#: nothing. ``--disable-frame-rate-limit`` measured 1.05x on this WebGL runtime</span>
+<span class="c1">#: (the widely-cited 2.3x is a canvas-2D artefact). ``--deterministic-mode`` is a</span>
+<span class="c1">#: verified no-op here, because the runtime uses ``autoStart:false`` plus an</span>
+<span class="c1">#: explicit ``app.render()``.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Record the argv **verbatim** in any provenance row: all four rasteriser</span>
+<span class="c1">#: configurations report the byte-identical ``UNMASKED_RENDERER_WEBGL`` string,</span>
+<span class="c1">#: so the renderer string cannot witness this choice.</span>
+<span class="n">DETERMINISTIC_CHROMIUM_ARGS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"--no-sandbox"</span><span class="p">,</span>  <span class="c1"># was already passed; also a Playwright default</span>
+    <span class="s2">"--disable-gpu"</span><span class="p">,</span>  <span class="c1"># pins SOFTWARE rasterisation</span>
+    <span class="s2">"--enable-unsafe-swiftshader"</span><span class="p">,</span>  <span class="c1"># Chrome 137 removed the automatic fallback</span>
+    <span class="s2">"--force-color-profile=srgb"</span><span class="p">,</span>  <span class="c1"># pins the screenshot path's colour management</span>
+<span class="p">)</span>
+
+<span class="c1">#: x264 encode knobs pinned so the delivered mp4 is a function of the frames</span>
+<span class="c1">#: rather than of the machine (an#34, research §2).</span>
+<span class="c1">#:</span>
+<span class="c1">#: `-threads 1` — `-threads 1/4/11` all give bit-identical decoded pixels, so</span>
+<span class="c1">#: this looks unnecessary on a laptop. It is not: `auto` raises</span>
+<span class="c1">#: `lookahead_threads` above 1 at roughly `-threads &gt;= 12`, and a forced</span>
+<span class="c1">#: `lookahead-threads=4` changes 86.2% of the bytes (max delta 80). A big CI</span>
+<span class="c1">#: runner crosses that line and a 4-core dev box never will, which is precisely</span>
+<span class="c1">#: how an unpinned thread count ships without anyone seeing it.</span>
+<span class="c1">#:</span>
+<span class="c1">#: `-crf 23 -preset medium` — both are libx264's compiled-in defaults today, so</span>
+<span class="c1">#: passing them changes nothing now and pins us against a build whose defaults</span>
+<span class="c1">#: differ. Worth pinning because preset swings distinct colour counts **2.3x,</span>
+<span class="c1">#: non-monotonically** (ultrafast 3141, veryfast 7296, medium 6064, slower 5393)</span>
+<span class="c1">#: against a crf18-&gt;23 signal of 1.35x — an unpinned preset dominates the very</span>
+<span class="c1">#: signal a quality ledger tries to measure.</span>
+<span class="c1">#:</span>
+<span class="c1">#: BT.709 is the one knob here that CHANGES today's output, and it changes more</span>
+<span class="c1">#: than the research predicted — measured, not assumed (an#34):</span>
+<span class="c1">#:</span>
+<span class="c1">#: - `-colorspace bt709` does not merely *tag* the file. It sets the matrix of</span>
+<span class="c1">#:   the auto-inserted RGB-&gt;YUV conversion, so the **encoded luma and chroma</span>
+<span class="c1">#:   planes themselves change**. Confirmed by construction: forcing</span>
+<span class="c1">#:   `scale=out_color_matrix=bt601` reproduces the untagged output's decoded</span>
+<span class="c1">#:   stream byte-for-byte, i.e. `an` has been converting with BT.601 all along.</span>
+<span class="c1">#: - `-color_range tv` is a **no-op today** (limited range is already the</span>
+<span class="c1">#:   default for yuv420p here). Pinned anyway, so a build that defaults</span>
+<span class="c1">#:   differently cannot change the output silently.</span>
+<span class="c1">#: - The ffmpeg-level `-color_primaries` / `-color_trc` flags **do not reach the</span>
+<span class="c1">#:   bitstream**: with them alone, ffprobe reports `color_space=bt709` and</span>
+<span class="c1">#:   `color_primaries=unknown`, `color_transfer=unknown`. `-x264-params` is what</span>
+<span class="c1">#:   lands all three in the VUI, and it leaves the decoded stream identical. A</span>
+<span class="c1">#:   half-tagged file is worse than an untagged one — the player stops guessing</span>
+<span class="c1">#:   the matrix but still guesses the primaries.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Why bother: untagged, the *player* picks its matrix by a height heuristic</span>
+<span class="c1">#: (BT.601 below ~576 lines). Every shipped `an` example is 320x240 to 640x360,</span>
+<span class="c1">#: so encode and playback agree by luck; at 1080p the same code would encode</span>
+<span class="c1">#: with BT.601 and be displayed as BT.709, a silent, resolution-dependent colour</span>
+<span class="c1">#: error. Pinning both sides to BT.709 makes them agree at every resolution.</span>
+<span class="c1">#: This is a **one-time deliberate re-baseline** of every mp4 — cheap now,</span>
+<span class="c1">#: because no ledger exists yet to invalidate.</span>
+<span class="c1">#: The delivered encode's pixel format, and **the one first-order quality lever</span>
+<span class="c1">#: in this file**. Measured on 30 real 1080p `an` frames, edge-band mean error:</span>
+<span class="c1">#: current flags 11.35, crf18 4:2:0 11.05, crf18 `-tune animation` 10.96,</span>
+<span class="c1">#: mathematically lossless 4:2:0 **10.15** — and crf18 **4:4:4 3.79**.</span>
+<span class="c1">#: Losslessness buys 8%; dropping chroma subsampling buys **66%**. Wave 2's own</span>
+<span class="c1">#: conclusion: "bitrate is second-order, pixel format is first-order".</span>
+<span class="c1">#:</span>
+<span class="c1">#: **The default stays 4:2:0 because that is a PRODUCT constraint, not an</span>
+<span class="c1">#: encoder-tuning one.** High 4:4:4 Predictive is refused by many hardware</span>
+<span class="c1">#: decoders, browsers and platforms, so flipping it would hand a design partner</span>
+<span class="c1">#: a file they cannot play. 4:4:4 is reachable per render</span>
+<span class="c1">#: (`an render --pix-fmt yuv444p`), which is the right shape for a knob whose</span>
+<span class="c1">#: right answer depends on where the file is going.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Read as a MODULE GLOBAL at call time, deliberately: that is what lets the</span>
+<span class="c1">#: bench's lever rebind it from outside, exactly as `high_crf` rebinds</span>
+<span class="c1">#: `DETERMINISTIC_X264_ARGS`. Hoisting either into a default argument binds it</span>
+<span class="c1">#: at `def` time and disarms the lever silently.</span>
+<span class="n">DEFAULT_PIX_FMT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"yuv420p"</span>
+
+<span class="c1">#: The formats the knob accepts. Not an open string: a typo would reach ffmpeg</span>
+<span class="c1">#: as an obscure failure minutes into a render, and a format outside this set</span>
+<span class="c1">#: has not been measured against the panel.</span>
+<span class="n">SUPPORTED_PIX_FMTS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"yuv420p"</span><span class="p">,</span> <span class="s2">"yuv444p"</span><span class="p">)</span>
+
+<span class="n">DETERMINISTIC_X264_ARGS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"-threads"</span><span class="p">,</span>
+    <span class="s2">"1"</span><span class="p">,</span>
+    <span class="s2">"-crf"</span><span class="p">,</span>
+    <span class="s2">"23"</span><span class="p">,</span>
+    <span class="s2">"-preset"</span><span class="p">,</span>
+    <span class="s2">"medium"</span><span class="p">,</span>
+    <span class="s2">"-colorspace"</span><span class="p">,</span>
+    <span class="s2">"bt709"</span><span class="p">,</span>
+    <span class="s2">"-color_primaries"</span><span class="p">,</span>
+    <span class="s2">"bt709"</span><span class="p">,</span>
+    <span class="s2">"-color_trc"</span><span class="p">,</span>
+    <span class="s2">"bt709"</span><span class="p">,</span>
+    <span class="s2">"-color_range"</span><span class="p">,</span>
+    <span class="s2">"tv"</span><span class="p">,</span>
+    <span class="c1"># The half that actually reaches the bitstream; see above.</span>
+    <span class="s2">"-x264-params"</span><span class="p">,</span>
+    <span class="s2">"colorprim=bt709:transfer=bt709:colormatrix=bt709"</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1">#: Races `anLoadScene` against an in-page deadline. `page.evaluate` awaits a</span>
+<span class="c1">#: returned promise with no timeout of its own, so the bound has to live here.</span>
+<span class="c1">#: The rejection message is matched by :func:`_evaluate` to name the cause.</span>
+<span class="n">_LOAD_SCENE_JS</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"""</span>
+<span class="s2">async (args) =&gt; {</span>
+<span class="s2">    let timer = null;</span>
+<span class="s2">    const deadline = new Promise((_, reject) =&gt; {</span>
+<span class="s2">        timer = setTimeout(</span>
+<span class="s2">            () =&gt; reject(new Error(</span><span class="si">%(marker)r</span><span class="s2">)), args.timeoutMs</span>
+<span class="s2">        );</span>
+<span class="s2">    });</span>
+<span class="s2">    try {</span>
+<span class="s2">        await Promise.race([window.anLoadScene(args.scene), deadline]);</span>
+<span class="s2">    } finally {</span>
+<span class="s2">        if (timer !== null) { clearTimeout(timer); }</span>
+<span class="s2">    }</span>
+<span class="s2">}</span>
+<span class="s2">"""</span>
+
+<span class="c1">#: Sentinel the in-page deadline rejects with, so the Python side can tell a</span>
+<span class="c1">#: timeout apart from a load failure and say something different about each.</span>
+<span class="n">ASSET_LOAD_TIMEOUT_MARKER</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"an:asset-load-timeout"</span>
+
+<span class="n">_LOAD_SCENE_JS</span> <span class="o">=</span> <span class="n">_LOAD_SCENE_JS</span> <span class="o">%</span> <span class="p">{</span><span class="s2">"marker"</span><span class="p">:</span> <span class="n">ASSET_LOAD_TIMEOUT_MARKER</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_evaluate</span><span class="p">(</span>
+    <span class="n">page</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">doing</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""`page.evaluate`, with failures wrapped as :class:`CutoutRenderError`.</span>
+
+<span class="sd">    A JS failure escapes Playwright as a raw ``playwright._impl._errors.Error``</span>
+<span class="sd">    carrying a minified stack trace and nothing about what the renderer was</span>
+<span class="sd">    doing. That violates the repo's typed-error convention and, in practice,</span>
+<span class="sd">    surfaces the most likely art failure in the product as</span>
+<span class="sd">    ``TypeError: Cannot read properties of undefined (reading 'x')`` (an#79).</span>
+
+<span class="sd">    ``doing`` names the step. The JS message is carried through verbatim</span>
+<span class="sd">    because it is the informative part; this only adds the context it lacks.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">page</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 — re-raised as a typed error below</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">if</span> <span class="n">ASSET_LOAD_TIMEOUT_MARKER</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"timed out after </span><span class="si">{</span><span class="n">DEFAULT_ASSET_LOAD_TIMEOUT_MS</span><span class="si">}</span><span class="s2"> ms while </span><span class="si">{</span><span class="n">doing</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="s2">"PIXI.Assets.load never settled — an empty, malformed or "</span>
+                <span class="s2">"zero-dimension part SVG does this. Raise "</span>
+                <span class="s2">"DEFAULT_ASSET_LOAD_TIMEOUT_MS only if the art is genuinely "</span>
+                <span class="sa">f</span><span class="s2">"this heavy.</span><span class="se">\n</span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"failed while </span><span class="si">{</span><span class="n">doing</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">if</span> <span class="n">hint</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="se">\n\n</span><span class="si">{</span><span class="n">hint</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+
+<div class="viewcode-block" id="CutoutRenderError">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/render.html#an.adapters.cutout.CutoutRenderError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CutoutRenderError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raised when a cutout render fails. Carries actionable detail."""</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_pix_fmt</span><span class="p">(</span><span class="n">pix_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Resolve and validate the pixel format, or refuse with the whole list.</span>
+
+<span class="sd">    ``None`` resolves to :data:`DEFAULT_PIX_FMT` **at call time**, which is what</span>
+<span class="sd">    lets the bench's lever rebind the module global and reach this render.</span>
+
+<span class="sd">    Refuses an unknown format rather than passing it to ffmpeg: a typo would</span>
+<span class="sd">    otherwise surface minutes into a render as an obscure encoder error, and on</span>
+<span class="sd">    the second shot of a parallel render it would surface from a thread. A</span>
+<span class="sd">    format outside the list has also never been measured against the panel.</span>
+<span class="sd">    """</span>
+    <span class="n">resolved</span> <span class="o">=</span> <span class="n">pix_fmt</span> <span class="ow">or</span> <span class="n">DEFAULT_PIX_FMT</span>
+    <span class="k">if</span> <span class="n">resolved</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_PIX_FMTS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"pix_fmt=</span><span class="si">{</span><span class="n">resolved</span><span class="si">!r}</span><span class="s2"> is not one of </span><span class="si">{</span><span class="n">SUPPORTED_PIX_FMTS</span><span class="si">}</span><span class="s2">. 4:4:4 is "</span>
+            <span class="s2">"opt-in and 4:2:0 is the default for a PRODUCT reason rather than "</span>
+            <span class="s2">"an encoder one — High 4:4:4 Predictive is refused by many hardware "</span>
+            <span class="s2">"decoders, browsers and platforms, so a 4:4:4 file is one some "</span>
+            <span class="s2">"viewers cannot play."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">resolved</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_RenderJob</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Per-shot scratch area + the scene that's about to render."""</span>
+
+    <span class="n">work_dir</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">runtime_dir</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">json_path</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">frames_dir</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">output_mp4</span><span class="p">:</span> <span class="n">Path</span>
+
+
+<div class="viewcode-block" id="CutoutRenderer">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/render.html#an.adapters.cutout.CutoutRenderer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CutoutRenderer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Headless cutout renderer: Playwright + ffmpeg.</span>
+
+<span class="sd">    &gt;&gt;&gt; r = CutoutRenderer()</span>
+<span class="sd">    &gt;&gt;&gt; r.name</span>
+<span class="sd">    'cutout'</span>
+<span class="sd">    &gt;&gt;&gt; r.supported_styles</span>
+<span class="sd">    ('cutout',)</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"cutout"</span>
+    <span class="n">supported_styles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"cutout"</span><span class="p">,)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">can_render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">shot</span><span class="o">.</span><span class="n">style</span> <span class="o">==</span> <span class="s2">"cutout"</span>
+
+<div class="viewcode-block" id="CutoutRenderer.render">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/render.html#an.adapters.cutout.CutoutRenderer.render">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">RenderContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenderResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Render ``shot`` to mp4 using ``ctx`` for paths + parameters."""</span>
+        <span class="n">_ensure_ffmpeg_available</span><span class="p">()</span>
+        <span class="c1"># Validated before anything launches: a browser and a scene compile are</span>
+        <span class="c1"># minutes, and `check_factor` is microseconds.</span>
+        <span class="n">supersample</span> <span class="o">=</span> <span class="n">check_factor</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">supersample</span><span class="p">)</span>
+        <span class="n">pix_fmt</span> <span class="o">=</span> <span class="n">_check_pix_fmt</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">pix_fmt</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>  <span class="c1"># local: optional dep</span>
+
+        <span class="n">scene_json</span> <span class="o">=</span> <span class="n">compile_shot</span><span class="p">(</span>
+            <span class="n">shot</span><span class="p">,</span>
+            <span class="n">mall</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">mall</span><span class="p">,</span>
+            <span class="n">fps</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">strict_assets</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">strict_assets</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">job</span> <span class="o">=</span> <span class="n">_stage_job</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">scene_json</span><span class="p">,</span> <span class="n">mall</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">mall</span><span class="p">)</span>
+
+        <span class="c1"># Drive Chromium → screenshot frames.</span>
+        <span class="c1"># Phase 11b: serve runtime via local HTTP because PIXI.Assets.fetch()</span>
+        <span class="c1"># can't load file:// URLs in headless Chromium. Same effect as a</span>
+        <span class="c1"># static deployment, isolated to this render.</span>
+        <span class="k">with</span> <span class="n">_serve_dir</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">runtime_dir</span><span class="p">)</span> <span class="k">as</span> <span class="n">base_url</span><span class="p">,</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+            <span class="c1"># `headless=True` explicitly: the default is headless today, but</span>
+            <span class="c1"># relying on it means a Playwright default change silently swaps the</span>
+            <span class="c1"># binary — full Chromium renders on the real GPU and differs by 1.91%.</span>
+            <span class="n">browser</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span>
+                <span class="n">args</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">DETERMINISTIC_CHROMIUM_ARGS</span><span class="p">),</span> <span class="n">headless</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">page</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">new_page</span><span class="p">(</span>
+                    <span class="n">viewport</span><span class="o">=</span><span class="p">{</span><span class="s2">"width"</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"height"</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span>
+                <span class="p">)</span>
+                <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">base_url</span><span class="si">}</span><span class="s2">/index.html"</span><span class="p">)</span>
+
+                <span class="c1"># Injected BEFORE `anLoadScene`, which is where the PixiJS</span>
+                <span class="c1"># application is constructed and therefore the only moment the</span>
+                <span class="c1"># factor can reach `resolution`. `add_init_script` would be the</span>
+                <span class="c1"># other option and is wrong: the page is already loaded by the</span>
+                <span class="c1"># time we get here.</span>
+                <span class="n">_evaluate</span><span class="p">(</span>
+                    <span class="n">page</span><span class="p">,</span>
+                    <span class="s2">"(k) =&gt; { window.anSupersample = k; }"</span><span class="p">,</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">supersample</span><span class="p">),</span>
+                    <span class="n">doing</span><span class="o">=</span><span class="sa">f</span><span class="s2">"injecting the supersample factor (</span><span class="si">{</span><span class="n">supersample</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Wait for runtime + PixiJS to load.</span>
+                <span class="n">page</span><span class="o">.</span><span class="n">wait_for_function</span><span class="p">(</span>
+                    <span class="s2">"() =&gt; window.anLoadScene &amp;&amp; window.PIXI"</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="n">DEFAULT_RUNTIME_LOAD_TIMEOUT_MS</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="n">scene_dict</span> <span class="o">=</span> <span class="n">to_dict</span><span class="p">(</span><span class="n">scene_json</span><span class="p">)</span>
+                <span class="c1"># anLoadScene is async (Phase 11b: it awaits Assets.load).</span>
+                <span class="c1"># Playwright awaits returned Promises automatically — and would</span>
+                <span class="c1"># await a promise that never settles forever, which is exactly</span>
+                <span class="c1"># what a degenerate part SVG produces, so the deadline is raced</span>
+                <span class="c1"># against it inside the page (an#79).</span>
+                <span class="n">_evaluate</span><span class="p">(</span>
+                    <span class="n">page</span><span class="p">,</span>
+                    <span class="n">_LOAD_SCENE_JS</span><span class="p">,</span>
+                    <span class="p">{</span><span class="s2">"scene"</span><span class="p">:</span> <span class="n">scene_dict</span><span class="p">,</span> <span class="s2">"timeoutMs"</span><span class="p">:</span> <span class="n">DEFAULT_ASSET_LOAD_TIMEOUT_MS</span><span class="p">},</span>
+                    <span class="n">doing</span><span class="o">=</span><span class="sa">f</span><span class="s2">"loading the scene for shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">hint</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"A part SVG that is empty, malformed or zero-dimension makes "</span>
+                        <span class="s2">"PIXI.Assets.load never settle; one that is absent fails the "</span>
+                        <span class="s2">"load outright. Check the textures this shot declares."</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_evaluate</span><span class="p">(</span>
+                    <span class="n">page</span><span class="p">,</span>
+                    <span class="s2">"() =&gt; window.anCanvasReady()"</span><span class="p">,</span>
+                    <span class="n">doing</span><span class="o">=</span><span class="s2">"checking the PixiJS app initialised"</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span>
+                        <span class="s2">"JS runtime did not initialize PixiJS app after anLoadScene"</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Probed on EVERY render, judged only when enforcement is on.</span>
+                <span class="c1"># Collecting it unconditionally is what puts the blink phases</span>
+                <span class="c1"># and the filter inventory into provenance, where the metrics</span>
+                <span class="c1"># ledger can stamp them; a fact recorded only under a flag is a</span>
+                <span class="c1"># fact missing from every row that matters.</span>
+                <span class="n">determinism</span> <span class="o">=</span> <span class="n">_determinism_report</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+
+                <span class="n">total_frames</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span> <span class="o">*</span> <span class="n">ctx</span><span class="o">.</span><span class="n">fps</span><span class="p">)))</span>
+                <span class="n">_capture_frames</span><span class="p">(</span>
+                    <span class="n">page</span><span class="p">,</span> <span class="n">total_frames</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span> <span class="n">job</span><span class="o">.</span><span class="n">frames_dir</span><span class="p">,</span> <span class="n">supersample</span>
+                <span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">browser</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Mux frames → silent video, then layer (silence base + dialogue) audio on top.</span>
+        <span class="c1"># Every shot mp4 carries an AAC stream (silent if no dialogue) so the</span>
+        <span class="c1"># final ffmpeg concat across heterogeneous shots works without surprises.</span>
+        <span class="n">silent_mp4</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"silent.mp4"</span>
+        <span class="n">_ffmpeg_mux</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">frames_dir</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span> <span class="n">silent_mp4</span><span class="p">,</span> <span class="n">pix_fmt</span><span class="p">)</span>
+        <span class="n">audio_inputs</span> <span class="o">=</span> <span class="n">_stage_audio_inputs</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">job</span><span class="o">.</span><span class="n">work_dir</span><span class="p">)</span>
+        <span class="n">_ffmpeg_add_audio</span><span class="p">(</span><span class="n">silent_mp4</span><span class="p">,</span> <span class="n">audio_inputs</span><span class="p">,</span> <span class="n">job</span><span class="o">.</span><span class="n">output_mp4</span><span class="p">,</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">RenderResult</span><span class="p">(</span>
+            <span class="n">mp4_path</span><span class="o">=</span><span class="n">job</span><span class="o">.</span><span class="n">output_mp4</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+            <span class="n">frame_manifest</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">frames_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.png"</span><span class="p">)),</span>
+            <span class="n">log</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span>
+            <span class="n">provenance</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"shot_id"</span><span class="p">:</span> <span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="s2">"fps"</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span>
+                <span class="s2">"resolution"</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">resolution</span><span class="p">,</span>
+                <span class="c1"># The DECLARED size, unchanged by supersampling — the frames on</span>
+                <span class="c1"># disk are always this, because the resolve runs in the frame</span>
+                <span class="c1"># stage. `supersample` beside it is what says how they got there.</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">supersample</span><span class="p">,</span>
+                <span class="s2">"pix_fmt"</span><span class="p">:</span> <span class="n">pix_fmt</span><span class="p">,</span>
+                <span class="s2">"frame_count"</span><span class="p">:</span> <span class="n">total_frames</span><span class="p">,</span>
+                <span class="s2">"audio_tracks"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">audio_inputs</span><span class="p">),</span>
+                <span class="c1"># The launch argv verbatim: all four rasteriser configurations</span>
+                <span class="c1"># report a byte-identical WebGL renderer string, so the string</span>
+                <span class="c1"># cannot witness the choice and the argv is the only guard.</span>
+                <span class="s2">"chromium_args"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">DETERMINISTIC_CHROMIUM_ARGS</span><span class="p">),</span>
+                <span class="s2">"x264_args"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">DETERMINISTIC_X264_ARGS</span><span class="p">),</span>
+                <span class="s2">"determinism"</span><span class="p">:</span> <span class="n">determinism</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># Internals</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_serve_dir</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Run a tiny HTTP server on a free port serving ``directory``.</span>
+
+<span class="sd">    Yields the base URL (``http://127.0.0.1:&lt;port&gt;``). Tears the server</span>
+<span class="sd">    down on context exit. Used by the cutout renderer so PIXI.Assets can</span>
+<span class="sd">    fetch SVG textures (file:// URLs don't work in headless Chromium).</span>
+<span class="sd">    """</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">_Handler</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">SimpleHTTPRequestHandler</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">directory</span><span class="p">),</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">log_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: A002, ARG002</span>
+            <span class="k">return</span>  <span class="c1"># silence access logs</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">_Server</span><span class="p">(</span><span class="n">socketserver</span><span class="o">.</span><span class="n">ThreadingTCPServer</span><span class="p">):</span>
+        <span class="n">allow_reuse_address</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">daemon_threads</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">server</span> <span class="o">=</span> <span class="n">_Server</span><span class="p">((</span><span class="s2">"127.0.0.1"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">_Handler</span><span class="p">)</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">server_address</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">server</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="sa">f</span><span class="s2">"http://127.0.0.1:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">server_close</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ensure_ffmpeg_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"ffmpeg"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span>
+            <span class="s2">"ffmpeg not found on PATH. Install with: brew install ffmpeg "</span>
+            <span class="s2">"(macOS) or apt install ffmpeg (Linux)."</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stage_job</span><span class="p">(</span>
+    <span class="n">work_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">shot_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">scene_json</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_RenderJob</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Lay out per-shot directories + copy the runtime files + SVG assets."""</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"shot_</span><span class="si">{</span><span class="n">shot_id</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">runtime_target</span> <span class="o">=</span> <span class="n">base</span> <span class="o">/</span> <span class="s2">"runtime"</span>
+    <span class="n">frames_dir</span> <span class="o">=</span> <span class="n">base</span> <span class="o">/</span> <span class="s2">"frames"</span>
+    <span class="n">base</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">frames_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">runtime_target</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">runtime_target</span><span class="p">)</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">runtime_dir</span><span class="p">(),</span> <span class="n">runtime_target</span><span class="p">)</span>
+
+    <span class="c1"># Phase 11b: stage SVG character textures into the runtime dir at the</span>
+    <span class="c1"># paths declared in scene.assets.textures, so Pixi can load them by</span>
+    <span class="c1"># relative URL from index.html.</span>
+    <span class="k">if</span> <span class="n">mall</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_stage_scene_assets</span><span class="p">(</span><span class="n">scene_json</span><span class="p">,</span> <span class="n">mall</span><span class="p">,</span> <span class="n">runtime_target</span><span class="p">)</span>
+
+    <span class="n">json_path</span> <span class="o">=</span> <span class="n">runtime_target</span> <span class="o">/</span> <span class="s2">"scene.json"</span>
+    <span class="n">json_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">to_dict</span><span class="p">(</span><span class="n">scene_json</span><span class="p">),</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_RenderJob</span><span class="p">(</span>
+        <span class="n">work_dir</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+        <span class="n">runtime_dir</span><span class="o">=</span><span class="n">runtime_target</span><span class="p">,</span>
+        <span class="n">json_path</span><span class="o">=</span><span class="n">json_path</span><span class="p">,</span>
+        <span class="n">frames_dir</span><span class="o">=</span><span class="n">frames_dir</span><span class="p">,</span>
+        <span class="n">output_mp4</span><span class="o">=</span><span class="n">base</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">shot_id</span><span class="si">}</span><span class="s2">.mp4"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="CutoutAssetWarning">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/render.html#an.adapters.cutout.CutoutAssetWarning">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CutoutAssetWarning</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A declared texture could not be staged into the runtime directory.</span>
+
+<span class="sd">    Deliberately a warning and not an error, for now: an art package that is</span>
+<span class="sd">    still being assembled is a real state, and refusing to render it would be</span>
+<span class="sd">    worse than rendering it incompletely. But it must be *audible* — the</span>
+<span class="sd">    consequence of an un-staged texture is worse than it looks and worse than</span>
+<span class="sd">    this docstring used to claim. Measured (``misc/docs/wave4_research.md`` §4):</span>
+<span class="sd">    an *absent* part file crashes the render with an unwrapped minified-PixiJS</span>
+<span class="sd">    ``TypeError``; a degenerate SVG hangs it indefinitely (#79); a geometry-less</span>
+<span class="sd">    part renders invisibly. ``PIXI.Texture.WHITE`` — the actual white rectangle —</span>
+<span class="sd">    is reached only by a zero-byte file, an empty ``src``, or no ``src`` key.</span>
+<span class="sd">    Either way a silent skip surfaces to the user as "the animation is broken"</span>
+<span class="sd">    rather than as an error, which is what this warning exists to prevent.</span>
+<span class="sd">    """</span></div>
+
+
+
+<span class="c1">#: Texture ``src`` prefix → the mall store that resolves the rest of the path.</span>
+<span class="c1">#:</span>
+<span class="c1">#: A ``src`` reads ``&lt;prefix&gt;/&lt;ref&gt;/parts/head.svg`` and resolves to</span>
+<span class="c1">#: ``mall[store]._root/&lt;ref&gt;/parts/head.svg``. Only ``characters/`` is emitted</span>
+<span class="c1">#: by the compiler today; the other two are here because environments, styles</span>
+<span class="c1">#: and props all route through this same staging step as they land, and the</span>
+<span class="c1">#: previous hardcoded ``characters/`` test silently dropped everything else.</span>
+<span class="n">ASSET_SRC_PREFIX_TO_STORE</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"characters/"</span><span class="p">:</span> <span class="s2">"characters"</span><span class="p">,</span>
+    <span class="s2">"environments/"</span><span class="p">:</span> <span class="s2">"environments"</span><span class="p">,</span>
+    <span class="s2">"styles/"</span><span class="p">:</span> <span class="s2">"styles"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stage_scene_assets</span><span class="p">(</span>
+    <span class="n">scene_json</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">runtime_target</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Copy every ``assets.textures`` entry from its mall store into the runtime dir.</span>
+
+<span class="sd">    Each texture's ``src`` is resolved through</span>
+<span class="sd">    :data:`ASSET_SRC_PREFIX_TO_STORE`. Anything that cannot be resolved — an</span>
+<span class="sd">    unknown prefix, an absent store, an in-memory store, or a file that is not</span>
+<span class="sd">    on disk — emits a :class:`CutoutAssetWarning` naming the alias, the declared</span>
+<span class="sd">    ``src`` and where it was looked for, rather than being skipped in silence.</span>
+<span class="sd">    """</span>
+    <span class="n">textures</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">scene_json</span><span class="o">.</span><span class="n">assets</span><span class="p">,</span> <span class="s2">"textures"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">scene_json</span><span class="o">.</span><span class="n">assets</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">alias</span><span class="p">,</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">textures</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">src_rel</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="s2">"src"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="n">asset</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"src"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">src_rel</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"texture </span><span class="si">{</span><span class="n">alias</span><span class="si">!r}</span><span class="s2"> declares no src; nothing to stage. "</span>
+                <span class="s2">"The runtime will draw a white rectangle in its place — this is one "</span>
+                <span class="s2">"of the three inputs that genuinely reach PIXI.Texture.WHITE (the "</span>
+                <span class="s2">"others are a zero-byte file and an empty src). An absent *file* "</span>
+                <span class="s2">"does not: it crashes at load. See misc/docs/wave4_research.md #4."</span><span class="p">,</span>
+                <span class="n">CutoutAssetWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">prefix</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ASSET_SRC_PREFIX_TO_STORE</span> <span class="k">if</span> <span class="n">src_rel</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"texture </span><span class="si">{</span><span class="n">alias</span><span class="si">!r}</span><span class="s2"> has src </span><span class="si">{</span><span class="n">src_rel</span><span class="si">!r}</span><span class="s2">, whose prefix is not one of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ASSET_SRC_PREFIX_TO_STORE</span><span class="p">)</span><span class="si">}</span><span class="s2">. It cannot be resolved to a "</span>
+                <span class="s2">"store, so nothing is staged for it and the render will fail at "</span>
+                <span class="s2">"load rather than draw a stand-in."</span><span class="p">,</span>
+                <span class="n">CutoutAssetWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">store_name</span> <span class="o">=</span> <span class="n">ASSET_SRC_PREFIX_TO_STORE</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span>
+        <span class="n">store</span> <span class="o">=</span> <span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">store_name</span><span class="p">)</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="s2">"_root"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># An in-memory store is legitimate (tests do it) and has nothing on</span>
+            <span class="c1"># disk to copy — but a scene that *declared* the texture still will</span>
+            <span class="c1"># not get it, so say so.</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"texture </span><span class="si">{</span><span class="n">alias</span><span class="si">!r}</span><span class="s2"> resolves to the </span><span class="si">{</span><span class="n">store_name</span><span class="si">!r}</span><span class="s2"> store, which has "</span>
+                <span class="s2">"no filesystem root (absent or in-memory); it cannot be staged."</span><span class="p">,</span>
+                <span class="n">CutoutAssetWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="o">/</span> <span class="n">src_rel</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="p">:]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">source</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"texture </span><span class="si">{</span><span class="n">alias</span><span class="si">!r}</span><span class="s2"> declared as </span><span class="si">{</span><span class="n">src_rel</span><span class="si">!r}</span><span class="s2"> was not found at "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">. Nothing is staged for it, so the render will fail at "</span>
+                <span class="sa">f</span><span class="s2">"load rather than draw a stand-in."</span><span class="p">,</span>
+                <span class="n">CutoutAssetWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">target</span> <span class="o">=</span> <span class="n">runtime_target</span> <span class="o">/</span> <span class="n">src_rel</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_determinism_report</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Read the runtime's determinism probe, and refuse a breached perimeter.</span>
+
+<span class="sd">    Enforcement is ON by default (`an.determinism`), so this raises rather than</span>
+<span class="sd">    warning: a frame that is a function of wall time or of `Math.random()` is</span>
+<span class="sd">    not a worse frame, it is a frame that cannot be compared to any other — and</span>
+<span class="sd">    everything downstream of here, the golden corpus and the metrics ledger</span>
+<span class="sd">    alike, is comparison.</span>
+
+<span class="sd">    A runtime too old to carry the probe is reported as such, not defaulted to</span>
+<span class="sd">    "fine": the absence of evidence is what this whole perimeter exists against.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">"() =&gt; window.anDeterminismReport()"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 — reported with its cause, never swallowed</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"error"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"error"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"the probe returned </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">report</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, not an object"</span><span class="p">}</span>
+
+    <span class="n">violations</span> <span class="o">=</span> <span class="n">capture_violations</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+    <span class="n">report</span><span class="p">[</span><span class="s2">"violations"</span><span class="p">]</span> <span class="o">=</span> <span class="n">violations</span>
+    <span class="n">report</span><span class="p">[</span><span class="s2">"enforced"</span><span class="p">]</span> <span class="o">=</span> <span class="n">determinism_enforced</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">violations</span> <span class="ow">and</span> <span class="n">report</span><span class="p">[</span><span class="s2">"enforced"</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span>
+            <span class="s2">"the render's determinism perimeter is breached, so these frames "</span>
+            <span class="s2">"cannot be compared with any others:</span><span class="se">\n\n</span><span class="s2">"</span>
+            <span class="o">+</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">violations</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">report</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_capture_frames</span><span class="p">(</span>
+    <span class="n">page</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">total_frames</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">frames_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">supersample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">NO_SUPERSAMPLE</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Step the JS runtime through ``total_frames`` and screenshot the canvas each time.</span>
+
+<span class="sd">    **The resolve happens here, in the frame stage, and that is not a stylistic</span>
+<span class="sd">    choice.** Nothing downstream reads a resolution off the files: the bench's</span>
+<span class="sd">    `capture.resolution` comes from the staged scene's `meta`, `_ffmpeg_mux`</span>
+<span class="sd">    trusts whatever the PNGs are, and the golden gate compares against a frame</span>
+<span class="sd">    blessed at the declared size. k-times PNGs left on disk would mux a 640x480</span>
+<span class="sd">    video against a 320x240 declaration and put every render-side measurement</span>
+<span class="sd">    out of reach — loudly since an#54, silently before it.</span>
+
+<span class="sd">    An ffmpeg-side `-vf scale` would be the other place to put it, and is</span>
+<span class="sd">    refused: it moves `x264_argv`, which refuses every encode-side metric, and</span>
+<span class="sd">    retires the cross-arch verdict's "ffmpeg never touches a frame" clause.</span>
+
+<span class="sd">    At ``supersample == 1`` this is byte-for-byte the old path — Chromium writes</span>
+<span class="sd">    straight to disk and nothing decodes anything. **Off is free.**</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_frames</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">i</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">fps</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">"(t) =&gt; window.anSetTime(t)"</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># The runtime now raises on an unknown animated property and on an</span>
+            <span class="c1"># animation aimed at a node that does not exist. Those escape</span>
+            <span class="c1"># `page.evaluate` as a raw `playwright._impl._errors.Error`, which</span>
+            <span class="c1"># says nothing about which frame or which shot — and would trade one</span>
+            <span class="c1"># silent discard for a violation of the typed-error convention. The</span>
+            <span class="c1"># JS message is the informative part, so it is carried through</span>
+            <span class="c1"># verbatim rather than summarised.</span>
+            <span class="c1"># Deliberately does not assert WHAT failed: a bare `except</span>
+            <span class="c1"># Exception` here also catches a Playwright timeout, a closed</span>
+            <span class="c1"># target and a crashed browser, and labelling those "the JS runtime</span>
+            <span class="c1"># failed" points the reader at the wrong place. The nested message</span>
+            <span class="c1"># says which it was.</span>
+            <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"frame </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> (t=</span><span class="si">{</span><span class="n">t</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">s) could not be evaluated:</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="c1"># Screenshot only the canvas element (no surrounding chrome).</span>
+        <span class="n">canvas</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">locator</span><span class="p">(</span><span class="s2">"#stage"</span><span class="p">)</span>
+        <span class="n">out_path</span> <span class="o">=</span> <span class="n">frames_dir</span> <span class="o">/</span> <span class="p">(</span><span class="n">DEFAULT_FRAME_PNG_PATTERN</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">supersample</span> <span class="o">==</span> <span class="n">NO_SUPERSAMPLE</span><span class="p">:</span>
+            <span class="n">canvas</span><span class="o">.</span><span class="n">screenshot</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">out_path</span><span class="p">),</span> <span class="n">omit_background</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span>
+                <span class="n">resolve_png_bytes</span><span class="p">(</span>
+                    <span class="n">canvas</span><span class="o">.</span><span class="n">screenshot</span><span class="p">(</span><span class="n">omit_background</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">factor</span><span class="o">=</span><span class="n">supersample</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ffmpeg_mux</span><span class="p">(</span>
+    <span class="n">frames_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">output_mp4</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">pix_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Mux a PNG sequence to H.264 mp4.</span>
+
+<span class="sd">    ``pix_fmt=None`` means "whatever the module default is **right now**", which</span>
+<span class="sd">    is what keeps the bench's `pix_fmt` lever able to reach this call by</span>
+<span class="sd">    rebinding :data:`DEFAULT_PIX_FMT`. A caller that passes one wins; the bench</span>
+<span class="sd">    never passes one, so the lever reaches the encode AND the recorded</span>
+<span class="sd">    environment, and the two cannot disagree.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Resolved AND validated through the one function that does both, so a</span>
+    <span class="c1"># direct call to the mux cannot slip an unmeasured format past the check</span>
+    <span class="c1"># `CutoutRenderer.render` performs — and so there is one place that turns</span>
+    <span class="c1"># `None` into the module default, which is the seam the lever pulls.</span>
+    <span class="n">resolved</span> <span class="o">=</span> <span class="n">_check_pix_fmt</span><span class="p">(</span><span class="n">pix_fmt</span><span class="p">)</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">frames_dir</span> <span class="o">/</span> <span class="n">DEFAULT_FRAME_PNG_PATTERN</span><span class="p">)</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"ffmpeg"</span><span class="p">,</span>
+        <span class="s2">"-y"</span><span class="p">,</span>
+        <span class="s2">"-loglevel"</span><span class="p">,</span>
+        <span class="s2">"error"</span><span class="p">,</span>
+        <span class="s2">"-framerate"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">fps</span><span class="p">),</span>
+        <span class="s2">"-i"</span><span class="p">,</span>
+        <span class="n">pattern</span><span class="p">,</span>
+        <span class="s2">"-c:v"</span><span class="p">,</span>
+        <span class="s2">"libx264"</span><span class="p">,</span>
+        <span class="s2">"-pix_fmt"</span><span class="p">,</span>
+        <span class="n">resolved</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">DETERMINISTIC_X264_ARGS</span><span class="p">,</span>
+        <span class="c1"># Kept, though this file is an intermediate `silent.mp4` that never</span>
+        <span class="c1"># ships and whose container `_ffmpeg_add_audio` re-lays anyway. The</span>
+        <span class="c1"># point of naming the constant is that the answer to "does an's mp4</span>
+        <span class="c1"># have faststart" stops depending on which of the three commands you</span>
+        <span class="c1"># happen to be reading.</span>
+        <span class="o">*</span><span class="n">MP4_FASTSTART_ARGS</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">output_mp4</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ffmpeg failed to launch: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">output_mp4</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span>
+            <span class="s2">"ffmpeg mux failed (rc=</span><span class="si">%d</span><span class="s2">):</span><span class="se">\n</span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stage_audio_inputs</span><span class="p">(</span>
+    <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">RenderContext</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">:</span> <span class="n">Path</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Write the shot's per-dialogue audio bytes to disk and return (path, delay)s.</span>
+
+<span class="sd">    Looks up each ``dialogue.audio_ref`` in ``mall["audio"]``. Lines without</span>
+<span class="sd">    an audio_ref or duration are skipped silently. Returns ``[]`` when no</span>
+<span class="sd">    audio is available, so the caller can use a video-only path.</span>
+<span class="sd">    """</span>
+    <span class="n">audio_store</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"audio"</span><span class="p">)</span> <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">mall</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">audio_store</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">audio_ref</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">audio_bytes</span> <span class="o">=</span> <span class="n">audio_store</span><span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">audio_ref</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="c1"># Sniff format: WAV starts with 'RIFF', mp3 with 'ID3' or 0xFFFB.</span>
+        <span class="k">if</span> <span class="n">audio_bytes</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">"RIFF"</span><span class="p">:</span>
+            <span class="n">ext</span> <span class="o">=</span> <span class="s2">"wav"</span>
+        <span class="k">elif</span> <span class="n">audio_bytes</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">"ID3"</span> <span class="ow">or</span> <span class="n">audio_bytes</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\xff</span><span class="s2">"</span><span class="p">:</span>
+            <span class="n">ext</span> <span class="o">=</span> <span class="s2">"mp3"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ext</span> <span class="o">=</span> <span class="s2">"wav"</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"audio_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">audio_ref</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">audio_bytes</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">path</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">start</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ffmpeg_add_audio</span><span class="p">(</span>
+    <span class="n">video_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">audio_inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+    <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">duration_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Mux a silence base + ``audio_inputs`` (path, delay_s) onto ``video_path``.</span>
+
+<span class="sd">    Always emits an audio stream. ``anullsrc`` provides the silent base track</span>
+<span class="sd">    of length ``duration_s`` so concat across shots is safe; dialogue lines</span>
+<span class="sd">    are overlaid via ``adelay`` + ``amix``.</span>
+<span class="sd">    """</span>
+    <span class="n">sr</span> <span class="o">=</span> <span class="mi">44100</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"ffmpeg"</span><span class="p">,</span>
+        <span class="s2">"-y"</span><span class="p">,</span>
+        <span class="s2">"-loglevel"</span><span class="p">,</span>
+        <span class="s2">"error"</span><span class="p">,</span>
+        <span class="s2">"-i"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">video_path</span><span class="p">),</span>
+        <span class="c1"># Silent base (input #1)</span>
+        <span class="s2">"-f"</span><span class="p">,</span>
+        <span class="s2">"lavfi"</span><span class="p">,</span>
+        <span class="s2">"-t"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">duration_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"-i"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"anullsrc=channel_layout=mono:sample_rate=</span><span class="si">{</span><span class="n">sr</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">audio_path</span><span class="p">,</span> <span class="n">_delay</span> <span class="ow">in</span> <span class="n">audio_inputs</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-i"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">audio_path</span><span class="p">)]</span>
+
+    <span class="n">filter_parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Resample silence base to ensure consistent format with dialogue inputs.</span>
+    <span class="n">filter_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"[1:a]aformat=sample_fmts=fltp:sample_rates=</span><span class="si">{</span><span class="n">sr</span><span class="si">}</span><span class="s2">:channel_layouts=mono[base]"</span>
+    <span class="p">)</span>
+    <span class="n">overlays</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">_path</span><span class="p">,</span> <span class="n">delay_s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">audio_inputs</span><span class="p">):</span>
+        <span class="n">delay_ms</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">delay_s</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)))</span>
+        <span class="c1"># Index in command: 0=video, 1=anullsrc, 2..=user audio</span>
+        <span class="n">cmd_idx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"a</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">filter_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">cmd_idx</span><span class="si">}</span><span class="s2">:a]aformat=sample_fmts=fltp:sample_rates=</span><span class="si">{</span><span class="n">sr</span><span class="si">}</span><span class="s2">:channel_layouts=mono,"</span>
+            <span class="sa">f</span><span class="s2">"adelay=</span><span class="si">{</span><span class="n">delay_ms</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">delay_ms</span><span class="si">}</span><span class="s2">[</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">]"</span>
+        <span class="p">)</span>
+        <span class="n">overlays</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
+
+    <span class="c1"># Mix [base] + all overlays (always at least 1 input for amix).</span>
+    <span class="n">inputs_count</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">overlays</span><span class="p">)</span>
+    <span class="n">mix_in</span> <span class="o">=</span> <span class="s2">"[base]"</span> <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">overlays</span><span class="p">)</span>
+    <span class="n">filter_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mix_in</span><span class="si">}</span><span class="s2">amix=inputs=</span><span class="si">{</span><span class="n">inputs_count</span><span class="si">}</span><span class="s2">:dropout_transition=0:normalize=0[aout]"</span>
+    <span class="p">)</span>
+
+    <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="s2">"-filter_complex"</span><span class="p">,</span>
+        <span class="s2">";"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filter_parts</span><span class="p">),</span>
+        <span class="s2">"-map"</span><span class="p">,</span>
+        <span class="s2">"0:v"</span><span class="p">,</span>
+        <span class="s2">"-map"</span><span class="p">,</span>
+        <span class="s2">"[aout]"</span><span class="p">,</span>
+        <span class="s2">"-c:v"</span><span class="p">,</span>
+        <span class="s2">"copy"</span><span class="p">,</span>
+        <span class="s2">"-c:a"</span><span class="p">,</span>
+        <span class="s2">"aac"</span><span class="p">,</span>
+        <span class="s2">"-b:a"</span><span class="p">,</span>
+        <span class="s2">"128k"</span><span class="p">,</span>
+        <span class="s2">"-ar"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">sr</span><span class="p">),</span>
+        <span class="s2">"-ac"</span><span class="p">,</span>
+        <span class="s2">"1"</span><span class="p">,</span>
+        <span class="s2">"-t"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">duration_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="c1"># THE DELIVERED per-shot mp4 is this one, not `_ffmpeg_mux`'s. `-c:v</span>
+        <span class="c1"># copy` re-lays the container and writes `moov` last, so without this</span>
+        <span class="c1"># every shot mp4 `an` has ever produced is progressive-download</span>
+        <span class="c1"># hostile -- including the bytes that go into `mall["shots"]` and,</span>
+        <span class="c1"># via the single-shot `shutil.copy` branch, into `output/main.mp4`.</span>
+        <span class="o">*</span><span class="n">MP4_FASTSTART_ARGS</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">output_path</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ffmpeg audio mux failed to launch: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">output_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">CutoutRenderError</span><span class="p">(</span>
+            <span class="s2">"ffmpeg audio mux failed (rc=</span><span class="si">%d</span><span class="s2">):</span><span class="se">\n</span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

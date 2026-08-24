@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.capture &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.capture &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -84,7 +84,26 @@
 <li class="toctree-l1"><a class="reference internal" href="../audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bench.html">an.bench</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.capture</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.capture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.CaptureError"><code class="docutils literal notranslate"><span class="pre">CaptureError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.FRAME_PNG_GLOB"><code class="docutils literal notranslate"><span class="pre">FRAME_PNG_GLOB</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.IGNORED_ON_COPY"><code class="docutils literal notranslate"><span class="pre">IGNORED_ON_COPY</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.IGNORED_RELPATHS_ON_COPY"><code class="docutils literal notranslate"><span class="pre">IGNORED_RELPATHS_ON_COPY</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.RENDER_WORK_RELPATH"><code class="docutils literal notranslate"><span class="pre">RENDER_WORK_RELPATH</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.SceneCapture"><code class="docutils literal notranslate"><span class="pre">SceneCapture</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.ShotCapture"><code class="docutils literal notranslate"><span class="pre">ShotCapture</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.capture.ShotCapture.duration"><code class="docutils literal notranslate"><span class="pre">ShotCapture.duration</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.capture.ShotCapture.frame_sizes"><code class="docutils literal notranslate"><span class="pre">ShotCapture.frame_sizes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.capture_fixture"><code class="docutils literal notranslate"><span class="pre">capture_fixture()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.cleanup"><code class="docutils literal notranslate"><span class="pre">cleanup()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.dirty_paths"><code class="docutils literal notranslate"><span class="pre">dirty_paths()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.distinct_png_sizes"><code class="docutils literal notranslate"><span class="pre">distinct_png_sizes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.expected_frame_count"><code class="docutils literal notranslate"><span class="pre">expected_frame_count()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.capture.stage_copy"><code class="docutils literal notranslate"><span class="pre">stage_copy()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="compare.html">an.bench.compare</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contract.html">an.bench.contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corpus.html">an.bench.corpus</a></li>
@@ -113,6 +132,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -176,8 +196,171 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-bench-capture">
-<h1>an.bench.capture<a class="headerlink" href="#an-bench-capture" title="Link to this heading"></a></h1>
+  <section id="module-an.bench.capture">
+<span id="an-bench-capture"></span><h1>an.bench.capture<a class="headerlink" href="#module-an.bench.capture" title="Link to this heading"></a></h1>
+<p>Render one corpus fixture into a throwaway copy, and hand back its artifacts.</p>
+<p>Two things this module exists to get right, both of which produce plausible
+numbers when got wrong:</p>
+<p><strong>Render into a copy.</strong> The render path mutates the project directory — scene
+mtimes, the decisions log, <code class="docutils literal notranslate"><span class="pre">.an/render_work</span></code> — so rendering in place makes
+the git sha in the ledger filename a lie about the tree that produced the row.</p>
+<p><strong>Do not inherit a stale render.</strong> <code class="docutils literal notranslate"><span class="pre">shutil.copytree</span></code> of a developer’s
+checkout would carry <code class="docutils literal notranslate"><span class="pre">.an/render_work</span></code> and <code class="docutils literal notranslate"><span class="pre">output/</span></code> across, <code class="docutils literal notranslate"><span class="pre">frames/</span></code> is
+never cleared, and ffmpeg’s image2 demuxer reads the contiguous
+<code class="docutils literal notranslate"><span class="pre">frame_%06d.png</span></code> run from 0 — so a longer previous render is silently
+appended to this one. Every encode-side metric pairs source frame <em>i</em> with
+decoded frame <em>i</em>, so that appends garbage to one leg and shifts nothing on the
+other. <code class="docutils literal notranslate"><span class="pre">artifacts/</span></code> is deliberately kept <em>except for one subdirectory</em>: it
+holds the audio cache, whose warm/cold state is recorded rather than destroyed
+— but <code class="docutils literal notranslate"><span class="pre">artifacts/shots</span></code> is <code class="docutils literal notranslate"><span class="pre">mall[&quot;shots&quot;]</span></code>, the previous render’s per-shot
+mp4s, and this module’s whole promise is that nothing of a previous render
+crosses. It is gitignored, so it does not reproduce on a clean checkout: a
+per-developer landmine, in the module whose docstring says the opposite.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.capture.CaptureError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">CaptureError</span></span><a class="reference internal" href="../../../_modules/an/bench/capture.html#CaptureError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.capture.CaptureError" title="Link to this definition"></a></dt>
+<dd><p>A capture could not produce something the metrics need.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.capture.FRAME_PNG_GLOB">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">FRAME_PNG_GLOB</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'frame_*.png'</span></span><a class="headerlink" href="#an.bench.capture.FRAME_PNG_GLOB" title="Link to this definition"></a></dt>
+<dd><p>How a shot’s frames are named on disk. One constant rather than the literal
+repeated at each glob site.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.capture.IGNORED_ON_COPY">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">IGNORED_ON_COPY</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('.an',</span> <span class="pre">'output',</span> <span class="pre">'.anima')</span></span><a class="headerlink" href="#an.bench.capture.IGNORED_ON_COPY" title="Link to this definition"></a></dt>
+<dd><p>they are the previous render’s
+output, and one of them silently extends this one’s frame sequence.
+Matched on the <strong>basename</strong>, at any depth — that is exactly what
+<code class="docutils literal notranslate"><span class="pre">shutil.ignore_patterns</span></code> does, and it is why <code class="docutils literal notranslate"><span class="pre">artifacts/shots</span></code> cannot be
+spelled here. See <a class="reference internal" href="#an.bench.capture.IGNORED_RELPATHS_ON_COPY" title="an.bench.capture.IGNORED_RELPATHS_ON_COPY"><code class="xref py py-data docutils literal notranslate"><span class="pre">IGNORED_RELPATHS_ON_COPY</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Copied for the render, but never these</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.capture.IGNORED_RELPATHS_ON_COPY">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">IGNORED_RELPATHS_ON_COPY</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('artifacts/shots',)</span></span><a class="headerlink" href="#an.bench.capture.IGNORED_RELPATHS_ON_COPY" title="Link to this definition"></a></dt>
+<dd><p>Excluded by their path <strong>relative to the project root</strong>, POSIX-spelled.
+<code class="docutils literal notranslate"><span class="pre">mall[&quot;shots&quot;]</span></code> is <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/artifacts/shots</span></code>, and <code class="docutils literal notranslate"><span class="pre">artifacts/</span></code>
+itself is kept on purpose — it holds the audio cache, whose warm/cold state
+this module records rather than destroys.</p>
+<p>Neither spelling belongs in <a class="reference internal" href="#an.bench.capture.IGNORED_ON_COPY" title="an.bench.capture.IGNORED_ON_COPY"><code class="xref py py-data docutils literal notranslate"><span class="pre">IGNORED_ON_COPY</span></code></a>, and <strong>both fail
+silently</strong>. <code class="docutils literal notranslate"><span class="pre">shutil.ignore_patterns</span></code> returns a closure handed the NAMES
+inside one directory, which it <code class="docutils literal notranslate"><span class="pre">fnmatch.filter``s</span> <span class="pre">—</span> <span class="pre">so</span> <span class="pre">``&quot;artifacts/shots&quot;</span></code>
+can never match anything (no name contains a separator) and a bare
+<code class="docutils literal notranslate"><span class="pre">&quot;shots&quot;</span></code> would delete every directory of that name <strong>anywhere</strong> in the
+tree, a character rig’s included.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.capture.RENDER_WORK_RELPATH">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">RENDER_WORK_RELPATH</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'.an/render_work'</span></span><a class="headerlink" href="#an.bench.capture.RENDER_WORK_RELPATH" title="Link to this definition"></a></dt>
+<dd><p>Where the renderer leaves its per-shot working tree inside the project.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.capture.SceneCapture">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">SceneCapture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str,</span> <span class="pre">source:</span> <span class="pre">str,</span> <span class="pre">prepared:</span> <span class="pre">bool,</span> <span class="pre">project_dir:</span> <span class="pre">~pathlib.Path,</span> <span class="pre">mp4:</span> <span class="pre">~pathlib.Path,</span> <span class="pre">shots:</span> <span class="pre">list[~an.bench.capture.ShotCapture],</span> <span class="pre">resolution:</span> <span class="pre">tuple[int,</span> <span class="pre">int],</span> <span class="pre">fps:</span> <span class="pre">int,</span> <span class="pre">duration:</span> <span class="pre">float,</span> <span class="pre">n_declared_entity_refs:</span> <span class="pre">int,</span> <span class="pre">visual_kinds:</span> <span class="pre">set[str],</span> <span class="pre">asset_resolution:</span> <span class="pre">list[dict],</span> <span class="pre">audio_cache:</span> <span class="pre">str,</span> <span class="pre">wall_seconds:</span> <span class="pre">float,</span> <span class="pre">determinism:</span> <span class="pre">dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/capture.html#SceneCapture"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.capture.SceneCapture" title="Link to this definition"></a></dt>
+<dd><p>One fixture’s whole render.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.capture.ShotCapture">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">ShotCapture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_sizes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/capture.html#ShotCapture"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.capture.ShotCapture" title="Link to this definition"></a></dt>
+<dd><p>One rendered shot’s artifacts.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.capture.ShotCapture.duration">
+<span class="sig-name descname"><span class="pre">duration</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#an.bench.capture.ShotCapture.duration" title="Link to this definition"></a></dt>
+<dd><p>The shot’s declared duration, from the IR rather than from the staged
+scene, so the expected frame count is derived from the same number the
+renderer used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.capture.ShotCapture.frame_sizes">
+<span class="sig-name descname"><span class="pre">frame_sizes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#an.bench.capture.ShotCapture.frame_sizes" title="Link to this definition"></a></dt>
+<dd><p>The distinct pixel sizes actually on disk, from each PNG’s IHDR. The
+independent half of a pair whose other half — <code class="docutils literal notranslate"><span class="pre">SceneCapture.resolution</span></code>
+— comes from the staged scene’s <code class="docutils literal notranslate"><span class="pre">meta</span></code> and never from a file. Empty
+only when the shot wrote no frames.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.capture.capture_fixture">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">capture_fixture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="corpus.html#an.bench.corpus.Fixture" title="an.bench.corpus.Fixture"><span class="pre">Fixture</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo_root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_render</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.bench.capture.SceneCapture" title="an.bench.capture.SceneCapture"><span class="pre">SceneCapture</span></a></span></span><a class="reference internal" href="../../../_modules/an/bench/capture.html#capture_fixture"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.capture.capture_fixture" title="Link to this definition"></a></dt>
+<dd><p>Render <code class="docutils literal notranslate"><span class="pre">fixture</span></code> in a throwaway copy and return its artifacts.</p>
+<p>The copy lives until the caller is done with it — the metrics read the
+frames — so this is a context-free function that leaves the tree in place
+and hands back the path. <code class="xref py py-func docutils literal notranslate"><span class="pre">captured()</span></code> is the scoped form.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.capture.cleanup">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">capture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.bench.capture.SceneCapture" title="an.bench.capture.SceneCapture"><span class="pre">SceneCapture</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/bench/capture.html#cleanup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.capture.cleanup" title="Link to this definition"></a></dt>
+<dd><p>Remove a capture’s throwaway tree.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.capture.dirty_paths">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">dirty_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo_root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/capture.html#dirty_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.capture.dirty_paths" title="Link to this definition"></a></dt>
+<dd><p><cite>git status –porcelain</cite> lines, so a capture can prove it touched nothing.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.capture.distinct_png_sizes">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">distinct_png_sizes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/capture.html#distinct_png_sizes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.capture.distinct_png_sizes" title="Link to this definition"></a></dt>
+<dd><p>Every distinct <code class="docutils literal notranslate"><span class="pre">(width,</span> <span class="pre">height)</span></code> among a shot’s frame PNGs, sorted.</p>
+<p>Read from each file’s IHDR — 24 bytes per frame — so reading all of them
+costs nothing and catches what sampling one would miss: a sequence whose
+size changes partway through, which is what a half-applied supersample
+produces.</p>
+<p><strong>Recorded here, enforced elsewhere.</strong> Rendering a fixture at a size the
+scene does not declare is a legitimate thing to do —
+<code class="docutils literal notranslate"><span class="pre">misc/bench/wave3_ab.py</span></code> patches <code class="docutils literal notranslate"><span class="pre">runtime.js</span></code> to <code class="docutils literal notranslate"><span class="pre">resolution:</span> <span class="pre">k,</span>
+<span class="pre">autoDensity:</span> <span class="pre">false</span></code> and drives <a class="reference internal" href="#an.bench.capture.capture_fixture" title="an.bench.capture.capture_fixture"><code class="xref py py-func docutils literal notranslate"><span class="pre">capture_fixture()</span></code></a> directly to measure
+the supersample — so this module reports what it saw and
+<a class="reference internal" href="run.html#module-an.bench.run" title="an.bench.run"><code class="xref py py-mod docutils literal notranslate"><span class="pre">an.bench.run</span></code></a> is where the <em>bench’s</em> invariant is asserted.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.capture.expected_frame_count">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">expected_frame_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../../_modules/an/bench/capture.html#expected_frame_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.capture.expected_frame_count" title="Link to this definition"></a></dt>
+<dd><p>The renderer’s own frame-count expression, reused rather than restated.</p>
+<p><code class="docutils literal notranslate"><span class="pre">max(1,</span> <span class="pre">int(round(duration</span> <span class="pre">*</span> <span class="pre">fps)))</span></code> — and Python 3’s <code class="docutils literal notranslate"><span class="pre">round</span></code> is
+banker’s rounding, so <code class="docutils literal notranslate"><span class="pre">math.ceil</span></code> or <code class="docutils literal notranslate"><span class="pre">int(x</span> <span class="pre">+</span> <span class="pre">0.5)</span></code> silently disagrees
+on every half-frame duration.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">expected_frame_count</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+<span class="go">60</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expected_frame_count</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.capture.stage_copy">
+<span class="sig-prename descclassname"><span class="pre">an.bench.capture.</span></span><span class="sig-name descname"><span class="pre">stage_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fixture_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../_modules/an/bench/capture.html#stage_copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.capture.stage_copy" title="Link to this definition"></a></dt>
+<dd><p>Copy a fixture into <code class="docutils literal notranslate"><span class="pre">base</span></code>, leaving the previous render behind.</p>
+<p>Split out of <a class="reference internal" href="#an.bench.capture.capture_fixture" title="an.bench.capture.capture_fixture"><code class="xref py py-func docutils literal notranslate"><span class="pre">capture_fixture()</span></code></a> so the exclusion is testable without
+rendering anything — which matters, because the failure it prevents is
+silent. <code class="docutils literal notranslate"><span class="pre">frames/</span></code> is never cleared and ffmpeg’s image2 demuxer reads the
+contiguous <code class="docutils literal notranslate"><span class="pre">frame_%06d.png</span></code> run from 0, so a longer previous render is
+appended to this one’s source leg and to nothing else.</p>
+<p>Two kinds of exclusion, because one kind cannot say both things:
+<a class="reference internal" href="#an.bench.capture.IGNORED_ON_COPY" title="an.bench.capture.IGNORED_ON_COPY"><code class="xref py py-data docutils literal notranslate"><span class="pre">IGNORED_ON_COPY</span></code></a> by basename at any depth, and
+<a class="reference internal" href="#an.bench.capture.IGNORED_RELPATHS_ON_COPY" title="an.bench.capture.IGNORED_RELPATHS_ON_COPY"><code class="xref py py-data docutils literal notranslate"><span class="pre">IGNORED_RELPATHS_ON_COPY</span></code></a> by path from the project root — which is
+the only way to drop <code class="docutils literal notranslate"><span class="pre">artifacts/shots</span></code> while keeping <code class="docutils literal notranslate"><span class="pre">artifacts/audio</span></code>.</p>
+</dd></dl>
+
 </section>
 
 

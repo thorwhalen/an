@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -110,6 +110,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
@@ -248,7 +249,7 @@
 <span class="c1">#: all. Before it existed, `assert not report["mutation_may_not_have_applied"]`</span>
 <span class="c1">#: asserted nothing for the AA lever (an#41 review).</span>
 <div class="viewcode-block" id="Touch">
-<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.Touch">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.Touch">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Touch</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""One environment key a lever is expected to change, and HOW.</span>
@@ -269,7 +270,7 @@
         <span class="k">return</span> <span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Touch.is_the_levers_change">
-<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.Touch.is_the_levers_change">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.Touch.is_the_levers_change">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_the_levers_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">after</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""True when the observed difference is the one this lever makes."""</span>
         <span class="k">if</span> <span class="n">before</span> <span class="o">==</span> <span class="n">after</span><span class="p">:</span>
@@ -381,14 +382,14 @@
 
 
 <div class="viewcode-block" id="RegistryError">
-<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.RegistryError">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.RegistryError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RegistryError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""A metric declaration violates one of the table's invariants."""</span></div>
 
 
 
 <div class="viewcode-block" id="Prediction">
-<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.Prediction">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.Prediction">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Prediction</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""What one metric is expected to do under one mutation, declared in advance.</span>
@@ -433,7 +434,7 @@
 
 
 <div class="viewcode-block" id="Optimum">
-<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.Optimum">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.Optimum">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Optimum</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Which way "better" points, and whether the optimum is interior."""</span>
@@ -464,7 +465,7 @@
 
 
 <div class="viewcode-block" id="MetricSpec">
-<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.registry.MetricSpec">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/registry.html#an.bench.MetricSpec">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MetricSpec</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""One row of the panel."""</span>

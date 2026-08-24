@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.ledger &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.ledger &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -110,6 +110,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
@@ -226,14 +227,14 @@
 
 
 <div class="viewcode-block" id="LedgerSchemaError">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.LedgerSchemaError">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.LedgerSchemaError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LedgerSchemaError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""A ledger row violates an invariant that would make it misreadable."""</span></div>
 
 
 
 <div class="viewcode-block" id="Value">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.Value">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.Value">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Value</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""One measured (or deliberately absent) number."""</span>
@@ -315,7 +316,7 @@
 
 
 <div class="viewcode-block" id="metric_declarations">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.metric_declarations">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.metric_declarations">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">metric_declarations</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The full declaration of every metric and tripwire, once per ledger row.</span>
 
@@ -335,7 +336,7 @@
 
 
 <div class="viewcode-block" id="build_scene_block">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.build_scene_block">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.build_scene_block">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_scene_block</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
@@ -398,7 +399,7 @@
 
 
 <div class="viewcode-block" id="build_ledger">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.build_ledger">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.build_ledger">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_ledger</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">provenance</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">scenes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The whole row."""</span>
     <span class="k">return</span> <span class="p">{</span>
@@ -417,7 +418,7 @@
 
 
 <div class="viewcode-block" id="write_ledger">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.write_ledger">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.write_ledger">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">write_ledger</span><span class="p">(</span><span class="n">ledger</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Write a row. ``sort_keys=True`` so two rows diff line-for-line."""</span>
     <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -429,7 +430,7 @@
 
 
 <div class="viewcode-block" id="witnesses">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.witnesses">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.witnesses">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">witnesses</span><span class="p">(</span><span class="n">ledger_scene</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">mutation</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""Which metrics would count for ``mutation``, grouped by family.</span>
 
@@ -450,7 +451,7 @@
 
 
 <div class="viewcode-block" id="unavailable">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.unavailable">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.unavailable">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Value</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Shorthand: this check could not run, and here is why."""</span>
     <span class="k">return</span> <span class="n">Value</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s2">"unavailable"</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">detail</span><span class="p">)</span></div>
@@ -458,7 +459,7 @@
 
 
 <div class="viewcode-block" id="gated">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.gated">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.gated">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">gated</span><span class="p">(</span><span class="n">gate</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Value</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Shorthand: this number would be uninterpretable, and here is the gate."""</span>
     <span class="k">return</span> <span class="n">Value</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s2">"gated"</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">gate</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">detail</span><span class="p">)</span></div>
@@ -466,7 +467,7 @@
 
 
 <div class="viewcode-block" id="measured">
-<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.ledger.measured">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/ledger.html#an.bench.measured">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">measured</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Value</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Shorthand: a real number.</span>
 

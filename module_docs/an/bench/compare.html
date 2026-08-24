@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.compare &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.compare &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -85,7 +85,25 @@
 <li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bench.html">an.bench</a></li>
 <li class="toctree-l1"><a class="reference internal" href="capture.html">an.bench.capture</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.compare</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.compare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.COMMON_ENV_PATHS"><code class="docutils literal notranslate"><span class="pre">COMMON_ENV_PATHS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.CROSS_CHECKED_FIELDS"><code class="docutils literal notranslate"><span class="pre">CROSS_CHECKED_FIELDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.ComparisonError"><code class="docutils literal notranslate"><span class="pre">ComparisonError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.DECLARATION_KEYS"><code class="docutils literal notranslate"><span class="pre">DECLARATION_KEYS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.ENCODE_ENV_PATHS"><code class="docutils literal notranslate"><span class="pre">ENCODE_ENV_PATHS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.MASK_PARAM_PATHS"><code class="docutils literal notranslate"><span class="pre">MASK_PARAM_PATHS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.RENDER_ENV_PATHS"><code class="docutils literal notranslate"><span class="pre">RENDER_ENV_PATHS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.REQUIRED_FAMILIES"><code class="docutils literal notranslate"><span class="pre">REQUIRED_FAMILIES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.SCENE_KEYS"><code class="docutils literal notranslate"><span class="pre">SCENE_KEYS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.SCORING_FIELDS"><code class="docutils literal notranslate"><span class="pre">SCORING_FIELDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.SUPPORTED_SCHEMA_VERSIONS"><code class="docutils literal notranslate"><span class="pre">SUPPORTED_SCHEMA_VERSIONS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.compare"><code class="docutils literal notranslate"><span class="pre">compare()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.direction_of"><code class="docutils literal notranslate"><span class="pre">direction_of()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.format_comparison"><code class="docutils literal notranslate"><span class="pre">format_comparison()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.latest_rows"><code class="docutils literal notranslate"><span class="pre">latest_rows()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare.load_row"><code class="docutils literal notranslate"><span class="pre">load_row()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="contract.html">an.bench.contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corpus.html">an.bench.corpus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environment.html">an.bench.environment</a></li>
@@ -113,6 +131,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -176,8 +195,194 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-bench-compare">
-<h1>an.bench.compare<a class="headerlink" href="#an-bench-compare" title="Link to this heading"></a></h1>
+  <section id="module-an.bench.compare">
+<span id="an-bench-compare"></span><h1>an.bench.compare<a class="headerlink" href="#module-an.bench.compare" title="Link to this heading"></a></h1>
+<p><cite>an bench –compare</cite>: read two ledger rows, and <strong>refuse when they are not comparable</strong>.</p>
+<p>Refusing is the feature. Two rows measured on different scenes, at different
+resolutions, or on different x264 builds are not “one better and one worse” —
+every number in them is <strong>uninterpretable</strong> relative to the other, and a number
+reported across incomparable rows is worse than no number at all.</p>
+<p>Three things here that are easy to get wrong in a way that still produces a
+plausible verdict:</p>
+<p><strong>A single per-metric sign mis-reports one of the two mutations.</strong> The sharpness
+family moves in <em>opposite</em> directions for AA-off and high-CRF, so the direction
+is read per metric <em>and per mutation</em>, from the <code class="docutils literal notranslate"><span class="pre">under_mutation</span></code> block the row
+already carries. Where the optimum is interior (<code class="docutils literal notranslate"><span class="pre">edge_transition_width</span></code> — under
+1 is a staircase, 3+ is soft) there is no “better” direction at all, and the
+comparison says <code class="docutils literal notranslate"><span class="pre">changed</span></code>, never <code class="docutils literal notranslate"><span class="pre">regression</span></code>. Inventing a band there would
+be the silently-widened threshold this whole wave exists to prevent.</p>
+<p><strong>The two sides have opposite comparison rules, and both are measured.</strong>
+Render-side rows compare across any machine: zero differing pixels across arm64
+macOS, x86-64 Linux and arm64 Linux, across two SwiftShader JIT backends — <em>at a
+pinned Chromium build</em>, which is why the browser build is itself a render-side
+comparability key. Encode-side rows are <strong>machine-scoped</strong>: same ISA and x264
+build is byte-identical, a different ISA moves the decoded stream a little, and a
+different x264 build moves it by two orders of magnitude. A band wide enough to
+absorb that would swallow <code class="docutils literal notranslate"><span class="pre">flat_field_deviation</span></code>’s entire crf18-&gt;23 signal
+(0.0003 -&gt; 0.0005), so the answer is to refuse, not to widen.</p>
+<p><strong>There is no tolerance, and none is needed.</strong> Every comparison is exact.
+Measured: two consecutive <cite>an bench</cite> runs on the same machine produce
+<strong>bit-identical</strong> numbers for every metric on all six scenes, and identical
+<cite>source_pixels_sha256</cite> — the render is pinned and the encode is pinned, so a
+delta of exactly zero is the normal case and any nonzero delta is a real change.
+An epsilon here would only hide small real movements.</p>
+<p>A fourth, quieter one: <strong>a metric’s own declaration is a comparability key</strong>.
+If <code class="docutils literal notranslate"><span class="pre">family</span></code> or <code class="docutils literal notranslate"><span class="pre">optimum</span></code> changed between the two rows, the metric means
+something different in each and the comparison is refused for that metric alone
+— which is why every row carries its full <code class="docutils literal notranslate"><span class="pre">metric_declarations</span></code> block rather
+than referencing the registry that happened to be installed.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.COMMON_ENV_PATHS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">COMMON_ENV_PATHS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(('render_kwargs',),)</span></span><a class="headerlink" href="#an.bench.compare.COMMON_ENV_PATHS" title="Link to this definition"></a></dt>
+<dd><p>Row-provenance paths that must match for <strong>either</strong> side.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.CROSS_CHECKED_FIELDS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">CROSS_CHECKED_FIELDS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('family',</span> <span class="pre">'side',</span> <span class="pre">'comparison_scope',</span> <span class="pre">'reference')</span></span><a class="headerlink" href="#an.bench.compare.CROSS_CHECKED_FIELDS" title="Link to this definition"></a></dt>
+<dd><p>Every field a row stores TWICE — inline on the metric and in
+<cite>metric_declarations</cite> — except <cite>under_mutation</cite>, whose nested shape gets
+<cite>_prediction_disagreements</cite> instead. Both copies are written from one
+registry at one moment, so a disagreement means the row was edited, and
+<cite>compare</cite> reads the INLINE one.</p>
+<p>Three defects of this exact class were found in one review pass, each on a
+field that had been left out: <cite>family</cite> (moved a witness between families and
+took <cite>criterion_met_on</cite> from three scenes to five), <cite>under_mutation</cite> (flipped
+<cite>contrary</cite> to <cite>as_declared</cite>), and <cite>comparison_scope</cite> (compared an encode-side
+metric across a different ISA). The list is therefore checked for
+COMPLETENESS by a test rather than maintained by hand — see
+<cite>tests/test_bench_compare.py::test_every_doubly_stored_field_is_cross_checked</cite>.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.compare.ComparisonError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">ComparisonError</span></span><a class="reference internal" href="../../../_modules/an/bench/compare.html#ComparisonError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.compare.ComparisonError" title="Link to this definition"></a></dt>
+<dd><p>The comparer was handed something it cannot read at all.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.DECLARATION_KEYS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">DECLARATION_KEYS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('family',</span> <span class="pre">'side',</span> <span class="pre">'optimum',</span> <span class="pre">'unit')</span></span><a class="headerlink" href="#an.bench.compare.DECLARATION_KEYS" title="Link to this definition"></a></dt>
+<dd><p>Per-metric declaration fields that must agree, or the metric means something
+different in each row. <cite>optimum</cite> decides which way “better” points and
+<cite>family</cite> decides what an#41’s criterion counts.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.ENCODE_ENV_PATHS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">ENCODE_ENV_PATHS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(('environment',</span> <span class="pre">'encode_side',</span> <span class="pre">'isa'),</span> <span class="pre">('environment',</span> <span class="pre">'encode_side',</span> <span class="pre">'x264_sei'),</span> <span class="pre">('environment',</span> <span class="pre">'encode_side',</span> <span class="pre">'x264_argv'),</span> <span class="pre">('environment',</span> <span class="pre">'encode_side',</span> <span class="pre">'pix_fmt'),</span> <span class="pre">('encode_command_source',),</span> <span class="pre">('decode_commands',))</span></span><a class="headerlink" href="#an.bench.compare.ENCODE_ENV_PATHS" title="Link to this definition"></a></dt>
+<dd><p>Row-provenance paths that must match for an <strong>encode-side</strong> metric.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.MASK_PARAM_PATHS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">MASK_PARAM_PATHS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(('masks',</span> <span class="pre">'edge',</span> <span class="pre">'operator'),</span> <span class="pre">('masks',</span> <span class="pre">'edge',</span> <span class="pre">'threshold'),</span> <span class="pre">('masks',</span> <span class="pre">'flat',</span> <span class="pre">'operator'),</span> <span class="pre">('masks',</span> <span class="pre">'flat',</span> <span class="pre">'dilate_k'),</span> <span class="pre">('masks',</span> <span class="pre">'held',</span> <span class="pre">'operator'),</span> <span class="pre">('masks',</span> <span class="pre">'ring',</span> <span class="pre">'operator'),</span> <span class="pre">('masks',</span> <span class="pre">'render_edge',</span> <span class="pre">'operator'),</span> <span class="pre">('masks',</span> <span class="pre">'render_edge',</span> <span class="pre">'threshold'))</span></span><a class="headerlink" href="#an.bench.compare.MASK_PARAM_PATHS" title="Link to this definition"></a></dt>
+<dd><p>Mask <strong>parameters</strong>, addressed by path into the scene’s <cite>masks</cite> block. The
+counts and fractions beside them are measurements and are excluded.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.RENDER_ENV_PATHS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">RENDER_ENV_PATHS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(('environment',</span> <span class="pre">'render_side',</span> <span class="pre">'chromium_build'),</span> <span class="pre">('environment',</span> <span class="pre">'render_side',</span> <span class="pre">'playwright'),</span> <span class="pre">('environment',</span> <span class="pre">'render_side',</span> <span class="pre">'launch_argv'))</span></span><a class="headerlink" href="#an.bench.compare.RENDER_ENV_PATHS" title="Link to this definition"></a></dt>
+<dd><p>Row-provenance paths that must match for a <strong>render-side</strong> metric.
+The Chromium build is here and not merely informational: the cross-arch
+verdict measured ISA- and OS-invariance <em>at a pinned build</em>, and an#38’s
+golden path keys on the build for the same reason. One bump has been measured
+to move zero pixels (1187 -&gt; 1223), so this refusal is precautionary rather
+than a known break — and a deliberate re-bless is the intended response.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.REQUIRED_FAMILIES">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">REQUIRED_FAMILIES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#an.bench.compare.REQUIRED_FAMILIES" title="Link to this definition"></a></dt>
+<dd><p>How many distinct causal families must move as declared for a mutation to
+count as caught. an#41’s criterion, restated from the research: “&gt;=3 metrics
+from &gt;=3 distinct causal families, evaluated per mutation, with a per-metric
+per-mutation sign declared in advance”.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.SCENE_KEYS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">SCENE_KEYS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('scene_contract_sha256',</span> <span class="pre">'resolution',</span> <span class="pre">'fps',</span> <span class="pre">'n_frames',</span> <span class="pre">'shot_order',</span> <span class="pre">'palette_hex',</span> <span class="pre">'tolerances')</span></span><a class="headerlink" href="#an.bench.compare.SCENE_KEYS" title="Link to this definition"></a></dt>
+<dd><p>Scene-provenance fields that must match for ANY metric to be comparable.
+Deliberately not the whole provenance block: that also carries per-run
+<em>measurements</em> (mask pixel counts, <cite>wall_seconds</cite>, the golden diagnostics),
+which change exactly when the render changes — i.e. when the two rows are
+most worth comparing.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.SCORING_FIELDS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">SCORING_FIELDS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('expect',</span> <span class="pre">'counts',</span> <span class="pre">'gate',</span> <span class="pre">'state')</span></span><a class="headerlink" href="#an.bench.compare.SCORING_FIELDS" title="Link to this definition"></a></dt>
+<dd><p>The fields of a per-mutation prediction that the verdict actually reads.
+<cite>reason</cite> is prose and is deliberately NOT here — the declarations block
+carries it and the inline block drops it, so requiring it would refuse every
+real row.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.compare.SUPPORTED_SCHEMA_VERSIONS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">SUPPORTED_SCHEMA_VERSIONS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(1,)</span></span><a class="headerlink" href="#an.bench.compare.SUPPORTED_SCHEMA_VERSIONS" title="Link to this definition"></a></dt>
+<dd><p>Row schema versions this comparer understands. A row it cannot read is
+refused rather than guessed at — the whole point of the version field.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.compare.compare">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">compare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/compare.html#compare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.compare.compare" title="Link to this definition"></a></dt>
+<dd><p>Compare two ledger rows. Returns a report; raises only on an unreadable row.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mutation</span></code> selects the question. With one, the report answers an#41’s:
+did the declared witnesses move in the declared direction, and did at least
+three distinct causal families do so. Without one, it answers “is the second
+row worse”, which only the one-sided metrics can answer at all.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.compare.direction_of">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">direction_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/bench/compare.html#direction_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.compare.direction_of" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">increase</span></code> / <code class="docutils literal notranslate"><span class="pre">decrease</span></code> / <code class="docutils literal notranslate"><span class="pre">no_change</span></code> — exactly, with no tolerance.</p>
+<p>Two consecutive runs on one machine are bit-identical, so zero is the normal
+delta and any nonzero one is real. Booleans compare as booleans: a tripwire
+that went <code class="docutils literal notranslate"><span class="pre">True</span> <span class="pre">-&gt;</span> <span class="pre">False</span></code> has not “decreased”.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">direction_of</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="go">'no_change'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">direction_of</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">'decrease'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.compare.format_comparison">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">format_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/bench/compare.html#format_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.compare.format_comparison" title="Link to this definition"></a></dt>
+<dd><p>The human-readable digest. Refusals first, because they are the verdict.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.compare.latest_rows">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">latest_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/compare.html#latest_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.compare.latest_rows" title="Link to this definition"></a></dt>
+<dd><p>The most recent committed ledger rows, newest last — <strong>by `generated_at`</strong>.</p>
+<p>Not by filename. Filenames are <code class="docutils literal notranslate"><span class="pre">&lt;date&gt;-&lt;sha7&gt;[-dirty].json</span></code>, so a filename
+sort orders same-day rows by <em>sha hex</em>. On a Wave 3 PR the re-baseline and
+the after-run are plausibly the same day, and when the after-commit’s sha
+sorts lower a bare <code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">bench-compare</span></code> silently swaps before and after and
+reports every improvement as a regression.</p>
+<p>A row whose <code class="docutils literal notranslate"><span class="pre">generated_at</span></code> cannot be read sorts <strong>before</strong> every dated
+one, so it is dropped as soon as two dated rows exist: a corrupt or
+pre-schema file must never become the <code class="docutils literal notranslate"><span class="pre">after</span></code> row a verdict is drawn from.
+The filename stays the tiebreak, which is what keeps a directory whose rows
+all lack the key ordered by date.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-dirty</span></code> rows are excluded: a row measured against uncommitted edits
+describes no commit, and comparing one is comparing against nothing
+nameable. <cite>an bench –out</cite> still lets a caller point at one explicitly.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.compare.load_row">
+<span class="sig-prename descclassname"><span class="pre">an.bench.compare.</span></span><span class="sig-name descname"><span class="pre">load_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/compare.html#load_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.compare.load_row" title="Link to this definition"></a></dt>
+<dd><p>Read one ledger row from disk.</p>
+</dd></dl>
+
 </section>
 
 

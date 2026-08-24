@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters._base &mdash; an 0.1.46 documentation</title>
+  <title>an.adapters._base &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -110,6 +110,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
@@ -198,7 +199,7 @@
 
 
 <div class="viewcode-block" id="RenderContext">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.RenderContext">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.RenderContext">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RenderContext</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Everything a renderer needs that isn't on the Shot itself.</span>
@@ -247,7 +248,7 @@
 
 
 <div class="viewcode-block" id="RenderResult">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.RenderResult">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.RenderResult">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RenderResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Outcome of a single shot render."""</span>
@@ -261,7 +262,7 @@
 
 
 <div class="viewcode-block" id="Renderer">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.Renderer">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.Renderer">[docs]</a>
 <span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Renderer</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Backend renderer interface.</span>
@@ -274,13 +275,13 @@
     <span class="n">supported_styles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Renderer.can_render">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.Renderer.can_render">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.Renderer.can_render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">can_render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return True if this renderer can render ``shot``."""</span></div>
 
 
 <div class="viewcode-block" id="Renderer.render">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.Renderer.render">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.Renderer.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">RenderContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RenderResult</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Render a single shot to mp4. Idempotent given identical inputs."""</span></div>
 </div>
@@ -293,7 +294,7 @@
 
 
 <div class="viewcode-block" id="RendererRegistry">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.RendererRegistry">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.RendererRegistry">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RendererRegistry</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Name-keyed registry of renderers.</span>
 
@@ -316,7 +317,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
 
 <div class="viewcode-block" id="RendererRegistry.find_for">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.RendererRegistry.find_for">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.RendererRegistry.find_for">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">find_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Renderer</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the first registered renderer that ``can_render(shot)``."""</span>
         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
@@ -334,7 +335,7 @@
 
 
 <div class="viewcode-block" id="register_renderer">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.register_renderer">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.register_renderer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">register_renderer</span><span class="p">(</span><span class="n">renderer</span><span class="p">:</span> <span class="n">Renderer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Register a renderer in the default registry."""</span>
     <span class="n">_DEFAULT_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span></div>
@@ -342,7 +343,7 @@
 
 
 <div class="viewcode-block" id="get_renderer">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.get_renderer">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.get_renderer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_renderer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Renderer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Look up a renderer by name in the default registry."""</span>
     <span class="k">return</span> <span class="n">_DEFAULT_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
@@ -350,7 +351,7 @@
 
 
 <div class="viewcode-block" id="list_renderers">
-<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters._base.list_renderers">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.list_renderers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_renderers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Names of all renderers registered in the default registry."""</span>
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_DEFAULT_REGISTRY</span><span class="o">.</span><span class="n">names</span><span class="p">())</span></div>

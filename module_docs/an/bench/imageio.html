@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.imageio &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.imageio &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -90,7 +90,23 @@
 <li class="toctree-l1"><a class="reference internal" href="corpus.html">an.bench.corpus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environment.html">an.bench.environment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="golden.html">an.bench.golden</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.imageio</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.imageio</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.BenchDecodeError"><code class="docutils literal notranslate"><span class="pre">BenchDecodeError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.SOURCE_SCALE_FILTER"><code class="docutils literal notranslate"><span class="pre">SOURCE_SCALE_FILTER</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.YUV_PIX_FMT"><code class="docutils literal notranslate"><span class="pre">YUV_PIX_FMT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.decoded_rgb"><code class="docutils literal notranslate"><span class="pre">decoded_rgb()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.decoded_rgb_command"><code class="docutils literal notranslate"><span class="pre">decoded_rgb_command()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.decoded_yuv"><code class="docutils literal notranslate"><span class="pre">decoded_yuv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.decoded_yuv_command"><code class="docutils literal notranslate"><span class="pre">decoded_yuv_command()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.lossless_encode_command"><code class="docutils literal notranslate"><span class="pre">lossless_encode_command()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.run_raw"><code class="docutils literal notranslate"><span class="pre">run_raw()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.source_rgb"><code class="docutils literal notranslate"><span class="pre">source_rgb()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.source_rgb_command"><code class="docutils literal notranslate"><span class="pre">source_rgb_command()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.source_yuv"><code class="docutils literal notranslate"><span class="pre">source_yuv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.source_yuv_command"><code class="docutils literal notranslate"><span class="pre">source_yuv_command()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.video_stream_bytes"><code class="docutils literal notranslate"><span class="pre">video_stream_bytes()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ledger.html">an.bench.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="masks.html">an.bench.masks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">an.bench.metrics</a></li>
@@ -113,6 +129,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -176,8 +193,160 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-bench-imageio">
-<h1>an.bench.imageio<a class="headerlink" href="#an-bench-imageio" title="Link to this heading"></a></h1>
+  <section id="module-an.bench.imageio">
+<span id="an-bench-imageio"></span><h1>an.bench.imageio<a class="headerlink" href="#module-an.bench.imageio" title="Link to this heading"></a></h1>
+<p>The pinned ffmpeg decodes, and the lossless leg every encode-side metric
+is measured against.</p>
+<p><strong>The reference is the lossless encode, not the PNGs — and that is a
+correction, made because CI caught the alternative.</strong> The obvious design reads
+the source frames back with an explicit conversion
+(<cite>-vf scale=out_range=tv:out_color_matrix=bt709 -pix_fmt yuv444p</cite>) and compares
+the delivered mp4 against that. Measured against a mathematically lossless
+(<cite>-qp 0</cite>) encode of the same frames, that conversion agrees <strong>exactly</strong> on
+ffmpeg 8.1 (luma residual 0.0000, max 0) and <strong>does not</strong> on the Linux runner’s
+older build (0.6290, max 5). A floor of 0.63 is 42% of <cite>coded_luma_edge_error</cite>’s
+whole crf23 value, so on that build every encode-side luma number would have
+been measuring a colour-conversion disagreement and reporting it as encoder
+damage.</p>
+<p>The fix is not a tolerance. It is to stop having a second conversion at all:
+<cite>-qp 0</cite> is lossless, so <strong>the qp0 decode’s luma plane IS the plane libx264
+received</strong>, on every build, by definition. Referencing the metrics to it
+removes the assumption instead of widening it, and it costs nothing extra —
+<cite>encode_ringing_excess</cite> already needed that leg.</p>
+<p>Two things this does NOT change:</p>
+<ul class="simple">
+<li><p><strong>The chroma metric still references the direct RGB-&gt;444 conversion</strong>, because
+its subject <em>is</em> the 4:2:0 subsampling that happens during the conversion. A
+qp0 file’s chroma is already subsampled, so referencing it there would read
+~0 and measure nothing.</p></li>
+<li><p><strong>The PNG conversion is still performed and its distance from the encoder’s
+input is still recorded</strong> (<cite>png_to_encoder_input_luma</cite>), because that number
+is exactly the build-dependence that was hiding inside a hard equality. It is
+provenance now, not a gate.</p></li>
+</ul>
+<p><cite>-map 0:v:0 -fps_mode passthrough</cite> on every mp4 decode: the delivered file
+carries an AAC track, and implicit frame-rate conversion would silently re-time
+the sequence that every encode-side metric pairs frame-for-frame.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.imageio.BenchDecodeError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">BenchDecodeError</span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#BenchDecodeError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.BenchDecodeError" title="Link to this definition"></a></dt>
+<dd><p>ffmpeg could not read something the bench needs.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.imageio.SOURCE_SCALE_FILTER">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">SOURCE_SCALE_FILTER</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'scale=out_range=tv:out_color_matrix=bt709'</span></span><a class="headerlink" href="#an.bench.imageio.SOURCE_SCALE_FILTER" title="Link to this definition"></a></dt>
+<dd><p>without it
+the encode-side metrics measure a colour-space conversion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pinned conversion applied to the PNG leg. Never remove it</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.imageio.YUV_PIX_FMT">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">YUV_PIX_FMT</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'yuv444p'</span></span><a class="headerlink" href="#an.bench.imageio.YUV_PIX_FMT" title="Link to this definition"></a></dt>
+<dd><p>4 for both legs of every encode-side metric — never <cite>rgb24</cite> for
+the edge metrics, whose defect was clipping precisely at the saturated fills
+sitting against black outlines that flat 2D art is made of.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Planar 4</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>4</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.decoded_rgb">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">decoded_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#decoded_rgb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.decoded_rgb" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">H,</span> <span class="pre">W,</span> <span class="pre">3)</span></code> uint8 of the delivered mp4.</p>
+<p><code class="docutils literal notranslate"><span class="pre">frames=None</span></code>: the run deliberately tolerates the encoder emitting a
+different count from the source leg and records it as
+<code class="docutils literal notranslate"><span class="pre">frame_count_disagreement</span></code>, so an equality here would turn a recorded
+disagreement into a crash. See <code class="xref py py-func docutils literal notranslate"><span class="pre">_reshape()</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.decoded_rgb_command">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">decoded_rgb_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#decoded_rgb_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.decoded_rgb_command" title="Link to this definition"></a></dt>
+<dd><p>Decode the delivered mp4 to raw RGB.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.decoded_yuv">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">decoded_yuv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#decoded_yuv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.decoded_yuv" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">3,</span> <span class="pre">H,</span> <span class="pre">W)</span></code> uint8 planar YUV of the delivered mp4. <code class="docutils literal notranslate"><span class="pre">frames=None</span></code> — see <a class="reference internal" href="#an.bench.imageio.decoded_rgb" title="an.bench.imageio.decoded_rgb"><code class="xref py py-func docutils literal notranslate"><span class="pre">decoded_rgb()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.decoded_yuv_command">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">decoded_yuv_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#decoded_yuv_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.decoded_yuv_command" title="Link to this definition"></a></dt>
+<dd><p>Decode the delivered mp4 to planar YUV.</p>
+<p>No <code class="docutils literal notranslate"><span class="pre">scale</span></code> filter here, deliberately: the file carries BT.709 tags
+(an#34) so ffmpeg already decodes it in the space the source leg is pinned
+to. Adding one would convert twice.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.lossless_encode_command">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">lossless_encode_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#lossless_encode_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.lossless_encode_command" title="Link to this definition"></a></dt>
+<dd><p><cite>-qp 0</cite> with otherwise identical flags, for <cite>encode_ringing_excess</cite>.</p>
+<p>Identical to the delivered encode except for the rate control, so the
+difference of the two overshoot means cancels the source-hardness term —
+which is the whole reason <cite>encode_ringing_excess</cite> replaced raw overshoot.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.run_raw">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">run_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#run_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.run_raw" title="Link to this definition"></a></dt>
+<dd><p>Run an ffmpeg command and return its raw stdout, or raise with the stderr.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.source_rgb">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">source_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#source_rgb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.source_rgb" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">H,</span> <span class="pre">W,</span> <span class="pre">3)</span></code> uint8 of the pre-encode PNGs.</p>
+<p><code class="docutils literal notranslate"><span class="pre">frames</span></code> is how many PNGs are on disk — the caller counted them — and it
+is required rather than derived, so the decode cannot silently return a
+different number of them.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.source_rgb_command">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">source_rgb_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#source_rgb_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.source_rgb_command" title="Link to this definition"></a></dt>
+<dd><p>Decode the pre-encode PNG sequence to raw RGB.</p>
+<p>RGB is correct here and only here: the two metrics that use it
+(<cite>flat_field_deviation</cite>, <cite>encode_flicker_on_held_pixels</cite>) are masked to the
+flat interior and to held pixels, both off-edge by construction, so the
+clipping that ruins the edge metrics cannot reach them.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.source_yuv">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">source_yuv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#source_yuv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.source_yuv" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">3,</span> <span class="pre">H,</span> <span class="pre">W)</span></code> uint8 planar YUV of the pre-encode PNGs, range-pinned.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.source_yuv_command">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">source_yuv_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#source_yuv_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.source_yuv_command" title="Link to this definition"></a></dt>
+<dd><p>Decode the pre-encode PNG sequence to planar YUV, <strong>range- and matrix-pinned</strong>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.video_stream_bytes">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">video_stream_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#video_stream_bytes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.video_stream_bytes" title="Link to this definition"></a></dt>
+<dd><p>Sum of the video stream’s packet sizes — the AAC track excluded.</p>
+<p><code class="docutils literal notranslate"><span class="pre">file_bytes</span></code> includes the audio track, which the renderer always emits
+(silent if there is no dialogue), so it varies with the audio cache’s state.
+This one does not.</p>
+</dd></dl>
+
 </section>
 
 

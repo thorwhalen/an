@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.corpus &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.corpus &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -87,7 +87,25 @@
 <li class="toctree-l1"><a class="reference internal" href="capture.html">an.bench.capture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compare.html">an.bench.compare</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contract.html">an.bench.contract</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.corpus</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.corpus</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.BENCH_RENDER_KWARGS"><code class="docutils literal notranslate"><span class="pre">BENCH_RENDER_KWARGS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.CORPUS_DIRNAME"><code class="docutils literal notranslate"><span class="pre">CORPUS_DIRNAME</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.CorpusError"><code class="docutils literal notranslate"><span class="pre">CorpusError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.DFLT_FIXTURES"><code class="docutils literal notranslate"><span class="pre">DFLT_FIXTURES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.Fixture"><code class="docutils literal notranslate"><span class="pre">Fixture</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.corpus.Fixture.expect_visual_kinds"><code class="docutils literal notranslate"><span class="pre">Fixture.expect_visual_kinds</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.corpus.Fixture.golden_frames"><code class="docutils literal notranslate"><span class="pre">Fixture.golden_frames</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.corpus.Fixture.golden_note"><code class="docutils literal notranslate"><span class="pre">Fixture.golden_note</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.corpus.Fixture.prepare"><code class="docutils literal notranslate"><span class="pre">Fixture.prepare</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.SHOT_DIR_GLOB"><code class="docutils literal notranslate"><span class="pre">SHOT_DIR_GLOB</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.assert_render_path"><code class="docutils literal notranslate"><span class="pre">assert_render_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.iter_shot_dirs"><code class="docutils literal notranslate"><span class="pre">iter_shot_dirs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.staged_scene"><code class="docutils literal notranslate"><span class="pre">staged_scene()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.corpus.visual_kinds"><code class="docutils literal notranslate"><span class="pre">visual_kinds()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="environment.html">an.bench.environment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="golden.html">an.bench.golden</a></li>
 <li class="toctree-l1"><a class="reference internal" href="imageio.html">an.bench.imageio</a></li>
@@ -113,6 +131,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -176,8 +195,201 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-bench-corpus">
-<h1>an.bench.corpus<a class="headerlink" href="#an-bench-corpus" title="Link to this heading"></a></h1>
+  <section id="module-an.bench.corpus">
+<span id="an-bench-corpus"></span><h1>an.bench.corpus<a class="headerlink" href="#module-an.bench.corpus" title="Link to this heading"></a></h1>
+<p>The bench corpus: which projects are measured, and what each must actually render.</p>
+<p><code class="docutils literal notranslate"><span class="pre">expect_visual_kinds</span></code> is not belt-and-braces. Every <code class="docutils literal notranslate"><span class="pre">examples/*/assets/</span></code> is
+gitignored, and before an#33 a missing character descriptor made the compiler
+fall back to the procedural rig with <strong>zero</strong> warnings. The first
+cross-architecture capture measured exactly that: three CI runners agreed
+perfectly about a picture that was not the picture, and the agreement read as a
+clean positive result. It surfaced only because the local machine happened to
+hold a <em>stale</em> build product and therefore disagreed.</p>
+<p>So a fixture declares the render path it must exercise, and the check reads the
+scene JSON <strong>the browser actually loaded</strong> — an independent second opinion to
+<code class="docutils literal notranslate"><span class="pre">strict_assets=True</span></code>, which trusts the compiler that produced it.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.corpus.BENCH_RENDER_KWARGS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">BENCH_RENDER_KWARGS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'auto_audio':</span> <span class="pre">False,</span> <span class="pre">'parallel':</span> <span class="pre">1,</span> <span class="pre">'strict_assets':</span> <span class="pre">True}</span></span><a class="headerlink" href="#an.bench.corpus.BENCH_RENDER_KWARGS" title="Link to this definition"></a></dt>
+<dd><p>Rendering knobs pinned for every bench capture, recorded verbatim into the
+ledger. NOT flags: a bench whose render knobs vary per invocation produces
+incomparable rows.</p>
+<p><code class="docutils literal notranslate"><span class="pre">auto_audio=False</span></code> because audio cannot move a pixel and would otherwise
+make the frames depend on the audio cache’s warm/cold state; <code class="docutils literal notranslate"><span class="pre">parallel=1</span></code>
+because a timing-sensitive pool is one more thing to explain if the pixels
+ever do differ; <code class="docutils literal notranslate"><span class="pre">strict_assets=True</span></code> because a stand-in asset renders
+happily as a DIFFERENT picture (an#33).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.corpus.CORPUS_DIRNAME">
+<span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">CORPUS_DIRNAME</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'misc/bench/corpus'</span></span><a class="headerlink" href="#an.bench.corpus.CORPUS_DIRNAME" title="Link to this definition"></a></dt>
+<dd><p>Where the bench-owned fixtures live. NOT under <cite>examples/</cite>, and the reason
+is mechanical rather than tidiness: <cite>.gitignore</cite> excludes every
+<cite>examples/*/assets/</cite>, so a corpus scene that needs committed art cannot live
+there without a carve-out per scene. <cite>misc/</cite> is not ignored at all.</p>
+<p>The second reason is that a metrics fixture must <strong>hold still</strong>. These four
+carry their whole rig as committed files and have no <code class="docutils literal notranslate"><span class="pre">prepare</span></code> step, so
+their pixels are a function of the repo alone — where <cite>promote_demo</cite>’s are a
+function of <cite>an.characters.promote</cite>, and would need re-blessing whenever that
+changes.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.corpus.CorpusError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">CorpusError</span></span><a class="reference internal" href="../../../_modules/an/bench/corpus.html#CorpusError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.corpus.CorpusError" title="Link to this definition"></a></dt>
+<dd><p>A fixture did not render what it declared.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.corpus.DFLT_FIXTURES">
+<span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">DFLT_FIXTURES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#an.bench.corpus.Fixture" title="an.bench.corpus.Fixture"><span class="pre">Fixture</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'aa_probe':</span> <span class="pre">Fixture(path='misc/bench/corpus/aa_probe',</span> <span class="pre">prepare=None,</span> <span class="pre">expect_visual_kinds=frozenset({'rect'}),</span> <span class="pre">golden_frames=(0.0,</span> <span class="pre">0.25),</span> <span class="pre">golden_note='the</span> <span class="pre">fourth</span> <span class="pre">bar</span> <span class="pre">sweeping</span> <span class="pre">horizontally</span> <span class="pre">(4,200</span> <span class="pre">px).</span> <span class="pre">The</span> <span class="pre">three</span> <span class="pre">angled</span> <span class="pre">bars</span> <span class="pre">are</span> <span class="pre">pinned</span> <span class="pre">and</span> <span class="pre">do</span> <span class="pre">not</span> <span class="pre">move</span> <span class="pre">—</span> <span class="pre">they</span> <span class="pre">are</span> <span class="pre">the</span> <span class="pre">AA</span> <span class="pre">subject.'),</span> <span class="pre">'graded_field':</span> <span class="pre">Fixture(path='misc/bench/corpus/graded_field',</span> <span class="pre">prepare=None,</span> <span class="pre">expect_visual_kinds=frozenset({'svg_sprite'}),</span> <span class="pre">golden_frames=(0.0,</span> <span class="pre">0.1667),</span> <span class="pre">golden_note='the</span> <span class="pre">white</span> <span class="pre">marker</span> <span class="pre">sweeping</span> <span class="pre">across</span> <span class="pre">the</span> <span class="pre">gradient</span> <span class="pre">(6,270</span> <span class="pre">px).</span> <span class="pre">Frame</span> <span class="pre">4,</span> <span class="pre">not</span> <span class="pre">the</span> <span class="pre">obvious</span> <span class="pre">mid-scene</span> <span class="pre">frame</span> <span class="pre">6:</span> <span class="pre">the</span> <span class="pre">marker</span> <span class="pre">advances</span> <span class="pre">by</span> <span class="pre">a</span> <span class="pre">sub-pixel</span> <span class="pre">step,</span> <span class="pre">so</span> <span class="pre">on</span> <span class="pre">frames</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">6,</span> <span class="pre">8</span> <span class="pre">and</span> <span class="pre">11</span> <span class="pre">it</span> <span class="pre">lands</span> <span class="pre">on</span> <span class="pre">an</span> <span class="pre">exact</span> <span class="pre">pixel</span> <span class="pre">boundary</span> <span class="pre">and</span> <span class="pre">AA-off</span> <span class="pre">changes</span> <span class="pre">ZERO</span> <span class="pre">pixels</span> <span class="pre">there.</span> <span class="pre">A</span> <span class="pre">blessed</span> <span class="pre">pair</span> <span class="pre">that</span> <span class="pre">no</span> <span class="pre">available</span> <span class="pre">mutation</span> <span class="pre">can</span> <span class="pre">move</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">gate</span> <span class="pre">that</span> <span class="pre">cannot</span> <span class="pre">go</span> <span class="pre">red.'),</span> <span class="pre">'multi_shot':</span> <span class="pre">Fixture(path='misc/bench/corpus/multi_shot',</span> <span class="pre">prepare=None,</span> <span class="pre">expect_visual_kinds=frozenset({'ellipse',</span> <span class="pre">'rect'}),</span> <span class="pre">golden_frames=(0.0,</span> <span class="pre">0.25),</span> <span class="pre">golden_note='the</span> <span class="pre">whole</span> <span class="pre">picture:</span> <span class="pre">0.25s</span> <span class="pre">is</span> <span class="pre">the</span> <span class="pre">FIRST</span> <span class="pre">frame</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">second</span> <span class="pre">shot,</span> <span class="pre">so</span> <span class="pre">the</span> <span class="pre">pair</span> <span class="pre">spans</span> <span class="pre">the</span> <span class="pre">concat</span> <span class="pre">boundary</span> <span class="pre">(75,050</span> <span class="pre">px).</span> <span class="pre">A</span> <span class="pre">golden</span> <span class="pre">pair</span> <span class="pre">inside</span> <span class="pre">one</span> <span class="pre">shot</span> <span class="pre">would</span> <span class="pre">not</span> <span class="pre">notice</span> <span class="pre">a</span> <span class="pre">shot</span> <span class="pre">rendered</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">wrong</span> <span class="pre">order.'),</span> <span class="pre">'promote_demo':</span> <span class="pre">Fixture(path='examples/promote_demo',</span> <span class="pre">prepare=&lt;function</span> <span class="pre">_prepare_promote_demo&gt;,</span> <span class="pre">expect_visual_kinds=frozenset({'svg_sprite'}),</span> <span class="pre">golden_frames=(0.0,</span> <span class="pre">2.9167),</span> <span class="pre">golden_note='the</span> <span class="pre">idle</span> <span class="pre">animation</span> <span class="pre">near</span> <span class="pre">the</span> <span class="pre">end</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">shot</span> <span class="pre">(224</span> <span class="pre">px).</span> <span class="pre">Measured:</span> <span class="pre">frame</span> <span class="pre">0</span> <span class="pre">against</span> <span class="pre">duration/2</span> <span class="pre">differs</span> <span class="pre">by</span> <span class="pre">exactly</span> <span class="pre">ZERO</span> <span class="pre">pixels</span> <span class="pre">here,</span> <span class="pre">so</span> <span class="pre">the</span> <span class="pre">obvious</span> <span class="pre">second</span> <span class="pre">time</span> <span class="pre">would</span> <span class="pre">have</span> <span class="pre">blessed</span> <span class="pre">one</span> <span class="pre">image</span> <span class="pre">twice.'),</span> <span class="pre">'saturated_outline':</span> <span class="pre">Fixture(path='misc/bench/corpus/saturated_outline',</span> <span class="pre">prepare=None,</span> <span class="pre">expect_visual_kinds=frozenset({'svg_sprite'}),</span> <span class="pre">golden_frames=(0.0,</span> <span class="pre">0.25),</span> <span class="pre">golden_note='the</span> <span class="pre">head</span> <span class="pre">plate</span> <span class="pre">rotating</span> <span class="pre">through</span> <span class="pre">0.3</span> <span class="pre">rad</span> <span class="pre">(1,187</span> <span class="pre">px).'),</span> <span class="pre">'single_character':</span> <span class="pre">Fixture(path='examples/single_character',</span> <span class="pre">prepare=&lt;function</span> <span class="pre">_declare_procedural_rig.&lt;locals&gt;.prepare&gt;,</span> <span class="pre">expect_visual_kinds=frozenset({'ellipse',</span> <span class="pre">'rect'}),</span> <span class="pre">golden_frames=(0.0,</span> <span class="pre">1.0),</span> <span class="pre">golden_note='a</span> <span class="pre">blink.</span> <span class="pre">Only</span> <span class="pre">253</span> <span class="pre">pixels</span> <span class="pre">differ,</span> <span class="pre">and</span> <span class="pre">that</span> <span class="pre">is</span> <span class="pre">the</span> <span class="pre">point:</span> <span class="pre">blinks</span> <span class="pre">occupy</span> <span class="pre">3.5%</span> <span class="pre">of</span> <span class="pre">frames,</span> <span class="pre">so</span> <span class="pre">frame</span> <span class="pre">0</span> <span class="pre">against</span> <span class="pre">duration/2</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">pixel-identical</span> <span class="pre">pair</span> <span class="pre">on</span> <span class="pre">this</span> <span class="pre">scene.')}</span></span><a class="headerlink" href="#an.bench.corpus.DFLT_FIXTURES" title="Link to this definition"></a></dt>
+<dd><p>the descriptor
+(SVG-sprite) path is 12x more sensitive to a rasteriser flip than the
+procedural one (2.94% vs 0.24% of pixels under GPU-vs-software), so a
+procedural-only corpus under-reports the case that matters.</p>
+<p>The four scenes an#38 adds, each for a <strong>measured</strong> reason:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">graded_field</span></code> — a real gradient (98 distinct luma levels down the centre
+column) over a large flat block. Banding has no edge in it, so every
+edge-masked metric is blind to it; and the gradient itself sits OUTSIDE the
+flat mask by construction (<code class="docutils literal notranslate"><span class="pre">flat_mask</span></code> demands a zero 4-neighbour delta),
+which is why the scene carries a flat block too — measured 0.2795 of the
+frame, against 0.0341 for a gradient alone.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">saturated_outline</span></code> — maximally saturated fills under a pure-black 12px
+outline. The shipped examples are 31 colours on white and their measured
+4:2:0 edge error is ~3x smaller, so the chroma metric under-reports exactly
+the artefact class the epic cares about. Highest edge-mask fraction in the
+corpus (0.0566).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aa_probe</span></code> — three bars pinned at 7, 23 and 45 degrees. Axis-aligned
+<code class="docutils literal notranslate"><span class="pre">drawRect</span></code> edges are bit-identical with MSAA on or off, so a corpus of
+axis-aligned art cannot validate an AA metric at all. Measured under the
+real AA lever (PixiJS <code class="docutils literal notranslate"><span class="pre">antialias:</span> <span class="pre">false</span></code>): <code class="docutils literal notranslate"><span class="pre">edge_transition_width</span></code>
+2.9866 -&gt; 2.0000 and <code class="docutils literal notranslate"><span class="pre">video_stream_bytes</span></code> <strong>+6.1%</strong>. That last number is
+why this scene is load-bearing rather than decorative — on
+<code class="docutils literal notranslate"><span class="pre">single_character</span></code> the same lever moves the bytes <strong>-6.1%</strong>, the opposite
+of the declared direction, because AA-off on axis-aligned art removes
+intermediate colours instead of creating a staircase. Family F is only an
+honest witness for <code class="docutils literal notranslate"><span class="pre">disabled_aa</span></code> on a scene with non-axis-aligned edges.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multi_shot</span></code> — two shots, so <code class="docutils literal notranslate"><span class="pre">an/render.py</span></code>’s <code class="docutils literal notranslate"><span class="pre">_ffmpeg_concat</span></code> is
+exercised at all (a single-shot render short-circuits it to
+<code class="docutils literal notranslate"><span class="pre">shutil.copy</span></code>) and <code class="docutils literal notranslate"><span class="pre">file_bytes</span></code> stops meaning two different things
+depending on shot count. Its shot ids are <code class="docutils literal notranslate"><span class="pre">intro</span></code> then <code class="docutils literal notranslate"><span class="pre">beat</span></code>
+<strong>deliberately</strong>: they sort the other way, so any code that recovers shot
+order from the directory name instead of the timeline pairs source frames
+against the wrong half of the concatenated video, and this fixture is what
+notices.</p></li>
+</ul>
+<p>One measured fact that shapes the set: the <strong>descriptor path is nearly blind
+to the AA lever</strong> (96 differing pixels out of 12.4M on <code class="docutils literal notranslate"><span class="pre">promote_demo</span></code>),
+because MSAA applies to WebGL geometry and an SVG sprite is a pre-rasterised
+texture. So the descriptor scenes are in the corpus for the rasteriser
+sensitivity the cross-arch work measured, not as AA witnesses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The corpus. One fixture per render path, deliberately both</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.corpus.Fixture">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">Fixture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">path:</span> <span class="pre">str,</span> <span class="pre">prepare:</span> <span class="pre">~typing.Callable[[~pathlib.Path],</span> <span class="pre">None]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">expect_visual_kinds:</span> <span class="pre">frozenset</span> <span class="pre">=</span> <span class="pre">frozenset({}),</span> <span class="pre">golden_frames:</span> <span class="pre">tuple[float,</span> <span class="pre">...]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">golden_note:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/corpus.html#Fixture"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.corpus.Fixture" title="Link to this definition"></a></dt>
+<dd><p>A corpus scene: where it lives, how to build it, what it must render.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.corpus.Fixture.expect_visual_kinds">
+<span class="sig-name descname"><span class="pre">expect_visual_kinds</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span></span><a class="headerlink" href="#an.bench.corpus.Fixture.expect_visual_kinds" title="Link to this definition"></a></dt>
+<dd><p>Visual kinds the staged scene MUST contain — see the module docstring.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.corpus.Fixture.golden_frames">
+<span class="sig-name descname"><span class="pre">golden_frames</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#an.bench.corpus.Fixture.golden_frames" title="Link to this definition"></a></dt>
+<dd><p>Times (seconds, into the scene’s CONCATENATED timeline) at which a
+golden frame is blessed. Two per scene, the second chosen so something
+has actually moved — <cite>–bless</cite> refuses a pair whose two frames are
+pixel-identical, which is not hypothetical: <cite>promote_demo</cite>’s frame 0 and
+its <cite>duration/2</cite> frame differ by exactly <strong>zero</strong> pixels.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.corpus.Fixture.golden_note">
+<span class="sig-name descname"><span class="pre">golden_note</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#an.bench.corpus.Fixture.golden_note" title="Link to this definition"></a></dt>
+<dd><p>One line saying what moves between the two golden times. Carried as data
+because “pick a time where something moved” is a rule that decays into a
+habit, and the reason is what a reviewer needs when a golden goes red.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.corpus.Fixture.prepare">
+<span class="sig-name descname"><span class="pre">prepare</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.bench.corpus.Fixture.prepare" title="Link to this definition"></a></dt>
+<dd><p>Run against the throwaway copy before loading, to regenerate build
+products the repo does not track.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.corpus.SHOT_DIR_GLOB">
+<span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">SHOT_DIR_GLOB</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'shot_*'</span></span><a class="headerlink" href="#an.bench.corpus.SHOT_DIR_GLOB" title="Link to this definition"></a></dt>
+<dd><p>Per-shot subdirectory naming inside <cite>.an/render_work</cite>, and the staged scene
+filename. Mirrored from the renderer rather than restated as literals at
+each use site.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.corpus.assert_render_path">
+<span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">assert_render_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.bench.corpus.Fixture" title="an.bench.corpus.Fixture"><span class="pre">Fixture</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">kinds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/bench/corpus.html#assert_render_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.corpus.assert_render_path" title="Link to this definition"></a></dt>
+<dd><p>Refuse a capture that did not exercise the path its fixture declares.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.corpus.iter_shot_dirs">
+<span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">iter_shot_dirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">work_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/corpus.html#iter_shot_dirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.corpus.iter_shot_dirs" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(shot_id,</span> <span class="pre">shot_dir)</span></code> for every rendered shot, in <strong>timeline</strong> order.</p>
+<p><code class="docutils literal notranslate"><span class="pre">order</span></code> is mandatory, and that is the whole point of this signature.
+<code class="docutils literal notranslate"><span class="pre">an/render.py</span></code> concatenates <code class="docutils literal notranslate"><span class="pre">[r.mp4_path</span> <span class="pre">for</span> <span class="pre">r</span> <span class="pre">in</span> <span class="pre">shot_results]</span></code> built
+from <code class="docutils literal notranslate"><span class="pre">list(scene.timeline)</span></code>, while this function’s previous form returned
+<code class="docutils literal notranslate"><span class="pre">sorted(work_dir.glob(&quot;shot_*&quot;))</span></code> — directory-name order. The two agree
+only when the shot ids happen to sort into timeline order, and when they do
+not, every encode-side metric pairs source frame <em>i</em> of one shot against
+decoded frame <em>i</em> of another. The <code class="docutils literal notranslate"><span class="pre">multi_shot</span></code> fixture’s ids (<code class="docutils literal notranslate"><span class="pre">intro</span></code>
+then <code class="docutils literal notranslate"><span class="pre">beat</span></code>) are chosen so they disagree.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"shot_intro"</span><span class="p">,</span> <span class="s2">"shot_beat"</span><span class="p">):</span> <span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">iter_shot_dirs</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">[</span><span class="s2">"intro"</span><span class="p">,</span> <span class="s2">"beat"</span><span class="p">])]</span>
+<span class="go">['intro', 'beat']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.corpus.staged_scene">
+<span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">staged_scene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/corpus.html#staged_scene"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.corpus.staged_scene" title="Link to this definition"></a></dt>
+<dd><p>The compiled scene JSON the browser actually loaded, for one shot.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.corpus.visual_kinds">
+<span class="sig-prename descclassname"><span class="pre">an.bench.corpus.</span></span><span class="sig-name descname"><span class="pre">visual_kinds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/corpus.html#visual_kinds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.corpus.visual_kinds" title="Link to this definition"></a></dt>
+<dd><p>Every <code class="docutils literal notranslate"><span class="pre">visual.kind</span></code> in a staged scene’s node tree.</p>
+<p>Read from the staged file rather than re-compiled, so it reports what was
+rendered rather than what a second compile would produce.</p>
+<p>Scoped to <code class="docutils literal notranslate"><span class="pre">scene</span></code> and to the <code class="docutils literal notranslate"><span class="pre">visual</span></code> key specifically. A sweep for
+every <code class="docutils literal notranslate"><span class="pre">kind</span></code> anywhere in the document — which is what this was before —
+also collects an#33’s <code class="docutils literal notranslate"><span class="pre">asset_resolution</span></code> entries, whose <code class="docutils literal notranslate"><span class="pre">kind</span></code> is
+<code class="docutils literal notranslate"><span class="pre">&quot;character&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;environment&quot;</span></code>. Those are entity kinds, not visual
+kinds, and mixing them makes the field mean two things at once.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">visual_kinds</span><span class="p">({</span><span class="s2">"scene"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"visual"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"rect"</span><span class="p">},</span>
+<span class="gp">... </span>                               <span class="s2">"children"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"visual"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"eye"</span><span class="p">}}]},</span>
+<span class="gp">... </span>                     <span class="s2">"asset_resolution"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"character"</span><span class="p">}]}))</span>
+<span class="go">['eye', 'rect']</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
 

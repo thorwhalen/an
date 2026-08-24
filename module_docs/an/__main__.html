@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.__main__ &mdash; an 0.1.46 documentation</title>
+  <title>an.__main__ &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -50,7 +50,13 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../an.html">an</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.__main__</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.__main__</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.__main__.build_app"><code class="docutils literal notranslate"><span class="pre">build_app()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.__main__.command_name"><code class="docutils literal notranslate"><span class="pre">command_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.__main__.help_text"><code class="docutils literal notranslate"><span class="pre">help_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.__main__.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="adapters.html">an.adapters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="adapters/_base.html">an.adapters._base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="adapters/cutout.html">an.adapters.cutout</a></li>
@@ -113,6 +119,7 @@
 <li class="toctree-l1"><a class="reference internal" href="characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="credits.html">an.credits</a></li>
@@ -176,8 +183,97 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-main">
-<h1>an.__main__<a class="headerlink" href="#an-main" title="Link to this heading"></a></h1>
+  <section id="module-an.__main__">
+<span id="an-main"></span><h1>an.__main__<a class="headerlink" href="#module-an.__main__" title="Link to this heading"></a></h1>
+<p>an CLI entry point — a thin dispatcher over <code class="xref py py-data docutils literal notranslate"><span class="pre">an.tools._dispatch_funcs</span></code>.</p>
+<p>Subcommands:</p>
+<blockquote>
+<div><p>an init &lt;dir&gt;         — create a fresh project
+an validate &lt;dir&gt;     — schema + semantic validation
+an sync &lt;dir&gt;         — reconcile scene.md ↔ ir/scene.json
+an check              — diagnose backend system deps</p>
+</div></blockquote>
+<p><strong>Typer is wired programmatically, never as decorators on the functions
+themselves.</strong> That is the “dispatch to interface” pillar: plain Python functions
+are the business logic and the CLI is a projection of them, so <cite>an.tools</cite>’s
+functions stay importable, testable and callable with no CLI framework in their
+signatures. Decorating them at the definition site would put <cite>click</cite> types in
+the business layer, which is the shape this package exists not to have.</p>
+<p><strong>Typer replaced argh, and the reason is licensing rather than ergonomics</strong>
+(an#45). <cite>argh</cite> declares LGPL-3.0 and was the only declared-copyleft
+distribution in <cite>an</cite>’s hard dependency set, against the MIT/BSD/Apache/ISC rule
+this repo and its federation state. Typer is MIT.
+<cite>argcomplete</cite> went with it: it hooks <cite>argparse</cite> specifically, so once the
+argparse-based parser was gone it was a dependency that did nothing. Typer
+supplies the replacement itself (<code class="docutils literal notranslate"><span class="pre">typer/completion.py</span></code>), reachable as
+<code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">--install-completion</span></code>; verified working under a pty, emitting a correct
+<code class="docutils literal notranslate"><span class="pre">#compdef</span> <span class="pre">an</span></code> block.</p>
+<p><strong>What typer pulls in depends on which typer resolves, and `pyproject.toml`
+pins no version.</strong> 0.19.x requires <cite>click</cite> (BSD-3); 0.27.1 — what a fresh
+<cite>pip install an</cite> gets today — requires <cite>shellingham</cite>, <cite>rich</cite> and
+<cite>annotated-doc</cite>, and <strong>no click at all</strong>. Earlier text here said flatly that
+typer “pulls click” and that click supplied the completion; both were true of
+the locally installed version and false of the package. The licence perimeter
+now walks the installed transitive closure rather than the five declared names,
+and says out loud that its answer is about the environment it runs in.</p>
+<p>Three behaviours argh gave for free that are reproduced here on purpose, because
+each one is user-visible and none is typer’s default:</p>
+<ol class="arabic simple">
+<li><p><strong>A command’s name is hyphenated.</strong> <code class="docutils literal notranslate"><span class="pre">bench_compare</span></code> is <code class="docutils literal notranslate"><span class="pre">an</span>
+<span class="pre">bench-compare</span></code>, as it was under argh. Typer would otherwise expose the
+underscored name and every documented invocation would break.</p></li>
+<li><p><strong>A command’s return value is printed.</strong> Every function in <cite>an.tools</cite>
+returns its report as a string and argh printed it; typer discards return
+values, so the wrapper prints it. Without this the CLI runs correctly and
+shows nothing, which is the worst possible failure for a diagnostic tool.</p></li>
+<li><p><strong>A function that exits nonzero still exits nonzero.</strong> <code class="docutils literal notranslate"><span class="pre">bench-compare</span>
+<span class="pre">--strict</span></code> and <code class="docutils literal notranslate"><span class="pre">bench-mutants</span></code> call <code class="docutils literal notranslate"><span class="pre">sys.exit(1)</span></code> after printing; the
+wrapper must not swallow <code class="docutils literal notranslate"><span class="pre">SystemExit</span></code>.</p></li>
+</ol>
+<dl class="py function">
+<dt class="sig sig-object py" id="an.__main__.build_app">
+<span class="sig-prename descclassname"><span class="pre">an.__main__.</span></span><span class="sig-name descname"><span class="pre">build_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">funcs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespaces</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Typer</span></span></span><a class="reference internal" href="../../_modules/an/__main__.html#build_app"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.__main__.build_app" title="Link to this definition"></a></dt>
+<dd><p>Project the dispatch lists onto a typer app.</p>
+<p>Takes the lists as arguments rather than reading the module globals so the
+projection is testable against a small set — the CLI surface is 17 commands
+and had no test at all before an#45.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.__main__.command_name">
+<span class="sig-prename descclassname"><span class="pre">an.__main__.</span></span><span class="sig-name descname"><span class="pre">command_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/__main__.html#command_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.__main__.command_name" title="Link to this definition"></a></dt>
+<dd><p>The CLI name for a dispatched function: underscores become hyphens.</p>
+<p>Matches what argh did, so no documented invocation changes.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">bench_compare</span><span class="p">():</span> <span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">command_name</span><span class="p">(</span><span class="n">bench_compare</span><span class="p">)</span>
+<span class="go">'bench-compare'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.__main__.help_text">
+<span class="sig-prename descclassname"><span class="pre">an.__main__.</span></span><span class="sig-name descname"><span class="pre">help_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/an/__main__.html#help_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.__main__.help_text" title="Link to this definition"></a></dt>
+<dd><p>The docstring, with its per-parameter lines protected from rewrapping.</p>
+<p>argh kept one line per flag; click and Rich rewrap a paragraph, so the six
+lines documenting <cite>an bench</cite>’s flags arrived as a single run-on — “scenes:
+… (default: all of them) out: ledger path … keep_render: keep the
+throwaway …”. That is the entire per-flag documentation of this CLI, and
+losing it was a silent regression that a first-four-words help assertion
+could not see.</p>
+<p>Click’s escape for this is a line containing only <code class="docutils literal notranslate"><span class="pre"></span></code> before a block it
+must not rewrap, so one is inserted ahead of each run of parameter lines.
+Cheaper and less fragile than rebuilding every function’s signature to
+attach <cite>typer.Option(help=…)</cite> per parameter, which is the nicer shape and
+would put CLI types where the dispatch pillar says they must not go.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.__main__.main">
+<span class="sig-prename descclassname"><span class="pre">an.__main__.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/an/__main__.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.__main__.main" title="Link to this definition"></a></dt>
+<dd><p>Dispatch the CLI.</p>
+</dd></dl>
+
 </section>
 
 

@@ -1,0 +1,306 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.characters.validate &mdash; an 0.1.47 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="an.check_requirements" href="../check_requirements.html" />
+    <link rel="prev" title="an.characters.svg_utils" href="svg_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.characters.validate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.validate.ADVISORY"><code class="docutils literal notranslate"><span class="pre">ADVISORY</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.validate.BLOCKING"><code class="docutils literal notranslate"><span class="pre">BLOCKING</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.validate.DRAWABLE_ELEMENTS"><code class="docutils literal notranslate"><span class="pre">DRAWABLE_ELEMENTS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.validate.PROHIBITED_ELEMENTS"><code class="docutils literal notranslate"><span class="pre">PROHIBITED_ELEMENTS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.validate.format_report"><code class="docutils literal notranslate"><span class="pre">format_report()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.validate.render_contract"><code class="docutils literal notranslate"><span class="pre">render_contract()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.characters.validate.validate_character"><code class="docutils literal notranslate"><span class="pre">validate_character()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">an.characters.validate</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/an/characters/validate.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-an.characters.validate">
+<span id="an-characters-validate"></span><h1>an.characters.validate<a class="headerlink" href="#module-an.characters.validate" title="Link to this heading"></a></h1>
+<p>Whether an art package is one the compiler can actually render.</p>
+<p>The artist-facing contract, checked offline. Wave 4 (#78) exists because the
+previous check had no teeth in two separate ways:</p>
+<ul class="simple">
+<li><p><strong>It checked file existence only.</strong> A part that was present but drew nothing
+passed, and then rendered invisibly — the one failure mode with no diagnostic
+anywhere in the pipeline (<code class="docutils literal notranslate"><span class="pre">misc/docs/wave4_research.md</span></code> §4).</p></li>
+<li><p><strong>It returned a bespoke report type</strong>, so the orchestrator’s typed-error
+routing did not apply to any character problem. Findings here are
+<a class="reference internal" href="../verify/_base.html#an.verify._base.Finding" title="an.verify._base.Finding"><code class="xref py py-class docutils literal notranslate"><span class="pre">an.verify._base.Finding</span></code></a>, the same type every verifier emits, with
+<code class="docutils literal notranslate"><span class="pre">ir_path</span></code> pointing at the file or slot that needs the fix.</p></li>
+</ul>
+<p>Everything here is offline and free: no render, no browser, no network. That is
+the point — an illustrator should be able to run it before delivering, and a
+contract they cannot check themselves is a contract that gets them paid for work
+that cannot land.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.characters.validate.ADVISORY">
+<span class="sig-prename descclassname"><span class="pre">an.characters.validate.</span></span><span class="sig-name descname"><span class="pre">ADVISORY</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'warning'</span></span><a class="headerlink" href="#an.characters.validate.ADVISORY" title="Link to this definition"></a></dt>
+<dd><p>Severity for a problem worth fixing that still renders.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.characters.validate.BLOCKING">
+<span class="sig-prename descclassname"><span class="pre">an.characters.validate.</span></span><span class="sig-name descname"><span class="pre">BLOCKING</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'error'</span></span><a class="headerlink" href="#an.characters.validate.BLOCKING" title="Link to this definition"></a></dt>
+<dd><p>Severity for a problem that stops the part rendering correctly.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.characters.validate.DRAWABLE_ELEMENTS">
+<span class="sig-prename descclassname"><span class="pre">an.characters.validate.</span></span><span class="sig-name descname"><span class="pre">DRAWABLE_ELEMENTS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'circle',</span> <span class="pre">'ellipse',</span> <span class="pre">'line',</span> <span class="pre">'path',</span> <span class="pre">'polygon',</span> <span class="pre">'polyline',</span> <span class="pre">'rect',</span> <span class="pre">'text',</span> <span class="pre">'use'})</span></span><a class="headerlink" href="#an.characters.validate.DRAWABLE_ELEMENTS" title="Link to this definition"></a></dt>
+<dd><p>Elements that put ink on the canvas. A part containing none of these is
+blank, whatever else it contains.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.characters.validate.PROHIBITED_ELEMENTS">
+<span class="sig-prename descclassname"><span class="pre">an.characters.validate.</span></span><span class="sig-name descname"><span class="pre">PROHIBITED_ELEMENTS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'foreignObject':</span> <span class="pre">'embeds</span> <span class="pre">non-SVG</span> <span class="pre">content</span> <span class="pre">that</span> <span class="pre">most</span> <span class="pre">rasterisers</span> <span class="pre">drop',</span> <span class="pre">'image':</span> <span class="pre">'raster</span> <span class="pre">embed;</span> <span class="pre">inline</span> <span class="pre">it</span> <span class="pre">or</span> <span class="pre">ship</span> <span class="pre">it</span> <span class="pre">as</span> <span class="pre">its</span> <span class="pre">own</span> <span class="pre">part',</span> <span class="pre">'script':</span> <span class="pre">'executable</span> <span class="pre">content;</span> <span class="pre">a</span> <span class="pre">part</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">drawing,</span> <span class="pre">not</span> <span class="pre">a</span> <span class="pre">program'}</span></span><a class="headerlink" href="#an.characters.validate.PROHIBITED_ELEMENTS" title="Link to this definition"></a></dt>
+<dd><p>Elements an art package may not contain.</p>
+<p>Not a security perimeter — the renderer loads these files into a headless
+browser we control — but a portability one: each of these makes a part render
+differently, or not at all, depending on the rasteriser, and a part that
+depends on script execution is not a drawing.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.validate.format_report">
+<span class="sig-prename descclassname"><span class="pre">an.characters.validate.</span></span><span class="sig-name descname"><span class="pre">format_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../verify/_base.html#an.verify._base.VerificationReport" title="an.verify._base.VerificationReport"><span class="pre">VerificationReport</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/validate.html#format_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.validate.format_report" title="Link to this definition"></a></dt>
+<dd><p>A short human-readable rendering, for the CLI.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.validate.render_contract">
+<span class="sig-prename descclassname"><span class="pre">an.characters.validate.</span></span><span class="sig-name descname"><span class="pre">render_contract</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/characters/validate.html#render_contract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.validate.render_contract" title="Link to this definition"></a></dt>
+<dd><p>The artist-facing spec, generated from the schema and the checks above.</p>
+<p>Every line here is read out of a live object: the required parts and mouth
+shapes from <a class="reference internal" href="schema.html#module-an.characters.schema" title="an.characters.schema"><code class="xref py py-mod docutils literal notranslate"><span class="pre">an.characters.schema</span></code></a>, the slot and attachment layout from
+a freshly-built descriptor, the prohibitions from
+<a class="reference internal" href="#an.characters.validate.PROHIBITED_ELEMENTS" title="an.characters.validate.PROHIBITED_ELEMENTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">PROHIBITED_ELEMENTS</span></code></a>, and the drawable set from
+<a class="reference internal" href="#an.characters.validate.DRAWABLE_ELEMENTS" title="an.characters.validate.DRAWABLE_ELEMENTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DRAWABLE_ELEMENTS</span></code></a>. Nothing is retyped, so the document and the
+validator cannot disagree.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.characters.validate.validate_character">
+<span class="sig-prename descclassname"><span class="pre">an.characters.validate.</span></span><span class="sig-name descname"><span class="pre">validate_character</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">char_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../verify/_base.html#an.verify._base.VerificationReport" title="an.verify._base.VerificationReport"><span class="pre">VerificationReport</span></a></span></span><a class="reference internal" href="../../../_modules/an/characters/validate.html#validate_character"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.validate.validate_character" title="Link to this definition"></a></dt>
+<dd><p>Check an art package against the contract, offline.</p>
+<p>Reports a <a class="reference internal" href="../verify/_base.html#an.verify._base.Finding" title="an.verify._base.Finding"><code class="xref py py-class docutils literal notranslate"><span class="pre">Finding</span></code></a> per problem: a missing or
+unparseable descriptor, absent required parts or mouth shapes, a part that
+draws nothing, a prohibited construct, a letterboxed part, a joint name
+colliding with a part id, and an unpopulated <code class="docutils literal notranslate"><span class="pre">AssetSource</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">report</span> <span class="o">=</span> <span class="n">validate_character</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"nobody"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span><span class="o">.</span><span class="n">passed</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">any</span><span class="p">(</span><span class="s2">"character.json"</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">description</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">findings</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="svg_utils.html" class="btn btn-neutral float-left" title="an.characters.svg_utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../check_requirements.html" class="btn btn-neutral float-right" title="an.check_requirements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

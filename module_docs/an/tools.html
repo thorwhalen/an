@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.tools &mdash; an 0.1.46 documentation</title>
+  <title>an.tools &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -113,6 +113,7 @@
 <li class="toctree-l1"><a class="reference internal" href="characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="credits.html">an.credits</a></li>
@@ -141,7 +142,20 @@
 <li class="toctree-l1"><a class="reference internal" href="stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores/voices.html">an.stores.voices</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.tools</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.bench"><code class="docutils literal notranslate"><span class="pre">bench()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.bench_compare"><code class="docutils literal notranslate"><span class="pre">bench_compare()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.bench_mutants"><code class="docutils literal notranslate"><span class="pre">bench_mutants()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.check"><code class="docutils literal notranslate"><span class="pre">check()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.credits"><code class="docutils literal notranslate"><span class="pre">credits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.iterate"><code class="docutils literal notranslate"><span class="pre">iterate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.preview"><code class="docutils literal notranslate"><span class="pre">preview()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.render"><code class="docutils literal notranslate"><span class="pre">render()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.sync"><code class="docutils literal notranslate"><span class="pre">sync()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.tools.validate"><code class="docutils literal notranslate"><span class="pre">validate()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="util.html">an.util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="verify.html">an.verify</a></li>
 <li class="toctree-l1"><a class="reference internal" href="verify/_base.html">an.verify._base</a></li>
@@ -176,8 +190,176 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-tools">
-<h1>an.tools<a class="headerlink" href="#an-tools" title="Link to this heading"></a></h1>
+  <section id="module-an.tools">
+<span id="an-tools"></span><h1>an.tools<a class="headerlink" href="#module-an.tools" title="Link to this heading"></a></h1>
+<p>User-facing utility functions, plus the SSOT list for CLI dispatch.</p>
+<p>Each function here is meant to be callable from Python <em>and</em> from the shell
+via <cite>an &lt;funcname&gt;</cite>. Keep their signatures dispatch-friendly: positional args
+become required arguments, defaults become optional flags, and the docstring
+becomes the command’s help. <cite>an/__main__.py</cite> projects this list onto typer
+without touching these functions, so they stay plain Python.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.bench">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">bench</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_render</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bless</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compare</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#bench"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.bench" title="Link to this definition"></a></dt>
+<dd><p>Render the fixed bench corpus and write a metrics ledger.</p>
+<p>The instrument, not the verdict: it records numbers whose predicted
+direction under each deliberate degradation is declared in advance, so a
+future regression is caught by something other than someone noticing.</p>
+<p>scenes: comma-separated corpus scene names (default: all of them)
+out: ledger path (default: misc/bench/ledger/&lt;date&gt;-&lt;sha&gt;[-dirty].json)
+keep_render: keep the throwaway render tree here instead of deleting it
+quiet: print only the ledger path
+bless: (re)write the golden frames, recording THIS STRING as the reason
+compare: after the run, compare it against this baseline ledger row
+mutation: pull one declared lever for this run, and ask –compare the</p>
+<blockquote>
+<div><p>per-mutation question instead of “is the second row worse”</p>
+</div></blockquote>
+<p>Rendering knobs are deliberately NOT flags: a bench whose render knobs vary
+per invocation produces incomparable rows, so they are a module constant
+recorded verbatim into the ledger. <code class="docutils literal notranslate"><span class="pre">--mutation</span></code> is not one of them, and is
+the exception that states the rule: a lever is the <strong>independent variable</strong>,
+it is named in the report, it is exempted by declaration in
+<code class="docutils literal notranslate"><span class="pre">MUTATION_TOUCHES</span></code> rather than by widening anything, and the row it
+produces is never filed under a commit’s name. Without it the <code class="docutils literal notranslate"><span class="pre">--compare</span></code>
+artifact is always the <code class="docutils literal notranslate"><span class="pre">mutation=None</span></code> path, which asks “is this worse” of
+a run that was broken on purpose — the wrong question, answered
+confidently.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--bless</span></code> takes the reason as its value rather than pairing with a
+separate <code class="docutils literal notranslate"><span class="pre">--reason</span></code>, so a bless with no recorded reason cannot be typed.
+A re-bless with no recorded reason is the same failure as a silently
+widened threshold, and it is the failure this wave exists to prevent — so
+look at the PNG diff (GitHub renders 2-up, swipe and onion-skin) before
+writing one.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.bench_compare">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">bench_compare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">after</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#bench_compare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.bench_compare" title="Link to this definition"></a></dt>
+<dd><p>Compare two ledger rows — and refuse when they are not comparable.</p>
+<p>before: baseline ledger row (default: the second-newest committed row)
+after: the row to judge (default: the newest committed row)
+mutation: evaluate the per-mutation predictions instead of asking whether</p>
+<blockquote>
+<div><p>the second row is worse. One of the mutations the rows declare.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>strict: exit nonzero when the answer is bad — a regression without a</dt><dd><p>mutation, an unmet criterion with one, a comparison that answered
+nothing, or a row that could not be read at all. For CI.</p>
+</dd>
+</dl>
+<p>raw: print the report as JSON instead of the human digest</p>
+<p>Refusing is the feature. Two rows measured on different scenes, at
+different resolutions, or on different x264 builds are not “one better and
+one worse” — every number in them is uninterpretable relative to the other,
+and a number reported across incomparable rows is worse than none.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-dirty</span></code> rows are excluded from the defaults: a row measured against
+uncommitted edits describes no commit. Name one explicitly to compare it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.bench_mutants">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">bench_mutants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#bench_mutants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.bench_mutants" title="Link to this definition"></a></dt>
+<dd><p>Break each guard on purpose and check the test that names it goes red.</p>
+<p>names: comma-separated mutant names (default: every declared one)
+quiet: print only the tally</p>
+<p>“N mutants, all caught” is unfalsifiable after the fact when the mutations
+lived in a scratch script. These are declared data, so the proof is
+re-runnable — which matters because Wave 1 shipped three guards that stayed
+green while the bug they guarded was present.</p>
+<p>The WHOLE guard file runs for each mutant, never a <cite>-k</cite> filter: a filter that
+happens to exclude the catching test reports “not caught” and sends you to
+write a test that already exists. Takes about forty seconds.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.check">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.check" title="Link to this definition"></a></dt>
+<dd><p>Print a status report of all backend system + Python deps.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.credits">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">credits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#credits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.credits" title="Link to this definition"></a></dt>
+<dd><p>Show what third-party work is in <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> and what it obliges.</p>
+<p>project_dir: the an project
+json_out: also write the machine-readable record to this path</p>
+<p>A licence recorded and never displayed is not compliance, so this is the
+consumer that makes the provenance field worth having.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.init">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.init" title="Link to this definition"></a></dt>
+<dd><p>Create a fresh an project at <code class="docutils literal notranslate"><span class="pre">project_dir</span></code>.</p>
+<p>project_dir: where to create the project (created if missing)
+name: project display name (defaults to the directory name)
+force: overwrite an existing scene.md</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.iterate">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">iterate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instruction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'claude-opus-4-7'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#iterate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.iterate" title="Link to this definition"></a></dt>
+<dd><p>Apply a free-text instruction to the scene. Needs ANTHROPIC_API_KEY.</p>
+<p>project_dir: path to an an project
+instruction: what to change in plain English (e.g. “make Maya’s laugh longer and warmer”)
+apply_changes: persist the new scene to disk + invalidate affected shot caches (default True)
+model: Anthropic model id (default claude-opus-4-7)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.preview">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">preview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_browser</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#preview"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.preview" title="Link to this definition"></a></dt>
+<dd><p>Live-preview the project’s scene in a browser; reloads on edit.</p>
+<p>Spins up a local HTTP server pointed at the runtime canvas. The
+browser polls <code class="docutils literal notranslate"><span class="pre">scene.json</span></code> for changes and re-loads when you save
+<code class="docutils literal notranslate"><span class="pre">scene.md</span></code>. Lossy: visuals only, no audio. Blocks until Ctrl-C.</p>
+<p>project_dir: path to an an project (must contain scene.md / ir/scene.json)
+shot: shot id to preview (default: first shot in the timeline)
+no_browser: don’t auto-open the default browser</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.render">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'main'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'offline'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lipsync</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'offline'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_assets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supersample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pix_fmt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.render" title="Link to this definition"></a></dt>
+<dd><p>Render the project at <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> to a single mp4.</p>
+<p>project_dir: path to an an project (must contain scene.md / ir/scene.json)
+output_name: filename stem under output/ (default: “main”)
+tts: TTS provider — “offline” (silent) or “elevenlabs” (needs ELEVEN_API_KEY)
+lipsync: lip-sync provider — “offline” (deterministic), “rhubarb”</p>
+<blockquote>
+<div><p>(needs the rhubarb binary), or “whisper” (needs faster-whisper)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>parallel: per-shot concurrency. “” or “1” = serial (default); “auto” =</dt><dd><p>min(shots, cpu, 4); a number ≥ 2 caps the thread pool.</p>
+</dd>
+<dt>strict_assets: fail instead of drawing a stand-in (the placeholder rig, the</dt><dd><p>default backdrop) for an asset the project’s stores don’t supply</p>
+</dd>
+<dt>supersample: render at N times the resolution and resolve back with an exact</dt><dd><p>N x N block mean. Opt-in; 1 (the default) costs nothing at all. Measured
+on the shipped path at 1920x1080: 125.5 ms/frame at 1, 508.6 at 2 —
+4.05x, which is NOT the 2.54x the research reports for the render alone</p>
+</dd>
+<dt>pix_fmt: the delivered encode’s pixel format — “yuv420p” (default) or</dt><dd><p>“yuv444p”. The ONE first-order quality lever in the encoder: 4:4:4 cuts
+the edge-band error 11.35 -&gt; 3.79, where a mathematically lossless 4:2:0
+only reaches 10.15. It is opt-in for a PRODUCT reason and not an encoder
+one: High 4:4:4 Predictive is refused by many hardware decoders,
+browsers and platforms, so a 4:4:4 file is one some viewers cannot play</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.sync">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">sync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#sync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.sync" title="Link to this definition"></a></dt>
+<dd><p>Reconcile scene.md and ir/scene.json inside <code class="docutils literal notranslate"><span class="pre">project_dir</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.tools.validate">
+<span class="sig-prename descclassname"><span class="pre">an.tools.</span></span><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/tools.html#validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.tools.validate" title="Link to this definition"></a></dt>
+<dd><p>Validate the scene at <code class="docutils literal notranslate"><span class="pre">project_dir</span></code>. Prints findings, exit 0 on pass.</p>
+</dd></dl>
+
 </section>
 
 

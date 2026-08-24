@@ -1,0 +1,727 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.bench.mutations &mdash; an 0.1.47 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.bench.mutations</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.bench.mutations</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The levers: deliberate, declared changes through seams the shipped code already has.</span>
+
+<span class="sd">This is the other half of the instrument. `an bench` records numbers; these</span>
+<span class="sd">change the pipeline on purpose so a test can check the numbers move the way the</span>
+<span class="sd">registry declared **in advance**. A metric that never moves under any lever is</span>
+<span class="sd">decoration, and the only way to know which is which is to pull one.</span>
+
+<span class="sd">**Two of the three are degradations and the third is an improvement**, and that</span>
+<span class="sd">asymmetry is the point rather than an untidiness. ``high_crf`` and</span>
+<span class="sd">``disabled_aa`` make the picture worse; ``supersample`` makes it better. A panel</span>
+<span class="sd">that has only ever been shown things getting worse cannot tell an improvement</span>
+<span class="sd">from a regression — run as a plain commit-to-commit diff, a k=2 supersample</span>
+<span class="sd">reports **2 false regressions** (``off_palette_pixel_fraction`` rises as blends</span>
+<span class="sd">multiply, ``min_ssim_win8_vs_golden`` falls away from the golden) and **7</span>
+<span class="sd">unearned improvements** (every family C/D/E/G metric whose mask derives from the</span>
+<span class="sd">source frames: gates live inside ``Prediction``, which exists only per declared</span>
+<span class="sd">mutation, so with ``mutation=None`` no gate is consulted and a softer source</span>
+<span class="sd">shrinks each mask to its easiest members). Declared as a lever, none of that</span>
+<span class="sd">happens. So what a lever has to be is **declared in advance**, not bad — and the</span>
+<span class="sd">word "degradations" in the old first line was quietly making the stronger, false</span>
+<span class="sd">claim (an#56).</span>
+
+<span class="sd">**No production knob exists for any of this, and that is deliberate.** Each</span>
+<span class="sd">lever reaches an existing seam from the outside:</span>
+
+<span class="sd">- ``high_crf`` rebinds ``an.adapters.cutout.render.DETERMINISTIC_X264_ARGS``.</span>
+<span class="sd">  ``_ffmpeg_mux`` reads that name as a module global at call time, so the</span>
+<span class="sd">  rebinding reaches the delivered encode. It does **not** reach</span>
+<span class="sd">  ``an.bench.imageio.lossless_encode_command``, which bound the tuple at import</span>
+<span class="sd">  — and that is exactly right: the lossless reference must stay lossless, or</span>
+<span class="sd">  every encode-side metric would be measured against a moving target and the</span>
+<span class="sd">  lever would produce beautiful numbers about nothing.</span>
+<span class="sd">- ``disabled_aa`` copies the staged runtime, flips PixiJS's ``antialias`` in the</span>
+<span class="sd">  copy, and rebinds ``an.adapters.cutout.render.runtime_dir``. The shipped</span>
+<span class="sd">  ``runtime.js`` is never written to.</span>
+<span class="sd">- ``supersample`` reaches the SAME runtime seam — ``resolution: k,</span>
+<span class="sd">  autoDensity: false`` in the Pixi application options — and then a second one</span>
+<span class="sd">  it cannot do without: it rebinds</span>
+<span class="sd">  ``an.adapters.cutout.render._capture_frames`` so the k-times PNGs are</span>
+<span class="sd">  block-mean-resolved back to the declared size **in the frame stage**, before</span>
+<span class="sd">  ffmpeg or the metrics or the golden gate read them. That is not tidiness. A</span>
+<span class="sd">  lever must measure what the product will produce, and everything downstream</span>
+<span class="sd">  reads the declared resolution off the STAGED SCENE, never off the files.</span>
+
+<span class="sd">A knob in the product would be worse than any of them: it would have to be</span>
+<span class="sd">documented, defended, and kept from being switched on by accident. (an#58 ships</span>
+<span class="sd">exactly such a knob for supersampling, opt-in — when it lands, this paragraph</span>
+<span class="sd">and the "no production knob exists for any of this" sentence above it stop being</span>
+<span class="sd">true and must be rewritten rather than left to rot.)</span>
+
+<span class="sd">**Each lever verifies that it applied.** A lever that silently failed to take</span>
+<span class="sd">produces a run in which nothing moved — which reads exactly like an instrument</span>
+<span class="sd">that cannot see it, and sends the reader to fix the wrong thing. So</span>
+<span class="sd">``verify_applied`` is part of the declaration rather than a courtesy, and the</span>
+<span class="sd">two levers verify it in different places for a structural reason: the encode</span>
+<span class="sd">argv is recorded in the ledger row, and the runtime is not (the runtime is the</span>
+<span class="sd">code under test, not a comparability key — see</span>
+<span class="sd">:data:`an.bench.registry.MUTATION_TOUCHES`).</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">MUTATIONS</span>
+
+<span class="c1">#: The CRF the encoder lever raises to. 40 rather than 51: measured on the CRF</span>
+<span class="c1">#: ladder, 40 gives C x8.4, D x8.0 and F -42% on `single_character` — large,</span>
+<span class="c1">#: unambiguous, and still a rate a human might plausibly ship. 51 is</span>
+<span class="c1">#: pathological, and a lever nobody would ever pull by accident is a weaker</span>
+<span class="c1">#: proxy for the regressions this instrument exists to catch.</span>
+<span class="n">HIGH_CRF</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"40"</span>
+
+
+<span class="c1">#: The exact text the AA lever flips, and where. Pinned as a literal so a</span>
+<span class="c1">#: rename in `runtime.js` fails here — loudly, at the lever — rather than</span>
+<span class="c1">#: producing a "mutation" that changes nothing.</span>
+<span class="n">AA_ON</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"antialias: true"</span>
+<span class="n">AA_OFF</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"antialias: false"</span>
+
+<span class="c1">#: The supersample lever's factor, read at call time so a test can move it. 2</span>
+<span class="c1">#: rather than 3, deliberately and with the residual on the record: research §3</span>
+<span class="c1">#: renders each corpus scene at rising k and lets `edge_transition_width`</span>
+<span class="c1">#: converge, and k=3 reaches that ceiling on every scene that has one while k=2</span>
+<span class="c1">#: falls 43% short on `saturated_outline` and 33% short on `graded_field`</span>
+<span class="c1">#: (0.09-0.17 px). It is 2 because **the lever must be the change the product</span>
+<span class="c1">#: will ship** — an#58 ships k=2 — and a lever measuring a factor nobody will</span>
+<span class="c1">#: run is a beautiful number about nothing. Cost, read off 1080p because the</span>
+<span class="c1">#: corpus cannot inform it: 0.126 s/f at k=1, 0.319 at k=2 (2.54x), 0.640 at k=3.</span>
+<span class="n">SUPERSAMPLE_K</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1">#: The exact text the supersample lever anchors to, and what it inserts. Pinned</span>
+<span class="c1">#: for the same reason `AA_ON` is: a reformat of the Pixi options object must</span>
+<span class="c1">#: fail here rather than produce a "mutation" that renders at 1x and then reads</span>
+<span class="c1">#: as an instrument that cannot see a supersample. `app = new PIXI.Application({`</span>
+<span class="c1">#: and NOT `new PIXI.Application(`: the shorter form occurs twice in</span>
+<span class="c1">#: `runtime.js` — the second is inside a comment — and a two-hit anchor would</span>
+<span class="c1">#: patch prose.</span>
+<span class="c1">#:</span>
+<span class="c1">#: **`autoDensity: false` is load-bearing and is the whole plumbing finding.**</span>
+<span class="c1">#: With it `true`, Pixi sets the canvas CSS size to the LOGICAL size and</span>
+<span class="c1">#: Chromium composites the k-times backbuffer down before the screenshot — a</span>
+<span class="c1">#: blind browser downscale with no filter choice and no record of having</span>
+<span class="c1">#: happened, i.e. the `device_scale_factor` failure wearing the name that most</span>
+<span class="c1">#: suggests it is the right one. Measured on `aa_probe`, declared 320x240:</span>
+<span class="c1">#: neither key -&gt; 320x240 PNGs; `resolution: 2, autoDensity: false` -&gt; 640x480;</span>
+<span class="c1">#: `resolution: 2, autoDensity: true` -&gt; 320x240. Neither key is in the shipped</span>
+<span class="c1">#: options today, so the engine default `RESOLUTION: 1` applies silently and</span>
+<span class="c1">#: both have to be introduced.</span>
+<span class="c1">#: Since an#58 the product owns `resolution` / `autoDensity: false` and reads</span>
+<span class="c1">#: the factor from an injected global, so the lever **overrides the line that</span>
+<span class="c1">#: reads it** rather than writing a second copy of the product's Pixi options.</span>
+<span class="c1">#: A lever that reproduces the code it is examining is examining itself.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Injecting the global does NOT work and the reason is worth keeping: the</span>
+<span class="c1">#: product sets `window.anSupersample` from `ctx.supersample` immediately before</span>
+<span class="c1">#: `anLoadScene`, so it would overwrite whatever the lever put there. Caught by</span>
+<span class="c1">#: an#54's shape guard — 160x120 frames against a 320x240 declaration — which is</span>
+<span class="c1">#: what that guard is for.</span>
+<span class="n">APP_OPEN</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"const resolution = Math.max(1, (NS.anSupersample | 0) || 1);"</span>
+<span class="n">SUPERSAMPLE_OPTIONS</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"        const resolution = </span><span class="si">{k}</span><span class="s2">;  // supersample lever"</span>
+
+
+<div class="viewcode-block" id="MutationError">
+<a class="viewcode-back" href="../../../module_docs/an/bench/mutations.html#an.bench.mutations.MutationError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MutationError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A lever could not be applied, or applied and left no trace."""</span></div>
+
+
+
+<div class="viewcode-block" id="Lever">
+<a class="viewcode-back" href="../../../module_docs/an/bench/mutations.html#an.bench.mutations.Lever">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Lever</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One deliberate, declared change to the pipeline, with the evidence that it took."""</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">side</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">what</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">why</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">apply</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="c1">#: Given the ledger row the mutated run produced, raise unless the lever's</span>
+    <span class="c1">#: fingerprint is in it. ``None`` when the row cannot carry one — see the</span>
+    <span class="c1">#: module docstring.</span>
+    <span class="n">verify_row</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_high_crf</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Raise the delivered encode's CRF, leaving the lossless reference alone."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout</span><span class="w"> </span><span class="kn">import</span> <span class="n">render</span>
+
+    <span class="n">original</span> <span class="o">=</span> <span class="n">render</span><span class="o">.</span><span class="n">DETERMINISTIC_X264_ARGS</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">original</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"-crf"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - the pin would have to be removed</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="s2">"`-crf` is not in DETERMINISTIC_X264_ARGS, so the encoder lever has "</span>
+            <span class="s2">"nothing to pull. The rate control moved; re-point this lever at it "</span>
+            <span class="s2">"rather than letting a mutation quietly become a no-op."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="n">args</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">HIGH_CRF</span>
+    <span class="n">render</span><span class="o">.</span><span class="n">DETERMINISTIC_X264_ARGS</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">render</span><span class="o">.</span><span class="n">DETERMINISTIC_X264_ARGS</span> <span class="o">=</span> <span class="n">original</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_verify_disabled_aa</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The row must record a runtime digest that is NOT the shipped runtime's.</span>
+
+<span class="sd">    The encode lever's fingerprint is in the row already (`x264_argv`); this one</span>
+<span class="sd">    had none, so `assert not report["mutation_may_not_have_applied"]` asserted</span>
+<span class="sd">    nothing for it and a lever that silently failed to take would have read as</span>
+<span class="sd">    an instrument that could not see it (an#41 review). Compared against the</span>
+<span class="sd">    pristine runtime rather than a stored constant, so a legitimate change to</span>
+<span class="sd">    `runtime.js` does not turn this into a re-baselining chore.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.environment</span><span class="w"> </span><span class="kn">import</span> <span class="n">runtime_sha256</span>
+
+    <span class="n">recorded</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">((</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"provenance"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"environment"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"render_side"</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="p">{}</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"runtime_sha256"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">recorded</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="s2">"the row records no `render_side.runtime_sha256`, so there is no way "</span>
+            <span class="s2">"to tell whether the AA lever reached the renderer."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">recorded</span> <span class="o">==</span> <span class="n">runtime_sha256</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="s2">"the row's runtime digest is the SHIPPED runtime's, so the AA lever "</span>
+            <span class="s2">"did not reach the render. Every 'nothing moved' below is about the "</span>
+            <span class="s2">"lever and not about the instrument."</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_expected_runtime_sha256</span><span class="p">(</span><span class="n">patch</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The digest `environment.runtime_sha256` reports for a run staged under ``patch``.</span>
+
+<span class="sd">    Recomputed from the SHIPPED tree rather than stored as a constant, for the</span>
+<span class="sd">    reason `_verify_disabled_aa` gives: a legitimate change to `runtime.js` must</span>
+<span class="sd">    not turn this into a re-baselining chore. Mirrors</span>
+<span class="sd">    `an.bench.environment.runtime_sha256` exactly — relative path, then bytes, in</span>
+<span class="sd">    sorted order — with `runtime.js`'s bytes substituted and `STAGING_IGNORE`</span>
+<span class="sd">    excluded on both sides.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.runtime_files</span><span class="w"> </span><span class="kn">import</span> <span class="n">runtime_dir</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">runtime_dir</span><span class="p">()</span>
+    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">p</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">STAGING_IGNORE</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"runtime.js"</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">patch</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
+        <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">digest</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_verify_supersample</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The row must record the digest a RESOLUTION-patched runtime produces.</span>
+
+<span class="sd">    Positive, where `_verify_disabled_aa` is negative, and the difference is</span>
+<span class="sd">    load-bearing rather than pedantic. **Both render levers stage through one</span>
+<span class="sd">    seam and both move `render_side.runtime_sha256`**, so "the digest is not the</span>
+<span class="sd">    shipped runtime's" is satisfied by EITHER of them — copy that check here and</span>
+<span class="sd">    a `supersample` row rendered with `antialias: false` verifies clean, the</span>
+<span class="sd">    lever table gets written from AA-off numbers, `mutation_may_not_have_applied`</span>
+<span class="sd">    stays empty, and nothing anywhere goes red. That is the same failure</span>
+<span class="sd">    `_verify_disabled_aa` was itself introduced to close (a lever with no</span>
+<span class="sd">    fingerprint in the row), one level along.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.environment</span><span class="w"> </span><span class="kn">import</span> <span class="n">runtime_sha256</span>
+
+    <span class="n">recorded</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">((</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"provenance"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"environment"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"render_side"</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="p">{}</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"runtime_sha256"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">recorded</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="s2">"the row records no `render_side.runtime_sha256`, so there is no way "</span>
+            <span class="s2">"to tell whether the supersample lever reached the renderer."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">recorded</span> <span class="o">==</span> <span class="n">runtime_sha256</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="s2">"the row's runtime digest is the SHIPPED runtime's, so the "</span>
+            <span class="s2">"supersample lever did not reach the render. Every 'nothing moved' "</span>
+            <span class="s2">"below is about the lever and not about the instrument."</span>
+        <span class="p">)</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="n">_expected_runtime_sha256</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">source</span><span class="p">:</span> <span class="n">_supersample_patch</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">SUPERSAMPLE_K</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">recorded</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the row records runtime digest </span><span class="si">{</span><span class="n">recorded</span><span class="p">[:</span><span class="mi">12</span><span class="p">]</span><span class="si">}</span><span class="s2">..., but a runtime "</span>
+            <span class="sa">f</span><span class="s2">"patched to resolution </span><span class="si">{</span><span class="n">SUPERSAMPLE_K</span><span class="si">}</span><span class="s2"> hashes to </span><span class="si">{</span><span class="n">expected</span><span class="p">[:</span><span class="mi">12</span><span class="p">]</span><span class="si">}</span><span class="s2">... "</span>
+            <span class="s2">"Some OTHER render-side lever staged that runtime. 'Not the shipped "</span>
+            <span class="s2">"one' is satisfied by any of them, which is why this check is an "</span>
+            <span class="s2">"equality and not an inequality."</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_verify_high_crf</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">argv</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">((</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"provenance"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"environment"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"encode_side"</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="p">{}</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"x264_argv"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s2">"-crf"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">argv</span> <span class="ow">or</span> <span class="n">argv</span><span class="p">[</span><span class="n">argv</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"-crf"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">HIGH_CRF</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the mutated row records x264_argv=</span><span class="si">{</span><span class="n">argv</span><span class="si">}</span><span class="s2">, which is not crf </span><span class="si">{</span><span class="n">HIGH_CRF</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="s2">"The lever did not reach the encode, so every 'nothing moved' below "</span>
+            <span class="s2">"is about the lever and not about the instrument."</span>
+        <span class="p">)</span>
+
+
+<span class="c1">#: Excluded from the staged copy so the staged tree is a pure function of the</span>
+<span class="c1">#: shipped source and the patch — which is what lets `_verify_supersample`</span>
+<span class="c1">#: RECOMPUTE the digest it expects instead of settling for "not the shipped</span>
+<span class="c1">#: one". `runtime_sha256()` walks whatever `render.runtime_dir()` returns, so</span>
+<span class="c1">#: with this excluded on the staging side and on the recompute side, the two</span>
+<span class="c1">#: hash byte-identical file sets.</span>
+<span class="n">STAGING_IGNORE</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"__pycache__"</span><span class="p">,)</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_patched_runtime</span><span class="p">(</span><span class="n">patch</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Stage a copy of the runtime with ``runtime.js`` patched, and point the renderer at it.</span>
+
+<span class="sd">    The seam both render-side levers reach through. The shipped ``runtime.js``</span>
+<span class="sd">    is never written to. ``render.runtime_dir`` is a module attribute rebound</span>
+<span class="sd">    for the duration, and ``an.bench.environment.runtime_sha256`` re-imports it</span>
+<span class="sd">    at call time, so the staged digest is what lands in the row.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout</span><span class="w"> </span><span class="kn">import</span> <span class="n">render</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.runtime_files</span><span class="w"> </span><span class="kn">import</span> <span class="n">runtime_dir</span>
+
+    <span class="n">staged</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">))</span> <span class="o">/</span> <span class="s2">"runtime"</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span>
+        <span class="n">runtime_dir</span><span class="p">(),</span> <span class="n">staged</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">shutil</span><span class="o">.</span><span class="n">ignore_patterns</span><span class="p">(</span><span class="o">*</span><span class="n">STAGING_IGNORE</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="p">(</span><span class="n">staged</span> <span class="o">/</span> <span class="s2">"runtime.js"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">staged</span> <span class="o">/</span> <span class="s2">"runtime.js"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">patch</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+        <span class="c1"># Clean up before refusing: the refusal path is loud and rare, but a</span>
+        <span class="c1"># lever that leaks half a megabyte every time it declines is a lever</span>
+        <span class="c1"># nobody wants to run in a loop.</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">staged</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="n">original</span> <span class="o">=</span> <span class="n">render</span><span class="o">.</span><span class="n">runtime_dir</span>
+    <span class="n">render</span><span class="o">.</span><span class="n">runtime_dir</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">staged</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">staged</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">render</span><span class="o">.</span><span class="n">runtime_dir</span> <span class="o">=</span> <span class="n">original</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">staged</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_disable_aa_patch</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``runtime.js`` with PixiJS multisampling off."""</span>
+    <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">AA_ON</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"expected exactly one </span><span class="si">{</span><span class="n">AA_ON</span><span class="si">!r}</span><span class="s2"> in runtime.js, found "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">source</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">AA_ON</span><span class="p">)</span><span class="si">}</span><span class="s2">. The AA lever is pinned to that literal, and "</span>
+            <span class="s2">"a rename must fail here rather than produce a mutation that changes "</span>
+            <span class="s2">"nothing."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">AA_ON</span><span class="p">,</span> <span class="n">AA_OFF</span><span class="p">)</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_disabled_aa</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Turn PixiJS multisampling off, in a copy of the runtime."""</span>
+    <span class="k">with</span> <span class="n">_patched_runtime</span><span class="p">(</span><span class="n">_disable_aa_patch</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"an-mutation-runtime-"</span><span class="p">):</span>
+        <span class="k">yield</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_supersample_patch</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``runtime.js`` with the Pixi application built at ``k`` times the declared size."""</span>
+    <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">APP_OPEN</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"expected exactly one </span><span class="si">{</span><span class="n">APP_OPEN</span><span class="si">!r}</span><span class="s2"> in runtime.js, found "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">source</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">APP_OPEN</span><span class="p">)</span><span class="si">}</span><span class="s2">. The supersample lever is pinned to that "</span>
+            <span class="s2">"literal, and a rename must fail here rather than produce a mutation "</span>
+            <span class="s2">"that renders at 1x — which would read as an instrument that cannot "</span>
+            <span class="s2">"see a supersample."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">source</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">APP_OPEN</span><span class="p">,</span> <span class="n">SUPERSAMPLE_OPTIONS</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_supersample</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Render at ``SUPERSAMPLE_K`` times the declared size and resolve back exactly.</span>
+
+<span class="sd">    **TWO seams, and the second is not optional.** Patching `runtime.js` alone</span>
+<span class="sd">    leaves k-times PNGs in `frames_dir`, and nothing downstream reads a</span>
+<span class="sd">    resolution off the files: `capture.resolution` comes from the STAGED</span>
+<span class="sd">    SCENE's `meta.width/height`. So ffmpeg would mux a 640x480 video against a</span>
+<span class="sd">    320x240 declaration, the golden gate would report `shape_mismatch` and</span>
+<span class="sd">    withhold family B's number instead of comparing it, and family A would be</span>
+<span class="sd">    computed on a k^2-larger buffer. Since an#54 that last one is a loud</span>
+<span class="sd">    refusal (`run._assert_declared_resolution`) rather than a plausible number,</span>
+<span class="sd">    which is exactly why an#54 was sequenced first.</span>
+
+<span class="sd">    So the lever resolves in the frame stage, between `_capture_frames` and</span>
+<span class="sd">    `_ffmpeg_mux`, exactly where an#58 will put the product's resolve. **A lever</span>
+<span class="sd">    must measure what the product will produce**: one that measured the raw</span>
+<span class="sd">    supersampled buffer would be declaring directions for a picture nobody will</span>
+<span class="sd">    ever see.</span>
+
+<span class="sd">    `render._capture_frames` is called as a module global from</span>
+<span class="sd">    `CutoutRenderer.render`, and per-shot fan-out is a `ThreadPoolExecutor` in</span>
+<span class="sd">    this process, so the rebinding reaches every shot at any `parallel`.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout</span><span class="w"> </span><span class="kn">import</span> <span class="n">render</span>
+
+    <span class="k">with</span> <span class="n">_patched_runtime</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">source</span><span class="p">:</span> <span class="n">_supersample_patch</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">SUPERSAMPLE_K</span><span class="p">),</span>
+        <span class="n">prefix</span><span class="o">=</span><span class="s2">"an-mutation-supersample-"</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">original</span> <span class="o">=</span> <span class="n">render</span><span class="o">.</span><span class="n">_capture_frames</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_capture_then_resolve</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">total_frames</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="n">frames_dir</span><span class="p">,</span> <span class="n">_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="c1"># Forces the PRODUCT's own `supersample` parameter (an#58) rather</span>
+            <span class="c1"># than resolving separately, so this lever runs the exact path a</span>
+            <span class="c1"># user gets from `an render --supersample 2` — same function, same</span>
+            <span class="c1"># place in the pipeline. It has to be forced here because the bench</span>
+            <span class="c1"># cannot pass it through `BENCH_RENDER_KWARGS`: that dict is a</span>
+            <span class="c1"># comparability key, and a factor in it would refuse every metric in</span>
+            <span class="c1"># the row rather than measure one.</span>
+            <span class="n">original</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">total_frames</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="n">frames_dir</span><span class="p">,</span> <span class="n">SUPERSAMPLE_K</span><span class="p">)</span>
+
+        <span class="n">render</span><span class="o">.</span><span class="n">_capture_frames</span> <span class="o">=</span> <span class="n">_capture_then_resolve</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">render</span><span class="o">.</span><span class="n">_capture_frames</span> <span class="o">=</span> <span class="n">original</span>
+
+
+<span class="c1">#: The levers, keyed by the mutation name the registry declares. At least one</span>
+<span class="c1">#: per SIDE is mandatory and the two sides are **disjoint on purpose**: an</span>
+<span class="c1">#: encoder lever cannot touch a golden-frame metric, because the corpus sits</span>
+<span class="c1">#: UPSTREAM of the encoder. So requiring three families from a CRF change alone</span>
+<span class="c1">#: would fail for a reason that has nothing to do with the instrument being</span>
+<span class="c1">#: blind — and that failure would be misdiagnosed as the harness being wrong.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The two RENDER levers are not redundant: measured, they reach complementary</span>
+<span class="c1">#: scenes. `disabled_aa` is nearly blind to the descriptor path (96 differing</span>
+<span class="c1">#: pixels of 12.4M on `promote_demo`, because MSAA applies to WebGL geometry and</span>
+<span class="c1">#: an SVG sprite is a pre-rasterised texture); `supersample` hits that same</span>
+<span class="c1">#: scene hardest of all six (-34.8% edge width, because the sprite rasterises AT</span>
+<span class="c1">#: 2x rather than being stretched up from a 1x texture).</span>
+<span class="n">LEVERS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Lever</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Lever</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"high_crf"</span><span class="p">,</span>
+        <span class="n">side</span><span class="o">=</span><span class="s2">"encode"</span><span class="p">,</span>
+        <span class="n">what</span><span class="o">=</span><span class="sa">f</span><span class="s2">"raise the delivered encode from the pinned CRF to </span><span class="si">{</span><span class="n">HIGH_CRF</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">why</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"moves only post-encode metrics. The golden corpus is upstream of the "</span>
+            <span class="s2">"encoder, so family B cannot see this by construction — which is the "</span>
+            <span class="s2">"reason two disjoint levers are mandatory."</span>
+        <span class="p">),</span>
+        <span class="n">apply</span><span class="o">=</span><span class="n">_high_crf</span><span class="p">,</span>
+        <span class="n">verify_row</span><span class="o">=</span><span class="n">_verify_high_crf</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Lever</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"disabled_aa"</span><span class="p">,</span>
+        <span class="n">side</span><span class="o">=</span><span class="s2">"render"</span><span class="p">,</span>
+        <span class="n">what</span><span class="o">=</span><span class="s2">"build the PixiJS application with multisampling off"</span><span class="p">,</span>
+        <span class="n">why</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"moves the render-side families and fires the golden tripwire. Its "</span>
+            <span class="s2">"effect is scene-dependent by measurement, not by accident: MSAA "</span>
+            <span class="s2">"applies to WebGL geometry, so an SVG sprite is nearly blind to it "</span>
+            <span class="s2">"(96 differing pixels of 12.4M) and axis-aligned `drawRect` edges are "</span>
+            <span class="s2">"bit-identical with it on or off. `aa_probe` exists so the corpus "</span>
+            <span class="s2">"contains edges this lever can actually change."</span>
+        <span class="p">),</span>
+        <span class="n">apply</span><span class="o">=</span><span class="n">_disabled_aa</span><span class="p">,</span>
+        <span class="n">verify_row</span><span class="o">=</span><span class="n">_verify_disabled_aa</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Lever</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"supersample"</span><span class="p">,</span>
+        <span class="n">side</span><span class="o">=</span><span class="s2">"render"</span><span class="p">,</span>
+        <span class="n">what</span><span class="o">=</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"build the PixiJS application at resolution </span><span class="si">{</span><span class="n">SUPERSAMPLE_K</span><span class="si">}</span><span class="s2"> with "</span>
+            <span class="s2">"`autoDensity: false`, and resolve the frames back to the declared "</span>
+            <span class="sa">f</span><span class="s2">"size with an exact </span><span class="si">{</span><span class="n">SUPERSAMPLE_K</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">SUPERSAMPLE_K</span><span class="si">}</span><span class="s2"> block mean "</span>
+            <span class="s2">"before anything reads them"</span>
+        <span class="p">),</span>
+        <span class="n">why</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"the instrument's exam against a change somebody WANTS to ship "</span>
+            <span class="s2">"(an#56). Run instead as a plain commit-to-commit diff, "</span>
+            <span class="s2">"`_verdict_by_optimum` reports it as 2 false regressions and 7 "</span>
+            <span class="s2">"unearned improvements, plus 7 unscored `changed`s including the "</span>
+            <span class="s2">"metric the wave's done-when names — a table that looks like "</span>
+            <span class="s2">"evidence and is not. Its effect is scene-dependent BY MEASUREMENT "</span>
+            <span class="s2">"and in the exact inverse of `disabled_aa`: +2.6% to +8.0</span><span class="si">% e</span><span class="s2">dge "</span>
+            <span class="s2">"width on the five procedural scenes and -34.8</span><span class="si">% o</span><span class="s2">n `promote_demo`. "</span>
+            <span class="s2">"The two render levers therefore reach complementary scenes, which "</span>
+            <span class="s2">"strengthens the harness rather than diluting it."</span>
+        <span class="p">),</span>
+        <span class="n">apply</span><span class="o">=</span><span class="n">_supersample</span><span class="p">,</span>
+        <span class="n">verify_row</span><span class="o">=</span><span class="n">_verify_supersample</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_registered</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">MUTATIONS</span> <span class="k">if</span> <span class="n">m</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">LEVERS</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>  <span class="c1"># pragma: no cover - an import-time invariant</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the registry declares </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> but no lever pulls them. A mutation "</span>
+            <span class="s2">"with a full column of predictions and no way to apply it is a "</span>
+            <span class="s2">"criterion nobody can ever evaluate."</span>
+        <span class="p">)</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">LEVERS</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MUTATIONS</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>  <span class="c1"># pragma: no cover - an import-time invariant</span>
+        <span class="k">raise</span> <span class="n">MutationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">extra</span><span class="si">}</span><span class="s2"> has a lever but no predictions. Every metric must declare "</span>
+            <span class="s2">"what it will do under every mutation, in advance — that is the whole "</span>
+            <span class="s2">"of the criterion."</span>
+        <span class="p">)</span>
+
+
+<span class="n">_check_registered</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="mutated_row">
+<a class="viewcode-back" href="../../../module_docs/an/bench/mutations.html#an.bench.mutations.mutated_row">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mutated_row</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">run_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render the corpus with one lever pulled, and prove the lever took.</span>
+
+<span class="sd">    Deliberately returns a row rather than a comparison: what to do with it is</span>
+<span class="sd">    :mod:`an.bench.compare`'s job, and keeping the two apart is what lets the</span>
+<span class="sd">    criterion be evaluated against a row written months ago.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_bench</span>
+
+    <span class="n">lever</span> <span class="o">=</span> <span class="n">LEVERS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">with</span> <span class="n">lever</span><span class="o">.</span><span class="n">apply</span><span class="p">():</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">run_bench</span><span class="p">(</span><span class="n">write</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">run_kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lever</span><span class="o">.</span><span class="n">verify_row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lever</span><span class="o">.</span><span class="n">verify_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">row</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.render &mdash; an 0.1.46 documentation</title>
+  <title>an.adapters.cutout.render &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -60,7 +60,21 @@
 <li class="toctree-l1"><a class="reference internal" href="easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fidelity.html">an.adapters.cutout.fidelity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pose.html">an.adapters.cutout.pose</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.render</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.render</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.ASSET_LOAD_TIMEOUT_MARKER"><code class="docutils literal notranslate"><span class="pre">ASSET_LOAD_TIMEOUT_MARKER</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.ASSET_SRC_PREFIX_TO_STORE"><code class="docutils literal notranslate"><span class="pre">ASSET_SRC_PREFIX_TO_STORE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.CutoutAssetWarning"><code class="docutils literal notranslate"><span class="pre">CutoutAssetWarning</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.CutoutRenderError"><code class="docutils literal notranslate"><span class="pre">CutoutRenderError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.CutoutRenderer"><code class="docutils literal notranslate"><span class="pre">CutoutRenderer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.cutout.render.CutoutRenderer.render"><code class="docutils literal notranslate"><span class="pre">CutoutRenderer.render()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.DEFAULT_ASSET_LOAD_TIMEOUT_MS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_ASSET_LOAD_TIMEOUT_MS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.DEFAULT_PIX_FMT"><code class="docutils literal notranslate"><span class="pre">DEFAULT_PIX_FMT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.DETERMINISTIC_CHROMIUM_ARGS"><code class="docutils literal notranslate"><span class="pre">DETERMINISTIC_CHROMIUM_ARGS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.SUPPORTED_PIX_FMTS"><code class="docutils literal notranslate"><span class="pre">SUPPORTED_PIX_FMTS</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="serialize.html">an.adapters.cutout.serialize</a></li>
@@ -113,6 +127,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../credits.html">an.credits</a></li>
@@ -176,8 +191,196 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-adapters-cutout-render">
-<h1>an.adapters.cutout.render<a class="headerlink" href="#an-adapters-cutout-render" title="Link to this heading"></a></h1>
+  <section id="module-an.adapters.cutout.render">
+<span id="an-adapters-cutout-render"></span><h1>an.adapters.cutout.render<a class="headerlink" href="#module-an.adapters.cutout.render" title="Link to this heading"></a></h1>
+<p>Headless cutout rendering: Playwright drives the JS runtime, ffmpeg muxes.</p>
+<p>The flow per shot:</p>
+<ol class="arabic simple">
+<li><p>Compile the shot to a <cite>CutoutSceneJSON</cite> via <cite>compile_shot</cite>.</p></li>
+<li><p>Stage a copy of the JS runtime in a per-shot work directory and write the
+JSON beside it.</p></li>
+<li><p>Launch headless Chromium via Playwright; load <cite>index.html</cite>; inject the
+scene via <code class="docutils literal notranslate"><span class="pre">window.anLoadScene</span></code>.</p></li>
+<li><p>For each frame <code class="docutils literal notranslate"><span class="pre">f</span></code> in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">total_frames)</span></code>: call <code class="docutils literal notranslate"><span class="pre">window.anSetTime(f/fps)</span></code>
+and screenshot the canvas to a PNG.</p></li>
+<li><p>Mux the PNG sequence to mp4 with ffmpeg.</p></li>
+</ol>
+<p>Failures are reported with concrete remediation: missing ffmpeg, missing
+Chromium, runtime load timeout, etc. Subprocess errors are wrapped at the
+facade boundary.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.ASSET_LOAD_TIMEOUT_MARKER">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">ASSET_LOAD_TIMEOUT_MARKER</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'an:asset-load-timeout'</span></span><a class="headerlink" href="#an.adapters.cutout.render.ASSET_LOAD_TIMEOUT_MARKER" title="Link to this definition"></a></dt>
+<dd><p>Sentinel the in-page deadline rejects with, so the Python side can tell a
+timeout apart from a load failure and say something different about each.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.ASSET_SRC_PREFIX_TO_STORE">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">ASSET_SRC_PREFIX_TO_STORE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'characters/':</span> <span class="pre">'characters',</span> <span class="pre">'environments/':</span> <span class="pre">'environments',</span> <span class="pre">'styles/':</span> <span class="pre">'styles'}</span></span><a class="headerlink" href="#an.adapters.cutout.render.ASSET_SRC_PREFIX_TO_STORE" title="Link to this definition"></a></dt>
+<dd><p>Texture <code class="docutils literal notranslate"><span class="pre">src</span></code> prefix → the mall store that resolves the rest of the path.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">src</span></code> reads <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;/&lt;ref&gt;/parts/head.svg</span></code> and resolves to
+<code class="docutils literal notranslate"><span class="pre">mall[store]._root/&lt;ref&gt;/parts/head.svg</span></code>. Only <code class="docutils literal notranslate"><span class="pre">characters/</span></code> is emitted
+by the compiler today; the other two are here because environments, styles
+and props all route through this same staging step as they land, and the
+previous hardcoded <code class="docutils literal notranslate"><span class="pre">characters/</span></code> test silently dropped everything else.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.CutoutAssetWarning">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">CutoutAssetWarning</span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/render.html#CutoutAssetWarning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.render.CutoutAssetWarning" title="Link to this definition"></a></dt>
+<dd><p>A declared texture could not be staged into the runtime directory.</p>
+<p>Deliberately a warning and not an error, for now: an art package that is
+still being assembled is a real state, and refusing to render it would be
+worse than rendering it incompletely. But it must be <em>audible</em> — the
+consequence of an un-staged texture is worse than it looks and worse than
+this docstring used to claim. Measured (<code class="docutils literal notranslate"><span class="pre">misc/docs/wave4_research.md</span></code> §4):
+an <em>absent</em> part file crashes the render with an unwrapped minified-PixiJS
+<code class="docutils literal notranslate"><span class="pre">TypeError</span></code>; a degenerate SVG hangs it indefinitely (#79); a geometry-less
+part renders invisibly. <code class="docutils literal notranslate"><span class="pre">PIXI.Texture.WHITE</span></code> — the actual white rectangle —
+is reached only by a zero-byte file, an empty <code class="docutils literal notranslate"><span class="pre">src</span></code>, or no <code class="docutils literal notranslate"><span class="pre">src</span></code> key.
+Either way a silent skip surfaces to the user as “the animation is broken”
+rather than as an error, which is what this warning exists to prevent.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.CutoutRenderError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">CutoutRenderError</span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/render.html#CutoutRenderError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.render.CutoutRenderError" title="Link to this definition"></a></dt>
+<dd><p>Raised when a cutout render fails. Carries actionable detail.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.CutoutRenderer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">CutoutRenderer</span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/render.html#CutoutRenderer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.render.CutoutRenderer" title="Link to this definition"></a></dt>
+<dd><p>Headless cutout renderer: Playwright + ffmpeg.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">CutoutRenderer</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">name</span>
+<span class="go">'cutout'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">supported_styles</span>
+<span class="go">('cutout',)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.CutoutRenderer.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../_base.html#an.adapters._base.RenderContext" title="an.adapters._base.RenderContext"><span class="pre">RenderContext</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../_base.html#an.adapters._base.RenderResult" title="an.adapters._base.RenderResult"><span class="pre">RenderResult</span></a></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/render.html#CutoutRenderer.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.render.CutoutRenderer.render" title="Link to this definition"></a></dt>
+<dd><p>Render <code class="docutils literal notranslate"><span class="pre">shot</span></code> to mp4 using <code class="docutils literal notranslate"><span class="pre">ctx</span></code> for paths + parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.DEFAULT_ASSET_LOAD_TIMEOUT_MS">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_ASSET_LOAD_TIMEOUT_MS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">60000</span></span><a class="headerlink" href="#an.adapters.cutout.render.DEFAULT_ASSET_LOAD_TIMEOUT_MS" title="Link to this definition"></a></dt>
+<dd><p>Deadline for <cite>anLoadScene</cite>, which awaits <cite>PIXI.Assets.load</cite> for every declared
+texture. <strong>A bound is required, not merely nice</strong>: a degenerate part SVG —
+<cite>&lt;svg/&gt;</cite>, malformed XML, a zero-dimension root — makes <cite>Assets.load</cite> never
+settle, so without this the render hangs indefinitely with no error and no
+output (an#79). <cite>page.evaluate</cite> is not subject to Playwright’s default
+timeout, so the deadline is imposed inside the page instead.</p>
+<p>The value is a policy choice, not a measurement: it needs to sit far above a
+legitimate cold load of a few dozen small SVGs and far below “a human gave
+up”. Raise it for a genuinely heavy art package rather than removing it.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.DEFAULT_PIX_FMT">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_PIX_FMT</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'yuv420p'</span></span><a class="headerlink" href="#an.adapters.cutout.render.DEFAULT_PIX_FMT" title="Link to this definition"></a></dt>
+<dd><p>x264 encode knobs pinned so the delivered mp4 is a function of the frames
+rather than of the machine (an#34, research §2).</p>
+<p><cite>-threads 1</cite> — <cite>-threads 1/4/11</cite> all give bit-identical decoded pixels, so
+this looks unnecessary on a laptop. It is not: <cite>auto</cite> raises
+<cite>lookahead_threads</cite> above 1 at roughly <cite>-threads &gt;= 12</cite>, and a forced
+<cite>lookahead-threads=4</cite> changes 86.2% of the bytes (max delta 80). A big CI
+runner crosses that line and a 4-core dev box never will, which is precisely
+how an unpinned thread count ships without anyone seeing it.</p>
+<p><cite>-crf 23 -preset medium</cite> — both are libx264’s compiled-in defaults today, so
+passing them changes nothing now and pins us against a build whose defaults
+differ. Worth pinning because preset swings distinct colour counts <strong>2.3x,
+non-monotonically</strong> (ultrafast 3141, veryfast 7296, medium 6064, slower 5393)
+against a crf18-&gt;23 signal of 1.35x — an unpinned preset dominates the very
+signal a quality ledger tries to measure.</p>
+<p>BT.709 is the one knob here that CHANGES today’s output, and it changes more
+than the research predicted — measured, not assumed (an#34):</p>
+<ul class="simple">
+<li><p><cite>-colorspace bt709</cite> does not merely <em>tag</em> the file. It sets the matrix of
+the auto-inserted RGB-&gt;YUV conversion, so the <strong>encoded luma and chroma
+planes themselves change</strong>. Confirmed by construction: forcing
+<cite>scale=out_color_matrix=bt601</cite> reproduces the untagged output’s decoded
+stream byte-for-byte, i.e. <cite>an</cite> has been converting with BT.601 all along.</p></li>
+<li><p><cite>-color_range tv</cite> is a <strong>no-op today</strong> (limited range is already the
+default for yuv420p here). Pinned anyway, so a build that defaults
+differently cannot change the output silently.</p></li>
+<li><p>The ffmpeg-level <cite>-color_primaries</cite> / <cite>-color_trc</cite> flags <strong>do not reach the
+bitstream</strong>: with them alone, ffprobe reports <cite>color_space=bt709</cite> and
+<cite>color_primaries=unknown</cite>, <cite>color_transfer=unknown</cite>. <cite>-x264-params</cite> is what
+lands all three in the VUI, and it leaves the decoded stream identical. A
+half-tagged file is worse than an untagged one — the player stops guessing
+the matrix but still guesses the primaries.</p></li>
+</ul>
+<p>Why bother: untagged, the <em>player</em> picks its matrix by a height heuristic
+(BT.601 below ~576 lines). Every shipped <cite>an</cite> example is 320x240 to 640x360,
+so encode and playback agree by luck; at 1080p the same code would encode
+with BT.601 and be displayed as BT.709, a silent, resolution-dependent colour
+error. Pinning both sides to BT.709 makes them agree at every resolution.
+This is a <strong>one-time deliberate re-baseline</strong> of every mp4 — cheap now,
+because no ledger exists yet to invalidate.
+The delivered encode’s pixel format, and <strong>the one first-order quality lever
+in this file</strong>. Measured on 30 real 1080p <cite>an</cite> frames, edge-band mean error:
+current flags 11.35, crf18 4:2:0 11.05, crf18 <cite>-tune animation</cite> 10.96,
+mathematically lossless 4:2:0 <strong>10.15</strong> — and crf18 <strong>4:4:4 3.79</strong>.
+Losslessness buys 8%; dropping chroma subsampling buys <strong>66%</strong>. Wave 2’s own
+conclusion: “bitrate is second-order, pixel format is first-order”.</p>
+<p><strong>The default stays 4:2:0 because that is a PRODUCT constraint, not an
+encoder-tuning one.</strong> High 4:4:4 Predictive is refused by many hardware
+decoders, browsers and platforms, so flipping it would hand a design partner
+a file they cannot play. 4:4:4 is reachable per render
+(<cite>an render –pix-fmt yuv444p</cite>), which is the right shape for a knob whose
+right answer depends on where the file is going.</p>
+<p>Read as a MODULE GLOBAL at call time, deliberately: that is what lets the
+bench’s lever rebind it from outside, exactly as <cite>high_crf</cite> rebinds
+<cite>DETERMINISTIC_X264_ARGS</cite>. Hoisting either into a default argument binds it
+at <cite>def</cite> time and disarms the lever silently.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.DETERMINISTIC_CHROMIUM_ARGS">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">DETERMINISTIC_CHROMIUM_ARGS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('--no-sandbox',</span> <span class="pre">'--disable-gpu',</span> <span class="pre">'--enable-unsafe-swiftshader',</span> <span class="pre">'--force-color-profile=srgb')</span></span><a class="headerlink" href="#an.adapters.cutout.render.DETERMINISTIC_CHROMIUM_ARGS" title="Link to this definition"></a></dt>
+<dd><p>Chromium launch flags that pin the rasteriser (an#31, research §2).</p>
+<p><strong>Unconditional, deliberately</strong> — not gated behind an env var. A render whose
+rasteriser depends on <code class="docutils literal notranslate"><span class="pre">AN_DETERMINISTIC</span></code> is non-reproducible <em>by default</em>,
+which is the property this work exists to remove; and the flags are a
+measured no-op on today’s output (0 differing pixels over both fixtures,
+verified on this repo at the commit that introduced them), so there is no
+baseline to protect by making them opt-in.</p>
+<p>Unpinned, the same code renders differently in ways nobody would attribute
+correctly: GPU vs software rasterisation is a 1.9% / max-57 pixel difference,
+and a headed browser (reachable by a one-word local edit) differs by 1.91%.
+A band that wide hides any real regression.</p>
+<p>Two flags are deliberately NOT here. <code class="docutils literal notranslate"><span class="pre">--use-angle=swiftshader</span></code> — including
+Chromium’s own documented <code class="docutils literal notranslate"><span class="pre">--use-gl=angle</span> <span class="pre">--use-angle=swiftshader</span></code> form —
+moves 1.55% of pixels by up to 58/255, so it would re-baseline the corpus for
+nothing. <code class="docutils literal notranslate"><span class="pre">--disable-frame-rate-limit</span></code> measured 1.05x on this WebGL runtime
+(the widely-cited 2.3x is a canvas-2D artefact). <code class="docutils literal notranslate"><span class="pre">--deterministic-mode</span></code> is a
+verified no-op here, because the runtime uses <code class="docutils literal notranslate"><span class="pre">autoStart:false</span></code> plus an
+explicit <code class="docutils literal notranslate"><span class="pre">app.render()</span></code>.</p>
+<p>Record the argv <strong>verbatim</strong> in any provenance row: all four rasteriser
+configurations report the byte-identical <code class="docutils literal notranslate"><span class="pre">UNMASKED_RENDERER_WEBGL</span></code> string,
+so the renderer string cannot witness this choice.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.SUPPORTED_PIX_FMTS">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">SUPPORTED_PIX_FMTS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('yuv420p',</span> <span class="pre">'yuv444p')</span></span><a class="headerlink" href="#an.adapters.cutout.render.SUPPORTED_PIX_FMTS" title="Link to this definition"></a></dt>
+<dd><p>a typo would reach ffmpeg
+as an obscure failure minutes into a render, and a format outside this set
+has not been measured against the panel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The formats the knob accepts. Not an open string</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

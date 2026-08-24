@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.supersample &mdash; an 0.1.46 documentation</title>
+  <title>an.adapters.cutout.supersample &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -64,7 +64,14 @@
 <li class="toctree-l1"><a class="reference internal" href="runtime_files.html">an.adapters.cutout.runtime_files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="serialize.html">an.adapters.cutout.serialize</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.supersample</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.supersample.NO_SUPERSAMPLE"><code class="docutils literal notranslate"><span class="pre">NO_SUPERSAMPLE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.supersample.SupersampleError"><code class="docutils literal notranslate"><span class="pre">SupersampleError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.supersample.block_mean_resolve"><code class="docutils literal notranslate"><span class="pre">block_mean_resolve()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.supersample.check_factor"><code class="docutils literal notranslate"><span class="pre">check_factor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.supersample.resolve_png_bytes"><code class="docutils literal notranslate"><span class="pre">resolve_png_bytes()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="timeline.html">an.adapters.cutout.timeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="transform.html">an.adapters.cutout.transform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../manim_adapter.html">an.adapters.manim_adapter</a></li>
@@ -113,6 +120,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../credits.html">an.credits</a></li>
@@ -176,8 +184,101 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-adapters-cutout-supersample">
-<h1>an.adapters.cutout.supersample<a class="headerlink" href="#an-adapters-cutout-supersample" title="Link to this heading"></a></h1>
+  <section id="module-an.adapters.cutout.supersample">
+<span id="an-adapters-cutout-supersample"></span><h1>an.adapters.cutout.supersample<a class="headerlink" href="#module-an.adapters.cutout.supersample" title="Link to this heading"></a></h1>
+<p>Render bigger, then resolve back exactly — the supersample knob’s two halves.</p>
+<p><strong>`autoDensity: false` is the whole plumbing finding, and it is load-bearing.</strong>
+<cite>resolution: k</cite> alone reproduces the failure it exists to avoid: with
+<cite>autoDensity: true</cite> PixiJS sets the canvas CSS size to the <em>logical</em> size, so
+Chromium composites the k-times backbuffer down before the screenshot — a blind
+browser downscale, no filter choice, no record that it happened. Measured on a
+declared 320x240 scene: neither key -&gt; 320x240 PNGs; <cite>resolution: 2,
+autoDensity: false</cite> -&gt; 640x480; <cite>resolution: 2, autoDensity: true</cite> -&gt; 320x240.
+It is the option whose name most suggests it is the right one.</p>
+<p><strong>The resolve is an exact k x k block mean, and calling it a filter would be
+wrong</strong> — at an integer ratio it <em>is</em> the supersample resolve. Measured against
+the alternatives on all six corpus scenes: PIL’s <cite>BOX</cite> agrees with it to four
+decimals, and lanczos triples the edge band on the most idiom-like scene
+(+208.8% on <cite>saturated_outline</cite>), because its negative lobes ring on hard-edged
+flat fills. An ffmpeg-side <cite>-vf scale</cite> is refused for a second, independent
+reason: it would move <cite>x264_argv</cite>, refusing every encode-side metric, and retire
+the cross-arch verdict’s load-bearing “ffmpeg never touches a frame” clause.</p>
+<p><strong>Why PIL here and not `an.bench.png`.</strong> The bench’s codec exists so a committed
+golden is a function of the <em>pixel data alone</em> rather than of Chromium’s libpng
+settings — a goal about files that get committed and diffed, which render-path
+frames are not. And it is the wrong tool for this job by an order of magnitude:
+Chromium’s screenshots are Paeth-filtered on ~87% of rows (measured: 209 of 240),
+which takes its scalar unfilter path at <strong>416 ns/px against PIL’s 31 ns/px</strong>.
+Extrapolated to a 3840x2160 supersampled frame that is <strong>3.46 s of decoding per
+frame</strong> versus 256 ms — more than the render itself costs. <cite>pillow</cite> is declared
+by the <cite>cutout</cite> extra, which this module cannot run without anyway.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.supersample.NO_SUPERSAMPLE">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.supersample.</span></span><span class="sig-name descname"><span class="pre">NO_SUPERSAMPLE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#an.adapters.cutout.supersample.NO_SUPERSAMPLE" title="Link to this definition"></a></dt>
+<dd><p>The factor at which every code path here is a no-op rather than merely cheap.
+Aliased from <a class="reference internal" href="../../base.html#an.base.DEFAULT_SUPERSAMPLE" title="an.base.DEFAULT_SUPERSAMPLE"><code class="xref py py-data docutils literal notranslate"><span class="pre">an.base.DEFAULT_SUPERSAMPLE</span></code></a> rather than restated: the
+default and the off-switch are the same fact, and two copies of a fact drift.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.adapters.cutout.supersample.SupersampleError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.supersample.</span></span><span class="sig-name descname"><span class="pre">SupersampleError</span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/supersample.html#SupersampleError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.supersample.SupersampleError" title="Link to this definition"></a></dt>
+<dd><p>A supersample factor or frame that cannot be resolved exactly.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.supersample.block_mean_resolve">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.supersample.</span></span><span class="sig-name descname"><span class="pre">block_mean_resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/supersample.html#block_mean_resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.supersample.block_mean_resolve" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(H*k,</span> <span class="pre">W*k,</span> <span class="pre">C)</span></code> uint8 -&gt; <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W,</span> <span class="pre">C)</span></code> uint8, by an exact <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">x</span> <span class="pre">k</span></code> mean.</p>
+<p>Two-step, summing rows and then columns in <code class="docutils literal notranslate"><span class="pre">uint16</span></code>, rather than the
+obvious <code class="docutils literal notranslate"><span class="pre">reshape(...).astype(float64).mean(axis=(1,</span> <span class="pre">3))</span></code>. The two agree
+<strong>bit for bit</strong> — asserted exhaustively over every possible 2x2 block, and
+on real frames — and the two-step form is 2.3x faster at 1080p (111.7 ms
+against 262.0 ms), because the cost here is the strided reduce and the
+64-bit temporary, not the arithmetic.</p>
+<p>Rounding is spelled out rather than inherited: <code class="docutils literal notranslate"><span class="pre">np.rint</span></code> is banker’s
+rounding, so a block averaging exactly <code class="docutils literal notranslate"><span class="pre">.5</span></code> goes to the EVEN neighbour.
+Getting that wrong changes one code value on every half-block, which is
+invisible in a picture and moves every golden.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">block_mean_resolve</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="go">[1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">block_mean_resolve</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">is</span> <span class="n">f</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.supersample.check_factor">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.supersample.</span></span><span class="sig-name descname"><span class="pre">check_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/supersample.html#check_factor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.supersample.check_factor" title="Link to this definition"></a></dt>
+<dd><p>Validate a supersample factor, or refuse with the reason.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">check_factor</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">check_factor</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(1, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_factor</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">  </span><span class="c">...</span>
+<span class="gr">an.adapters.cutout.supersample.SupersampleError</span>: <span class="n">supersample must be &gt;= 1, got 0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.supersample.resolve_png_bytes">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.supersample.</span></span><span class="sig-name descname"><span class="pre">resolve_png_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/supersample.html#resolve_png_bytes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.supersample.resolve_png_bytes" title="Link to this definition"></a></dt>
+<dd><p>Decode a screenshot, block-mean it down by <code class="docutils literal notranslate"><span class="pre">factor</span></code>, re-encode.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">data</span></code> unchanged at <code class="docutils literal notranslate"><span class="pre">factor</span> <span class="pre">==</span> <span class="pre">1</span></code>, so the un-supersampled path
+keeps Chromium’s own bytes and pays nothing at all — which is what makes
+this knob free when it is off.</p>
+<p><strong>The early return sits above the imports deliberately.</strong> “Off is free”
+should mean free of the <em>dependency</em> too: Pillow is declared by the <cite>cutout</cite>
+extra, so the default path must not need it merely to decide it has nothing
+to do. Without this, importing it here would make the knob’s own tests
+unrunnable in the default CI lane, which installs <cite>dev,test</cite> and not
+<cite>cutout</cite> — and CI is where that was found.</p>
+</dd></dl>
+
 </section>
 
 

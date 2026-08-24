@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.environment &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.environment &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -88,7 +88,14 @@
 <li class="toctree-l1"><a class="reference internal" href="compare.html">an.bench.compare</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contract.html">an.bench.contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corpus.html">an.bench.corpus</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.environment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.environment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.environment_record"><code class="docutils literal notranslate"><span class="pre">environment_record()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.ffmpeg_identity"><code class="docutils literal notranslate"><span class="pre">ffmpeg_identity()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.probe_browser"><code class="docutils literal notranslate"><span class="pre">probe_browser()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.runtime_sha256"><code class="docutils literal notranslate"><span class="pre">runtime_sha256()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.x264_sei"><code class="docutils literal notranslate"><span class="pre">x264_sei()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="golden.html">an.bench.golden</a></li>
 <li class="toctree-l1"><a class="reference internal" href="imageio.html">an.bench.imageio</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ledger.html">an.bench.ledger</a></li>
@@ -113,6 +120,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -176,8 +184,71 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-bench-environment">
-<h1>an.bench.environment<a class="headerlink" href="#an-bench-environment" title="Link to this heading"></a></h1>
+  <section id="module-an.bench.environment">
+<span id="an-bench-environment"></span><h1>an.bench.environment<a class="headerlink" href="#module-an.bench.environment" title="Link to this heading"></a></h1>
+<p>The environment tuple — the fields that decide whether two rows may be compared.</p>
+<p>Split into two halves with <strong>different comparison rules</strong>, because the two
+sides of the pipeline were measured and their answers are opposite:</p>
+<p><strong>Render side — comparable on any machine.</strong> Both render paths, four machines
+(local arm64 macOS, <code class="docutils literal notranslate"><span class="pre">macos-latest</span></code>, <code class="docutils literal notranslate"><span class="pre">ubuntu-latest</span></code> x86-64,
+<code class="docutils literal notranslate"><span class="pre">ubuntu-24.04-arm</span></code>), 132 frames each: zero differing pixels <em>and</em> zero
+differing PNG bytes, across two different SwiftShader JIT backends. So the
+render-side metrics need <strong>no cross-machine band column</strong>, and the golden
+corpus can be a CI gate. Record the Chromium build and the <strong>launch argv
+verbatim</strong> — all four rasteriser configurations report a byte-identical
+<code class="docutils literal notranslate"><span class="pre">UNMASKED_RENDERER_WEBGL</span></code> string, so the renderer string is demonstrably
+blind to the choice it was proposed to guard.</p>
+<p><strong>Encode side — machine-scoped, not bandable.</strong> Same ISA + same x264 build is
+byte-identical; a different ISA moves the decoded stream a little (luma &lt;=2.66%
+of samples); a different x264 build moves it by two orders of magnitude (up to
+99.2% of samples, mean <a href="#id1"><span class="problematic" id="id2">|d|</span></a> 3.94, max 36). A band that wide would swallow
+<code class="docutils literal notranslate"><span class="pre">flat_field_deviation</span></code>’s entire crf18-&gt;23 signal. So <code class="docutils literal notranslate"><span class="pre">--compare</span></code> (an#40)
+must <strong>refuse</strong> rows whose <code class="docutils literal notranslate"><span class="pre">x264_sei</span></code> or <code class="docutils literal notranslate"><span class="pre">isa</span></code> differ, in the same way it
+refuses rows with a different <code class="docutils literal notranslate"><span class="pre">scene_contract_sha256</span></code> — the number is
+uninterpretable, not good or bad.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.environment.environment_record">
+<span class="sig-prename descclassname"><span class="pre">an.bench.environment.</span></span><span class="sig-name descname"><span class="pre">environment_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">x264_sei</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">browser</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/environment.html#environment_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.environment.environment_record" title="Link to this definition"></a></dt>
+<dd><p>Everything about this machine that could plausibly move a number.</p>
+<p><code class="docutils literal notranslate"><span class="pre">browser</span></code> lets the caller supply an already-taken probe. The golden gate
+needs the Chromium build <em>before</em> the run-level provenance is assembled —
+the path keys on it — and probing twice would launch a second browser and
+could, in principle, report a different build from the one that rendered.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.environment.ffmpeg_identity">
+<span class="sig-prename descclassname"><span class="pre">an.bench.environment.</span></span><span class="sig-name descname"><span class="pre">ffmpeg_identity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/environment.html#ffmpeg_identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.environment.ffmpeg_identity" title="Link to this definition"></a></dt>
+<dd><p>The ffmpeg build banner. Informational — the <code class="docutils literal notranslate"><span class="pre">x264_sei</span></code> is the key.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.environment.probe_browser">
+<span class="sig-prename descclassname"><span class="pre">an.bench.environment.</span></span><span class="sig-name descname"><span class="pre">probe_browser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/environment.html#probe_browser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.environment.probe_browser" title="Link to this definition"></a></dt>
+<dd><p>Launch Chromium with the render path’s own flags and read back its identity.</p>
+<p>Never raises: a probe that crashes must not cost a caller a completed
+capture, and a recorded <code class="docutils literal notranslate"><span class="pre">error</span></code> is more honest than a missing field that
+reads as “nothing to report”.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.environment.runtime_sha256">
+<span class="sig-prename descclassname"><span class="pre">an.bench.environment.</span></span><span class="sig-name descname"><span class="pre">runtime_sha256</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/bench/environment.html#runtime_sha256"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.environment.runtime_sha256" title="Link to this definition"></a></dt>
+<dd><p>A digest of the JS runtime the renderer will stage, files and names.</p>
+<p>Provenance, NOT a comparability key: the runtime is the code under test, and
+two rows rendered by different runtimes are exactly what <cite>an bench –compare</cite>
+exists to compare. What it buys is that a render-side mutation leaves a
+fingerprint in the row — before this, the <cite>disabled_aa</cite> lever had no way to
+prove it applied, and <cite>assert not report[“mutation_may_not_have_applied”]</cite>
+asserted nothing for it (an#41 review).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.environment.x264_sei">
+<span class="sig-prename descclassname"><span class="pre">an.bench.environment.</span></span><span class="sig-name descname"><span class="pre">x264_sei</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/bench/environment.html#x264_sei"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.environment.x264_sei" title="Link to this definition"></a></dt>
+<dd><p>The encoder build + thread count, read straight out of the file.</p>
+</dd></dl>
+
 </section>
 
 

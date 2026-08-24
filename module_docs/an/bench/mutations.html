@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.mutations &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.mutations &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -95,7 +95,21 @@
 <li class="toctree-l1"><a class="reference internal" href="masks.html">an.bench.masks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">an.bench.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mutants.html">an.bench.mutants</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.mutations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.mutations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutations.AA_ON"><code class="docutils literal notranslate"><span class="pre">AA_ON</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutations.APP_OPEN"><code class="docutils literal notranslate"><span class="pre">APP_OPEN</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutations.HIGH_CRF"><code class="docutils literal notranslate"><span class="pre">HIGH_CRF</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutations.LEVERS"><code class="docutils literal notranslate"><span class="pre">LEVERS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutations.Lever"><code class="docutils literal notranslate"><span class="pre">Lever</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.mutations.Lever.verify_row"><code class="docutils literal notranslate"><span class="pre">Lever.verify_row</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutations.MutationError"><code class="docutils literal notranslate"><span class="pre">MutationError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutations.STAGING_IGNORE"><code class="docutils literal notranslate"><span class="pre">STAGING_IGNORE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutations.SUPERSAMPLE_K"><code class="docutils literal notranslate"><span class="pre">SUPERSAMPLE_K</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutations.mutated_row"><code class="docutils literal notranslate"><span class="pre">mutated_row()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="palette.html">an.bench.palette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paths.html">an.bench.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="png.html">an.bench.png</a></li>
@@ -113,6 +127,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -176,8 +191,187 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-bench-mutations">
-<h1>an.bench.mutations<a class="headerlink" href="#an-bench-mutations" title="Link to this heading"></a></h1>
+  <section id="module-an.bench.mutations">
+<span id="an-bench-mutations"></span><h1>an.bench.mutations<a class="headerlink" href="#module-an.bench.mutations" title="Link to this heading"></a></h1>
+<p>The levers: deliberate, declared changes through seams the shipped code already has.</p>
+<p>This is the other half of the instrument. <cite>an bench</cite> records numbers; these
+change the pipeline on purpose so a test can check the numbers move the way the
+registry declared <strong>in advance</strong>. A metric that never moves under any lever is
+decoration, and the only way to know which is which is to pull one.</p>
+<p><strong>Two of the three are degradations and the third is an improvement</strong>, and that
+asymmetry is the point rather than an untidiness. <code class="docutils literal notranslate"><span class="pre">high_crf</span></code> and
+<code class="docutils literal notranslate"><span class="pre">disabled_aa</span></code> make the picture worse; <code class="docutils literal notranslate"><span class="pre">supersample</span></code> makes it better. A panel
+that has only ever been shown things getting worse cannot tell an improvement
+from a regression — run as a plain commit-to-commit diff, a k=2 supersample
+reports <strong>2 false regressions</strong> (<code class="docutils literal notranslate"><span class="pre">off_palette_pixel_fraction</span></code> rises as blends
+multiply, <code class="docutils literal notranslate"><span class="pre">min_ssim_win8_vs_golden</span></code> falls away from the golden) and <strong>7
+unearned improvements</strong> (every family C/D/E/G metric whose mask derives from the
+source frames: gates live inside <code class="docutils literal notranslate"><span class="pre">Prediction</span></code>, which exists only per declared
+mutation, so with <code class="docutils literal notranslate"><span class="pre">mutation=None</span></code> no gate is consulted and a softer source
+shrinks each mask to its easiest members). Declared as a lever, none of that
+happens. So what a lever has to be is <strong>declared in advance</strong>, not bad — and the
+word “degradations” in the old first line was quietly making the stronger, false
+claim (an#56).</p>
+<p><strong>No production knob exists for any of this, and that is deliberate.</strong> Each
+lever reaches an existing seam from the outside:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">high_crf</span></code> rebinds <code class="docutils literal notranslate"><span class="pre">an.adapters.cutout.render.DETERMINISTIC_X264_ARGS</span></code>.
+<code class="docutils literal notranslate"><span class="pre">_ffmpeg_mux</span></code> reads that name as a module global at call time, so the
+rebinding reaches the delivered encode. It does <strong>not</strong> reach
+<code class="docutils literal notranslate"><span class="pre">an.bench.imageio.lossless_encode_command</span></code>, which bound the tuple at import
+— and that is exactly right: the lossless reference must stay lossless, or
+every encode-side metric would be measured against a moving target and the
+lever would produce beautiful numbers about nothing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">disabled_aa</span></code> copies the staged runtime, flips PixiJS’s <code class="docutils literal notranslate"><span class="pre">antialias</span></code> in the
+copy, and rebinds <code class="docutils literal notranslate"><span class="pre">an.adapters.cutout.render.runtime_dir</span></code>. The shipped
+<code class="docutils literal notranslate"><span class="pre">runtime.js</span></code> is never written to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">supersample</span></code> reaches the SAME runtime seam — <code class="docutils literal notranslate"><span class="pre">resolution:</span> <span class="pre">k,</span>
+<span class="pre">autoDensity:</span> <span class="pre">false</span></code> in the Pixi application options — and then a second one
+it cannot do without: it rebinds
+<code class="docutils literal notranslate"><span class="pre">an.adapters.cutout.render._capture_frames</span></code> so the k-times PNGs are
+block-mean-resolved back to the declared size <strong>in the frame stage</strong>, before
+ffmpeg or the metrics or the golden gate read them. That is not tidiness. A
+lever must measure what the product will produce, and everything downstream
+reads the declared resolution off the STAGED SCENE, never off the files.</p></li>
+</ul>
+<p>A knob in the product would be worse than any of them: it would have to be
+documented, defended, and kept from being switched on by accident. (an#58 ships
+exactly such a knob for supersampling, opt-in — when it lands, this paragraph
+and the “no production knob exists for any of this” sentence above it stop being
+true and must be rewritten rather than left to rot.)</p>
+<p><strong>Each lever verifies that it applied.</strong> A lever that silently failed to take
+produces a run in which nothing moved — which reads exactly like an instrument
+that cannot see it, and sends the reader to fix the wrong thing. So
+<code class="docutils literal notranslate"><span class="pre">verify_applied</span></code> is part of the declaration rather than a courtesy, and the
+two levers verify it in different places for a structural reason: the encode
+argv is recorded in the ledger row, and the runtime is not (the runtime is the
+code under test, not a comparability key — see
+<code class="xref py py-data docutils literal notranslate"><span class="pre">an.bench.registry.MUTATION_TOUCHES</span></code>).</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.mutations.AA_ON">
+<span class="sig-prename descclassname"><span class="pre">an.bench.mutations.</span></span><span class="sig-name descname"><span class="pre">AA_ON</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'antialias:</span> <span class="pre">true'</span></span><a class="headerlink" href="#an.bench.mutations.AA_ON" title="Link to this definition"></a></dt>
+<dd><p>The exact text the AA lever flips, and where. Pinned as a literal so a
+rename in <cite>runtime.js</cite> fails here — loudly, at the lever — rather than
+producing a “mutation” that changes nothing.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.mutations.APP_OPEN">
+<span class="sig-prename descclassname"><span class="pre">an.bench.mutations.</span></span><span class="sig-name descname"><span class="pre">APP_OPEN</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'const</span> <span class="pre">resolution</span> <span class="pre">=</span> <span class="pre">Math.max(1,</span> <span class="pre">(NS.anSupersample</span> <span class="pre">|</span> <span class="pre">0)</span> <span class="pre">||</span> <span class="pre">1);'</span></span><a class="headerlink" href="#an.bench.mutations.APP_OPEN" title="Link to this definition"></a></dt>
+<dd><p>The exact text the supersample lever anchors to, and what it inserts. Pinned
+for the same reason <cite>AA_ON</cite> is: a reformat of the Pixi options object must
+fail here rather than produce a “mutation” that renders at 1x and then reads
+as an instrument that cannot see a supersample. <cite>app = new PIXI.Application({</cite>
+and NOT <cite>new PIXI.Application(</cite>: the shorter form occurs twice in
+<cite>runtime.js</cite> — the second is inside a comment — and a two-hit anchor would
+patch prose.</p>
+<p><strong>`autoDensity: false` is load-bearing and is the whole plumbing finding.</strong>
+With it <cite>true</cite>, Pixi sets the canvas CSS size to the LOGICAL size and
+Chromium composites the k-times backbuffer down before the screenshot — a
+blind browser downscale with no filter choice and no record of having
+happened, i.e. the <cite>device_scale_factor</cite> failure wearing the name that most
+suggests it is the right one. Measured on <cite>aa_probe</cite>, declared 320x240:
+neither key -&gt; 320x240 PNGs; <cite>resolution: 2, autoDensity: false</cite> -&gt; 640x480;
+<cite>resolution: 2, autoDensity: true</cite> -&gt; 320x240. Neither key is in the shipped
+options today, so the engine default <cite>RESOLUTION: 1</cite> applies silently and
+both have to be introduced.
+Since an#58 the product owns <cite>resolution</cite> / <cite>autoDensity: false</cite> and reads
+the factor from an injected global, so the lever <strong>overrides the line that
+reads it</strong> rather than writing a second copy of the product’s Pixi options.
+A lever that reproduces the code it is examining is examining itself.</p>
+<p>Injecting the global does NOT work and the reason is worth keeping: the
+product sets <cite>window.anSupersample</cite> from <cite>ctx.supersample</cite> immediately before
+<cite>anLoadScene</cite>, so it would overwrite whatever the lever put there. Caught by
+an#54’s shape guard — 160x120 frames against a 320x240 declaration — which is
+what that guard is for.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.mutations.HIGH_CRF">
+<span class="sig-prename descclassname"><span class="pre">an.bench.mutations.</span></span><span class="sig-name descname"><span class="pre">HIGH_CRF</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'40'</span></span><a class="headerlink" href="#an.bench.mutations.HIGH_CRF" title="Link to this definition"></a></dt>
+<dd><p>measured on the CRF
+ladder, 40 gives C x8.4, D x8.0 and F -42% on <cite>single_character</cite> — large,
+unambiguous, and still a rate a human might plausibly ship. 51 is
+pathological, and a lever nobody would ever pull by accident is a weaker
+proxy for the regressions this instrument exists to catch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The CRF the encoder lever raises to. 40 rather than 51</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.mutations.LEVERS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.mutations.</span></span><span class="sig-name descname"><span class="pre">LEVERS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#an.bench.mutations.Lever" title="an.bench.mutations.Lever"><span class="pre">Lever</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'disabled_aa':</span> <span class="pre">Lever(name='disabled_aa',</span> <span class="pre">side='render',</span> <span class="pre">what='build</span> <span class="pre">the</span> <span class="pre">PixiJS</span> <span class="pre">application</span> <span class="pre">with</span> <span class="pre">multisampling</span> <span class="pre">off',</span> <span class="pre">why='moves</span> <span class="pre">the</span> <span class="pre">render-side</span> <span class="pre">families</span> <span class="pre">and</span> <span class="pre">fires</span> <span class="pre">the</span> <span class="pre">golden</span> <span class="pre">tripwire.</span> <span class="pre">Its</span> <span class="pre">effect</span> <span class="pre">is</span> <span class="pre">scene-dependent</span> <span class="pre">by</span> <span class="pre">measurement,</span> <span class="pre">not</span> <span class="pre">by</span> <span class="pre">accident:</span> <span class="pre">MSAA</span> <span class="pre">applies</span> <span class="pre">to</span> <span class="pre">WebGL</span> <span class="pre">geometry,</span> <span class="pre">so</span> <span class="pre">an</span> <span class="pre">SVG</span> <span class="pre">sprite</span> <span class="pre">is</span> <span class="pre">nearly</span> <span class="pre">blind</span> <span class="pre">to</span> <span class="pre">it</span> <span class="pre">(96</span> <span class="pre">differing</span> <span class="pre">pixels</span> <span class="pre">of</span> <span class="pre">12.4M)</span> <span class="pre">and</span> <span class="pre">axis-aligned</span> <span class="pre">`drawRect`</span> <span class="pre">edges</span> <span class="pre">are</span> <span class="pre">bit-identical</span> <span class="pre">with</span> <span class="pre">it</span> <span class="pre">on</span> <span class="pre">or</span> <span class="pre">off.</span> <span class="pre">`aa_probe`</span> <span class="pre">exists</span> <span class="pre">so</span> <span class="pre">the</span> <span class="pre">corpus</span> <span class="pre">contains</span> <span class="pre">edges</span> <span class="pre">this</span> <span class="pre">lever</span> <span class="pre">can</span> <span class="pre">actually</span> <span class="pre">change.',</span> <span class="pre">apply=&lt;function</span> <span class="pre">_disabled_aa&gt;,</span> <span class="pre">verify_row=&lt;function</span> <span class="pre">_verify_disabled_aa&gt;),</span> <span class="pre">'high_crf':</span> <span class="pre">Lever(name='high_crf',</span> <span class="pre">side='encode',</span> <span class="pre">what='raise</span> <span class="pre">the</span> <span class="pre">delivered</span> <span class="pre">encode</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">pinned</span> <span class="pre">CRF</span> <span class="pre">to</span> <span class="pre">40',</span> <span class="pre">why='moves</span> <span class="pre">only</span> <span class="pre">post-encode</span> <span class="pre">metrics.</span> <span class="pre">The</span> <span class="pre">golden</span> <span class="pre">corpus</span> <span class="pre">is</span> <span class="pre">upstream</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">encoder,</span> <span class="pre">so</span> <span class="pre">family</span> <span class="pre">B</span> <span class="pre">cannot</span> <span class="pre">see</span> <span class="pre">this</span> <span class="pre">by</span> <span class="pre">construction</span> <span class="pre">—</span> <span class="pre">which</span> <span class="pre">is</span> <span class="pre">the</span> <span class="pre">reason</span> <span class="pre">two</span> <span class="pre">disjoint</span> <span class="pre">levers</span> <span class="pre">are</span> <span class="pre">mandatory.',</span> <span class="pre">apply=&lt;function</span> <span class="pre">_high_crf&gt;,</span> <span class="pre">verify_row=&lt;function</span> <span class="pre">_verify_high_crf&gt;),</span> <span class="pre">'supersample':</span> <span class="pre">Lever(name='supersample',</span> <span class="pre">side='render',</span> <span class="pre">what='build</span> <span class="pre">the</span> <span class="pre">PixiJS</span> <span class="pre">application</span> <span class="pre">at</span> <span class="pre">resolution</span> <span class="pre">2</span> <span class="pre">with</span> <span class="pre">`autoDensity:</span> <span class="pre">false`,</span> <span class="pre">and</span> <span class="pre">resolve</span> <span class="pre">the</span> <span class="pre">frames</span> <span class="pre">back</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">declared</span> <span class="pre">size</span> <span class="pre">with</span> <span class="pre">an</span> <span class="pre">exact</span> <span class="pre">2x2</span> <span class="pre">block</span> <span class="pre">mean</span> <span class="pre">before</span> <span class="pre">anything</span> <span class="pre">reads</span> <span class="pre">them',</span> <span class="pre">why=&quot;the</span> <span class="pre">instrument's</span> <span class="pre">exam</span> <span class="pre">against</span> <span class="pre">a</span> <span class="pre">change</span> <span class="pre">somebody</span> <span class="pre">WANTS</span> <span class="pre">to</span> <span class="pre">ship</span> <span class="pre">(an#56).</span> <span class="pre">Run</span> <span class="pre">instead</span> <span class="pre">as</span> <span class="pre">a</span> <span class="pre">plain</span> <span class="pre">commit-to-commit</span> <span class="pre">diff,</span> <span class="pre">`_verdict_by_optimum`</span> <span class="pre">reports</span> <span class="pre">it</span> <span class="pre">as</span> <span class="pre">2</span> <span class="pre">false</span> <span class="pre">regressions</span> <span class="pre">and</span> <span class="pre">7</span> <span class="pre">unearned</span> <span class="pre">improvements,</span> <span class="pre">plus</span> <span class="pre">7</span> <span class="pre">unscored</span> <span class="pre">`changed`s</span> <span class="pre">including</span> <span class="pre">the</span> <span class="pre">metric</span> <span class="pre">the</span> <span class="pre">wave's</span> <span class="pre">done-when</span> <span class="pre">names</span> <span class="pre">—</span> <span class="pre">a</span> <span class="pre">table</span> <span class="pre">that</span> <span class="pre">looks</span> <span class="pre">like</span> <span class="pre">evidence</span> <span class="pre">and</span> <span class="pre">is</span> <span class="pre">not.</span> <span class="pre">Its</span> <span class="pre">effect</span> <span class="pre">is</span> <span class="pre">scene-dependent</span> <span class="pre">BY</span> <span class="pre">MEASUREMENT</span> <span class="pre">and</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">exact</span> <span class="pre">inverse</span> <span class="pre">of</span> <span class="pre">`disabled_aa`:</span> <span class="pre">+2.6%</span> <span class="pre">to</span> <span class="pre">+8.0%</span> <span class="pre">edge</span> <span class="pre">width</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">five</span> <span class="pre">procedural</span> <span class="pre">scenes</span> <span class="pre">and</span> <span class="pre">-34.8%</span> <span class="pre">on</span> <span class="pre">`promote_demo`.</span> <span class="pre">The</span> <span class="pre">two</span> <span class="pre">render</span> <span class="pre">levers</span> <span class="pre">therefore</span> <span class="pre">reach</span> <span class="pre">complementary</span> <span class="pre">scenes,</span> <span class="pre">which</span> <span class="pre">strengthens</span> <span class="pre">the</span> <span class="pre">harness</span> <span class="pre">rather</span> <span class="pre">than</span> <span class="pre">diluting</span> <span class="pre">it.&quot;,</span> <span class="pre">apply=&lt;function</span> <span class="pre">_supersample&gt;,</span> <span class="pre">verify_row=&lt;function</span> <span class="pre">_verify_supersample&gt;)}</span></span><a class="headerlink" href="#an.bench.mutations.LEVERS" title="Link to this definition"></a></dt>
+<dd><p>The levers, keyed by the mutation name the registry declares. At least one
+per SIDE is mandatory and the two sides are <strong>disjoint on purpose</strong>: an
+encoder lever cannot touch a golden-frame metric, because the corpus sits
+UPSTREAM of the encoder. So requiring three families from a CRF change alone
+would fail for a reason that has nothing to do with the instrument being
+blind — and that failure would be misdiagnosed as the harness being wrong.</p>
+<p>The two RENDER levers are not redundant: measured, they reach complementary
+scenes. <cite>disabled_aa</cite> is nearly blind to the descriptor path (96 differing
+pixels of 12.4M on <cite>promote_demo</cite>, because MSAA applies to WebGL geometry and
+an SVG sprite is a pre-rasterised texture); <cite>supersample</cite> hits that same
+scene hardest of all six (-34.8% edge width, because the sprite rasterises AT
+2x rather than being stretched up from a 1x texture).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.mutations.Lever">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.mutations.</span></span><span class="sig-name descname"><span class="pre">Lever</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">what</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">why</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify_row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/mutations.html#Lever"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.mutations.Lever" title="Link to this definition"></a></dt>
+<dd><p>One deliberate, declared change to the pipeline, with the evidence that it took.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.mutations.Lever.verify_row">
+<span class="sig-name descname"><span class="pre">verify_row</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.bench.mutations.Lever.verify_row" title="Link to this definition"></a></dt>
+<dd><p>Given the ledger row the mutated run produced, raise unless the lever’s
+fingerprint is in it. <code class="docutils literal notranslate"><span class="pre">None</span></code> when the row cannot carry one — see the
+module docstring.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.mutations.MutationError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.mutations.</span></span><span class="sig-name descname"><span class="pre">MutationError</span></span><a class="reference internal" href="../../../_modules/an/bench/mutations.html#MutationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.mutations.MutationError" title="Link to this definition"></a></dt>
+<dd><p>A lever could not be applied, or applied and left no trace.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.mutations.STAGING_IGNORE">
+<span class="sig-prename descclassname"><span class="pre">an.bench.mutations.</span></span><span class="sig-name descname"><span class="pre">STAGING_IGNORE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('__pycache__',)</span></span><a class="headerlink" href="#an.bench.mutations.STAGING_IGNORE" title="Link to this definition"></a></dt>
+<dd><p>Excluded from the staged copy so the staged tree is a pure function of the
+shipped source and the patch — which is what lets <cite>_verify_supersample</cite>
+RECOMPUTE the digest it expects instead of settling for “not the shipped
+one”. <cite>runtime_sha256()</cite> walks whatever <cite>render.runtime_dir()</cite> returns, so
+with this excluded on the staging side and on the recompute side, the two
+hash byte-identical file sets.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.mutations.SUPERSAMPLE_K">
+<span class="sig-prename descclassname"><span class="pre">an.bench.mutations.</span></span><span class="sig-name descname"><span class="pre">SUPERSAMPLE_K</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#an.bench.mutations.SUPERSAMPLE_K" title="Link to this definition"></a></dt>
+<dd><p>The supersample lever’s factor, read at call time so a test can move it. 2
+rather than 3, deliberately and with the residual on the record: research §3
+renders each corpus scene at rising k and lets <cite>edge_transition_width</cite>
+converge, and k=3 reaches that ceiling on every scene that has one while k=2
+falls 43% short on <cite>saturated_outline</cite> and 33% short on <cite>graded_field</cite>
+(0.09-0.17 px). It is 2 because <strong>the lever must be the change the product
+will ship</strong> — an#58 ships k=2 — and a lever measuring a factor nobody will
+run is a beautiful number about nothing. Cost, read off 1080p because the
+corpus cannot inform it: 0.126 s/f at k=1, 0.319 at k=2 (2.54x), 0.640 at k=3.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.mutations.mutated_row">
+<span class="sig-prename descclassname"><span class="pre">an.bench.mutations.</span></span><span class="sig-name descname"><span class="pre">mutated_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">run_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/mutations.html#mutated_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.mutations.mutated_row" title="Link to this definition"></a></dt>
+<dd><p>Render the corpus with one lever pulled, and prove the lever took.</p>
+<p>Deliberately returns a row rather than a comparison: what to do with it is
+<a class="reference internal" href="compare.html#module-an.bench.compare" title="an.bench.compare"><code class="xref py py-mod docutils literal notranslate"><span class="pre">an.bench.compare</span></code></a>’s job, and keeping the two apart is what lets the
+criterion be evaluated against a row written months ago.</p>
+</dd></dl>
+
 </section>
 
 

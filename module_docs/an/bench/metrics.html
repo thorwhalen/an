@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.metrics &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.metrics &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -93,7 +93,32 @@
 <li class="toctree-l1"><a class="reference internal" href="imageio.html">an.bench.imageio</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ledger.html">an.bench.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="masks.html">an.bench.masks</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.metrics</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.metrics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.BLEND_TOLERANCE"><code class="docutils literal notranslate"><span class="pre">BLEND_TOLERANCE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.EDGE_FLAT_TOL"><code class="docutils literal notranslate"><span class="pre">EDGE_FLAT_TOL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.EDGE_TRIM"><code class="docutils literal notranslate"><span class="pre">EDGE_TRIM</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.FLAT_DEV_TOL"><code class="docutils literal notranslate"><span class="pre">FLAT_DEV_TOL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.FLICKER_DELTA_TOL"><code class="docutils literal notranslate"><span class="pre">FLICKER_DELTA_TOL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.LUMA_709"><code class="docutils literal notranslate"><span class="pre">LUMA_709</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.SSIM_RADIUS"><code class="docutils literal notranslate"><span class="pre">SSIM_RADIUS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.classify_off_palette"><code class="docutils literal notranslate"><span class="pre">classify_off_palette()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.edge_masked_distinct_colours"><code class="docutils literal notranslate"><span class="pre">edge_masked_distinct_colours()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.edge_transition_width"><code class="docutils literal notranslate"><span class="pre">edge_transition_width()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.encode_flicker_on_held_pixels"><code class="docutils literal notranslate"><span class="pre">encode_flicker_on_held_pixels()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.encode_ringing_excess"><code class="docutils literal notranslate"><span class="pre">encode_ringing_excess()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.flat_field_deviation"><code class="docutils literal notranslate"><span class="pre">flat_field_deviation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.frame_distinct_colours"><code class="docutils literal notranslate"><span class="pre">frame_distinct_colours()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.golden_comparison"><code class="docutils literal notranslate"><span class="pre">golden_comparison()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.luma709"><code class="docutils literal notranslate"><span class="pre">luma709()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.luma_u8"><code class="docutils literal notranslate"><span class="pre">luma_u8()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.masked_mean_abs"><code class="docutils literal notranslate"><span class="pre">masked_mean_abs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.off_palette_pixel_fraction"><code class="docutils literal notranslate"><span class="pre">off_palette_pixel_fraction()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.off_palette_top_colours"><code class="docutils literal notranslate"><span class="pre">off_palette_top_colours()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.overshoot_mean"><code class="docutils literal notranslate"><span class="pre">overshoot_mean()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.pack_rgb"><code class="docutils literal notranslate"><span class="pre">pack_rgb()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.metrics.ssim_map"><code class="docutils literal notranslate"><span class="pre">ssim_map()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="mutants.html">an.bench.mutants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mutations.html">an.bench.mutations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="palette.html">an.bench.palette</a></li>
@@ -113,6 +138,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -176,8 +202,432 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-bench-metrics">
-<h1>an.bench.metrics<a class="headerlink" href="#an-bench-metrics" title="Link to this heading"></a></h1>
+  <section id="module-an.bench.metrics">
+<span id="an-bench-metrics"></span><h1>an.bench.metrics<a class="headerlink" href="#module-an.bench.metrics" title="Link to this heading"></a></h1>
+<p>The metric panel: pure numpy, no I/O, no subprocess.</p>
+<p>Every function here is <code class="docutils literal notranslate"><span class="pre">f(arrays,</span> <span class="pre">mask)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code>. Loading is
+<a class="reference internal" href="imageio.html#module-an.bench.imageio" title="an.bench.imageio"><code class="xref py py-mod docutils literal notranslate"><span class="pre">an.bench.imageio</span></code></a>’s job. The split is what lets the whole panel run in
+the default CI leg — numpy is a hard dependency, ffmpeg and Playwright are not
+— which is the only part of this wave that main CI can ever see.</p>
+<p><strong>The set is the research’s corrected one, and it is not the epic’s draft.</strong>
+All twelve originally-proposed metrics were refuted. The corrections that are
+easiest to undo by accident, each guarded by a test:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">edge_transition_width</span></code>’s flatness tolerance must not be 0. With <code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">0</span></code>,
+±3-LSB dither sends the metric to 255.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">off_palette_pixel_fraction</span></code> must not use <code class="docutils literal notranslate"><span class="pre">np.unique(...,</span> <span class="pre">axis=0)</span></code>:
+1.833 s/frame at 1080p against 0.019 s for the packed form, 94x, identical
+result.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">encode_flicker_on_held_pixels</span></code> must <strong>cast before subtracting</strong>.
+<code class="docutils literal notranslate"><span class="pre">np.abs(a</span> <span class="pre">-</span> <span class="pre">b)</span></code> on uint8 is the identity on unsigned dtypes, so the literal
+proposed form measured the <em>sign</em> of the change. It stayed monotone, which is
+exactly why it would have shipped unnoticed. And it must report a <strong>rate</strong>,
+not a mean: the median held-pixel delta is 0 at every CRF.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">encode_ringing_excess</span></code> is the difference of two overshoot means, so the
+source-hardness term cancels. Raw overshoot is a joint function of source
+hardness and encoder fidelity with one degree of freedom, which is why any
+move toward crisper outlines raised it under an unchanged encoder.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">edge_masked_distinct_colours</span></code> must be handed a mask built from
+<a class="reference internal" href="#an.bench.metrics.luma_u8" title="an.bench.metrics.luma_u8"><code class="xref py py-func docutils literal notranslate"><span class="pre">luma_u8()</span></code></a>, never from <a class="reference internal" href="#an.bench.metrics.luma709" title="an.bench.metrics.luma709"><code class="xref py py-func docutils literal notranslate"><span class="pre">luma709()</span></code></a> directly. <code class="docutils literal notranslate"><span class="pre">luma709</span></code> returns
+<strong>float in [0,1]</strong> and <a class="reference internal" href="masks.html#an.bench.masks.edge_mask" title="an.bench.masks.edge_mask"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.masks.edge_mask()</span></code></a> thresholds at <strong>40 on
+0-255</strong>, so the float form makes every two-apart gradient &lt;= 1.0 and the mask
+comes back <strong>entirely empty</strong> — measured: 0 selected pixels against 4 for the
+same hard step. The metric would then be <code class="docutils literal notranslate"><span class="pre">nan</span></code> on every scene, which reads
+as “the check could not run” rather than as a bug (an#55).</p></li>
+</ul>
+<p>One metric the epic named is deliberately absent: <code class="docutils literal notranslate"><span class="pre">mean_adjacent_frame_ssim</span></code>
+moves the <strong>wrong way</strong> (0.958 at crf18 -&gt; 0.977 at crf51, because a crushed
+video is smoother). Its existing use as a frozen-render detector in
+<a class="reference internal" href="../verify/media_quality.html#module-an.verify.media_quality" title="an.verify.media_quality"><code class="xref py py-mod docutils literal notranslate"><span class="pre">an.verify.media_quality</span></code></a> is a different and legitimate job.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.metrics.BLEND_TOLERANCE">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">BLEND_TOLERANCE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#an.bench.metrics.BLEND_TOLERANCE" title="Link to this definition"></a></dt>
+<dd><p>How far off the line between two palette colours a pixel may sit and still
+be called a blend of them. 8-bit channels, so a couple of code values covers
+rounding in the compositor.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.metrics.EDGE_FLAT_TOL">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">EDGE_FLAT_TOL</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></span><a class="headerlink" href="#an.bench.metrics.EDGE_FLAT_TOL" title="Link to this definition"></a></dt>
+<dd><p>Two neighbours within this many code values count as “flat”. NOT 0 — see
+the module docstring.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.metrics.EDGE_TRIM">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">EDGE_TRIM</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></span><a class="headerlink" href="#an.bench.metrics.EDGE_TRIM" title="Link to this definition"></a></dt>
+<dd><p>Trim fraction for <cite>edge_transition_width</cite>’s mean, so one pathological run
+cannot carry the number.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.metrics.FLAT_DEV_TOL">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">FLAT_DEV_TOL</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></span><a class="headerlink" href="#an.bench.metrics.FLAT_DEV_TOL" title="Link to this definition"></a></dt>
+<dd><p>A flat-field pixel more than this far off is “deviated”.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.metrics.FLICKER_DELTA_TOL">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">FLICKER_DELTA_TOL</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#an.bench.metrics.FLICKER_DELTA_TOL" title="Link to this definition"></a></dt>
+<dd><p>A held pixel that moved by at least this much “flickered”.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.metrics.LUMA_709">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">LUMA_709</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.2126,</span> <span class="pre">0.7152,</span> <span class="pre">0.0722)</span></span><a class="headerlink" href="#an.bench.metrics.LUMA_709" title="Link to this definition"></a></dt>
+<dd><p>BT.709 luma coefficients, recorded in the ledger so a future change to the
+reduction is visible rather than folded into the number.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.metrics.SSIM_RADIUS">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">SSIM_RADIUS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#an.bench.metrics.SSIM_RADIUS" title="Link to this definition"></a></dt>
+<dd><p><cite>ssim_map</cite> window radius; 7x7, matched to feature size rather than the
+global-moment form.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.classify_off_palette">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">classify_off_palette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#classify_off_palette"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.classify_off_palette" title="Link to this definition"></a></dt>
+<dd><p>Say, for each off-palette colour, whether it is a blend of two declared ones.</p>
+<p>This is the difference between a diagnostic and a list of hex codes. The
+metric’s whole meaning is “not one of the colours the compiler declared”,
+so a palette that under-collects turns it into a large, plausible number
+with no error anywhere. Anti-aliasing legitimately produces colours <em>on the
+segment between</em> two declared colours; a missed literal does not.</p>
+<p>So each entry gains <code class="docutils literal notranslate"><span class="pre">blend_of</span></code> (the two palette colours it sits between,
+or <code class="docutils literal notranslate"><span class="pre">None</span></code>). A row whose top off-palette colours are all blends is
+reporting anti-aliasing correctly. One that is not is a derivation bug, and
+now it says so in the ledger rather than waiting for someone to look.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">classify_off_palette</span><span class="p">([{</span><span class="s2">"hex"</span><span class="p">:</span> <span class="s2">"#808080"</span><span class="p">}],</span> <span class="p">[</span><span class="mh">0x000000</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"blend_of"</span><span class="p">]</span>
+<span class="go">['#000000', '#ffffff']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_off_palette</span><span class="p">([{</span><span class="s2">"hex"</span><span class="p">:</span> <span class="s2">"#ff00ff"</span><span class="p">}],</span> <span class="p">[</span><span class="mh">0x000000</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"blend_of"</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.edge_masked_distinct_colours">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">edge_masked_distinct_colours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#edge_masked_distinct_colours"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.edge_masked_distinct_colours" title="Link to this definition"></a></dt>
+<dd><p>Mean distinct colours per frame, counted ONLY on the edge mask.</p>
+<p>The half of <cite>frame_distinct_colours</cite> that is about edges: an interior-only
+change — a gradient laid into a flat field, a soft shadow — moves the
+whole-frame count and cannot reach this one at all. The second doctest
+below is that property, and it is the whole of what the mask buys.</p>
+<p><strong>It does NOT make the number blind to a whole-frame blur, and an#55’s
+premise that it would is refuted.</strong> The mask is recomputed from the frame
+being measured, and a blur WIDENS the edge band, so the mask grows to admit
+the new gradation. Measured on the six committed goldens, 3x3 box blur,
+ratio against k=1:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>scene</p></th>
+<th class="head"><p>whole-frame</p></th>
+<th class="head"><p>edge-masked</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>aa_probe</p></td>
+<td><p>10.25x</p></td>
+<td><p>9.50x</p></td>
+</tr>
+<tr class="row-odd"><td><p>graded_field</p></td>
+<td><p>2.04x</p></td>
+<td><p>2.35x</p></td>
+</tr>
+<tr class="row-even"><td><p>multi_shot</p></td>
+<td><p>7.92x</p></td>
+<td><p>4.63x</p></td>
+</tr>
+<tr class="row-odd"><td><p>promote_demo</p></td>
+<td><p>1.25x</p></td>
+<td><p>0.83x</p></td>
+</tr>
+<tr class="row-even"><td><p>saturated_outline</p></td>
+<td><p>1.49x</p></td>
+<td><p>1.14x</p></td>
+</tr>
+<tr class="row-odd"><td><p>single_character</p></td>
+<td><p>8.60x</p></td>
+<td><p>5.70x</p></td>
+</tr>
+</tbody>
+</table>
+<p>Damped on four of six, WORSE on <cite>graded_field</cite>, and nowhere near blind.
+(an#55 quotes “1.8x-9.3x” for the whole-frame column; the real range on
+these goldens is 1.25x-10.25x, wider at both ends.)</p>
+<p><strong>What separates a blur from a supersample is the WIDTH half of the pair,
+not this one.</strong> The same blur puts <cite>edge_transition_width</cite> at 2.1x-3.4x
+(<cite>aa_probe</cite> 2.655 -&gt; 5.594 px), while an exact k=2 resolve moves it +2.6%
+to +8.0% (research §4). So read this metric BESIDE
+<cite>edge_transition_width</cite>: colours up with width flat is gradation added;
+colours up with width doubled is a soft picture.</p>
+<p><strong>Evidence for a human reader, never a gate.</strong> an#41’s criterion counts
+metrics independently and cannot express a conjunction, so neither half of
+the pair may be declared as counting on the strength of the other.</p>
+<p><code class="docutils literal notranslate"><span class="pre">edge</span></code> must come from <a class="reference internal" href="masks.html#an.bench.masks.edge_mask" title="an.bench.masks.edge_mask"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.masks.edge_mask()</span></code></a> applied to
+<a class="reference internal" href="#an.bench.metrics.luma_u8" title="an.bench.metrics.luma_u8"><code class="xref py py-func docutils literal notranslate"><span class="pre">luma_u8()</span></code></a> — <strong>not</strong> to <a class="reference internal" href="#an.bench.metrics.luma709" title="an.bench.metrics.luma709"><code class="xref py py-func docutils literal notranslate"><span class="pre">luma709()</span></code></a>, which is float in [0,1]
+against a threshold of 40 on 0-255 and yields an empty mask every time.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">(mean,</span> <span class="pre">frames_measured)</span></code>. A frame whose mask is empty is
+<strong>skipped, not averaged in as zero</strong> — a zero would drag the mean down and
+read as exactly the regression this metric exists to notice. With no such
+frame the answer is <code class="docutils literal notranslate"><span class="pre">nan</span></code>, which the caller records as <cite>unavailable</cite>;
+<a class="reference internal" href="ledger.html#an.bench.ledger.measured" title="an.bench.ledger.measured"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.ledger.measured()</span></code></a> refuses it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.masks</span><span class="w"> </span><span class="kn">import</span> <span class="n">edge_mask</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">);</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">8</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">255</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">edge_masked_distinct_colours</span><span class="p">(</span><span class="n">pack_rgb</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">edge_mask</span><span class="p">(</span><span class="n">luma_u8</span><span class="p">(</span><span class="n">c</span><span class="p">)))</span>
+<span class="go">(2.0, 1)</span>
+</pre></div>
+</div>
+<p>A change entirely inside a flat field moves the whole-frame count and not
+this one — this, and only this, is what the mask buys:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="mi">8</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame_distinct_colours</span><span class="p">(</span><span class="n">pack_rgb</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+<span class="go">6.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">edge_masked_distinct_colours</span><span class="p">(</span><span class="n">pack_rgb</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="n">edge_mask</span><span class="p">(</span><span class="n">luma_u8</span><span class="p">(</span><span class="n">d</span><span class="p">)))</span>
+<span class="go">(2.0, 1)</span>
+</pre></div>
+</div>
+<p>An empty mask is not a colour count of zero:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="mi">128</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">edge_masked_distinct_colours</span><span class="p">(</span><span class="n">pack_rgb</span><span class="p">(</span><span class="n">flat</span><span class="p">),</span> <span class="n">edge_mask</span><span class="p">(</span><span class="n">luma_u8</span><span class="p">(</span><span class="n">flat</span><span class="p">)))</span>
+<span class="go">(nan, 0)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.edge_transition_width">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">edge_transition_width</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#edge_transition_width"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.edge_transition_width" title="Link to this definition"></a></dt>
+<dd><p>Average thickness, in pixels, of the fuzzy band between two flat areas.</p>
+<p>Under 1 is a jagged staircase; ~1 is clean AA; 3+ means the picture has
+gone soft. <strong>Two-sided</strong>, which is the whole reason it replaced a palette
+cardinality count: cardinality reads AA-off as 4, AA-on as 45 and a 3x3
+blur as 416, so “the number went up” means “AA restored” and “the picture
+went soft” indiscriminately.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">(trimmed_mean,</span> <span class="pre">median)</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">);</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">4</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">255</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">edge_transition_width</span><span class="p">(</span><span class="n">a</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span>   <span class="c1"># one hard step = a 2px band</span>
+<span class="go">2.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.encode_flicker_on_held_pixels">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">encode_flicker_on_held_pixels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec_rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#encode_flicker_on_held_pixels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.encode_flicker_on_held_pixels" title="Link to this definition"></a></dt>
+<dd><p>Fraction of perfectly-held pixels that moved in the delivered video.</p>
+<p>Held-pose “boiling” — the worst artefact for limited-motion animation.
+Pooled over every frame pair rather than averaged per pair, so a pair with
+three held pixels does not weigh as much as one with seventy thousand.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">copy</span><span class="p">();</span> <span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">encode_flicker_on_held_pixels</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="go">0.25</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.encode_ringing_excess">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">encode_ringing_excess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dec_luma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lossless_luma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_luma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#encode_ringing_excess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.encode_ringing_excess" title="Link to this definition"></a></dt>
+<dd><p>How much more the lossy encode overshoots than a lossless one does.</p>
+<p>Both legs share the source, so the source-spectrum term cancels: AA-off
+raises both together (correctly reporting “the encoder did not get worse”),
+a genuine crispness improvement also raises both (no false regression), and
+a CRF change raises only the lossy leg.</p>
+<p><strong>Provisional.</strong> <cite>edge_band_mae</cite> is recorded beside it so research open
+question 4 — “does plain edge-band MAE beat this?” — is answered by the
+ledger rather than by nobody.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">encode_ringing_excess</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+<span class="gp">... </span>                      <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span> <span class="n">s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">bool</span><span class="p">))</span>
+<span class="go">3.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.flat_field_deviation">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">flat_field_deviation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec_rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#flat_field_deviation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.flat_field_deviation" title="Link to this definition"></a></dt>
+<dd><p>Fraction of flat-field pixels the encoder moved by more than <code class="docutils literal notranslate"><span class="pre">tol</span></code>.</p>
+<p>The strongest metric in the set and the only one measured genuinely
+orthogonal to the edge/AA axis: monotone over a 133x span on the CRF ladder
+(0.0003 -&gt; 0.0399, crf18 -&gt; crf51) and flat under every AA variant.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">(fraction_over_tol,</span> <span class="pre">p99_of_the_deviation)</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">copy</span><span class="p">();</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">flat_field_deviation</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">bool</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">0.1111111111111111</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.frame_distinct_colours">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">frame_distinct_colours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#frame_distinct_colours"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.frame_distinct_colours" title="Link to this definition"></a></dt>
+<dd><p>Mean number of distinct colours per frame.</p>
+<p>A flatness / palette-discipline <strong>guard</strong>, with no predicted direction on
+an AA change. Do not count it alongside <cite>off_palette_pixel_fraction</cite>; they
+are the same family.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame_distinct_colours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">))</span>
+<span class="go">2.5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.golden_comparison">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">golden_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">today_rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">golden_rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#golden_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.golden_comparison" title="Link to this definition"></a></dt>
+<dd><p>The full-frame identity gate plus its diagnostics.</p>
+<p>Full-frame, not edge-masked: that is what makes the one sentence true, and
+what catches the flat-interior regressions an edge mask is blind to — and
+for this look the flat fields are most of the picture.</p>
+<p><code class="docutils literal notranslate"><span class="pre">changed_px</span></code> and <code class="docutils literal notranslate"><span class="pre">max_delta</span></code> belong in a failure message, not in the
+metrics block; they are returned here so the caller can put them there.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">golden_comparison</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">)[</span><span class="s2">"identical"</span><span class="p">]</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.luma709">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">luma709</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#luma709"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.luma709" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(H,W,3)</span></code> uint8 -&gt; <code class="docutils literal notranslate"><span class="pre">(H,W)</span></code> float in [0,1]. PIL-free.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">luma709</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="mi">255</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="mi">6</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.luma_u8">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">luma_u8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#luma_u8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.luma_u8" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(...,3)</span></code> uint8 -&gt; <code class="docutils literal notranslate"><span class="pre">(...)</span></code> uint8 luma, on the 0-255 scale a plane uses.</p>
+<p>The one conversion between <a class="reference internal" href="#an.bench.metrics.luma709" title="an.bench.metrics.luma709"><code class="xref py py-func docutils literal notranslate"><span class="pre">luma709()</span></code></a>, which returns <strong>float in
+[0,1]</strong>, and <a class="reference internal" href="masks.html#an.bench.masks.edge_mask" title="an.bench.masks.edge_mask"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.masks.edge_mask()</span></code></a>, whose threshold is <strong>40 on
+0-255</strong>. Handing the float straight to the mask is not a wrong number, it is
+an <strong>empty mask</strong>: every two-apart gradient is &lt;= 1.0, so nothing is ever an
+edge and the metric downstream reads <cite>unavailable</cite> on every scene. Written
+once, named and tested here rather than open-coded at each call site,
+because it cost a debugging round the first time (an#55).</p>
+<p><strong>This is FULL-RANGE luma and the encode-side plane is not.</strong>
+<a class="reference internal" href="imageio.html#an.bench.imageio.SOURCE_SCALE_FILTER" title="an.bench.imageio.SOURCE_SCALE_FILTER"><code class="xref py py-data docutils literal notranslate"><span class="pre">an.bench.imageio.SOURCE_SCALE_FILTER</span></code></a> pins <code class="docutils literal notranslate"><span class="pre">out_range=tv</span></code>, so
+ffmpeg’s Y sits in [16,235] and its gradients are 219/255 of these. At one
+threshold that makes the render-side mask the <strong>wider</strong> of the two —
+measured: a 45-code-value step selects 4 pixels here and 0 there — which is
+why the row records it under its own operator string rather than reusing
+<code class="xref py py-data docutils literal notranslate"><span class="pre">an.bench.masks.EDGE_OPERATOR</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">);</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">255</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">luma_u8</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="go">[[[0, 255]]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.masked_mean_abs">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">masked_mean_abs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#masked_mean_abs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.masked_mean_abs" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">|a</span> <span class="pre">-</span> <span class="pre">b|</span></code> averaged over <code class="docutils literal notranslate"><span class="pre">mask</span></code>, with the cast that makes it correct.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">200</span><span class="p">]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">);</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">190</span><span class="p">]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">masked_mean_abs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">bool</span><span class="p">))</span>
+<span class="go">6.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.off_palette_pixel_fraction">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">off_palette_pixel_fraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#off_palette_pixel_fraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.off_palette_pixel_fraction" title="Link to this definition"></a></dt>
+<dd><p>Fraction of the frame whose colour is not one the compiler declared.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mh">0x000000</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">,</span> <span class="mh">0x808080</span><span class="p">]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">off_palette_pixel_fraction</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[</span><span class="mh">0x000000</span><span class="p">,</span> <span class="mh">0xffffff</span><span class="p">]),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">0.3333</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.off_palette_top_colours">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">off_palette_top_colours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">top</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#off_palette_top_colours"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.off_palette_top_colours" title="Link to this definition"></a></dt>
+<dd><p>The most frequent off-palette colours, as <code class="docutils literal notranslate"><span class="pre">[{&quot;hex&quot;,</span> <span class="pre">&quot;count&quot;}]</span></code>.</p>
+<p>Not decoration: this metric’s whole meaning is “not one of the colours the
+compiler declared”, so a palette that under-collects turns it into a large
+plausible number with no error anywhere. If the top entries are exact hex
+literals from the staged art, the derivation missed them; if they are
+blends sitting between two palette entries, that is anti-aliasing and the
+number is right.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">off_palette_top_colours</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">top</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[{'hex': '#000001', 'count': 2}]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.overshoot_mean">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">overshoot_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dec_luma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_luma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#overshoot_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.overshoot_mean" title="Link to this definition"></a></dt>
+<dd><p>Mean positive excursion above the source, over the ring band.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">);</span> <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">overshoot_mean</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">bool</span><span class="p">))</span>
+<span class="go">2.5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.pack_rgb">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">pack_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#pack_rgb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.pack_rgb" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(N,H,W,3)</span></code> uint8 -&gt; <code class="docutils literal notranslate"><span class="pre">(N,H,W)</span></code> uint32, one integer per colour.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">hex</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pack_rgb</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[[</span><span class="mh">0x12</span><span class="p">,</span> <span class="mh">0x34</span><span class="p">,</span> <span class="mh">0x56</span><span class="p">]]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+<span class="go">'0x123456'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.metrics.ssim_map">
+<span class="sig-prename descclassname"><span class="pre">an.bench.metrics.</span></span><span class="sig-name descname"><span class="pre">ssim_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../../_modules/an/bench/metrics.html#ssim_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.metrics.ssim_map" title="Link to this definition"></a></dt>
+<dd><p>Windowed SSIM at stride 1, as a per-pixel map.</p>
+<p>Added <strong>beside</strong> <a class="reference internal" href="../verify/media.html#an.verify.media.ssim" title="an.verify.media.ssim"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.verify.media.ssim()</span></code></a>, never replacing it: that
+function’s global-moment form is what
+<a class="reference internal" href="../verify/media_quality.html#module-an.verify.media_quality" title="an.verify.media_quality"><code class="xref py py-data docutils literal notranslate"><span class="pre">an.verify.media_quality</span></code></a>’s frozen-render threshold was tuned
+against, and <cite>MediaQualityVerifier</cite> sits in the default orchestrate chain.</p>
+<p>Why it exists at all: the metrics survey concluded SSIM should be excluded
+because whole-frame SSIM scores a total eye-blink at 0.9989. That
+conclusion was <strong>refuted</strong> — only the <em>global-moment</em> reduction is blind.
+With the window matched to feature size, min-over-windows scores the same
+blink at 0.279 (1080p) and 0.063 (native).</p>
+<p>Do not cross-check against ffmpeg’s <code class="docutils literal notranslate"><span class="pre">ssim</span></code> filter: it uses overlapped 8x8
+block sums at 4-pixel stride, disagrees by up to 0.0201, and the
+disagreement <em>grows</em> with degradation.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ssim_map</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="mi">6</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
 

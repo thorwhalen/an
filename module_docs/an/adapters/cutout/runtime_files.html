@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.runtime_files &mdash; an 0.1.46 documentation</title>
+  <title>an.adapters.cutout.runtime_files &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -61,7 +61,12 @@
 <li class="toctree-l1"><a class="reference internal" href="fidelity.html">an.adapters.cutout.fidelity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pose.html">an.adapters.cutout.pose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="render.html">an.adapters.cutout.render</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.runtime_files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.runtime_files.runtime_dir"><code class="docutils literal notranslate"><span class="pre">runtime_dir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.runtime_files.runtime_index_html"><code class="docutils literal notranslate"><span class="pre">runtime_index_html()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.runtime_files.runtime_js"><code class="docutils literal notranslate"><span class="pre">runtime_js()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="serialize.html">an.adapters.cutout.serialize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="supersample.html">an.adapters.cutout.supersample</a></li>
@@ -113,6 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../credits.html">an.credits</a></li>
@@ -176,8 +182,38 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-adapters-cutout-runtime-files">
-<h1>an.adapters.cutout.runtime_files<a class="headerlink" href="#an-adapters-cutout-runtime-files" title="Link to this heading"></a></h1>
+  <section id="module-an.adapters.cutout.runtime_files">
+<span id="an-adapters-cutout-runtime-files"></span><h1>an.adapters.cutout.runtime_files<a class="headerlink" href="#module-an.adapters.cutout.runtime_files" title="Link to this heading"></a></h1>
+<p>Locate the bundled cutout JS runtime files.</p>
+<p>The runtime ships under <code class="docutils literal notranslate"><span class="pre">an/data/cutout_runtime/</span></code> and is consumed by the
+headless renderer in Phase 2C. This module exposes paths so callers don’t
+hard-code the layout.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">runtime_dir</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">"index.html"</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.runtime_files.runtime_dir">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.runtime_files.</span></span><span class="sig-name descname"><span class="pre">runtime_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/runtime_files.html#runtime_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.runtime_files.runtime_dir" title="Link to this definition"></a></dt>
+<dd><p>Return the directory containing index.html + runtime.js.</p>
+<p>Uses importlib.resources so it works from a wheel install too.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.runtime_files.runtime_index_html">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.runtime_files.</span></span><span class="sig-name descname"><span class="pre">runtime_index_html</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/runtime_files.html#runtime_index_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.runtime_files.runtime_index_html" title="Link to this definition"></a></dt>
+<dd><p>Path to <code class="docutils literal notranslate"><span class="pre">index.html</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.runtime_files.runtime_js">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.runtime_files.</span></span><span class="sig-name descname"><span class="pre">runtime_js</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/runtime_files.html#runtime_js"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.runtime_files.runtime_js" title="Link to this definition"></a></dt>
+<dd><p>Path to <code class="docutils literal notranslate"><span class="pre">runtime.js</span></code>.</p>
+</dd></dl>
+
 </section>
 
 

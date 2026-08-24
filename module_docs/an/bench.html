@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench &mdash; an 0.1.46 documentation</title>
+  <title>an.bench &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -83,7 +83,32 @@
 <li class="toctree-l1"><a class="reference internal" href="audio/tts.html">an.audio.tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base.html">an.base</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.BenchError"><code class="docutils literal notranslate"><span class="pre">BenchError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.GoldenError"><code class="docutils literal notranslate"><span class="pre">GoldenError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.LedgerSchemaError"><code class="docutils literal notranslate"><span class="pre">LedgerSchemaError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.MetricSpec"><code class="docutils literal notranslate"><span class="pre">MetricSpec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.PngFormatError"><code class="docutils literal notranslate"><span class="pre">PngFormatError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.Prediction"><code class="docutils literal notranslate"><span class="pre">Prediction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.RegistryError"><code class="docutils literal notranslate"><span class="pre">RegistryError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.Value"><code class="docutils literal notranslate"><span class="pre">Value</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.bless_scene"><code class="docutils literal notranslate"><span class="pre">bless_scene()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.build_ledger"><code class="docutils literal notranslate"><span class="pre">build_ledger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.build_scene_block"><code class="docutils literal notranslate"><span class="pre">build_scene_block()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.compare_scene"><code class="docutils literal notranslate"><span class="pre">compare_scene()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.decode_png"><code class="docutils literal notranslate"><span class="pre">decode_png()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.encode_png"><code class="docutils literal notranslate"><span class="pre">encode_png()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.format_panel"><code class="docutils literal notranslate"><span class="pre">format_panel()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.frame_key"><code class="docutils literal notranslate"><span class="pre">frame_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.pixels_sha256"><code class="docutils literal notranslate"><span class="pre">pixels_sha256()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.png_dimensions"><code class="docutils literal notranslate"><span class="pre">png_dimensions()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.read_png"><code class="docutils literal notranslate"><span class="pre">read_png()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.read_png_dimensions"><code class="docutils literal notranslate"><span class="pre">read_png_dimensions()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.run_bench"><code class="docutils literal notranslate"><span class="pre">run_bench()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.witnesses"><code class="docutils literal notranslate"><span class="pre">witnesses()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.write_png"><code class="docutils literal notranslate"><span class="pre">write_png()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="bench/capture.html">an.bench.capture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bench/compare.html">an.bench.compare</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bench/contract.html">an.bench.contract</a></li>
@@ -113,6 +138,7 @@
 <li class="toctree-l1"><a class="reference internal" href="characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="credits.html">an.credits</a></li>
@@ -176,8 +202,271 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-bench">
-<h1>an.bench<a class="headerlink" href="#an-bench" title="Link to this heading"></a></h1>
+  <section id="module-an.bench">
+<span id="an-bench"></span><h1>an.bench<a class="headerlink" href="#module-an.bench" title="Link to this heading"></a></h1>
+<p><cite>an bench</cite> — render a fixed corpus, compute a metrics panel, write one ledger row.</p>
+<p>The instrument Wave 2 exists to build. Its job is not to say whether the
+animation is good; it is to make a <strong>deliberate degradation move a number in a
+direction declared in advance</strong>, so that a future regression is caught by
+something other than someone noticing.</p>
+<p>Three things about the panel that are easy to assume wrongly:</p>
+<ul class="simple">
+<li><p><strong>It is not the epic’s metric list.</strong> All twelve originally-proposed metrics
+were refuted; every one here is a corrected form. <code class="docutils literal notranslate"><span class="pre">mean</span> <span class="pre">adjacent-frame</span>
+<span class="pre">SSIM</span></code> in particular is <em>out</em> — it moves the wrong way (0.958 at crf18 -&gt;
+0.977 at crf51, because a crushed video is smoother), so shipping it would
+put a number in the ledger that rewards the degradation the gate exists to
+catch.</p></li>
+<li><p><strong>Render-side and encode-side metrics are blind to each other’s mutations by
+construction</strong>, and are labelled so nothing mixes them. Render-side rows
+compare across any machine; encode-side rows are machine-scoped.</p></li>
+<li><p><strong>The vision judge is deliberately not here.</strong> Not because its input is
+nondeterministic — over frozen frames it is perfectly reproducible — but
+because a cassetted judge is a <em>constant</em>, invariant to the code under test,
+so it can never move under a deliberate degradation.</p></li>
+</ul>
+<p>Entry points: <a class="reference internal" href="bench/run.html#an.bench.run.run_bench" title="an.bench.run.run_bench"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.run.run_bench()</span></code></a>, and <code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">bench</span></code> on the CLI.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.BenchError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">BenchError</span></span><a class="reference internal" href="../../_modules/an/bench/run.html#BenchError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.BenchError" title="Link to this definition"></a></dt>
+<dd><p>The bench could not produce a row it would be honest to file.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.GoldenError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">GoldenError</span></span><a class="reference internal" href="../../_modules/an/bench/golden.html#GoldenError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.GoldenError" title="Link to this definition"></a></dt>
+<dd><p>A bless was refused, or a committed golden is unusable.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.LedgerSchemaError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">LedgerSchemaError</span></span><a class="reference internal" href="../../_modules/an/bench/ledger.html#LedgerSchemaError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.LedgerSchemaError" title="Link to this definition"></a></dt>
+<dd><p>A ledger row violates an invariant that would make it misreadable.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.MetricSpec">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">MetricSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">key:</span> <span class="pre">str,</span> <span class="pre">family:</span> <span class="pre">~typing.Literal['A',</span> <span class="pre">'B',</span> <span class="pre">'C',</span> <span class="pre">'D',</span> <span class="pre">'E',</span> <span class="pre">'F',</span> <span class="pre">'G'],</span> <span class="pre">unit:</span> <span class="pre">str,</span> <span class="pre">optimum:</span> <span class="pre">~an.bench.registry.Optimum,</span> <span class="pre">predictions:</span> <span class="pre">dict[str,</span> <span class="pre">~an.bench.registry.Prediction],</span> <span class="pre">sentence:</span> <span class="pre">str,</span> <span class="pre">role:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">reference:</span> <span class="pre">~typing.Literal['lossless',</span> <span class="pre">'source_png',</span> <span class="pre">'none']</span> <span class="pre">=</span> <span class="pre">'none',</span> <span class="pre">provisional:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">unreviewed:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">tripwire:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">notes:</span> <span class="pre">tuple[str,</span> <span class="pre">...]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/bench/registry.html#MetricSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.MetricSpec" title="Link to this definition"></a></dt>
+<dd><p>One row of the panel.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.PngFormatError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">PngFormatError</span></span><a class="reference internal" href="../../_modules/an/bench/png.html#PngFormatError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.PngFormatError" title="Link to this definition"></a></dt>
+<dd><p>A PNG this module deliberately does not decode, or a malformed one.</p>
+<p>Typed and specific on purpose: the alternative to refusing is returning a
+plausible array, and a golden gate that compares a plausible array is worse
+than one that does not run.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.Prediction">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">Prediction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expect</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'increase'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'decrease'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'no_change'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'not_applicable'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/bench/registry.html#Prediction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.Prediction" title="Link to this definition"></a></dt>
+<dd><p>What one metric is expected to do under one mutation, declared in advance.</p>
+<p><code class="docutils literal notranslate"><span class="pre">expect=None</span></code> means <strong>gated</strong>: the number is uninterpretable rather than
+good or bad, and <code class="docutils literal notranslate"><span class="pre">gate</span></code> says why. It is not “no change”.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.RegistryError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">RegistryError</span></span><a class="reference internal" href="../../_modules/an/bench/registry.html#RegistryError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.RegistryError" title="Link to this definition"></a></dt>
+<dd><p>A metric declaration violates one of the table’s invariants.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.Value">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">Value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal['measured'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'gated'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'unavailable']</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'measured'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/bench/ledger.html#Value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.Value" title="Link to this definition"></a></dt>
+<dd><p>One measured (or deliberately absent) number.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.bless_scene">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">bless_scene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">capture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chromium_build</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_contract_sha256</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">golden_note</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/an/bench/golden.html#bless_scene"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.bless_scene" title="Link to this definition"></a></dt>
+<dd><p>Write one scene’s golden frames and its bless record. Refuses, loudly.</p>
+<p>Every refusal here is a case where writing the file would produce a gate
+that cannot fail:</p>
+<ul class="simple">
+<li><p><strong>no reason</strong> — a re-bless with no recorded reason is the same failure as
+a silently widened threshold, which is the named failure mode this whole
+wave exists to prevent;</p></li>
+<li><p><strong>fewer than two frames</strong> — one frame cannot notice a scene that renders
+its first instant correctly and then stops;</p></li>
+<li><p><strong>a pixel-identical pair</strong> — measured on <code class="docutils literal notranslate"><span class="pre">promote_demo</span></code>: frame 0 and the
+<code class="docutils literal notranslate"><span class="pre">duration/2</span></code> frame differ by exactly zero pixels, so the obvious choice
+blesses one picture twice and the second golden tests nothing;</p></li>
+<li><p><strong>an unknown Chromium build</strong> — the path keys on it, so without it the
+frames would be written under a name no future run could look up.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.build_ledger">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">build_ledger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/an/bench/ledger.html#build_ledger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.build_ledger" title="Link to this definition"></a></dt>
+<dd><p>The whole row.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.build_scene_block">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">build_scene_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">provenance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="bench/ledger.html#an.bench.ledger.Value" title="an.bench.ledger.Value"><span class="pre">Value</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tripwires</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="bench/ledger.html#an.bench.ledger.Value" title="an.bench.ledger.Value"><span class="pre">Value</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/an/bench/ledger.html#build_scene_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.build_scene_block" title="Link to this definition"></a></dt>
+<dd><p>Assemble one scene’s three blocks, refusing anything unreadable.</p>
+<p>Completeness is enforced in both directions. A metric the registry declares
+but the row omits is a silently narrower panel; a metric the row carries
+but the registry does not declare has no family, no side and no predicted
+direction, so nothing downstream can count it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.compare_scene">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">compare_scene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">capture</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chromium_build</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/an/bench/golden.html#compare_scene"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.compare_scene" title="Link to this definition"></a></dt>
+<dd><p>Compare today’s render against the committed goldens for one scene.</p>
+<p>Returns a dict with <code class="docutils literal notranslate"><span class="pre">state</span></code> in <code class="docutils literal notranslate"><span class="pre">{&quot;measured&quot;,</span> <span class="pre">&quot;gated&quot;,</span> <span class="pre">&quot;unavailable&quot;}</span></code>,
+the reduced numbers the ledger carries, and a per-frame record for
+provenance. The reduction is <strong>worst frame wins</strong>: <code class="docutils literal notranslate"><span class="pre">identical</span></code> is the
+conjunction and <code class="docutils literal notranslate"><span class="pre">min_ssim_win8</span></code> is the minimum, because a maximum or a
+mean lets one clean frame hide a broken one, and this metric’s own name is
+“the worst small window”.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.decode_png">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">decode_png</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../_modules/an/bench/png.html#decode_png"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.decode_png" title="Link to this definition"></a></dt>
+<dd><p>Decode an 8-bit truecolour PNG to <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W,</span> <span class="pre">C)</span></code> uint8, <code class="docutils literal notranslate"><span class="pre">C</span></code> in <code class="docutils literal notranslate"><span class="pre">{3,</span> <span class="pre">4}</span></code>.</p>
+<p>Refuses — rather than approximates — 16-bit, palette, greyscale and
+interlaced images, naming what it found.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]]],</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">decode_png</span><span class="p">(</span><span class="n">encode_png</span><span class="p">(</span><span class="n">a</span><span class="p">)),</span> <span class="n">a</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.encode_png">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">encode_png</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">9</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="reference internal" href="../../_modules/an/bench/png.html#encode_png"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.encode_png" title="Link to this definition"></a></dt>
+<dd><p>Encode <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W,</span> <span class="pre">3)</span></code> uint8 as an 8-bit truecolour PNG, every row filter 0.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">encode_png</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span> <span class="o">==</span> <span class="n">PNG_SIGNATURE</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">decode_png</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2, 3, 3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.format_panel">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">format_panel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ledger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/bench/run.html#format_panel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.format_panel" title="Link to this definition"></a></dt>
+<dd><p>A human-readable digest of a row — the thing <cite>an bench</cite> prints.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.frame_key">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">frame_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/bench/golden.html#frame_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.frame_key" title="Link to this definition"></a></dt>
+<dd><p>The filename stem for a frame, zero-padded so a directory listing sorts.</p>
+<p>Keyed on the frame <strong>index</strong>, not the pinned time: the index is what names
+the picture. A change to <code class="docutils literal notranslate"><span class="pre">fps</span></code> moves the index, which changes the path,
+which makes the golden absent and therefore <em>gated</em> — loud, and pointing at
+the right cause.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">frame_key</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">'f0007'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.pixels_sha256">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">pixels_sha256</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/an/bench/golden.html#pixels_sha256"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.pixels_sha256" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">sha256</span></code> over the decoded pixels — <strong>shape and dtype included</strong>.</p>
+<p>Never over file bytes, for the reason in the module docstring. And never
+over the raw buffer alone either: <code class="docutils literal notranslate"><span class="pre">tobytes()</span></code> carries no shape, so a
+320x240 frame and a 240x320 one holding the same bytes hash identically,
+and issue #38’s literal “the criterion is <code class="docutils literal notranslate"><span class="pre">sha256(decoded</span> <span class="pre">RGB</span> <span class="pre">array)</span></code>”
+would report PASS on a transposed frame. Both orientations are live in this
+corpus. <a class="reference internal" href="bench/metrics.html#an.bench.metrics.golden_comparison" title="an.bench.metrics.golden_comparison"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.metrics.golden_comparison()</span></code></a> catches it separately via
+its <code class="docutils literal notranslate"><span class="pre">shape_mismatch</span></code> branch; this makes the digest agree with the gate
+rather than quietly disagreeing with it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pixels_sha256</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="o">==</span> <span class="n">pixels_sha256</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.png_dimensions">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">png_dimensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/an/bench/png.html#png_dimensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.png_dimensions" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(width,</span> <span class="pre">height)</span></code> from a PNG’s IHDR, without decoding a single pixel.</p>
+<p>Width first, matching the PNG header itself — and deliberately the opposite
+order from <a class="reference internal" href="#an.bench.read_png" title="an.bench.read_png"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_png()</span></code></a>, which returns <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W,</span> <span class="pre">C)</span></code> like every other
+array here. Getting it backwards produces a square-looking check that
+passes on square frames only, so the order is asserted in the tests.</p>
+<p>Cheap on purpose. The bench reads this for <strong>every</strong> frame on disk rather
+than sampling one, because the failure it exists to catch — a render whose
+frame size changed partway through — is exactly the one sampling misses.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">png_dimensions</span><span class="p">(</span><span class="n">encode_png</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">240</span><span class="p">,</span> <span class="mi">320</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)))</span>
+<span class="go">(320, 240)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.read_png">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">read_png</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../_modules/an/bench/png.html#read_png"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.read_png" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W,</span> <span class="pre">3)</span></code> uint8 for a PNG on disk, alpha dropped only if opaque.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.read_png_dimensions">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">read_png_dimensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/an/bench/png.html#read_png_dimensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.read_png_dimensions" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(width,</span> <span class="pre">height)</span></code> for a PNG on disk, reading only its header.</p>
+<p>A 1080p frame is megabytes and its declared size is in the first 24 of
+them. Reading only those is what makes checking every frame of every shot
+free rather than a second full decode of the corpus.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.run_bench">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">run_bench</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="bench/corpus.html#an.bench.corpus.Fixture" title="an.bench.corpus.Fixture"><span class="pre">Fixture</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_render</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bless</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">golden_root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/an/bench/run.html#run_bench"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.run_bench" title="Link to this definition"></a></dt>
+<dd><p>Render the corpus, compute the panel, and (by default) write the row.</p>
+<p><code class="docutils literal notranslate"><span class="pre">bless</span></code> is the <strong>reason</strong> a re-bless is being made, and passing it is what
+turns the run into a bless. One argument rather than a <code class="docutils literal notranslate"><span class="pre">--bless</span></code> flag plus
+a <code class="docutils literal notranslate"><span class="pre">--reason</span></code> string, so “blessed with no recorded reason” — the failure
+this rule exists to prevent — is not expressible.</p>
+<p><code class="docutils literal notranslate"><span class="pre">golden_root</span></code> redirects where goldens are read and written, and it exists
+because without it a test of the bless path has no choice but to overwrite
+the committed corpus. That is not hypothetical: the first version of an#38’s
+bless test did exactly that, replacing a real bless record’s reason with the
+test’s own.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.witnesses">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">witnesses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ledger_scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mutation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/an/bench/ledger.html#witnesses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.witnesses" title="Link to this definition"></a></dt>
+<dd><p>Which metrics would count for <code class="docutils literal notranslate"><span class="pre">mutation</span></code>, grouped by family.</p>
+<p>Reads the row rather than the registry, so an#41’s criterion is evaluated
+against what was actually written down.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">witnesses</span><span class="p">({</span><span class="s2">"metrics"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"m"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"family"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"under_mutation"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"high_crf"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"counts"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}}}}},</span> <span class="s2">"high_crf"</span><span class="p">)</span>
+<span class="go">{'A': ['m']}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.write_png">
+<span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">write_png</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">9</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../../_modules/an/bench/png.html#write_png"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.write_png" title="Link to this definition"></a></dt>
+<dd><p>Write <code class="docutils literal notranslate"><span class="pre">rgb</span></code> as a filter-0 PNG and <strong>verify the round trip</strong> before returning.</p>
+<p>The verification is not defensive noise: it is the only thing standing
+between a bug in this module’s own encoder and a committed golden that
+silently disagrees with the frame it was blessed from. Research §3 asks for
+exactly this — “assert the round trip at bless time against the in-memory
+screenshot pixels, so a bug in <cite>an</cite>’s own encoder cannot hide”.</p>
+</dd></dl>
+
 </section>
 
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.fidelity &mdash; an 0.1.46 documentation</title>
+  <title>an.adapters.cutout.fidelity &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -58,7 +58,21 @@
 <li class="toctree-l1"><a class="reference internal" href="clip.html">an.adapters.cutout.clip</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="easing.html">an.adapters.cutout.easing</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.fidelity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#why-this-and-not-a-rendered-bounding-box">Why this and not a rendered bounding box</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-it-measures">What it measures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.fidelity.CONTAIN_FIT"><code class="docutils literal notranslate"><span class="pre">CONTAIN_FIT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.fidelity.DFLT_ASPECT_TOLERANCE"><code class="docutils literal notranslate"><span class="pre">DFLT_ASPECT_TOLERANCE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.fidelity.PartFidelity"><code class="docutils literal notranslate"><span class="pre">PartFidelity</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.cutout.fidelity.PartFidelity.aspect_distortion"><code class="docutils literal notranslate"><span class="pre">PartFidelity.aspect_distortion</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.cutout.fidelity.PartFidelity.box_aspect_disagreement"><code class="docutils literal notranslate"><span class="pre">PartFidelity.box_aspect_disagreement</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.fidelity.SPRITE_KIND"><code class="docutils literal notranslate"><span class="pre">SPRITE_KIND</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.fidelity.aspect_findings"><code class="docutils literal notranslate"><span class="pre">aspect_findings()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.fidelity.part_fidelity"><code class="docutils literal notranslate"><span class="pre">part_fidelity()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="pose.html">an.adapters.cutout.pose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="runtime_files.html">an.adapters.cutout.runtime_files</a></li>
@@ -113,6 +127,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../credits.html">an.credits</a></li>
@@ -176,8 +191,105 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-adapters-cutout-fidelity">
-<h1>an.adapters.cutout.fidelity<a class="headerlink" href="#an-adapters-cutout-fidelity" title="Link to this heading"></a></h1>
+  <section id="module-an.adapters.cutout.fidelity">
+<span id="an-adapters-cutout-fidelity"></span><h1>an.adapters.cutout.fidelity<a class="headerlink" href="#module-an.adapters.cutout.fidelity" title="Link to this heading"></a></h1>
+<p>How faithfully a compiled scene reproduces the art it was built from.</p>
+<p>Wave 4’s instrument (#9, <cite>misc/docs/wave4_research.md</cite> §2). One number per
+sprite: the <strong>aspect distortion</strong>, the factor by which the compiler’s box
+disagrees with the art’s own raster about shape.</p>
+<section id="why-this-and-not-a-rendered-bounding-box">
+<h2>Why this and not a rendered bounding box<a class="headerlink" href="#why-this-and-not-a-rendered-bounding-box" title="Link to this heading"></a></h2>
+<p>The obvious instrument — render a frame, find the part’s ink, measure its
+extents — does not work. Measured on the repo’s own art, the same <code class="docutils literal notranslate"><span class="pre">arm_l</span></code>
+render is 2, 4, 6 or 8 px wide depending only on the anti-aliasing threshold
+chosen, so any tolerance asserted against it is really an assertion about a
+threshold. The scale ratio below is exact, threshold-free, needs no browser and
+no render at all, and reads straight off the two numbers that actually decide
+the shape.</p>
+</section>
+<section id="what-it-measures">
+<h2>What it measures<a class="headerlink" href="#what-it-measures" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">makeSvgSprite</span></code> sets <code class="docutils literal notranslate"><span class="pre">sprite.width</span></code> and <code class="docutils literal notranslate"><span class="pre">sprite.height</span></code> independently
+(<code class="docutils literal notranslate"><span class="pre">runtime.js:164-165</span></code>); PixiJS turns each into an independent axis scale.
+So the sprite’s two scale factors are</p>
+<blockquote>
+<div><p>sx = box_width  / raster_width
+sy = box_height / raster_height</p>
+</div></blockquote>
+<p>and the art keeps its shape exactly when <code class="docutils literal notranslate"><span class="pre">sx</span> <span class="pre">==</span> <span class="pre">sy</span></code>.
+<a class="reference internal" href="#an.adapters.cutout.fidelity.PartFidelity.aspect_distortion" title="an.adapters.cutout.fidelity.PartFidelity.aspect_distortion"><code class="xref py py-attr docutils literal notranslate"><span class="pre">PartFidelity.aspect_distortion</span></code></a> is <code class="docutils literal notranslate"><span class="pre">max(sx,</span> <span class="pre">sy)</span> <span class="pre">/</span> <span class="pre">min(sx,</span> <span class="pre">sy)</span></code> — 1.0
+when the art is respected, and the factor by which it is squashed otherwise.</p>
+<p><strong>The invariant this exists to enforce: aspect ratio is intrinsic to the art,
+and the compiler may never override it.</strong> A part is placed and uniformly
+scaled, never stretched to fit a box.</p>
+</section>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.fidelity.CONTAIN_FIT">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.fidelity.</span></span><span class="sig-name descname"><span class="pre">CONTAIN_FIT</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'contain'</span></span><a class="headerlink" href="#an.adapters.cutout.fidelity.CONTAIN_FIT" title="Link to this definition"></a></dt>
+<dd><p>Fit policies, mirroring <code class="docutils literal notranslate"><span class="pre">VisualJSON.fit</span></code>.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.fidelity.DFLT_ASPECT_TOLERANCE">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.fidelity.</span></span><span class="sig-name descname"><span class="pre">DFLT_ASPECT_TOLERANCE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.000001</span></span><a class="headerlink" href="#an.adapters.cutout.fidelity.DFLT_ASPECT_TOLERANCE" title="Link to this definition"></a></dt>
+<dd><p>Ratios within this of 1.0 count as uniform. Guards float noise only — it is
+not a tolerance for “close enough”, which is why it is this tight.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.cutout.fidelity.PartFidelity">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.fidelity.</span></span><span class="sig-name descname"><span class="pre">PartFidelity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asset_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raster</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'stretch'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/fidelity.html#PartFidelity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.fidelity.PartFidelity" title="Link to this definition"></a></dt>
+<dd><p>One sprite’s box, its art’s raster, and the disagreement between them.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="an.adapters.cutout.fidelity.PartFidelity.aspect_distortion">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">aspect_distortion</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#an.adapters.cutout.fidelity.PartFidelity.aspect_distortion" title="Link to this definition"></a></dt>
+<dd><p>The factor by which the art is actually reshaped on screen.</p>
+<p><strong>The fit policy is what decides this, not the box.</strong> Under
+<code class="docutils literal notranslate"><span class="pre">contain</span></code> the runtime scales both axes by one factor, so the art
+keeps its shape whatever the box says and this is 1.0. Under
+<code class="docutils literal notranslate"><span class="pre">stretch</span></code> the box wins on both axes and the disagreement is the
+distortion.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="an.adapters.cutout.fidelity.PartFidelity.box_aspect_disagreement">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">box_aspect_disagreement</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#an.adapters.cutout.fidelity.PartFidelity.box_aspect_disagreement" title="Link to this definition"></a></dt>
+<dd><p>How far the box’s shape is from the art’s. 1.0 when they agree.</p>
+<p>Pure geometry, independent of the fit policy. Under <code class="docutils literal notranslate"><span class="pre">contain</span></code> this is
+<em>slack</em> — the art still keeps its shape and the box is simply roomier on
+one axis — so it is a weaker signal than <a class="reference internal" href="#an.adapters.cutout.fidelity.PartFidelity.aspect_distortion" title="an.adapters.cutout.fidelity.PartFidelity.aspect_distortion"><code class="xref py py-attr docutils literal notranslate"><span class="pre">aspect_distortion</span></code></a>, but
+it is what tells you the compiler is sizing from the art rather than
+from a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.fidelity.SPRITE_KIND">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.fidelity.</span></span><span class="sig-name descname"><span class="pre">SPRITE_KIND</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'svg_sprite'</span></span><a class="headerlink" href="#an.adapters.cutout.fidelity.SPRITE_KIND" title="Link to this definition"></a></dt>
+<dd><p>The visual kind whose art comes from a file and can therefore be distorted.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.fidelity.aspect_findings">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.fidelity.</span></span><span class="sig-name descname"><span class="pre">aspect_findings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">asset_root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">severity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'error'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.000001</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../verify/_base.html#an.verify._base.Finding" title="an.verify._base.Finding"><span class="pre">Finding</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/fidelity.html#aspect_findings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.fidelity.aspect_findings" title="Link to this definition"></a></dt>
+<dd><p>Report each non-uniformly scaled sprite as a typed <code class="xref py py-class docutils literal notranslate"><span class="pre">Finding</span></code>.</p>
+<p>Uses the existing finding type so the orchestrator’s error routing applies,
+and sets <code class="docutils literal notranslate"><span class="pre">ir_path</span></code> to the scene-graph node path so a fix is routed to the
+part that needs it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.fidelity.part_fidelity">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.fidelity.</span></span><span class="sig-name descname"><span class="pre">part_fidelity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">asset_root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.000001</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.adapters.cutout.fidelity.PartFidelity" title="an.adapters.cutout.fidelity.PartFidelity"><span class="pre">PartFidelity</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/fidelity.html#part_fidelity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.fidelity.part_fidelity" title="Link to this definition"></a></dt>
+<dd><p>Measure every <code class="docutils literal notranslate"><span class="pre">svg_sprite</span></code> in a compiled scene against its source art.</p>
+<p><code class="docutils literal notranslate"><span class="pre">asset_root</span></code> is the directory a texture’s <code class="docutils literal notranslate"><span class="pre">src</span></code> is relative to — the
+staged runtime directory, or the mall’s characters-store root with the
+<code class="docutils literal notranslate"><span class="pre">characters/</span></code> prefix retained.</p>
+<p>Sprites whose art cannot be read are skipped rather than guessed at; a
+missing part is #76’s problem, not this function’s.</p>
+</dd></dl>
+
 </section>
 
 

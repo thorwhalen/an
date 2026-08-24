@@ -1,0 +1,820 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.bench.metrics &mdash; an 0.1.47 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.bench.metrics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.bench.metrics</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The metric panel: pure numpy, no I/O, no subprocess.</span>
+
+<span class="sd">Every function here is ``f(arrays, mask) -&gt; float``. Loading is</span>
+<span class="sd">:mod:`an.bench.imageio`'s job. The split is what lets the whole panel run in</span>
+<span class="sd">the default CI leg — numpy is a hard dependency, ffmpeg and Playwright are not</span>
+<span class="sd">— which is the only part of this wave that main CI can ever see.</span>
+
+<span class="sd">**The set is the research's corrected one, and it is not the epic's draft.**</span>
+<span class="sd">All twelve originally-proposed metrics were refuted. The corrections that are</span>
+<span class="sd">easiest to undo by accident, each guarded by a test:</span>
+
+<span class="sd">- ``edge_transition_width``'s flatness tolerance must not be 0. With ``&gt; 0``,</span>
+<span class="sd">  ±3-LSB dither sends the metric to 255.0.</span>
+<span class="sd">- ``off_palette_pixel_fraction`` must not use ``np.unique(..., axis=0)``:</span>
+<span class="sd">  1.833 s/frame at 1080p against 0.019 s for the packed form, 94x, identical</span>
+<span class="sd">  result.</span>
+<span class="sd">- ``encode_flicker_on_held_pixels`` must **cast before subtracting**.</span>
+<span class="sd">  ``np.abs(a - b)`` on uint8 is the identity on unsigned dtypes, so the literal</span>
+<span class="sd">  proposed form measured the *sign* of the change. It stayed monotone, which is</span>
+<span class="sd">  exactly why it would have shipped unnoticed. And it must report a **rate**,</span>
+<span class="sd">  not a mean: the median held-pixel delta is 0 at every CRF.</span>
+<span class="sd">- ``encode_ringing_excess`` is the difference of two overshoot means, so the</span>
+<span class="sd">  source-hardness term cancels. Raw overshoot is a joint function of source</span>
+<span class="sd">  hardness and encoder fidelity with one degree of freedom, which is why any</span>
+<span class="sd">  move toward crisper outlines raised it under an unchanged encoder.</span>
+<span class="sd">- ``edge_masked_distinct_colours`` must be handed a mask built from</span>
+<span class="sd">  :func:`luma_u8`, never from :func:`luma709` directly. ``luma709`` returns</span>
+<span class="sd">  **float in [0,1]** and :func:`an.bench.masks.edge_mask` thresholds at **40 on</span>
+<span class="sd">  0-255**, so the float form makes every two-apart gradient &lt;= 1.0 and the mask</span>
+<span class="sd">  comes back **entirely empty** — measured: 0 selected pixels against 4 for the</span>
+<span class="sd">  same hard step. The metric would then be ``nan`` on every scene, which reads</span>
+<span class="sd">  as "the check could not run" rather than as a bug (an#55).</span>
+
+<span class="sd">One metric the epic named is deliberately absent: ``mean_adjacent_frame_ssim``</span>
+<span class="sd">moves the **wrong way** (0.958 at crf18 -&gt; 0.977 at crf51, because a crushed</span>
+<span class="sd">video is smoother). Its existing use as a frozen-render detector in</span>
+<span class="sd">:mod:`an.verify.media_quality` is a different and legitimate job.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="c1">#: Two neighbours within this many code values count as "flat". NOT 0 — see</span>
+<span class="c1">#: the module docstring.</span>
+<span class="n">EDGE_FLAT_TOL</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="c1">#: Trim fraction for `edge_transition_width`'s mean, so one pathological run</span>
+<span class="c1">#: cannot carry the number.</span>
+<span class="n">EDGE_TRIM</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.10</span>
+
+<span class="c1">#: A flat-field pixel more than this far off is "deviated".</span>
+<span class="n">FLAT_DEV_TOL</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span>
+
+<span class="c1">#: A held pixel that moved by at least this much "flickered".</span>
+<span class="n">FLICKER_DELTA_TOL</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1">#: `ssim_map` window radius; 7x7, matched to feature size rather than the</span>
+<span class="c1">#: global-moment form.</span>
+<span class="n">SSIM_RADIUS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_trimmed_mean</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">trim</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="n">trim</span><span class="p">)</span>
+    <span class="n">core</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">k</span> <span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="n">k</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">v</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+
+<span class="c1"># --------------------------------------------------------------- render-side</span>
+
+
+<div class="viewcode-block" id="edge_transition_width">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.edge_transition_width">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">edge_transition_width</span><span class="p">(</span>
+    <span class="n">rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">EDGE_FLAT_TOL</span><span class="p">,</span> <span class="n">trim</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">EDGE_TRIM</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Average thickness, in pixels, of the fuzzy band between two flat areas.</span>
+
+<span class="sd">    Under 1 is a jagged staircase; ~1 is clean AA; 3+ means the picture has</span>
+<span class="sd">    gone soft. **Two-sided**, which is the whole reason it replaced a palette</span>
+<span class="sd">    cardinality count: cardinality reads AA-off as 4, AA-on as 45 and a 3x3</span>
+<span class="sd">    blur as 416, so "the number went up" means "AA restored" and "the picture</span>
+<span class="sd">    went soft" indiscriminately.</span>
+
+<span class="sd">    Returns ``(trimmed_mean, median)``.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; a = np.zeros((1, 4, 8, 3), np.uint8); a[0, :, 4:] = 255</span>
+<span class="sd">    &gt;&gt;&gt; round(edge_transition_width(a)[0], 3)   # one hard step = a 2px band</span>
+<span class="sd">    2.0</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">rgb</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+    <span class="n">dl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">a</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">dr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">a</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">:])</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">nonflat</span> <span class="o">=</span> <span class="o">~</span><span class="p">((</span><span class="n">dl</span> <span class="o">&lt;=</span> <span class="n">tol</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">dr</span> <span class="o">&lt;=</span> <span class="n">tol</span><span class="p">))</span>
+    <span class="n">padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">nonflat</span><span class="p">,</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">padded</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">starts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">d</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[:,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">ends</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">d</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">runs</span> <span class="o">=</span> <span class="n">ends</span> <span class="o">-</span> <span class="n">starts</span>
+    <span class="k">if</span> <span class="n">runs</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">_trimmed_mean</span><span class="p">(</span><span class="n">runs</span><span class="p">,</span> <span class="n">trim</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">runs</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="pack_rgb">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.pack_rgb">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pack_rgb</span><span class="p">(</span><span class="n">rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``(N,H,W,3)`` uint8 -&gt; ``(N,H,W)`` uint32, one integer per colour.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; hex(int(pack_rgb(np.array([[[[0x12, 0x34, 0x56]]]], np.uint8))[0, 0, 0]))</span>
+<span class="sd">    '0x123456'</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">rgb</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">a</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="off_palette_pixel_fraction">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.off_palette_pixel_fraction">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">off_palette_pixel_fraction</span><span class="p">(</span><span class="n">packed</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Fraction of the frame whose colour is not one the compiler declared.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; p = np.array([[[0x000000, 0xffffff, 0x808080]]], np.uint32)</span>
+<span class="sd">    &gt;&gt;&gt; round(off_palette_pixel_fraction(p, [0x000000, 0xffffff]), 4)</span>
+<span class="sd">    0.3333</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">packed</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">palette</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="off_palette_top_colours">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.off_palette_top_colours">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">off_palette_top_colours</span><span class="p">(</span><span class="n">packed</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">top</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The most frequent off-palette colours, as ``[{"hex", "count"}]``.</span>
+
+<span class="sd">    Not decoration: this metric's whole meaning is "not one of the colours the</span>
+<span class="sd">    compiler declared", so a palette that under-collects turns it into a large</span>
+<span class="sd">    plausible number with no error anywhere. If the top entries are exact hex</span>
+<span class="sd">    literals from the staged art, the derivation missed them; if they are</span>
+<span class="sd">    blends sitting between two palette entries, that is anti-aliasing and the</span>
+<span class="sd">    number is right.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; p = np.array([[[1, 1, 2]]], np.uint32)</span>
+<span class="sd">    &gt;&gt;&gt; off_palette_top_colours(p, [2], top=1)</span>
+<span class="sd">    [{'hex': '#000001', 'count': 2}]</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">off</span> <span class="o">=</span> <span class="n">packed</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">packed</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">palette</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">))]</span>
+    <span class="k">if</span> <span class="n">off</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">values</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">off</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">counts</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="n">top</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[{</span><span class="s2">"hex"</span><span class="p">:</span> <span class="s2">"#</span><span class="si">%06x</span><span class="s2">"</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="s2">"count"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">])}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">order</span><span class="p">]</span></div>
+
+
+
+<span class="c1">#: How far off the line between two palette colours a pixel may sit and still</span>
+<span class="c1">#: be called a blend of them. 8-bit channels, so a couple of code values covers</span>
+<span class="c1">#: rounding in the compositor.</span>
+<span class="n">BLEND_TOLERANCE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<div class="viewcode-block" id="classify_off_palette">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.classify_off_palette">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">classify_off_palette</span><span class="p">(</span><span class="n">entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">palette</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Say, for each off-palette colour, whether it is a blend of two declared ones.</span>
+
+<span class="sd">    This is the difference between a diagnostic and a list of hex codes. The</span>
+<span class="sd">    metric's whole meaning is "not one of the colours the compiler declared",</span>
+<span class="sd">    so a palette that under-collects turns it into a large, plausible number</span>
+<span class="sd">    with no error anywhere. Anti-aliasing legitimately produces colours *on the</span>
+<span class="sd">    segment between* two declared colours; a missed literal does not.</span>
+
+<span class="sd">    So each entry gains ``blend_of`` (the two palette colours it sits between,</span>
+<span class="sd">    or ``None``). A row whose top off-palette colours are all blends is</span>
+<span class="sd">    reporting anti-aliasing correctly. One that is not is a derivation bug, and</span>
+<span class="sd">    now it says so in the ledger rather than waiting for someone to look.</span>
+
+<span class="sd">    &gt;&gt;&gt; classify_off_palette([{"hex": "#808080"}], [0x000000, 0xffffff])[0]["blend_of"]</span>
+<span class="sd">    ['#000000', '#ffffff']</span>
+<span class="sd">    &gt;&gt;&gt; classify_off_palette([{"hex": "#ff00ff"}], [0x000000, 0xffffff])[0]["blend_of"]</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">pal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="p">[[(</span><span class="n">c</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">255</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">255</span><span class="p">,</span> <span class="n">c</span> <span class="o">&amp;</span> <span class="mi">255</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">palette</span><span class="p">)],</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"hex"</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"#"</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span> <span class="mi">16</span><span class="p">)],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pal</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pal</span><span class="p">)):</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">pal</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pal</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="n">ab</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+                <span class="n">denom</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ab</span> <span class="o">@</span> <span class="n">ab</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">denom</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">v</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">@</span> <span class="n">ab</span><span class="p">)</span> <span class="o">/</span> <span class="n">denom</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">ab</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">BLEND_TOLERANCE</span><span class="p">:</span>
+                    <span class="n">found</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="s2">"#</span><span class="si">%02x%02x%02x</span><span class="s2">"</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span><span class="p">),</span>
+                        <span class="s2">"#</span><span class="si">%02x%02x%02x</span><span class="s2">"</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">b</span><span class="p">),</span>
+                    <span class="p">]</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="o">**</span><span class="n">entry</span><span class="p">,</span> <span class="s2">"blend_of"</span><span class="p">:</span> <span class="n">found</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="frame_distinct_colours">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.frame_distinct_colours">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">frame_distinct_colours</span><span class="p">(</span><span class="n">packed</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Mean number of distinct colours per frame.</span>
+
+<span class="sd">    A flatness / palette-discipline **guard**, with no predicted direction on</span>
+<span class="sd">    an AA change. Do not count it alongside `off_palette_pixel_fraction`; they</span>
+<span class="sd">    are the same family.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; frame_distinct_colours(np.array([[[1, 1, 2]], [[3, 4, 5]]], np.uint32))</span>
+<span class="sd">    2.5</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">packed</span><span class="p">]))</span></div>
+
+
+
+<div class="viewcode-block" id="edge_masked_distinct_colours">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.edge_masked_distinct_colours">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">edge_masked_distinct_colours</span><span class="p">(</span><span class="n">packed</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Mean distinct colours per frame, counted ONLY on the edge mask.</span>
+
+<span class="sd">    The half of `frame_distinct_colours` that is about edges: an interior-only</span>
+<span class="sd">    change — a gradient laid into a flat field, a soft shadow — moves the</span>
+<span class="sd">    whole-frame count and cannot reach this one at all. The second doctest</span>
+<span class="sd">    below is that property, and it is the whole of what the mask buys.</span>
+
+<span class="sd">    **It does NOT make the number blind to a whole-frame blur, and an#55's</span>
+<span class="sd">    premise that it would is refuted.** The mask is recomputed from the frame</span>
+<span class="sd">    being measured, and a blur WIDENS the edge band, so the mask grows to admit</span>
+<span class="sd">    the new gradation. Measured on the six committed goldens, 3x3 box blur,</span>
+<span class="sd">    ratio against k=1:</span>
+
+<span class="sd">    ==================  ===========  ===========</span>
+<span class="sd">    scene               whole-frame  edge-masked</span>
+<span class="sd">    ==================  ===========  ===========</span>
+<span class="sd">    aa_probe                 10.25x        9.50x</span>
+<span class="sd">    graded_field              2.04x        2.35x</span>
+<span class="sd">    multi_shot                7.92x        4.63x</span>
+<span class="sd">    promote_demo              1.25x        0.83x</span>
+<span class="sd">    saturated_outline         1.49x        1.14x</span>
+<span class="sd">    single_character          8.60x        5.70x</span>
+<span class="sd">    ==================  ===========  ===========</span>
+
+<span class="sd">    Damped on four of six, WORSE on `graded_field`, and nowhere near blind.</span>
+<span class="sd">    (an#55 quotes "1.8x-9.3x" for the whole-frame column; the real range on</span>
+<span class="sd">    these goldens is 1.25x-10.25x, wider at both ends.)</span>
+
+<span class="sd">    **What separates a blur from a supersample is the WIDTH half of the pair,</span>
+<span class="sd">    not this one.** The same blur puts `edge_transition_width` at 2.1x-3.4x</span>
+<span class="sd">    (`aa_probe` 2.655 -&gt; 5.594 px), while an exact k=2 resolve moves it +2.6%</span>
+<span class="sd">    to +8.0% (research §4). So read this metric BESIDE</span>
+<span class="sd">    `edge_transition_width`: colours up with width flat is gradation added;</span>
+<span class="sd">    colours up with width doubled is a soft picture.</span>
+
+<span class="sd">    **Evidence for a human reader, never a gate.** an#41's criterion counts</span>
+<span class="sd">    metrics independently and cannot express a conjunction, so neither half of</span>
+<span class="sd">    the pair may be declared as counting on the strength of the other.</span>
+
+<span class="sd">    ``edge`` must come from :func:`an.bench.masks.edge_mask` applied to</span>
+<span class="sd">    :func:`luma_u8` — **not** to :func:`luma709`, which is float in [0,1]</span>
+<span class="sd">    against a threshold of 40 on 0-255 and yields an empty mask every time.</span>
+
+<span class="sd">    Returns ``(mean, frames_measured)``. A frame whose mask is empty is</span>
+<span class="sd">    **skipped, not averaged in as zero** — a zero would drag the mean down and</span>
+<span class="sd">    read as exactly the regression this metric exists to notice. With no such</span>
+<span class="sd">    frame the answer is ``nan``, which the caller records as `unavailable`;</span>
+<span class="sd">    :func:`an.bench.ledger.measured` refuses it.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from an.bench.masks import edge_mask</span>
+<span class="sd">    &gt;&gt;&gt; c = np.zeros((1, 4, 16, 3), np.uint8); c[0, :, 8:] = 255</span>
+<span class="sd">    &gt;&gt;&gt; edge_masked_distinct_colours(pack_rgb(c), edge_mask(luma_u8(c)))</span>
+<span class="sd">    (2.0, 1)</span>
+
+<span class="sd">    A change entirely inside a flat field moves the whole-frame count and not</span>
+<span class="sd">    this one — this, and only this, is what the mask buys:</span>
+
+<span class="sd">    &gt;&gt;&gt; d = c.copy()</span>
+<span class="sd">    &gt;&gt;&gt; for x in range(2, 6): d[0, :, x] = 8 * (x - 1)</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt; frame_distinct_colours(pack_rgb(d))</span>
+<span class="sd">    6.0</span>
+<span class="sd">    &gt;&gt;&gt; edge_masked_distinct_colours(pack_rgb(d), edge_mask(luma_u8(d)))</span>
+<span class="sd">    (2.0, 1)</span>
+
+<span class="sd">    An empty mask is not a colour count of zero:</span>
+
+<span class="sd">    &gt;&gt;&gt; flat = np.full((1, 4, 8, 3), 128, np.uint8)</span>
+<span class="sd">    &gt;&gt;&gt; edge_masked_distinct_colours(pack_rgb(flat), edge_mask(luma_u8(flat)))</span>
+<span class="sd">    (nan, 0)</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">per_frame</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">m</span><span class="p">]))</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">packed</span><span class="p">,</span> <span class="n">edge</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">any</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">per_frame</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">),</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">per_frame</span><span class="p">)),</span> <span class="nb">len</span><span class="p">(</span><span class="n">per_frame</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------- encode-side</span>
+
+
+<div class="viewcode-block" id="masked_mean_abs">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.masked_mean_abs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">masked_mean_abs</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``|a - b|`` averaged over ``mask``, with the cast that makes it correct.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; x = np.array([[[10, 200]]], np.uint8); y = np.array([[[12, 190]]], np.uint8)</span>
+<span class="sd">    &gt;&gt;&gt; masked_mean_abs(x, y, np.ones((1, 1, 2), bool))</span>
+<span class="sd">    6.0</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">))[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="flat_field_deviation">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.flat_field_deviation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flat_field_deviation</span><span class="p">(</span>
+    <span class="n">src_rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">dec_rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">flat</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">FLAT_DEV_TOL</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Fraction of flat-field pixels the encoder moved by more than ``tol``.</span>
+
+<span class="sd">    The strongest metric in the set and the only one measured genuinely</span>
+<span class="sd">    orthogonal to the edge/AA axis: monotone over a 133x span on the CRF ladder</span>
+<span class="sd">    (0.0003 -&gt; 0.0399, crf18 -&gt; crf51) and flat under every AA variant.</span>
+
+<span class="sd">    Returns ``(fraction_over_tol, p99_of_the_deviation)``.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; s = np.zeros((1, 3, 3, 3), np.uint8)</span>
+<span class="sd">    &gt;&gt;&gt; d = s.copy(); d[0, 1, 1] = 20</span>
+<span class="sd">    &gt;&gt;&gt; flat_field_deviation(s, d, np.ones((1, 3, 3), bool))[0]</span>
+<span class="sd">    0.1111111111111111</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">flat</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">)</span>
+    <span class="n">dev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dec_rgb</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span> <span class="o">-</span> <span class="n">src_rgb</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">flat</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">((</span><span class="n">dev</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span> <span class="mi">99</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="encode_flicker_on_held_pixels">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.encode_flicker_on_held_pixels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">encode_flicker_on_held_pixels</span><span class="p">(</span>
+    <span class="n">src_rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">dec_rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">FLICKER_DELTA_TOL</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Fraction of perfectly-held pixels that moved in the delivered video.</span>
+
+<span class="sd">    Held-pose "boiling" — the worst artefact for limited-motion animation.</span>
+<span class="sd">    Pooled over every frame pair rather than averaged per pair, so a pair with</span>
+<span class="sd">    three held pixels does not weigh as much as one with seventy thousand.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; s = np.zeros((2, 1, 4, 3), np.uint8)</span>
+<span class="sd">    &gt;&gt;&gt; d = s.copy(); d[1, 0, 0] = 5</span>
+<span class="sd">    &gt;&gt;&gt; encode_flicker_on_held_pixels(s, d)</span>
+<span class="sd">    0.25</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">s</span> <span class="o">=</span> <span class="n">src_rgb</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">dec_rgb</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+    <span class="n">held</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">s</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">held</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">)</span>
+    <span class="n">moved</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">v</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">((</span><span class="n">moved</span><span class="p">[</span><span class="n">held</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">tol</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="overshoot_mean">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.overshoot_mean">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">overshoot_mean</span><span class="p">(</span><span class="n">dec_luma</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">src_luma</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ring</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Mean positive excursion above the source, over the ring band.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; s = np.zeros((1, 1, 2), np.uint8); d = np.array([[[5, 0]]], np.uint8)</span>
+<span class="sd">    &gt;&gt;&gt; overshoot_mean(d, s, np.ones((1, 1, 2), bool))</span>
+<span class="sd">    2.5</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ring</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">dec_luma</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span> <span class="o">-</span> <span class="n">src_luma</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">),</span> <span class="mi">0</span><span class="p">)[</span>
+            <span class="n">ring</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="encode_ringing_excess">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.encode_ringing_excess">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">encode_ringing_excess</span><span class="p">(</span>
+    <span class="n">dec_luma</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">lossless_luma</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">src_luma</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ring</span><span class="p">:</span> <span class="n">Any</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""How much more the lossy encode overshoots than a lossless one does.</span>
+
+<span class="sd">    Both legs share the source, so the source-spectrum term cancels: AA-off</span>
+<span class="sd">    raises both together (correctly reporting "the encoder did not get worse"),</span>
+<span class="sd">    a genuine crispness improvement also raises both (no false regression), and</span>
+<span class="sd">    a CRF change raises only the lossy leg.</span>
+
+<span class="sd">    **Provisional.** `edge_band_mae` is recorded beside it so research open</span>
+<span class="sd">    question 4 — "does plain edge-band MAE beat this?" — is answered by the</span>
+<span class="sd">    ledger rather than by nobody.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; s = np.zeros((1, 1, 2), np.uint8)</span>
+<span class="sd">    &gt;&gt;&gt; encode_ringing_excess(np.array([[[9, 0]]], np.uint8),</span>
+<span class="sd">    ...                       np.array([[[3, 0]]], np.uint8), s, np.ones((1, 1, 2), bool))</span>
+<span class="sd">    3.0</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">overshoot_mean</span><span class="p">(</span><span class="n">dec_luma</span><span class="p">,</span> <span class="n">src_luma</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span> <span class="o">-</span> <span class="n">overshoot_mean</span><span class="p">(</span>
+        <span class="n">lossless_luma</span><span class="p">,</span> <span class="n">src_luma</span><span class="p">,</span> <span class="n">ring</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ------------------------------------------- shared reductions (golden-side,</span>
+<span class="c1"># and the render-side edge mask via `luma_u8`)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_box_mean</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Uniform ``k x k`` mean at stride 1, via a summed-area table."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">k</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">pad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"edge"</span><span class="p">)</span>
+    <span class="n">integral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">integral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">integral</span><span class="p">,</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">integral</span><span class="p">[</span><span class="n">k</span><span class="p">:,</span> <span class="n">k</span><span class="p">:]</span> <span class="o">-</span> <span class="n">integral</span><span class="p">[:</span><span class="o">-</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">:]</span> <span class="o">-</span> <span class="n">integral</span><span class="p">[</span><span class="n">k</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">integral</span><span class="p">[:</span><span class="o">-</span><span class="n">k</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="n">k</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">total</span><span class="p">[:</span><span class="n">h</span><span class="p">,</span> <span class="p">:</span><span class="n">w</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">k</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ssim_map">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.ssim_map">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ssim_map</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">SSIM_RADIUS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Windowed SSIM at stride 1, as a per-pixel map.</span>
+
+<span class="sd">    Added **beside** :func:`an.verify.media.ssim`, never replacing it: that</span>
+<span class="sd">    function's global-moment form is what</span>
+<span class="sd">    :data:`an.verify.media_quality`'s frozen-render threshold was tuned</span>
+<span class="sd">    against, and `MediaQualityVerifier` sits in the default orchestrate chain.</span>
+
+<span class="sd">    Why it exists at all: the metrics survey concluded SSIM should be excluded</span>
+<span class="sd">    because whole-frame SSIM scores a total eye-blink at 0.9989. That</span>
+<span class="sd">    conclusion was **refuted** — only the *global-moment* reduction is blind.</span>
+<span class="sd">    With the window matched to feature size, min-over-windows scores the same</span>
+<span class="sd">    blink at 0.279 (1080p) and 0.063 (native).</span>
+
+<span class="sd">    Do not cross-check against ffmpeg's ``ssim`` filter: it uses overlapped 8x8</span>
+<span class="sd">    block sums at 4-pixel stride, disagrees by up to 0.0201, and the</span>
+<span class="sd">    disagreement *grows* with degradation.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; x = np.linspace(0, 1, 64).reshape(8, 8)</span>
+<span class="sd">    &gt;&gt;&gt; round(float(ssim_map(x, x).min()), 6)</span>
+<span class="sd">    1.0</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="mf">0.01</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.03</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">ma</span><span class="p">,</span> <span class="n">mb</span> <span class="o">=</span> <span class="n">_box_mean</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="n">_box_mean</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="n">saa</span> <span class="o">=</span> <span class="n">_box_mean</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">a</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">-</span> <span class="n">ma</span> <span class="o">*</span> <span class="n">ma</span>
+    <span class="n">sbb</span> <span class="o">=</span> <span class="n">_box_mean</span><span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">b</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">-</span> <span class="n">mb</span> <span class="o">*</span> <span class="n">mb</span>
+    <span class="n">sab</span> <span class="o">=</span> <span class="n">_box_mean</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">-</span> <span class="n">ma</span> <span class="o">*</span> <span class="n">mb</span>
+    <span class="k">return</span> <span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ma</span> <span class="o">*</span> <span class="n">mb</span> <span class="o">+</span> <span class="n">c1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sab</span> <span class="o">+</span> <span class="n">c2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">ma</span> <span class="o">*</span> <span class="n">ma</span> <span class="o">+</span> <span class="n">mb</span> <span class="o">*</span> <span class="n">mb</span> <span class="o">+</span> <span class="n">c1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">saa</span> <span class="o">+</span> <span class="n">sbb</span> <span class="o">+</span> <span class="n">c2</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1">#: BT.709 luma coefficients, recorded in the ledger so a future change to the</span>
+<span class="c1">#: reduction is visible rather than folded into the number.</span>
+<span class="n">LUMA_709</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.2126</span><span class="p">,</span> <span class="mf">0.7152</span><span class="p">,</span> <span class="mf">0.0722</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="luma709">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.luma709">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">luma709</span><span class="p">(</span><span class="n">rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``(H,W,3)`` uint8 -&gt; ``(H,W)`` float in [0,1]. PIL-free.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; round(float(luma709(np.full((1, 1, 3), 255, np.uint8))[0, 0]), 6)</span>
+<span class="sd">    1.0</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+    <span class="k">return</span> <span class="n">a</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">LUMA_709</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">LUMA_709</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">LUMA_709</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="luma_u8">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.luma_u8">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">luma_u8</span><span class="p">(</span><span class="n">rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``(...,3)`` uint8 -&gt; ``(...)`` uint8 luma, on the 0-255 scale a plane uses.</span>
+
+<span class="sd">    The one conversion between :func:`luma709`, which returns **float in</span>
+<span class="sd">    [0,1]**, and :func:`an.bench.masks.edge_mask`, whose threshold is **40 on</span>
+<span class="sd">    0-255**. Handing the float straight to the mask is not a wrong number, it is</span>
+<span class="sd">    an **empty mask**: every two-apart gradient is &lt;= 1.0, so nothing is ever an</span>
+<span class="sd">    edge and the metric downstream reads `unavailable` on every scene. Written</span>
+<span class="sd">    once, named and tested here rather than open-coded at each call site,</span>
+<span class="sd">    because it cost a debugging round the first time (an#55).</span>
+
+<span class="sd">    **This is FULL-RANGE luma and the encode-side plane is not.**</span>
+<span class="sd">    :data:`an.bench.imageio.SOURCE_SCALE_FILTER` pins ``out_range=tv``, so</span>
+<span class="sd">    ffmpeg's Y sits in [16,235] and its gradients are 219/255 of these. At one</span>
+<span class="sd">    threshold that makes the render-side mask the **wider** of the two —</span>
+<span class="sd">    measured: a 45-code-value step selects 4 pixels here and 0 there — which is</span>
+<span class="sd">    why the row records it under its own operator string rather than reusing</span>
+<span class="sd">    :data:`an.bench.masks.EDGE_OPERATOR`.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; a = np.zeros((1, 1, 2, 3), np.uint8); a[0, 0, 1] = 255</span>
+<span class="sd">    &gt;&gt;&gt; luma_u8(a).tolist()</span>
+<span class="sd">    [[[0, 255]]]</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">luma709</span><span class="p">(</span><span class="n">rgb</span><span class="p">)</span> <span class="o">*</span> <span class="mf">255.0</span><span class="p">)</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="golden_comparison">
+<a class="viewcode-back" href="../../../module_docs/an/bench/metrics.html#an.bench.metrics.golden_comparison">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">golden_comparison</span><span class="p">(</span><span class="n">today_rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">golden_rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The full-frame identity gate plus its diagnostics.</span>
+
+<span class="sd">    Full-frame, not edge-masked: that is what makes the one sentence true, and</span>
+<span class="sd">    what catches the flat-interior regressions an edge mask is blind to — and</span>
+<span class="sd">    for this look the flat fields are most of the picture.</span>
+
+<span class="sd">    ``changed_px`` and ``max_delta`` belong in a failure message, not in the</span>
+<span class="sd">    metrics block; they are returned here so the caller can put them there.</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; a = np.zeros((4, 4, 3), np.uint8)</span>
+<span class="sd">    &gt;&gt;&gt; golden_comparison(a, a)["identical"]</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">today_rgb</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">golden_rgb</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">g</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"identical"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"changed_px"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"max_delta"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"shape_mismatch"</span><span class="p">:</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
+            <span class="s2">"min_ssim_win8"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"identical"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">((</span><span class="n">diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="s2">"changed_px"</span><span class="p">:</span> <span class="nb">int</span><span class="p">((</span><span class="n">diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
+        <span class="s2">"max_delta"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span>
+        <span class="s2">"shape_mismatch"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"min_ssim_win8"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">ssim_map</span><span class="p">(</span><span class="n">luma709</span><span class="p">(</span><span class="n">today_rgb</span><span class="p">),</span> <span class="n">luma709</span><span class="p">(</span><span class="n">golden_rgb</span><span class="p">))</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

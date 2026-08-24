@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.clip &mdash; an 0.1.46 documentation</title>
+  <title>an.adapters.cutout.clip &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,7 +55,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../_base.html">an.adapters._base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cutout.html">an.adapters.cutout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="channel.html">an.adapters.cutout.channel</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.clip</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.clip.Clip"><code class="docutils literal notranslate"><span class="pre">Clip</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.clip.LoopMode"><code class="docutils literal notranslate"><span class="pre">LoopMode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.clip.evaluate"><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fidelity.html">an.adapters.cutout.fidelity</a></li>
@@ -113,6 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../credits.html">an.credits</a></li>
@@ -176,8 +182,45 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-adapters-cutout-clip">
-<h1>an.adapters.cutout.clip<a class="headerlink" href="#an-adapters-cutout-clip" title="Link to this heading"></a></h1>
+  <section id="module-an.adapters.cutout.clip">
+<span id="an-adapters-cutout-clip"></span><h1>an.adapters.cutout.clip<a class="headerlink" href="#module-an.adapters.cutout.clip" title="Link to this heading"></a></h1>
+<p>Clip: a named bundle of channels with a duration and loop mode.</p>
+<p>A clip is what you’d call an “animation” in Spine / Rive terminology — a
+reusable unit (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;walk_cycle&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;wave&quot;</span></code>). Evaluating a clip at time
+<code class="docutils literal notranslate"><span class="pre">t</span></code> produces a <cite>Pose</cite> by evaluating each of its channels at <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
+<p>Loop modes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LoopMode.ONCE</span></code> — past <code class="docutils literal notranslate"><span class="pre">duration</span></code>, the last frame holds.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LoopMode.LOOP</span></code> — <code class="docutils literal notranslate"><span class="pre">t</span></code> wraps modulo <code class="docutils literal notranslate"><span class="pre">duration</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LoopMode.PING_PONG</span></code> — <code class="docutils literal notranslate"><span class="pre">t</span></code> ping-pongs over <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">duration]</span></code>.</p></li>
+</ul>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.channel</span><span class="w"> </span><span class="kn">import</span> <span class="n">Channel</span><span class="p">,</span> <span class="n">Keyframe</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ch</span> <span class="o">=</span> <span class="n">Channel</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="p">[</span><span class="n">Keyframe</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">Keyframe</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">clip</span> <span class="o">=</span> <span class="n">Clip</span><span class="p">(</span><span class="s2">"walk"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="n">ch</span><span class="p">],</span> <span class="n">loop_mode</span><span class="o">=</span><span class="n">LoopMode</span><span class="o">.</span><span class="n">LOOP</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate</span><span class="p">(</span><span class="n">clip</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)[(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)]</span>
+<span class="go">5.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate</span><span class="p">(</span><span class="n">clip</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">)[(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)]</span>  <span class="c1"># loop wraps</span>
+<span class="go">2.5</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.cutout.clip.Clip">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.clip.</span></span><span class="sig-name descname"><span class="pre">Clip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="channel.html#an.adapters.cutout.channel.Channel" title="an.adapters.cutout.channel.Channel"><span class="pre">Channel</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.adapters.cutout.clip.LoopMode" title="an.adapters.cutout.clip.LoopMode"><span class="pre">LoopMode</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">LoopMode.ONCE</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/clip.html#Clip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.clip.Clip" title="Link to this definition"></a></dt>
+<dd><p>Named animation: a duration + a bundle of channels.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.cutout.clip.LoopMode">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.clip.</span></span><span class="sig-name descname"><span class="pre">LoopMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/clip.html#LoopMode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.clip.LoopMode" title="Link to this definition"></a></dt>
+<dd><p>How a clip behaves past its natural duration.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.clip.evaluate">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.clip.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.adapters.cutout.clip.Clip" title="an.adapters.cutout.clip.Clip"><span class="pre">Clip</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/clip.html#evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.clip.evaluate" title="Link to this definition"></a></dt>
+<dd><p>Evaluate <code class="docutils literal notranslate"><span class="pre">clip</span></code> at time <code class="docutils literal notranslate"><span class="pre">t</span></code>, returning a <cite>Pose</cite>.</p>
+</dd></dl>
+
 </section>
 
 

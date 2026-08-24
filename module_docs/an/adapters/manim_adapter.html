@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.manim_adapter &mdash; an 0.1.46 documentation</title>
+  <title>an.adapters.manim_adapter &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -67,7 +67,11 @@
 <li class="toctree-l1"><a class="reference internal" href="cutout/supersample.html">an.adapters.cutout.supersample</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cutout/timeline.html">an.adapters.cutout.timeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cutout/transform.html">an.adapters.cutout.transform</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.manim_adapter</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.manim_adapter.ManimRenderError"><code class="docutils literal notranslate"><span class="pre">ManimRenderError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.manim_adapter.ManimRenderer"><code class="docutils literal notranslate"><span class="pre">ManimRenderer</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="remotion_adapter.html">an.adapters.remotion_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="whiteboard.html">an.adapters.whiteboard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../audio.html">an.audio</a></li>
@@ -113,6 +117,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -176,8 +181,29 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="an-adapters-manim-adapter">
-<h1>an.adapters.manim_adapter<a class="headerlink" href="#an-adapters-manim-adapter" title="Link to this heading"></a></h1>
+  <section id="module-an.adapters.manim_adapter">
+<span id="an-adapters-manim-adapter"></span><h1>an.adapters.manim_adapter<a class="headerlink" href="#module-an.adapters.manim_adapter" title="Link to this heading"></a></h1>
+<p>ManimRenderer — generate a minimal Manim scene + invoke <cite>manim</cite> as subprocess.</p>
+<p>Phase 6 ships the wiring + a placeholder scene. Real shot-to-Manim translation
+is a Phase 7+ effort: it needs careful mapping from anima’s renderer-agnostic
+IR onto Manim’s mobject grammar (Text / VGroup / Animation / etc).</p>
+<p>For now: every cutout-style shot rendered through this adapter produces a
+minimal “title card” Manim scene of the right duration. Useful as a pipeline
+sanity check; not a real animation.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.adapters.manim_adapter.ManimRenderError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.manim_adapter.</span></span><span class="sig-name descname"><span class="pre">ManimRenderError</span></span><a class="reference internal" href="../../../_modules/an/adapters/manim_adapter.html#ManimRenderError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.manim_adapter.ManimRenderError" title="Link to this definition"></a></dt>
+<dd><p>Raised when a Manim render fails. Carries actionable detail.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.manim_adapter.ManimRenderer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.manim_adapter.</span></span><span class="sig-name descname"><span class="pre">ManimRenderer</span></span><a class="reference internal" href="../../../_modules/an/adapters/manim_adapter.html#ManimRenderer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.manim_adapter.ManimRenderer" title="Link to this definition"></a></dt>
+<dd><p>Manim Community Edition renderer (skeleton).</p>
+<p>Implements the <code class="docutils literal notranslate"><span class="pre">Renderer</span></code> Protocol. <code class="docutils literal notranslate"><span class="pre">can_render</span></code> is True for shots
+whose <code class="docutils literal notranslate"><span class="pre">style</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;manim&quot;</span></code>.</p>
+</dd></dl>
+
 </section>
 
 

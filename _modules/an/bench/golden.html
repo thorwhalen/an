@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.golden &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.golden &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -110,6 +110,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/credits.html">an.credits</a></li>
@@ -251,14 +252,14 @@
 
 
 <div class="viewcode-block" id="GoldenError">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.GoldenError">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.GoldenError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GoldenError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""A bless was refused, or a committed golden is unusable."""</span></div>
 
 
 
 <div class="viewcode-block" id="FrameRef">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.FrameRef">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.FrameRef">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FrameRef</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""One pinned golden frame, resolved against the render that just happened."""</span>
@@ -273,7 +274,7 @@
 
 
 <div class="viewcode-block" id="frame_key">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.frame_key">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.frame_key">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">frame_key</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The filename stem for a frame, zero-padded so a directory listing sorts.</span>
 
@@ -290,7 +291,7 @@
 
 
 <div class="viewcode-block" id="frame_index_for">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.frame_index_for">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.frame_index_for">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">frame_index_for</span><span class="p">(</span><span class="n">time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_frames</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The frame a pinned time names, snapped to the nearest one.</span>
 
@@ -314,7 +315,7 @@
 
 
 <div class="viewcode-block" id="resolve_frames">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.resolve_frames">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.resolve_frames">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">resolve_frames</span><span class="p">(</span><span class="n">capture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">times</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FrameRef</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Map each pinned time onto ``(global index, shot, index within that shot)``.</span>
 
@@ -346,7 +347,7 @@
 
 
 <div class="viewcode-block" id="frame_png_path">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.frame_png_path">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.frame_png_path">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">frame_png_path</span><span class="p">(</span><span class="n">capture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="n">FrameRef</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Where the renderer left the PNG for one resolved frame."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_FRAME_PNG_PATTERN</span>
@@ -357,7 +358,7 @@
 
 
 <div class="viewcode-block" id="pixels_sha256">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.pixels_sha256">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.pixels_sha256">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pixels_sha256</span><span class="p">(</span><span class="n">rgb</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""``sha256`` over the decoded pixels — **shape and dtype included**.</span>
 
@@ -386,7 +387,7 @@
 
 
 <div class="viewcode-block" id="manifest_path">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.manifest_path">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.manifest_path">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">manifest_path</span><span class="p">(</span><span class="n">scene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Where one scene's bless record for one Chromium build lives."""</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -398,7 +399,7 @@
 
 
 <div class="viewcode-block" id="load_manifest">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.load_manifest">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.load_manifest">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_manifest</span><span class="p">(</span>
     <span class="n">scene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -411,7 +412,7 @@
 
 
 <div class="viewcode-block" id="chromium_build_of">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.chromium_build_of">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.chromium_build_of">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">chromium_build_of</span><span class="p">(</span><span class="n">environment</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The Chromium build from an environment record, or ``None`` if unknown.</span>
 
@@ -426,7 +427,7 @@
 
 
 <div class="viewcode-block" id="iter_committed">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.iter_committed">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.iter_committed">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">iter_committed</span><span class="p">(</span>
     <span class="n">scene</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chromium_build</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
@@ -440,7 +441,7 @@
 
 
 <div class="viewcode-block" id="compare_scene">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.compare_scene">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.compare_scene">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compare_scene</span><span class="p">(</span>
     <span class="n">capture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -629,7 +630,7 @@
 
 
 <div class="viewcode-block" id="bless_scene">
-<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.golden.bless_scene">[docs]</a>
+<a class="viewcode-back" href="../../../module_docs/an/bench/golden.html#an.bench.bless_scene">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">bless_scene</span><span class="p">(</span>
     <span class="n">capture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>

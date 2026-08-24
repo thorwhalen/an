@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.golden &mdash; an 0.1.46 documentation</title>
+  <title>an.bench.golden &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -135,6 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
@@ -201,7 +202,7 @@
   <section id="module-an.bench.golden">
 <span id="an-bench-golden"></span><h1>an.bench.golden<a class="headerlink" href="#module-an.bench.golden" title="Link to this heading"></a></h1>
 <p>The golden gate: committed frames, compared on <strong>decoded pixels</strong>.</p>
-<p>Family B of the panel. Everything else in <code class="xref py py-mod docutils literal notranslate"><span class="pre">an.bench</span></code> measures a property
+<p>Family B of the panel. Everything else in <a class="reference internal" href="../bench.html#module-an.bench" title="an.bench"><code class="xref py py-mod docutils literal notranslate"><span class="pre">an.bench</span></code></a> measures a property
 of one render; this compares today’s render against a picture a human looked at
 and blessed, so it is the only part that can catch a change nobody predicted.</p>
 <p>Four decisions here that are easy to get wrong in a way that still looks like
@@ -222,7 +223,7 @@ explanation.</p>
 golden frames”, “goldens exist but not for this Chromium build” and “the
 Chromium build could not be determined at all” are three different facts, and a
 reader who cannot tell them apart cannot act on any of them. The last one
-matters most: <code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.environment.probe_browser()</span></code> never raises, it
+matters most: <a class="reference internal" href="environment.html#an.bench.environment.probe_browser" title="an.bench.environment.probe_browser"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.environment.probe_browser()</span></code></a> never raises, it
 returns <code class="docutils literal notranslate"><span class="pre">{&quot;error&quot;:</span> <span class="pre">...}</span></code> — so without a distinct gate an un-probeable browser
 reads exactly like a scene nobody has blessed yet.</p>
 <p><strong>A comparison against a golden written in the same run is a tautology</strong>, so a
@@ -384,7 +385,7 @@ over the raw buffer alone either: <code class="docutils literal notranslate"><sp
 320x240 frame and a 240x320 one holding the same bytes hash identically,
 and issue #38’s literal “the criterion is <code class="docutils literal notranslate"><span class="pre">sha256(decoded</span> <span class="pre">RGB</span> <span class="pre">array)</span></code>”
 would report PASS on a transposed frame. Both orientations are live in this
-corpus. <code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.metrics.golden_comparison()</span></code> catches it separately via
+corpus. <a class="reference internal" href="metrics.html#an.bench.metrics.golden_comparison" title="an.bench.metrics.golden_comparison"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.bench.metrics.golden_comparison()</span></code></a> catches it separately via
 its <code class="docutils literal notranslate"><span class="pre">shape_mismatch</span></code> branch; this makes the digest agree with the gate
 rather than quietly disagreeing with it.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>

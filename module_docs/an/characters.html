@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters &mdash; an 0.1.46 documentation</title>
+  <title>an.characters &mdash; an 0.1.47 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f98a5df1"></script>
+      <script src="../../_static/documentation_options.js?v=5df2d9e8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -171,6 +171,7 @@
 <li class="toctree-l1"><a class="reference internal" href="characters/schema.html">an.characters.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/silhouette.html">an.characters.silhouette</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/validate.html">an.characters.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="check_requirements.html">an.check_requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="credits.html">an.credits</a></li>
@@ -698,11 +699,21 @@ background with the given color.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="an.characters.validate_character">
-<span class="sig-prename descclassname"><span class="pre">an.characters.</span></span><span class="sig-name descname"><span class="pre">validate_character</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">char_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="characters/factory.html#an.characters.factory.ValidationReport" title="an.characters.factory.ValidationReport"><span class="pre">ValidationReport</span></a></span></span><a class="reference internal" href="../../_modules/an/characters/factory.html#validate_character"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.validate_character" title="Link to this definition"></a></dt>
-<dd><p>Check that a character directory is complete and well-formed.</p>
-<p>Looks for: <code class="docutils literal notranslate"><span class="pre">character.json</span></code>, all <code class="xref py py-data docutils literal notranslate"><span class="pre">REQUIRED_PARTS</span></code> under
-<code class="docutils literal notranslate"><span class="pre">parts/</span></code>, all 9 mouth shapes under <code class="docutils literal notranslate"><span class="pre">parts/mouth/</span></code>, and at least one
-pivot in the canonical SVG (if one exists).</p>
+<span class="sig-prename descclassname"><span class="pre">an.characters.</span></span><span class="sig-name descname"><span class="pre">validate_character</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">char_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="verify/_base.html#an.verify._base.VerificationReport" title="an.verify._base.VerificationReport"><span class="pre">VerificationReport</span></a></span></span><a class="reference internal" href="../../_modules/an/characters/validate.html#validate_character"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.validate_character" title="Link to this definition"></a></dt>
+<dd><p>Check an art package against the contract, offline.</p>
+<p>Reports a <a class="reference internal" href="verify/_base.html#an.verify._base.Finding" title="an.verify._base.Finding"><code class="xref py py-class docutils literal notranslate"><span class="pre">Finding</span></code></a> per problem: a missing or
+unparseable descriptor, absent required parts or mouth shapes, a part that
+draws nothing, a prohibited construct, a letterboxed part, a joint name
+colliding with a part id, and an unpopulated <code class="docutils literal notranslate"><span class="pre">AssetSource</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">report</span> <span class="o">=</span> <span class="n">validate_character</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"nobody"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span><span class="o">.</span><span class="n">passed</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">any</span><span class="p">(</span><span class="s2">"character.json"</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">description</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">findings</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
