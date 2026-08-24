@@ -406,7 +406,7 @@ unverified. The pupil stays inside the white by **clamping at compile time**: tr
 sclera clearance minus pupil radius, a descriptor number, not a renderer feature.
 
 **The eye becomes three sibling slots** per side: `left_sclera` (white fill, draw order 5)
-→ `left_pupil` (7) → `left_eye` (the existing slot, now the *lid*, drawn above the pupil).
+→ `left_pupil` (6, as built — the addendum has the rule) → `left_eye` (the existing slot, now the *lid*, drawn above the pupil).
 Factory art: `open` becomes outline-only with a transparent interior; `closed` becomes a
 **filled** skin-tone lid (a stroke-only closed eye would show the pupil through it);
 `sclera_l/r.svg` and `pupil_l/r.svg` are two new synthesizers. The `eyelid` set is untouched
@@ -729,6 +729,29 @@ freezer pattern from PR-B apply unchanged) — recorded as the remaining item on
 the way: `an render` (the CLI) had raised `TypeError` since `--supersample` landed, because
 `an.orchestrate.render_project` re-declared the leaf's parameters and fell behind while the
 CLI test stubbed it; it is a pass-through now, with a test that stubs the leaf.
+
+**Landed in PR-D (an#99).** As designed in §9, with these facts from building it: the eye stack is
+added by `an.characters.factory.add_gaze` (draw orders sclera = lid−1 … pupil = lid, lid bumped
+once; idempotent), which the factory calls by default (`new_character(gaze=True)`) and `an
+character add-gaze` exposes; `_default_slots` is untouched, so `promote` and every descriptor
+constructed without slots keep the pre-stack eye and no existing golden moved except the
+`expressions` corpus rig, re-blessed once. `gaze_travel` is `{x: 9, y: 5}` view-box units on the
+synthesized eye (rx 14 / ry 10, pupil r 5). A gaze action is an `expression` with `gaze_x`/`gaze_y`
+axes (no new leaf kind — §5's "gaze actions" are provider spans like any other). The generator
+(`an/adapters/cutout/gaze.py`) is as §9 states, its constants labelled design values; the solver
+adds its sample-and-held steps onto the gaze curves, clamped, only where the rig has pupil nodes,
+and a rig with pupils always takes the solver path (ambient saccades are a contributor like
+blinks, so its blinks are frame-quantised in the face clip). The one deviation from §9: gaze on a
+rig WITHOUT pupils is not merely "a no-op" but a byte-identical document — an axis the rig binds
+nothing to is filtered out before the solver runs. Determinism is a test compiling the same shot
+twice; `meta.gaze_seeds` is serialized only when non-empty, so pre-Wave-6 contract hashes hold.
+The review corrected the clamp: §9's "travel = sclera clearance minus pupil radius" is a per-axis
+BOX, and at its corner the pupil disc pokes 2% past the ellipse; the compiler clamps the summed
+(x, y) to 0.95 of the unit circle instead (`GAZE_ELLIPSE_MARGIN`), measured to keep the disc
+inside at every angle. Also from the review: `add_gaze` refuses to overwrite eye art that is not
+the factory's own (a promoted rig's illustrator eyes) unless `overwrite_eyes=True`, reads the lid's
+fill off the head art, validates before it writes, and a coupled jump whose blink centre falls
+before the previous step keeps its own time instead of being lost.
 
 ## 15. What the adversarial pass changed
 

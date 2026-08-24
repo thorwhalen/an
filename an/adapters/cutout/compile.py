@@ -50,6 +50,7 @@ from an.expression.binding import (
     expression_problems,
     resolve_mouth_set,
 )
+from an.adapters.cutout.gaze import gaze_seed, saccade_track
 from an.expression.presets import mouth_form_of
 from an.expression.provider import DefaultExpressionProvider, ExpressionProvider
 from an.characters.play import (
@@ -175,6 +176,13 @@ _BLINK_DEPTH: float = 0.95
 #: The nodes that blink, by name: the default rig's eye slots ARE its node
 #: names, on both the procedural and the descriptor path.
 EYE_NODE_NAMES: frozenset[str] = frozenset({"left_eye", "right_eye"})
+#: The pupil nodes of the gaze stack (an#99); a rig without them takes gaze as a no-op.
+PUPIL_NODE_NAMES: frozenset[str] = frozenset({"left_pupil", "right_pupil"})
+#: The summed gaze (x, y), in axis units, is clamped to a circle of this radius
+#: — the declared travel maps the unit circle onto the sclera's inner ellipse,
+#: and 0.95 keeps the whole pupil disc inside it at every angle (measured on
+#: the synthesized eye: 1.0 pokes out by 2% of the ellipse at the diagonal).
+GAZE_ELLIPSE_MARGIN: float = 0.95
 #: Within a blink window, the eyelid swap shows CLOSED for the central half —
 #: the span where the squash curve sits above 0.7 of full closure.
 _EYELID_CLOSED_SPAN: tuple[float, float] = (0.25, 0.75)
@@ -622,7 +630,7 @@ def compile_shot(
     # The face (an#98): blinks, expressions and the silent mouth form — one
     # channel per (node, property), ahead of everything authored. An entity
     # nothing expresses on gets its blink clips exactly as before (an#88).
-    blink_phases = _add_face_clips(
+    blink_phases, gaze_seeds = _add_face_clips(
         shot, animations, tracks, vocab=vocab, fps=fps, mall=mall, provider=provider
     )
     # Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale
@@ -646,6 +654,7 @@ def compile_shot(
             background=background,
             blink_phases=blink_phases,
             step_hz=step_hz,
+            gaze_seeds=gaze_seeds,
         ),
         scene=scene_root,
         animations=animations,
@@ -2461,7 +2470,7 @@ def _add_face_clips(
     fps: int,
     mall: Mapping[str, Mapping] | None = None,
     provider: ExpressionProvider | None = None,
-) -> dict[str, float]:
+) -> tuple[dict[str, float], dict[str, int]]:
     """Emit the face of every character: blinks, expressions, the silent mouth
     form — **exactly one channel per (node, property)**, summed at compile
     time, placed at the FRONT of the entity's track like blinks (an#88), so an
@@ -2484,10 +2493,14 @@ def _add_face_clips(
 
     A baked face (``face_overlay: false``) refuses an authored expression with
     the same reasons ``an validate`` reports, and warns on the dialogue sugar.
-    Returns the blink phases used, per entity, for the compiled scene's meta.
+
+    A rig with a pupil layer (an#99) always takes the solver path, expressed on
+    or not: its ambient saccades are a contributor like blinks. Returns the
+    blink phases and the gaze seeds used, per entity, for the scene's meta.
     """
     provider = provider or DefaultExpressionProvider()
     phases: dict[str, float] = {}
+    seeds: dict[str, int] = {}
     baked = _baked_face_speakers(shot, mall)
     track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
     spans_of = getattr(provider, "spans", None)
@@ -2528,10 +2541,24 @@ def _add_face_clips(
         # A span that asks for nothing — `preset: None` with no axes, or
         # `intensity: 0` — is not a contributor: the entity keeps its verbatim
         # blink clips rather than a rest-valued face clip (an#98 review).
-        spans = [
-            sp for sp in spans if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)
-        ]
-        if not spans or desc is None:
+        # ...and an axis the rig binds nothing to (gaze on a rig without
+        # pupils, an#99) contributes nothing either: the document stays the one
+        # the rig had, and `an character validate` says why.
+        if desc is None or not spans:
+            spans = [sp for sp in spans if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)]
+        else:
+            try:
+                bound = {b.axis for b in binding_for(desc)}
+            except ExpressionResolutionError as e:
+                raise CutoutCompileError(str(e)) from e
+            spans = [
+                sp
+                for sp in spans
+                if sp.intensity > 0
+                and (sp.mouth_form or any(a in bound for a in sp.offsets()))
+            ]
+        has_pupils = desc is not None and bool(_pupil_paths(vocab, entity.id))
+        if (not spans and not has_pupils) or desc is None:
             if spans and desc is None:
                 warnings.warn(
                     f"shot {shot.id!r}: {entity.id!r} has no descriptor (a procedural "
@@ -2559,6 +2586,8 @@ def _add_face_clips(
             )
             if _eye_paths(vocab, entity.id):
                 phases[entity.id] = blink_phase(entity.id)
+            if has_pupils:
+                seeds[entity.id] = gaze_seed(entity.id)
         if not placed:
             continue
         track = track_lookup.get(entity.id)
@@ -2567,7 +2596,15 @@ def _add_face_clips(
             tracks.append(track)
             track_lookup[entity.id] = track
         track.clips[:0] = placed
-    return phases
+    return phases, seeds
+
+
+def _pupil_paths(vocab: _SwapVocabulary, entity_id: str) -> list[str]:
+    return sorted(
+        p
+        for p in vocab.paths
+        if p.split("/", 1)[0] == entity_id and p.rsplit("/", 1)[-1] in PUPIL_NODE_NAMES
+    )
 
 
 def _solve_face(
@@ -2590,6 +2627,36 @@ def _solve_face(
     times = [f / fps for f in range(n)]
     k = vocab.entity_scale.get(entity_id, 1.0)
     windows = _blink_windows(entity_id, shot.duration)
+    # Ambient saccades (an#99): one more addend on the gaze axes, seeded by
+    # the entity name, sample-and-held at frame times — only where the rig
+    # has pupils to move (the binding is what says so).
+    if _pupil_paths(vocab, entity_id):
+        steps = saccade_track(entity_id, duration=float(shot.duration), fps=fps, blink_windows=windows)
+        sx, sy = [0.0] * n, [0.0] * n
+        j = 0
+        for i, t in enumerate(times):
+            while j + 1 < len(steps) and steps[j + 1].time <= t + 1e-9:
+                j += 1
+            sx[i], sy[i] = steps[j].x, steps[j].y
+        for axis, jitter in (("gaze_x", sx), ("gaze_y", sy)):
+            base = (curves.get(axis) or [0.0] * n)
+            base = (base + [base[-1]] * n)[:n]
+            curves[axis] = [max(-1.0, min(1.0, base[i] + jitter[i])) for i in range(n)]
+    if "gaze_x" in curves or "gaze_y" in curves:
+        # The pupil stays inside the WHITE, an ellipse, not inside a box: the
+        # summed (x, y) — in axis units, where the declared travel is the unit
+        # circle — is clamped to a circle of radius GAZE_ELLIPSE_MARGIN. At
+        # the corner of the box the pupil disc pokes past the sclera by ~3
+        # canvas units (an#99 review); at 0.95 it stays inside on every angle.
+        gx = list(curves.get("gaze_x") or [0.0] * n)
+        gy = list(curves.get("gaze_y") or [0.0] * n)
+        gx, gy = (gx + [gx[-1]] * n)[:n], (gy + [gy[-1]] * n)[:n]
+        for i in range(n):
+            m = math.hypot(gx[i], gy[i])
+            if m > GAZE_ELLIPSE_MARGIN:
+                gx[i] *= GAZE_ELLIPSE_MARGIN / m
+                gy[i] *= GAZE_ELLIPSE_MARGIN / m
+        curves["gaze_x"], curves["gaze_y"] = gx, gy
     # Authored channels on face nodes win; say so once per (target, property).
     authored: set[tuple[str, str]] = set()
     for track in tracks:
@@ -2602,7 +2669,11 @@ def _solve_face(
 
     offsets: dict[tuple[str, str], list[float]] = {}
     lid_expr: dict[str, list[float]] = {}
-    for b in binding_for(desc):
+    try:
+        bindings = binding_for(desc)
+    except ExpressionResolutionError as e:
+        raise CutoutCompileError(str(e)) from e
+    for b in bindings:
         samples = curves.get(b.axis)
         if samples is None:
             continue

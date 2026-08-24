@@ -275,12 +275,19 @@ class CutoutSceneMetaJSON(_JSONModel):
     #: `null` here would move every committed row's hash for a knob nobody
     #: turned. Inert to the runtime; read by the ledger.
     step_hz: float | None = None
+    #: Per-entity saccade seed (an#99), a pure function of the entity NAME
+    #: like `blink_phases`; stamped for the rigs that have pupils and
+    #: **serialized only when non-empty** — a pre-Wave-6 rig has no pupils and
+    #: its compiled document, the bench's scene contract, must not move.
+    gaze_seeds: dict[str, int] = Field(default_factory=dict)
 
     @model_serializer(mode="wrap")
     def _omit_unset_step_hz(self, handler):
         data = handler(self)
         if isinstance(data, dict) and data.get("step_hz") is None:
             data.pop("step_hz", None)
+        if isinstance(data, dict) and not data.get("gaze_seeds"):
+            data.pop("gaze_seeds", None)
         return data
 
 

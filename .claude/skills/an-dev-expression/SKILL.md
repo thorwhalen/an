@@ -28,8 +28,14 @@ get fixed.
   `LID_SQUASH_GAIN = 0.5`; the brow-angle sign is `-travel` left / `+travel` right (PixiJS is clockwise-positive).
 - Variants: `an character new --mouth-variants happy,sad` (the default), `an character mouths --variants angry`;
   `DEFAULT_MOUTH_VARIANTS` in `an/characters/mouth_set.py`; `declare_mouth_variants` in the factory.
-- Measurement: corpus `expressions` (eight goldens), `tests/test_expression_goldens.py` (pairwise ≥ 53 px in the
-  face crop), ledger `expression_min_pairwise_changed_px`. The emotion cassette is NOT recorded yet.
+- Measurement: corpus `expressions` (eight goldens, re-blessed once in PR-D when the eye stack landed),
+  `tests/test_expression_goldens.py` (pairwise ≥ 53 px in the face crop), ledger
+  `expression_min_pairwise_changed_px`. The emotion cassette is NOT recorded yet.
+- Gaze (PR-D, an#99): `an/adapters/cutout/gaze.py` (`saccade_track`, `gaze_seed`, the design-value constants),
+  `an.characters.factory.add_gaze` / `GAZE_PARTS` / `gaze_travel_for`, `CharacterDescriptor.gaze_travel`,
+  `an character add-gaze`, `meta.gaze_seeds`. A rig with pupils always takes the solver path (saccades are a
+  contributor like blinks); an axis the rig binds nothing to is not a contributor (gaze on a pupil-less rig is a
+  byte-identical no-op).
 
 ## 1. The axes (ten ship; offsets over the built rest)
 
@@ -38,7 +44,7 @@ get fixed.
 | `brow_height_l`, `brow_height_r` | [−1, 1] / 0 | `head/<brow>:y`, scaled by eye height |
 | `brow_angle_l`, `brow_angle_r` | [−1, 1] / 0 | `head/<brow>:rotation`; + inner end up (worry), − down (furrow). **The binding's per-side `gain` carries the sign** — the two sides rotate opposite ways on screen for one axis sign |
 | `lid_open_l`, `lid_open_r` | [−1, 0.5] / 0 | the `eyelid` swap set, quantised by one ladder: `wide` > +0.25 · `open` · `half` < −0.35 · `closed` < −0.85 |
-| `gaze_x`, `gaze_y` | [−1, 1] / 0 | `head/<pupil>:x`/`:y`, clamped by the eye's declared travel; **never reads a head axis** |
+| `gaze_x`, `gaze_y` | [−1, 1] / 0 | `head/<pupil>:x`/`:y`, scaled by the eye's declared travel and the summed (x, y) clamped to 0.95 of the unit circle (the sclera's inner ellipse — a per-axis box pokes the pupil out at the diagonal); **never reads a head axis** |
 | `mouth_form` | selection | which `viseme@<preset>` set the mouth's key indexes |
 | `intensity` | [0, 1] / 1 | scalar on every offset; the blend ramp is a curve on it |
 
@@ -53,8 +59,9 @@ whole sum. The face solver (`_add_face_clips`) computes `value(t) = rest + Σ of
 bound `(node, property)` and emits **exactly one** channel per key. A second generated writer
 for a face key is a bug; the test that guards it asserts every generated face channel has a
 distinct `(target, property)`, that a pose at t carries *both* an emotion's brow offset and a
-second contributor's offset (a per-axis override today; a gaze offset once PR-D gives a rig
-pupils), and that the pose is identical with contributors fed in reverse order.
+second contributor's offset (a per-axis override in `test_expression_compose.py`; a real gaze
+offset over pupils in `test_gaze.py`), and that the pose is identical with contributors fed in
+reverse order.
 
 - **Transform axes sum, then clamp. Swap axes resolve by priority**, never by blending two
   drawings. The lid: `lid(t) = min(lid_expr(t), lid_blink(t))` with `lid_blink = −1` inside a
@@ -94,7 +101,7 @@ unknown leaf). An unknown preset is a validate **error**. Every name the retired
 accepted (`neutral happy sad angry surprised skeptical amused thinking`) stays a preset —
 live content authors `amused`.
 
-## 5. Gaze (design of record — ships in PR-D, #99; today the axes are a no-op on every rig)
+## 5. Gaze (shipped in PR-D, #99)
 
 Three sibling slots per eye under `head`, no nesting, no runtime mask: `<side>_sclera` →
 `<side>_pupil` → `<side>_eye` (the lid; `closed` art is **mandatory** once pupils exist,
@@ -109,7 +116,7 @@ a character re-seeds them, the recorded blink hazard. Every timing constant is a
 ## 6. Baked faces (`face_overlay: false`)
 
 Authored expression or gaze → validate error + `ExpressionResolutionError` naming the
-character and the exit (`an character promote`; `add-gaze` joins it in PR-D). Dialogue-sugar
+character and the two exits (`an character promote`, `an character add-gaze`). Dialogue-sugar
 emotion → a warning with the right diagnosis (audio still plays). Ambient saccades skip, like
 blinks. Overlay-over-baked-art was rejected twice (the "four eyes" bug).
 
@@ -127,6 +134,6 @@ blinks. Overlay-over-baked-art was rejected twice (the "four eyes" bug).
 
 ## 8. Every face feature ships with a clip
 
-`misc/demos/build_demos.py`: `expressions`, `expressions-more` (shipped), `gaze`, `gaze-plus-expression` (PR-D),
+`misc/demos/build_demos.py`: `expressions`, `expressions-more`, `gaze`, `gaze-plus-expression`,
 `emotion-visemes` — on **synthesized descriptor characters** (the procedural rig has no
 variant sets and no brow gain), no burned-in labels, panes described in `shows`.

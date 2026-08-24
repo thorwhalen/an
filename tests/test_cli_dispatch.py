@@ -311,6 +311,7 @@ def test_the_command_set_is_pinned_by_literal():
     assert _group_commands(_app(), "character") == [
         "new",
         "mouths",
+        "add-gaze",
         "validate",
         "contract",
         "silhouette",

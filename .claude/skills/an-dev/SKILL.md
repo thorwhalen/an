@@ -66,7 +66,7 @@ Read `misc/docs/architecture_as_built.md` for the full map. The pieces that didn
 - `an/verify/media.py` — ssim, detect_silence, audio_volume, extract_frames, transcribe (Phase 8)
 - `an/verify/media_quality.py` — MediaQualityVerifier (Phase 9)
 - `an/verify/vision.py` — VisionLMVerifier (Claude vision QA, Phase 9)
-- `an/characters/` — character authoring tools (Phase 11a): Spine-shaped `CharacterDescriptor`, SVG utils, parametric 9-shape mouth generator, DiceBear client + envelope, idle-animation factories, silhouette test, `assets.promote`. Powers `an character {new,mouths,validate,silhouette,preview}`. The Pixi SVG-texture path has since shipped: `makeSvgSprite` builds a real `PIXI.Sprite` from a preloaded texture, and `preloadAssets` stages them. The procedural rig is the fallback for characters with no descriptor art, not the only path.
+- `an/characters/` — character authoring tools (Phase 11a): Spine-shaped `CharacterDescriptor`, SVG utils, parametric 9-shape mouth generator, DiceBear client + envelope, idle-animation factories, silhouette test, `assets.promote`. Powers `an character {new,mouths,add-gaze,validate,silhouette,preview,record}`. The Pixi SVG-texture path has since shipped: `makeSvgSprite` builds a real `PIXI.Sprite` from a preloaded texture, and `preloadAssets` stages them. The procedural rig is the fallback for characters with no descriptor art, not the only path.
 
 ## How to wire a new TTS / LipSync / Verifier / Renderer
 

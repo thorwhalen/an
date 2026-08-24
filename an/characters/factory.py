@@ -18,6 +18,7 @@ problem routes the way every other verifier's does (an#78).
 from __future__ import annotations
 
 import hashlib
+import re
 import json
 import shutil
 import textwrap
@@ -110,8 +111,14 @@ def new_character(
     acknowledge_attribution: bool = False,
     overwrite: bool = False,
     mouth_variants: Optional[dict[str, float]] = None,
+    gaze: bool = True,
 ) -> Path:
     """Build a complete character on disk.
+
+    ``gaze`` (an#99) adds the eye stack — sclera and pupil slots under each
+    lid, a filled closed lid, the ``gaze_travel`` clamp — through
+    :func:`add_gaze`, so `gaze_x`/`gaze_y` and the ambient saccades reach the
+    pupils. Off, the eye is the single pre-stack drawing.
 
     ``mouth_variants`` (an#98) — ``{form: smile offset}`` — writes one more
     9-shape mouth set per form (``mouth_<shape>_<form>.svg``) and declares it
@@ -216,8 +223,11 @@ def new_character(
         source=source,
     )
     declare_mouth_variants(descriptor, variants)
+    descriptor.metadata["seed"] = seed_used
     desc_path = out / "character.json"
     desc_path.write_text(descriptor.model_dump_json(indent=2), encoding="utf-8")
+    if gaze and descriptor.face_overlay:
+        add_gaze(out)  # the lid's fill is read off the head art it just wrote
     return desc_path
 
 
@@ -304,29 +314,199 @@ def _fallback_face_svg(seed: str) -> str:
     )
 
 
-def _synthesize_eye_open(path: Path, *, side: str) -> Path:
-    svg = (
+#: The eye's geometry in its 64x32 canvas, shared by the four synthesizers so
+#: the sclera, the pupil and the lid outline agree (an#99).
+EYE_CANVAS: tuple[int, int] = (64, 32)
+EYE_CENTRE: tuple[int, int] = (32, 16)
+EYE_RX, EYE_RY = 14, 10
+PUPIL_R: int = 5
+#: The parts a rig gains with `an character add-gaze`. Optional — never in
+#: `REQUIRED_PARTS`: a pre-Wave-6 rig without them still renders, and gaze is
+#: a no-op on it.
+GAZE_PARTS: tuple[str, ...] = ("sclera_l", "sclera_r", "pupil_l", "pupil_r")
+
+
+def _eye_svg(inner: str, *, gid: str) -> str:
+    w, h = EYE_CANVAS
+    return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
-        f'<svg xmlns="{SVG_NS}" viewBox="0 0 64 32" width="64" height="32">'
-        f'<g id="eye_{side}_open">'
-        '<ellipse cx="32" cy="16" rx="14" ry="10" fill="#ffffff" stroke="#222" stroke-width="2"/>'
-        '<circle cx="32" cy="16" r="5" fill="#1a1a1a"/>'
-        "</g></svg>"
+        f'<svg xmlns="{SVG_NS}" viewBox="0 0 {w} {h}" width="{w}" height="{h}">'
+        f'<g id="{gid}">{inner}</g></svg>'
     )
-    path.write_text(svg, encoding="utf-8")
+
+
+def _synthesize_eye_open(path: Path, *, side: str, outline_only: bool = False) -> Path:
+    """The open eye. ``outline_only`` (the gaze stack, an#99) draws the outline
+    with a transparent interior, so the sclera and pupil slots beneath show
+    through; the default keeps the pre-stack single drawing (white + pupil)."""
+    cx, cy = EYE_CENTRE
+    if outline_only:
+        inner = f'<ellipse cx="{cx}" cy="{cy}" rx="{EYE_RX}" ry="{EYE_RY}" fill="none" stroke="#222" stroke-width="2"/>'
+    else:
+        inner = (
+            f'<ellipse cx="{cx}" cy="{cy}" rx="{EYE_RX}" ry="{EYE_RY}" fill="#ffffff" stroke="#222" stroke-width="2"/>'
+            f'<circle cx="{cx}" cy="{cy}" r="{PUPIL_R}" fill="#1a1a1a"/>'
+        )
+    path.write_text(_eye_svg(inner, gid=f"eye_{side}_open"), encoding="utf-8")
     return path
 
 
-def _synthesize_eye_closed(path: Path, *, side: str) -> Path:
-    svg = (
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        f'<svg xmlns="{SVG_NS}" viewBox="0 0 64 32" width="64" height="32">'
-        f'<g id="eye_{side}_closed">'
-        '<path d="M 18 18 Q 32 24 46 18" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>'
-        "</g></svg>"
-    )
-    path.write_text(svg, encoding="utf-8")
+def _synthesize_eye_closed(path: Path, *, side: str, fill: str | None = None) -> Path:
+    """The closed eye. With ``fill`` (the gaze stack) it is a FILLED skin-tone
+    lid — a stroke-only closed eye would show the pupil through it."""
+    cx, cy = EYE_CENTRE
+    lid = ""
+    if fill is not None:
+        lid = f'<ellipse cx="{cx}" cy="{cy}" rx="{EYE_RX}" ry="{EYE_RY}" fill="{fill}" stroke="none"/>'
+    inner = lid + f'<path d="M {cx - 14} {cy + 2} Q {cx} {cy + 8} {cx + 14} {cy + 2}" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    path.write_text(_eye_svg(inner, gid=f"eye_{side}_closed"), encoding="utf-8")
     return path
+
+
+def _synthesize_sclera(path: Path, *, side: str) -> Path:
+    cx, cy = EYE_CENTRE
+    inner = f'<ellipse cx="{cx}" cy="{cy}" rx="{EYE_RX}" ry="{EYE_RY}" fill="#ffffff" stroke="none"/>'
+    path.write_text(_eye_svg(inner, gid=f"sclera_{side}"), encoding="utf-8")
+    return path
+
+
+def _synthesize_pupil(path: Path, *, side: str) -> Path:
+    cx, cy = EYE_CENTRE
+    inner = f'<circle cx="{cx}" cy="{cy}" r="{PUPIL_R}" fill="#1a1a1a"/>'
+    path.write_text(_eye_svg(inner, gid=f"pupil_{side}"), encoding="utf-8")
+    return path
+
+
+def _skin_fill_of(head_svg: Path) -> str | None:
+    """The first solid fill of the head art's first circle/ellipse — the face's
+    skin tone on every rig this factory synthesizes; ``None`` if none is found.
+    """
+    if not head_svg.is_file():
+        return None
+    m = re.search(r"<(?:circle|ellipse)[^>]*fill=\"(#[0-9a-fA-F]{6})\"", head_svg.read_text(encoding="utf-8"))
+    return m.group(1) if m else None
+
+
+def gaze_travel_for(rx: float = EYE_RX, ry: float = EYE_RY, pupil_r: float = PUPIL_R) -> dict[str, float]:
+    """The pupil's travel per axis, in view-box units: the sclera's clearance
+    minus the pupil's radius — the semi-axes of the inner ellipse the gaze
+    axes' unit circle maps onto. The compiler clamps the summed gaze to 0.95
+    of that circle (`GAZE_ELLIPSE_MARGIN`), which is what keeps the pupil disc
+    inside the white at every angle without a runtime mask.
+
+    >>> gaze_travel_for()
+    {'x': 9.0, 'y': 5.0}
+    """
+    return {"x": float(rx - pupil_r), "y": float(ry - pupil_r)}
+
+
+def _is_factory_eye(path: Path, *, side: str, state: str) -> bool:
+    """Whether an eye part is this factory's own drawing (its group id and the
+    64x32 canvas) — the only art `add_gaze` may overwrite."""
+    if not path.is_file():
+        return True  # nothing to lose
+    svg = path.read_text(encoding="utf-8")
+    w, h = EYE_CANVAS
+    return f'id="eye_{side}_{state}"' in svg and f'viewBox="0 0 {w} {h}"' in svg
+
+
+def add_gaze(char_dir: str | Path, *, skin: str | None = None, overwrite_eyes: bool = False) -> Path:
+    """Give a character the eye stack (an#99): three sibling slots per eye under
+    the head — ``<side>_sclera`` (white fill) below ``<side>_pupil`` below
+    ``<side>_eye`` (the existing slot, now the lid, drawn above the pupil) —
+    with synthesized parts, an outline-only open eye, a FILLED closed lid, the
+    ``gaze_travel`` clamp, and draw orders that put the lid over the pupil.
+    Idempotent: a rig that already has the stack is rewritten to the same
+    state. Returns the descriptor path.
+
+    The open and closed eye parts are REWRITTEN (outline-only, filled lid), so
+    on a rig whose eyes are not this factory's drawings — a promoted hand rig —
+    it refuses unless ``overwrite_eyes=True``: the stack's geometry is the
+    synthesized eye's, and an illustrator's eyes would be silently replaced
+    (an#99 review). Such a rig wants its own outline-only open eye, filled
+    lid, sclera and pupil parts drawn to its own geometry.
+
+    This is the **expand** step for a pre-Wave-6 descriptor: no migration
+    inserts pupil slots, because their art would be absent and absent art is
+    fatal under `strict_assets` — every existing character would stop
+    rendering on the bench.
+    """
+    from an.characters.schema import CharacterDescriptor, FACE_OFFSETS, Attachment, Slot
+    from an.ir.migrate import migrate
+
+    char_dir = Path(char_dir)
+    desc_path = char_dir / "character.json"
+    raw = json.loads(desc_path.read_text(encoding="utf-8"))
+    desc = CharacterDescriptor.model_validate(migrate(raw, kind="CharacterDescriptor"))
+    if not desc.face_overlay:
+        raise ValueError(
+            f"{desc.name!r} has its face baked into the head art (face_overlay: false): "
+            "the rig builder draws no overlay eye, so an eye stack would never show. "
+            "`an character promote` a hand-drawn rig with overlay face parts first."
+        )
+    parts = char_dir / "parts"
+    # Every refusal BEFORE the first write, so a rig that errors is untouched.
+    skin_ = desc.skins.get("default")
+    if skin_ is None:
+        raise ValueError(f"{desc.name!r} has no default skin to add the eye stack to")
+    by_name = {s.name: s for s in desc.slots}
+    for eye_slot in ("left_eye", "right_eye"):
+        if eye_slot not in by_name:
+            raise ValueError(f"{desc.name!r} has no {eye_slot!r} slot; the eye stack sits under it")
+    foreign = [
+        f"eye_{side}_{state}.svg"
+        for side in ("l", "r")
+        for state in ("open", "closed")
+        if not _is_factory_eye(parts / f"eye_{side}_{state}.svg", side=side, state=state)
+    ]
+    if foreign and not overwrite_eyes:
+        raise ValueError(
+            f"{desc.name!r}'s eye art is not this factory's ({', '.join(foreign)}): the eye "
+            "stack would replace a hand-drawn eye with the synthesized outline and lid. "
+            "Draw the rig's own outline-only open eye, filled closed lid, sclera and pupil "
+            "parts to its geometry, or pass overwrite_eyes=True (`--overwrite-eyes`) to "
+            "accept the synthesized eyes."
+        )
+    if skin is None:
+        # The lid's fill is the HEAD's skin — read off the head art, never
+        # re-derived from a seed the descriptor may not carry (an#99 review:
+        # a rig built with `--seed` ≠ name got a lid of another tone).
+        skin = _skin_fill_of(parts / "head.svg") or _palette_for_seed(
+            str(desc.metadata.get("seed") or desc.metadata.get("dicebear_seed") or desc.name)
+        )[0]
+    for side in ("l", "r"):
+        _synthesize_sclera(parts / f"sclera_{side}.svg", side=side)
+        _synthesize_pupil(parts / f"pupil_{side}.svg", side=side)
+        _synthesize_eye_open(parts / f"eye_{side}_open.svg", side=side, outline_only=True)
+        _synthesize_eye_closed(parts / f"eye_{side}_closed.svg", side=side, fill=skin)
+    had_stack = "left_pupil" in by_name or "right_pupil" in by_name
+    for side, eye_slot in (("l", "left_eye"), ("r", "right_eye")):
+        eye = by_name[eye_slot]
+        x, y = FACE_OFFSETS.get(eye_slot, (0.0, 0.0))
+        existing = skin_.slots.get(eye_slot, {})
+        template = existing.get("open") or next(iter(existing.values()), None)
+        if template is not None:
+            x, y = template.x, template.y
+        base = eye.draw_order - 1 if had_stack else eye.draw_order
+        for kind, order in (("sclera", base - 1), ("pupil", base)):
+            slot_name = f"{eye_slot.split('_')[0]}_{kind}"
+            stem = f"{kind}_{side}"
+            if slot_name not in by_name:
+                desc.slots.append(Slot(name=slot_name, bone=eye.bone, draw_order=order, attachment=stem))
+                by_name[slot_name] = desc.slots[-1]
+            else:
+                by_name[slot_name].draw_order = order
+            skin_.slots[slot_name] = {stem: Attachment(path=f"parts/{stem}.svg", anchor=(0.5, 0.5), x=x, y=y)}
+        # The lid draws above the pupil: bump it once (idempotent on a rig that
+        # already has the stack). On the default rig the lid then TIES the
+        # mouth's order and the tie-break is by name, which puts `left_eye`
+        # under the mouth and `right_eye` over it — harmless, they never
+        # overlap, but do not read the numbers as a strict stack.
+        eye.draw_order = base + 1
+    desc.gaze_travel = gaze_travel_for()
+    desc.metadata["gaze_stack"] = "an#99"
+    desc_path.write_text(desc.model_dump_json(indent=2), encoding="utf-8")
+    return desc_path
 
 
 def _palette_for_seed(seed: str) -> tuple[str, str, str]:

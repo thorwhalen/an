@@ -50,7 +50,7 @@ BROW_HEIGHT_TRAVEL: float = 10.0
 #: Brow rotation per unit of `brow_angle_*`, radians. Art direction.
 BROW_ANGLE_TRAVEL: float = 0.35
 #: Pupil travel per unit of `gaze_*`, in view-box units — the default when a
-#: descriptor declares no travel of its own (PR-D wires the pupil layer).
+#: descriptor declares no travel of its own (`add_gaze` writes `gaze_travel`).
 GAZE_TRAVEL: float = 6.0
 #: On a rig whose eye squashes instead of swapping art, a lid offset scales
 #: the eye by this much per unit.
@@ -126,14 +126,16 @@ def default_binding(desc: CharacterDescriptor) -> list[Binding]:
     for axis, slot in (("lid_open_l", LEFT_EYE_SLOT), ("lid_open_r", RIGHT_EYE_SLOT)):
         if slot in slots:
             out.append(SetBinding(axis, slot, EYELID_CHANNEL))
+    travel = getattr(desc, "gaze_travel", None) or {}
+    tx, ty = float(travel.get("x", GAZE_TRAVEL)), float(travel.get("y", GAZE_TRAVEL))
+    if travel and not (tx > 0 and ty > 0):
+        raise ExpressionResolutionError(
+            desc.name, [f"gaze_travel must be positive per axis, got {travel!r}"]
+        )
     for slot in (LEFT_PUPIL_SLOT, RIGHT_PUPIL_SLOT):
         if slot in slots:
-            out.append(
-                ChannelBinding("gaze_x", slot, "x", GAZE_TRAVEL, rig_scaled=True)
-            )
-            out.append(
-                ChannelBinding("gaze_y", slot, "y", GAZE_TRAVEL, rig_scaled=True)
-            )
+            out.append(ChannelBinding("gaze_x", slot, "x", tx, rig_scaled=True))
+            out.append(ChannelBinding("gaze_y", slot, "y", ty, rig_scaled=True))
     return out
 
 
@@ -283,9 +285,10 @@ def expression_problems(
     if desc is not None and not desc.face_overlay:
         problems.append(
             f"{who!r} has its face baked into the head art (face_overlay: false), so "
-            "there is no brow, lid or pupil node for an expression to move. The "
-            "exit: `an character promote` a hand-drawn rig with overlay face parts "
-            "(or `an character new --offline`, whose synthesized face is overlay art)."
+            "there is no brow, lid or pupil node for an expression to move. Two "
+            "exits: `an character promote` a hand-drawn rig with overlay face parts "
+            "(or `an character new --offline`, whose synthesized face is overlay "
+            "art), then `an character add-gaze` for the pupils."
         )
     return problems
 

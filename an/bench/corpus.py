@@ -248,9 +248,11 @@ DFLT_FIXTURES: dict[str, Fixture] = {
             "shot), so no golden straddles a blink; "
             "it is lowered by an absolute `set face y` so the head clears the "
             "frame's top edge at 320x240. Its rig is committed whole (parts and "
-            "descriptor, `viseme@happy`/`viseme@sad` variants included) and has "
-            "no pupil layer yet — PR-D re-blesses these eight once the eye stack "
-            "lands. The pairwise distinguishability test in "
+            "descriptor, `viseme@happy`/`viseme@sad` variants included) and, since "
+            "an#99, the eye stack (sclera/pupil/lid slots, a filled closed lid, "
+            "`gaze_travel`), so the pupils also make their seeded ambient "
+            "saccades — sub-pixel at 320x240 and inside the face crop. The "
+            "pairwise distinguishability test in "
             "tests/test_expression_goldens.py reads these same PNGs."
         ),
     ),

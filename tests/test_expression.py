@@ -165,7 +165,7 @@ def test_expression_problems_name_every_exit():
     assert "nose" in p
     baked = CharacterDescriptor(name="b", face_overlay=False)
     (p,) = expression_problems(baked, preset="happy", who="b")
-    assert "promote" in p and "add-gaze" not in p, "no such command until PR-D"
+    assert "promote" in p and "add-gaze" in p, "both exits, now that PR-D ships add-gaze"
 
 
 # ---------------------------------------------------------------- provider

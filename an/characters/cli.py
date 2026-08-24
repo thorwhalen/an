@@ -142,6 +142,30 @@ def mouths(
     return f"wrote {len(written)} mouth shapes to {target}"
 
 
+def add_gaze(name: str, out_dir: str = "", overwrite_eyes: bool = False) -> str:
+    """Give ``name`` the eye stack (an#99): sclera and pupil slots under each
+    lid, a filled closed lid, and the ``gaze_travel`` clamp — so `gaze_x` /
+    `gaze_y` and the ambient saccades move its pupils. The expand step for a
+    character made before Wave 6; idempotent on one that has it.
+
+    name: character id
+    out_dir: parent directory; defaults to ./assets/characters
+    overwrite_eyes: replace hand-drawn eye parts with the synthesized outline
+        and filled lid (refused otherwise — a promoted rig's eyes are not the
+        factory's to redraw)
+    """
+    from an.characters.factory import add_gaze as _add_gaze
+
+    char_dir = _resolve_target(out_dir) / name
+    if not (char_dir / "character.json").is_file():
+        return f"no character at {char_dir}"
+    try:
+        desc = _add_gaze(char_dir, overwrite_eyes=overwrite_eyes)
+    except ValueError as e:
+        return str(e)
+    return f"added the eye stack to {desc.parent} (descriptor: {desc.name})"
+
+
 def _parse_variants(spec: str) -> dict[str, float]:
     """``"happy,sad"`` → ``{form: smile offset}``; unknown forms are refused."""
     from an.characters.mouth_set import DEFAULT_MOUTH_VARIANTS
@@ -426,6 +450,7 @@ def contract() -> str:
 _dispatch_funcs = [
     new,
     mouths,
+    add_gaze,
     validate,
     contract,
     silhouette,

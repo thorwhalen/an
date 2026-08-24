@@ -27,6 +27,7 @@ from typing import Iterator
 from an.base import swap_set_name_problem
 from an.ir.migrate import migrate
 from an.characters.schema import (
+    EYELID_CHANNEL,
     VISEME_CHANNEL,
     CHARACTER_DOCUMENT_KIND,
     MOUTH_SHAPES,
@@ -235,6 +236,7 @@ def validate_character(
     _check_asset_sets(directory, descriptor, report, who=who)
 
     _check_mouth_variants(descriptor, report, who=who)
+    _check_gaze_stack(descriptor, report, who=who)
     _check_face_overlay_declaration(descriptor, report, who=who)
     _check_joint_names(directory, descriptor, report)
 
@@ -361,6 +363,49 @@ def _check_asset_sets(
                     "Give the set's attachments identical geometry, or "
                     "accept that per-key placement is not yet expressible.",
                 )
+
+
+def _check_gaze_stack(
+    descriptor: CharacterDescriptor | None, report: VerificationReport, *, who: str
+) -> None:
+    """A rig without pupil slots takes `gaze_x`/`gaze_y` as a no-op (an#99) —
+    an `info` Finding, not a defect: the expand step is `an character add-gaze`."""
+    if descriptor is None or not descriptor.face_overlay:
+        return
+    slots = {s.name for s in descriptor.slots}
+    pupils = {"left_pupil", "right_pupil"} & slots
+    if pupils and pupils != {"left_pupil", "right_pupil"}:
+        report.add(
+            BLOCKING,
+            "character.json#slots",
+            f"{who} has one pupil slot ({sorted(pupils)}) — the gaze axes yoke both eyes",
+            f"Run `an character add-gaze {who}` to complete the stack.",
+        )
+        return
+    if not pupils:
+        report.add(
+            "info",
+            "character.json#slots",
+            f"{who} has no pupil slot, so gaze (`gaze_x`/`gaze_y`, ambient saccades) "
+            "moves nothing on it",
+            f"Run `an character add-gaze {who}` to add the eye stack.",
+        )
+        return
+    # Once pupils exist, `closed` art is MANDATORY: the blink squash scales the
+    # lid node only, so a rig without closed art would squash the outline while
+    # the white and the pupil stayed put (research §9).
+    skin = descriptor.skins.get("default")
+    closed = descriptor.asset_sets.get(EYELID_CHANNEL, {}).get("CLOSED")
+    for eye_slot in ("left_eye", "right_eye"):
+        attachments = (skin.slots.get(eye_slot) if skin else None) or {}
+        if closed not in attachments:
+            report.add(
+                BLOCKING,
+                f"character.json#skins.default.slots.{eye_slot}",
+                f"{who} has pupil slots but {eye_slot!r} carries no closed-lid attachment "
+                f"({closed!r}); a blink would squash the lid outline over a pupil that stays put",
+                f"Run `an character add-gaze {who}` (it draws a filled closed lid), or add the art.",
+            )
 
 
 def _check_mouth_variants(

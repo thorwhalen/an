@@ -35,8 +35,10 @@ NEW_IN_WAVE_6 = {"expressions"}
 def mall():
     with tempfile.TemporaryDirectory() as d:
         root = init(Path(d) / "p")
-        new_character(root / "assets" / "characters", name="c", seed="c", use_dicebear=False, overwrite=True)
-        new_character(root / "assets" / "characters", name="plain", seed="plain", use_dicebear=False, overwrite=True, mouth_variants={})
+        # `gaze=False`: these rigs stand for the pre-Wave-6 shape (no pupils), so
+        # the untouched-entity identity holds; PR-D's rigs are in test_gaze.py.
+        new_character(root / "assets" / "characters", name="c", seed="c", use_dicebear=False, overwrite=True, gaze=False)
+        new_character(root / "assets" / "characters", name="plain", seed="plain", use_dicebear=False, overwrite=True, mouth_variants={}, gaze=False)
         yield load(root).mall
 
 

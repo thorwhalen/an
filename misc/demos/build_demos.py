@@ -298,6 +298,57 @@ def _build_emotion_visemes(work: Path) -> Path:
     return out
 
 
+def _build_gaze(work: Path) -> Path:
+    """The same authored sweep twice, side by side: the pupils alone on the
+    left (a character that has the eye stack but whose saccades are held at
+    centre by compiling with a zero-amplitude generator is not a knob the
+    scene has — so the left pane is a rig WITHOUT the stack, whose eyes are
+    the single pre-Wave-6 drawing and cannot move), the sweep plus ambient
+    saccades on the right (a rig with the stack)."""
+    actions = (
+        "\n```yaml actions\n"
+        "- kind: expression\n  target: maya\n  axes: {gaze_x: -1.0}\n  duration: 1.0\n  blend: 0.3\n"
+        "- kind: expression\n  target: maya\n  axes: {gaze_x: 1.0}\n  duration: 1.0\n  blend: 0.3\n  start: 1.0\n"
+        "- kind: expression\n  target: maya\n  axes: {gaze_y: 1.0}\n  duration: 1.0\n  blend: 0.3\n  start: 2.0\n"
+        "```\n"
+    )
+    md = _meta("Gaze: an authored sweep, with and without the eye stack", 3.5) + "\n" + _shot("s1", 3.5) + "\n" + _entities("maya") + actions
+    clips = []
+    for variant, gaze in (("without", False), ("with", True)):
+        project = work / variant
+        (project / "assets" / "characters").mkdir(parents=True, exist_ok=True)
+        from an.characters import new_character
+
+        new_character(project / "assets" / "characters", name="maya", seed="maya", use_dicebear=False, overwrite=True, gaze=gaze)
+        (project / "scene.md").write_text(md, encoding="utf-8")
+        clips.append(_render(project))
+    out = work / "side_by_side.mp4"
+    subprocess.run(
+        [
+            "ffmpeg", "-v", "error", "-y", "-i", str(clips[0]), "-i", str(clips[1]),
+            "-filter_complex",
+            f"[0:v]crop={FACE_CROP}[a];[1:v]crop={FACE_CROP}[b];[a][b]hstack=inputs=2",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out),
+        ],
+        check=True,
+    )
+    return out
+
+
+def _build_gaze_plus_expression(work: Path) -> Path:
+    """`angry` held while an authored gaze sweeps — two contributors on one
+    face, summed by the solver, plus the ambient saccades."""
+    actions = (
+        "\n```yaml actions\n"
+        "- kind: expression\n  target: charlie\n  preset: angry\n  blend: 0.25\n"
+        "- kind: expression\n  target: charlie\n  axes: {gaze_x: -1.0}\n  duration: 1.2\n  blend: 0.4\n  start: 0.5\n"
+        "- kind: expression\n  target: charlie\n  axes: {gaze_x: 1.0}\n  duration: 1.2\n  blend: 0.4\n  start: 1.7\n"
+        "```\n"
+    )
+    md = _meta("Gaze plus expression", 3.0) + "\n" + _shot("s1", 3.0) + "\n" + _entities("charlie") + actions
+    return _render(_project(work, scene_md=md, characters=("charlie",)))
+
+
 def _build_camera(work: Path) -> Path:
     parts = [_meta("The camera moves the compiler implements", 8.0)]
     for i, move in enumerate(("hold", "push_in", "pull_out", "zoom_in"), start=1):
@@ -658,6 +709,51 @@ DEMOS: tuple[Demo, ...] = (
             "property. The brows and lids move too; watch the mouth's corners."
         ),
         build=_build_emotion_visemes,
+    ),
+    Demo(
+        slug="gaze",
+        title="Gaze: the pupils move, on a rig that has them",
+        shows=(
+            "The same authored sweep twice, side by side, cropped to the face — "
+            "left, then right, then down — on a rig WITHOUT the eye stack (left "
+            "pane: the eye is one drawing with the pupil baked in, so nothing "
+            "moves; gaze is a validated no-op there) and on a rig WITH it (right "
+            "pane: sclera, pupil and lid are three slots; the pupils follow the "
+            "sweep, clamped inside the white by the descriptor's travel; the "
+            "ambient saccades every pupil rig makes, seeded by the character's "
+            "name, ride underneath — at this size they are a pixel or two, so "
+            "watch the full-rate mp4 rather than the GIF for them). Blinks still "
+            "close over the pupil "
+            "because the closed lid is a filled drawing."
+        ),
+        how=(
+            "`- kind: expression / target: maya / axes: {gaze_x: -1.0} / duration: 1.0` "
+            "(gaze is two expression axes, `gaze_x`/`gaze_y`, no preset carries them); "
+            "`an character new` draws the eye stack by default, `an character add-gaze "
+            "<name>` adds it to an older rig. Saccades: `an/adapters/cutout/gaze.py`, "
+            "seed stamped in the compiled scene's `meta.gaze_seeds`."
+        ),
+        crop="",
+        build=_build_gaze,
+    ),
+    Demo(
+        slug="gaze-plus-expression",
+        title="Angry, and looking around",
+        shows=(
+            "`angry` held for the whole shot while an authored gaze sweeps left then "
+            "right — two contributors on one face, summed at compile time by the "
+            "face solver (the brows stay furrowed while the pupils travel), with the "
+            "ambient saccades riding on top. Order-independent by construction: "
+            "the same pose comes out with the actions listed the other way round."
+        ),
+        how=(
+            "Two `expression` actions on one entity — one with `preset: angry`, one "
+            "with `axes: {gaze_x: …}` — overlapping in time. `_add_face_clips` emits "
+            "one channel per (node, property): brows from the preset, pupils from the "
+            "gaze axes plus the saccade generator."
+        ),
+        crop=FACE_CROP,
+        build=_build_gaze_plus_expression,
     ),
     Demo(
         slug="camera",
