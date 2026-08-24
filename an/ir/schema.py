@@ -187,15 +187,20 @@ class ExpressionAction(_ActionBase):
 
     A leaf action, flattened like ``play``: the compiler resolves it in the
     face solver (one channel per ``(node, property)``), never per action.
+
+    The ramp is a min over the two ends, so a span shorter than ``2·blend``
+    never reaches full intensity (a 0.2 s expression at the default 0.15 s
+    blend peaks at 0.67) and a ``duration=0`` expression shows only where a
+    frame lands on it with ``blend=0`` — cut the blend for a flash.
     """
 
     kind: Literal["expression"] = "expression"
     target: PathStr  # the ENTITY; the binding picks the nodes
     preset: str | None = None
     axes: dict[str, float] = Field(default_factory=dict)
-    intensity: float = 1.0
-    duration: Seconds | None = None  # None = to the shot end
-    blend: Seconds = DFLT_EXPRESSION_BLEND_S
+    intensity: float = Field(default=1.0, ge=0.0, le=1.0)
+    duration: Seconds | None = Field(default=None, ge=0.0)  # None = to the shot end
+    blend: Seconds = Field(default=DFLT_EXPRESSION_BLEND_S, ge=0.0)
 
 
 class SequenceAction(_ActionBase):

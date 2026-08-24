@@ -50,6 +50,7 @@ from an.expression.binding import (
     expression_problems,
     resolve_mouth_set,
 )
+from an.expression.presets import mouth_form_of
 from an.expression.provider import DefaultExpressionProvider, ExpressionProvider
 from an.characters.play import (
     BoneTrack,
@@ -2149,10 +2150,35 @@ def _add_viseme_clips(
             preset = provider.mouth_preset_at(shot, speaker, float(line.start))
             if preset is not None:
                 keys_used = {str(kf.viseme).upper() for kf in line.viseme_track.keyframes}
+                # The terminal rest is a key the line USES (appended below), so
+                # a variant without it must not be selected (an#98 review).
+                keys_used |= {
+                    r
+                    for p in vocab.swap_capable_paths(speaker, VISEME_CHANNEL)
+                    if (r := _mouth_rest_key(vocab, p, VISEME_CHANNEL)) is not None
+                }
                 try:
                     set_name = resolve_mouth_set(desc, preset, keys_used=keys_used, who=speaker)
                 except ExpressionResolutionError as e:
                     raise CutoutCompileError(str(e)) from e
+                if set_name != VISEME_CHANNEL:
+                    # Declared is not resolved: a variant key whose art is
+                    # missing on disk is dropped from the node's projection,
+                    # and a line that then holds its previous shape through
+                    # the missing key is worse than the neutral set.
+                    for p in vocab.swap_capable_paths(speaker, set_name):
+                        resolved = set(vocab.node_sets[p].get(set_name) or {})
+                        missing = sorted(keys_used - resolved)
+                        if missing:
+                            warnings.warn(
+                                f"shot {shot.id!r} dialogue line {i}: {set_name!r} on "
+                                f"{p!r} resolved without {missing} (art missing on "
+                                f"disk); the neutral {VISEME_CHANNEL!r} set is used instead.",
+                                CutoutCompileWarning,
+                                stacklevel=2,
+                            )
+                            set_name = VISEME_CHANNEL
+                            break
         mouth_paths = (
             vocab.swap_capable_paths(speaker, set_name)
             if vocab is not None
@@ -2395,13 +2421,16 @@ def _compress_linear(times: list[float], values: list[float]) -> list[KeyframeJS
 
 
 def _lid_blink_at(t: float, windows: list[tuple[float, float]]) -> float:
-    """−1 inside a blink's closed span (the central half of its window), else 0."""
+    """−1 inside a blink's closed span (the central half of its window), else
+    +inf — the blink is a contributor that can only CLOSE, so outside a blink
+    it must not cap a positive (wide) offset (the first draft returned 0 here
+    and the `WIDE` rung of the ladder was unreachable, an#98 review)."""
     lo, hi = _EYELID_CLOSED_SPAN
     for start, end in windows:
         span = end - start
         if start + lo * span <= t < start + hi * span:
             return -1.0
-    return 0.0
+    return math.inf
 
 
 def _blink_squash_at(t: float, windows: list[tuple[float, float]]) -> float:
@@ -2472,6 +2501,15 @@ def _add_face_clips(
                 )
             continue
         desc = vocab.descriptors.get(entity.id)
+        if desc is not None:
+            for sp in spans:
+                problems = expression_problems(desc, preset=sp.preset, axes=sp.axes, who=entity.id)
+                if problems:
+                    raise CutoutCompileError(str(ExpressionResolutionError(entity.id, problems)))
+        # A span that asks for nothing — `preset: None` with no axes, or
+        # `intensity: 0` — is not a contributor: the entity keeps its verbatim
+        # blink clips rather than a rest-valued face clip (an#98 review).
+        spans = [sp for sp in spans if sp.intensity > 0 and (sp.offsets() or sp.mouth_form)]
         if not spans or desc is None:
             if spans and desc is None:
                 warnings.warn(
@@ -2485,10 +2523,6 @@ def _add_face_clips(
                 continue
             phases[entity.id] = blink_phase(entity.id)
         else:
-            for sp in spans:
-                problems = expression_problems(desc, preset=sp.preset, axes=sp.axes, who=entity.id)
-                if problems:
-                    raise CutoutCompileError(str(ExpressionResolutionError(entity.id, problems)))
             placed = _solve_face(shot, entity.id, desc, animations, tracks, vocab=vocab, fps=fps, provider=provider, spans=spans)
             if _eye_paths(vocab, entity.id):
                 phases[entity.id] = blink_phase(entity.id)
@@ -2586,7 +2620,7 @@ def _solve_face(
                 continue
             rest_sy = float(vocab.node_transforms[path].scale_y)
             values = [
-                rest_sy * _blink_squash_at(t, windows) * max(0.05, 1.0 + LID_SQUASH_GAIN * expr[i])
+                max(0.05 * rest_sy, rest_sy * _blink_squash_at(t, windows) * (1.0 + LID_SQUASH_GAIN * expr[i]))
                 for i, t in enumerate(times)
             ]
             channels.append(ChannelJSON(target=path, property="scale_y", keyframes=_compress_linear(times, values)))
@@ -2599,12 +2633,57 @@ def _solve_face(
         placed.append(PlacedClipJSON(animation_id=anim_id, start_time=0.0, duration=duration))
 
     # The silent mouth form: hold the variant's rest key over each expression
-    # span, outside this entity's dialogue lines.
-    lines = [
-        (float(l.start), float(l.start) + float(l.duration))
-        for l in shot.dialogue
-        if l.speaker == entity_id and l.start is not None and l.duration is not None
-    ]
+    # span, outside this entity's dialogue lines — and, whenever any variant is
+    # in play, hold the NEUTRAL set's rest over the whole shot at the very
+    # front, so the mouth returns to neutral art when a variant span or a
+    # variant-set line ends (the runtime keeps the last texture a property set;
+    # with nothing re-asserting `viseme` the mouth stayed on `X_happy` for the
+    # rest of the shot, an#98 review). Two properties live at one instant
+    # resolve by NAME order in the runtime (`viseme@…` sorts after `viseme`),
+    # so the variant wins wherever it is live and neutral shows elsewhere.
+    # Each hold ends one frame BEFORE a line's first frame and starts one
+    # frame AFTER the line clip's last frame, so no frame carries both a hold
+    # and the line's own key.
+    frame = 1.0 / fps
+    line_windows = []
+    for l in shot.dialogue:
+        if l.speaker == entity_id and l.start is not None and l.duration is not None:
+            a = float(l.start)
+            end = a + math.ceil(float(l.duration) * fps - 1e-9) / fps  # the clip's inclusive last frame
+            line_windows.append((a, end))
+    variant_used = any(sp.mouth_form for sp in spans)
+    for l in shot.dialogue:
+        if l.speaker == entity_id and l.start is not None and getattr(l, "emotion", None):
+            variant_used = variant_used or bool(mouth_form_of((l.emotion or "").strip().lower()))
+
+    def hold_clips(set_name: str, rest: str, target: str, spans_: list[tuple[float, float]], tag: str) -> None:
+        for j, (a, b) in enumerate(spans_):
+            for k, (ha, hb) in enumerate(_subtract_intervals((a, b), line_windows)):
+                # Snap to frames: start on the first frame at/after `ha` (one
+                # frame after a line's last frame when `ha` is that frame),
+                # end on the last frame strictly before `hb`'s line.
+                start = math.ceil(ha * fps - 1e-9) / fps
+                if any(abs(start - lw_end) < 1e-9 for _, lw_end in line_windows):
+                    start += frame
+                end = min(shot.duration, math.ceil(hb * fps - 1e-9) / fps)
+                if any(abs(end - lw_start) < 1e-9 for lw_start, _ in line_windows) or end > hb + 1e-9 and any(lw_start - 1e-9 <= end <= lw_end + 1e-9 for lw_start, lw_end in line_windows):
+                    end -= frame
+                if end - start < -1e-9:
+                    continue
+                dur = max(0.001, end - start)
+                anim_id = f"__face_mouth__{shot.id}_{entity_id}_{tag}_{j}_{k}_{target.replace('/', '.')}"
+                animations[anim_id] = AnimationClipJSON(
+                    name=anim_id,
+                    duration=dur,
+                    channels=[ChannelJSON(target=target, property=set_name, keyframes=[KeyframeJSON(time=0.0, value=rest, easing="step")])],
+                )
+                placed.append(PlacedClipJSON(animation_id=anim_id, start_time=start, duration=dur))
+
+    if variant_used:
+        for target in vocab.swap_capable_paths(entity_id, VISEME_CHANNEL):
+            rest = _mouth_rest_key(vocab, target, VISEME_CHANNEL)
+            if rest is not None:
+                hold_clips(VISEME_CHANNEL, rest, target, [(0.0, float(shot.duration))], "neutral")
     for idx, sp in enumerate(spans):
         if sp.mouth_form is None or sp.source != "action":
             continue
@@ -2613,17 +2692,7 @@ def _solve_face(
             rest = _mouth_rest_key(vocab, target, set_name)
             if rest is None:
                 continue
-            for j, (a, b) in enumerate(_subtract_intervals((sp.start, sp.end), lines)):
-                b = min(shot.duration, math.ceil(b * fps - 1e-9) / fps)
-                if b <= a:
-                    continue
-                anim_id = f"__face_mouth__{shot.id}_{entity_id}_{idx}_{j}_{target.replace('/', '.')}"
-                animations[anim_id] = AnimationClipJSON(
-                    name=anim_id,
-                    duration=max(0.001, b - a),
-                    channels=[ChannelJSON(target=target, property=set_name, keyframes=[KeyframeJSON(time=0.0, value=rest, easing="step")])],
-                )
-                placed.append(PlacedClipJSON(animation_id=anim_id, start_time=a, duration=max(0.001, b - a)))
+            hold_clips(set_name, rest, target, [(sp.start, sp.end)], str(idx))
     return placed
 
 
@@ -2631,7 +2700,7 @@ def _subtract_intervals(span: tuple[float, float], holes: list[tuple[float, floa
     """``span`` minus every hole, as sorted disjoint intervals."""
     out: list[tuple[float, float]] = []
     cursor, end = span
-    for a, b in sorted(holes):
+    for a, b in sorted((min(h), max(h)) for h in holes):
         if b <= cursor or a >= end:
             continue
         if a > cursor:

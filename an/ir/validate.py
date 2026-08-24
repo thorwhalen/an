@@ -201,6 +201,15 @@ def _check_swap_references(
             if getattr(leaf, "kind", None) != "expression":
                 continue
             entity_id = (getattr(leaf, "target", "") or "").split("/", 1)[0]
+            if entity_id not in refs_by_entity:
+                report.add(
+                    "error",
+                    f"{path}/actions/{k}",
+                    f"`expression` targets {entity_id!r}, which is not a character "
+                    f"entity of this shot (entities: {sorted(refs_by_entity) or 'none'}) "
+                    "— it would compile to nothing.",
+                )
+                continue
             desc = _descriptor_for(refs_by_entity.get(entity_id), available_characters)
             for problem in expression_problems(
                 desc, preset=leaf.preset, axes=leaf.axes, who=entity_id

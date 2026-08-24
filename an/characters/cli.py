@@ -145,7 +145,7 @@ def _parse_variants(spec: str) -> dict[str, float]:
     from an.characters.mouth_set import DEFAULT_MOUTH_VARIANTS
     from an.expression.presets import PRESETS
 
-    forms = [f.strip() for f in spec.split(",") if f.strip()]
+    forms = [f.strip().lower() for f in spec.split(",") if f.strip()]
     known = {p.mouth_form for p in PRESETS.values() if p.mouth_form}
     out: dict[str, float] = {}
     for form in forms:

@@ -15,9 +15,15 @@ get fixed.
   `resolve_mouth_set`, `expression_problems`, `DefaultExpressionProvider` (`curves`, `spans`, `mouth_preset_at`),
   `BLENDSHAPE_V2_NAMES`/`from_blendshapes`. The combinator is `an.ir.expression` (NOT re-exported at `an.` — that
   name is this subpackage).
-- The solver: `_add_face_clips` → `_solve_face` in `an/adapters/cutout/compile.py`; untouched entities go through
-  `_blink_placements` (the an#88 body, verbatim). `_add_viseme_clips` asks the provider for the preset at the line's
-  start and `resolve_mouth_set` for the set; silent spans hold the variant's rest via `__face_mouth__` clips.
+- The solver: `_add_face_clips` → `_solve_face` in `an/adapters/cutout/compile.py`; untouched entities (and empty
+  expressions: `preset: None` with no axes, `intensity: 0`) go through `_blink_placements` (the an#88 body,
+  verbatim). `_add_viseme_clips` asks the provider for the preset at the line's start and `resolve_mouth_set` for the
+  set (coverage includes the terminal rest, checked against RESOLVED keys); silent spans hold the variant's rest via
+  `__face_mouth__` clips, and whenever any variant is in play a neutral `viseme` rest hold runs the WHOLE shot at the
+  front — the runtime keeps the last texture a property set, and resolves two mouth properties by NAME order
+  (`viseme@…` after `viseme`), so the variant wins where it is live and neutral shows elsewhere; every hold stops one
+  frame short of a line on both sides. The blink term in `lid = min(lid_expr, lid_blink)` is −1 inside a closed span
+  and **+inf** outside (a blink can only close; 0 would cap `wide`).
 - Gains: `BROW_HEIGHT_TRAVEL = 10` (view-box units, rig-scaled), `BROW_ANGLE_TRAVEL = 0.35` rad,
   `LID_SQUASH_GAIN = 0.5`; the brow-angle sign is `-travel` left / `+travel` right (PixiJS is clockwise-positive).
 - Variants: `an character new --mouth-variants happy,sad` (the default), `an character mouths --variants angry`;

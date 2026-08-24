@@ -110,8 +110,11 @@ def preset_axes(
                 f"unknown expression axis {name!r} (known: {', '.join(sorted(AXES))})"
             )
         merged[name] = float(value)
-    scaled = clamp_axes({k: v * float(intensity) for k, v in merged.items()})
-    return {k: v for k, v in scaled.items() if v != 0.0}
+    # Clamp BEFORE scaling — the same order the provider uses — so an
+    # out-of-range override at half intensity is half the range, not the
+    # whole of it (an#98 review).
+    clamped = clamp_axes(merged)
+    return {k: v for k, v in ((k, v * float(intensity)) for k, v in clamped.items()) if v != 0.0}
 
 
 def mouth_form_of(preset: str | None) -> str | None:

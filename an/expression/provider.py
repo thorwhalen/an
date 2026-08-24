@@ -35,6 +35,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Protocol
 
+from an.expression.axes import AXES
 from an.expression.presets import mouth_form_of, preset_axes
 from an.ir.compose import flatten
 from an.ir.schema import ExpressionAction, Shot
@@ -162,7 +163,12 @@ class DefaultExpressionProvider:
                     w = span.weight_at(t)
                     if w:
                         acc[i] += value * w
-        return [AxisCurve(axis, tuple(samples)) for axis, samples in per_axis.items()]
+        # The SUM is clamped to the axis range: two happy spans overlapping
+        # must not raise a brow past what one axis can ask for.
+        return [
+            AxisCurve(axis, tuple(AXES[axis].clamp(v) if axis in AXES else v for v in samples))
+            for axis, samples in per_axis.items()
+        ]
 
     def mouth_preset_at(self, shot: Shot, entity_id: str, t: float) -> str | None:
         """The preset whose mouth form is in force at ``t``: the heaviest span

@@ -566,6 +566,11 @@ def pinned_frames_min_pairwise_changed_px(capture: SceneCapture, times) -> Value
     frames = {}
     for ref in G.resolve_frames(capture, times):
         frames[ref.index] = read_png(G.frame_png_path(capture, ref)).astype(int)
+    if len(frames) < MIN_PINNED_FRAMES_FOR_PAIRWISE:
+        return unavailable(
+            f"the scene's {len(times)} pinned times resolve to {len(frames)} distinct "
+            f"frame(s); a pairwise minimum needs {MIN_PINNED_FRAMES_FOR_PAIRWISE}"
+        )
     best = None
     for a, b in combinations(sorted(frames), 2):
         changed = int((frames[a] != frames[b]).any(axis=-1).sum())

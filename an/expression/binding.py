@@ -139,12 +139,19 @@ def binding_for(desc: CharacterDescriptor) -> list[Binding]:
     declared = getattr(desc, "expression_binding", None)
     if not declared:
         return default_binding(desc)
+    slots = {s.name for s in desc.slots}
     out: list[Binding] = []
     for raw in declared:
         axis = raw.get("axis")
         if axis not in AXES:
             raise ExpressionResolutionError(
                 desc.name, [f"expression_binding names unknown axis {axis!r}"]
+            )
+        if raw.get("slot") not in slots:
+            raise ExpressionResolutionError(
+                desc.name,
+                [f"expression_binding maps {axis!r} onto slot {raw.get('slot')!r}, "
+                 f"which the rig does not declare (slots: {sorted(slots)})"],
             )
         if "set_family" in raw:
             out.append(SetBinding(axis, str(raw["slot"]), str(raw["set_family"])))
@@ -258,6 +265,11 @@ def expression_problems(
             problems.append(
                 f"unknown expression axis {axis!r} (known: {', '.join(sorted(AXES))})"
             )
+    if desc is not None:
+        try:
+            binding_for(desc)
+        except ExpressionResolutionError as e:
+            problems.extend(e.problems)
     if desc is not None and not desc.face_overlay:
         problems.append(
             f"{who!r} has its face baked into the head art (face_overlay: false), so "

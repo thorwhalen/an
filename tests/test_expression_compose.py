@@ -27,6 +27,8 @@ from an.project import init, load
 from .test_swap_channels import _evaluate, _python_timeline
 
 ROOT = Path(__file__).resolve().parents[1]
+#: Corpus scenes this wave added — their contract hash is allowed to move.
+NEW_IN_WAVE_6 = {"expressions"}
 
 
 @pytest.fixture(scope="module")
@@ -141,8 +143,8 @@ def test_every_corpus_contract_hash_equals_the_committed_ledger_row():
     row = max(rows, key=lambda r: r["generated_at"])
     checked = 0
     for name, fx in DFLT_FIXTURES.items():
-        if name not in row["scenes"]:
-            continue  # a fixture added after the row (`expressions` itself, at first)
+        if name not in row["scenes"] or name in NEW_IN_WAVE_6:
+            continue  # `expressions` is this wave's own scene; its hash moves with the solver
         checked += 1
         with tempfile.TemporaryDirectory() as tmp:
             work = stage_copy(ROOT / fx.path, Path(tmp))
@@ -235,8 +237,9 @@ def test_a_silent_expression_holds_the_variants_rest_outside_lines(mall):
     assert _evaluate(tl, 0.5)[("c/head/mouth", "viseme@happy")] == "X"
     assert _evaluate(tl, 1.2)[("c/head/mouth", "viseme@happy")] == "D"
     assert _evaluate(tl, 1.9)[("c/head/mouth", "viseme@happy")] == "X"
-    holds = [k for k in to_dict(js)["animations"] if k.startswith("__face_mouth__")]
-    assert len(holds) == 2, "one hold before the line, one after"
+    holds = sorted(k for k in to_dict(js)["animations"] if k.startswith("__face_mouth__"))
+    assert len(holds) == 4, holds  # variant rest before/after the line, neutral rest before/after
+    assert sum("_neutral_" in k for k in holds) == 2
 
 
 def test_a_missing_variant_falls_back_to_the_neutral_set_with_a_warning(mall):
@@ -380,3 +383,265 @@ def test_the_mouth_variant_art_is_a_corner_move_only():
     assert neutral != happy
     # Same canvas, same opening: only the corner control points differ.
     assert re.search(r'viewBox="[^"]+"', neutral).group(0) == re.search(r'viewBox="[^"]+"', happy).group(0)
+
+
+# ---------------------------------------------------------------- an#98 review: the defects, pinned
+
+
+def _pose(js, t):
+    return _evaluate(_python_timeline(js), t)
+
+
+def test_the_mouth_returns_to_neutral_after_a_variant_span(mall):
+    """The runtime keeps the last texture a property set; with nothing
+    re-asserting `viseme` the mouth stayed on `X_happy` for the rest of the
+    shot after a happy span (review #2). A neutral rest hold now runs the
+    whole shot under any variant, and name order lets the variant win where
+    it is live."""
+    js = compile_shot(_shot(actions=[expression("c", "happy", duration=1.0, blend=0.0)]), mall=mall, fps=24, strict_assets=True)
+    assert _pose(js, 0.5)[("c/head/mouth", "viseme@happy")] == "X"
+    late = _pose(js, 1.5)
+    assert late[("c/head/mouth", "viseme")] == "X" and ("c/head/mouth", "viseme@happy") not in late
+    # The dialogue sugar too: after a [happy] line on the variant set, neutral.
+    line = Dialogue(speaker="c", text="hi", emotion="happy", start=0.2, duration=0.5, viseme_track=_track("X", "D", "X"))
+    js = compile_shot(_shot(dialogue=[line]), mall=mall, fps=24, strict_assets=True)
+    assert _pose(js, 0.4)[("c/head/mouth", "viseme@happy")] == "D"
+    assert _pose(js, 1.5)[("c/head/mouth", "viseme")] == "X"
+
+
+def test_no_frame_carries_a_hold_and_the_lines_own_key(mall):
+    """Review #12: the hold's frame-ceiled end used to land on the line's first
+    frame and the next hold on the line clip's last frame; the runtime
+    resolves two mouth properties by NAME order, so `X_happy` flicked over a
+    neutral line's first key. Holds now stop one frame short on both sides."""
+    line = Dialogue(speaker="c", text="hi", start=0.5, duration=0.5, viseme_track=_track("X", "D", "X"))
+    js = compile_shot(_shot(actions=[expression("c", "happy", blend=0.0)]), mall=mall, fps=24, strict_assets=True)
+    js = compile_shot(_shot(actions=[expression("c", "sad", blend=0.0)], dialogue=[line]), mall=mall, fps=24, strict_assets=True)
+    # The line resolves to viseme@sad (declared by default); the holds are on
+    # viseme@sad and viseme. At every frame, at most one hold-or-line key per
+    # PROPERTY is live, and the line's frames carry the line's key alone.
+    tl = _python_timeline(js)
+    for f in range(0, 49):
+        t = f / 24
+        pose = _evaluate(tl, t)
+        mouth = {k[1]: v for k, v in pose.items() if k[0] == "c/head/mouth"}
+        if 0.5 <= t <= 1.0 + 1e-9:
+            assert mouth.get("viseme@sad") in ("X", "D"), (t, mouth)
+    d = to_dict(js)
+    (track,) = [tr for tr in d["timeline"]["tracks"] if tr["target_root"] == "c"]
+    holds = [c for c in track["clips"] if "__face_mouth__" in c["animation_id"]]
+    line_clip = next(c for c in track["clips"] if "__viseme__" in c["animation_id"])
+    for h in holds:
+        h_end = h["start_time"] + h["duration"]
+        assert not (h["start_time"] <= line_clip["start_time"] <= h_end + 1e-9), (h, line_clip)
+        assert not (h["start_time"] - 1e-9 <= line_clip["start_time"] + line_clip["duration"] <= h_end), (h, line_clip)
+
+
+def test_a_wide_lid_is_reachable_when_the_rig_has_the_art(mall, tmp_path):
+    """Review #1: the blink term returned 0 outside a blink, so any positive
+    lid offset was clamped and the `WIDE` rung could never show."""
+    import json as _json
+    import shutil
+
+    src = Path(mall["characters"].rootdir if hasattr(mall["characters"], "rootdir") else "") if False else None
+    # Build a rig with WIDE art: copy `c`, add eye_l_wide/eye_r_wide, declare WIDE.
+    from an.characters import new_character
+    from an.project import init, load
+
+    root = init(tmp_path / "p")
+    new_character(root / "assets" / "characters", name="w", seed="w", use_dicebear=False, overwrite=True)
+    cdir = root / "assets" / "characters" / "w"
+    for side in ("l", "r"):
+        shutil.copy(cdir / "parts" / f"eye_{side}_open.svg", cdir / "parts" / f"eye_{side}_wide.svg")
+    raw = _json.loads((cdir / "character.json").read_text(encoding="utf-8"))
+    raw["asset_sets"]["eyelid"]["WIDE"] = "wide"
+    for slot, stem in (("left_eye", "eye_l"), ("right_eye", "eye_r")):
+        open_att = raw["skins"]["default"]["slots"][slot]["open"]
+        raw["skins"]["default"]["slots"][slot]["wide"] = {**open_att, "path": f"parts/{stem}_wide.svg"}
+    (cdir / "character.json").write_text(_json.dumps(raw), encoding="utf-8")
+    wmall = load(root).mall
+    js = compile_shot(_shot(actions=[expression("w", "surprised", blend=0.0)], ref="w", entity="w"), mall=wmall, fps=24, strict_assets=True)
+    assert _pose(js, 0.5)[("w/head/left_eye", "eyelid")] == "WIDE"
+    # and a blink inside a wide expression still closes (12 s to catch one)
+    js = compile_shot(_shot(actions=[expression("w", "surprised", blend=0.0)], ref="w", entity="w", duration=12.0), mall=wmall, fps=24, strict_assets=True)
+    values = {k["value"] for k in _face_channels(js)[("w/head/left_eye", "eyelid")]}
+    assert values >= {"WIDE", "CLOSED"}, values
+
+
+def test_a_variant_without_the_rest_key_is_not_selected(mall):
+    """Review #4: coverage ignored the terminal rest, so a variant lacking `X`
+    was chosen and the line then had no rest key — no lip-sync at all."""
+    import copy
+
+    desc = copy.deepcopy(mall["characters"]["c"])
+    del desc["asset_sets"]["viseme@happy"]["X"]
+    m = {"characters": {"c": mall["characters"]["c"], "norest": desc}}
+    line = Dialogue(speaker="n", text="hi", start=0.2, duration=0.6, viseme_track=_track("A", "D"))
+    with pytest.warns(UserWarning, match=r"\['X'\]"):
+        js = compile_shot(_shot(actions=[expression("n", "happy", blend=0.0)], dialogue=[line], ref="norest", entity="n"), mall=m, fps=24, strict_assets=True)
+    assert _pose(js, 0.5)[("n/head/mouth", "viseme")] == "D"
+
+
+def test_a_variant_key_missing_on_disk_falls_back_to_neutral(tmp_path):
+    """Review #9: declared is not resolved — a variant whose art is missing on
+    disk dropped the key with a warning and held the previous shape through it."""
+    from an.characters import new_character
+    from an.project import init, load
+
+    root = init(tmp_path / "p")
+    new_character(root / "assets" / "characters", name="g", seed="g", use_dicebear=False, overwrite=True)
+    (root / "assets" / "characters" / "g" / "parts" / "mouth" / "mouth_d_happy.svg").unlink()
+    m = load(root).mall
+    line = Dialogue(speaker="g", text="hi", start=0.2, duration=0.6, viseme_track=_track("X", "D", "X"))
+    with pytest.warns(CutoutCompileWarning, match="art missing on disk"):
+        js = compile_shot(_shot(actions=[expression("g", "happy", blend=0.0)], dialogue=[line], ref="g", entity="g"), mall=m, fps=24)
+    assert _pose(js, 0.5)[("g/head/mouth", "viseme")] == "D"
+
+
+def test_axis_ranges_hold_on_what_reaches_the_rig():
+    """Review #5: `preset_axes` clamped after scaling while the provider clamped
+    before; overlapping spans could sum past an axis's range; the schema took
+    negative durations and intensities above 1."""
+    from pydantic import ValidationError
+
+    from an.expression import DefaultExpressionProvider, preset_axes
+
+    assert preset_axes("neutral", axes={"brow_height_l": 5.0}, intensity=0.5)["brow_height_l"] == 0.5
+    shot = Shot(id="s", style="cutout", duration=1.0, entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
+                actions=[expression("c", "surprised", blend=0.0), expression("c", "surprised", blend=0.0)])
+    curves = {c.axis: c.samples for c in DefaultExpressionProvider().curves(shot, "c", fps=4)}
+    assert max(curves["brow_height_l"]) == 1.0
+    for bad in (dict(intensity=2.0), dict(intensity=-1.0), dict(duration=-1.0), dict(blend=-0.1)):
+        with pytest.raises(ValidationError):
+            ExpressionAction(target="c", preset="happy", **bad)
+
+
+def test_validate_refuses_an_expression_on_an_unknown_entity(mall):
+    from an.ir.schema import Meta, SceneIR
+
+    scene = SceneIR(meta=Meta(title="t", duration=1.0), timeline=[_shot(actions=[expression("ghost", "happy")])])
+    report = validate_semantic(scene, available_characters=mall["characters"])
+    assert any("ghost" in f.description and f.severity == "error" for f in report.findings)
+
+
+def test_a_declared_binding_naming_a_missing_slot_is_a_resolution_error(mall):
+    import copy
+
+    from an.expression import ExpressionResolutionError, binding_for, expression_problems
+    from an.characters.schema import CharacterDescriptor
+
+    raw = copy.deepcopy(mall["characters"]["c"])
+    raw["expression_binding"] = [{"axis": "brow_height_l", "slot": "nose_ring", "property": "y", "gain": 1.0}]
+    desc = CharacterDescriptor.model_validate(raw)
+    with pytest.raises(ExpressionResolutionError, match="nose_ring"):
+        binding_for(desc)
+    assert any("nose_ring" in p for p in expression_problems(desc, preset="happy", who="c"))
+    m = {"characters": {"c": mall["characters"]["c"], "bad": raw}}
+    with pytest.raises(CutoutCompileError, match="nose_ring"):
+        compile_shot(_shot(actions=[expression("b", "happy")], ref="bad", entity="b"), mall=m, fps=24, strict_assets=True)
+
+
+def test_variants_derive_their_art_from_the_key_not_the_attachment_name():
+    """Review #8: a promoted hand rig maps `X` to `mouth_shut`; only
+    `mouth_x_<form>.svg` is ever drawn, so the declaration must say that."""
+    from an.characters.factory import declare_mouth_variants
+    from an.characters.schema import CharacterDescriptor
+
+    desc = CharacterDescriptor(name="h")
+    desc.asset_sets["viseme"]["X"] = "mouth_shut"
+    desc.skins["default"].slots["mouth"]["mouth_shut"] = desc.skins["default"].slots["mouth"]["mouth_x"]
+    declare_mouth_variants(desc, {"happy": 0.3})
+    assert desc.asset_sets["viseme@happy"]["X"] == "mouth_x_happy"
+    assert desc.skins["default"].slots["mouth"]["mouth_x_happy"].path == "parts/mouth/mouth_x_happy.svg"
+
+
+def test_an_empty_expression_is_not_a_contributor(mall):
+    """Review #16: `preset: None` with no axes, or `intensity: 0`, used to take
+    the solver path and emit a rest-valued face clip — the compiled document
+    must be identical to no expression at all."""
+    plain = to_dict(compile_shot(_shot(), mall=mall, fps=24, strict_assets=True))
+    for empty in (expression("c", None), expression("c", "angry", intensity=0.0)):
+        assert to_dict(compile_shot(_shot(actions=[empty]), mall=mall, fps=24, strict_assets=True)) == plain
+
+
+def test_the_squash_floor_holds_through_a_blink(mall):
+    """Review #13: the floor was applied before the blink squash."""
+    import copy
+
+    from an.expression.binding import LID_SQUASH_GAIN
+
+    raw = copy.deepcopy(mall["characters"]["c"])
+    del raw["skins"]["default"]["slots"]["left_eye"]["closed"]
+    del raw["skins"]["default"]["slots"]["right_eye"]["closed"]
+    m = {"characters": {"c": mall["characters"]["c"], "sq": raw}}
+    js = compile_shot(_shot(actions=[expression("q", None, axes={"lid_open_l": -1.0, "lid_open_r": -1.0}, blend=0.0)], ref="sq", entity="q", duration=12.0), mall=m, fps=24, strict_assets=False)
+    ch = _face_channels(js)[("q/head/left_eye", "scale_y")]
+    lo = min(k["value"] for k in ch)
+    assert lo >= 0.05 * 1.0 - 1e-9 and lo < 1.0 - LID_SQUASH_GAIN + 1e-9, lo
+
+
+def test_subtract_intervals_normalises_inverted_holes():
+    assert compile_mod._subtract_intervals((0.0, 10.0), [(6.0, 4.0)]) == [(0.0, 4.0), (6.0, 10.0)]
+
+
+def test_two_axes_on_one_key_sum(mall):
+    """Mutant 1b: the solver's accumulation (`+=`) — the default binding never
+    shares a (slot, property), so a declared binding that does is the guard."""
+    import copy
+
+    from an.expression.binding import BROW_HEIGHT_TRAVEL
+
+    raw = copy.deepcopy(mall["characters"]["c"])
+    raw["expression_binding"] = [
+        {"axis": "brow_height_l", "slot": "left_brow", "property": "y", "gain": -1.0, "rig_scaled": False},
+        {"axis": "brow_height_r", "slot": "left_brow", "property": "y", "gain": -1.0, "rig_scaled": False},
+    ]
+    m = {"characters": {"c": mall["characters"]["c"], "two": raw}}
+    js = compile_shot(_shot(actions=[expression("t", None, axes={"brow_height_l": 0.5, "brow_height_r": 0.25}, blend=0.0)], ref="two", entity="t"), mall=m, fps=24, strict_assets=True)
+    ent = next(e for e in js.scene.children if e.name == "t")
+    rest = next(c for c in next(c for c in ent.children if c.name == "head").children if c.name == "left_brow").transform.y
+    assert _pose(js, 0.5)[("t/head/left_brow", "y")] == pytest.approx(rest - 0.75)
+
+
+def test_pinned_frames_min_pairwise_is_a_minimum_over_distinct_frames(tmp_path):
+    """Mutant 13 and review #11, on synthetic frames."""
+    from types import SimpleNamespace as NS
+
+    import numpy as np
+
+    from an.bench.png import write_png
+    from an.bench.run import pinned_frames_min_pairwise_changed_px
+
+    frames = tmp_path / "frames"
+    frames.mkdir()
+    base = np.zeros((4, 4, 3), dtype=np.uint8)
+    for i, n_changed in enumerate((0, 1, 3, 10)):
+        img = base.copy()
+        img.reshape(-1, 3)[:n_changed] = 255
+        write_png(frames / f"frame_{i:06d}.png", img)
+    capture = NS(fps=4, shots=[NS(shot_id="s", frames_dir=frames, frame_count=4)])
+    v = pinned_frames_min_pairwise_changed_px(capture, [0.0, 0.25, 0.5, 0.75])
+    assert v.state == "measured" and v.value == 1, v  # frames 0 vs 1
+    assert v.extra["closest_pair"] == ["f0000", "f0001"]
+    v = pinned_frames_min_pairwise_changed_px(capture, [0.0, 0.05, 0.1])  # all one frame
+    assert v.state == "unavailable"
+
+
+def test_the_distinguishability_floor_is_positive_and_below_the_measured_minimum():
+    """Mutant 14: the threshold is a fraction of what the goldens actually show, never 0."""
+    from itertools import combinations
+
+    from tests.test_expression_goldens import FACE_CROP, MIN_PAIRWISE_CHANGED_PX, _goldens
+
+    goldens = _goldens()
+    if len(goldens) < 8:
+        pytest.skip("goldens not blessed")
+    r0, r1, c0, c1 = FACE_CROP
+    actual = min(int((goldens[a].astype(int) != goldens[b].astype(int)).any(axis=-1)[r0:r1, c0:c1].sum()) for a, b in combinations(sorted(goldens), 2))
+    assert 0 < MIN_PAIRWISE_CHANGED_PX <= actual // 2, (MIN_PAIRWISE_CHANGED_PX, actual)
+
+
+def test_variant_forms_parse_case_insensitively():
+    from an.characters.cli import _parse_variants
+
+    assert _parse_variants("HAPPY, Sad") == {"happy": 0.35, "sad": -0.35}

@@ -235,7 +235,11 @@ def declare_mouth_variants(descriptor: CharacterDescriptor, variants: dict[str, 
     for form in variants:
         key_map: dict[str, str] = {}
         for key, attachment in neutral.items():
-            shape = attachment[len("mouth_"):] if attachment.startswith("mouth_") else key.lower()
+            # From the KEY, never the attachment name: a promoted hand rig maps
+            # `X` to `mouth_shut`, and only `mouth_x_<form>.svg` is ever drawn.
+            shape = key.lower()
+            if shape not in MOUTH_SHAPES:
+                continue
             variant_name = mouth_attachment_name(shape, form)
             template = mouth_slot.get(attachment)
             if template is None:
