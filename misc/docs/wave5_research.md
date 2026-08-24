@@ -46,14 +46,17 @@ Two real holes, both narrower and one inverted:
 every swap-channel keyframe and warns when it overrides** an authored easing (the brief's
 prescription survives as hygiene — Spine's attachment keyframes carry `{time, name}` and
 no curve field at all, so "swaps are stepped by format" is the industry invariant, §10).
-And the evaluator **snaps non-numeric values on the RAW segment position, never the
-eased one** — the research's first proposal here was "clamp `eased` into [0,1]", which is
-itself wrong: a clamped overshoot still *reaches* 1.0 mid-segment and snaps early. The
-raw position is strictly < 1 inside a segment by construction of the keyframe scan, so
-easing simply does not apply to non-numeric values and hold semantics is a theorem. The
-easing is still validated per segment (a typo'd name stays loud). Landed identically in
-`runtime.js::evaluateChannel` and `channel.py::evaluate` (the spec — §3), pinned by the
-new parity test.
+And the evaluator **snaps non-numeric values on TIME (`t >= b.time`), never on an eased
+or derived parameter** — this design went through three drafts, each killed by
+adversarial review: "clamp `eased` into [0,1]" is wrong because a clamped overshoot
+still *reaches* 1.0 mid-segment and snaps early; "snap on the raw segment position"
+is one float division away from wrong because `(t - a.time) / span` can round up to
+1.0 while `t < b.time` (reproduced in both languages with real keyframe times). The
+time comparison has no intermediate arithmetic, so hold-for-exactly-`[a.time, b.time)`
+is a theorem. Easing is still validated per segment (a typo'd name stays loud on a swap
+channel too — pinned, since the "validate only on the numeric branch" mutation survived
+the first battery). Landed identically in `runtime.js::evaluateChannel` and
+`channel.py::evaluate` (the spec — §3), pinned by the parity battery.
 
 ### Trap (b) is VERIFIED — and understated: seven silent paths, not one
 
@@ -193,8 +196,16 @@ one BEFORE building swap channels:
 - **DELETE** the dead Spine sketch everywhere: serialize.py's `SkinJSON`, `RigJSON`,
   `rigs`, both `current_attachment` fields, `NodeJSON.slots` + all THREE compile.py
   `SlotJSON` writes, the `__all__` entries, and the cluster copy (goes with `scene.py`).
-  Safe: the compiled scene JSON is a per-render transient staged into the runtime dir
-  (`an/adapters/cutout/render.py:493-495`); nothing durable stores it.
+  The compiled scene JSON is a per-render transient staged into the runtime dir
+  (`an/adapters/cutout/render.py:493-495`); nothing durable stores the *document*. One
+  durable **derivative** exists and changes deliberately: `scene_contract_sha256`
+  (`an/bench/contract.py`) hashes the full serialized scene, so removing serialized
+  defaults changes every fixture's contract hash with zero pixel change — and
+  `bench-compare`'s SCENE_KEYS therefore **refuses** comparisons across the an#86
+  boundary. That refusal is the instrument working as designed (same event class as a
+  fixture re-authoring; Wave 4's rig rewrite crossed the same boundary), the goldens —
+  which compare decoded pixels, not hashes — are what carried the zero-pixel proof
+  across it, and it is recorded here rather than discovered later.
 - **Value policy** (closes the two divergences): the compiler **refuses `bool` and
   `None` keyframe values** on emission — swap keys are strings, numerics are
   `int`/`float`-not-`bool` — and `channel.py`'s snap gains the same

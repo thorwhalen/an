@@ -49,7 +49,7 @@ What exists, and where. This replaces the old phase table on purpose — phase t
 | Scene IR: schema, composition, validate, migrate, md↔json sync | `an/ir/` | shipped |
 | Project layout + dol-backed mall (characters, environments, voices, styles, scenes, artifacts, decisions) | `an/project.py`, `an/stores/` | shipped |
 | CLI `an {init,validate,sync,render,iterate,preview,check}` + `an character {new,mouths,validate,silhouette,preview,record}` | `an/tools.py`, `an/__main__.py`, `an/characters/cli.py` | shipped |
-| Cutout backend: transform math, easing, scene graph, channels, poses, clips, timeline, JSON contract, `compile_shot`, headless Playwright+ffmpeg render | `an/adapters/cutout/` | shipped — the real v0.1 renderer |
+| Cutout backend: easing, channels, clips, timeline (the executable spec of the runtime's evaluation, parity-tested under node), JSON contract, `compile_shot`, headless Playwright+ffmpeg render — application is `runtime.js` only; the Python applier/scene graph were deleted in an#86 | `an/adapters/cutout/` | shipped — the real v0.1 renderer |
 | JS runtime: PixiJS v7, procedural rig, SVG-sprite rig, viseme mouth shapes, procedural blinks | `an/data/cutout_runtime/{index.html,runtime.js,preview.html}` | shipped |
 | TTS providers `offline` / `elevenlabs` / `mac_say` | `an/audio/{offline_tts,elevenlabs_tts,mac_say_tts}.py`, factories in `an/audio/providers.py` | shipped |
 | Lip-sync providers `offline` / `whisper` / `rhubarb`, plus `WordTimingsLipSync` for injecting precomputed word timings | `an/audio/{offline_lipsync,whisper_lipsync,rhubarb_lipsync,injectable_lipsync}.py` | shipped |

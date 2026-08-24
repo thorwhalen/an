@@ -58,14 +58,17 @@ Dead everywhere — **no producer and no consumer**: `view_box`, `bones`, `slots
 and `animations` (the idle rig, seeded by `model_post_init` and never read).
 
 `runtime.js` contains zero occurrences of `rigs`, `skins` or `attachment`.
-`CutoutSceneJSON.rigs: dict[str, RigJSON]` exists in `serialize.py` and nothing
-populates it — the same defect one layer down, and the natural target for the rewrite.
+`CutoutSceneJSON.rigs: dict[str, RigJSON]` was the same defect one layer down —
+a wire model nothing populated. **Deleted in an#86** along with the rest of the
+sketched Spine vocabulary (`SkinJSON`, `SlotJSON`/`NodeJSON.slots`,
+`current_attachment`); the wire's real swap carrier is `VisualJSON`'s per-node
+asset maps, and Wave 5 (an#87) generalises those.
 
 ### The field path in the epic is wrong
 
 `skins[].attachments[].anchor` does not exist. `Skin` has `name` and `slots`; the real
-path is `skins[<skin>].slots[<slot>][<attachment>].anchor`. `attachments` belongs to
-`SkinJSON`, an unrelated scene-JSON model nothing constructs.
+path is `skins[<skin>].slots[<slot>][<attachment>].anchor`. (`attachments` belonged to
+`SkinJSON`, an unrelated scene-JSON model nothing ever constructed — deleted in an#86.)
 
 ## The invariants
 

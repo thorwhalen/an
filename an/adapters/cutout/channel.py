@@ -14,13 +14,16 @@ Two value classes, two rules:
 - **Numeric** (``int``/``float``, excluding ``bool``): true interpolation
   through the segment's easing.
 - **Everything else** (strings — viseme codes, swap keys): the value holds
-  ``a`` for the whole segment ``[a.time, b.time)`` and switches exactly at
-  ``b.time`` via segment advance. **Easing does not apply** — the snap is on
-  the raw segment position, never the eased one, because an overshooting
-  cubic-bezier easing crosses 1.0 mid-segment and would show the *second* key
-  early (or flap A→B→A within one segment). Step semantics is a theorem here,
-  not a convention. The easing is still *validated* (an unknown spec raises)
-  so a typo'd easing name stays loud on every channel.
+  ``a`` for exactly ``[a.time, b.time)`` and switches at ``b.time``.
+  **Easing does not apply** — the snap compares ``t`` against ``b.time``
+  directly, never an eased or derived parameter, because each indirection was
+  measured wrong: an overshooting cubic-bezier easing crosses 1.0 mid-segment
+  (showing the *second* key early, or flapping A→B→A within one segment), and
+  even the raw ``(t - a.time) / span`` can round up to 1.0 while
+  ``t < b.time``. The time comparison has no intermediate arithmetic, so step
+  semantics is a theorem here, not a convention. The easing is still
+  *validated* (an unknown spec raises) so a typo'd easing name stays loud on
+  every channel.
 
 ``bool`` keyframe values are refused upstream by the compiler
 (``compile.py::_check_keyframe_value``): Python's ``isinstance(True, int)``
@@ -113,10 +116,13 @@ def evaluate(channel: Channel, t: float) -> Any:
     eased = apply_easing(a.easing, u)
     if _is_numeric(a.value) and _is_numeric(b.value):
         return a.value + (b.value - a.value) * eased
-    # Non-numeric: snap on the RAW segment position, which the search above
-    # keeps strictly < 1 inside a segment — so the value switches exactly at
-    # b.time via segment advance, regardless of easing.
-    return b.value if u >= 1.0 else a.value
+    # Non-numeric: snap on TIME, never on the (eased or raw) parameter. The
+    # value is `a` for exactly [a.time, b.time) — comparing `u >= 1.0` here
+    # would be one float-division away from wrong: (t - a.time) / span can
+    # round UP to 1.0 while t < b.time, showing `b` one representable float
+    # early (found by the an#86 adversarial review). The time comparison has
+    # no intermediate arithmetic, so the boundary is exact.
+    return b.value if t >= b.time else a.value
 
 
 def _is_numeric(v: Any) -> bool:

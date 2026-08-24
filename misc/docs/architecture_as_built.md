@@ -378,7 +378,7 @@ What genuinely remains, in rough priority order:
 Run `pytest -q` for the current count — a number written here only goes stale.
 The suite is layered:
 
-- **Doctests** in module docstrings cover the public API of each module (composition flatten times, transform decompose, easing endpoints, etc.).
+- **Doctests** in module docstrings cover the public API of each module (composition flatten times, channel snap semantics, easing endpoints, etc.).
 - **Pytest** for cross-cutting checks: store roundtrips, IR migration chaining, sync flip-flop regression, mall conformance, multi-shot concat audio, multi-character render distinct.
 - **Live API tests** are gated on an explicit positive opt-in — `AN_LIVE_API_TESTS=1` **and** `CI` unset — not on a key being present. That distinction is the whole point: the previous "skip-if-key-missing" gate was satisfied by every developer machine and every agent session that had sourced a shell profile, so a plain `pytest -q` once made real, billed ElevenLabs calls and reported PASSED.
 - **The suite is offline and hermetic, and a guard enforces it.** `tests/conftest.py` refuses *and records* non-loopback socket use; `hermetic_browser` does the same at the Playwright layer, because a socket patch cannot see Chromium.

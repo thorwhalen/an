@@ -28,6 +28,7 @@ used to fail only at render time in a browser.
 from __future__ import annotations
 
 import json
+import math
 import re
 import shutil
 import subprocess
@@ -49,9 +50,15 @@ RUNTIME_JS = (
 _NAMED = ["linear", "ease", "ease_in", "ease_out", "ease_in_out", "step"]
 
 #: Sample times chosen to hit: the clamps, exact keyframe times, segment
-#: interiors, and just-below-boundary positions where the old eased-snap rule
-#: could fire early.
-_TIMES = [-0.5, 0.0, 0.146, 0.25, 0.5, 0.66, 0.75, 0.999, 0.9999999, 1.0, 1.5, 2.0, 9.0]
+#: interiors, just-below-boundary positions where the old eased-snap rule
+#: could fire early, the large-bezier row's measured divergence time, and the
+#: exact float where (t - a.time) / span rounds up to 1.0 for the
+#: string-boundary row (times harmlessly clamp on rows they don't concern).
+_TIMES = [
+    -0.5, 0.0, 0.146, 0.25, 0.5, 0.66, 0.75, 0.999, 0.9999999, 1.0, 1.5,
+    1.7099999989999999, 2.0, 9.0,
+    math.nextafter(9.767899248713501, 0.0), 9.767899248713501,
+]
 
 
 def _kf(time, value, easing=None):
@@ -66,6 +73,31 @@ def _battery() -> list[dict]:
         cases.append(
             {"keyframes": [_kf(0.0, 0.0, easing), _kf(1.0, 10.0)], "kind": "numeric"}
         )
+    # Large-magnitude bezier rows: a ULP of disagreement in `eased` is
+    # amplified by (b - a), so these rows are what force the two Newton loops
+    # to be structurally identical — the adversarial review of an#86 found the
+    # Python loop's extra early-convergence break made 0→10 rows agree while
+    # 1e9-scale rows missed the tolerance by five orders of magnitude.
+    for easing in [[0.42, 0.0, 0.58, 1.0], [0.5, 2.0, 0.5, 2.0], [0.3, 3.0, 0.7, 0.0]]:
+        cases.append(
+            {
+                "keyframes": [_kf(1.1, 1.0e9, easing), _kf(1.71, 0.0)],
+                "kind": "numeric-large",
+            }
+        )
+    # The snap-boundary rounding case: (t - a.time) / span rounds UP to 1.0
+    # at t = nextafter(b.time, -inf) for these keyframe times, so a raw-u snap
+    # shows 'B' one representable float early. The snap is time-based to make
+    # the boundary exact; this row pins that both sides agree there.
+    cases.append(
+        {
+            "keyframes": [
+                _kf(0.1524221856720187, "A", "step"),
+                _kf(9.767899248713501, "B"),
+            ],
+            "kind": "string-boundary",
+        }
+    )
     # String channels: the same easings PLUS the two measured overshoot shapes.
     # Under the old rule (0.5,2,0.5,2) showed the second key from u≈0.257 and
     # (0.3,3,0.7,0) flapped A→B→A across [0.146, 0.652]. Both must now hold 'A'
@@ -209,6 +241,45 @@ def test_overshoot_bezier_on_a_string_channel_holds_the_first_key():
         )
         for t in inside:
             assert evaluate(ch, t) == "A"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
+def test_both_sides_validate_easing_on_non_numeric_segments():
+    """A typo'd easing name must raise on a SWAP channel too, in both languages.
+
+    Easing is never APPLIED to a non-numeric value, so the lazy 'optimisation'
+    of validating it only on the numeric branch would leave every other test
+    green while the two evaluators diverge (Python raises, JS silently
+    renders). The an#86 adversarial review demonstrated exactly that mutation
+    surviving the original battery — this test is what kills it.
+    """
+    bad = {"keyframes": [_kf(0.0, "A", "eaze"), _kf(1.0, "B")]}
+    src = RUNTIME_JS.read_text(encoding="utf-8")
+    pieces = [
+        _extract_js_block(src, "const EASINGS ="),
+        _extract_js_block(src, "function cubicBezier"),
+        _extract_js_block(src, "function applyEasing"),
+        _extract_js_block(src, "function evaluateChannel"),
+    ]
+    script = "\n".join(
+        pieces
+        + [
+            f"const bad = {json.dumps(bad)};",
+            "try { evaluateChannel(bad, 0.5); console.log('SILENT'); }",
+            "catch (e) { console.log('RAISED: ' + e.message); }",
+        ]
+    )
+    proc = subprocess.run(
+        ["node", "-e", script], capture_output=True, text=True, timeout=30
+    )
+    assert proc.returncode == 0, f"node failed: {proc.stderr}"
+    out = proc.stdout.strip()
+    assert out.startswith("RAISED") and "eaze" in out, (
+        f"JS accepted an unknown easing on a non-numeric segment: {out}"
+    )
+    ch = Channel("a", "hands", [Keyframe(0.0, "A", "eaze"), Keyframe(1.0, "B")])
+    with pytest.raises(ValueError, match="unknown easing preset"):
+        evaluate(ch, 0.5)
 
 
 def test_the_three_easing_tables_agree():

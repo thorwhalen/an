@@ -370,7 +370,12 @@ def _runtime_switch_cases() -> set[str]:
     src = RUNTIME_JS.read_text(encoding="utf-8")
     body = re.search(r"function applyProperty\([^)]*\)\s*\{(.*?)\n    \}", src, re.S)
     assert body
-    return set(re.findall(r"case\s+'([a-z_]+)'\s*:", re.sub(r"//[^\n]*", "", body.group(1))))
+    # Both quote styles — a double-quoted case label is legal JS, and a
+    # single-quote-only extractor silently exempts it from every gate here
+    # (an#86 adversarial review demonstrated `case "tint":` passing all four).
+    return set(
+        re.findall(r"case\s+['\"]([a-z_]+)['\"]\s*:", re.sub(r"//[^\n]*", "", body.group(1)))
+    )
 
 
 def _run_node(script: str) -> str:

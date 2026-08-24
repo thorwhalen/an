@@ -6,13 +6,17 @@ reads them. The schema is deliberately separate from the cutout-internal
 Python evaluation types (`clip.Clip`, `channel.Channel`) so the Python side
 can evolve internally without breaking the runtime contract.
 
-Every field here has a producer in ``compile.py`` and a consumer in
-``runtime.js``. That is a rule, not an observation: this file used to carry a
-sketched Spine-flavoured swap vocabulary (``SkinJSON``, ``RigJSON``,
-``CutoutSceneJSON.rigs``, ``SlotJSON``/``NodeJSON.slots``,
-``current_attachment``) that nothing populated and nothing read — deleted in
-Wave 5 (an#86) so the *real* swap mechanism (``VisualJSON``'s per-node asset
-maps driven by step channels) is the only one the contract describes.
+This file used to carry a sketched Spine-flavoured swap vocabulary
+(``SkinJSON``, ``RigJSON``, ``CutoutSceneJSON.rigs``, ``SlotJSON``/
+``NodeJSON.slots``, ``current_attachment``) that nothing populated and nothing
+read — deleted in an#86 so the *real* swap mechanism (``VisualJSON``'s
+per-node asset maps driven by step channels) is the only one the contract
+describes. A few declared-but-unwired scalars remain (``PlacedClipJSON.blend_in``
+/ ``blend_out`` — recorded, never applied; ``VisualJSON.texture_id``): the same
+debt class at smaller scale, kept only because they are field-shaped
+placeholders rather than a parallel *vocabulary* for a capability that shipped
+elsewhere. Do not add more; a new field needs its producer and its consumer in
+the same change.
 
 >>> j = CutoutSceneJSON(
 ...     meta={"fps": 30, "width": 1920, "height": 1080, "duration": 5.0},

@@ -106,16 +106,17 @@
         if (typeof a.value === 'number' && typeof b.value === 'number') {
             return a.value + (b.value - a.value) * eased;
         }
-        // Non-numeric (viseme codes, swap keys): snap on the RAW segment
-        // position, never the eased one. The scan above keeps u strictly < 1
-        // inside a segment, so the value holds `a` for the whole segment and
-        // switches exactly at b.time via segment advance — step semantics by
-        // construction. Snapping on `eased` was the old rule, and it had a
-        // hole: an overshooting cubic bezier crosses 1.0 mid-segment and
-        // showed the SECOND key early (or flapped A->B->A within a segment).
-        // Mirror of an/adapters/cutout/channel.py::evaluate — that function is
-        // the spec, and tests/test_cutout_channel_parity.py pins the identity.
-        return u >= 1.0 ? b.value : a.value;
+        // Non-numeric (viseme codes, swap keys): snap on TIME, never on the
+        // eased or raw parameter. The value is `a` for exactly
+        // [a.time, b.time): easing cannot move the boundary (the old
+        // eased-snap rule let an overshooting cubic bezier show the SECOND
+        // key early, or flap A->B->A within one segment), and time has no
+        // intermediate arithmetic (a raw-u snap is one float division away
+        // from wrong: (t - a.time) / span can round up to 1.0 while
+        // t < b.time). Mirror of an/adapters/cutout/channel.py::evaluate —
+        // that function is the spec, and tests/test_cutout_channel_parity.py
+        // pins the identity.
+        return t >= b.time ? b.value : a.value;
     }
 
     // ------------------------------------------------------------------------

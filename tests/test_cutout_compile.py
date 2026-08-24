@@ -174,3 +174,15 @@ def test_compiler_refuses_bool_and_none_keyframe_values():
                 )
             )
         )
+    # from_value is a SEPARATE guarded call site — deleting just that check
+    # left the suite green until this case existed (an#86 adversarial review).
+    # None never reaches it (a None from_value means "start from rest"), so
+    # bool is the live branch there.
+    with _pytest.raises(CutoutCompileError, match="bool and None"):
+        compile_shot(
+            _shot(
+                TweenAction(
+                    target="a", property="x", from_value=True, to_value=1.0
+                )
+            )
+        )
