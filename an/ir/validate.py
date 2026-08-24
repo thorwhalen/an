@@ -311,7 +311,6 @@ def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
         )
 
 
-
 def validate_semantic(
     scene: SceneIR,
     *,
