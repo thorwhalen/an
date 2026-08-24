@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.51 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -66,6 +66,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.SCENE_PX_PER_VIEW_BOX"><code class="docutils literal notranslate"><span class="pre">SCENE_PX_PER_VIEW_BOX</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.blink_phase"><code class="docutils literal notranslate"><span class="pre">blink_phase()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.compile_shot"><code class="docutils literal notranslate"><span class="pre">compile_shot()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.step_times"><code class="docutils literal notranslate"><span class="pre">step_times()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="easing.html">an.adapters.cutout.easing</a></li>
@@ -200,7 +201,8 @@ placeholder rect parts when the character store has no sidecar art yet).</p></li
 <cite>tween</cite>/<cite>set</cite>/<cite>play</cite>/composition produces leaf <a href="#id1"><span class="problematic" id="id2">`</span></a>FlatAction`s with
 absolute times.</p></li>
 <li><p><strong>Compile each FlatAction to PlacedClipJSON entries</strong> on the appropriate
-track. Tween → a 2-keyframe AnimationClipJSON + a PlacedClipJSON. Set →
+track. Tween → a 2-keyframe AnimationClipJSON + a PlacedClipJSON (or, under
+<code class="docutils literal notranslate"><span class="pre">step_hz</span></code>, a grid of step-eased keyframes — an#89). Set →
 a step channel that HOLDS until the next action on the same
 target/property. Play → a per-instance clip (<code class="docutils literal notranslate"><span class="pre">__play__{n}</span></code>) resolved
 from the target’s descriptor animation (an#7).</p></li>
@@ -310,14 +312,56 @@ driving it all along.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="an.adapters.cutout.compile.compile_shot">
-<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">compile_shot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mall</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1920</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1080</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'#ffffff'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_assets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="serialize.html#an.adapters.cutout.serialize.CutoutSceneJSON" title="an.adapters.cutout.serialize.CutoutSceneJSON"><span class="pre">CutoutSceneJSON</span></a></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/compile.html#compile_shot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.compile.compile_shot" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">compile_shot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mall</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1920</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1080</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'#ffffff'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_assets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_hz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="serialize.html#an.adapters.cutout.serialize.CutoutSceneJSON" title="an.adapters.cutout.serialize.CutoutSceneJSON"><span class="pre">CutoutSceneJSON</span></a></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/compile.html#compile_shot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.compile.compile_shot" title="Link to this definition"></a></dt>
 <dd><p>Compile a single cutout-style <cite>Shot</cite> to its JS-runtime JSON form.</p>
+<p><code class="docutils literal notranslate"><span class="pre">step_hz</span></code> (an#89) resamples every authored <strong>tween</strong> onto a SHOT-wide
+pose grid of that many updates per second (multiples of <code class="docutils literal notranslate"><span class="pre">1/step_hz</span></code> on
+this shot’s clock, shared by every tween in the shot; the grid restarts at
+a cut), each keyframe step-eased, so the character holds each pose for the
+frames between grid points — “on twos” at half the frame rate, “on threes”
+at a third. It is sample-and-hold of the eased curve at the grid instants,
+not a retiming into holds and fast transitions. <code class="docutils literal notranslate"><span class="pre">None</span></code> (default) leaves
+tweens smooth and the compiled document byte-identical to before the knob
+existed; anything else must satisfy <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">step_hz</span> <span class="pre">&lt;=</span> <span class="pre">fps</span></code> — checked HERE
+as well as by <code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">validate</span></code>, because a render never runs validate and a
+non-positive rate used to spin <code class="docutils literal notranslate"><span class="pre">step_times</span></code> forever (an#89 review).
+Exempt by construction, because they are separate
+emission sites rather than string-sniffed: the camera (<cite>_add_camera_clips</cite>
+— a stepped character under a translating camera slides in screen space,
+which is why the practice keeps cameras on ones), compiled blinks, <cite>play</cite>
+clips, and swap channels (already stepped by format). The value is
+stamped into <code class="docutils literal notranslate"><span class="pre">meta.step_hz</span></code> — only when set — so a serialized scene
+declares its timing policy without moving the contract hash of one that
+has none.</p>
 <p><code class="docutils literal notranslate"><span class="pre">strict_assets</span></code> turns a stand-in asset — the placeholder rig drawn for a
 character whose descriptor is missing, or the default backdrop drawn for an
 unknown environment ref — from a warning into a <a class="reference internal" href="#an.adapters.cutout.compile.CutoutCompileError" title="an.adapters.cutout.compile.CutoutCompileError"><code class="xref py py-class docutils literal notranslate"><span class="pre">CutoutCompileError</span></code></a>.
 Off by default so an asset-less project still renders; on for anything that
 measures pixels, where a stand-in is a wrong answer wearing a right one’s
 clothes (an#33).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.step_times">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">step_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_hz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/compile.html#step_times"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.compile.step_times" title="Link to this definition"></a></dt>
+<dd><p>Clip-local times at which a stepped tween updates its pose (an#89).</p>
+<p>The grid is SHOT-wide — multiples of <code class="docutils literal notranslate"><span class="pre">1/step_hz</span></code> on the shot’s clock,
+shared by every tween in the shot — not the tween’s own: “on twos” means
+every character changes pose on the same frames, so a tween starting at
+0.033 s updates at the next grid point, not 0.033 s later. (Shots compile
+independently, so the grid restarts at each cut.) Local 0 (the tween’s
+start) and <code class="docutils literal notranslate"><span class="pre">duration</span></code> (where the end value lands) are always present, so
+a tween shorter than one step is a single step to its end value.</p>
+<p><code class="docutils literal notranslate"><span class="pre">step_hz</span></code> must be positive: with a non-positive rate the walk below never
+reaches <code class="docutils literal notranslate"><span class="pre">duration</span></code> — an infinite loop, not an error — so it is refused.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">step_times</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">[0.0, 0.1, 0.2, 0.3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">step_times</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)]</span>
+<span class="go">[0.0, 0.05, 0.15, 0.25, 0.3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">step_times</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">[0.0, 0.02]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

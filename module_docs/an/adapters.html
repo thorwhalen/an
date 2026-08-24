@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters &mdash; an 0.1.51 documentation</title>
+  <title>an.adapters &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,6 +56,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.RemotionRenderer"><code class="docutils literal notranslate"><span class="pre">RemotionRenderer</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.RenderContext"><code class="docutils literal notranslate"><span class="pre">RenderContext</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.pix_fmt"><code class="docutils literal notranslate"><span class="pre">RenderContext.pix_fmt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.step_hz"><code class="docutils literal notranslate"><span class="pre">RenderContext.step_hz</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.strict_assets"><code class="docutils literal notranslate"><span class="pre">RenderContext.strict_assets</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.supersample"><code class="docutils literal notranslate"><span class="pre">RenderContext.supersample</span></code></a></li>
 </ul>
@@ -222,7 +223,7 @@ whose <code class="docutils literal notranslate"><span class="pre">style</span><
 
 <dl class="py class">
 <dt class="sig sig-object py" id="an.adapters.RenderContext">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">RenderContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">mall:</span> <span class="pre">~collections.abc.Mapping[str,</span> <span class="pre">~collections.abc.MutableMapping],</span> <span class="pre">work_dir:</span> <span class="pre">~pathlib.Path,</span> <span class="pre">fps:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">30,</span> <span class="pre">resolution:</span> <span class="pre">tuple[int,</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">(1920,</span> <span class="pre">1080),</span> <span class="pre">strict_assets:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">supersample:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">pix_fmt:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">extra:</span> <span class="pre">dict[str,</span> <span class="pre">~typing.Any]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/adapters/_base.html#RenderContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.RenderContext" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">RenderContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">mall:</span> <span class="pre">~collections.abc.Mapping[str,</span> <span class="pre">~collections.abc.MutableMapping],</span> <span class="pre">work_dir:</span> <span class="pre">~pathlib.Path,</span> <span class="pre">fps:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">30,</span> <span class="pre">resolution:</span> <span class="pre">tuple[int,</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">(1920,</span> <span class="pre">1080),</span> <span class="pre">strict_assets:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">supersample:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">pix_fmt:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">step_hz:</span> <span class="pre">float</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">extra:</span> <span class="pre">dict[str,</span> <span class="pre">~typing.Any]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/adapters/_base.html#RenderContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.RenderContext" title="Link to this definition"></a></dt>
 <dd><p>Everything a renderer needs that isn’t on the Shot itself.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mall</span></code> carries the project’s stores so the renderer can resolve assets
 by reference. <code class="docutils literal notranslate"><span class="pre">work_dir</span></code> is a scratch space; the renderer must clean up
@@ -239,6 +240,20 @@ buys 66%.</p>
 rebinds the module default — still reaches an unset render. The default
 stays 4:2:0 for a PRODUCT reason and not an encoder one: High 4:4:4
 Predictive is refused by many hardware decoders, browsers and platforms.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.adapters.RenderContext.step_hz">
+<span class="sig-name descname"><span class="pre">step_hz</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.adapters.RenderContext.step_hz" title="Link to this definition"></a></dt>
+<dd><p>Scene-level stepped-timing policy for authored tweens (an#89); a shot’s
+own <code class="docutils literal notranslate"><span class="pre">step_hz</span></code> overrides it. <code class="docutils literal notranslate"><span class="pre">None</span></code> = smooth. Reaches the compiled
+document’s <code class="docutils literal notranslate"><span class="pre">meta.step_hz</span></code> (only when set) and per-shot provenance.</p>
+<p>The one deliberate exception to the rule two fields up (“a field on the
+compiled scene document moves <cite>scene_contract_sha256</cite>”): unlike
+<cite>supersample</cite>, this knob CHANGES the compiled document — the resampled
+keyframes are the contract — so the hash moves whenever it is set no
+matter where the knob lives, and a document that carries its own timing
+policy is the honest one. Omit-when-unset keeps the unset case free.</p>
 </dd></dl>
 
 <dl class="py attribute">

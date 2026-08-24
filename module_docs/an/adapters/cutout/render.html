@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.render &mdash; an 0.1.51 documentation</title>
+  <title>an.adapters.cutout.render &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -72,6 +72,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.DEFAULT_PIX_FMT"><code class="docutils literal notranslate"><span class="pre">DEFAULT_PIX_FMT</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.DETERMINISTIC_CHROMIUM_ARGS"><code class="docutils literal notranslate"><span class="pre">DETERMINISTIC_CHROMIUM_ARGS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.SUPPORTED_PIX_FMTS"><code class="docutils literal notranslate"><span class="pre">SUPPORTED_PIX_FMTS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.render.effective_step_hz"><code class="docutils literal notranslate"><span class="pre">effective_step_hz()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="runtime_files.html">an.adapters.cutout.runtime_files</a></li>
@@ -377,6 +378,24 @@ has not been measured against the panel.</p>
 <dd class="field-odd"><p>The formats the knob accepts. Not an open string</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.render.effective_step_hz">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">effective_step_hz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../_base.html#an.adapters._base.RenderContext" title="an.adapters._base.RenderContext"><span class="pre">RenderContext</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/render.html#effective_step_hz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.render.effective_step_hz" title="Link to this definition"></a></dt>
+<dd><p>The stepped-timing policy a shot renders under (an#89): the shot’s own
+<code class="docutils literal notranslate"><span class="pre">step_hz</span></code> when it declares one, else the scene’s (<code class="docutils literal notranslate"><span class="pre">ctx.step_hz</span></code>), else
+<code class="docutils literal notranslate"><span class="pre">None</span></code> — smooth. The compiler stamps whatever this returns.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ctx</span> <span class="o">=</span> <span class="n">RenderContext</span><span class="p">(</span><span class="n">mall</span><span class="o">=</span><span class="p">{},</span> <span class="n">work_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"."</span><span class="p">),</span> <span class="n">step_hz</span><span class="o">=</span><span class="mf">15.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">effective_step_hz</span><span class="p">(</span><span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s"</span><span class="p">),</span> <span class="n">ctx</span><span class="p">)</span>
+<span class="go">15.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">effective_step_hz</span><span class="p">(</span><span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s"</span><span class="p">,</span> <span class="n">step_hz</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span> <span class="n">ctx</span><span class="p">)</span>
+<span class="go">10.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">effective_step_hz</span><span class="p">(</span><span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s"</span><span class="p">),</span> <span class="n">RenderContext</span><span class="p">(</span><span class="n">mall</span><span class="o">=</span><span class="p">{},</span> <span class="n">work_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"."</span><span class="p">)))</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

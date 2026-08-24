@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.run &mdash; an 0.1.51 documentation</title>
+  <title>an.bench.run &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -106,6 +106,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.lossless_reference"><code class="docutils literal notranslate"><span class="pre">lossless_reference()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.naming_git_state"><code class="docutils literal notranslate"><span class="pre">naming_git_state()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.run_bench"><code class="docutils literal notranslate"><span class="pre">run_bench()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.run.shot_policy_provenance"><code class="docutils literal notranslate"><span class="pre">shot_policy_provenance()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
@@ -278,6 +279,32 @@ because without it a test of the bless path has no choice but to overwrite
 the committed corpus. That is not hypothetical: the first version of an#38’s
 bless test did exactly that, replacing a real bless record’s reason with the
 test’s own.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.run.shot_policy_provenance">
+<span class="sig-prename descclassname"><span class="pre">an.bench.run.</span></span><span class="sig-name descname"><span class="pre">shot_policy_provenance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shots</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/run.html#shot_policy_provenance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.run.shot_policy_provenance" title="Link to this definition"></a></dt>
+<dd><p>The per-shot COMPILE POLICIES a scene rendered under, keyed by shot id.</p>
+<p>Additive scene-provenance facts read off each staged <code class="docutils literal notranslate"><span class="pre">scene_json</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">meta</span></code>; <code class="docutils literal notranslate"><span class="pre">shots</span></code> is any iterable of objects with <code class="docutils literal notranslate"><span class="pre">shot_id</span></code> and
+<code class="docutils literal notranslate"><span class="pre">scene_json</span></code> (a <a class="reference internal" href="capture.html#an.bench.capture.ShotCapture" title="an.bench.capture.ShotCapture"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShotCapture</span></code></a>, or a stand-in).</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">blink_phases</span></code> (an#88): the per-entity blink phase each shot was
+compiled with. A renamed corpus character re-phases every blink and
+moves every pixel metric; this makes that a visible diff in the row
+instead of an unexplained shift.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step_hz</span></code> (an#89): the stepped-timing policy each shot’s tweens were
+compiled under; <code class="docutils literal notranslate"><span class="pre">None</span></code> = smooth (the meta key is absent then, by the
+serializer). Stepping moves <code class="docutils literal notranslate"><span class="pre">scene_contract_sha256</span></code> by construction —
+the resampled keyframes ARE the contract — and this says the movement
+was a timing policy, not a mystery.</p></li>
+</ul>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleNamespace</span> <span class="k">as</span> <span class="n">NS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shot_policy_provenance</span><span class="p">([</span><span class="n">NS</span><span class="p">(</span><span class="n">shot_id</span><span class="o">=</span><span class="s2">"s1"</span><span class="p">,</span> <span class="n">scene_json</span><span class="o">=</span><span class="p">{</span><span class="s2">"meta"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"step_hz"</span><span class="p">:</span> <span class="mf">12.0</span><span class="p">,</span> <span class="s2">"blink_phases"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">}}}),</span>
+<span class="gp">... </span>                        <span class="n">NS</span><span class="p">(</span><span class="n">shot_id</span><span class="o">=</span><span class="s2">"s2"</span><span class="p">,</span> <span class="n">scene_json</span><span class="o">=</span><span class="p">{</span><span class="s2">"meta"</span><span class="p">:</span> <span class="p">{}})])</span>
+<span class="go">{'blink_phases': {'s1': {'a': 0.5}, 's2': {}}, 'step_hz': {'s1': 12.0, 's2': None}}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

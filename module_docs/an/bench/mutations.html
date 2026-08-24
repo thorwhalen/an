@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.mutations &mdash; an 0.1.51 documentation</title>
+  <title>an.bench.mutations &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -210,8 +210,14 @@ shrinks each mask to its easiest members). Declared as a lever, none of that
 happens. So what a lever has to be is <strong>declared in advance</strong>, not bad — and the
 word “degradations” in the old first line was quietly making the stronger, false
 claim (an#56).</p>
-<p><strong>No production knob exists for any of this, and that is deliberate.</strong> Each
-lever reaches an existing seam from the outside:</p>
+<p><strong>Two of the three levers have no production knob, and that is deliberate.</strong>
+The third, <code class="docutils literal notranslate"><span class="pre">supersample</span></code>, has had one since an#58 (<code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">render</span> <span class="pre">--supersample</span>
+<span class="pre">N</span></code>) and the lever now FORCES the product’s own parameter rather than carrying
+a second copy of the resolve — a lever that reproduces the code it examines is
+examining itself. The inverse also exists: <code class="docutils literal notranslate"><span class="pre">step_hz</span></code> (an#89) is a product
+knob with <strong>no lever</strong>, on measurement — a per-frame instrument cannot judge a
+temporal choice (the <cite>an-dev-bench</cite> skill’s table has the numbers). Each lever
+reaches an existing seam from the outside:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">high_crf</span></code> rebinds <code class="docutils literal notranslate"><span class="pre">an.adapters.cutout.render.DETERMINISTIC_X264_ARGS</span></code>.
 <code class="docutils literal notranslate"><span class="pre">_ffmpeg_mux</span></code> reads that name as a module global at call time, so the
@@ -232,11 +238,9 @@ ffmpeg or the metrics or the golden gate read them. That is not tidiness. A
 lever must measure what the product will produce, and everything downstream
 reads the declared resolution off the STAGED SCENE, never off the files.</p></li>
 </ul>
-<p>A knob in the product would be worse than any of them: it would have to be
-documented, defended, and kept from being switched on by accident. (an#58 ships
-exactly such a knob for supersampling, opt-in — when it lands, this paragraph
-and the “no production knob exists for any of this” sentence above it stop being
-true and must be rewritten rather than left to rot.)</p>
+<p>A knob in the product is a cost each of the other two levers avoids: it has to
+be documented, defended, and kept from being switched on by accident — which is
+why supersampling is opt-in and off is free.</p>
 <p><strong>Each lever verifies that it applied.</strong> A lever that silently failed to take
 produces a run in which nothing moved — which reads exactly like an instrument
 that cannot see it, and sends the reader to fix the wrong thing. So

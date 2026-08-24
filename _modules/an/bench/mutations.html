@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.mutations &mdash; an 0.1.51 documentation</title>
+  <title>an.bench.mutations &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -195,8 +195,14 @@
 <span class="sd">word "degradations" in the old first line was quietly making the stronger, false</span>
 <span class="sd">claim (an#56).</span>
 
-<span class="sd">**No production knob exists for any of this, and that is deliberate.** Each</span>
-<span class="sd">lever reaches an existing seam from the outside:</span>
+<span class="sd">**Two of the three levers have no production knob, and that is deliberate.**</span>
+<span class="sd">The third, ``supersample``, has had one since an#58 (``an render --supersample</span>
+<span class="sd">N``) and the lever now FORCES the product's own parameter rather than carrying</span>
+<span class="sd">a second copy of the resolve — a lever that reproduces the code it examines is</span>
+<span class="sd">examining itself. The inverse also exists: ``step_hz`` (an#89) is a product</span>
+<span class="sd">knob with **no lever**, on measurement — a per-frame instrument cannot judge a</span>
+<span class="sd">temporal choice (the `an-dev-bench` skill's table has the numbers). Each lever</span>
+<span class="sd">reaches an existing seam from the outside:</span>
 
 <span class="sd">- ``high_crf`` rebinds ``an.adapters.cutout.render.DETERMINISTIC_X264_ARGS``.</span>
 <span class="sd">  ``_ffmpeg_mux`` reads that name as a module global at call time, so the</span>
@@ -217,11 +223,9 @@
 <span class="sd">  lever must measure what the product will produce, and everything downstream</span>
 <span class="sd">  reads the declared resolution off the STAGED SCENE, never off the files.</span>
 
-<span class="sd">A knob in the product would be worse than any of them: it would have to be</span>
-<span class="sd">documented, defended, and kept from being switched on by accident. (an#58 ships</span>
-<span class="sd">exactly such a knob for supersampling, opt-in — when it lands, this paragraph</span>
-<span class="sd">and the "no production knob exists for any of this" sentence above it stop being</span>
-<span class="sd">true and must be rewritten rather than left to rot.)</span>
+<span class="sd">A knob in the product is a cost each of the other two levers avoids: it has to</span>
+<span class="sd">be documented, defended, and kept from being switched on by accident — which is</span>
+<span class="sd">why supersampling is opt-in and off is free.</span>
 
 <span class="sd">**Each lever verifies that it applied.** A lever that silently failed to take</span>
 <span class="sd">produces a run in which nothing moved — which reads exactly like an instrument</span>

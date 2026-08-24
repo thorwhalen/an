@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.51 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -187,7 +187,8 @@
 <span class="sd">   `tween`/`set`/`play`/composition produces leaf `FlatAction`s with</span>
 <span class="sd">   absolute times.</span>
 <span class="sd">3. **Compile each FlatAction to PlacedClipJSON entries** on the appropriate</span>
-<span class="sd">   track. Tween → a 2-keyframe AnimationClipJSON + a PlacedClipJSON. Set →</span>
+<span class="sd">   track. Tween → a 2-keyframe AnimationClipJSON + a PlacedClipJSON (or, under</span>
+<span class="sd">   ``step_hz``, a grid of step-eased keyframes — an#89). Set →</span>
 <span class="sd">   a step channel that HOLDS until the next action on the same</span>
 <span class="sd">   target/property. Play → a per-instance clip (``__play__{n}``) resolved</span>
 <span class="sd">   from the target's descriptor animation (an#7).</span>
@@ -719,8 +720,29 @@
     <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1080</span><span class="p">,</span>
     <span class="n">background</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"#ffffff"</span><span class="p">,</span>
     <span class="n">strict_assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CutoutSceneJSON</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Compile a single cutout-style `Shot` to its JS-runtime JSON form.</span>
+
+<span class="sd">    ``step_hz`` (an#89) resamples every authored **tween** onto a SHOT-wide</span>
+<span class="sd">    pose grid of that many updates per second (multiples of ``1/step_hz`` on</span>
+<span class="sd">    this shot's clock, shared by every tween in the shot; the grid restarts at</span>
+<span class="sd">    a cut), each keyframe step-eased, so the character holds each pose for the</span>
+<span class="sd">    frames between grid points — "on twos" at half the frame rate, "on threes"</span>
+<span class="sd">    at a third. It is sample-and-hold of the eased curve at the grid instants,</span>
+<span class="sd">    not a retiming into holds and fast transitions. ``None`` (default) leaves</span>
+<span class="sd">    tweens smooth and the compiled document byte-identical to before the knob</span>
+<span class="sd">    existed; anything else must satisfy ``0 &lt; step_hz &lt;= fps`` — checked HERE</span>
+<span class="sd">    as well as by ``an validate``, because a render never runs validate and a</span>
+<span class="sd">    non-positive rate used to spin ``step_times`` forever (an#89 review).</span>
+<span class="sd">    Exempt by construction, because they are separate</span>
+<span class="sd">    emission sites rather than string-sniffed: the camera (`_add_camera_clips`</span>
+<span class="sd">    — a stepped character under a translating camera slides in screen space,</span>
+<span class="sd">    which is why the practice keeps cameras on ones), compiled blinks, `play`</span>
+<span class="sd">    clips, and swap channels (already stepped by format). The value is</span>
+<span class="sd">    stamped into ``meta.step_hz`` — only when set — so a serialized scene</span>
+<span class="sd">    declares its timing policy without moving the contract hash of one that</span>
+<span class="sd">    has none.</span>
 
 <span class="sd">    ``strict_assets`` turns a stand-in asset — the placeholder rig drawn for a</span>
 <span class="sd">    character whose descriptor is missing, or the default backdrop drawn for an</span>
@@ -731,6 +753,11 @@
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">style</span> <span class="o">!=</span> <span class="s2">"cutout"</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"compile_shot expects style='cutout'; got </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">style</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">step_hz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">step_hz</span><span class="p">)</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">step_hz</span> <span class="o">&lt;=</span> <span class="n">fps</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"step_hz must satisfy 0 &lt; step_hz &lt;= fps (</span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">); got </span><span class="si">{</span><span class="n">step_hz</span><span class="si">!r}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"At </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2"> fps, </span><span class="si">{</span><span class="n">fps</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> is 'on twos' and </span><span class="si">{</span><span class="n">fps</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">3</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> 'on threes'."</span>
+        <span class="p">)</span>
     <span class="n">mall</span> <span class="o">=</span> <span class="n">mall</span> <span class="ow">or</span> <span class="p">{}</span>
 
     <span class="n">textures</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AssetJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -740,7 +767,12 @@
     <span class="p">)</span>
     <span class="n">vocab</span> <span class="o">=</span> <span class="n">_swap_vocabulary</span><span class="p">(</span><span class="n">scene_root</span><span class="p">,</span> <span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">)</span>
     <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span> <span class="o">=</span> <span class="n">_compile_actions</span><span class="p">(</span>
-        <span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">,</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span>
+        <span class="n">shot</span><span class="o">.</span><span class="n">actions</span><span class="p">,</span>
+        <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+        <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span>
+        <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span><span class="p">,</span>
+        <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
+        <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="c1"># Phase 4: emit a viseme channel per dialogue line that has a viseme_track.</span>
     <span class="n">_add_viseme_clips</span><span class="p">(</span>
@@ -774,6 +806,7 @@
             <span class="n">duration</span><span class="o">=</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
             <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
             <span class="n">blink_phases</span><span class="o">=</span><span class="n">blink_phases</span><span class="p">,</span>
+            <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="n">scene</span><span class="o">=</span><span class="n">scene_root</span><span class="p">,</span>
         <span class="n">animations</span><span class="o">=</span><span class="n">animations</span><span class="p">,</span>
@@ -1507,6 +1540,7 @@
     <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">TrackJSON</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""Flatten authoring actions and convert to animation clips.</span>
 
@@ -1563,7 +1597,12 @@
         <span class="n">ordinal</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="n">anim_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">anim_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">animations</span><span class="p">:</span>
             <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">_build_anim_for</span><span class="p">(</span>
-                <span class="n">flat</span><span class="p">,</span> <span class="n">anim_id</span><span class="p">,</span> <span class="n">swap_properties</span><span class="o">=</span><span class="n">swap_props</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span>
+                <span class="n">flat</span><span class="p">,</span>
+                <span class="n">anim_id</span><span class="p">,</span>
+                <span class="n">swap_properties</span><span class="o">=</span><span class="n">swap_props</span><span class="p">,</span>
+                <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span>
+                <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
+                <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">flat</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="n">PlayAction</span><span class="p">)</span>
@@ -1733,6 +1772,7 @@
     <span class="n">swap_properties</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
     <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnimationClipJSON</span><span class="p">:</span>
     <span class="n">action</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">PlayAction</span><span class="p">):</span>
@@ -1774,6 +1814,18 @@
                 <span class="n">CutoutCompileWarning</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
+        <span class="n">keyframes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">from_value</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="n">easing</span><span class="p">),</span>
+            <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">to_value</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="c1"># The CONTRACT is this guard: swap properties are never stepped here</span>
+        <span class="c1"># (they are stepped by format). `_stepped_keyframes`' own non-numeric</span>
+        <span class="c1"># early return is the defence behind it, so the two are redundant by</span>
+        <span class="c1"># design — drop this one and the swap test still passes (an#89 review).</span>
+        <span class="k">if</span> <span class="n">step_hz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">action</span><span class="o">.</span><span class="n">property</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">swap_properties</span><span class="p">:</span>
+            <span class="n">keyframes</span> <span class="o">=</span> <span class="n">_stepped_keyframes</span><span class="p">(</span>
+                <span class="n">keyframes</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="n">flat</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
             <span class="n">duration</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
@@ -1781,14 +1833,84 @@
                 <span class="n">ChannelJSON</span><span class="p">(</span>
                     <span class="n">target</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
                     <span class="nb">property</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="p">,</span>
-                    <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span>
-                        <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">from_value</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="n">easing</span><span class="p">),</span>
-                        <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">to_value</span><span class="p">),</span>
-                    <span class="p">],</span>
+                    <span class="n">keyframes</span><span class="o">=</span><span class="n">keyframes</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">],</span>
         <span class="p">)</span>
     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unsupported anim build for </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="step_times">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/compile.html#an.adapters.cutout.step_times">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">step_times</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Clip-local times at which a stepped tween updates its pose (an#89).</span>
+
+<span class="sd">    The grid is SHOT-wide — multiples of ``1/step_hz`` on the shot's clock,</span>
+<span class="sd">    shared by every tween in the shot — not the tween's own: "on twos" means</span>
+<span class="sd">    every character changes pose on the same frames, so a tween starting at</span>
+<span class="sd">    0.033 s updates at the next grid point, not 0.033 s later. (Shots compile</span>
+<span class="sd">    independently, so the grid restarts at each cut.) Local 0 (the tween's</span>
+<span class="sd">    start) and ``duration`` (where the end value lands) are always present, so</span>
+<span class="sd">    a tween shorter than one step is a single step to its end value.</span>
+
+<span class="sd">    ``step_hz`` must be positive: with a non-positive rate the walk below never</span>
+<span class="sd">    reaches ``duration`` — an infinite loop, not an error — so it is refused.</span>
+
+<span class="sd">    &gt;&gt;&gt; step_times(0.0, 0.3, 10)</span>
+<span class="sd">    [0.0, 0.1, 0.2, 0.3]</span>
+<span class="sd">    &gt;&gt;&gt; [round(t, 3) for t in step_times(0.05, 0.3, 10)]</span>
+<span class="sd">    [0.0, 0.05, 0.15, 0.25, 0.3]</span>
+<span class="sd">    &gt;&gt;&gt; step_times(0.0, 0.02, 10)</span>
+<span class="sd">    [0.0, 0.02]</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">step_hz</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"step_hz must be positive; got </span><span class="si">{</span><span class="n">step_hz</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-9</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">start</span> <span class="o">*</span> <span class="n">step_hz</span> <span class="o">-</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">j</span> <span class="o">/</span> <span class="n">step_hz</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="n">duration</span> <span class="o">-</span> <span class="n">eps</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="n">eps</span><span class="p">:</span>
+            <span class="n">times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">duration</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">times</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stepped_keyframes</span><span class="p">(</span>
+    <span class="n">keyframes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">KeyframeJSON</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">KeyframeJSON</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Resample a numeric tween's curve onto the step grid, step-eased.</span>
+
+<span class="sd">    The curve is evaluated through the Python spec (`channel.evaluate`) — the</span>
+<span class="sd">    same evaluator the parity tests hold against the runtime — so a stepped</span>
+<span class="sd">    tween shows exactly the values the smooth one would at each grid time,</span>
+<span class="sd">    then holds. Non-numeric (swap) values are left alone: they are stepped by</span>
+<span class="sd">    format already, and easing never applied to them.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.channel</span><span class="w"> </span><span class="kn">import</span> <span class="n">Channel</span><span class="p">,</span> <span class="n">Keyframe</span><span class="p">,</span> <span class="n">evaluate</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keyframes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">keyframes</span>
+    <span class="n">channel</span> <span class="o">=</span> <span class="n">Channel</span><span class="p">(</span>
+        <span class="s2">"_"</span><span class="p">,</span>
+        <span class="s2">"_"</span><span class="p">,</span>
+        <span class="p">[</span>
+            <span class="n">Keyframe</span><span class="p">(</span>
+                <span class="n">k</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                <span class="n">k</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="nb">tuple</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">easing</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">easing</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">k</span><span class="o">.</span><span class="n">easing</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keyframes</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">evaluate</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">t</span><span class="p">)),</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">step_times</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">step_hz</span><span class="p">)</span>
+    <span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_play</span><span class="p">(</span>
@@ -1834,8 +1956,7 @@
         <span class="p">)</span>
     <span class="k">except</span> <span class="n">PlayResolutionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"play of </span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">animation</span><span class="si">!r}</span><span class="s2"> on </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2">: "</span>
-            <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">problems</span><span class="p">)</span>
+            <span class="sa">f</span><span class="s2">"play of </span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">animation</span><span class="si">!r}</span><span class="s2"> on </span><span class="si">{</span><span class="n">entity_id</span><span class="si">!r}</span><span class="s2">: "</span> <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">problems</span><span class="p">)</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
     <span class="n">anim</span> <span class="o">=</span> <span class="n">resolved</span><span class="o">.</span><span class="n">animation</span>
     <span class="n">k</span> <span class="o">=</span> <span class="n">vocab</span><span class="o">.</span><span class="n">entity_scale</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
@@ -1860,18 +1981,24 @@
             <span class="n">scale</span> <span class="o">=</span> <span class="n">rt</span><span class="o">.</span><span class="n">unit</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="k">if</span> <span class="n">rt</span><span class="o">.</span><span class="n">rig_scaled</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">rt</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"sine"</span><span class="p">:</span>
                 <span class="n">kfs</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">rest_value</span> <span class="o">+</span> <span class="n">dev</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"linear"</span><span class="p">)</span>
+                    <span class="n">KeyframeJSON</span><span class="p">(</span>
+                        <span class="n">time</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">rest_value</span> <span class="o">+</span> <span class="n">dev</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"linear"</span>
+                    <span class="p">)</span>
                     <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">dev</span> <span class="ow">in</span> <span class="n">sampled_deviations</span><span class="p">(</span><span class="n">rt</span><span class="o">.</span><span class="n">track</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">fps</span><span class="p">)</span>
                 <span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">easing</span> <span class="o">=</span> <span class="s2">"step"</span> <span class="k">if</span> <span class="n">rt</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"step"</span> <span class="k">else</span> <span class="s2">"linear"</span>
                 <span class="n">kfs</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="n">KeyframeJSON</span><span class="p">(</span>
-                        <span class="n">time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ft</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="n">rest_value</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">fv</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="n">easing</span>
+                        <span class="n">time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ft</span><span class="p">),</span>
+                        <span class="n">value</span><span class="o">=</span><span class="n">rest_value</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">fv</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span>
+                        <span class="n">easing</span><span class="o">=</span><span class="n">easing</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="k">for</span> <span class="n">ft</span><span class="p">,</span> <span class="n">fv</span> <span class="ow">in</span> <span class="n">rt</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">frames</span>
                 <span class="p">]</span>
-            <span class="n">channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">rt</span><span class="o">.</span><span class="n">property</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">kfs</span><span class="p">))</span>
+            <span class="n">channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">rt</span><span class="o">.</span><span class="n">property</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">kfs</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">ChannelJSON</span><span class="p">(</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.51 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -311,6 +311,11 @@
             <span class="n">shot_kwargs</span><span class="p">[</span><span class="s2">"camera"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"camera"</span><span class="p">]</span>
         <span class="k">if</span> <span class="s2">"options"</span> <span class="ow">in</span> <span class="n">shot_yaml</span><span class="p">:</span>
             <span class="n">shot_kwargs</span><span class="p">[</span><span class="s2">"options"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"options"</span><span class="p">]</span>
+        <span class="c1"># Whitelisted, like `camera`: this reader enumerates shot keys, so a</span>
+        <span class="c1"># field added to `Shot` that is not named here silently drops on read</span>
+        <span class="c1"># (and the writer above enumerates too, so on write) — an#89.</span>
+        <span class="k">if</span> <span class="s2">"step_hz"</span> <span class="ow">in</span> <span class="n">shot_yaml</span><span class="p">:</span>
+            <span class="n">shot_kwargs</span><span class="p">[</span><span class="s2">"step_hz"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"step_hz"</span><span class="p">]</span>
         <span class="n">shots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Shot</span><span class="p">(</span><span class="o">**</span><span class="n">shot_kwargs</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">duration</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -468,7 +473,9 @@
                 <span class="n">item</span><span class="p">[</span><span class="s2">"target"</span><span class="p">],</span>
                 <span class="n">item</span><span class="p">[</span><span class="s2">"animation"</span><span class="p">],</span>
                 <span class="n">duration</span><span class="o">=</span><span class="p">(</span>
-                    <span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"duration"</span><span class="p">])</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"duration"</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="kc">None</span>
                 <span class="p">),</span>
                 <span class="n">speed</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"speed"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
                 <span class="n">loop</span><span class="o">=</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"loop"</span><span class="p">])</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"loop"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span>
@@ -531,6 +538,8 @@
         <span class="p">},</span>
         <span class="s2">"default_style"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">default_style</span><span class="p">,</span>
     <span class="p">}</span>
+    <span class="k">if</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">step_hz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">meta_dict</span><span class="p">[</span><span class="s2">"step_hz"</span><span class="p">]</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">step_hz</span>
     <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```yaml meta"</span><span class="p">)</span>
     <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
     <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"```</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
@@ -541,6 +550,8 @@
     <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">:</span>
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"## Shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">style</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">shot_yaml</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"duration"</span><span class="p">:</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">step_hz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"step_hz"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">step_hz</span>
         <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"camera"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>

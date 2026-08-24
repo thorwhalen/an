@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.51 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -506,7 +506,28 @@
     <span class="n">actions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Action</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">dialogue</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Dialogue</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">narration</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Narration</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
+    <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1">#: Per-shot override of :attr:`Meta.step_hz` (``None`` = inherit).</span>
+    <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_step_hz">
+<a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.resolve_step_hz">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_step_hz</span><span class="p">(</span><span class="n">shot</span><span class="p">:</span> <span class="s2">"Shot"</span><span class="p">,</span> <span class="n">scene_step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The stepped-timing policy ``shot`` renders under: its own ``step_hz``</span>
+<span class="sd">    when it declares one, else the scene's, else ``None`` (smooth). The ONE</span>
+<span class="sd">    statement of the shot-over-scene rule — the cutout renderer, the preview</span>
+<span class="sd">    and the project renderer all call it (an#89 review: three copies).</span>
+
+<span class="sd">    &gt;&gt;&gt; resolve_step_hz(Shot(id="s", step_hz=10.0), 15.0)</span>
+<span class="sd">    10.0</span>
+<span class="sd">    &gt;&gt;&gt; resolve_step_hz(Shot(id="s"), 15.0)</span>
+<span class="sd">    15.0</span>
+<span class="sd">    &gt;&gt;&gt; resolve_step_hz(Shot(id="s"), None) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">shot</span><span class="o">.</span><span class="n">step_hz</span> <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">step_hz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">scene_step_hz</span></div>
 
 
 
@@ -526,7 +547,22 @@
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_FPS</span>
     <span class="n">resolution</span><span class="p">:</span> <span class="n">Resolution</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Resolution</span><span class="p">)</span>
     <span class="n">default_style</span><span class="p">:</span> <span class="n">StyleName</span> <span class="o">=</span> <span class="s2">"cutout"</span>
-    <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="c1">#: Stepped timing for AUTHORED TWEENS, in pose updates per second; ``None``</span>
+    <span class="c1">#: (the default) leaves every tween smooth. At 30 fps, ``15`` is "on twos"</span>
+    <span class="c1">#: and ``10`` "on threes" — the character-animation practice Spider-Verse</span>
+    <span class="c1">#: made famous (characters on twos, simulation on ones). The camera is</span>
+    <span class="c1">#: exempt by construction, as are swap channels (already stepped by</span>
+    <span class="c1">#: format), compiled blinks and ``play`` clips: only `tween` curves are</span>
+    <span class="c1">#: resampled — sample-and-hold of the eased curve on a SHOT-wide grid</span>
+    <span class="c1">#: (every tween in a shot shares it; it restarts at a cut), not a retiming</span>
+    <span class="c1">#: into holds and fast transitions. A tween's own START and END are always</span>
+    <span class="c1">#: pose changes too, so a tween that begins or ends off-grid changes pose</span>
+    <span class="c1">#: on that frame as well as on the grid (a ``set`` at an off-grid ``at``</span>
+    <span class="c1">#: likewise lands where it was authored). A shot's own ``step_hz``</span>
+    <span class="c1">#: overrides this. Must be positive (schema) and ``&lt;= fps`` (validate +</span>
+    <span class="c1">#: compile), an#89.</span>
+    <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
 
 
 

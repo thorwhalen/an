@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.render &mdash; an 0.1.51 documentation</title>
+  <title>an.adapters.cutout.render &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -217,7 +217,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.compile</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_shot</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.runtime_files</span><span class="w"> </span><span class="kn">import</span> <span class="n">runtime_dir</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.serialize</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_dict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shot</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shot</span><span class="p">,</span> <span class="n">resolve_step_hz</span>
 
 
 <span class="c1"># Tunables — exposed as module constants per the no-magic-numbers rule.</span>
@@ -484,6 +484,7 @@
         <span class="n">pix_fmt</span> <span class="o">=</span> <span class="n">_check_pix_fmt</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">pix_fmt</span><span class="p">)</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>  <span class="c1"># local: optional dep</span>
 
+        <span class="n">step_hz</span> <span class="o">=</span> <span class="n">effective_step_hz</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">ctx</span><span class="p">)</span>
         <span class="n">scene_json</span> <span class="o">=</span> <span class="n">compile_shot</span><span class="p">(</span>
             <span class="n">shot</span><span class="p">,</span>
             <span class="n">mall</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">mall</span><span class="p">,</span>
@@ -491,6 +492,7 @@
             <span class="n">width</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">height</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
             <span class="n">strict_assets</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">strict_assets</span><span class="p">,</span>
+            <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">job</span> <span class="o">=</span> <span class="n">_stage_job</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">scene_json</span><span class="p">,</span> <span class="n">mall</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">mall</span><span class="p">)</span>
@@ -609,9 +611,33 @@
                 <span class="c1"># carried here so a renamed character is a visible provenance</span>
                 <span class="c1"># diff rather than an unexplained metric shift.</span>
                 <span class="s2">"blink_phases"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">scene_json</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">blink_phases</span><span class="p">),</span>
+                <span class="c1"># The stepped-timing policy the tweens were compiled under</span>
+                <span class="c1"># (an#89); None = smooth. Recorded so a stepped render is a</span>
+                <span class="c1"># visible provenance fact, not a mystery in the motion.</span>
+                <span class="s2">"step_hz"</span><span class="p">:</span> <span class="n">scene_json</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">step_hz</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">)</span></div>
 </div>
+
+
+
+<div class="viewcode-block" id="effective_step_hz">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/render.html#an.adapters.cutout.effective_step_hz">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">effective_step_hz</span><span class="p">(</span><span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">RenderContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The stepped-timing policy a shot renders under (an#89): the shot's own</span>
+<span class="sd">    ``step_hz`` when it declares one, else the scene's (``ctx.step_hz``), else</span>
+<span class="sd">    ``None`` — smooth. The compiler stamps whatever this returns.</span>
+
+<span class="sd">    &gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">    &gt;&gt;&gt; ctx = RenderContext(mall={}, work_dir=Path("."), step_hz=15.0)</span>
+<span class="sd">    &gt;&gt;&gt; effective_step_hz(Shot(id="s"), ctx)</span>
+<span class="sd">    15.0</span>
+<span class="sd">    &gt;&gt;&gt; effective_step_hz(Shot(id="s", step_hz=10.0), ctx)</span>
+<span class="sd">    10.0</span>
+<span class="sd">    &gt;&gt;&gt; effective_step_hz(Shot(id="s"), RenderContext(mall={}, work_dir=Path("."))) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">resolve_step_hz</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">step_hz</span><span class="p">)</span></div>
 
 
 

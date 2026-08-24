@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.render &mdash; an 0.1.51 documentation</title>
+  <title>an.render &mdash; an 0.1.52 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=56cc1d78"></script>
+      <script src="../../_static/documentation_options.js?v=61349712"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -252,6 +252,7 @@
     <span class="n">strict_assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">supersample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SUPERSAMPLE</span><span class="p">,</span>
     <span class="n">pix_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Render every shot in ``project_dir``'s scene and concatenate to one mp4.</span>
 
@@ -275,6 +276,11 @@
 <span class="sd">    with an exact block mean. **Opt-in, and 1 is free** — at 1 nothing is</span>
 <span class="sd">    decoded and Chromium's own bytes reach disk. See :func:`render`.</span>
 
+<span class="sd">    ``step_hz`` overrides the scene's ``meta.step_hz`` for this render (a shot's</span>
+<span class="sd">    own ``step_hz`` still wins): authored tweens are resampled onto a pose grid</span>
+<span class="sd">    of that many updates per second — 15 at 30 fps is "on twos". ``None`` uses</span>
+<span class="sd">    the scene's declaration, which is itself ``None`` (smooth) by default.</span>
+
 <span class="sd">    Returns the absolute path of the final output file (under ``output/``).</span>
 <span class="sd">    """</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
@@ -289,6 +295,7 @@
         <span class="n">strict_assets</span><span class="o">=</span><span class="n">strict_assets</span><span class="p">,</span>
         <span class="n">supersample</span><span class="o">=</span><span class="n">supersample</span><span class="p">,</span>
         <span class="n">pix_fmt</span><span class="o">=</span><span class="n">pix_fmt</span><span class="p">,</span>
+        <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -308,6 +315,7 @@
     <span class="n">strict_assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">supersample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SUPERSAMPLE</span><span class="p">,</span>
     <span class="n">pix_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Lower-level: render a loaded ``Project`` to mp4.</span>
 
@@ -400,6 +408,7 @@
         <span class="n">strict_assets</span><span class="o">=</span><span class="n">strict_assets</span><span class="p">,</span>
         <span class="n">supersample</span><span class="o">=</span><span class="n">supersample</span><span class="p">,</span>
         <span class="n">pix_fmt</span><span class="o">=</span><span class="n">pix_fmt</span><span class="p">,</span>
+        <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span> <span class="k">if</span> <span class="n">step_hz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">step_hz</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">shots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">)</span>
