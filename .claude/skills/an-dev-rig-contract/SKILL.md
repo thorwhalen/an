@@ -59,8 +59,11 @@ Four descriptor keys are read, at five sites; **three have any effect**.
 | `metadata.art_provenance` | `:765`, `:1098` | face-baked overlay suppression — now the declared `face_overlay` field (an#87) |
 
 Dead everywhere — **no producer and no consumer**: `view_box`, `bones`, `slots`
-(and `draw_order`), `skins` (and every `Attachment.path`/`.anchor`/`.width`/`.height`),
-and `animations` (the idle rig, seeded by `model_post_init` and never read).
+(and `draw_order`), `skins` (and every `Attachment.path`/`.anchor`/`.width`/`.height`).
+`animations` (the idle rig, seeded by `model_post_init`) was on this list until
+an#7: an authored `play` now resolves it through `an.characters.play` (shared by
+`an validate` and `compile.py::_resolve_play`), so it is read — but only by a
+`play`; nothing plays it automatically.
 
 `runtime.js` contains zero occurrences of `rigs`, `skins` or `attachment`.
 `CutoutSceneJSON.rigs: dict[str, RigJSON]` was the same defect one layer down —

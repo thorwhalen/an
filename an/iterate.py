@@ -150,8 +150,11 @@ The IR shape (relevant fields):
         "alpha" is the fade primitive and cascades to a character's parts.
         A tween with no "from" starts at the property's rest value: 1.0 for
         scale_x / scale_y / alpha, 0.0 for the rest.
-        Do NOT emit "play" actions: named reusable animations are unimplemented
-        and a "play" now fails the compile.
+        A "play" action ({kind: play, target: <entity>, animation: <name>,
+        [duration], [speed], [loop]}) plays one of the target character's
+        descriptor animations ("idle_breath", "blink", or any it declares);
+        an animation the descriptor does not declare fails the compile —
+        never invent a name.
       - dialogue: list of {speaker, text, emotion, voice_ref, start, duration, ...}
       - narration: list (same shape as dialogue, no speaker pin).
         NOT IMPLEMENTED — the audio pipeline walks dialogue only, and a shot with

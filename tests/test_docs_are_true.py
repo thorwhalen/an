@@ -64,10 +64,11 @@ def test_a_reference_to_a_growing_directory_carries_no_count(rel, pointer):
 
 
 def test_no_gap_line_survives_its_gap_loop_mode():
-    """`loop_mode` shipped, and two docs went on calling it a gap for months.
-
-    The remaining gap is the INVERSE and is easy to state backwards: both
-    evaluators honour it, and nothing ever emits a non-default value.
+    """`loop_mode` shipped, and two docs went on calling it a gap for months;
+    then its INVERSE ("nothing emits a non-default value") shipped in an#7 and
+    one doc went on calling THAT a gap. Both lines are asserted absent, and
+    the emitter asserted present — the previous version of this test ended in
+    `assert not writers or True`, which caught nothing.
     """
     from an.adapters.cutout import serialize
 
@@ -78,16 +79,20 @@ def test_no_gap_line_survives_its_gap_loop_mode():
     )
     for rel in ("CLAUDE.md", "misc/docs/architecture_as_built.md"):
         text = (ROOT / rel).read_text(encoding="utf-8").lower()
-        for phrase in ("runtime ignores `loop_mode`", "runtime.js has no handling for it",
-                       "js runtime ignores"):
-            assert phrase not in text, f"{rel} still claims the runtime ignores loop_mode"
+        for phrase in (
+            "runtime ignores `loop_mode`",
+            "runtime.js has no handling for it",
+            "js runtime ignores",
+            "no compiler code writes the field",
+            "reachable only by hand-writing",
+        ):
+            assert phrase not in text, f"{rel} still states a closed loop_mode gap: {phrase!r}"
 
-    # and the real gap is still real: nothing writes the field
-    writers = [
-        p for p in (ROOT / "an").rglob("*.py")
-        if "loop_mode=" in p.read_text(encoding="utf-8") and p.name not in {"serialize.py", "clip.py"}
-    ]
-    assert not writers or True, "informational"
+    # The emitter exists: a compiler path writes a non-default loop_mode.
+    compile_src = (ROOT / "an/adapters/cutout/compile.py").read_text(encoding="utf-8")
+    assert 'loop_mode="loop" if loop else "once"' in compile_src, (
+        "the compiler no longer emits loop_mode — the gap line would be true again"
+    )
     assert serialize.AnimationClipJSON.model_fields["loop_mode"].default == "once"
 
 

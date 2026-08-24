@@ -473,8 +473,17 @@ convert:
   animation's own `loop`); the generated clip's `loop_mode` carries it.
   `PlacedClipJSON.loop_mode` (issue #7 step 2) is **deferred** until clip dedup exists.
 - Landing deletes all three refusals in the same pass (they become false rejections the
-  moment resolution works), un-skips the writer/parser asymmetry, and un-gates `play`
+  moment resolution works), ends the writer/parser asymmetry, and un-gates `play`
   in the scene.md grammar docs.
+
+**Landed in PR #93** (2026-08-24; line references above are pre-#93). The adversarial
+review moved resolution out of the compiler into `an.characters.play`, shared with
+`an validate` (validate had passed four plays the compiler refused), made a slot track
+resolve to exactly ONE set (per-frame resolution split `blink` across two channels and
+the runtime's name-order application left the eye open), and widened a looping
+duration-less play to the shot end (a loop bounded by its own natural duration never
+looped). The "teleports to y≈±2" line above was reasoning, not a measurement — no naive
+copy ever ran in this repo; the correct conversion is what `tests/test_play.py` pins.
 
 ---
 

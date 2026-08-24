@@ -357,12 +357,15 @@ What genuinely remains, in rough priority order:
    right duration. No entity, action, dialogue or camera information from the
    Shot reaches the generated script. Translating the flat timeline into Manim
    constructs is unstarted design work, not a wiring job.
-2. **Nothing ever *emits* a non-default `loop_mode`.** The runtime honours all
-   three modes (`runtime.js`, `wrapTime`) and so does Python
-   (`an/adapters/cutout/clip.py`, `_wrap_time`) — that landed, and an earlier
-   version of this section claiming otherwise was stale. The remaining gap is
-   the inverse and easy to miss: no compiler code writes the field, so looping
-   is reachable only by hand-writing `CutoutSceneJSON`.
+2. **`ping_pong` has no emitter, and placements cannot override a clip's
+   loop.** Both evaluators honour all three `loop_mode`s (`runtime.js`
+   `wrapTime`, `clip.py` `_wrap_time`), and since an#7 a `play` of a looping
+   descriptor animation compiles to `loop_mode="loop"` (`_resolve_play`) — so
+   the old line here, "nothing ever emits a non-default loop_mode", is closed.
+   What remains: no compiler path writes `ping_pong`, and `PlacedClipJSON` has
+   no `loop_mode` of its own (issue #7's step 2, deferred until clip dedup
+   exists; per-instance `__play__{n}` clips make it unnecessary today —
+   tracked as an#94).
 3. **Lip-sync for face-baked characters.** A descriptor declaring
    `face_overlay: false` (DiceBear avatars; the 0.3.0 migration derives it from
    the old provenance string) has the face baked into the head SVG, so the
@@ -372,7 +375,7 @@ What genuinely remains, in rough priority order:
 4. **Multi-scene projects.** `"main"` is the only key the scenes store supports.
 5. **A real `an validate` for everything the renderer refuses.** The pre-flight
    now reports the four IR-level refusals (unknown `camera.move`, `prop`
-   entities, `narration`, `play`), but it duplicates the compiler's camera list
+   entities, `narration`; `play` is resolved against the target's descriptor animations since an#7), but it duplicates the compiler's camera list
    rather than sharing it, and it cannot see rig-level problems — a speaker
    whose character has no head is only discovered at compile time.
 

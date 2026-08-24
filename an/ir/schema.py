@@ -146,14 +146,26 @@ class TweenAction(_ActionBase):
 
 
 class PlayAction(_ActionBase):
-    """Play a named animation clip on a target."""
+    """Play a named animation of the target entity's descriptor (an#7).
+
+    ``animation`` names an entry of ``CharacterDescriptor.animations`` (the
+    seeded ``idle_breath`` and ``blink``, or anything an author adds); the
+    compiler resolves its tracks into channels on the entity's nodes.
+    ``duration`` widens/narrows the placement window; ``None`` means the
+    animation's own duration — or, when the resolved ``loop`` is true, the
+    rest of the shot, because a loop bounded by its own natural duration
+    never loops. ``loop`` overrides the animation's declared ``loop``
+    (``None`` = use the descriptor's). Inside a ``sequence`` a play with
+    ``duration=None`` has ZERO width (:func:`an.ir.compose.duration_of`):
+    the next sibling starts at the same instant.
+    """
 
     kind: Literal["play"] = "play"
     target: PathStr
-    animation: str  # animation id
-    duration: Seconds | None = None  # None = use clip's natural duration
+    animation: str  # a key of the entity descriptor's `animations`
+    duration: Seconds | None = None  # None = the animation's natural duration
     speed: float = 1.0
-    loop: bool = False
+    loop: bool | None = None  # None = the descriptor animation's own `loop`
 
 
 class SequenceAction(_ActionBase):

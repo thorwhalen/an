@@ -79,9 +79,19 @@ def play(
     *,
     duration: Seconds | None = None,
     speed: float = 1.0,
-    loop: bool = False,
+    loop: bool | None = None,
 ) -> PlayAction:
-    """Play a named animation clip on a target."""
+    """Play a named animation of the target entity's descriptor (an#7).
+
+    ``duration=None`` fills the animation's natural length — or the shot's
+    remainder for a looping one — but counts as **zero** in a ``sequence``,
+    so a sibling placed after it starts at the same instant:
+
+    >>> [f.start for f in flatten(sequence(play("a", "idle_breath"), delay(1.0), play("a", "blink")))]
+    [0.0, 1.0]
+    >>> [f.start for f in flatten(sequence(play("a", "idle_breath", duration=2.0), play("a", "blink")))]
+    [0.0, 2.0]
+    """
     return PlayAction(
         target=target,
         animation=animation,

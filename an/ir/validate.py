@@ -19,6 +19,8 @@ from typing import Any, Literal, Mapping
 from pydantic import ValidationError
 
 from an.base import TRANSFORM_PROPERTIES
+from an.characters.play import art_exists_for, play_problems
+from an.characters.schema import CharacterDescriptor
 from an.ir.compose import flatten
 from an.ir.migrate import migrate
 from an.ir.schema import SceneIR
@@ -127,10 +129,13 @@ def _check_swap_references(
     shot, path: str, report: "ValidationReport", available_characters
 ) -> None:
     """A set/tween on a non-transform property must name a declared asset set
-    and key of its target entity's descriptor — checked HERE, before the
-    author pays for TTS or a Chromium launch, because compile raises on it
-    (an#87). Same charter as `_check_renderable`; needs the store, so it runs
-    from `validate_semantic`'s shot loop.
+    and key of its target entity's descriptor, and a `play` must resolve
+    against that descriptor's animations — checked HERE, before the author
+    pays for TTS or a Chromium launch, because compile raises on both
+    (an#87, an#7). Same charter as `_check_renderable`; needs the store, so
+    it runs from `validate_semantic`'s shot loop — and ONLY then: with
+    `available_characters=None` neither check runs, so a bare
+    `validate_semantic(scene)` passes a play the compiler will refuse.
 
     Descriptor-less (procedural) entities get a carve-out for `viseme` — the
     compiler validates its codes against the drawn-mouth shapes — and an
@@ -139,6 +144,53 @@ def _check_swap_references(
     if available_characters is None:
         return
     refs_by_entity = {e.id: e.ref for e in shot.entities if e.kind == "character"}
+    # `play` (an#7): resolved against the target entity's MIGRATED descriptor
+    # by `an.characters.play` — the SAME code the compiler resolves with, so
+    # validate's verdict is compile's (an unknown bone property, a bone with
+    # no slot of its own, art missing for a frame, a face slot suppressed by
+    # `face_overlay=false` all used to pass here and raise there). Art is
+    # checked when the store has a filesystem root; a dict store assumes
+    # presence, as the compiler's part probe does.
+    for k, action in enumerate(shot.actions):
+        for flat in flatten(action):
+            leaf = flat.action
+            if getattr(leaf, "kind", None) != "play":
+                continue
+            entity_id = (getattr(leaf, "target", "") or "").split("/", 1)[0]
+            ref = refs_by_entity.get(entity_id)
+            desc = None
+            if ref is not None:
+                try:
+                    candidate = available_characters[ref]
+                except (KeyError, TypeError):
+                    candidate = None
+                if (
+                    isinstance(candidate, dict)
+                    and candidate.get("kind") == "CharacterDescriptor"
+                ):
+                    desc = CharacterDescriptor.model_validate(
+                        migrate(dict(candidate), kind="CharacterDescriptor")
+                    )
+            if desc is None:
+                report.add(
+                    "error",
+                    f"{path}/actions/{k}",
+                    f"`play` names animation {leaf.animation!r} on {entity_id!r}, "
+                    "which has no descriptor — named animations live in a "
+                    "character's descriptor `animations`; compiling this shot raises.",
+                )
+                continue
+            for problem in play_problems(
+                desc,
+                leaf.animation,
+                art_exists=art_exists_for(available_characters, ref),
+            ):
+                report.add(
+                    "error",
+                    f"{path}/actions/{k}",
+                    f"`play` of {leaf.animation!r} on {entity_id!r} cannot "
+                    f"resolve: {problem} — compiling this shot raises.",
+                )
     # Flattened, like the compiler: the documented `start:` idiom wraps every
     # leaf in a `sequence`, so walking only top-level actions would miss the
     # common case (an#87 review) — an authoring-time gate that only sees the
@@ -258,15 +310,6 @@ def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
             "speaker as the workaround.",
         )
 
-    for k, action in enumerate(shot.actions):
-        if getattr(action, "kind", None) == "play":
-            report.add(
-                "error",
-                f"{path}/actions/{k}",
-                "`play` references a named animation, which nothing can define — "
-                "compiling this shot raises. Use tween / set, or sequence / "
-                "parallel to compose them.",
-            )
 
 
 def validate_semantic(
@@ -279,8 +322,11 @@ def validate_semantic(
 
     Both ``available_voices`` and ``available_characters`` accept any mapping.
     Voices are consulted via ``__contains__`` only; characters additionally
-    via ``__getitem__`` (the swap-reference check reads descriptor dicts,
-    an#87). Pass ``None`` to skip those checks.
+    via ``__getitem__`` (the swap-reference and `play` checks read descriptor
+    dicts, an#87 / an#7). Pass ``None`` to skip those checks — and know that
+    skipping them is what it sounds like: a `play` or a swap the compiler
+    will refuse passes silently without the store (the CLI, `an validate`,
+    always passes it).
     """
     report = ValidationReport()
 
