@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.49 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.50 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=1190fe33"></script>
+      <script src="../../../../_static/documentation_options.js?v=f2b49961"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -60,9 +60,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CONTAIN_FIT"><code class="docutils literal notranslate"><span class="pre">CONTAIN_FIT</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CutoutCompileError"><code class="docutils literal notranslate"><span class="pre">CutoutCompileError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CutoutCompileWarning"><code class="docutils literal notranslate"><span class="pre">CutoutCompileWarning</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.EYE_NODE_NAMES"><code class="docutils literal notranslate"><span class="pre">EYE_NODE_NAMES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.PROCEDURAL_MOUTH_KEYS"><code class="docutils literal notranslate"><span class="pre">PROCEDURAL_MOUTH_KEYS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.RUNTIME_APPLIED_PROPERTIES"><code class="docutils literal notranslate"><span class="pre">RUNTIME_APPLIED_PROPERTIES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.SCENE_PX_PER_VIEW_BOX"><code class="docutils literal notranslate"><span class="pre">SCENE_PX_PER_VIEW_BOX</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.blink_phase"><code class="docutils literal notranslate"><span class="pre">blink_phase()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.compile_shot"><code class="docutils literal notranslate"><span class="pre">compile_shot()</span></code></a></li>
 </ul>
 </li>
@@ -240,6 +242,18 @@ idiom, and passing in silence is what this whole change is against.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.EYE_NODE_NAMES">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">EYE_NODE_NAMES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'left_eye',</span> <span class="pre">'right_eye'})</span></span><a class="headerlink" href="#an.adapters.cutout.compile.EYE_NODE_NAMES" title="Link to this definition"></a></dt>
+<dd><p>the default rig’s eye slots ARE its node
+names, on both the procedural and the descriptor path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The nodes that blink, by name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="an.adapters.cutout.compile.PROCEDURAL_MOUTH_KEYS">
 <span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">PROCEDURAL_MOUTH_KEYS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'A':</span> <span class="pre">'A',</span> <span class="pre">'B':</span> <span class="pre">'B',</span> <span class="pre">'C':</span> <span class="pre">'C',</span> <span class="pre">'D':</span> <span class="pre">'D',</span> <span class="pre">'E':</span> <span class="pre">'E',</span> <span class="pre">'F':</span> <span class="pre">'F',</span> <span class="pre">'G':</span> <span class="pre">'G',</span> <span class="pre">'H':</span> <span class="pre">'H',</span> <span class="pre">'X':</span> <span class="pre">'X'}</span></span><a class="headerlink" href="#an.adapters.cutout.compile.PROCEDURAL_MOUTH_KEYS" title="Link to this definition"></a></dt>
 <dd><p>The procedural (drawn) mouth’s swap vocabulary, DECLARED as data on its
@@ -279,6 +293,16 @@ seven deleted <code class="docutils literal notranslate"><span class="pre">_SVG_
 legs 37.7x118.6 against 38x120. The constants were an approximation of
 exactly this product, which is the evidence that the rig should have been
 driving it all along.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.blink_phase">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">blink_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/compile.html#blink_phase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.compile.blink_phase" title="Link to this definition"></a></dt>
+<dd><p>The entity’s blink phase in [0, 1): the runtime’s rule, ported exactly.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">blink_phase</span><span class="p">(</span><span class="s2">"charlie"</span><span class="p">)</span>
+<span class="go">0.762</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">

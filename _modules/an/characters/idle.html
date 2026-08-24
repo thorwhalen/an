@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.idle &mdash; an 0.1.49 documentation</title>
+  <title>an.characters.idle &mdash; an 0.1.50 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1190fe33"></script>
+      <script src="../../../_static/documentation_options.js?v=f2b49961"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -184,6 +184,13 @@
 <span class="sd">The functions return :class:`an.characters.IdleAnimation` instances ready</span>
 <span class="sd">to drop into :attr:`CharacterDescriptor.animations`.</span>
 
+<span class="sd">**None of this drives what renders today.** The blink you see is compiled by</span>
+<span class="sd">``an.adapters.cutout.compile._add_blink_clips`` (an#88) from a fixed</span>
+<span class="sd">entity-name-phase schedule (period 4.0 s); descriptor ``animations`` are</span>
+<span class="sd">seeded by ``model_post_init`` and consumed by nothing on the render path until</span>
+<span class="sd">``PlayAction`` resolution lands (an#7). ``random_blink_schedule`` has no</span>
+<span class="sd">caller either — it is the seeded alternative that resolution may adopt.</span>
+
 <span class="sd">&gt;&gt;&gt; a = breath_animation()</span>
 <span class="sd">&gt;&gt;&gt; a.name</span>
 <span class="sd">'idle_breath'</span>
@@ -325,8 +332,9 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Return a sorted list of blink start times across ``duration_s``.</span>
 
-<span class="sd">    Used by the renderer to schedule spontaneous blinks. Gaps are uniform in</span>
-<span class="sd">    ``[min_gap_s, max_gap_s]``.</span>
+<span class="sd">    A seeded schedule with uniform gaps in ``[min_gap_s, max_gap_s]``. NOT</span>
+<span class="sd">    what the renderer uses today (see the module docstring); kept as the</span>
+<span class="sd">    candidate for descriptor-driven scheduling.</span>
 
 <span class="sd">    &gt;&gt;&gt; times = random_blink_schedule(20.0, seed=0)</span>
 <span class="sd">    &gt;&gt;&gt; all(0 &lt;= t &lt; 20 for t in times)</span>

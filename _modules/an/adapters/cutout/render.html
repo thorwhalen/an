@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.render &mdash; an 0.1.49 documentation</title>
+  <title>an.adapters.cutout.render &mdash; an 0.1.50 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=1190fe33"></script>
+      <script src="../../../../_static/documentation_options.js?v=f2b49961"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -557,8 +557,9 @@
                     <span class="p">)</span>
 
                 <span class="c1"># Probed on EVERY render, judged only when enforcement is on.</span>
-                <span class="c1"># Collecting it unconditionally puts the blink phases and the</span>
-                <span class="c1"># filter inventory into RenderResult.provenance. (An earlier</span>
+                <span class="c1"># Collecting it unconditionally puts the filter inventory into</span>
+                <span class="c1"># RenderResult.provenance (the blink phases moved to the compiled</span>
+                <span class="c1"># scene's meta when blinks became channels, an#88). (An earlier</span>
                 <span class="c1"># version of this comment claimed the metrics ledger stamps</span>
                 <span class="c1"># them; it does not — `SceneCapture.determinism` is declared</span>
                 <span class="c1"># and never populated, and no ledger row carries a determinism</span>
@@ -602,6 +603,11 @@
                 <span class="s2">"chromium_args"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">DETERMINISTIC_CHROMIUM_ARGS</span><span class="p">),</span>
                 <span class="s2">"x264_args"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">DETERMINISTIC_X264_ARGS</span><span class="p">),</span>
                 <span class="s2">"determinism"</span><span class="p">:</span> <span class="n">determinism</span><span class="p">,</span>
+                <span class="c1"># Per-entity blink phase (a pure function of the entity NAME):</span>
+                <span class="c1"># stamped by the compiler since blinks became channels (an#88),</span>
+                <span class="c1"># carried here so a renamed character is a visible provenance</span>
+                <span class="c1"># diff rather than an unexplained metric shift.</span>
+                <span class="s2">"blink_phases"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">scene_json</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">blink_phases</span><span class="p">),</span>
             <span class="p">},</span>
         <span class="p">)</span></div>
 </div>

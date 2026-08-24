@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.characters.idle &mdash; an 0.1.49 documentation</title>
+  <title>an.characters.idle &mdash; an 0.1.50 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1190fe33"></script>
+      <script src="../../../_static/documentation_options.js?v=f2b49961"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -192,6 +192,12 @@
 </ul>
 <p>The functions return <a class="reference internal" href="../characters.html#an.characters.IdleAnimation" title="an.characters.IdleAnimation"><code class="xref py py-class docutils literal notranslate"><span class="pre">an.characters.IdleAnimation</span></code></a> instances ready
 to drop into <code class="xref py py-attr docutils literal notranslate"><span class="pre">CharacterDescriptor.animations</span></code>.</p>
+<p><strong>None of this drives what renders today.</strong> The blink you see is compiled by
+<code class="docutils literal notranslate"><span class="pre">an.adapters.cutout.compile._add_blink_clips</span></code> (an#88) from a fixed
+entity-name-phase schedule (period 4.0 s); descriptor <code class="docutils literal notranslate"><span class="pre">animations</span></code> are
+seeded by <code class="docutils literal notranslate"><span class="pre">model_post_init</span></code> and consumed by nothing on the render path until
+<code class="docutils literal notranslate"><span class="pre">PlayAction</span></code> resolution lands (an#7). <code class="docutils literal notranslate"><span class="pre">random_blink_schedule</span></code> has no
+caller either — it is the seeded alternative that resolution may adopt.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">breath_animation</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">name</span>
 <span class="go">'idle_breath'</span>
@@ -246,8 +252,9 @@ For linear: linear interpolation between bracketing frames.</p>
 <dt class="sig sig-object py" id="an.characters.idle.random_blink_schedule">
 <span class="sig-prename descclassname"><span class="pre">an.characters.idle.</span></span><span class="sig-name descname"><span class="pre">random_blink_schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_gap_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_gap_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/characters/idle.html#random_blink_schedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.characters.idle.random_blink_schedule" title="Link to this definition"></a></dt>
 <dd><p>Return a sorted list of blink start times across <code class="docutils literal notranslate"><span class="pre">duration_s</span></code>.</p>
-<p>Used by the renderer to schedule spontaneous blinks. Gaps are uniform in
-<code class="docutils literal notranslate"><span class="pre">[min_gap_s,</span> <span class="pre">max_gap_s]</span></code>.</p>
+<p>A seeded schedule with uniform gaps in <code class="docutils literal notranslate"><span class="pre">[min_gap_s,</span> <span class="pre">max_gap_s]</span></code>. NOT
+what the renderer uses today (see the module docstring); kept as the
+candidate for descriptor-driven scheduling.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="n">random_blink_schedule</span><span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">all</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="mi">20</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">times</span><span class="p">)</span>
 <span class="go">True</span>
