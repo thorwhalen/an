@@ -261,7 +261,13 @@ def test_a_non_frame_aligned_numeric_set_still_fires(gale_store):
         mall={"characters": gale_store},
     )
     (ch,) = _channels(scene, "scale_x")
-    placed = scene.timeline.tracks[0].clips[0]
+    # By id, not position: blink clips sit first on the track (an#88).
+    placed = next(
+        p
+        for t in scene.timeline.tracks
+        for p in t.clips
+        if p.animation_id.startswith("__set__")
+    )
     assert placed.start_time == pytest.approx(1.02)
     assert placed.duration == pytest.approx(2.0 - 1.02)
     assert ch.keyframes[0].value == 2.0

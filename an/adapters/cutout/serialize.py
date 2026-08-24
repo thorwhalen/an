@@ -261,6 +261,14 @@ class CutoutSceneMetaJSON(_JSONModel):
     height: int = 1080
     duration: float = 0.0
     background: str = "#ffffff"
+    #: Per-entity blink phase in [0, 1), a pure function of the entity NAME
+    #: (an#88). Stamped by the compiler — which now emits blinks as channels —
+    #: and inert to the runtime. It is recorded because renaming a corpus
+    #: character silently re-phases every blink and moves every pixel metric;
+    #: a stamped phase turns that into a visible diff instead of an
+    #: unexplained metric shift. (The runtime's determinism probe used to
+    #: carry this; the fact moved with the mechanism.)
+    blink_phases: dict[str, float] = Field(default_factory=dict)
 
 
 class CutoutSceneJSON(_JSONModel):

@@ -376,8 +376,9 @@ class CutoutRenderer:
                     )
 
                 # Probed on EVERY render, judged only when enforcement is on.
-                # Collecting it unconditionally puts the blink phases and the
-                # filter inventory into RenderResult.provenance. (An earlier
+                # Collecting it unconditionally puts the filter inventory into
+                # RenderResult.provenance (the blink phases moved to the compiled
+                # scene's meta when blinks became channels, an#88). (An earlier
                 # version of this comment claimed the metrics ledger stamps
                 # them; it does not — `SceneCapture.determinism` is declared
                 # and never populated, and no ledger row carries a determinism

@@ -41,7 +41,7 @@ Python surface (everything in `an.__all__`):
 - Verify (in `an.verify`): `LayoutLintVerifier`, `HumanInTheLoopVerifier`, `MediaQualityVerifier`, `VisionLMVerifier`.
 - Orchestrate (in `an.orchestrate`): `orchestrate(project_dir, *, tts="offline", lipsync="offline", parallel=None, ...) -> OrchestratorReport`, `iterate(project_dir, instruction) -> IterateResult`. `tts` and `lipsync` accept either provider-name strings or instances — pass a `WordTimingsLipSync(...)` to inject pre-computed timings instead of running whisper.
 
-Backends registered: `cutout` (real, with face rig + emotion-driven eyebrows + procedural blinks + bezier mouth shapes per viseme + environment backdrops), `manim` (works if `manim` installed), `remotion` (skeleton), `whiteboard` (stub).
+Backends registered: `cutout` (real, with face rig + emotion-driven eyebrows + compiled blinks (an eyelid swap where the rig has closed-eye art, a squash otherwise — an authored eye channel overrides them) + bezier mouth shapes per viseme + swap channels + environment backdrops), `manim` (works if `manim` installed), `remotion` (skeleton), `whiteboard` (stub).
 
 ## Markdown surface
 
