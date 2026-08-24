@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.channel &mdash; an 0.1.47 documentation</title>
+  <title>an.adapters.cutout.channel &mdash; an 0.1.48 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../../_static/documentation_options.js?v=b5e87a2a"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,14 +56,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
@@ -181,9 +178,30 @@
 <span class="sd">binary search to find the surrounding keyframes, applies the easing for that</span>
 <span class="sd">segment, and lerps between the two values.</span>
 
-<span class="sd">Phase 2A supports **numeric values only** (int / float). Vector values</span>
-<span class="sd">(positions as `(x, y)` pairs), color tweens, and string-attachment swaps</span>
-<span class="sd">arrive in 2B.</span>
+<span class="sd">**This module is the executable spec of ``runtime.js``'s ``evaluateChannel``**</span>
+<span class="sd">— the browser implementation must stay behaviourally identical, and</span>
+<span class="sd">``tests/test_cutout_channel_parity.py`` runs the real extracted JS against this</span>
+<span class="sd">one to pin it (the same harness pattern that pins ``wrapTime``).</span>
+
+<span class="sd">Two value classes, two rules:</span>
+
+<span class="sd">- **Numeric** (``int``/``float``, excluding ``bool``): true interpolation</span>
+<span class="sd">  through the segment's easing.</span>
+<span class="sd">- **Everything else** (strings — viseme codes, swap keys): the value holds</span>
+<span class="sd">  ``a`` for exactly ``[a.time, b.time)`` and switches at ``b.time``.</span>
+<span class="sd">  **Easing does not apply** — the snap compares ``t`` against ``b.time``</span>
+<span class="sd">  directly, never an eased or derived parameter, because each indirection was</span>
+<span class="sd">  measured wrong: an overshooting cubic-bezier easing crosses 1.0 mid-segment</span>
+<span class="sd">  (showing the *second* key early, or flapping A→B→A within one segment), and</span>
+<span class="sd">  even the raw ``(t - a.time) / span`` can round up to 1.0 while</span>
+<span class="sd">  ``t &lt; b.time``. The time comparison has no intermediate arithmetic, so step</span>
+<span class="sd">  semantics is a theorem here, not a convention. The easing is still</span>
+<span class="sd">  *validated* (an unknown spec raises) so a typo'd easing name stays loud on</span>
+<span class="sd">  every channel.</span>
+
+<span class="sd">``bool`` keyframe values are refused upstream by the compiler</span>
+<span class="sd">(``compile.py::_check_keyframe_value``): Python's ``isinstance(True, int)``</span>
+<span class="sd">would lerp what JS's ``typeof`` snaps.</span>
 
 <span class="sd">&gt;&gt;&gt; ch = Channel("a", "x", [Keyframe(0.0, 0.0), Keyframe(1.0, 10.0)])</span>
 <span class="sd">&gt;&gt;&gt; evaluate(ch, 0.5)</span>
@@ -192,6 +210,11 @@
 <span class="sd">0.0</span>
 <span class="sd">&gt;&gt;&gt; evaluate(ch, 99.0)  # after last → clamps to last value</span>
 <span class="sd">10.0</span>
+<span class="sd">&gt;&gt;&gt; sw = Channel("a", "hands", [Keyframe(0.0, "fist"), Keyframe(1.0, "open")])</span>
+<span class="sd">&gt;&gt;&gt; evaluate(sw, 0.999)  # holds the first key for the whole segment</span>
+<span class="sd">'fist'</span>
+<span class="sd">&gt;&gt;&gt; evaluate(sw, 1.0)  # switches exactly at the keyframe</span>
+<span class="sd">'open'</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -270,22 +293,25 @@
     <span class="k">if</span> <span class="n">span</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">b</span><span class="o">.</span><span class="n">value</span>
     <span class="n">u</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="o">/</span> <span class="n">span</span>
+    <span class="c1"># Validated for every segment (a typo'd easing name must raise on a swap</span>
+    <span class="c1"># channel too), but *applied* only to numeric values — see module docstring.</span>
     <span class="n">eased</span> <span class="o">=</span> <span class="n">apply_easing</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">easing</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_lerp</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">eased</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">_is_numeric</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_is_numeric</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="n">eased</span>
+    <span class="c1"># Non-numeric: snap on TIME, never on the (eased or raw) parameter. The</span>
+    <span class="c1"># value is `a` for exactly [a.time, b.time) — comparing `u &gt;= 1.0` here</span>
+    <span class="c1"># would be one float-division away from wrong: (t - a.time) / span can</span>
+    <span class="c1"># round UP to 1.0 while t &lt; b.time, showing `b` one representable float</span>
+    <span class="c1"># early (found by the an#86 adversarial review). The time comparison has</span>
+    <span class="c1"># no intermediate arithmetic, so the boundary is exact.</span>
+    <span class="k">return</span> <span class="n">b</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="n">b</span><span class="o">.</span><span class="n">time</span> <span class="k">else</span> <span class="n">a</span><span class="o">.</span><span class="n">value</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_lerp</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Linear interpolation between ``a`` and ``b`` at parameter ``t``.</span>
-
-<span class="sd">    Numeric values get true interpolation. Non-numeric values (strings, enums</span>
-<span class="sd">    used by viseme channels) snap: stay at ``a`` until ``t`` reaches the next</span>
-<span class="sd">    keyframe (``t &gt;= 1.0``). Pair non-numeric channels with ``easing="step"``</span>
-<span class="sd">    so the snap happens at the keyframe boundary.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span>
-    <span class="k">return</span> <span class="n">b</span> <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="k">else</span> <span class="n">a</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_numeric</span><span class="p">(</span><span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""True for values that interpolate. ``bool`` deliberately does not:</span>
+<span class="sd">    Python's ``bool ⊂ int`` would lerp what JS's ``typeof`` snaps."""</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
 </pre></div>
 
            </div>

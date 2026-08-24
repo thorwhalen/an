@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.serialize &mdash; an 0.1.47 documentation</title>
+  <title>an.adapters.cutout.serialize &mdash; an 0.1.48 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../../_static/documentation_options.js?v=b5e87a2a"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,14 +56,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
@@ -177,11 +174,23 @@
   <h1>Source code for an.adapters.cutout.serialize</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""JSON contract between the Python compiler and the (future) JS runtime.</span>
 
-<span class="sd">These Pydantic models describe **exactly** the JSON shape the Phase 2B</span>
-<span class="sd">PixiJS runtime will consume. Phase 2A produces these objects via</span>
-<span class="sd">``compile_shot``; Phase 2B reads them. The schema is deliberately separate</span>
-<span class="sd">from the cutout-internal Python types (`scene.Node`, `clip.Clip`, etc.) so</span>
-<span class="sd">the Python side can evolve internally without breaking the runtime contract.</span>
+<span class="sd">These Pydantic models describe **exactly** the JSON shape the PixiJS runtime</span>
+<span class="sd">consumes — nothing more. ``compile_shot`` produces these objects; the runtime</span>
+<span class="sd">reads them. The schema is deliberately separate from the cutout-internal</span>
+<span class="sd">Python evaluation types (`clip.Clip`, `channel.Channel`) so the Python side</span>
+<span class="sd">can evolve internally without breaking the runtime contract.</span>
+
+<span class="sd">This file used to carry a sketched Spine-flavoured swap vocabulary</span>
+<span class="sd">(``SkinJSON``, ``RigJSON``, ``CutoutSceneJSON.rigs``, ``SlotJSON``/</span>
+<span class="sd">``NodeJSON.slots``, ``current_attachment``) that nothing populated and nothing</span>
+<span class="sd">read — deleted in an#86 so the *real* swap mechanism (``VisualJSON``'s</span>
+<span class="sd">per-node asset maps driven by step channels) is the only one the contract</span>
+<span class="sd">describes. A few declared-but-unwired scalars remain (``PlacedClipJSON.blend_in``</span>
+<span class="sd">/ ``blend_out`` — recorded, never applied; ``VisualJSON.texture_id``): the same</span>
+<span class="sd">debt class at smaller scale, kept only because they are field-shaped</span>
+<span class="sd">placeholders rather than a parallel *vocabulary* for a capability that shipped</span>
+<span class="sd">elsewhere. Do not add more; a new field needs its producer and its consumer in</span>
+<span class="sd">the same change.</span>
 
 <span class="sd">&gt;&gt;&gt; j = CutoutSceneJSON(</span>
 <span class="sd">...     meta={"fps": 30, "width": 1920, "height": 1080, "duration": 5.0},</span>
@@ -279,21 +288,7 @@
     <span class="n">height</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">50.0</span>
     <span class="n">anchor_x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
     <span class="n">anchor_y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
-    <span class="n">color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"#888888"</span>
-    <span class="n">current_attachment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
-
-
-
-<div class="viewcode-block" id="SlotJSON">
-<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/serialize.html#an.adapters.cutout.SlotJSON">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SlotJSON</span><span class="p">(</span><span class="n">_JSONModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Attachment point on a node."""</span>
-
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">rotation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">current_attachment</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"#888888"</span></div>
 
 
 
@@ -305,33 +300,7 @@
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">transform</span><span class="p">:</span> <span class="n">TransformJSON</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">TransformJSON</span><span class="p">)</span>
     <span class="n">visual</span><span class="p">:</span> <span class="n">VisualJSON</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">slots</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SlotJSON</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">"NodeJSON"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
-
-
-
-<span class="c1"># -----------------------------------------------------------------------------</span>
-<span class="c1"># Rigs (per-character skin definitions; mostly a 2B+ concern, sketched here)</span>
-<span class="c1"># -----------------------------------------------------------------------------</span>
-
-
-<div class="viewcode-block" id="SkinJSON">
-<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/serialize.html#an.adapters.cutout.SkinJSON">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SkinJSON</span><span class="p">(</span><span class="n">_JSONModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""A named skin: slot path → attachment dict."""</span>
-
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">attachments</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="RigJSON">
-<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/serialize.html#an.adapters.cutout.RigJSON">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RigJSON</span><span class="p">(</span><span class="n">_JSONModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Rig definition for one character: root node path + skins."""</span>
-
-    <span class="n">root_node</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">skins</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SkinJSON</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 
 
 
@@ -511,7 +480,6 @@
     <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.1.0"</span>
     <span class="n">meta</span><span class="p">:</span> <span class="n">CutoutSceneMetaJSON</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">CutoutSceneMetaJSON</span><span class="p">)</span>
     <span class="n">scene</span><span class="p">:</span> <span class="n">NodeJSON</span>
-    <span class="n">rigs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RigJSON</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">timeline</span><span class="p">:</span> <span class="n">TimelineJSON</span>
     <span class="n">assets</span><span class="p">:</span> <span class="n">AssetsJSON</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">AssetsJSON</span><span class="p">)</span>

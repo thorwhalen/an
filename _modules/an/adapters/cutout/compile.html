@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.47 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.48 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../../_static/documentation_options.js?v=b5e87a2a"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,14 +56,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
@@ -231,7 +228,6 @@
     <span class="n">KeyframeJSON</span><span class="p">,</span>
     <span class="n">NodeJSON</span><span class="p">,</span>
     <span class="n">PlacedClipJSON</span><span class="p">,</span>
-    <span class="n">SlotJSON</span><span class="p">,</span>
     <span class="n">TimelineJSON</span><span class="p">,</span>
     <span class="n">TrackJSON</span><span class="p">,</span>
     <span class="n">TransformJSON</span><span class="p">,</span>
@@ -239,8 +235,6 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CHARACTER_DOCUMENT_KIND</span><span class="p">,</span>
-    <span class="n">MOUTH_SHAPES</span><span class="p">,</span>
-    <span class="n">REQUIRED_PARTS</span><span class="p">,</span>
     <span class="n">VISEME_CHANNEL</span><span class="p">,</span>
     <span class="n">Attachment</span><span class="p">,</span>
     <span class="n">Bone</span><span class="p">,</span>
@@ -310,14 +304,28 @@
         <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="c1"># `rotation_rad` is an accepted alias for `rotation` in the runtime's</span>
-    <span class="c1"># property switch and in `pose.py`; it is not a schema field, so it has to</span>
-    <span class="c1"># be added here rather than derived.</span>
+    <span class="c1"># property switch; it is not a schema field, so it has to be added here</span>
+    <span class="c1"># rather than derived.</span>
     <span class="n">rest</span><span class="p">[</span><span class="s2">"rotation_rad"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rest</span><span class="p">[</span><span class="s2">"rotation"</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">rest</span>
 
 
 <span class="c1">#: See :func:`_property_rest_values`.</span>
 <span class="n">_PROPERTY_REST_VALUES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">_property_rest_values</span><span class="p">()</span>
+
+
+<span class="c1">#: Every property name the JS runtime's ``applyProperty`` switch implements —</span>
+<span class="c1">#: the numeric transform vocabulary (the rest-value SSOT above) plus the</span>
+<span class="c1">#: discrete channel name(s) the compiler emits. This is the Python side of the</span>
+<span class="c1">#: two-evaluator drift gate: ``tests/test_loud_discards.py`` extracts the</span>
+<span class="c1">#: runtime's actual switch cases and asserts exact equality with this set, in</span>
+<span class="c1">#: both directions. It replaced ``pose.py``'s allow-list when the Python</span>
+<span class="c1">#: applier was deleted (an#86) — the compiler, not a dead applier, is what the</span>
+<span class="c1">#: runtime must agree with. The swap generalisation (an#87) will shrink this</span>
+<span class="c1">#: to the numeric vocabulary when ``viseme`` stops being a static case.</span>
+<span class="n">RUNTIME_APPLIED_PROPERTIES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">_PROPERTY_REST_VALUES</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span>
+    <span class="n">VISEME_CHANNEL</span>
+<span class="p">}</span>
 
 
 <div class="viewcode-block" id="CutoutCompileError">
@@ -818,7 +826,6 @@
     <span class="n">char_node</span> <span class="o">=</span> <span class="n">NodeJSON</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">transform</span><span class="o">=</span><span class="n">TransformJSON</span><span class="p">(),</span>
-        <span class="n">slots</span><span class="o">=</span><span class="p">{</span><span class="s2">"root"</span><span class="p">:</span> <span class="n">SlotJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"root"</span><span class="p">)},</span>
         <span class="n">children</span><span class="o">=</span><span class="n">children</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="s2">"head"</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
@@ -828,7 +835,6 @@
         <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">char_node</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">"head"</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="n">child</span><span class="o">.</span><span class="n">slots</span><span class="p">[</span><span class="s2">"mouth"</span><span class="p">]</span> <span class="o">=</span> <span class="n">SlotJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"mouth"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
             <span class="c1"># Hair: rounded band atop the head.</span>
             <span class="n">child</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">NodeJSON</span><span class="p">(</span>
@@ -1225,7 +1231,6 @@
     <span class="k">return</span> <span class="n">NodeJSON</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">transform</span><span class="o">=</span><span class="n">TransformJSON</span><span class="p">(),</span>
-        <span class="n">slots</span><span class="o">=</span><span class="p">{</span><span class="s2">"root"</span><span class="p">:</span> <span class="n">SlotJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"root"</span><span class="p">)},</span>
         <span class="n">children</span><span class="o">=</span><span class="n">children_of</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="p">[]),</span>
     <span class="p">)</span>
 
@@ -1321,6 +1326,27 @@
     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unsupported FlatAction.action type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_keyframe_value</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prop</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refuse keyframe values the two evaluators would disagree on.</span>
+
+<span class="sd">    ``bool`` is the trap: Python's ``isinstance(True, int)`` would lerp it while</span>
+<span class="sd">    JS's ``typeof true === 'boolean'`` snaps it — a channel whose value</span>
+<span class="sd">    interpolates in the spec and snaps in the browser. ``None`` is the other:</span>
+<span class="sd">    the Python spec would carry it into the pose while the runtime drops null</span>
+<span class="sd">    values (``runtime.js`` ``evaluateTimeline``), so the two sides render</span>
+<span class="sd">    different pictures. Neither has a meaning worth keeping: a discrete state</span>
+<span class="sd">    is a string key, a numeric one is an ``int``/``float``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"keyframe on </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2">:</span><span class="si">{</span><span class="n">prop</span><span class="si">!r}</span><span class="s2"> has value </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">; keyframe "</span>
+            <span class="s2">"values must be numbers (int/float) or string keys — bool and None "</span>
+            <span class="s2">"evaluate differently in the Python spec and the JS runtime, so "</span>
+            <span class="s2">"the compiler refuses them rather than pick a side silently."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_build_anim_for</span><span class="p">(</span><span class="n">flat</span><span class="p">:</span> <span class="n">FlatAction</span><span class="p">,</span> <span class="n">anim_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnimationClipJSON</span><span class="p">:</span>
     <span class="n">action</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">TweenAction</span><span class="p">):</span>
@@ -1328,6 +1354,10 @@
             <span class="n">action</span><span class="o">.</span><span class="n">from_value</span>
             <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">from_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="n">_rest_value_for</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">_check_keyframe_value</span><span class="p">(</span><span class="n">from_value</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="p">)</span>
+        <span class="n">_check_keyframe_value</span><span class="p">(</span>
+            <span class="n">action</span><span class="o">.</span><span class="n">to_value</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">property</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
@@ -1348,6 +1378,7 @@
             <span class="p">],</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">SetAction</span><span class="p">):</span>
+        <span class="n">_check_keyframe_value</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">property</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
             <span class="n">duration</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>

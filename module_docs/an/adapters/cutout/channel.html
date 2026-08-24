@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.channel &mdash; an 0.1.47 documentation</title>
+  <title>an.adapters.cutout.channel &mdash; an 0.1.48 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../../_static/documentation_options.js?v=b5e87a2a"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -64,14 +64,11 @@
 <li class="toctree-l1"><a class="reference internal" href="compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fidelity.html">an.adapters.cutout.fidelity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pose.html">an.adapters.cutout.pose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="runtime_files.html">an.adapters.cutout.runtime_files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="serialize.html">an.adapters.cutout.serialize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="supersample.html">an.adapters.cutout.supersample</a></li>
 <li class="toctree-l1"><a class="reference internal" href="timeline.html">an.adapters.cutout.timeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="transform.html">an.adapters.cutout.transform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../manim_adapter.html">an.adapters.manim_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../remotion_adapter.html">an.adapters.remotion_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../whiteboard.html">an.adapters.whiteboard</a></li>
@@ -188,9 +185,29 @@
 <p>A channel holds a sorted list of <cite>Keyframe`s. ``evaluate(channel, t)`</cite> does a
 binary search to find the surrounding keyframes, applies the easing for that
 segment, and lerps between the two values.</p>
-<p>Phase 2A supports <strong>numeric values only</strong> (int / float). Vector values
-(positions as <cite>(x, y)</cite> pairs), color tweens, and string-attachment swaps
-arrive in 2B.</p>
+<p><strong>This module is the executable spec of ``runtime.js``’s ``evaluateChannel``</strong>
+— the browser implementation must stay behaviourally identical, and
+<code class="docutils literal notranslate"><span class="pre">tests/test_cutout_channel_parity.py</span></code> runs the real extracted JS against this
+one to pin it (the same harness pattern that pins <code class="docutils literal notranslate"><span class="pre">wrapTime</span></code>).</p>
+<p>Two value classes, two rules:</p>
+<ul class="simple">
+<li><p><strong>Numeric</strong> (<code class="docutils literal notranslate"><span class="pre">int</span></code>/<code class="docutils literal notranslate"><span class="pre">float</span></code>, excluding <code class="docutils literal notranslate"><span class="pre">bool</span></code>): true interpolation
+through the segment’s easing.</p></li>
+<li><p><strong>Everything else</strong> (strings — viseme codes, swap keys): the value holds
+<code class="docutils literal notranslate"><span class="pre">a</span></code> for exactly <code class="docutils literal notranslate"><span class="pre">[a.time,</span> <span class="pre">b.time)</span></code> and switches at <code class="docutils literal notranslate"><span class="pre">b.time</span></code>.
+<strong>Easing does not apply</strong> — the snap compares <code class="docutils literal notranslate"><span class="pre">t</span></code> against <code class="docutils literal notranslate"><span class="pre">b.time</span></code>
+directly, never an eased or derived parameter, because each indirection was
+measured wrong: an overshooting cubic-bezier easing crosses 1.0 mid-segment
+(showing the <em>second</em> key early, or flapping A→B→A within one segment), and
+even the raw <code class="docutils literal notranslate"><span class="pre">(t</span> <span class="pre">-</span> <span class="pre">a.time)</span> <span class="pre">/</span> <span class="pre">span</span></code> can round up to 1.0 while
+<code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">&lt;</span> <span class="pre">b.time</span></code>. The time comparison has no intermediate arithmetic, so step
+semantics is a theorem here, not a convention. The easing is still
+<em>validated</em> (an unknown spec raises) so a typo’d easing name stays loud on
+every channel.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code> keyframe values are refused upstream by the compiler
+(<code class="docutils literal notranslate"><span class="pre">compile.py::_check_keyframe_value</span></code>): Python’s <code class="docutils literal notranslate"><span class="pre">isinstance(True,</span> <span class="pre">int)</span></code>
+would lerp what JS’s <code class="docutils literal notranslate"><span class="pre">typeof</span></code> snaps.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ch</span> <span class="o">=</span> <span class="n">Channel</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="p">[</span><span class="n">Keyframe</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">Keyframe</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
 <span class="go">5.0</span>
@@ -198,6 +215,11 @@ arrive in 2B.</p>
 <span class="go">0.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="mf">99.0</span><span class="p">)</span>  <span class="c1"># after last → clamps to last value</span>
 <span class="go">10.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sw</span> <span class="o">=</span> <span class="n">Channel</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"hands"</span><span class="p">,</span> <span class="p">[</span><span class="n">Keyframe</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"fist"</span><span class="p">),</span> <span class="n">Keyframe</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="s2">"open"</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate</span><span class="p">(</span><span class="n">sw</span><span class="p">,</span> <span class="mf">0.999</span><span class="p">)</span>  <span class="c1"># holds the first key for the whole segment</span>
+<span class="go">'fist'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate</span><span class="p">(</span><span class="n">sw</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># switches exactly at the keyframe</span>
+<span class="go">'open'</span>
 </pre></div>
 </div>
 <dl class="py class">

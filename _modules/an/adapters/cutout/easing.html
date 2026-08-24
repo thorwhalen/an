@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.easing &mdash; an 0.1.47 documentation</title>
+  <title>an.adapters.cutout.easing &mdash; an 0.1.48 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../../_static/documentation_options.js?v=b5e87a2a"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,14 +56,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/pose.html">an.adapters.cutout.pose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/transform.html">an.adapters.cutout.transform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
@@ -285,7 +282,17 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">by</span><span class="p">(</span><span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">return</span> <span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">u</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">u</span> <span class="o">*</span> <span class="n">cy1</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">u</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span> <span class="o">*</span> <span class="n">u</span> <span class="o">*</span> <span class="n">cy2</span> <span class="o">+</span> <span class="n">u</span><span class="o">**</span><span class="mi">3</span>
 
-    <span class="c1"># Newton's method to find u such that bx(u) = t</span>
+    <span class="c1"># Newton's method to find u such that bx(u) = t.</span>
+    <span class="c1">#</span>
+    <span class="c1"># Structurally IDENTICAL to runtime.js::cubicBezier on purpose: always 8</span>
+    <span class="c1"># iterations, break only on a degenerate derivative, clamp each step. This</span>
+    <span class="c1"># function is the spec of that port, and the two are compared bit-for-bit</span>
+    <span class="c1"># by the parity battery — an earlier version had an extra</span>
+    <span class="c1"># |u_new - u| &lt; 1e-9 early-convergence break the JS side lacked, which</span>
+    <span class="c1"># left the two a ULP apart in `eased`; harmless for the snap rule, but a</span>
+    <span class="c1"># numeric channel lerping large magnitudes amplifies a ULP of easing by</span>
+    <span class="c1"># (b - a), so "behaviourally identical" was false at the 1e9 scale (found</span>
+    <span class="c1"># by the an#86 adversarial review; the loops now match).</span>
     <span class="n">u</span> <span class="o">=</span> <span class="n">t</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
         <span class="n">f</span> <span class="o">=</span> <span class="n">bx</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">t</span>
@@ -298,9 +305,6 @@
             <span class="n">u_new</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">elif</span> <span class="n">u_new</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">u_new</span> <span class="o">=</span> <span class="mf">1.0</span>
-        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">u_new</span> <span class="o">-</span> <span class="n">u</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-9</span><span class="p">:</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="n">u_new</span>
-            <span class="k">break</span>
         <span class="n">u</span> <span class="o">=</span> <span class="n">u_new</span>
     <span class="k">return</span> <span class="n">by</span><span class="p">(</span><span class="n">u</span><span class="p">)</span></div>
 

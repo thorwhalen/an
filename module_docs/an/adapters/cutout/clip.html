@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.clip &mdash; an 0.1.47 documentation</title>
+  <title>an.adapters.cutout.clip &mdash; an 0.1.48 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=5df2d9e8"></script>
+      <script src="../../../../_static/documentation_options.js?v=b5e87a2a"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -58,20 +58,19 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.clip</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.clip.Clip"><code class="docutils literal notranslate"><span class="pre">Clip</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.clip.LoopMode"><code class="docutils literal notranslate"><span class="pre">LoopMode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.clip.Pose"><code class="docutils literal notranslate"><span class="pre">Pose</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.clip.evaluate"><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.clip.merge_poses"><code class="docutils literal notranslate"><span class="pre">merge_poses()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fidelity.html">an.adapters.cutout.fidelity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pose.html">an.adapters.cutout.pose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="render.html">an.adapters.cutout.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="runtime_files.html">an.adapters.cutout.runtime_files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scene.html">an.adapters.cutout.scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="serialize.html">an.adapters.cutout.serialize</a></li>
 <li class="toctree-l1"><a class="reference internal" href="supersample.html">an.adapters.cutout.supersample</a></li>
 <li class="toctree-l1"><a class="reference internal" href="timeline.html">an.adapters.cutout.timeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="transform.html">an.adapters.cutout.transform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../manim_adapter.html">an.adapters.manim_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../remotion_adapter.html">an.adapters.remotion_adapter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../whiteboard.html">an.adapters.whiteboard</a></li>
@@ -215,10 +214,31 @@ reusable unit (e.g. <code class="docutils literal notranslate"><span class="pre"
 <dd><p>How a clip behaves past its natural duration.</p>
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.clip.Pose">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.clip.</span></span><span class="sig-name descname"><span class="pre">Pose</span></span><a class="headerlink" href="#an.adapters.cutout.clip.Pose" title="Link to this definition"></a></dt>
+<dd><p>Mapping of (target_path, property_name) -&gt; value — the universal output of
+animation evaluation. Application happens in <code class="docutils literal notranslate"><span class="pre">runtime.js</span></code> (<code class="docutils literal notranslate"><span class="pre">applyPose</span></code>);
+the Python side only ever <em>produces</em> poses (an#86 deleted the Python
+applier, which structurally could not apply swap or alpha values).</p>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>], <code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="an.adapters.cutout.clip.evaluate">
 <span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.clip.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.adapters.cutout.clip.Clip" title="an.adapters.cutout.clip.Clip"><span class="pre">Clip</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/clip.html#evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.clip.evaluate" title="Link to this definition"></a></dt>
 <dd><p>Evaluate <code class="docutils literal notranslate"><span class="pre">clip</span></code> at time <code class="docutils literal notranslate"><span class="pre">t</span></code>, returning a <cite>Pose</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.clip.merge_poses">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.clip.</span></span><span class="sig-name descname"><span class="pre">merge_poses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">poses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/clip.html#merge_poses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.clip.merge_poses" title="Link to this definition"></a></dt>
+<dd><p>Merge multiple poses with <strong>override semantics</strong> (later wins per key).</p>
+<p>Used by the timeline to combine concurrent clips on the same target.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">merge_poses</span><span class="p">({(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">):</span> <span class="mf">1.0</span><span class="p">},</span> <span class="p">{(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">):</span> <span class="mf">2.0</span><span class="p">,</span> <span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">):</span> <span class="mf">3.0</span><span class="p">})</span>
+<span class="go">{('a', 'x'): 2.0, ('a', 'y'): 3.0}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
