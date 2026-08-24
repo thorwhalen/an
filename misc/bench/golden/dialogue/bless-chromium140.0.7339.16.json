@@ -1,46 +1,46 @@
 {
-  "blessed_at": "2026-08-24T20:19:00Z",
+  "blessed_at": "2026-08-24T21:22:41Z",
   "chromium_build": "140.0.7339.16",
   "criterion": "sha256 of the DECODED RGB array, never the file bytes: Chromium 1187 -> 1223 changes every PNG file and zero pixels.",
   "fps": 24,
   "frames": [
     {
-      "bytes": 1451,
+      "bytes": 1544,
       "file": "f0000-chromium140.0.7339.16.png",
       "frame_key": "f0000",
       "index": 0,
       "local_index": 0,
-      "sha256": "92ff72d874d3bfb6577258638bbd80bdb86997e6a8ce14369534bac0333f6055",
+      "sha256": "6277a96037ac765963714ee3d28df54450e0200963d8f99a878ca2db248ef21d",
       "shot_id": "line",
       "time": 0.0
     },
     {
-      "bytes": 1536,
+      "bytes": 1451,
       "file": "f0014-chromium140.0.7339.16.png",
       "frame_key": "f0014",
       "index": 14,
       "local_index": 14,
-      "sha256": "f8f04634edef1da15f4e786fda4ef2a8c224c7dccc6ed697dfbddb467a26cad1",
+      "sha256": "a6dd06e95c3035b58b34f7415cc28ea9b7358af6136046e19b27682f1e863265",
       "shot_id": "line",
       "time": 0.6
     }
   ],
   "git": {
-    "branch": "wave6-pr-a",
+    "branch": "wave6-pr-b",
     "dirty": true,
-    "sha": "78fc88f18b5f853bb6f03e396706dc868e8a6350"
+    "sha": "d2054c8acbefcbae4ea74cc5fad28036855be018"
   },
-  "reason": "an#96: new corpus scene; its second golden (frame 14) sits inside the spoken line, where today's condenser shows C having dropped the D and A of 'shape' inside its window \u2014 the frame PR-B's vote will move; head lifted 34 px above rest so the mouth clears the torso",
+  "reason": "an#97: the condenser holds and votes \u2014 frame 14 shows A, the winner of its 0.14 s window (124 px moved from the C the old drop-not-hold condenser showed, which had dropped the D and A after it); frame 0 shows E, the winner of the first window after the anticipation lead pulled the line's opening cues to 0 (129 px moved from the rest the old path showed there)",
   "removed": [],
   "resolution": [
     320,
     240
   ],
   "scene": "dialogue",
-  "scene_contract_sha256": "32de75f7a9a14dacced02405d67419f0c9367a8dee651ba4cc429534dcb91572",
+  "scene_contract_sha256": "769c84040690d18e0017e37e4fc3939945238e1d70c163fd2cf17c2747cd05b1",
   "shot_ids": [
     "line"
   ],
   "source": "misc/bench/corpus/dialogue",
-  "what_moves": "the mouth mid-line: frame 14 sits on the `h`/`a` of 'shape' and TODAY'S condenser shows `C` there, having dropped the `D` and `A` that follow inside its 0.14 s window \u2014 the drop-instead-of-hold defect PR-B (an#97) replaces with a vote, which is what will move this frame. The head is lifted 34 px above its rest by an absolute `set` so the placeholder rig's mouth clears the torso (127 px differ between the pair). The second golden sits INSIDE the spoken interval, which no other corpus scene does: `single_character` samples after its line ends and `promote_demo` renders mute in the bench (no visemes in its IR, by design). The visemes are the offline provider's, stamped into the committed ir/scene.json; the bench renders with auto_audio=False and reads them from there."
+  "what_moves": "the mouth mid-line: frame 14 sits on the `h`/`a` of 'shape' and shows `A`, the winner of its 0.14 s window under the an#97 vote; the old drop-not-hold condenser showed `C` there, having dropped the `D` and `A` that followed inside the window. Frame 0 shows `E` \u2014 the winner of the first window, after the lead pulled the line's opening cues to 0 \u2014 where the old path showed the rest. The head is lifted 34 px above its rest by an absolute `set` so the placeholder rig's mouth clears the torso. The second golden sits INSIDE the spoken interval; `single_character`'s second golden samples after its line ends (its first, at t=0, is on the led first shape) and `promote_demo` renders mute in the bench (no visemes in its IR, by design). The visemes are the offline provider's, stamped into the committed ir/scene.json; the bench renders with auto_audio=False and reads them from there."
 }

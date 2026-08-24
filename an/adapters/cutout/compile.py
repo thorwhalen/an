@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from an.base import TRANSFORM_PROPERTIES, swap_set_name_problem
+from an.adapters.cutout.coarticulate import coarticulate
 from an.characters.play import (
     BoneTrack,
     PlayResolutionError,
@@ -121,8 +122,18 @@ def _palette_for(entity_id: str) -> tuple[str, str, str]:
     return _CHARACTER_PALETTES[idx]
 
 
-# Cap viseme keyframe density to ~7Hz; reduces "twitchy" mouth at full speed.
-_MIN_VISEME_GAP_S: float = 0.14
+#: Co-articulation on/off (an#97). ON is the product; OFF reproduces the
+#: pre-#97 mouth CHOICE — the raw provider track thinned by the old drop-not-hold
+#: condenser — over the new frame-ceiled clip window (so not byte-for-byte the
+#: old emission: OFF still closes the mouth after a line) and exists so the `lipsync-coarticulation` demo and a test can
+#: render the two side by side. Not a RenderContext knob: nobody should ship
+#: the old behaviour, and a module flag rebound for one render is the shape
+#: the bench's levers already use.
+COARTICULATION_ENABLED: bool = True
+
+#: The pre-#97 minimum gap, kept ONLY for the OFF path above (the ON path's
+#: hold is `coarticulate.DEFAULT_MIN_HOLD_S`, the same number until measured).
+_LEGACY_MIN_VISEME_GAP_S: float = 0.14
 
 #: The procedural (drawn) mouth's swap vocabulary, DECLARED as data on its
 #: visual exactly as the runtime declares it (`g._anDrawSets = {viseme: ...}`)
@@ -595,6 +606,7 @@ def compile_shot(
         tracks,
         mall=mall,
         vocab=vocab,
+        fps=fps,
     )
     # Blinks (an#88): compiled per eye, ahead of everything authored.
     blink_phases = _add_blink_clips(
@@ -2040,9 +2052,18 @@ def _add_viseme_clips(
     *,
     mall: Mapping[str, Mapping] | None = None,
     vocab: _SwapVocabulary | None = None,
+    fps: int = 30,
 ) -> None:
     """For each dialogue line with a viseme_track, emit a step swap channel on
     every node of the speaker that can apply the ``viseme`` set.
+
+    The provider's raw track goes through the co-articulation passes first
+    (`an.adapters.cutout.coarticulate`, an#97): duplicates merged, sub-frame
+    tongue shapes dropped, every shape led by two frames, a decay before rest,
+    and a minimum hold that HOLDS AND VOTES. The old condenser here dropped
+    every key inside its 0.14 s window, so a consonant cluster collapsed to
+    whichever shape arrived first (epic #9 defect 5b). ``fps`` is what "one
+    frame" means to the symbolic pass.
 
     Side-effects ``animations`` (adds named clips) and ``tracks`` (appends to
     or creates the speaker's track).
@@ -2080,7 +2101,17 @@ def _add_viseme_clips(
     """
     face_baked = _baked_face_speakers(shot, mall)
     track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
-    for i, line in enumerate(shot.dialogue):
+    # Emit in TIME order, keeping each line's authored index for its ids: the
+    # frame-ceiled window of one line can overlap the next line's first frame
+    # on the same track, and the runtime resolves that by clip order (later
+    # wins) — so a dialogue list authored out of order would show line 1's
+    # rest over line 2's opening shape for one frame (an#97 review). In-order
+    # lists are emitted exactly as before.
+    ordered = sorted(
+        enumerate(shot.dialogue),
+        key=lambda p: (p[1].start if p[1].start is not None else math.inf, p[0]),
+    )
+    for i, line in ordered:
         if line.viseme_track is None or not line.viseme_track.keyframes:
             continue
         if line.start is None or line.duration is None:
@@ -2110,18 +2141,24 @@ def _add_viseme_clips(
             )
             continue
 
-        # Build viseme keyframes (step-easing) — but cap density so adjacent
-        # keyframes are at least _MIN_VISEME_GAP_S apart. Reduces the
-        # "twitchy" look of per-character distribution at high densities.
         raw = [
             (float(kf.time), str(kf.viseme).upper())
             for kf in line.viseme_track.keyframes
         ]
-        condensed: list[tuple[float, str]] = []
-        for t, v in raw:
-            if condensed and (t - condensed[-1][0]) < _MIN_VISEME_GAP_S:
-                continue
-            condensed.append((t, v))
+        condensed: list[tuple[float, str]]
+        if COARTICULATION_ENABLED:
+            condensed = [
+                (c.time, c.code)
+                for c in coarticulate(raw, fps=fps, end=float(line.duration))
+            ]
+        else:
+            # The pre-#97 condenser, verbatim: a key inside the window is
+            # DROPPED, so the shape that arrived first owns the window.
+            condensed = []
+            for t, v in raw:
+                if condensed and (t - condensed[-1][0]) < _LEGACY_MIN_VISEME_GAP_S:
+                    continue
+                condensed.append((t, v))
 
         for target in mouth_paths:
             mapped = set(vocab.node_sets[target][VISEME_CHANNEL])
@@ -2162,10 +2199,18 @@ def _add_viseme_clips(
             # closes its mouth too.
             kfs.append(KeyframeJSON(time=line.duration, value=rest, easing="step"))
 
+            # The clip WINDOW ends on the first frame at or after the line's
+            # end, not at the line's end itself: a terminal rest at 0.71 s is
+            # never sampled when frame 17 is 0.708 s and frame 18 (0.75 s) lies
+            # outside a 0.71 s window — the runtime then keeps whatever shape
+            # frame 17 showed, and the mouth stays open after the line. Seen on
+            # `single_character`'s f0024 golden (an#97); blink clips already
+            # frame-ceil their windows for the same reason.
+            window = math.ceil(float(line.duration) * fps - 1e-9) / fps
             anim_id = f"__viseme__{shot.id}_{i}_{target.replace('/', '.')}"
             animations[anim_id] = AnimationClipJSON(
                 name=anim_id,
-                duration=line.duration,
+                duration=max(window, float(line.duration)),
                 channels=[
                     ChannelJSON(target=target, property=VISEME_CHANNEL, keyframes=kfs),
                 ],
@@ -2179,7 +2224,7 @@ def _add_viseme_clips(
                 PlacedClipJSON(
                     animation_id=anim_id,
                     start_time=float(line.start),
-                    duration=float(line.duration),
+                    duration=max(window, float(line.duration)),
                 )
             )
 

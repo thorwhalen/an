@@ -1,6 +1,6 @@
 ---
 name: an-dev-lipsync
-description: Lip sync in the `an` repo — where co-articulation sits (in the compiler, over the provider's raw track), the pass order (symbolic → dominance → envelope → minimum hold), the condenser that HOLDS and votes instead of dropping, the Rhubarb recognizer rule, word-timing retention and its cache rule, the alignment-model licence trap, and the two standing measurements. Load before touching `an/audio/*lipsync*`, `an/audio/pipeline.py`, `_add_viseme_clips`, `_MIN_VISEME_GAP_S`, `an/adapters/cutout/coarticulate.py`, any viseme test, or a dialogue corpus scene. Triggers on "lip sync", "viseme", "Rhubarb", "whisper", "word timings", "co-articulation", "condenser", "aligner".
+description: Lip sync in the `an` repo — where co-articulation sits (in the compiler, over the provider's raw track), the pass order (symbolic → lead → decay → a minimum hold that votes by dominance), the condenser that HOLDS and votes instead of dropping, the Rhubarb recognizer rule, word-timing retention and its cache rule, the alignment-model licence trap, and the two standing measurements. Load before touching `an/audio/*lipsync*`, `an/audio/pipeline.py`, `_add_viseme_clips`, `_LEGACY_MIN_VISEME_GAP_S`, `an/adapters/cutout/coarticulate.py`, any viseme test, or a dialogue corpus scene. Triggers on "lip sync", "viseme", "Rhubarb", "whisper", "word timings", "co-articulation", "condenser", "aligner".
 ---
 
 # an-dev-lipsync — mouths that read
@@ -24,19 +24,36 @@ the sidecar as `1.0`) is the dominance carrier; cached tracks keep `1.0` until r
    the same as `Phone::N → {B, C, F, H}`, a set its optimizer resolves to the neighbours). In
    Rhubarb's letters the tongue class is B and H — but B also codes EE, so only providers that
    know the character stamp consonant-origin B low.
-2. **Dominance** — Cohen–Massaro's per-segment dominance, degraded for a swap mouth to an
-   **argmax over the window**: `weight = raw_span × α`. The *order* of `DOMINANCE` is sourced
+2. **Dominance** — not a pass but the weight table the hold (4) votes with: Cohen–Massaro's
+   per-segment dominance, degraded for a swap mouth to an **argmax over the window**,
+   `weight = span inside the window × α`. The *order* of `DOMINANCE` is sourced
    (A > F, G > E, D > C > X > B, H); the values are art direction.
-3. **Envelope** — timing offsets: an anticipation lead of `2/24 s` (JALI: onset ~120 ms before
+3. **Lead, then decay** (two passes) — timing offsets: an anticipation lead of `2/24 s` (JALI: onset ~120 ms before
    the apex; Rhubarb's `maxExtensionDuration = 6_cs`), clamped at 0; the apex *is* the swap; a
    word-final open vowel before a gap decays to `X` ~120 ms after its last key.
-4. **Minimum hold — the condenser, last.** It **holds and votes**; it never drops. Windows of
-   at least `min_hold_s` start at each key that clears the previous window; within a window
-   the largest `raw_span × dominance` shape shows, **placed at the window start** (no delay,
-   and a 10 ms /t/ that arrives first cannot own the hold). `[(0,X),(.30,B),(.34,A),(.38,D),
-   (.80,X)]` → `[(0,X),(.30,D),(.80,X)]`; the old `continue` loop gave `[X, B, X]`. Keep
-   `min_hold_s = 0.14` until measured (Rhubarb's floor is 0.08 s; one frame is the floor below
-   which nothing registers). The terminal rest key stays an invariant.
+4. **Minimum hold — the condenser, last.** It **holds and votes**; it never drops a cue unvoted (a carried
+   loser that loses its second window too never shows — outvoted twice, not skipped). Windows of
+   at least ``min_hold_s`` open at each cue that clears the previous window; every cue in the
+   window — the opener included — votes with the length of its span **inside the window**
+   times its dominance (Rhubarb's own "highest total duration within the candidate range"),
+   and the winner shows **at the window start**. A member whose span runs past the window
+   and lost is not dropped: it opens the next window at the window's end, delayed — the hold
+   doing its job. `[(0,X),(.30,B),(.34,A),(.38,D),(.80,X)]` → `[(0,X),(.30,D),(.80,X)]`;
+   the old `continue` loop gave `[X, B, X]`. Without `end` the last cue shows forever (so it always survives); window edges carry a
+   1e-9 tolerance against `0.28 + 0.14 ≠ 0.42`. Keep `min_hold_s = 0.14` until measured
+   (Rhubarb's floor is 0.08 s; one frame is the floor below which nothing registers). The
+   terminal rest key stays an invariant — and since an#97 the clip **window** is frame-ceiled
+   so that rest is actually sampled (a 0.71 s line's rest at 0.71 s fell between frames 17
+   and 18 and the mouth stayed open after the line). Shipped as
+   `an/adapters/cutout/coarticulate.py`; `compile.COARTICULATION_ENABLED = False` reproduces
+   the old condenser for a side-by-side and nothing else.
+
+**What the keyframe count honestly does.** Against the RAW provider track the passes thin
+the mouth to the hold's ceiling (~7/s at 0.14 s). Against the OLD condenser the count goes
+**up** on a dense track (`dialogue`: raw ~17/s → old 5.8/s → passes 7.3/s), because the old
+loop had fewer keyframes only by dropping the closures and open vowels a viewer reads; the
+vote keeps one shape per window and never loses one. "Fewer keyframes" is a claim about the
+raw track, never about the old condenser.
 
 Order matters: (1) before (4) so a one-frame /t/ never wins a window; (3) before (4) so the
 hold is measured on shifted times.
@@ -87,12 +104,14 @@ impossible to swallow.
 
 Before an#96 only one corpus scene spoke and its golden sampled *outside* the line, so a
 condenser change moved zero committed pixels. `misc/bench/corpus/dialogue/` (an#96) has a
-golden **inside** the line — frame 14, on the `h`/`a` of "shape", where today's condenser
-shows `C` having dropped the `D` and `A` inside its window; the vote changes that frame, and
-it is re-blessed "condenser holds" when it does. `promote_demo` renders mute in the bench by
-design (no visemes stamped in its IR). The
-two standing numbers: viseme keyframes per second of dialogue (from compiled `__viseme__`
-clips, trailing rest excluded) must fall; the legibility score from the cassetted judge
-(a dense 8-frame strip inside the line, "could you read this mouth is saying `<text>`", 1–5)
-must not. Recording spends once, under `AN_LIVE_API_TESTS=1`; replay is the default and a
+golden **inside** the line — frame 14, on the `h`/`a` of "shape", where the old condenser
+showed `C` having dropped the `D` and `A` inside its window; the vote shows `A` there and
+the golden was re-blessed to it in an#97 (with `single_character`'s pair, which the lead and
+the frame-ceiled window also moved). `promote_demo` renders mute in the bench by design (no
+visemes stamped in its IR). The two standing numbers: viseme keyframes per second of dialogue
+(from compiled `__viseme__` clips, trailing rest excluded; `viseme_keyframes_per_second` in
+the ledger's shot provenance) must sit below the RAW provider track's rate — against the old
+condenser it may rise, see §2 — and the legibility score from the cassetted judge (a dense
+8-frame strip inside the line, "could you read this mouth is saying `<text>`", 1–5; frozen
+by `python tests/_lipsync_strips.py`) must not fall. Recording spends once, under `AN_LIVE_API_TESTS=1`; replay is the default and a
 miss is a `CassetteMiss`. The judge stays out of the ledger.

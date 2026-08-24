@@ -236,6 +236,79 @@ def _anthropic_version() -> str | None:
         return None
 
 
+_LEGIBILITY_PROMPT = """You are judging LIP-SYNC LEGIBILITY on a dense strip of frames from a
+short animated cartoon, all taken from inside ONE spoken line. The art is
+deliberately simple; judge only the mouth. The character is saying:
+
+    "{text}"
+
+Reply in JSON only, with this shape:
+
+{{
+  "legibility": <integer 1-5: 1 = the mouth could be saying anything, 5 = you could
+                 read this line from the mouth alone>,
+  "heard": "<the words you would guess from the mouth shapes alone, or empty>"
+}}
+"""
+
+
+def legibility_prompt(text: str) -> str:
+    """The legibility prompt for one line. The text is part of the key, so a
+    different line is a different recording."""
+    return _LEGIBILITY_PROMPT.format(text=text.strip())
+
+
+def _parse_legibility(body: str) -> tuple[int, str] | None:
+    """``(score, heard)`` from a reply, or ``None`` when it carried no verdict.
+
+    >>> _parse_legibility('{"legibility": 4, "heard": "hold the shape"}')
+    (4, 'hold the shape')
+    >>> _parse_legibility("I can't help with that.") is None
+    True
+    >>> _parse_legibility('{"legibility": 9}') is None
+    True
+    """
+    import json
+    import re
+
+    if not body:
+        return None
+    fenced = re.search(r"```(?:json)?\s*({.*?})\s*```", body, re.DOTALL)
+    raw = fenced.group(1) if fenced else body
+    start, end = raw.find("{"), raw.rfind("}")
+    if start == -1 or end == -1 or end < start:
+        return None
+    try:
+        data = json.loads(raw[start : end + 1])
+    except json.JSONDecodeError:
+        return None
+    score = data.get("legibility")
+    if not isinstance(score, int) or isinstance(score, bool) or not 1 <= score <= 5:
+        return None
+    heard = data.get("heard")
+    return score, (heard if isinstance(heard, str) else "")
+
+
+def judge_legibility(
+    frames: Sequence[bytes],
+    text: str,
+    *,
+    judge: Callable[..., str] | None = None,
+    model: str = _DEFAULT_MODEL,
+    max_tokens: int = _DEFAULT_MAX_TOKENS,
+    api_key: str | None = None,
+) -> tuple[int, str] | None:
+    """Score a dense in-line frame strip for lip-sync legibility (an#97).
+
+    ``judge`` is the `judge_frames`-shaped seam — the cassette-backed one in
+    tests, the paid one otherwise. Parsing stays outside the recording.
+    """
+    reply = (judge or judge_frames)(
+        frames, prompt=legibility_prompt(text), model=model, max_tokens=max_tokens, api_key=api_key
+    )
+    return _parse_legibility(reply)
+
+
 def judge_frames(
     frames: Sequence[bytes],
     *,

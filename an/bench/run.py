@@ -628,7 +628,7 @@ def shot_policy_provenance(shots) -> dict[str, dict[str, Any]]:
     >>> from types import SimpleNamespace as NS
     >>> shot_policy_provenance([NS(shot_id="s1", scene_json={"meta": {"step_hz": 12.0, "blink_phases": {"a": 0.5}}}),
     ...                         NS(shot_id="s2", scene_json={"meta": {}})])
-    {'blink_phases': {'s1': {'a': 0.5}, 's2': {}}, 'step_hz': {'s1': 12.0, 's2': None}}
+    {'blink_phases': {'s1': {'a': 0.5}, 's2': {}}, 'step_hz': {'s1': 12.0, 's2': None}, 'viseme_keyframes_per_second': {'s1': None, 's2': None}}
     """
     metas = {s.shot_id: (s.scene_json.get("meta") or {}) for s in shots}
     return {
@@ -636,7 +636,43 @@ def shot_policy_provenance(shots) -> dict[str, dict[str, Any]]:
             sid: dict(m.get("blink_phases") or {}) for sid, m in metas.items()
         },
         "step_hz": {sid: m.get("step_hz") for sid, m in metas.items()},
+        "viseme_keyframes_per_second": {
+            s.shot_id: viseme_keyframes_per_second(s.scene_json) for s in shots
+        },
     }
+
+
+def viseme_keyframes_per_second(scene_json: dict) -> float | None:
+    """Viseme keyframes per second of dialogue in a compiled shot, or ``None``
+    when nothing speaks (an#97).
+
+    Counted over the ``__viseme__`` clips: keyframes minus one per channel
+    (the trailing rest is an invariant, not a decision — today's emission has
+    one channel per clip), over the clips' summed durations, which are the
+    frame-ceiled windows rather than the lines' exact lengths (a small
+    downward bias, the same for every row). Keyframes, not distinct shapes — a repeated code (the carried
+    rest before the terminal one) counts. The co-articulation passes bring
+    this below the RAW provider track's rate; against the old drop-not-hold
+    condenser it can rise, because that loop was cheaper only by dropping
+    shapes. Recorded as provenance rather than a panel metric because no lever
+    in the registry moves it.
+
+    >>> viseme_keyframes_per_second({"animations": {}})
+    >>> viseme_keyframes_per_second({"animations": {"__viseme__s_0_m": {"duration": 2.0,
+    ...     "channels": [{"keyframes": [{"time": 0}, {"time": 0.5}, {"time": 1.0}, {"time": 2.0}]}]}}})
+    1.5
+    """
+    changes = 0
+    seconds = 0.0
+    for name, clip in (scene_json.get("animations") or {}).items():
+        if not str(name).startswith("__viseme__"):
+            continue
+        for ch in clip.get("channels") or []:
+            changes += max(0, len(ch.get("keyframes") or []) - 1)
+        seconds += float(clip.get("duration") or 0.0)
+    if seconds <= 0:
+        return None
+    return changes / seconds
 
 
 def run_bench(
