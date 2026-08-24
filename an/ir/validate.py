@@ -311,7 +311,6 @@ def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
         )
 
 
-
 def _check_step_hz(
     step_hz: float | None, *, fps: int, path: str, report: "ValidationReport"
 ) -> None:
@@ -352,7 +351,9 @@ def validate_semantic(
         report.add("error", "meta/duration", "duration must be non-negative")
     if scene.meta.fps <= 0:
         report.add("error", "meta/fps", "fps must be positive")
-    _check_step_hz(scene.meta.step_hz, fps=scene.meta.fps, path="meta/step_hz", report=report)
+    _check_step_hz(
+        scene.meta.step_hz, fps=scene.meta.fps, path="meta/step_hz", report=report
+    )
     if not scene.timeline:
         report.add(
             "warning",

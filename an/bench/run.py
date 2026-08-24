@@ -632,7 +632,9 @@ def shot_policy_provenance(shots) -> dict[str, dict[str, Any]]:
     """
     metas = {s.shot_id: (s.scene_json.get("meta") or {}) for s in shots}
     return {
-        "blink_phases": {sid: dict(m.get("blink_phases") or {}) for sid, m in metas.items()},
+        "blink_phases": {
+            sid: dict(m.get("blink_phases") or {}) for sid, m in metas.items()
+        },
         "step_hz": {sid: m.get("step_hz") for sid, m in metas.items()},
     }
 

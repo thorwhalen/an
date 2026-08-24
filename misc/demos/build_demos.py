@@ -393,10 +393,21 @@ def _build_stepped_timing(work: Path) -> Path:
     out = work / "side_by_side.mp4"
     subprocess.run(
         [
-            "ffmpeg", "-v", "error", "-y",
-            "-i", str(smooth), "-i", str(stepped),
-            "-filter_complex", "[0:v][1:v]hstack=inputs=2",
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out),
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-i",
+            str(smooth),
+            "-i",
+            str(stepped),
+            "-filter_complex",
+            "[0:v][1:v]hstack=inputs=2",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            str(out),
         ],
         check=True,
     )
