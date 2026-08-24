@@ -691,7 +691,15 @@ variant set falls back to `viseme` with a warning, and with no `viseme` set rais
 `rg _EMOTION_BROWS an/ .claude/ misc/docs/ README.md` returns nothing; word timings round-trip
 whisper → IR → JSON → IR for the two providers that have them.
 
-**Landed in PR-C (an#98).** As designed in §4–§8 and §10, with these facts from building it:
+**Landed in PR-C (an#98).** As designed in §4–§8 and §10, with three deviations and these
+facts from building it. Deviations: (1) §5's `an/__init__.py` export of the `expression()`
+combinator is deliberately NOT made — `an.expression` is the subpackage, so the combinator is
+`an.ir.expression`; (2) §6's "viseme emission moves into the solver" did not happen — emission
+stayed in `_add_viseme_clips`, which now asks the provider for the line's preset and
+`resolve_mouth_set` for the set, and the solver adds only the silent `__face_mouth__` holds
+(still one mouth swap property live per instant, by interval subtraction rather than by one
+emitter); (3) §7's validate rule is declaration-level ("declares a variant but no neutral
+`viseme` set"), not projection-level. Facts:
 `an/expression/` is `axes.py` (eight numeric axes, the ladder), `presets.py` (ten presets;
 `disgusted` and `afraid` are the additions the table promised), `binding.py`
 (`ChannelBinding`/`SetBinding`, `default_binding` from the slots a rig has, `binding_for` reading
@@ -713,8 +721,10 @@ fresh character honours `happy`/`amused`/`sad` without a warning. The `expressio
 scene pins eight goldens (the two-frames rule became at-least-two); the first bless measured
 106 px between `thinking` and `skeptical` (the asymmetric pair, as predicted) and 384 px at
 the far end, so `tests/test_expression_goldens.py` pins 53, and the ledger row
-`expression_min_pairwise_changed_px` (family B, diagnostic, counts nothing) reports the live
-number. Not built here: the "name the emotion" cassette (no key in the session; the judge and
+`expression_min_pairwise_changed_px` (family B, diagnostic, counts nothing; gated under
+`disabled_aa`/`supersample`, which move it in an undeclared direction — the lane caught the
+first `not_applicable` declaration moving) reports the live number on every scene (a
+two-frame scene reports its pair's own change; a render-side row is never null). Not built here: the "name the emotion" cassette (no key in the session; the judge and
 freezer pattern from PR-B apply unchanged) — recorded as the remaining item on #98. Found on
 the way: `an render` (the CLI) had raised `TypeError` since `--supersample` landed, because
 `an.orchestrate.render_project` re-declared the leaf's parameters and fell behind while the

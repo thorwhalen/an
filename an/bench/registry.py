@@ -1085,7 +1085,9 @@ METRICS: dict[str, MetricSpec] = {
                 "The smallest number of pixels by which any two of the scene's "
                 "pinned frames differ in TODAY'S render — on `expressions`, the "
                 "closest pair of presets; a collapse of two emotions onto one "
-                "face drives it to zero (an#98)."
+                "face drives it to zero (an#98). On a two-frame scene it is that "
+                "pair's own change, measured rather than withheld: a render-side "
+                "row is never null on a real capture."
             ),
             optimum=Optimum(
                 kind="guard",
@@ -1093,9 +1095,7 @@ METRICS: dict[str, MetricSpec] = {
                     "Not a quality dial: larger is not better beyond 'the presets "
                     "are apart'. It exists so a regression that makes two "
                     "expressions render alike moves a ledger number instead of "
-                    "waiting for someone to look. `unavailable` on a scene that "
-                    "pins fewer than three frames, where a pairwise minimum is "
-                    "just that pair's own change."
+                    "waiting for someone to look."
                 ),
             ),
             predictions={
@@ -1104,17 +1104,23 @@ METRICS: dict[str, MetricSpec] = {
                     reason="computed on the pre-encode PNGs; no encode change can reach it",
                 ),
                 "disabled_aa": Prediction(
-                    "not_applicable",
-                    reason=(
-                        "AA-off moves every edge on every pinned frame, in both "
-                        "directions at once; the pairwise minimum has no declared "
-                        "sign under it and counts nothing. Family B's witness is "
-                        "`min_ssim_win8_vs_golden`."
+                    None,
+                    gate=(
+                        "AA-off moves every edge on every pinned frame, so the count "
+                        "of differing pixels between two frames moves with it in an "
+                        "undeclared direction — measured on the lane: it MOVED under "
+                        "`supersample` when first declared `not_applicable`. Gated, "
+                        "not predicted: the delta is uninterpretable, not good or bad. "
+                        "Family B's witness is `min_ssim_win8_vs_golden`."
                     ),
                 ),
                 "supersample": Prediction(
-                    "not_applicable",
-                    reason="same as disabled_aa: an edge-quality lever, not a face-solver lever",
+                    None,
+                    gate=(
+                        "same as disabled_aa: an edge-quality lever softens every "
+                        "edge on every pinned frame and the pairwise count moves "
+                        "with it; not a face-solver lever, no declared sign"
+                    ),
                 ),
             },
             notes=(

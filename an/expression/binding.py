@@ -261,9 +261,9 @@ def expression_problems(
     if desc is not None and not desc.face_overlay:
         problems.append(
             f"{who!r} has its face baked into the head art (face_overlay: false), so "
-            "there is no brow, lid or pupil node for an expression to move. Two "
-            "exits: `an character promote` a hand-drawn rig with overlay face "
-            "parts, or `an character add-gaze` on a rig that has them."
+            "there is no brow, lid or pupil node for an expression to move. The "
+            "exit: `an character promote` a hand-drawn rig with overlay face parts "
+            "(or `an character new --offline`, whose synthesized face is overlay art)."
         )
     return problems
 

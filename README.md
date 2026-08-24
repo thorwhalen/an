@@ -28,7 +28,7 @@ an render my-scene                                        # re-renders only the 
 # Character authoring (Phase 11a)
 an character new maya --seed maya-warm                    # generate a DiceBear-backed character
 an character new bob --offline                            # offline-only: deterministic geometric fallback
-an character mouths maya                                  # regenerate the 9-shape default mouth set
+an character mouths maya                                  # regenerate the 9-shape mouth set + its viseme@happy / viseme@sad variants
 an character validate maya                                # check parts, mouth set, pivots
 an character silhouette maya --other bob                  # silhouette test (IoU score)
 an character preview maya --open-browser                  # HTML viewer cycling all 9 visemes
@@ -83,7 +83,7 @@ maya [amused]: Because the pigeons trust us.
 ```
 ````
 
-`an render` produces an mp4 with two visually-distinct characters (per-id palette: skin/clothing/hair), animated mouths over the dialogue lines, eye-blinks every ~4 seconds, eyebrows tilted by emotion, a sky/grass park background, and a slow camera push-in.
+`an render` produces an mp4 with two visually-distinct characters (per-id palette: skin/clothing/hair), animated mouths over the dialogue lines, eye-blinks every ~4 seconds, brows, lids and mouth form driven by each line's `[emotion]` (the face solver), a sky/grass park background, and a slow camera push-in.
 
 ---
 

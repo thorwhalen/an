@@ -47,7 +47,8 @@ whole sum. The face solver (`_add_face_clips`) computes `value(t) = rest + Σ of
 bound `(node, property)` and emits **exactly one** channel per key. A second generated writer
 for a face key is a bug; the test that guards it asserts every generated face channel has a
 distinct `(target, property)`, that a pose at t carries *both* an emotion's brow offset and a
-gaze offset, and that the pose is identical with contributors fed in reverse order.
+second contributor's offset (a per-axis override today; a gaze offset once PR-D gives a rig
+pupils), and that the pose is identical with contributors fed in reverse order.
 
 - **Transform axes sum, then clamp. Swap axes resolve by priority**, never by blending two
   drawings. The lid: `lid(t) = min(lid_expr(t), lid_blink(t))` with `lid_blink = −1` inside a
@@ -87,7 +88,7 @@ unknown leaf). An unknown preset is a validate **error**. Every name the retired
 accepted (`neutral happy sad angry surprised skeptical amused thinking`) stays a preset —
 live content authors `amused`.
 
-## 5. Gaze
+## 5. Gaze (design of record — ships in PR-D, #99; today the axes are a no-op on every rig)
 
 Three sibling slots per eye under `head`, no nesting, no runtime mask: `<side>_sclera` →
 `<side>_pupil` → `<side>_eye` (the lid; `closed` art is **mandatory** once pupils exist,
@@ -102,7 +103,7 @@ a character re-seeds them, the recorded blink hazard. Every timing constant is a
 ## 6. Baked faces (`face_overlay: false`)
 
 Authored expression or gaze → validate error + `ExpressionResolutionError` naming the
-character and the two exits (`an character promote`, `an character add-gaze`). Dialogue-sugar
+character and the exit (`an character promote`; `add-gaze` joins it in PR-D). Dialogue-sugar
 emotion → a warning with the right diagnosis (audio still plays). Ambient saccades skip, like
 blinks. Overlay-over-baked-art was rejected twice (the "four eyes" bug).
 
@@ -120,6 +121,6 @@ blinks. Overlay-over-baked-art was rejected twice (the "four eyes" bug).
 
 ## 8. Every face feature ships with a clip
 
-`misc/demos/build_demos.py`: `expressions`, `expressions-more`, `gaze`, `gaze-plus-expression`,
+`misc/demos/build_demos.py`: `expressions`, `expressions-more` (shipped), `gaze`, `gaze-plus-expression` (PR-D),
 `emotion-visemes` — on **synthesized descriptor characters** (the procedural rig has no
 variant sets and no brow gain), no burned-in labels, panes described in `shows`.

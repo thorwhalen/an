@@ -681,7 +681,7 @@
     };
 
     // Blinks are COMPILED channels since an#88 — see compile.py's
-    // `_add_blink_clips`. This file used to run a post-pose pass that matched
+    // `_add_face_clips` / `_blink_placements`. This file used to run a post-pose pass that matched
     // eye nodes by regex and forced scale.y every frame, which is why an
     // authored eye scale_y could never reach the screen. The phase-per-entity
     // fact that pass owned now lives in the compiled scene's meta.blink_phases.

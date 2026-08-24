@@ -133,10 +133,11 @@ the bless refusal of pixel-identical pairs is pairwise) and a
 commit its `ir/scene.json` with the offline visemes stamped, through a
 per-scene carve-out from `.gitignore`'s `misc/bench/corpus/*/ir/` rule: the
 bench renders with `auto_audio=False`, so without it the scene is mute on a
-clean checkout (`dialogue`, an#96, is the precedent). A scene that pins three or more frames also
-feeds `expression_min_pairwise_changed_px` (family B, diagnostic, counts nothing):
-the smallest pixel distance between any two pinned frames of today's render,
-`unavailable` below three — the ledger's view of `tests/test_expression_goldens.py`. A fixture under
+clean checkout (`dialogue`, an#96, is the precedent). Every scene also feeds
+`expression_min_pairwise_changed_px` (family B, diagnostic, counts nothing; gated
+under the two edge levers because it moves with every edge): the smallest pixel
+distance between any two pinned frames of today's render — on a two-frame scene
+that pair's own change — the ledger's view of `tests/test_expression_goldens.py`. A fixture under
 `examples/` that gains dialogue gets the opposite treatment: its `prepare`
 regenerates the staged IR from the md, so a developer who ran the example
 (`auto_audio=True` persists visemes) cannot move the fixture's contract hash.

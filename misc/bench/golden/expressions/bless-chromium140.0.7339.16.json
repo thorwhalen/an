@@ -1,5 +1,5 @@
 {
-  "blessed_at": "2026-08-24T21:54:59Z",
+  "blessed_at": "2026-08-24T22:17:48Z",
   "chromium_build": "140.0.7339.16",
   "criterion": "sha256 of the DECODED RGB array, never the file bytes: Chromium 1187 -> 1223 changes every PNG file and zero pixels.",
   "fps": 24,
@@ -88,9 +88,9 @@
   "git": {
     "branch": "wave6-pr-c",
     "dirty": true,
-    "sha": "f20076d7c5b61fe25cb98977d4ce2e284fc794ba"
+    "sha": "3d805256f7a804d79e7c567782f5ef5b3bea5a02"
   },
-  "reason": "an#98: first bless of the expressions corpus \u2014 eight silent presets on one synthesized rig (no pupils yet; PR-D re-blesses once the eye stack lands); what differs between the eight is the face solver's output alone: brow height and angle, the eyelid key, the mouth form's rest",
+  "reason": "an#98: first bless of the expressions corpus \u2014 eight silent presets on one synthesized rig (no pupils yet; PR-D re-blesses once the eye stack lands); what differs between the eight is the face solver's output alone: brow height and angle, the eyelid key, the mouth form's rest. Re-blessed pixel-identically to carry the corrected note (the blink clock restarts per shot)",
   "removed": [],
   "resolution": [
     320,
@@ -109,5 +109,5 @@
     "skeptical"
   ],
   "source": "misc/bench/corpus/expressions",
-  "what_moves": "eight 0.25 s shots of one silent synthesized character holding one expression preset each (neutral, happy, sad, angry, surprised, afraid, thinking, skeptical \u2014 the two presets whose faces differ only by a mouth form the silent rest does not show, disgusted and amused, are left out), sampled at each shot's mid-frame (an#98). What moves between goldens is the FACE SOLVER's output alone: brow height and angle, the eyelid key, and the mouth form's rest. The character is named `face` because its seeded blink phase puts no blink window inside the 2 s scene, so no golden straddles a blink; it is lowered by an absolute `set face y` so the head clears the frame's top edge at 320x240. Its rig is committed whole (parts and descriptor, `viseme@happy`/`viseme@sad` variants included) and has no pupil layer yet \u2014 PR-D re-blesses these eight once the eye stack lands. The pairwise distinguishability test in tests/test_expression_goldens.py reads these same PNGs."
+  "what_moves": "eight 0.25 s shots of one silent synthesized character holding one expression preset each (neutral, happy, sad, angry, surprised, afraid, thinking, skeptical \u2014 the two presets whose faces differ only by a mouth form the silent rest does not show, disgusted and amused, are left out), sampled at each shot's mid-frame (an#98). What moves between goldens is the FACE SOLVER's output alone: brow height and angle, the eyelid key, and the mouth form's rest. The character is named `face` because its seeded blink phase puts no blink window inside any 0.25 s shot (the blink clock restarts per shot), so no golden straddles a blink; it is lowered by an absolute `set face y` so the head clears the frame's top edge at 320x240. Its rig is committed whole (parts and descriptor, `viseme@happy`/`viseme@sad` variants included) and has no pupil layer yet \u2014 PR-D re-blesses these eight once the eye stack lands. The pairwise distinguishability test in tests/test_expression_goldens.py reads these same PNGs."
 }

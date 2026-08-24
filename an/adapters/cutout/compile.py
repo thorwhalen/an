@@ -2281,71 +2281,8 @@ def _mouth_rest_key(vocab: _SwapVocabulary, target: str, set_name: str) -> str |
 
 
 # -----------------------------------------------------------------------------
-# Blinks: compiled per eye (an#88)
+# Blinks: compiled per eye (an#88) — emitted by the face solver below
 # -----------------------------------------------------------------------------
-
-
-def _add_blink_clips(
-    shot: Shot,
-    animations: dict[str, AnimationClipJSON],
-    tracks: list[TrackJSON],
-    *,
-    vocab: _SwapVocabulary,
-    fps: int,
-    mall: Mapping[str, Mapping] | None = None,
-) -> dict[str, float]:
-    """Emit blink clips per eye node of every character; return the phases
-    used, per entity, for the compiled scene's meta.
-
-    A character whose descriptor declares ``face_overlay=False`` never
-    blinks, whatever eye nodes the rig builder produced — the policy lives
-    here, not in a naming coincidence of the rig builder.
-
-    Mechanism splits by what the eye can do (research §6):
-
-    - an eye whose visual projects the ``eyelid`` set with both ``OPEN`` and
-      ``CLOSED`` resolved, and whose rest attachment IS the open one, swaps
-      ART — a step channel through the one swap implementation, CLOSED for
-      the central half of each blink window;
-    - any other eye (the procedural drawn eye; a descriptor rig without
-      closed-eye art) gets the sine SQUASH the runtime used to apply, as a
-      ``scale_y`` channel sampled at the frame times — a tween, not a swap,
-      so "one swap implementation" holds without contortions;
-    - an eye that rests CLOSED (a sleeping character) does not blink at all:
-      the author closed it, and the old runtime never opened it either.
-
-    **One clip per blink window, not one whole-shot fill.** Outside a window
-    the pose then carries NO eye value, so an authored eye channel's end
-    value persists exactly as every other property's does (the runtime's
-    stateful hold); a whole-shot ``1.0`` fill snapped an authored ``scale_y``
-    back the frame after its tween ended (an#88 review). Each clip is
-    extended to the first frame time at or after the window's end so the
-    return-to-rest keyframe is applied on a rendered frame — the runtime's
-    per-frame reset, reproduced at exactly the frames that matter.
-
-    The clips go at the FRONT of the entity's track: later-wins evaluation
-    then lets an authored eye channel override a blink, where the old
-    post-pose reset clobbered any authored ``scale_y`` on every frame.
-    """
-    phases: dict[str, float] = {}
-    baked = _baked_face_speakers(shot, mall)
-    track_lookup: dict[str, TrackJSON] = {t.target_root: t for t in tracks}
-    for entity in shot.entities:
-        if entity.kind != "character" or entity.id in baked:
-            continue
-        placed = _blink_placements(shot, entity.id, animations, vocab=vocab, fps=fps)
-        if placed is None:
-            continue
-        phases[entity.id] = blink_phase(entity.id)
-        if not placed:
-            continue
-        track = track_lookup.get(entity.id)
-        if track is None:
-            track = TrackJSON(target_root=entity.id, clips=[])
-            tracks.append(track)
-            track_lookup[entity.id] = track
-        track.clips[:0] = placed
-    return phases
 
 
 def _eye_paths(vocab: _SwapVocabulary, entity_id: str) -> list[str]:
@@ -2365,9 +2302,9 @@ def _blink_placements(
     fps: int,
 ) -> list[PlacedClipJSON] | None:
     """The an#88 blink clips of one entity, VERBATIM — ``None`` when it has no
-    eye node (nothing blinks), else the placements (possibly empty). Split out
-    of :func:`_add_blink_clips` so the face solver can hand an entity nothing
-    expresses on exactly the clips it always had: same ids, same exact-time
+    eye node (nothing blinks), else the placements (possibly empty). The body of
+    the an#88 emitter (`_add_blink_clips`, retired in an#98), so the face solver
+    can hand an entity nothing expresses on exactly the clips it always had: same ids, same exact-time
     keyframes, so every corpus scene's contract hash is unchanged (an#98)."""
     eyes = _eye_paths(vocab, entity_id)
     if not eyes:

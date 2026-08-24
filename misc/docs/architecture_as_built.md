@@ -8,7 +8,7 @@
 
 ## 1. The story in 30 seconds
 
-You write a `scene.md`. You run `an render <dir>`. An mp4 lands in `output/main.mp4` with audible dialogue, a sky/grass background, two distinct cartoon characters, animated mouths over real ElevenLabs speech aligned by Whisper word-timestamps, eye-blinks, emotion-driven eyebrows, and a slow camera push-in.
+You write a `scene.md`. You run `an render <dir>`. An mp4 lands in `output/main.mp4` with audible dialogue, a sky/grass background, two distinct cartoon characters, animated mouths over real ElevenLabs speech aligned by Whisper word-timestamps, eye-blinks, faces driven by the expression solver (each line's `[emotion]`, or an `expression` action), and a slow camera push-in.
 
 You say `an iterate <dir> "make Maya's response more affectionate"`. Claude (Opus 4.7) returns surgical JSON patches against the IR, validates them against the schema, persists, and invalidates only the affected shot's cache so the next render only redoes that shot.
 

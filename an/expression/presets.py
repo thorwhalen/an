@@ -1,8 +1,8 @@
 """Expression presets: our art direction on the axes (an#98).
 
 Every name the compiler's retired brow-tilt table accepted is a preset here
-(``amused`` included — live content authors it), plus the four the research
-added. The FACS action-unit numbers in each ``anchor`` are cross-reference
+(``amused`` included — live content authors it), plus the two the research
+added (``afraid``, ``disgusted``). The FACS action-unit numbers in each ``anchor`` are cross-reference
 comments, not sources: no emotion table was transcribed (research
 ``misc/docs/wave6_research.md`` §3, §8). Gaze is absent from every preset so
 the two sources stay independent — "thinking looks up and away" is a gaze

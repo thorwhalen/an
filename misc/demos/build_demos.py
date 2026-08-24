@@ -612,7 +612,9 @@ DEMOS: tuple[Demo, ...] = (
             "not — and prefer no mouth form, so they keep the neutral mouth; `sad` "
             "selects `viseme@sad`. The two presets not shown anywhere, `disgusted` and "
             "`amused`, differ from their neighbours mainly by a mouth form the silent "
-            "rest barely shows — a limit of the medium, said here rather than hidden."
+            "rest barely shows — a limit of the medium, said here rather than hidden. "
+            "`afraid` prefers a `viseme@afraid` set no default character draws, so its "
+            "mouth here is the neutral one (a speaking line would say so in a warning)."
         ),
         how=(
             "Same as above with the other preset names; `axes: {brow_height_l: 0.5}` "
@@ -629,7 +631,8 @@ DEMOS: tuple[Demo, ...] = (
             "mouth set on the left, the `viseme@happy` variant on the right, selected "
             "for the whole line by the `happy` expression the character holds. Every "
             "viseme keyframe is identical in both panes — same times, same keys — "
-            "only which SET the key indexes differs. A character without the variant "
+            "and only which SET the key indexes differs at the mouth; the brows and "
+            "lids carry the preset too, as in every expression. A character without the variant "
             "falls back to the neutral set with a warning naming what was missing; "
             "`an character new` draws `happy` and `sad` variants by default and "
             "`an character mouths --variants angry` adds more."

@@ -542,24 +542,26 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
 GOLDEN_METRIC_KEY: str = "min_ssim_win8_vs_golden"
 GOLDEN_TRIPWIRE_KEY: str = "golden_identity"
 PAIRWISE_METRIC_KEY: str = "expression_min_pairwise_changed_px"
-#: Below this many pinned frames the pairwise minimum is a single pair's change.
-MIN_PINNED_FRAMES_FOR_PAIRWISE: int = 3
+#: A pairwise minimum needs two frames; every fixture pins at least two, so on
+#: a real capture this row is always measured (the render-side panel may not
+#: be null — `tests/test_bench_capture.py`).
+MIN_PINNED_FRAMES_FOR_PAIRWISE: int = 2
 
 
 def pinned_frames_min_pairwise_changed_px(capture: SceneCapture, times) -> Value:
     """``expression_min_pairwise_changed_px`` for one scene: decode the pinned
     frames from today's render and take the minimum over every pair of the
-    count of pixels that differ (an#98). `unavailable`, never zero, when the
-    scene pins too few frames for a pairwise minimum to mean anything."""
+    count of pixels that differ (an#98). On a two-frame scene that is the
+    pair's own change; `unavailable`, never zero, only when a scene pins a
+    single frame, which the fixture rule forbids."""
     from itertools import combinations
 
     from an.bench.png import read_png
 
     if len(times) < MIN_PINNED_FRAMES_FOR_PAIRWISE:
         return unavailable(
-            f"the scene pins {len(times)} frame(s); a pairwise minimum needs at "
-            f"least {MIN_PINNED_FRAMES_FOR_PAIRWISE} to say anything about two of "
-            "them collapsing onto one picture"
+            f"the scene pins {len(times)} frame(s); a pairwise minimum needs "
+            f"{MIN_PINNED_FRAMES_FOR_PAIRWISE}"
         )
     frames = {}
     for ref in G.resolve_frames(capture, times):
