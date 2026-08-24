@@ -312,6 +312,7 @@ def test_the_command_set_is_pinned_by_literal():
         "new",
         "mouths",
         "validate",
+        "contract",
         "silhouette",
         "preview",
         "record",

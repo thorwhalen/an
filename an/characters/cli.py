@@ -23,7 +23,9 @@ from pathlib import Path
 from typing import Optional
 
 from an.characters.factory import new_character as _new_character
-from an.characters.factory import validate_character as _validate_character
+from an.characters.validate import format_report as _format_report
+from an.characters.validate import render_contract as _render_contract
+from an.characters.validate import validate_character as _validate_character
 from an.characters.mouth_set import write_default_mouths
 from an.characters.dicebear import (
     DICEBEAR_DEFAULT_STYLE,
@@ -118,7 +120,7 @@ def validate(name: str, out_dir: str = "") -> str:
     """
     target = _resolve_target(out_dir) / name
     report = _validate_character(target, name=name)
-    return report.format()
+    return _format_report(report, name=name)
 
 
 def silhouette(
@@ -351,4 +353,25 @@ def record(
 
 # Dispatch list. Mounted as a nested namespace ('character')
 # by an/__main__.py so they appear as `an character new`, etc.
-_dispatch_funcs = [new, mouths, validate, silhouette, preview, record]
+
+
+def contract() -> str:
+    """Print the art-package contract an illustrator must satisfy.
+
+    **Derived from the schema and the validator, never hand-written**, so it
+    cannot drift from what `an character validate` actually enforces — a
+    contract that disagrees with its checker is worse than none, because it
+    gets a human paid for work that cannot land.
+    """
+    return _render_contract()
+
+
+_dispatch_funcs = [
+    new,
+    mouths,
+    validate,
+    contract,
+    silhouette,
+    preview,
+    record,
+]

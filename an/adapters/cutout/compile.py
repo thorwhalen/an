@@ -571,6 +571,7 @@ def _build_character_subtree(
             char_meta,
             textures=textures if textures is not None else {},
             probe=_part_probe(characters_store),
+            resolutions=resolutions,
         )
 
     declared_parts = char_meta.get("parts")
@@ -795,6 +796,63 @@ def _bone_positions(desc: CharacterDescriptor) -> dict[str, tuple[float, float]]
     return out
 
 
+def _record_missing_parts(
+    entity: AssetRef,
+    missing: list[tuple[str, str, str]],
+    *,
+    drawn: set[str],
+    into: list[AssetResolutionJSON] | None,
+) -> None:
+    """Record every declared part whose art is not on disk, as a fallback.
+
+    A skin declares an inventory, and a slot that ends up with nothing to draw
+    is a hole in the picture. Recording it here routes it through the one place
+    that decides what a stand-in costs: audible always, fatal under
+    ``strict_assets`` (an#76). Raising from the compiler instead would put a
+    second policy next to that one.
+
+    A slot that still drew *something* — one attachment missing out of several,
+    as when a rig ships open eyes but no closed ones — is reported separately
+    and NOT as a fallback, because the frame is not wrong, only the inventory
+    is incomplete. Conflating the two would make every rig without a blink
+    refuse to render under ``strict_assets``.
+    """
+    if into is None or not missing:
+        return
+    empty = [m for m in missing if m[0] not in drawn]
+    partial = [m for m in missing if m[0] in drawn]
+    for slot_name, attachment, path in empty:
+        into.append(
+            AssetResolutionJSON(
+                id=f"{entity.id}/{slot_name}",
+                kind="part",
+                store=entity.store,
+                ref=entity.ref,
+                resolved="missing",
+                fallback=True,
+                detail=(
+                    f"slot {slot_name!r} declares attachment {attachment!r} at "
+                    f"{path!r}, which is not in the store — the slot draws nothing"
+                ),
+            )
+        )
+    for slot_name, attachment, path in partial:
+        into.append(
+            AssetResolutionJSON(
+                id=f"{entity.id}/{slot_name}",
+                kind="part",
+                store=entity.store,
+                ref=entity.ref,
+                resolved="incomplete",
+                fallback=False,
+                detail=(
+                    f"slot {slot_name!r} is missing attachment {attachment!r} at "
+                    f"{path!r}; the slot still draws, but that key cannot be swapped to"
+                ),
+            )
+        )
+
+
 def _rig_origin(bones: dict[str, tuple[float, float]]) -> tuple[float, float]:
     """The point in view_box space that the entity's placement refers to.
 
@@ -847,6 +905,7 @@ def _build_svg_character_subtree(
     *,
     textures: dict[str, AssetJSON],
     probe: Callable[[str], tuple[bool, tuple[float, float] | None]] | None = None,
+    resolutions: list[AssetResolutionJSON] | None = None,
 ) -> NodeJSON:
     """Build the scene subtree for a character, **from its descriptor's rig**.
 
@@ -855,6 +914,13 @@ def _build_svg_character_subtree(
     constant: the seven ``_SVG_*_SIZE`` values and the four y-offset literals
     this replaced are gone, and gutting ``bones``/``slots``/``skins``/``view_box``
     now changes the output — which it provably did not before (an#73).
+
+    A slot whose art is not on disk is recorded in ``resolutions`` as a fallback,
+    which makes it audible by default and fatal under ``strict_assets`` — the
+    same treatment a missing *character* already got (an#33), now reaching
+    inside the descriptor to the individual part (an#76). It is recorded rather
+    than raised here because the decision belongs to one place, and that place
+    is :func:`_raise_or_warn_on_asset_fallbacks`.
 
     ``probe(src) -> (exists, size)`` answers whether a part's art is on disk and
     what size it rasterises at. Existence decides whether a texture is declared
@@ -896,11 +962,13 @@ def _build_svg_character_subtree(
     # what resolves keeps the compiler from fabricating; reporting the gap in
     # the art package is `an character validate`'s job (#78), not this one's.
     aliases: dict[str, dict[str, str]] = {}
+    missing_art: list[tuple[str, str, str]] = []
     for slot_name, attachments in skin.slots.items():
         resolved_here: dict[str, str] = {}
         for name, att in attachments.items():
             src = _svg_asset_src(ref, att.path)
             if probe is not None and not probe(src)[0]:
+                missing_art.append((slot_name, name, att.path))
                 continue
             resolved_here[name] = _register(name, att)
         aliases[slot_name] = resolved_here
@@ -961,6 +1029,8 @@ def _build_svg_character_subtree(
         )
         nodes[slot.name] = node
         children_of.setdefault(parent if nested else "", []).append(node)
+
+    _record_missing_parts(entity, missing_art, drawn=set(nodes), into=resolutions)
 
     for parent_name, kids in children_of.items():
         if parent_name and parent_name in nodes:

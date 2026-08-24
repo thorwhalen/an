@@ -3,6 +3,18 @@
 AI-maintained record of substantive changes to the an codebase. One entry per
 day per chunk of work; keep entries terse.
 
+- **Wave 4 finished: the art contract gets teeth** (an#76, an#78). Both halves of one boundary, and the split between them is the interesting part.
+
+  **At compile time (#76).** A slot whose art is not on disk is recorded as a fallback, so it is audible by default and fatal under `strict_assets` — the treatment a missing *character* got in an#33, now reaching inside the descriptor to the individual part. Measured before: `strict_assets` compiled a descriptor with a deleted `head.svg` with **zero diagnostics**. It is recorded rather than raised at the call site because the decision belongs to one place, and that place already exists. **A slot that still draws something is deliberately NOT a fallback** — a rig shipping open eyes but no closed ones is incomplete, not broken, and both committed corpus rigs are in exactly that state, so conflating the two would make every rig without a blink refuse to render.
+
+  **Offline (#78).** `validate_character` opens each part now: drawable geometry, viewBox sanity, prohibited constructs, a letterboxed raster, joint-name collisions, a populated `AssetSource`. It returns `an.verify._base.Finding`s instead of a bespoke `ValidationReport` — which also retires a class whose name collided with an unrelated one in `an.ir` — so the orchestrator's typed error routing finally reaches character problems.
+
+  **The geometry check is deliberately not on the render path.** The bbox scraper under-covers real SVG (no transforms, no `<polygon>`), so a false "draws nothing" would refuse a valid render; as a `Finding` a false positive is a sentence a human reads. That is the same reasoning that kept existence and measurability separate in the compiler.
+
+  **`an character contract` is generated, never written.** Required parts, mouth shapes, the slot/attachment layout, the joint each bone reads, the prohibitions and the drawable set are all read out of live objects, so the document and the checker cannot disagree — a contract that drifts from its validator is worse than none, because it gets an illustrator paid for work that cannot land. `an-art-package` ships with it, which is the condition the epic set for writing that skill at all.
+
+  The regression fixture the epic asked for had to be **authored**: no invisible-head part exists in git history (`examples/*/assets/` is gitignored). `tests/fixtures/art/invisible_head.svg` is valid SVG, correctly sized, and draws nothing — with a title and a gradient in it so no size or emptiness heuristic can catch it. All six goldens verified `changed_px: 0`: this pass touches no pixel.
+
 - **Wave 4 PR-2: the compiler builds a character from its descriptor's rig** (an#9, #73/#74/#75/#77). The wave's thesis was that art an illustrator delivers changes nothing on screen. It does now.
 
   **The compiler.** `_build_svg_character_subtree` — the largest function in `compile.py` — walked seven `_SVG_*_SIZE` constants and ~40 inline literals; it now walks `bones`, `slots`, `skins` and `view_box`. One uniform factor `k = SCENE_PX_PER_VIEW_BOX / view_box.height` scales bone positions and part extents alike, so the compiler *cannot* violate the aspect invariant. **345 is a calibration, not a preference**: at k = 0.3369 `saturated-rig`'s own art gives torso 107.8x129.4 against the deleted constant's 110x130 and legs 37.7x118.6 against 38x120 — the constants were an approximation of exactly this product, which is the evidence the rig should have been driving it all along. Node nesting is deliberately **not** the bone hierarchy (rigs stay flat, CLAUDE.md pillar 4); bone parentage decides position only.

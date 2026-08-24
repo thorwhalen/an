@@ -72,7 +72,8 @@ from an.characters.dicebear import (
     DICEBEAR_DEFAULT_STYLE,
     DICEBEAR_API_VERSION,
 )
-from an.characters.factory import new_character, validate_character
+from an.characters.factory import new_character
+from an.characters.validate import validate_character
 from an.characters.promote import promote
 from an.characters.record import (
     record_character,
