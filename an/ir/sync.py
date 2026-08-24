@@ -232,10 +232,9 @@ def _extract_actions_block(text: str) -> list:
     Supported entry shapes (one per item in the YAML list):
       - ``{kind: tween, target, property, to, duration, [from_], [easing], [start]}``
       - ``{kind: set,   target, property, value, [at]}``
-      - ``{kind: play,  ...}`` is **rejected**: named reusable animations have
-        nowhere to be defined, so the compiler refuses every ``PlayAction``.
-        Accepting one here would let it round-trip through ``scene.md`` and fail
-        later, at render, having looked valid the whole way.
+      - ``{kind: play,  target, animation, [duration], [speed], [loop], [start]}``
+        — resolved at compile against the target entity's descriptor
+        ``animations`` (an#7). ``loop`` omitted means the animation's own.
 
     A leaf action with a ``start`` key is wrapped in ``sequence(delay(start),
     action)`` so flatten yields the correct absolute time. ``set`` uses ``at``
@@ -280,9 +279,10 @@ def _extract_actions_block(text: str) -> list:
         elif kind == "play":
             # `{kind: play, target, animation, [duration], [speed], [loop],
             # [start]}` — resolved at compile against the target entity's
-            # descriptor `animations` (an#7). The writer below has emitted
-            # this shape for a long time; the reader refused it until
-            # resolution existed, which left the pair asymmetric.
+            # descriptor `animations` (an#7). This reader accepted the shape
+            # from the start, then #24 made it refuse (nothing resolved a
+            # play) while the writer below kept emitting it — three days of
+            # a project's own scene.md failing to parse, ended here.
             action = _compose.play(
                 item["target"],
                 item["animation"],

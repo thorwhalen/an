@@ -64,13 +64,16 @@ def _shot(actions=(), *, duration=2.0):
 def _python_timeline(scene):
     """The compiled scene as the Python spec's Timeline, for evaluating poses."""
     from an.adapters.cutout.channel import Channel, Keyframe
-    from an.adapters.cutout.clip import Clip
+    from an.adapters.cutout.clip import Clip, LoopMode
     from an.adapters.cutout.timeline import PlacedClip, Timeline, Track
 
     clips = {
         aid: Clip(
             aid,
             duration=a.duration,
+            # Carried, not defaulted: without it every loop assertion routed
+            # through this helper silently evaluated as `once` (an#7 review).
+            loop_mode=LoopMode(a.loop_mode),
             channels=[
                 Channel(
                     ch.target,

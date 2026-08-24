@@ -113,3 +113,13 @@ If your new set needed code, you broke the generalisation; stop and fix that.
 | Pre-render validation | `an/ir/validate.py::_check_swap_references` (transform list duplicated-and-pinned); `an/characters/validate.py::_check_asset_sets` |
 | Proof fixture + tests | `tests/fixtures/characters/gale/`, `tests/test_swap_channels.py` |
 | Demo | `misc/demos/build_demos.py::_build_swap_channels` |
+
+## `play` rides the same channels (an#7)
+
+A `play` of a descriptor animation compiles slot tracks into swap channels on
+exactly these sets — `an.characters.play.resolve_play` picks the ONE set whose
+keys name every frame's attachment (two candidates is an error naming both) and
+the compiler emits `ChannelJSON(property=<set>, value=<KEY>)` like an authored
+`set`. Bone tracks become transform channels around the built node's rest.
+Resolution is shared with `an validate`; when you change what a slot or set
+can carry, change it there, not in `compile.py`.

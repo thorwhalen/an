@@ -10,13 +10,21 @@ Defaults are taken from production references (see research §6.3):
 The functions return :class:`an.characters.IdleAnimation` instances ready
 to drop into :attr:`CharacterDescriptor.animations`.
 
-**None of this drives what renders today.** The blink you see is compiled by
+**Nothing here renders on its own.** Descriptor ``animations`` are seeded
+by ``model_post_init`` and reach the screen ONLY through an authored ``play``
+action (an#7: ``play("maya", "idle_breath")`` renders exactly what
+:func:`breath_animation` returns — resolved by :mod:`an.characters.play`),
+never automatically. The blink you see without one is compiled by
 ``an.adapters.cutout.compile._add_blink_clips`` (an#88) from a fixed
-entity-name-phase schedule (period 4.0 s); descriptor ``animations`` are
-seeded by ``model_post_init`` and reached ONLY through an authored ``play``
-action (an#7: ``play("maya", "idle_breath")``), never automatically.
-``random_blink_schedule`` has no caller — it is the seeded alternative the
-compiled blink could adopt.
+entity-name-phase schedule (period 4.0 s). ``random_blink_schedule`` has no
+caller — it is the seeded alternative the compiled blink could adopt.
+
+One documented number is not what a ``play`` shows: the "4-second period"
+above is ``DEFAULT_BREATH_PERIOD_S``, but the seeded ``idle_breath`` also
+carries the 6 s weight shift, and :func:`evaluate_track` divides by the
+ANIMATION's duration — ``max(4, 6)`` — so every sine track in it runs a 6 s
+cycle. A per-track period is the fix; until then, ``include_weight_shift=False``
+gives the 4 s breath the numbers describe.
 
 >>> a = breath_animation()
 >>> a.name

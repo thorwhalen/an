@@ -333,6 +333,32 @@ def _build_swap_channels(work: Path) -> Path:
     return _render(work)
 
 
+def _build_play(work: Path) -> Path:
+    """`play` of a descriptor animation (an#7): the seeded `idle_breath` loops
+    to the shot end from ONE line, and two `blink`s ride the eyelid swap set."""
+    chars_dir = work / "assets" / "characters"
+    chars_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(
+        REPO_ROOT / "tests" / "fixtures" / "characters" / "gale",
+        chars_dir / "gale",
+        dirs_exist_ok=True,
+    )
+    md = (
+        _meta("Play: a descriptor animation from one line", 6.0)
+        + "\n"
+        + _shot("s1", 6.0)
+        + "\n"
+        + _entities("gale")
+        + "\n```yaml actions\n"
+        "- kind: play\n  target: gale\n  animation: idle_breath\n"
+        "- kind: play\n  target: gale\n  animation: blink\n  start: 1.5\n"
+        "- kind: play\n  target: gale\n  animation: blink\n  start: 4.2\n"
+        "```\n"
+    )
+    (work / "scene.md").write_text(md, encoding="utf-8")
+    return _render(work)
+
+
 def _copy_example(rel: str) -> Callable[[Path], Path]:
     def build(work: Path) -> Path:
         src = REPO_ROOT / rel
@@ -458,6 +484,24 @@ DEMOS: tuple[Demo, ...] = (
             "every error."
         ),
         build=_build_swap_channels,
+    ),
+    Demo(
+        slug="play-animation",
+        title="Play: a descriptor animation from one line",
+        shows=(
+            "The character breathes for the whole shot — torso bob, head tilt, "
+            "weight shift — and blinks twice on cue, from three `play` lines. "
+            "`idle_breath` and `blink` are the animations every descriptor "
+            "carries; `play` resolves them into channels around the rig's rest "
+            "pose (bone tracks) and through the eyelid swap set (slot tracks). "
+            "The looping breath has no `duration`, so it runs to the shot end (an#7)."
+        ),
+        how=(
+            "`{kind: play, target: gale, animation: idle_breath}` in `yaml actions`; "
+            "`an validate` and the compiler share one resolver, so a play that "
+            "cannot resolve is refused before any render with the reason named."
+        ),
+        build=_build_play,
     ),
     Demo(
         slug="svg-promote",

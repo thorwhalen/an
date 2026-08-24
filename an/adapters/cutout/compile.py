@@ -13,7 +13,9 @@ Strategy:
    absolute times.
 3. **Compile each FlatAction to PlacedClipJSON entries** on the appropriate
    track. Tween → a 2-keyframe AnimationClipJSON + a PlacedClipJSON. Set →
-   a 1-keyframe step-easing clip. Play → reference an existing animation.
+   a step channel that HOLDS until the next action on the same
+   target/property. Play → a per-instance clip (``__play__{n}``) resolved
+   from the target's descriptor animation (an#7).
 
 The compiler is deterministic and side-effect-free (it doesn't write to the
 mall). It reads only.
@@ -36,6 +38,16 @@ from pathlib import Path
 from typing import Any, Callable
 
 from an.base import TRANSFORM_PROPERTIES, swap_set_name_problem
+from an.characters.play import (
+    BoneTrack,
+    PlayResolutionError,
+    art_exists_for,
+    drawn_attachment,
+    primary_slot_per_bone,
+    resolve_play,
+    sampled_deviations,
+    slot_node_path,
+)
 from an.ir.compose import FlatAction, flatten
 from an.ir.schema import (
     Action,
@@ -352,22 +364,18 @@ class _SwapVocabulary:
     #: entity id → set → {KEY: attachment name}, as DECLARED (an#7 needs the
     #: attachment names: descriptor animation tracks name attachments).
     declared_maps: dict[str, dict[str, dict[str, str]]] = field(default_factory=dict)
-    #: entity id → {name: IdleAnimation} from the migrated descriptor (an#7).
-    animations: dict[str, dict[str, Any]] = field(default_factory=dict)
+    #: entity id → its MIGRATED descriptor (an#7: `play` resolves against
+    #: it through `an.characters.play`, the same code `an validate` runs).
+    descriptors: dict[str, CharacterDescriptor] = field(default_factory=dict)
+    #: entity id → `rel_path -> art on disk`, or None when the store cannot
+    #: say (then every declared attachment is assumed present — the part
+    #: probe's own rule, so resolution and the rig builder agree).
+    art_exists: dict[str, Callable[[str], bool] | None] = field(default_factory=dict)
     #: node path → its rest transform, so a descriptor animation's DEVIATIONS
     #: can be turned into the absolute values channels carry.
     node_transforms: dict[str, TransformJSON] = field(default_factory=dict)
     #: entity id → k, the view_box → scene-pixel factor its rig was built with.
     entity_scale: dict[str, float] = field(default_factory=dict)
-
-    def node_path_for_slot(self, entity_id: str, slot_name: str) -> str | None:
-        """The node path of ``slot_name`` under ``entity_id``, if built."""
-        hits = sorted(
-            p
-            for p in self.paths
-            if p.split("/", 1)[0] == entity_id and p.rsplit("/", 1)[-1] == slot_name
-        )
-        return hits[0] if hits else None
 
     def swap_capable_paths(self, entity_id: str, set_name: str) -> list[str]:
         """Node paths under ``entity_id`` that can apply ``set_name``."""
@@ -421,7 +429,8 @@ def _swap_vocabulary(
 
     declared: dict[str, dict[str, frozenset[str]]] = {}
     declared_maps: dict[str, dict[str, dict[str, str]]] = {}
-    animations: dict[str, dict[str, Any]] = {}
+    descriptors: dict[str, CharacterDescriptor] = {}
+    art_exists: dict[str, Callable[[str], bool] | None] = {}
     entity_scale: dict[str, float] = {}
     chars_store = mall.get("characters") or {}
     for entity in shot.entities:
@@ -457,7 +466,8 @@ def _swap_vocabulary(
         declared_maps[entity.id] = {
             channel: dict(keys) for channel, keys in desc.asset_sets.items()
         }
-        animations[entity.id] = dict(desc.animations)
+        descriptors[entity.id] = desc
+        art_exists[entity.id] = art_exists_for(chars_store, entity.ref)
         entity_scale[entity.id] = SCENE_PX_PER_VIEW_BOX / float(desc.view_box[3] or 1)
 
     return _SwapVocabulary(
@@ -466,7 +476,8 @@ def _swap_vocabulary(
         declared=declared,
         paths=frozenset(_runtime_node_paths(root)),
         declared_maps=declared_maps,
-        animations=animations,
+        descriptors=descriptors,
+        art_exists=art_exists,
         node_transforms=node_transforms,
         entity_scale=entity_scale,
     )
@@ -1131,30 +1142,6 @@ def _rig_origin(bones: dict[str, tuple[float, float]]) -> tuple[float, float]:
     return ((min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0)
 
 
-def _primary_slot_per_bone(desc: CharacterDescriptor) -> dict[str, str]:
-    """``{bone name: the slot that IS that bone}``, when one exists.
-
-    Used for node nesting, which is deliberately **not** the bone hierarchy.
-    The rigs here are flat by design — arms are siblings of the torso, not
-    children (CLAUDE.md pillar 4) — so bone parentage decides *position* only.
-    A slot nests under the primary slot of its bone when it is not that slot
-    itself, which is what puts eyes and mouth under ``head`` and leaves every
-    limb a direct child of the entity.
-    """
-    return {s.bone: s.name for s in desc.slots if s.name == s.bone}
-
-
-def _attachment_for(
-    desc: CharacterDescriptor, skin: Skin, slot: Slot
-) -> tuple[str, Attachment] | None:
-    """The ``(name, attachment)`` a slot draws by default, or ``None``."""
-    available = skin.slots.get(slot.name) or {}
-    if not available:
-        return None
-    name = slot.attachment if slot.attachment in available else next(iter(available))
-    return name, available[name]
-
-
 def _build_svg_character_subtree(
     entity: AssetRef,
     desc_data: dict[str, Any],
@@ -1195,7 +1182,9 @@ def _build_svg_character_subtree(
     skin = desc.skins.get("default") or next(iter(desc.skins.values()), Skin())
     bones = _bone_positions(desc)
     origin = _rig_origin(bones)
-    nests_under = _primary_slot_per_bone(desc)
+    # Shared with `an.characters.play` so a `play` resolves against the
+    # nesting the builder actually uses (an#7 review).
+    nests_under = primary_slot_per_bone(desc)
 
     # If the head art has its own face baked in (DiceBear / hand-drawn full
     # avatars), the separate eye/brow/mouth sprites double up with the baked
@@ -1245,7 +1234,7 @@ def _build_svg_character_subtree(
         if nested and head_has_face and parent == nests_under.get("head"):
             continue
 
-        resolved = _attachment_for(desc, skin, slot)
+        resolved = drawn_attachment(desc, skin, slot)
         if resolved is None or resolved[0] not in aliases.get(slot.name, {}):
             continue
         attachment_name, attachment = resolved
@@ -1388,6 +1377,23 @@ def _compile_actions(
         if anim_id is not None and anim_id not in animations:
             animations[anim_id] = _build_anim_for(
                 flat, anim_id, swap_properties=swap_props, vocab=vocab, fps=fps
+            )
+        if (
+            isinstance(flat.action, PlayAction)
+            and flat.action.duration is None
+            and anim_id is not None
+            and animations[anim_id].loop_mode == "loop"
+        ):
+            # A LOOP with no window to fill is a loop that never loops: the
+            # placement defaulted to the animation's natural duration, so
+            # `play("gale", "idle_breath")` stopped after one cycle — issue
+            # #7's title, one layer up (an#7 review). "Keep going" means to
+            # the shot end; both evaluators divide the window by `speed`, so
+            # the window is stretched by it to land there.
+            placed = placed.model_copy(
+                update={
+                    "duration": max(0.001, (shot_duration - flat.start) * placed.speed)
+                }
             )
         placed_by_track.setdefault(track_root, []).append(placed)
 
@@ -1598,127 +1604,97 @@ def _build_anim_for(
     raise TypeError(f"unsupported anim build for {type(action).__name__}")
 
 
-#: Descriptor bone-track properties → (runtime property, unit factor). The
-#: descriptor speaks degrees for rotation; the runtime is radians.
-_BONE_TRACK_PROPERTIES: dict[str, tuple[str, float]] = {
-    "x": ("x", 1.0),
-    "y": ("y", 1.0),
-    "rotation_deg": ("rotation", math.pi / 180.0),
-    "scale_x": ("scale_x", 1.0),
-    "scale_y": ("scale_y", 1.0),
-}
-
-
 def _resolve_play(
     action: PlayAction, *, anim_id: str, vocab: _SwapVocabulary | None, fps: int
 ) -> AnimationClipJSON:
     """A ``play`` becomes a clip built from the descriptor animation's tracks
-    (an#7). Two things the naive conversion gets wrong, both measured:
+    (an#7). Resolution — which node, which set, which key, and every way it
+    can fail — is :func:`an.characters.play.resolve_play`, shared with
+    ``an validate`` so the two cannot disagree; this function only converts
+    the resolved tracks into channel values.
+
+    Two conversions a naive copy gets wrong (the research reasoned them out,
+    `tests/test_play.py` pins them):
 
     - **Units and reference.** A ``bone:<b>.<prop>`` track is a DEVIATION in
       view-box units (rotation in degrees) around the bone's rest; a channel
       carries ABSOLUTE scene values (radians). So every value is
       ``rest + deviation * k`` (positions scale by the rig's view_box → pixel
       factor; rotation by pi/180), read off the built node's transform — a
-      naive copy teleported the torso to y≈±2 and threw on ``rotation_deg``.
+      naive copy would put the torso at y≈±2 instead of bobbing around its
+      rest, and `rotation_deg` is not a runtime property at all.
     - **Attachment swaps.** A ``slot:<s>.attachment`` track names
-      ATTACHMENTS; a swap channel carries set KEYS. Each frame resolves to
-      the (set, key) whose declared attachment it names and whose projection
-      the slot's node carries — the same swap path as an authored set.
+      ATTACHMENTS; a swap channel carries set KEYS. The whole track resolves
+      to ONE set (never split per frame across two channels) and rides the
+      same runtime swap path an authored ``set`` does.
 
-    Sine tracks are sampled at the frame rate with linear easing; step and
-    linear tracks map 1:1. ``loop`` is the action's override or, when the
-    action says nothing, the animation's own.
+    Sine tracks are sampled at the frame rate with linear easing, always
+    closing the cycle at the clip end; step and linear tracks map 1:1.
+    ``loop`` is the action's override or, when the action says nothing, the
+    animation's own.
     """
     entity_id = _track_root_of(action.target)
-    if vocab is None or entity_id not in vocab.animations:
+    if vocab is None or entity_id not in vocab.descriptors:
         raise CutoutCompileError(
             f"play of {action.animation!r} on {entity_id!r}: named animations "
             "live in a character descriptor's `animations`, and this entity "
             "has no descriptor (a procedural rig has none). Use tween / set."
         )
-    anims = vocab.animations[entity_id]
-    anim = anims.get(action.animation)
-    if anim is None:
-        raise CutoutCompileError(
-            f"play of {action.animation!r} on {entity_id!r}: the descriptor "
-            f"declares no such animation (it has: {sorted(anims)})."
+    desc = vocab.descriptors[entity_id]
+    try:
+        resolved = resolve_play(
+            desc, action.animation, art_exists=vocab.art_exists.get(entity_id)
         )
+    except PlayResolutionError as e:
+        raise CutoutCompileError(
+            f"play of {action.animation!r} on {entity_id!r}: "
+            + "; ".join(e.problems)
+        ) from e
+    anim = resolved.animation
     k = vocab.entity_scale.get(entity_id, 1.0)
     duration = max(0.001, float(anim.duration))
     channels: list[ChannelJSON] = []
-    for track in anim.tracks:
-        kind, _, rest = track.target.partition(":")
-        name, _, prop = rest.partition(".")
-        path = vocab.node_path_for_slot(entity_id, name)
-        if path is None:
+    for rt in resolved.tracks:
+        path = (
+            entity_id
+            if isinstance(rt, BoneTrack) and rt.slot is None
+            else f"{entity_id}/{slot_node_path(desc, rt.slot)}"
+        )
+        if path not in vocab.paths:
+            # Resolution mirrors the rig builder, so this is a bug in one of
+            # the two rather than an authoring error — say which node.
             raise CutoutCompileError(
-                f"play of {action.animation!r}: track {track.target!r} names "
-                f"{kind} {name!r}, but no node of that name was built for "
-                f"{entity_id!r}. Built: "
-                f"{sorted(p for p in vocab.paths if p.startswith(entity_id + '/'))}"
+                f"play of {action.animation!r}: track {rt.track.target!r} "
+                f"resolved to node {path!r}, which the built scene does not "
+                f"carry (built: {sorted(p for p in vocab.paths if p.startswith(entity_id))})."
             )
-        if kind == "bone":
-            if prop not in _BONE_TRACK_PROPERTIES:
-                raise CutoutCompileError(
-                    f"play of {action.animation!r}: bone track property "
-                    f"{prop!r} is not animatable (known: "
-                    f"{sorted(_BONE_TRACK_PROPERTIES)})."
-                )
-            runtime_prop, unit = _BONE_TRACK_PROPERTIES[prop]
-            rest_value = float(getattr(vocab.node_transforms[path], runtime_prop))
-            scale = unit * (k if prop in ("x", "y") else 1.0)
-            if track.type == "sine":
-                n = max(1, int(round(duration * fps)))
+        if isinstance(rt, BoneTrack):
+            rest_value = float(getattr(vocab.node_transforms[path], rt.property))
+            scale = rt.unit * (k if rt.rig_scaled else 1.0)
+            if rt.track.type == "sine":
                 kfs = [
-                    KeyframeJSON(
-                        time=min(duration, i / fps),
-                        value=rest_value
-                        + float(track.amplitude)
-                        * scale
-                        * math.sin(2.0 * math.pi * (min(duration, i / fps) / duration + float(track.phase))),
-                        easing="linear",
-                    )
-                    for i in range(n + 1)
+                    KeyframeJSON(time=t, value=rest_value + dev * scale, easing="linear")
+                    for t, dev in sampled_deviations(rt.track, duration, fps)
                 ]
             else:
-                easing = "step" if track.type == "step" else "linear"
+                easing = "step" if rt.track.type == "step" else "linear"
                 kfs = [
-                    KeyframeJSON(time=float(ft), value=rest_value + float(fv) * scale, easing=easing)
-                    for ft, fv in track.frames
-                ]
-            channels.append(ChannelJSON(target=path, property=runtime_prop, keyframes=kfs))
-        elif kind == "slot" and prop == "attachment":
-            maps = vocab.declared_maps.get(entity_id, {})
-            node_sets = vocab.node_sets.get(path, {})
-            by_set: dict[str, list[KeyframeJSON]] = {}
-            for ft, attachment in track.frames:
-                hit = next(
-                    (
-                        (set_name, key)
-                        for set_name, key_map in sorted(maps.items())
-                        for key, att in key_map.items()
-                        if att == attachment and key in node_sets.get(set_name, {})
-                    ),
-                    None,
-                )
-                if hit is None:
-                    raise CutoutCompileError(
-                        f"play of {action.animation!r}: track {track.target!r} "
-                        f"names attachment {attachment!r}, which no declared "
-                        f"asset set resolves on {path!r} (sets there: "
-                        f"{sorted(node_sets)})."
+                    KeyframeJSON(
+                        time=float(ft), value=rest_value + float(fv) * scale, easing=easing
                     )
-                set_name, key = hit
-                by_set.setdefault(set_name, []).append(
-                    KeyframeJSON(time=float(ft), value=key, easing="step")
-                )
-            for set_name, kfs in by_set.items():
-                channels.append(ChannelJSON(target=path, property=set_name, keyframes=kfs))
+                    for ft, fv in rt.track.frames
+                ]
+            channels.append(ChannelJSON(target=path, property=rt.property, keyframes=kfs))
         else:
-            raise CutoutCompileError(
-                f"play of {action.animation!r}: unsupported track target "
-                f"{track.target!r} (bone:<name>.<prop> or slot:<name>.attachment)."
+            channels.append(
+                ChannelJSON(
+                    target=path,
+                    property=rt.set_name,
+                    keyframes=[
+                        KeyframeJSON(time=t, value=key, easing="step")
+                        for t, key in rt.frames
+                    ],
+                )
             )
     loop = action.loop if action.loop is not None else bool(anim.loop)
     return AnimationClipJSON(

@@ -151,9 +151,13 @@ class PlayAction(_ActionBase):
     ``animation`` names an entry of ``CharacterDescriptor.animations`` (the
     seeded ``idle_breath`` and ``blink``, or anything an author adds); the
     compiler resolves its tracks into channels on the entity's nodes.
-    ``duration`` widens/narrows the placement window (None = the animation's
-    own duration); ``loop`` overrides the animation's declared ``loop``
-    (None = use the descriptor's).
+    ``duration`` widens/narrows the placement window; ``None`` means the
+    animation's own duration — or, when the resolved ``loop`` is true, the
+    rest of the shot, because a loop bounded by its own natural duration
+    never loops. ``loop`` overrides the animation's declared ``loop``
+    (``None`` = use the descriptor's). Inside a ``sequence`` a play with
+    ``duration=None`` has ZERO width (:func:`an.ir.compose.duration_of`):
+    the next sibling starts at the same instant.
     """
 
     kind: Literal["play"] = "play"

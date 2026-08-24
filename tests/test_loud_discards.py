@@ -139,11 +139,14 @@ def test_the_schema_no_longer_advertises_a_move_the_compiler_lacks():
 # --------------------------------------------------------------- 2. PlayAction
 
 
-def test_play_raises_instead_of_compiling_to_a_clip_that_animates_nothing():
-    """The defensive re-pass used to fabricate an empty, channel-less clip.
+def test_a_play_on_a_descriptor_less_entity_is_refused_not_faked():
+    """`play` resolves against the target's descriptor (an#7); an entity with
+    none — the placeholder rig here — can play nothing, and must say so.
 
-    That is how `play` came to look wired up while animating nothing: the clip
-    was present, carried the right duration, and moved not one property (#7).
+    History this guards: the defensive re-pass used to fabricate an empty,
+    channel-less clip, which is how `play` came to look wired up while
+    animating nothing — the clip was present, carried the right duration, and
+    moved not one property. The refusal must name the animation.
     """
     shot = Shot(
         id="s1",
@@ -546,8 +549,9 @@ def test_no_skill_advertises_a_capability_that_now_raises():
 
     `pan_left` was the original instance: named in the IR's own comment and dead
     in the compiler. The same trap applies to every doc that lists what a scene
-    may contain — the `an` skill told an agent that `kind` may be `prop` and that
-    `play` is a composition primitive, both of which now hard-fail.
+    may contain — the `an` skill told an agent that `kind` may be `prop`, which
+    hard-fails (it once said the same of `play`, which has since been built —
+    an#7 — so that half of the guard is gone).
     """
     skills = Path(__file__).resolve().parents[1] / ".claude/skills"
     offenders = []
