@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.54 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.55 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=0ec583c6"></script>
+      <script src="../../../../_static/documentation_options.js?v=aabd07df"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
@@ -214,6 +215,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRANSFORM_PROPERTIES</span><span class="p">,</span> <span class="n">swap_set_name_problem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.coarticulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">coarticulate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.play</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BoneTrack</span><span class="p">,</span>
     <span class="n">PlayResolutionError</span><span class="p">,</span>
@@ -296,8 +298,18 @@
     <span class="k">return</span> <span class="n">_CHARACTER_PALETTES</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
 
-<span class="c1"># Cap viseme keyframe density to ~7Hz; reduces "twitchy" mouth at full speed.</span>
-<span class="n">_MIN_VISEME_GAP_S</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.14</span>
+<span class="c1">#: Co-articulation on/off (an#97). ON is the product; OFF reproduces the</span>
+<span class="c1">#: pre-#97 mouth CHOICE — the raw provider track thinned by the old drop-not-hold</span>
+<span class="c1">#: condenser — over the new frame-ceiled clip window (so not byte-for-byte the</span>
+<span class="c1">#: old emission: OFF still closes the mouth after a line) and exists so the `lipsync-coarticulation` demo and a test can</span>
+<span class="c1">#: render the two side by side. Not a RenderContext knob: nobody should ship</span>
+<span class="c1">#: the old behaviour, and a module flag rebound for one render is the shape</span>
+<span class="c1">#: the bench's levers already use.</span>
+<span class="n">COARTICULATION_ENABLED</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="c1">#: The pre-#97 minimum gap, kept ONLY for the OFF path above (the ON path's</span>
+<span class="c1">#: hold is `coarticulate.DEFAULT_MIN_HOLD_S`, the same number until measured).</span>
+<span class="n">_LEGACY_MIN_VISEME_GAP_S</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.14</span>
 
 <span class="c1">#: The procedural (drawn) mouth's swap vocabulary, DECLARED as data on its</span>
 <span class="c1">#: visual exactly as the runtime declares it (`g._anDrawSets = {viseme: ...}`)</span>
@@ -781,6 +793,7 @@
         <span class="n">tracks</span><span class="p">,</span>
         <span class="n">mall</span><span class="o">=</span><span class="n">mall</span><span class="p">,</span>
         <span class="n">vocab</span><span class="o">=</span><span class="n">vocab</span><span class="p">,</span>
+        <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="c1"># Blinks (an#88): compiled per eye, ahead of everything authored.</span>
     <span class="n">blink_phases</span> <span class="o">=</span> <span class="n">_add_blink_clips</span><span class="p">(</span>
@@ -2230,9 +2243,18 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">vocab</span><span class="p">:</span> <span class="n">_SwapVocabulary</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""For each dialogue line with a viseme_track, emit a step swap channel on</span>
 <span class="sd">    every node of the speaker that can apply the ``viseme`` set.</span>
+
+<span class="sd">    The provider's raw track goes through the co-articulation passes first</span>
+<span class="sd">    (`an.adapters.cutout.coarticulate`, an#97): duplicates merged, sub-frame</span>
+<span class="sd">    tongue shapes dropped, every shape led by two frames, a decay before rest,</span>
+<span class="sd">    and a minimum hold that HOLDS AND VOTES. The old condenser here dropped</span>
+<span class="sd">    every key inside its 0.14 s window, so a consonant cluster collapsed to</span>
+<span class="sd">    whichever shape arrived first (epic #9 defect 5b). ``fps`` is what "one</span>
+<span class="sd">    frame" means to the symbolic pass.</span>
 
 <span class="sd">    Side-effects ``animations`` (adds named clips) and ``tracks`` (appends to</span>
 <span class="sd">    or creates the speaker's track).</span>
@@ -2270,7 +2292,17 @@
 <span class="sd">    """</span>
     <span class="n">face_baked</span> <span class="o">=</span> <span class="n">_baked_face_speakers</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">)</span>
     <span class="n">track_lookup</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TrackJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="o">.</span><span class="n">target_root</span><span class="p">:</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">}</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">):</span>
+    <span class="c1"># Emit in TIME order, keeping each line's authored index for its ids: the</span>
+    <span class="c1"># frame-ceiled window of one line can overlap the next line's first frame</span>
+    <span class="c1"># on the same track, and the runtime resolves that by clip order (later</span>
+    <span class="c1"># wins) — so a dialogue list authored out of order would show line 1's</span>
+    <span class="c1"># rest over line 2's opening shape for one frame (an#97 review). In-order</span>
+    <span class="c1"># lists are emitted exactly as before.</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">dialogue</span><span class="p">),</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span><span class="o">.</span><span class="n">keyframes</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2300,18 +2332,24 @@
             <span class="p">)</span>
             <span class="k">continue</span>
 
-        <span class="c1"># Build viseme keyframes (step-easing) — but cap density so adjacent</span>
-        <span class="c1"># keyframes are at least _MIN_VISEME_GAP_S apart. Reduces the</span>
-        <span class="c1"># "twitchy" look of per-character distribution at high densities.</span>
         <span class="n">raw</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">kf</span><span class="o">.</span><span class="n">time</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">kf</span><span class="o">.</span><span class="n">viseme</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
             <span class="k">for</span> <span class="n">kf</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">viseme_track</span><span class="o">.</span><span class="n">keyframes</span>
         <span class="p">]</span>
-        <span class="n">condensed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">condensed</span> <span class="ow">and</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">condensed</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">_MIN_VISEME_GAP_S</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="n">condensed</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+        <span class="n">condensed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">COARTICULATION_ENABLED</span><span class="p">:</span>
+            <span class="n">condensed</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coarticulate</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">))</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The pre-#97 condenser, verbatim: a key inside the window is</span>
+            <span class="c1"># DROPPED, so the shape that arrived first owns the window.</span>
+            <span class="n">condensed</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">condensed</span> <span class="ow">and</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">condensed</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">_LEGACY_MIN_VISEME_GAP_S</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">condensed</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">mouth_paths</span><span class="p">:</span>
             <span class="n">mapped</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vocab</span><span class="o">.</span><span class="n">node_sets</span><span class="p">[</span><span class="n">target</span><span class="p">][</span><span class="n">VISEME_CHANNEL</span><span class="p">])</span>
@@ -2352,10 +2390,18 @@
             <span class="c1"># closes its mouth too.</span>
             <span class="n">kfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">rest</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"step"</span><span class="p">))</span>
 
+            <span class="c1"># The clip WINDOW ends on the first frame at or after the line's</span>
+            <span class="c1"># end, not at the line's end itself: a terminal rest at 0.71 s is</span>
+            <span class="c1"># never sampled when frame 17 is 0.708 s and frame 18 (0.75 s) lies</span>
+            <span class="c1"># outside a 0.71 s window — the runtime then keeps whatever shape</span>
+            <span class="c1"># frame 17 showed, and the mouth stays open after the line. Seen on</span>
+            <span class="c1"># `single_character`'s f0024 golden (an#97); blink clips already</span>
+            <span class="c1"># frame-ceil their windows for the same reason.</span>
+            <span class="n">window</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span> <span class="o">*</span> <span class="n">fps</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">)</span> <span class="o">/</span> <span class="n">fps</span>
             <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__viseme__</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span><span class="w"> </span><span class="s1">'.'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
             <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
-                <span class="n">duration</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                <span class="n">duration</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">)),</span>
                 <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">ChannelJSON</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="nb">property</span><span class="o">=</span><span class="n">VISEME_CHANNEL</span><span class="p">,</span> <span class="n">keyframes</span><span class="o">=</span><span class="n">kfs</span><span class="p">),</span>
                 <span class="p">],</span>
@@ -2369,7 +2415,7 @@
                 <span class="n">PlacedClipJSON</span><span class="p">(</span>
                     <span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
                     <span class="n">start_time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">start</span><span class="p">),</span>
-                    <span class="n">duration</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
+                    <span class="n">duration</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">duration</span><span class="p">)),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 

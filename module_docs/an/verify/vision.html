@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.vision &mdash; an 0.1.54 documentation</title>
+  <title>an.verify.vision &mdash; an 0.1.55 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
+      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout.html">an.adapters.cutout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
@@ -158,6 +159,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.verify.vision.judge_envelope"><code class="docutils literal notranslate"><span class="pre">judge_envelope()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.verify.vision.judge_frames"><code class="docutils literal notranslate"><span class="pre">judge_frames()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.verify.vision.judge_key"><code class="docutils literal notranslate"><span class="pre">judge_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.verify.vision.judge_legibility"><code class="docutils literal notranslate"><span class="pre">judge_legibility()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.verify.vision.legibility_prompt"><code class="docutils literal notranslate"><span class="pre">legibility_prompt()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -312,6 +315,21 @@ the fully-spelled call are two different keys for one request.</p>
 <span class="go">False</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.verify.vision.judge_legibility">
+<span class="sig-prename descclassname"><span class="pre">an.verify.vision.</span></span><span class="sig-name descname"><span class="pre">judge_legibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">judge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'claude-haiku-4-5-20251001'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">800</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/verify/vision.html#judge_legibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.verify.vision.judge_legibility" title="Link to this definition"></a></dt>
+<dd><p>Score a dense in-line frame strip for lip-sync legibility (an#97).</p>
+<p><code class="docutils literal notranslate"><span class="pre">judge</span></code> is the <cite>judge_frames</cite>-shaped seam — the cassette-backed one in
+tests, the paid one otherwise. Parsing stays outside the recording.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.verify.vision.legibility_prompt">
+<span class="sig-prename descclassname"><span class="pre">an.verify.vision.</span></span><span class="sig-name descname"><span class="pre">legibility_prompt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/verify/vision.html#legibility_prompt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.verify.vision.legibility_prompt" title="Link to this definition"></a></dt>
+<dd><p>The legibility prompt for one line. The text is part of the key, so a
+different line is a different recording.</p>
 </dd></dl>
 
 </section>

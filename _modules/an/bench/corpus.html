@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.corpus &mdash; an 0.1.54 documentation</title>
+  <title>an.bench.corpus &mdash; an 0.1.55 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
+      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
@@ -372,10 +373,13 @@
         <span class="n">expect_visual_kinds</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">({</span><span class="s2">"rect"</span><span class="p">,</span> <span class="s2">"ellipse"</span><span class="p">}),</span>
         <span class="n">golden_frames</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
         <span class="n">golden_note</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"a blink (the compiled scale_y squash on the procedural eyes). Only "</span>
-            <span class="s2">"253 pixels differ, and that is the point: blinks occupy 3.5</span><span class="si">% o</span><span class="s2">f "</span>
-            <span class="s2">"frames, so frame 0 against duration/2 is a pixel-identical pair "</span>
-            <span class="s2">"on this scene."</span>
+            <span class="s2">"a blink (the compiled scale_y squash on the procedural eyes) plus, "</span>
+            <span class="s2">"since an#97, the mouth: 253 pixels differ, 172 from the blink and "</span>
+            <span class="s2">"81 from the mouth (frame 0 shows the led first shape of the 0.71 s "</span>
+            <span class="s2">"line, frame 24 the closed rest after it, which the frame-ceiled "</span>
+            <span class="s2">"window now samples). Blinks occupy 3.5</span><span class="si">% o</span><span class="s2">f frames, so before the "</span>
+            <span class="s2">"lead frame 0 against duration/2 was a pixel-identical pair on this "</span>
+            <span class="s2">"scene; the mouth now separates them by 81 px."</span>
         <span class="p">),</span>
     <span class="p">),</span>
     <span class="s2">"promote_demo"</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">(</span>
@@ -424,15 +428,17 @@
         <span class="n">golden_frames</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">),</span>
         <span class="n">golden_note</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"the mouth mid-line: frame 14 sits on the `h`/`a` of 'shape' and "</span>
-            <span class="s2">"TODAY'S condenser shows `C` there, having dropped the `D` and `A` "</span>
-            <span class="s2">"that follow inside its 0.14 s window — the drop-instead-of-hold "</span>
-            <span class="s2">"defect PR-B (an#97) replaces with a vote, which is what will move "</span>
-            <span class="s2">"this frame. The head is lifted 34 px above its rest by an absolute "</span>
-            <span class="s2">"`set` so the placeholder rig's mouth clears the torso (127 px "</span>
-            <span class="s2">"differ between the pair). The second golden sits INSIDE the spoken "</span>
-            <span class="s2">"interval, which no other corpus scene does: `single_character` "</span>
-            <span class="s2">"samples after its line ends and `promote_demo` renders mute in the "</span>
-            <span class="s2">"bench (no visemes in its IR, by design). The visemes are the "</span>
+            <span class="s2">"shows `A`, the winner of its 0.14 s window under the an#97 vote; "</span>
+            <span class="s2">"the old drop-not-hold condenser showed `C` there, having dropped "</span>
+            <span class="s2">"the `D` and `A` that followed inside the window. Frame 0 shows "</span>
+            <span class="s2">"`E` — the winner of the first window, after the lead pulled the "</span>
+            <span class="s2">"line's opening cues to 0 — where the old path showed the rest. The "</span>
+            <span class="s2">"head is lifted 34 px above its rest by an absolute `set` so the "</span>
+            <span class="s2">"placeholder rig's mouth clears the torso. The second golden sits "</span>
+            <span class="s2">"INSIDE the spoken interval; `single_character`'s second golden "</span>
+            <span class="s2">"samples after its line ends (its first, at t=0, is on the led "</span>
+            <span class="s2">"first shape) and `promote_demo` renders mute in the bench (no "</span>
+            <span class="s2">"visemes in its IR, by design). The visemes are the "</span>
             <span class="s2">"offline provider's, stamped into the committed ir/scene.json; the "</span>
             <span class="s2">"bench renders with auto_audio=False and reads them from there."</span>
         <span class="p">),</span>

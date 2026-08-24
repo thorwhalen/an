@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.verify.vision &mdash; an 0.1.54 documentation</title>
+  <title>an.verify.vision &mdash; an 0.1.55 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
+      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
@@ -421,6 +422,85 @@
         <span class="k">return</span> <span class="n">version</span><span class="p">(</span><span class="s2">"anthropic"</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">PackageNotFoundError</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="n">_LEGIBILITY_PROMPT</span> <span class="o">=</span> <span class="s2">"""You are judging LIP-SYNC LEGIBILITY on a dense strip of frames from a</span>
+<span class="s2">short animated cartoon, all taken from inside ONE spoken line. The art is</span>
+<span class="s2">deliberately simple; judge only the mouth. The character is saying:</span>
+
+<span class="s2">    "</span><span class="si">{text}</span><span class="s2">"</span>
+
+<span class="s2">Reply in JSON only, with this shape:</span>
+
+<span class="s2">{{</span>
+<span class="s2">  "legibility": &lt;integer 1-5: 1 = the mouth could be saying anything, 5 = you could</span>
+<span class="s2">                 read this line from the mouth alone&gt;,</span>
+<span class="s2">  "heard": "&lt;the words you would guess from the mouth shapes alone, or empty&gt;"</span>
+<span class="s2">}}</span>
+<span class="s2">"""</span>
+
+
+<div class="viewcode-block" id="legibility_prompt">
+<a class="viewcode-back" href="../../../module_docs/an/verify/vision.html#an.verify.legibility_prompt">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">legibility_prompt</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The legibility prompt for one line. The text is part of the key, so a</span>
+<span class="sd">    different line is a different recording."""</span>
+    <span class="k">return</span> <span class="n">_LEGIBILITY_PROMPT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_legibility</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``(score, heard)`` from a reply, or ``None`` when it carried no verdict.</span>
+
+<span class="sd">    &gt;&gt;&gt; _parse_legibility('{"legibility": 4, "heard": "hold the shape"}')</span>
+<span class="sd">    (4, 'hold the shape')</span>
+<span class="sd">    &gt;&gt;&gt; _parse_legibility("I can't help with that.") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; _parse_legibility('{"legibility": 9}') is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">body</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">fenced</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"```(?:json)?\s*({.*?})\s*```"</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">fenced</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">fenced</span> <span class="k">else</span> <span class="n">body</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"{"</span><span class="p">),</span> <span class="n">raw</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"legibility"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">score</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">heard</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"heard"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">score</span><span class="p">,</span> <span class="p">(</span><span class="n">heard</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">heard</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="judge_legibility">
+<a class="viewcode-back" href="../../../module_docs/an/verify/vision.html#an.verify.judge_legibility">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">judge_legibility</span><span class="p">(</span>
+    <span class="n">frames</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bytes</span><span class="p">],</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">judge</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_DEFAULT_MODEL</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_DEFAULT_MAX_TOKENS</span><span class="p">,</span>
+    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Score a dense in-line frame strip for lip-sync legibility (an#97).</span>
+
+<span class="sd">    ``judge`` is the `judge_frames`-shaped seam — the cassette-backed one in</span>
+<span class="sd">    tests, the paid one otherwise. Parsing stays outside the recording.</span>
+<span class="sd">    """</span>
+    <span class="n">reply</span> <span class="o">=</span> <span class="p">(</span><span class="n">judge</span> <span class="ow">or</span> <span class="n">judge_frames</span><span class="p">)(</span>
+        <span class="n">frames</span><span class="p">,</span> <span class="n">prompt</span><span class="o">=</span><span class="n">legibility_prompt</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_parse_legibility</span><span class="p">(</span><span class="n">reply</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="judge_frames">

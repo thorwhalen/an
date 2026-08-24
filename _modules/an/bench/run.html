@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.run &mdash; an 0.1.54 documentation</title>
+  <title>an.bench.run &mdash; an 0.1.55 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
+      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
@@ -817,7 +818,7 @@
 <span class="sd">    &gt;&gt;&gt; from types import SimpleNamespace as NS</span>
 <span class="sd">    &gt;&gt;&gt; shot_policy_provenance([NS(shot_id="s1", scene_json={"meta": {"step_hz": 12.0, "blink_phases": {"a": 0.5}}}),</span>
 <span class="sd">    ...                         NS(shot_id="s2", scene_json={"meta": {}})])</span>
-<span class="sd">    {'blink_phases': {'s1': {'a': 0.5}, 's2': {}}, 'step_hz': {'s1': 12.0, 's2': None}}</span>
+<span class="sd">    {'blink_phases': {'s1': {'a': 0.5}, 's2': {}}, 'step_hz': {'s1': 12.0, 's2': None}, 'viseme_keyframes_per_second': {'s1': None, 's2': None}}</span>
 <span class="sd">    """</span>
     <span class="n">metas</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">shot_id</span><span class="p">:</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">scene_json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"meta"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shots</span><span class="p">}</span>
     <span class="k">return</span> <span class="p">{</span>
@@ -825,7 +826,46 @@
             <span class="n">sid</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"blink_phases"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">sid</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metas</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">},</span>
         <span class="s2">"step_hz"</span><span class="p">:</span> <span class="p">{</span><span class="n">sid</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"step_hz"</span><span class="p">)</span> <span class="k">for</span> <span class="n">sid</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metas</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+        <span class="s2">"viseme_keyframes_per_second"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">shot_id</span><span class="p">:</span> <span class="n">viseme_keyframes_per_second</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">scene_json</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shots</span>
+        <span class="p">},</span>
     <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="viseme_keyframes_per_second">
+<a class="viewcode-back" href="../../../module_docs/an/bench/run.html#an.bench.viseme_keyframes_per_second">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">viseme_keyframes_per_second</span><span class="p">(</span><span class="n">scene_json</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Viseme keyframes per second of dialogue in a compiled shot, or ``None``</span>
+<span class="sd">    when nothing speaks (an#97).</span>
+
+<span class="sd">    Counted over the ``__viseme__`` clips: keyframes minus one per channel</span>
+<span class="sd">    (the trailing rest is an invariant, not a decision — today's emission has</span>
+<span class="sd">    one channel per clip), over the clips' summed durations, which are the</span>
+<span class="sd">    frame-ceiled windows rather than the lines' exact lengths (a small</span>
+<span class="sd">    downward bias, the same for every row). Keyframes, not distinct shapes — a repeated code (the carried</span>
+<span class="sd">    rest before the terminal one) counts. The co-articulation passes bring</span>
+<span class="sd">    this below the RAW provider track's rate; against the old drop-not-hold</span>
+<span class="sd">    condenser it can rise, because that loop was cheaper only by dropping</span>
+<span class="sd">    shapes. Recorded as provenance rather than a panel metric because no lever</span>
+<span class="sd">    in the registry moves it.</span>
+
+<span class="sd">    &gt;&gt;&gt; viseme_keyframes_per_second({"animations": {}})</span>
+<span class="sd">    &gt;&gt;&gt; viseme_keyframes_per_second({"animations": {"__viseme__s_0_m": {"duration": 2.0,</span>
+<span class="sd">    ...     "channels": [{"keyframes": [{"time": 0}, {"time": 0.5}, {"time": 1.0}, {"time": 2.0}]}]}}})</span>
+<span class="sd">    1.5</span>
+<span class="sd">    """</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">clip</span> <span class="ow">in</span> <span class="p">(</span><span class="n">scene_json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"animations"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"__viseme__"</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">clip</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"channels"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">changes</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"keyframes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">seconds</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">clip</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">seconds</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">changes</span> <span class="o">/</span> <span class="n">seconds</span></div>
 
 
 

@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.adapters.cutout.coarticulate &mdash; an 0.1.55 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="an.adapters.cutout.compile" href="compile.html" />
+    <link rel="prev" title="an.adapters.cutout.clip" href="clip.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.coarticulate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.Cue"><code class="docutils literal notranslate"><span class="pre">Cue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.DEFAULT_DECAY_S"><code class="docutils literal notranslate"><span class="pre">DEFAULT_DECAY_S</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.DEFAULT_DOMINANCE"><code class="docutils literal notranslate"><span class="pre">DEFAULT_DOMINANCE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.DEFAULT_LEAD_S"><code class="docutils literal notranslate"><span class="pre">DEFAULT_LEAD_S</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.DEFAULT_MIN_HOLD_S"><code class="docutils literal notranslate"><span class="pre">DEFAULT_MIN_HOLD_S</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.DOMINANCE"><code class="docutils literal notranslate"><span class="pre">DOMINANCE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.WEAK_BELOW"><code class="docutils literal notranslate"><span class="pre">WEAK_BELOW</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.coarticulate"><code class="docutils literal notranslate"><span class="pre">coarticulate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.condense"><code class="docutils literal notranslate"><span class="pre">condense()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.decay"><code class="docutils literal notranslate"><span class="pre">decay()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.lead"><code class="docutils literal notranslate"><span class="pre">lead()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.merge_duplicates"><code class="docutils literal notranslate"><span class="pre">merge_duplicates()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.coarticulate.suppress_weak"><code class="docutils literal notranslate"><span class="pre">suppress_weak()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/play.html">an.characters.play</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">an.adapters.cutout.coarticulate</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/module_docs/an/adapters/cutout/coarticulate.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-an.adapters.cutout.coarticulate">
+<span id="an-adapters-cutout-coarticulate"></span><h1>an.adapters.cutout.coarticulate<a class="headerlink" href="#module-an.adapters.cutout.coarticulate" title="Link to this heading"></a></h1>
+<p>Co-articulation for a swap mouth: the passes between a provider’s raw viseme
+track and the compiler’s channel emission (an#97, epic #9 Wave 6).</p>
+<p>A lip-sync provider hands the compiler a list of <code class="docutils literal notranslate"><span class="pre">(time,</span> <span class="pre">code)</span></code> cues — one
+mouth shape per phoneme or per character, at whatever density it produced.
+Shown as-is, that track <em>flickers</em>: consonant clusters swap the mouth faster
+than a frame or two can show, tongue-only shapes swap the lips for one frame, and
+every shape lands exactly on its sound instead of a beat ahead of it. These
+passes turn the raw track into what an animator would key, in this order:</p>
+<ol class="arabic simple">
+<li><p><strong>Symbolic</strong> — <a class="reference internal" href="#an.adapters.cutout.coarticulate.merge_duplicates" title="an.adapters.cutout.coarticulate.merge_duplicates"><code class="xref py py-func docutils literal notranslate"><span class="pre">merge_duplicates()</span></code></a> drops a cue whose shape is already
+showing; <a class="reference internal" href="#an.adapters.cutout.coarticulate.suppress_weak" title="an.adapters.cutout.coarticulate.suppress_weak"><code class="xref py py-func docutils literal notranslate"><span class="pre">suppress_weak()</span></code></a> drops a low-dominance cue that would show for
+less than one frame (JALI, Edwards et al. 2016 §4.2: “Tongue-only visemes
+(l n t d g k N) have no influence on the lips” — for a swap mouth, “take the
+neighbour’s shape” is “do not swap”).</p></li>
+<li><p><strong>Anticipation</strong> — <a class="reference internal" href="#an.adapters.cutout.coarticulate.lead" title="an.adapters.cutout.coarticulate.lead"><code class="xref py py-func docutils literal notranslate"><span class="pre">lead()</span></code></a> moves every cue earlier by a fixed lead
+(JALI: “speech onset begins 120 ms before the apex”; the animator’s “two
+frames ahead”; Rhubarb’s own <code class="docutils literal notranslate"><span class="pre">maxExtensionDuration</span></code> of 60 ms), clamped
+at 0.</p></li>
+<li><p><strong>Decay</strong> — <a class="reference internal" href="#an.adapters.cutout.coarticulate.decay" title="an.adapters.cutout.coarticulate.decay"><code class="xref py py-func docutils literal notranslate"><span class="pre">decay()</span></code></a> gives a shape its time to close: a rest cue that
+arrives sooner than <code class="docutils literal notranslate"><span class="pre">decay_s</span></code> after the shape before it is pushed out to
+<code class="docutils literal notranslate"><span class="pre">decay_s</span></code> (JALI: “another 120 ms to decay to zero”), never past the next
+speaking cue.</p></li>
+<li><p><strong>Minimum hold</strong> — <a class="reference internal" href="#an.adapters.cutout.coarticulate.condense" title="an.adapters.cutout.coarticulate.condense"><code class="xref py py-func docutils literal notranslate"><span class="pre">condense()</span></code></a>, LAST. It <strong>holds and votes</strong>; it never
+drops a cue unvoted (a carried loser can lose its next window too and never
+show — outvoted twice, not skipped). Windows of at least <code class="docutils literal notranslate"><span class="pre">min_hold_s</span></code> open at each cue that clears the
+previous window; within a window the shape with the largest
+<code class="docutils literal notranslate"><span class="pre">span</span> <span class="pre">×</span> <span class="pre">dominance</span></code> (Rhubarb’s “select shape with highest total duration
+within the candidate range”, weighted by Cohen–Massaro’s per-segment
+dominance) shows, <strong>placed at the window start</strong>. The old compiler loop
+<a href="#id1"><span class="problematic" id="id2">``</span></a>continue``d past every cue inside the window, so a consonant cluster
+collapsed to whichever shape arrived first — the defect epic #9 names.</p></li>
+</ol>
+<p>Order matters: (1) before (4) so a one-frame /t/ never wins a window; (2) and
+(3) before (4) so the hold is measured on shifted times. Every pass is a pure
+function over <code class="docutils literal notranslate"><span class="pre">list[Cue]</span></code>, runs in the <strong>compiler</strong> (never in the audio
+pipeline, so a knob change is a recompile and never a paid re-alignment), and
+none of these constants may ever enter a cache key.</p>
+<p>Dominance: the ORDER of <a class="reference internal" href="#an.adapters.cutout.coarticulate.DOMINANCE" title="an.adapters.cutout.coarticulate.DOMINANCE"><code class="xref py py-data docutils literal notranslate"><span class="pre">DOMINANCE</span></code></a> is sourced — A (bilabial closure;
+JALI rule 1 “must close the lips”) &gt; F, G (lip-heavy) &gt; E, D &gt; C &gt; X &gt; B, H
+(tongue) — and its values are art direction. A provider that knows the
+character behind a cue may scale it through <code class="docutils literal notranslate"><span class="pre">Cue.intensity</span></code> (Rhubarb’s <code class="docutils literal notranslate"><span class="pre">B</span></code>
+codes both “most consonants” and the vowel EE, so the letter alone cannot say).</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.Cue">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">Cue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/coarticulate.html#Cue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.coarticulate.Cue" title="Link to this definition"></a></dt>
+<dd><p>One mouth-shape cue: when it starts, which shape, how loudly it wants the lips.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.DEFAULT_DECAY_S">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_DECAY_S</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.12</span></span><a class="headerlink" href="#an.adapters.cutout.coarticulate.DEFAULT_DECAY_S" title="Link to this definition"></a></dt>
+<dd><p>Time a shape is given to close before rest (JALI’s “120 ms to decay”).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.DEFAULT_DOMINANCE">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_DOMINANCE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="headerlink" href="#an.adapters.cutout.coarticulate.DEFAULT_DOMINANCE" title="Link to this definition"></a></dt>
+<dd><p>A shape not in the table (another convention’s code) is neither strong nor weak.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.DEFAULT_LEAD_S">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_LEAD_S</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.08333333333333333</span></span><a class="headerlink" href="#an.adapters.cutout.coarticulate.DEFAULT_LEAD_S" title="Link to this definition"></a></dt>
+<dd><p>Anticipation lead — two frames at 24 fps (art direction; JALI’s 120 ms is the ceiling).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.DEFAULT_MIN_HOLD_S">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_MIN_HOLD_S</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.14</span></span><a class="headerlink" href="#an.adapters.cutout.coarticulate.DEFAULT_MIN_HOLD_S" title="Link to this definition"></a></dt>
+<dd><p>The minimum hold, unchanged from the pre-an#97 compiler until measured.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.DOMINANCE">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">DOMINANCE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'A':</span> <span class="pre">1.0,</span> <span class="pre">'B':</span> <span class="pre">0.3,</span> <span class="pre">'C':</span> <span class="pre">0.6,</span> <span class="pre">'D':</span> <span class="pre">0.8,</span> <span class="pre">'E':</span> <span class="pre">0.8,</span> <span class="pre">'F':</span> <span class="pre">0.9,</span> <span class="pre">'G':</span> <span class="pre">0.9,</span> <span class="pre">'H':</span> <span class="pre">0.3,</span> <span class="pre">'X':</span> <span class="pre">0.5}</span></span><a class="headerlink" href="#an.adapters.cutout.coarticulate.DOMINANCE" title="Link to this definition"></a></dt>
+<dd><p>Per-shape dominance for Rhubarb’s letters. Order sourced, values ours.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.WEAK_BELOW">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">WEAK_BELOW</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="headerlink" href="#an.adapters.cutout.coarticulate.WEAK_BELOW" title="Link to this definition"></a></dt>
+<dd><p>Below this dominance a cue is “weak” for <a class="reference internal" href="#an.adapters.cutout.coarticulate.suppress_weak" title="an.adapters.cutout.coarticulate.suppress_weak"><code class="xref py py-func docutils literal notranslate"><span class="pre">suppress_weak()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.coarticulate">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">coarticulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_hold_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.08333333333333333</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'X'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.adapters.cutout.coarticulate.Cue" title="an.adapters.cutout.coarticulate.Cue"><span class="pre">Cue</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/coarticulate.html#coarticulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.coarticulate.coarticulate" title="Link to this definition"></a></dt>
+<dd><p>All four passes, in the order the module docstring gives.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">raw</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.30</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.34</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.38</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.80</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="nb">round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coarticulate</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.257, 'D'), (0.717, 'X')]</span>
+</pre></div>
+</div>
+<p>A track that ends on <code class="docutils literal notranslate"><span class="pre">rest</span></code> still does after the passes, at <code class="docutils literal notranslate"><span class="pre">end</span></code> when
+the decay left no room before it (the compiler appends its own terminal
+rest at the line’s end regardless — this is for every other caller):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="nb">round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coarticulate</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.69</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.71</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">)],</span> <span class="n">fps</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">0.71</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.217, 'D'), (0.607, 'C'), (0.71, 'X')]</span>
+</pre></div>
+</div>
+<p>The knobs are validated up front — a negative lead or a zero hold is a
+typo, not a style:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coarticulate</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">min_hold_s</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">min_hold_s must be &gt; 0, got 0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.condense">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">condense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_hold_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.adapters.cutout.coarticulate.Cue" title="an.adapters.cutout.coarticulate.Cue"><span class="pre">Cue</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/coarticulate.html#condense"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.coarticulate.condense" title="Link to this definition"></a></dt>
+<dd><p>Enforce a minimum hold by voting, never by dropping.</p>
+<p>Windows of <code class="docutils literal notranslate"><span class="pre">min_hold_s</span></code> open at each cue that clears the previous window.
+Every cue inside a window — the opener included — votes with the length of
+its raw span <strong>that falls inside the window</strong> times its dominance
+(Rhubarb’s “select shape with highest total duration within the candidate
+range”, weighted); the winner shows for the window, placed at the window
+start. A member whose span runs past the window’s end and did not win is
+not lost: it opens the next window at the window’s end, delayed — that is
+the hold doing its job. Ties go to the later arrival.</p>
+<p>The defect the epic names, verbatim semantics of the old compiler loop —
+‘A’ (the closure) and ‘D’ (the open vowel) are gone and a 40 ms ‘B’ holds
+for 500 ms:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">raw</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.30</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.34</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.38</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.80</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">old</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">old</span> <span class="ow">and</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">old</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">0.14</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">continue</span>
+<span class="gp">... </span>    <span class="n">old</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">old</span>
+<span class="go">[(0.0, 'X'), (0.3, 'B'), (0.8, 'X')]</span>
+</pre></div>
+</div>
+<p>The vote in the window at 0.30: B (0.04 × 0.3) and A (0.04 × 1.0) lose to
+D (0.06 in-window × 0.8), which shows at the window’s start:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">condense</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">min_hold_s</span><span class="o">=</span><span class="mf">0.14</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.3, 'D'), (0.8, 'X')]</span>
+</pre></div>
+</div>
+<p>A cue exactly at the window edge opens the next window, untouched — also
+at the third edge, where <code class="docutils literal notranslate"><span class="pre">0.28</span> <span class="pre">+</span> <span class="pre">0.14</span></code> is a hair over <code class="docutils literal notranslate"><span class="pre">0.42</span></code> in binary:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">condense</span><span class="p">([(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.14</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.28</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.42</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">)],</span> <span class="n">min_hold_s</span><span class="o">=</span><span class="mf">0.14</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.14, 'C'), (0.28, 'D'), (0.42, 'A')]</span>
+</pre></div>
+</div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">end</span></code> the last cue shows forever, so it always survives (it opens
+its own window when it loses one):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">condense</span><span class="p">([(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">)],</span> <span class="n">min_hold_s</span><span class="o">=</span><span class="mf">0.14</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.14, 'A')]</span>
+</pre></div>
+</div>
+<p>Windows chain, so nothing is lost: the opening rest keeps its window
+(0.10 of rest beats a 20 ms closure and 20 ms of F); F, running past the
+window, opens the next one at 0.14 and wins it over the 40 ms of C inside
+it; C in turn opens the window at 0.28:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">condense</span><span class="p">([(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.10</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.12</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.20</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">)],</span> <span class="n">min_hold_s</span><span class="o">=</span><span class="mf">0.14</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.14, 'F'), (0.28, 'C'), (0.9, 'X')]</span>
+</pre></div>
+</div>
+<p>A winner equal to the shape already showing is merged:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">condense</span><span class="p">([(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.10</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">)],</span> <span class="n">min_hold_s</span><span class="o">=</span><span class="mf">0.14</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X')]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.decay">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">decay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'X'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.adapters.cutout.coarticulate.Cue" title="an.adapters.cutout.coarticulate.Cue"><span class="pre">Cue</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/coarticulate.html#decay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.coarticulate.decay" title="Link to this definition"></a></dt>
+<dd><p>Give a shape <code class="docutils literal notranslate"><span class="pre">decay_s</span></code> to close: a rest arriving sooner than that after
+the shape before it is pushed out to <code class="docutils literal notranslate"><span class="pre">decay_s</span></code>, never past the next cue
+and never past <code class="docutils literal notranslate"><span class="pre">end</span></code> (a rest pushed to <code class="docutils literal notranslate"><span class="pre">end</span></code> is where the line closes).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="nb">round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">decay</span><span class="p">([(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">)],</span> <span class="n">decay_s</span><span class="o">=</span><span class="mf">0.12</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.2, 'D'), (0.32, 'X'), (0.6, 'B')]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="nb">round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">decay</span><span class="p">([(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.30</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">)],</span> <span class="n">decay_s</span><span class="o">=</span><span class="mf">0.12</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.2, 'D'), (0.3, 'B')]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.lead">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">lead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.adapters.cutout.coarticulate.Cue" title="an.adapters.cutout.coarticulate.Cue"><span class="pre">Cue</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/coarticulate.html#lead"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.coarticulate.lead" title="Link to this definition"></a></dt>
+<dd><p>Anticipation: every cue moves <code class="docutils literal notranslate"><span class="pre">lead_s</span></code> earlier, clamped at 0.</p>
+<p>Cues that collide at 0 collapse to the last one — the shape that is still
+the state once the collision is over. An opening burst shorter than the
+lead (<code class="docutils literal notranslate"><span class="pre">[(0,</span> <span class="pre">X),</span> <span class="pre">(0.02,</span> <span class="pre">A),</span> <span class="pre">(0.05,</span> <span class="pre">D),</span> <span class="pre">(0.07,</span> <span class="pre">X)]</span></code>) therefore never opens
+the mouth; the hold would have refused a 70 ms word anyway, and the old
+condenser did.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="nb">round</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">lead</span><span class="p">([(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">)],</span> <span class="n">lead_s</span><span class="o">=</span><span class="mf">0.08</span><span class="p">)]</span>
+<span class="go">[(0.0, 'D'), (0.42, 'B')]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.merge_duplicates">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">merge_duplicates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.adapters.cutout.coarticulate.Cue" title="an.adapters.cutout.coarticulate.Cue"><span class="pre">Cue</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/coarticulate.html#merge_duplicates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.coarticulate.merge_duplicates" title="Link to this definition"></a></dt>
+<dd><p>Drop a cue whose shape is the one already showing.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">merge_duplicates</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">)])]</span>
+<span class="go">[(0.0, 'X'), (0.1, 'B'), (0.3, 'C')]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.coarticulate.suppress_weak">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.coarticulate.</span></span><span class="sig-name descname"><span class="pre">suppress_weak</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weak_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.adapters.cutout.coarticulate.Cue" title="an.adapters.cutout.coarticulate.Cue"><span class="pre">Cue</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/coarticulate.html#suppress_weak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.coarticulate.suppress_weak" title="Link to this definition"></a></dt>
+<dd><p>Drop a weak (low-dominance) cue that would show for less than <code class="docutils literal notranslate"><span class="pre">max_weak_s</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">raw</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.20</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.40</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.43</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.80</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">suppress_weak</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">max_weak_s</span><span class="o">=</span><span class="mf">0.04</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.2, 'D'), (0.8, 'X')]</span>
+</pre></div>
+</div>
+<p>A weak cue that lasts is kept — this is not the minimum-hold pass:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">suppress_weak</span><span class="p">([(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">)],</span> <span class="n">max_weak_s</span><span class="o">=</span><span class="mf">0.04</span><span class="p">)]</span>
+<span class="go">[(0.0, 'X'), (0.2, 'B'), (0.5, 'D')]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="clip.html" class="btn btn-neutral float-left" title="an.adapters.cutout.clip" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="compile.html" class="btn btn-neutral float-right" title="an.adapters.cutout.compile" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

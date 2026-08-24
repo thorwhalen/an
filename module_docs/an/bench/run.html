@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.run &mdash; an 0.1.54 documentation</title>
+  <title>an.bench.run &mdash; an 0.1.55 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=0ec583c6"></script>
+      <script src="../../../_static/documentation_options.js?v=aabd07df"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,6 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout.html">an.adapters.cutout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
@@ -107,6 +108,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.naming_git_state"><code class="docutils literal notranslate"><span class="pre">naming_git_state()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.run_bench"><code class="docutils literal notranslate"><span class="pre">run_bench()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.shot_policy_provenance"><code class="docutils literal notranslate"><span class="pre">shot_policy_provenance()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.run.viseme_keyframes_per_second"><code class="docutils literal notranslate"><span class="pre">viseme_keyframes_per_second()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
@@ -302,7 +304,30 @@ was a timing policy, not a mystery.</p></li>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleNamespace</span> <span class="k">as</span> <span class="n">NS</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">shot_policy_provenance</span><span class="p">([</span><span class="n">NS</span><span class="p">(</span><span class="n">shot_id</span><span class="o">=</span><span class="s2">"s1"</span><span class="p">,</span> <span class="n">scene_json</span><span class="o">=</span><span class="p">{</span><span class="s2">"meta"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"step_hz"</span><span class="p">:</span> <span class="mf">12.0</span><span class="p">,</span> <span class="s2">"blink_phases"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">}}}),</span>
 <span class="gp">... </span>                        <span class="n">NS</span><span class="p">(</span><span class="n">shot_id</span><span class="o">=</span><span class="s2">"s2"</span><span class="p">,</span> <span class="n">scene_json</span><span class="o">=</span><span class="p">{</span><span class="s2">"meta"</span><span class="p">:</span> <span class="p">{}})])</span>
-<span class="go">{'blink_phases': {'s1': {'a': 0.5}, 's2': {}}, 'step_hz': {'s1': 12.0, 's2': None}}</span>
+<span class="go">{'blink_phases': {'s1': {'a': 0.5}, 's2': {}}, 'step_hz': {'s1': 12.0, 's2': None}, 'viseme_keyframes_per_second': {'s1': None, 's2': None}}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.run.viseme_keyframes_per_second">
+<span class="sig-prename descclassname"><span class="pre">an.bench.run.</span></span><span class="sig-name descname"><span class="pre">viseme_keyframes_per_second</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/bench/run.html#viseme_keyframes_per_second"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.run.viseme_keyframes_per_second" title="Link to this definition"></a></dt>
+<dd><p>Viseme keyframes per second of dialogue in a compiled shot, or <code class="docutils literal notranslate"><span class="pre">None</span></code>
+when nothing speaks (an#97).</p>
+<p>Counted over the <code class="docutils literal notranslate"><span class="pre">__viseme__</span></code> clips: keyframes minus one per channel
+(the trailing rest is an invariant, not a decision — today’s emission has
+one channel per clip), over the clips’ summed durations, which are the
+frame-ceiled windows rather than the lines’ exact lengths (a small
+downward bias, the same for every row). Keyframes, not distinct shapes — a repeated code (the carried
+rest before the terminal one) counts. The co-articulation passes bring
+this below the RAW provider track’s rate; against the old drop-not-hold
+condenser it can rise, because that loop was cheaper only by dropping
+shapes. Recorded as provenance rather than a panel metric because no lever
+in the registry moves it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">viseme_keyframes_per_second</span><span class="p">({</span><span class="s2">"animations"</span><span class="p">:</span> <span class="p">{}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">viseme_keyframes_per_second</span><span class="p">({</span><span class="s2">"animations"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"__viseme__s_0_m"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"duration"</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"channels"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"keyframes"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"time"</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span> <span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span> <span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span> <span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">}]}]}}})</span>
+<span class="go">1.5</span>
 </pre></div>
 </div>
 </dd></dl>

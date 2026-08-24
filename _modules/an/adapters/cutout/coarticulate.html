@@ -1,0 +1,573 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.adapters.cutout.coarticulate &mdash; an 0.1.55 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=aabd07df"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/play.html">an.characters.play</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">an.adapters.cutout.coarticulate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for an.adapters.cutout.coarticulate</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Co-articulation for a swap mouth: the passes between a provider's raw viseme</span>
+<span class="sd">track and the compiler's channel emission (an#97, epic #9 Wave 6).</span>
+
+<span class="sd">A lip-sync provider hands the compiler a list of ``(time, code)`` cues — one</span>
+<span class="sd">mouth shape per phoneme or per character, at whatever density it produced.</span>
+<span class="sd">Shown as-is, that track *flickers*: consonant clusters swap the mouth faster</span>
+<span class="sd">than a frame or two can show, tongue-only shapes swap the lips for one frame, and</span>
+<span class="sd">every shape lands exactly on its sound instead of a beat ahead of it. These</span>
+<span class="sd">passes turn the raw track into what an animator would key, in this order:</span>
+
+<span class="sd">1. **Symbolic** — :func:`merge_duplicates` drops a cue whose shape is already</span>
+<span class="sd">   showing; :func:`suppress_weak` drops a low-dominance cue that would show for</span>
+<span class="sd">   less than one frame (JALI, Edwards et al. 2016 §4.2: "Tongue-only visemes</span>
+<span class="sd">   (l n t d g k N) have no influence on the lips" — for a swap mouth, "take the</span>
+<span class="sd">   neighbour's shape" is "do not swap").</span>
+<span class="sd">2. **Anticipation** — :func:`lead` moves every cue earlier by a fixed lead</span>
+<span class="sd">   (JALI: "speech onset begins 120 ms before the apex"; the animator's "two</span>
+<span class="sd">   frames ahead"; Rhubarb's own ``maxExtensionDuration`` of 60 ms), clamped</span>
+<span class="sd">   at 0.</span>
+<span class="sd">3. **Decay** — :func:`decay` gives a shape its time to close: a rest cue that</span>
+<span class="sd">   arrives sooner than ``decay_s`` after the shape before it is pushed out to</span>
+<span class="sd">   ``decay_s`` (JALI: "another 120 ms to decay to zero"), never past the next</span>
+<span class="sd">   speaking cue.</span>
+<span class="sd">4. **Minimum hold** — :func:`condense`, LAST. It **holds and votes**; it never</span>
+<span class="sd">   drops a cue unvoted (a carried loser can lose its next window too and never</span>
+<span class="sd">   show — outvoted twice, not skipped). Windows of at least ``min_hold_s`` open at each cue that clears the</span>
+<span class="sd">   previous window; within a window the shape with the largest</span>
+<span class="sd">   ``span × dominance`` (Rhubarb's "select shape with highest total duration</span>
+<span class="sd">   within the candidate range", weighted by Cohen–Massaro's per-segment</span>
+<span class="sd">   dominance) shows, **placed at the window start**. The old compiler loop</span>
+<span class="sd">   ``continue``d past every cue inside the window, so a consonant cluster</span>
+<span class="sd">   collapsed to whichever shape arrived first — the defect epic #9 names.</span>
+
+<span class="sd">Order matters: (1) before (4) so a one-frame /t/ never wins a window; (2) and</span>
+<span class="sd">(3) before (4) so the hold is measured on shifted times. Every pass is a pure</span>
+<span class="sd">function over ``list[Cue]``, runs in the **compiler** (never in the audio</span>
+<span class="sd">pipeline, so a knob change is a recompile and never a paid re-alignment), and</span>
+<span class="sd">none of these constants may ever enter a cache key.</span>
+
+<span class="sd">Dominance: the ORDER of :data:`DOMINANCE` is sourced — A (bilabial closure;</span>
+<span class="sd">JALI rule 1 "must close the lips") &gt; F, G (lip-heavy) &gt; E, D &gt; C &gt; X &gt; B, H</span>
+<span class="sd">(tongue) — and its values are art direction. A provider that knows the</span>
+<span class="sd">character behind a cue may scale it through ``Cue.intensity`` (Rhubarb's ``B``</span>
+<span class="sd">codes both "most consonants" and the vowel EE, so the letter alone cannot say).</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="c1">#: Per-shape dominance for Rhubarb's letters. Order sourced, values ours.</span>
+<span class="n">DOMINANCE</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"A"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="s2">"F"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+    <span class="s2">"G"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+    <span class="s2">"E"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+    <span class="s2">"D"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+    <span class="s2">"C"</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+    <span class="s2">"X"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="s2">"B"</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+    <span class="s2">"H"</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="c1">#: A shape not in the table (another convention's code) is neither strong nor weak.</span>
+<span class="n">DEFAULT_DOMINANCE</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="c1">#: Below this dominance a cue is "weak" for :func:`suppress_weak`.</span>
+<span class="n">WEAK_BELOW</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="c1">#: Anticipation lead — two frames at 24 fps (art direction; JALI's 120 ms is the ceiling).</span>
+<span class="n">DEFAULT_LEAD_S</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">24</span>
+<span class="c1">#: Time a shape is given to close before rest (JALI's "120 ms to decay").</span>
+<span class="n">DEFAULT_DECAY_S</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span>
+<span class="c1">#: The minimum hold, unchanged from the pre-an#97 compiler until measured.</span>
+<span class="n">DEFAULT_MIN_HOLD_S</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.14</span>
+
+
+<div class="viewcode-block" id="Cue">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.Cue">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cue</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One mouth-shape cue: when it starts, which shape, how loudly it wants the lips."""</span>
+
+    <span class="n">time</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">intensity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dominance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DOMINANCE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">DEFAULT_DOMINANCE</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensity</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cues</span><span class="p">(</span><span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Accept ``Cue``s or ``(t, code[, intensity])`` tuples; sort by time; upper-case codes."""</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">Cue</span><span class="p">):</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Cue</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">time</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">intensity</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">t</span><span class="p">,</span> <span class="n">code</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Cue</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+
+
+<span class="c1">#: Window-edge tolerance: ``0.28 + 0.14`` is ``0.42000000000000004``, so a cue at</span>
+<span class="c1">#: exactly three holds would otherwise fall *inside* the third window.</span>
+<span class="n">_EDGE_EPS</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spans</span><span class="p">(</span><span class="n">cues</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Cue</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""How long each cue would show if nothing were held: until the next cue,</span>
+<span class="sd">    then until ``end`` — or **forever** when ``end`` is unknown, so a last cue</span>
+<span class="sd">    is never a zero-span nobody that loses every vote and vanishes (review of</span>
+<span class="sd">    an#97: ``condense([(0, "X"), (0.1, "A")], min_hold_s=0.14)`` used to</span>
+<span class="sd">    return just the rest)."""</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">cues</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">-</span> <span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cues</span><span class="p">)</span>
+        <span class="k">else</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">end</span> <span class="o">-</span> <span class="n">c</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cues</span><span class="p">)</span>
+    <span class="p">]</span>
+
+
+<div class="viewcode-block" id="merge_duplicates">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.merge_duplicates">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_duplicates</span><span class="p">(</span><span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Drop a cue whose shape is the one already showing.</span>
+
+<span class="sd">    &gt;&gt;&gt; [(c.time, c.code) for c in merge_duplicates([(0, "X"), (0.1, "B"), (0.2, "B"), (0.3, "C")])]</span>
+<span class="sd">    [(0.0, 'X'), (0.1, 'B'), (0.3, 'C')]</span>
+<span class="sd">    """</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">_cues</span><span class="p">(</span><span class="n">keys</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">and</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="suppress_weak">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.suppress_weak">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">suppress_weak</span><span class="p">(</span><span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_weak_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Drop a weak (low-dominance) cue that would show for less than ``max_weak_s``.</span>
+
+<span class="sd">    &gt;&gt;&gt; raw = [(0.0, "X"), (0.20, "D"), (0.40, "B"), (0.43, "D"), (0.80, "X")]</span>
+<span class="sd">    &gt;&gt;&gt; [(c.time, c.code) for c in suppress_weak(raw, max_weak_s=0.04)]</span>
+<span class="sd">    [(0.0, 'X'), (0.2, 'D'), (0.8, 'X')]</span>
+
+<span class="sd">    A weak cue that lasts is kept — this is not the minimum-hold pass:</span>
+
+<span class="sd">    &gt;&gt;&gt; [(c.time, c.code) for c in suppress_weak([(0.0, "X"), (0.2, "B"), (0.5, "D")], max_weak_s=0.04)]</span>
+<span class="sd">    [(0.0, 'X'), (0.2, 'B'), (0.5, 'D')]</span>
+<span class="sd">    """</span>
+    <span class="n">cues</span> <span class="o">=</span> <span class="n">_cues</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+    <span class="n">spans</span> <span class="o">=</span> <span class="n">_spans</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
+    <span class="n">kept</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">span</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">spans</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">dominance</span> <span class="o">&lt;</span> <span class="n">WEAK_BELOW</span> <span class="ow">and</span> <span class="n">span</span> <span class="o">&lt;</span> <span class="n">max_weak_s</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">merge_duplicates</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="lead">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.lead">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">lead</span><span class="p">(</span><span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">lead_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Anticipation: every cue moves ``lead_s`` earlier, clamped at 0.</span>
+
+<span class="sd">    Cues that collide at 0 collapse to the last one — the shape that is still</span>
+<span class="sd">    the state once the collision is over. An opening burst shorter than the</span>
+<span class="sd">    lead (``[(0, X), (0.02, A), (0.05, D), (0.07, X)]``) therefore never opens</span>
+<span class="sd">    the mouth; the hold would have refused a 70 ms word anyway, and the old</span>
+<span class="sd">    condenser did.</span>
+
+<span class="sd">    &gt;&gt;&gt; [(round(c.time, 3), c.code) for c in lead([(0.0, "X"), (0.05, "D"), (0.5, "B")], lead_s=0.08)]</span>
+<span class="sd">    [(0.0, 'D'), (0.42, 'B')]</span>
+<span class="sd">    """</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">_cues</span><span class="p">(</span><span class="n">keys</span><span class="p">):</span>
+        <span class="n">moved</span> <span class="o">=</span> <span class="n">Cue</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">time</span> <span class="o">-</span> <span class="n">lead_s</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">intensity</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="ow">and</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">==</span> <span class="n">moved</span><span class="o">.</span><span class="n">time</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">moved</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">moved</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">merge_duplicates</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="decay">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.decay">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">decay</span><span class="p">(</span><span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">decay_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">rest</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"X"</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Give a shape ``decay_s`` to close: a rest arriving sooner than that after</span>
+<span class="sd">    the shape before it is pushed out to ``decay_s``, never past the next cue</span>
+<span class="sd">    and never past ``end`` (a rest pushed to ``end`` is where the line closes).</span>
+
+<span class="sd">    &gt;&gt;&gt; [(round(c.time, 3), c.code) for c in decay([(0.0, "X"), (0.2, "D"), (0.25, "X"), (0.6, "B")], decay_s=0.12)]</span>
+<span class="sd">    [(0.0, 'X'), (0.2, 'D'), (0.32, 'X'), (0.6, 'B')]</span>
+<span class="sd">    &gt;&gt;&gt; [(round(c.time, 3), c.code) for c in decay([(0.0, "X"), (0.2, "D"), (0.25, "X"), (0.30, "B")], decay_s=0.12)]</span>
+<span class="sd">    [(0.0, 'X'), (0.2, 'D'), (0.3, 'B')]</span>
+<span class="sd">    """</span>
+    <span class="n">cues</span> <span class="o">=</span> <span class="n">_cues</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cues</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">rest</span> <span class="ow">and</span> <span class="n">out</span> <span class="ow">and</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">!=</span> <span class="n">rest</span><span class="p">:</span>
+            <span class="n">earliest</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">+</span> <span class="n">decay_s</span>
+            <span class="n">nxt</span> <span class="o">=</span> <span class="n">cues</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cues</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">earliest</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">nxt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">earliest</span> <span class="o">&gt;=</span> <span class="n">nxt</span><span class="p">:</span>
+                    <span class="k">continue</span>  <span class="c1"># the next shape arrives first: no rest in between</span>
+                <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">earliest</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">earliest</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">Cue</span><span class="p">(</span><span class="n">earliest</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">intensity</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">merge_duplicates</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="condense">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.condense">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">condense</span><span class="p">(</span><span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_hold_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Enforce a minimum hold by voting, never by dropping.</span>
+
+<span class="sd">    Windows of ``min_hold_s`` open at each cue that clears the previous window.</span>
+<span class="sd">    Every cue inside a window — the opener included — votes with the length of</span>
+<span class="sd">    its raw span **that falls inside the window** times its dominance</span>
+<span class="sd">    (Rhubarb's "select shape with highest total duration within the candidate</span>
+<span class="sd">    range", weighted); the winner shows for the window, placed at the window</span>
+<span class="sd">    start. A member whose span runs past the window's end and did not win is</span>
+<span class="sd">    not lost: it opens the next window at the window's end, delayed — that is</span>
+<span class="sd">    the hold doing its job. Ties go to the later arrival.</span>
+
+<span class="sd">    The defect the epic names, verbatim semantics of the old compiler loop —</span>
+<span class="sd">    'A' (the closure) and 'D' (the open vowel) are gone and a 40 ms 'B' holds</span>
+<span class="sd">    for 500 ms:</span>
+
+<span class="sd">    &gt;&gt;&gt; raw = [(0.0, "X"), (0.30, "B"), (0.34, "A"), (0.38, "D"), (0.80, "X")]</span>
+<span class="sd">    &gt;&gt;&gt; old = []</span>
+<span class="sd">    &gt;&gt;&gt; for t, v in raw:</span>
+<span class="sd">    ...     if old and (t - old[-1][0]) &lt; 0.14:</span>
+<span class="sd">    ...         continue</span>
+<span class="sd">    ...     old.append((t, v))</span>
+<span class="sd">    &gt;&gt;&gt; old</span>
+<span class="sd">    [(0.0, 'X'), (0.3, 'B'), (0.8, 'X')]</span>
+
+<span class="sd">    The vote in the window at 0.30: B (0.04 × 0.3) and A (0.04 × 1.0) lose to</span>
+<span class="sd">    D (0.06 in-window × 0.8), which shows at the window's start:</span>
+
+<span class="sd">    &gt;&gt;&gt; [(c.time, c.code) for c in condense(raw, min_hold_s=0.14)]</span>
+<span class="sd">    [(0.0, 'X'), (0.3, 'D'), (0.8, 'X')]</span>
+
+<span class="sd">    A cue exactly at the window edge opens the next window, untouched — also</span>
+<span class="sd">    at the third edge, where ``0.28 + 0.14`` is a hair over ``0.42`` in binary:</span>
+
+<span class="sd">    &gt;&gt;&gt; [(c.time, c.code) for c in condense([(0.0, "X"), (0.14, "C"), (0.28, "D"), (0.42, "A")], min_hold_s=0.14)]</span>
+<span class="sd">    [(0.0, 'X'), (0.14, 'C'), (0.28, 'D'), (0.42, 'A')]</span>
+
+<span class="sd">    Without ``end`` the last cue shows forever, so it always survives (it opens</span>
+<span class="sd">    its own window when it loses one):</span>
+
+<span class="sd">    &gt;&gt;&gt; [(c.time, c.code) for c in condense([(0.0, "X"), (0.1, "A")], min_hold_s=0.14)]</span>
+<span class="sd">    [(0.0, 'X'), (0.14, 'A')]</span>
+
+<span class="sd">    Windows chain, so nothing is lost: the opening rest keeps its window</span>
+<span class="sd">    (0.10 of rest beats a 20 ms closure and 20 ms of F); F, running past the</span>
+<span class="sd">    window, opens the next one at 0.14 and wins it over the 40 ms of C inside</span>
+<span class="sd">    it; C in turn opens the window at 0.28:</span>
+
+<span class="sd">    &gt;&gt;&gt; [(c.time, c.code) for c in condense([(0.0, "X"), (0.10, "A"), (0.12, "F"), (0.20, "C"), (0.9, "X")], min_hold_s=0.14)]</span>
+<span class="sd">    [(0.0, 'X'), (0.14, 'F'), (0.28, 'C'), (0.9, 'X')]</span>
+
+<span class="sd">    A winner equal to the shape already showing is merged:</span>
+
+<span class="sd">    &gt;&gt;&gt; [(c.time, c.code) for c in condense([(0.0, "X"), (0.05, "B"), (0.10, "X")], min_hold_s=0.14)]</span>
+<span class="sd">    [(0.0, 'X')]</span>
+<span class="sd">    """</span>
+    <span class="n">cues</span> <span class="o">=</span> <span class="n">_cues</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cues</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">spans</span> <span class="o">=</span> <span class="n">_spans</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
+    <span class="n">ends</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">time</span> <span class="o">+</span> <span class="n">sp</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">sp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">spans</span><span class="p">)]</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">cues</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time</span>
+    <span class="n">carried</span><span class="p">:</span> <span class="n">Cue</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># a member delayed into the next window as its opener</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cues</span><span class="p">)</span> <span class="ow">or</span> <span class="n">carried</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">window_end</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">min_hold_s</span>
+        <span class="n">members</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Cue</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">carried</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">carried</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">ends</span><span class="p">[</span><span class="n">carried_idx</span><span class="p">],</span> <span class="n">window_end</span><span class="p">)</span> <span class="o">-</span> <span class="n">start</span><span class="p">)))</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cues</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">cues</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">window_end</span> <span class="o">-</span> <span class="n">_EDGE_EPS</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">members</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">==</span> <span class="n">i</span><span class="p">)):</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">ends</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">window_end</span><span class="p">)</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">cues</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">start</span><span class="p">))</span>
+            <span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">cues</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">overlap</span><span class="p">))</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># Ties go to the later arrival: scan reversed so max() keeps the last.</span>
+        <span class="n">winner</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">members</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dominance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span> <span class="ow">or</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">!=</span> <span class="n">winner</span><span class="o">.</span><span class="n">code</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Cue</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">winner</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">winner</span><span class="o">.</span><span class="n">intensity</span><span class="p">))</span>
+        <span class="c1"># The last member runs past the window and lost: it opens the next one.</span>
+        <span class="n">last_cue</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">members</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">last_idx</span> <span class="o">=</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">members</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">carried</span> <span class="k">else</span> <span class="n">carried_idx</span>
+        <span class="n">carried</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">last_cue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">winner</span> <span class="ow">and</span> <span class="n">ends</span><span class="p">[</span><span class="n">last_idx</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">window_end</span> <span class="o">+</span> <span class="n">_EDGE_EPS</span><span class="p">:</span>
+            <span class="n">carried</span><span class="p">,</span> <span class="n">carried_idx</span> <span class="o">=</span> <span class="n">last_cue</span><span class="p">,</span> <span class="n">last_idx</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">window_end</span>
+        <span class="k">elif</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cues</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">cues</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">time</span>  <span class="c1"># the loop above guarantees it clears the window</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">j</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="coarticulate">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/coarticulate.html#an.adapters.cutout.coarticulate.coarticulate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">coarticulate</span><span class="p">(</span>
+    <span class="n">keys</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_hold_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_MIN_HOLD_S</span><span class="p">,</span>
+    <span class="n">lead_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_LEAD_S</span><span class="p">,</span>
+    <span class="n">decay_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_DECAY_S</span><span class="p">,</span>
+    <span class="n">rest</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"X"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""All four passes, in the order the module docstring gives.</span>
+
+<span class="sd">    &gt;&gt;&gt; raw = [(0.0, "X"), (0.30, "B"), (0.34, "A"), (0.38, "D"), (0.80, "X")]</span>
+<span class="sd">    &gt;&gt;&gt; [(round(c.time, 3), c.code) for c in coarticulate(raw, fps=24, end=1.0)]</span>
+<span class="sd">    [(0.0, 'X'), (0.257, 'D'), (0.717, 'X')]</span>
+
+<span class="sd">    A track that ends on ``rest`` still does after the passes, at ``end`` when</span>
+<span class="sd">    the decay left no room before it (the compiler appends its own terminal</span>
+<span class="sd">    rest at the line's end regardless — this is for every other caller):</span>
+
+<span class="sd">    &gt;&gt;&gt; [(round(c.time, 3), c.code) for c in coarticulate([(0, "X"), (0.3, "D"), (0.69, "C"), (0.71, "X")], fps=24, end=0.71)]</span>
+<span class="sd">    [(0.0, 'X'), (0.217, 'D'), (0.607, 'C'), (0.71, 'X')]</span>
+
+<span class="sd">    The knobs are validated up front — a negative lead or a zero hold is a</span>
+<span class="sd">    typo, not a style:</span>
+
+<span class="sd">    &gt;&gt;&gt; coarticulate(raw, fps=24, end=1.0, min_hold_s=0)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    ValueError: min_hold_s must be &gt; 0, got 0</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">fps</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"fps must be &gt; 0, got </span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">min_hold_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"min_hold_s must be &gt; 0, got </span><span class="si">{</span><span class="n">min_hold_s</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lead_s</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">decay_s</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"lead_s and decay_s must be &gt;= 0, got </span><span class="si">{</span><span class="n">lead_s</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">decay_s</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">cues_in</span> <span class="o">=</span> <span class="n">_cues</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+    <span class="n">one_frame</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">fps</span>
+    <span class="n">cues</span> <span class="o">=</span> <span class="n">suppress_weak</span><span class="p">(</span><span class="n">cues_in</span><span class="p">,</span> <span class="n">max_weak_s</span><span class="o">=</span><span class="n">one_frame</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
+    <span class="n">cues</span> <span class="o">=</span> <span class="n">lead</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">lead_s</span><span class="o">=</span><span class="n">lead_s</span><span class="p">)</span>
+    <span class="n">cues</span> <span class="o">=</span> <span class="n">decay</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">decay_s</span><span class="o">=</span><span class="n">decay_s</span><span class="p">,</span> <span class="n">rest</span><span class="o">=</span><span class="n">rest</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">condense</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="n">min_hold_s</span><span class="o">=</span><span class="n">min_hold_s</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cues_in</span> <span class="ow">and</span> <span class="n">cues_in</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">rest</span> <span class="ow">and</span> <span class="n">out</span> <span class="ow">and</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">!=</span> <span class="n">rest</span><span class="p">:</span>
+        <span class="c1"># The closing rest lost its last window (or the decay pushed it onto</span>
+        <span class="c1"># the end): the line still closes, at `end`.</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Cue</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">end</span><span class="p">),</span> <span class="n">rest</span><span class="p">,</span> <span class="n">cues_in</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">intensity</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">doctest</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">())</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
