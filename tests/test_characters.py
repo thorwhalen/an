@@ -312,11 +312,20 @@ class TestNewCharacter:
             assert (parts_dir / "mouth" / f"mouth_{shape}.svg").exists()
 
     def test_validate_passes_after_new(self, tmp_path):
+        """What `an character new` produces must satisfy the contract it ships.
+
+        `validate_character` returns a `VerificationReport` of typed `Finding`s
+        since an#78, so the orchestrator's error routing reaches character
+        problems; `passed` flips on `error` only, so an advisory (a missing
+        `AssetSource`, say) does not fail a freshly-generated character.
+        """
+        from an.characters.validate import format_report
+
         new_character(tmp_path, name="maya", use_dicebear=False)
         report = validate_character(tmp_path / "maya")
-        assert report.passed, report.format()
-        assert not report.missing_parts
-        assert not report.missing_mouths
+        assert report.passed, format_report(report, name="maya")
+        blocking = [f for f in report.findings if f.severity == "error"]
+        assert blocking == []
 
     def test_overwrite_required_when_exists(self, tmp_path):
         new_character(tmp_path, name="bob", use_dicebear=False)

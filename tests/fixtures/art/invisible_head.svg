@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 276" width="240" height="276">
+  <!-- The regression fixture for an#76/#78.
+
+       A part that is valid SVG, correctly sized, and draws NOTHING. Before
+       Wave 4 this rendered silently invisible: no warning, no error, not even
+       under strict_assets — the one failure mode with no diagnostic anywhere
+       in the pipeline. A <title> and a <defs> are here on purpose, so the file
+       has real content and cannot be caught by a size or emptiness heuristic;
+       only looking for a drawable element finds it.
+
+       The epic asked for "the historical invisible-head example part". There
+       isn't one: examples/*/assets/ is gitignored and nothing matching is in
+       git history, so this is authored rather than recovered. -->
+  <title>head</title>
+  <defs>
+    <linearGradient id="skin"><stop offset="0" stop-color="#f0c8a0"/></linearGradient>
+  </defs>
+  <g id="head"></g>
+</svg>

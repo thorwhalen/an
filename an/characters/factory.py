@@ -1,18 +1,18 @@
-"""High-level entry points: build, validate, and inspect a character.
+"""High-level entry points: build and inspect a character.
 
 The :func:`new_character` function wires together fetching/wrapping art,
 slicing it into per-part SVGs, generating the default mouth set, and
 writing a complete character directory + ``character.json`` descriptor.
 
-The :func:`validate_character` function checks completeness against
-:data:`an.characters.REQUIRED_PARTS` and the 9-shape mouth set.
+Checking one is :mod:`an.characters.validate`'s job, not this module's — it
+opens every part and reports :class:`an.verify._base.Finding` s, so a character
+problem routes the way every other verifier's does (an#78).
 
->>> import tempfile, json, pathlib
->>> # validate_character on an empty dir gives a list of complaints:
+>>> import tempfile
 >>> with tempfile.TemporaryDirectory() as d:
-...     report = validate_character(d, name='nobody')
-...     report.passed
-False
+...     descriptor_path = new_character(d, name='nobody', use_dicebear=False)
+...     descriptor_path.parent.name, descriptor_path.name
+('nobody', 'character.json')
 """
 
 from __future__ import annotations
@@ -67,35 +67,6 @@ from an.characters.svg_utils import (
 # Each part SVG is a self-contained content-centered drawing. The canonical
 # `<name>.svg` (built via wrap_dicebear_for_an) is for human inspection /
 # silhouette test; the renderer uses these per-part files directly.
-
-
-@dataclass
-class ValidationReport:
-    """Result of :func:`validate_character`."""
-
-    name: str
-    directory: Path
-    passed: bool = True
-    missing_parts: list[str] = field(default_factory=list)
-    missing_mouths: list[str] = field(default_factory=list)
-    pivots_found: list[str] = field(default_factory=list)
-    notes: list[str] = field(default_factory=list)
-
-    def format(self) -> str:
-        """Render a short human-readable report."""
-        head = f"character '{self.name}' at {self.directory}: " + (
-            "OK" if self.passed else "FAILED"
-        )
-        lines = [head]
-        if self.missing_parts:
-            lines.append("  missing body parts: " + ", ".join(self.missing_parts))
-        if self.missing_mouths:
-            lines.append("  missing mouth shapes: " + ", ".join(self.missing_mouths))
-        if self.pivots_found:
-            lines.append("  pivots: " + ", ".join(self.pivots_found))
-        for n in self.notes:
-            lines.append(f"  note: {n}")
-        return "\n".join(lines)
 
 
 def _check_style_is_usable(style: str, *, acknowledge_attribution: bool) -> None:
@@ -228,58 +199,6 @@ def new_character(
     desc_path = out / "character.json"
     desc_path.write_text(descriptor.model_dump_json(indent=2), encoding="utf-8")
     return desc_path
-
-
-def validate_character(
-    char_dir: str | Path, *, name: Optional[str] = None
-) -> ValidationReport:
-    """Check that a character directory is complete and well-formed.
-
-    Looks for: ``character.json``, all :data:`REQUIRED_PARTS` under
-    ``parts/``, all 9 mouth shapes under ``parts/mouth/``, and at least one
-    pivot in the canonical SVG (if one exists).
-    """
-    d = Path(char_dir)
-    report = ValidationReport(name=name or d.name, directory=d)
-    if not d.exists() or not d.is_dir():
-        report.passed = False
-        report.notes.append("directory does not exist")
-        return report
-
-    desc_path = d / "character.json"
-    if not desc_path.exists():
-        report.passed = False
-        report.notes.append("no character.json")
-    else:
-        try:
-            CharacterDescriptor.model_validate_json(
-                desc_path.read_text(encoding="utf-8")
-            )
-        except Exception as e:
-            report.passed = False
-            report.notes.append(f"character.json invalid: {e}")
-
-    parts = d / "parts"
-    for part in REQUIRED_PARTS:
-        if not (parts / f"{part}.svg").exists():
-            report.missing_parts.append(part)
-    mouth_dir = parts / "mouth"
-    for shape in MOUTH_SHAPES:
-        if not (mouth_dir / f"mouth_{shape}.svg").exists():
-            report.missing_mouths.append(f"mouth_{shape}")
-
-    # Pivots are nice-to-have, not required for validation pass.
-    candidate = next(d.glob("*.svg"), None)
-    if candidate is not None:
-        try:
-            pivots = extract_pivots(candidate)
-            report.pivots_found = sorted(pivots.keys())
-        except Exception as e:
-            report.notes.append(f"could not parse {candidate.name}: {e}")
-
-    if report.missing_parts or report.missing_mouths:
-        report.passed = False
-    return report
 
 
 # -----------------------------------------------------------------------------

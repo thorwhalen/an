@@ -14,13 +14,13 @@ from typing import Any, Optional
 
 from an.characters.factory import (
     new_character,
-    validate_character,
     _synthesize_brow,
     _synthesize_eye_closed,
     _synthesize_eye_open,
 )
 from an.characters.mouth_set import write_default_mouths
 from an.characters.schema import CharacterDescriptor, bones_from_pivots
+from an.characters.validate import validate_character
 from an.characters.svg_utils import (
     extract_part,
     extract_pivots,
