@@ -29,7 +29,7 @@ from an.adapters.cutout.compile import compile_shot
 from an.ir.schema import AssetRef, Dialogue, Shot, VisemeKeyframe, VisemeTrack
 
 from .conftest import requires_live_api
-from .test_swap_channels import _evaluate, _python_timeline
+from an.adapters.cutout.timeline import evaluate_timeline, timeline_from_scene
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -131,8 +131,8 @@ def test_the_passes_thin_the_raw_track_but_not_below_the_old_condenser(monkeypat
     assert rate_off < rate_on, (rate_off, rate_on)
     # And the frame-14 golden changes: today's `C` is voted against.
 
-    before = _evaluate(_python_timeline(off), 14 / 24)[("talker/head/mouth", "viseme")]
-    after = _evaluate(_python_timeline(on), 14 / 24)[("talker/head/mouth", "viseme")]
+    before = evaluate_timeline(timeline_from_scene(off), 14 / 24)[("talker/head/mouth", "viseme")]
+    after = evaluate_timeline(timeline_from_scene(on), 14 / 24)[("talker/head/mouth", "viseme")]
     assert before == "C"
     assert after != before
 
@@ -143,14 +143,14 @@ def test_a_line_ending_between_frames_still_closes_the_mouth():
     0.71 s window — so the runtime kept frame 17's shape and the mouth stayed
     open after the line (`single_character` f0024, pre-an#97). The clip window
     now ends on the first frame at or after the line's end."""
-    from tests.test_swap_channels import _evaluate, _python_timeline
+    from an.adapters.cutout.timeline import evaluate_timeline, timeline_from_scene
 
     shot = _shot([(0.0, "X"), (0.2, "D"), (0.5, "C"), (0.71, "X")], duration=0.71)
     scene = _compile(shot)
     placed = next(p for t in scene.timeline.tracks for p in t.clips if p.animation_id.startswith("__viseme__"))
     assert placed.duration == pytest.approx(18 / 24)
-    tl = _python_timeline(scene)
-    assert _evaluate(tl, 18 / 24)[("c/head/mouth", "viseme")] == "X"
+    tl = timeline_from_scene(scene)
+    assert evaluate_timeline(tl, 18 / 24)[("c/head/mouth", "viseme")] == "X"
 
 
 def test_provenance_carries_the_rate_per_shot():
@@ -422,6 +422,6 @@ def test_out_of_order_dialogue_lines_are_emitted_in_time_order():
         )
         compiled = compile_shot(shot, fps=24)
         js = to_dict(compiled)
-        assert _evaluate(_python_timeline(compiled), 18 / 24)[("c/head/mouth", "viseme")] == "A", order
+        assert evaluate_timeline(timeline_from_scene(compiled), 18 / 24)[("c/head/mouth", "viseme")] == "A", order
         (trk,) = [t for t in js["timeline"]["tracks"] if t["target_root"] == "c"]
         assert [c["start_time"] for c in trk["clips"] if "__viseme__" in c["animation_id"]] == [0.0, 0.71]

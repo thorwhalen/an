@@ -102,8 +102,10 @@ x = 0 probe excludes a zoom.
 
 - **JSON measurement** uses the *composed screen-space* x, not a per-node local channel (a rigid
   pan on `root` leaves every plane's local `Δx = 0`). `evaluate_timeline` returns a **pose**, not a
-  position, and nothing in `an/` composes `world = position + M·(local − pivot)` — promoting
-  `_python_timeline` is the prerequisite; **writing the compositor is the work**.
+  position, and nothing in `an/` composes `world = position + M·(local − pivot)`. The prerequisite
+  **landed as an#107**: `an.adapters.cutout.timeline.timeline_from_scene` turns a compiled document
+  into an evaluable `Timeline` (it was a private helper inside `tests/test_swap_channels.py`).
+  **Writing the compositor is the work**, and it is still unwritten.
 - **Pixel measurement** is per-plane centroids over exact-colour masks; `an/bench/masks.py` is
   *not* reusable (no colour selection) — the primitive is `metrics.pack_rgb` plus equality. A
   centroid is **not** at x = 0, so the fixture must hold zoom constant (measured: at offset −60
@@ -156,7 +158,8 @@ A pack must not declare a role it cannot change — `lip`, `mouth_fill`, `teeth`
 
 
 `0` wire `migrate()` into the SceneIR read path **(landed, an#105)** → `1` `Shot.style` →
-`Shot.renderer` (+ retire `kind="style"`), one migration **(landed, an#106)** → `2` promote `_python_timeline` → `3` props (extraction alone,
+`Shot.renderer` (+ retire `kind="style"`), one migration **(landed, an#106)** → `2` promote the
+scene→`Timeline` reader as `timeline_from_scene` **(landed, an#107)** → `3` props (extraction alone,
 then the path) → `4` the translating camera → `5` plane environments (store-declared only) →
 `6` the `stage_pan` fixture, goldens, metric, tripwire → `7` StylePack.
 

@@ -26,7 +26,7 @@ from an.ir.compose import expression
 from an.ir.schema import AssetRef, Shot
 from an.project import init, load
 
-from .test_swap_channels import _evaluate, _python_timeline
+from an.adapters.cutout.timeline import evaluate_timeline, timeline_from_scene
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +44,7 @@ def _shot(entity, ref, actions=(), duration=2.0):
 
 
 def _pupil(js, t, entity="g", prop="x", side="left"):
-    return _evaluate(_python_timeline(js), t)[(f"{entity}/head/{side}_pupil", prop)]
+    return evaluate_timeline(timeline_from_scene(js), t)[(f"{entity}/head/{side}_pupil", prop)]
 
 
 def _rest(js, entity, node, prop="x"):
@@ -148,9 +148,9 @@ def test_authored_gaze_moves_the_pupils_by_the_declared_travel(rigs):
     uy = (_pupil(diag, 0.0, "g", "y") - rest_y) / (travel["y"] * k)
     assert (ux, uy) == pytest.approx((M / 2 ** 0.5, M / 2 ** 0.5)), "on the inner ellipse, not at the box corner"
     ambient = compile_shot(_shot("g", "g", duration=8.0), mall=mall, fps=24, strict_assets=True)
-    tl = _python_timeline(ambient)
+    tl = timeline_from_scene(ambient)
     for f in range(0, 8 * 24 + 1):
-        pose = _evaluate(tl, f / 24)
+        pose = evaluate_timeline(tl, f / 24)
         ex = (pose[("g/head/left_pupil", "x")] - rest_x) / (travel["x"] * k)
         ey = (pose[("g/head/left_pupil", "y")] - rest_y) / (travel["y"] * k)
         assert ex * ex + ey * ey <= M * M + 1e-6
@@ -210,7 +210,7 @@ def test_emotion_and_gaze_compose_in_one_pose_over_real_pupils(rigs):
     poses = []
     for order in ((a, b), (b, a)):
         js = compile_shot(_shot("g", "g", list(order)), mall=mall, fps=24, strict_assets=True)
-        poses.append(_evaluate(_python_timeline(js), 1.0))
+        poses.append(evaluate_timeline(timeline_from_scene(js), 1.0))
     assert poses[0] == poses[1]
     pose = poses[0]
     rest_rot = _rest(js, "g", "left_brow", "rotation")

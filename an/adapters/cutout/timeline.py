@@ -28,9 +28,14 @@ Evaluation semantics in Phase 2A:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from an.adapters.cutout.clip import Clip, Pose, merge_poses
+from an.adapters.cutout.channel import Channel, Keyframe
+from an.adapters.cutout.clip import Clip, LoopMode, Pose, merge_poses
 from an.adapters.cutout.clip import evaluate as _evaluate_clip
+
+if TYPE_CHECKING:  # pragma: no cover - types only
+    from an.adapters.cutout.serialize import CutoutSceneJSON
 
 
 @dataclass(slots=True)
@@ -98,3 +103,76 @@ def evaluate_timeline(timeline: Timeline, t: float) -> Pose:
     if not track_poses:
         return {}
     return merge_poses(*track_poses)
+
+
+def timeline_from_scene(scene: CutoutSceneJSON) -> Timeline:
+    """The compiled scene's `timeline`/`animations` as this module's `Timeline`.
+
+    `compile_shot` produces a serialisable document (`an.adapters.cutout.serialize`)
+    for the JS runtime; this rebuilds the *evaluable* form, so a caller can ask
+    what a compiled scene's pose is at time `t` without a browser. It is the
+    Python side of the parity contract: `evaluate_timeline` over this object is
+    the executable spec `runtime.js` is tested against.
+
+    Two fields are carried rather than defaulted, and both have cost a bug:
+    `loop_mode` (without it every loop evaluated as `once` — an#7) and a
+    list-valued `easing`, which is a cubic-bezier control quadruple and must
+    stay a tuple for `Keyframe`.
+
+    >>> from an.adapters.cutout.compile import compile_shot
+    >>> from an.ir.compose import tween
+    >>> from an.ir.schema import Shot
+    >>> shot = Shot(id="s1", renderer="cutout", duration=2.0,
+    ...             actions=[tween("root", "x", 10.0, 1.0, from_=0.0)])
+    >>> scene = compile_shot(shot, mall=None, fps=24)
+    >>> evaluate_timeline(timeline_from_scene(scene), 0.5)[("root", "x")]
+    5.0
+    """
+    clips = {
+        aid: Clip(
+            aid,
+            duration=a.duration,
+            loop_mode=LoopMode(a.loop_mode),
+            channels=[
+                Channel(
+                    ch.target,
+                    ch.property,
+                    [
+                        Keyframe(
+                            k.time,
+                            k.value,
+                            tuple(k.easing) if isinstance(k.easing, list) else k.easing,
+                        )
+                        for k in ch.keyframes
+                    ],
+                )
+                for ch in a.channels
+            ],
+        )
+        for aid, a in scene.animations.items()
+    }
+    return Timeline(
+        duration=scene.timeline.duration,
+        tracks=[
+            Track(
+                t.target_root,
+                [
+                    PlacedClip(
+                        clips[p.animation_id],
+                        p.start_time,
+                        p.duration,
+                        p.speed,
+                        # Carried for the same reason as `target_root`: nothing
+                        # reads them YET (`evaluate_timeline` records the ramps
+                        # and does not apply them — additive blending is 2B),
+                        # and a reader that quietly drops a field it was handed
+                        # is a lossy "rebuilds the evaluable form".
+                        p.blend_in,
+                        p.blend_out,
+                    )
+                    for p in t.clips
+                ],
+            )
+            for t in scene.timeline.tracks
+        ],
+    )
