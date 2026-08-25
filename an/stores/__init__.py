@@ -1,7 +1,7 @@
 """Project mall: a dict of dol-backed `MutableMapping` stores.
 
 The mall is the unit of persistence in an. Every long-lived state — assets
-(characters, environments, voices, styles), the scene file pair, intermediate
+(characters, props, environments, voices, styles), the scene file pair, intermediate
 artifacts (audio, viseme tracks, per-shot mp4s), final output, and the agent's
 decision log — is keyed inside a store. Stores are dol-backed so the same call
 sites work against filesystem, SQLite, S3, etc.
@@ -12,8 +12,8 @@ sites work against filesystem, SQLite, S3, etc.
 ...     mall = build_project_mall(d, ensure=True)
 ...     sorted(mall.keys()) == [
 ...         'audio', 'characters', 'decisions', 'environments',
-...         'output', 'previews', 'scenes', 'shots', 'styles',
-...         'visemes', 'voices',
+...         'output', 'previews', 'props', 'scenes', 'shots',
+...         'styles', 'visemes', 'voices',
 ...     ]
 True
 """
@@ -26,6 +26,7 @@ from typing import MutableMapping
 from an.stores.characters import CharactersStore
 from an.stores.decisions import DecisionLogStore
 from an.stores.environments import EnvironmentsStore
+from an.stores.props import PropsStore
 from an.stores.scenes import ScenesStore
 from an.stores.styles import StylesStore
 from an.stores.voices import VoicesStore
@@ -67,6 +68,7 @@ def build_project_mall(
         for sub in (
             "assets/characters",
             "assets/environments",
+            "assets/props",
             "assets/voices",
             "assets/styles",
             "ir",
@@ -82,6 +84,7 @@ def build_project_mall(
     mall: dict[str, MutableMapping] = {
         "characters": CharactersStore(pdir / "assets" / "characters"),
         "environments": EnvironmentsStore(pdir / "assets" / "environments"),
+        "props": PropsStore(pdir / "assets" / "props"),
         "voices": VoicesStore(pdir / "assets" / "voices"),
         "styles": StylesStore(pdir / "assets" / "styles"),
         "scenes": ScenesStore(pdir),

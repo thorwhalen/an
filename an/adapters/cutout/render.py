@@ -555,12 +555,17 @@ class CutoutAssetWarning(UserWarning):
 #:
 #: A ``src`` reads ``<prefix>/<ref>/parts/head.svg`` and resolves to
 #: ``mall[store]._root/<ref>/parts/head.svg``. Only ``characters/`` is emitted
-#: by the compiler today; the other two are here because environments, styles
-#: and props all route through this same staging step as they land, and the
+#: by the compiler today; the others are here because environments, styles and
+#: props all route through this same staging step as they land, and the
 #: previous hardcoded ``characters/`` test silently dropped everything else.
+#:
+#: The prefix IS the store name plus a slash for all four, which is not an
+#: accident worth relying on: the map is the contract, and a fifth kind whose
+#: store is named differently must still work.
 ASSET_SRC_PREFIX_TO_STORE: dict[str, str] = {
     "characters/": "characters",
     "environments/": "environments",
+    "props/": "props",
     "styles/": "styles",
 }
 
