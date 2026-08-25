@@ -1063,7 +1063,9 @@ CONTAIN_FIT: str = "contain"
 CHARACTER_ART_PREFIX: str = "characters/"
 
 
-def _svg_asset_src(ref: str, rel_path: str, *, art_prefix: str = CHARACTER_ART_PREFIX) -> str:
+def _svg_asset_src(
+    ref: str, rel_path: str, *, art_prefix: str = CHARACTER_ART_PREFIX
+) -> str:
     """Path used inside the runtime dir, relative to ``index.html``.
 
     >>> _svg_asset_src("maya", "parts/head.svg")
@@ -1287,7 +1289,9 @@ def _build_svg_character_subtree(
         # (both eye slots carry `open`/`closed`), and the old `{entity}.{name}`
         # alias space was silently first-wins on cross-slot collision.
         alias = f"{entity.id}.{slot_name}.{attachment_name}"
-        return _register_texture(textures, alias, _svg_asset_src(ref, attachment.path, art_prefix=art_prefix))
+        return _register_texture(
+            textures, alias, _svg_asset_src(ref, attachment.path, art_prefix=art_prefix)
+        )
 
     # Every attachment in the skin is registered, not just the active one, so a
     # swap has its texture already loaded when the key changes.
