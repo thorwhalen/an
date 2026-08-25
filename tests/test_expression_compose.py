@@ -35,7 +35,12 @@ ROOT = Path(__file__).resolve().parents[1]
 #: again in the PR that first blesses that scene's row (an#108 review, H-1:
 #: the exemption outlived its wave, and three later PRs claimed "all eight,
 #: no exemption" while the only guard checked seven).
-NEW_IN_WAVE: set[str] = set()
+#:
+#: `prop_swap` is an#108's own scene and is here for exactly one release: it
+#: has no committed ledger row yet, so there is nothing for its hash to be
+#: compared to. `test_no_scene_stays_exempt_from_the_hash_guard_once_it_has_a_row`
+#: goes red the moment a row lands, which is how it gets removed.
+NEW_IN_WAVE: set[str] = {"prop_swap"}
 
 
 @pytest.fixture(scope="module")

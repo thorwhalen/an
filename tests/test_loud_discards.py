@@ -258,23 +258,34 @@ def test_a_typo_speaker_names_the_scenes_actual_mouths():
 # -------------------------------------------------------------------- 4. props
 
 
-def test_a_prop_entity_raises_naming_the_shot_and_a_reachable_issue():
-    """`an` is on PyPI, so an internal wave number means nothing to a user.
+def test_an_unresolvable_prop_raises_naming_the_store_and_the_ref():
+    """Props render since an#108; what stays loud is a prop that cannot resolve.
 
-    Every error a pip-install user can hit must name WHERE (the shot) and point
-    somewhere they can actually read.
+    This test used to pin the blanket "props are not drawn yet" refusal. The
+    refusal it pins now is narrower and, unlike the old one, permanent: a
+    character whose art cannot be resolved falls back to the built-in
+    placeholder rig, and that placeholder is a HUMANOID — so the same fallback
+    would draw a person where the lamp should be, in a render that reports
+    success. A prop raises instead.
+
+    The user-facing rule is unchanged: name WHERE, and point at something the
+    reader can act on.
     """
     shot = Shot(
         id="s1",
         renderer="cutout",
         duration=1.0,
-        entities=[AssetRef(kind="prop", id="banner", store="characters", ref="b-v1")],
+        entities=[AssetRef(kind="prop", id="banner", store="props", ref="b-v1")],
     )
     with pytest.raises(CutoutCompileError) as e:
         compile_shot(shot)
     msg = str(e.value)
-    assert "'s1'" in msg, "the error must name the shot"
-    assert "github.com/thorwhalen/an/issues" in msg, "and point at something readable"
+    assert "'banner'" in msg and "'b-v1'" in msg, "name the entity and the ref"
+    assert "'props'" in msg, "and the store it was looked for in"
+    assert "HUMANOID" in msg or "humanoid" in msg, (
+        "and say WHY there is no fallback, because 'no placeholder' reads as "
+        "an omission rather than a decision"
+    )
 
 
 def test_no_user_facing_error_cites_an_internal_wave_number():
@@ -606,8 +617,6 @@ def test_a_js_runtime_throw_arrives_as_a_typed_error_naming_the_frame():
 _UNRENDERABLE_SHOTS = {
     "camera": lambda: Shot(id="s1", renderer="cutout", duration=1.0,
                            entities=[_character()], camera=Camera(move="pan_left")),
-    "prop": lambda: Shot(id="s1", renderer="cutout", duration=1.0,
-                         entities=[AssetRef(kind="prop", id="b", store="characters", ref="b-v1")]),
     "narration": lambda: Shot(id="s1", renderer="cutout", duration=1.0,
                               narration=[Narration(text="once")]),
     "play": lambda: Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()],

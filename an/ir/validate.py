@@ -133,7 +133,12 @@ _RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(
 
 #: Entity kinds the cutout renderer draws. `voice` is legitimately
 #: not drawable — they configure the render rather than appearing in it.
-_DRAWABLE_ENTITY_KINDS: frozenset[str] = frozenset({"character", "environment"})
+#: an#108: `prop` moved from "declared by the IR but not drawn" to drawn.
+#: validate's verdict IS compile's, so this set and the compiler's
+#: entity dispatch are pinned equal by test — a validator that passes a
+#: scene the compiler refuses is worse than no validator, because it is
+#: trusted.
+_DRAWABLE_ENTITY_KINDS: frozenset[str] = frozenset({"character", "environment", "prop"})
 _CONFIGURING_ENTITY_KINDS: frozenset[str] = frozenset({"voice"})
 
 #: Any property outside the transform vocabulary on a set/tween names a swap
@@ -149,8 +154,46 @@ _TRANSFORM_PROPERTIES: frozenset[str] = TRANSFORM_PROPERTIES
 _PROCEDURAL_SWAP_SETS: frozenset[str] = frozenset({"viseme"})
 
 
+#: Entity kind → (the mall store holding its rig, the descriptor `kind` tag
+#: that store's documents carry). `environment` and `voice` are absent because
+#: neither has a rig to declare asset sets on.
+RIG_STORES: dict[str, tuple[str, str]] = {
+    "character": ("characters", "CharacterDescriptor"),
+    "prop": ("props", "PropDescriptor"),
+}
+
+
+def _rig_document(entity, stores: Mapping[str, Any]) -> dict | None:
+    """The MIGRATED descriptor behind ``entity``, or ``None``.
+
+    Migrated because that is how the compiler reads it: every committed
+    pre-0.3.0 character descriptor has no `asset_sets` on disk (0.1.0 carries
+    `viseme_map`; `eyelid` is migration-seeded), so the raw dict would refuse
+    swaps the compiler accepts.
+
+    Keyed on the entity's KIND rather than on "is it a character", so a prop's
+    descriptor is found in the props store (an#108). It also refuses a
+    document of the wrong kind in the right store — a `CharacterDescriptor`
+    under `assets/props/` is not a prop, and the compiler says so too.
+    """
+    try:
+        store_name, want_kind = RIG_STORES[entity.kind]
+    except KeyError:
+        return None
+    store = stores.get(store_name)
+    if store is None:
+        return None
+    try:
+        candidate = store[entity.ref]
+    except (KeyError, TypeError):
+        return None
+    if isinstance(candidate, dict) and candidate.get("kind") == want_kind:
+        return migrate(dict(candidate), kind=want_kind)
+    return None
+
+
 def _check_swap_references(
-    shot, path: str, report: "ValidationReport", available_characters
+    shot, path: str, report: "ValidationReport", stores: Mapping[str, Any]
 ) -> None:
     """A set/tween on a non-transform property must name a declared asset set
     and key of its target entity's descriptor, and a `play` must resolve
@@ -158,16 +201,26 @@ def _check_swap_references(
     pays for TTS or a Chromium launch, because compile raises on both
     (an#87, an#7). Same charter as `_check_renderable`; needs the store, so
     it runs from `validate_semantic`'s shot loop — and ONLY then: with
-    `available_characters=None` neither check runs, so a bare
-    `validate_semantic(scene)` passes a play the compiler will refuse.
+    no stores neither check runs, so a bare `validate_semantic(scene)` passes
+    a play the compiler will refuse.
+
+    ``stores`` is keyed by MALL NAME, not by entity kind, and `RIG_STORES`
+    maps between them — because an#108 gave props the same rig machinery, and
+    a check that only knows how to find a *character's* descriptor reports
+    "no descriptor declaring asset sets" for a lamp whose descriptor is right
+    there in the props store.
 
     Descriptor-less (procedural) entities get a carve-out for `viseme` — the
     compiler validates its codes against the drawn-mouth shapes — and an
     error for anything else, matching the compiler's verdicts.
     """
-    if available_characters is None:
+    if not stores:
         return
+    rigs = {e.id: e for e in shot.entities if e.kind in RIG_STORES}
+    # The expression and dialogue-emotion checks below are CHARACTER-only:
+    # a prop has no face.
     refs_by_entity = {e.id: e.ref for e in shot.entities if e.kind == "character"}
+    available_characters = stores.get("characters")
     # `play` (an#7): resolved against the target entity's MIGRATED descriptor
     # by `an.characters.play` — the SAME code the compiler resolves with, so
     # validate's verdict is compile's (an unknown bone property, a bone with
@@ -181,20 +234,18 @@ def _check_swap_references(
             if getattr(leaf, "kind", None) != "play":
                 continue
             entity_id = (getattr(leaf, "target", "") or "").split("/", 1)[0]
-            ref = refs_by_entity.get(entity_id)
-            desc = None
-            if ref is not None:
-                try:
-                    candidate = available_characters[ref]
-                except (KeyError, TypeError):
-                    candidate = None
-                if (
-                    isinstance(candidate, dict)
-                    and candidate.get("kind") == "CharacterDescriptor"
-                ):
-                    desc = CharacterDescriptor.model_validate(
-                        migrate(dict(candidate), kind="CharacterDescriptor")
-                    )
+            entity = rigs.get(entity_id)
+            doc = _rig_document(entity, stores) if entity is not None else None
+            # `play` resolves against a CHARACTER's animations. A prop has an
+            # `animations` field so the shared rig builder can read the same
+            # attribute on either document, but nothing seeds it and no author
+            # tool writes one — so a `play` on a prop lands here with the same
+            # "no descriptor" verdict the compiler gives it.
+            desc = (
+                CharacterDescriptor.model_validate(doc)
+                if doc is not None and entity.kind == "character"
+                else None
+            )
             if desc is None:
                 report.add(
                     "error",
@@ -207,7 +258,7 @@ def _check_swap_references(
             for problem in play_problems(
                 desc,
                 leaf.animation,
-                art_exists=art_exists_for(available_characters, ref),
+                art_exists=art_exists_for(stores.get("characters"), entity.ref),
             ):
                 report.add(
                     "error",
@@ -273,22 +324,8 @@ def _check_swap_references(
             continue
         target = getattr(action, "target", "") or ""
         entity_id = target.split("/", 1)[0]
-        ref = refs_by_entity.get(entity_id)
-        desc = None
-        if ref is not None:
-            try:
-                candidate = available_characters[ref]
-            except (KeyError, TypeError):
-                candidate = None
-            if (
-                isinstance(candidate, dict)
-                and candidate.get("kind") == "CharacterDescriptor"
-            ):
-                # The MIGRATED document, as the compiler reads it: every
-                # committed pre-0.3.0 descriptor has no `asset_sets` on disk
-                # (0.1.0 carries `viseme_map`; `eyelid` is migration-seeded),
-                # so the raw dict would refuse swaps the compiler accepts.
-                desc = migrate(dict(candidate), kind="CharacterDescriptor")
+        entity = rigs.get(entity_id)
+        desc = _rig_document(entity, stores) if entity is not None else None
         if desc is None:
             if prop not in _PROCEDURAL_SWAP_SETS:
                 report.add(
@@ -460,10 +497,14 @@ def validate_semantic(
     *,
     available_voices: Mapping[str, Any] | None = None,
     available_characters: Mapping[str, Any] | None = None,
+    available_props: Mapping[str, Any] | None = None,
 ) -> ValidationReport:
     """Cross-field semantic checks. Pass live stores in for cross-store checks.
 
-    Both ``available_voices`` and ``available_characters`` accept any mapping.
+    Both ``available_voices`` and ``available_characters`` accept any mapping;
+    ``available_props`` is the same thing for `kind="prop"` entities (an#108) —
+    without it a prop's swaps are reported as having no descriptor, which is
+    validate refusing what compile accepts.
     Voices are consulted via ``__contains__`` only; characters additionally
     via ``__getitem__`` (the swap-reference and `play` checks read descriptor
     dicts, an#87 / an#7). Pass ``None`` to skip those checks — and know that
@@ -472,6 +513,16 @@ def validate_semantic(
     always passes it).
     """
     report = ValidationReport()
+    #: Only the stores actually supplied — an absent one skips its checks
+    #: rather than reporting everything it would have found as missing.
+    rig_stores = {
+        name: store
+        for name, store in (
+            ("characters", available_characters),
+            ("props", available_props),
+        )
+        if store is not None
+    }
 
     _check_retired_keys(scene, report)
     if scene.meta.duration < 0:
@@ -505,7 +556,7 @@ def validate_semantic(
             report.add("error", f"{path}/duration", "shot duration must be > 0")
 
         _check_renderable(shot, path, report)
-        _check_swap_references(shot, path, report, available_characters)
+        _check_swap_references(shot, path, report, rig_stores)
 
         # Entity references resolve?
         if available_characters is not None:

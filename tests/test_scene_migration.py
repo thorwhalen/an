@@ -582,12 +582,11 @@ def test_the_iterate_prompt_teaches_the_schema_it_patches_against():
         .rstrip(".")
         .split(",")
     }
-    # `prop` is declared by the IR and deliberately NOT offered: the very next
-    # prompt line tells the model not to emit one, and a renderer raises on it.
-    # So the prompt teaches the kinds MINUS prop — and this asserts exactly
-    # that, so retiring `prop` or adding a fifth kind both fail here.
-    assert taught_kinds == kinds - {"prop"}, taught_kinds ^ (kinds - {"prop"})
-    assert "\"prop\" is declared by the IR but NOT rendered" in _SYSTEM_PROMPT
+    # Every kind, `prop` included since an#108 made it drawable. The line
+    # after it states the one thing a model has to know that the enumeration
+    # cannot say: a prop has no placeholder rig.
+    assert taught_kinds == kinds, taught_kinds ^ kinds
+    assert "it has no\n        placeholder rig" in _SYSTEM_PROMPT
 
 
 def test_an_sync_and_an_render_report_the_markdown_refusal(tmp_path):

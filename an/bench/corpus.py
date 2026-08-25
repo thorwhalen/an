@@ -231,6 +231,25 @@ DFLT_FIXTURES: dict[str, Fixture] = {
         golden_frames=(0.0, 0.25),
         golden_note="the head plate rotating through 0.3 rad (1,187 px).",
     ),
+    "prop_swap": Fixture(
+        path=f"{CORPUS_DIRNAME}/prop_swap",
+        expect_visual_kinds=frozenset({"svg_sprite"}),
+        golden_frames=(0.0, 0.375),
+        golden_note=(
+            "a two-state prop swapping mid-shot (an#108): a desk lamp whose "
+            "`lamp` asset-set goes `off` -> `on` at t=0.25. What moves between "
+            "the goldens is a texture SWAP and nothing else — no transform, no "
+            "easing, no interpolation — which is why this scene is worth a row "
+            "the other seven cannot provide: every one of them measures a pose "
+            "changing continuously, so a regression that broke swap resolution "
+            "alone (the runtime resolves two swap properties on one node by "
+            "NAME order, and an#87's failure mode was keeping the PREVIOUS "
+            "texture in silence) would move no golden anywhere in the corpus. "
+            "Frame 9 rather than the mid-frame: at 24 fps the swap lands on "
+            "frame 6, so frame 9 is clear of the boundary in a way that does "
+            "not depend on how the frame containing t=0.25 rounds."
+        ),
+    ),
     "expressions": Fixture(
         path=f"{CORPUS_DIRNAME}/expressions",
         expect_visual_kinds=frozenset({"svg_sprite"}),
