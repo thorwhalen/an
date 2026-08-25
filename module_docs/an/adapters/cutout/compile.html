@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.59 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.60 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=755f2e77"></script>
+      <script src="../../../../_static/documentation_options.js?v=5fe4e9ad"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -200,7 +200,7 @@
              
   <section id="module-an.adapters.cutout.compile">
 <span id="an-adapters-cutout-compile"></span><h1>an.adapters.cutout.compile<a class="headerlink" href="#module-an.adapters.cutout.compile" title="Link to this heading"></a></h1>
-<p>Compile a top-level <cite>Shot</cite> (style=”cutout”) into a <cite>CutoutSceneJSON</cite>.</p>
+<p>Compile a top-level <cite>Shot</cite> (renderer=”cutout”) into a <cite>CutoutSceneJSON</cite>.</p>
 <p>This is the bridge between the renderer-agnostic <cite>an.ir</cite> types and the
 cutout-specific JSON contract that the JS runtime will consume in Phase 2B.</p>
 <p>Strategy:</p>
@@ -222,7 +222,7 @@ from the target’s descriptor animation (an#7).</p></li>
 mall). It reads only.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Meta</span><span class="p">,</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">Shot</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.compile</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_shot</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">shot</span> <span class="o">=</span> <span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s1"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">"cutout"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shot</span> <span class="o">=</span> <span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s1"</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s2">"cutout"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">j</span> <span class="o">=</span> <span class="n">compile_shot</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="o">=</span><span class="p">{</span><span class="s2">"characters"</span><span class="p">:</span> <span class="p">{}})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">j</span><span class="o">.</span><span class="n">timeline</span><span class="o">.</span><span class="n">duration</span>
 <span class="go">2.0</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.59 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.60 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
+      <script src="../../../_static/documentation_options.js?v=5fe4e9ad"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -213,7 +213,9 @@
 <span class="sd">    maya: Because the pigeons trust us.</span>
 <span class="sd">    ```</span>
 
-<span class="sd">A shot heading is ``## Shot &lt;id&gt; (&lt;style&gt;)``. Fenced blocks attach to the</span>
+<span class="sd">A shot heading is ``## Shot &lt;id&gt; (&lt;renderer&gt;)`` — the parenthesised word names</span>
+<span class="sd">the RENDERER, and is captured positionally, so the heading is unchanged by the</span>
+<span class="sd">an#106 rename. Fenced blocks attach to the</span>
 <span class="sd">nearest enclosing scope. Unknown blocks are preserved as ``options`` so</span>
 <span class="sd">agent extensions don't get clobbered on round-trip.</span>
 <span class="sd">"""</span>
@@ -248,6 +250,21 @@
 <span class="n">_SHOT_HEADING_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
     <span class="sa">r</span><span class="s2">"^##\s+Shot\s+(\S+)(?:\s+\(([^)]+)\))?\s*$"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span>
 <span class="p">)</span>
+
+
+<div class="viewcode-block" id="SceneMarkdownError">
+<a class="viewcode-back" href="../../../module_docs/an/ir/sync.html#an.SceneMarkdownError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SceneMarkdownError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""`scene.md` says something this build cannot read — a refusal, not a crash.</span>
+
+<span class="sd">    Every parse refusal in this module raises it, so the CLI can tell "the</span>
+<span class="sd">    human's file needs one edit" apart from "something broke". That</span>
+<span class="sd">    distinction is the whole point of naming it: an#106's first pass widened</span>
+<span class="sd">    the CLI's catch to bare ``ValueError`` to print these cleanly, which also</span>
+<span class="sd">    swallowed ``json.JSONDecodeError`` and ``CutoutCompileError`` — both</span>
+<span class="sd">    ``ValueError`` subclasses — and turned a failed render into exit 0.</span>
+<span class="sd">    """</span></div>
+
 
 
 <div class="viewcode-block" id="SyncResult">
@@ -305,19 +322,31 @@
     <span class="n">global_text</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="s2">"__global__"</span><span class="p">]</span>
 
     <span class="n">meta_data</span> <span class="o">=</span> <span class="n">_extract_yaml_block</span><span class="p">(</span><span class="n">global_text</span><span class="p">,</span> <span class="s2">"meta"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="s2">"default_style"</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="p">:</span>
+        <span class="c1"># A REFUSAL, not a silent rename. `scene.md` is the human SSOT and</span>
+        <span class="c1"># carries no schema version, so nothing here can tell "written before</span>
+        <span class="c1"># an#106" from "typed today" — and `Meta` is `extra="allow"`, so</span>
+        <span class="c1"># dropping it would leave the author's declared renderer silently</span>
+        <span class="c1"># replaced by the default. The stored JSON is migrated instead; a</span>
+        <span class="c1"># hand-edited md is the author's to fix, once.</span>
+        <span class="k">raise</span> <span class="n">SceneMarkdownError</span><span class="p">(</span>
+            <span class="s2">"`default_style:` in the meta block was renamed to `default_renderer:` "</span>
+            <span class="s2">"(an#106): it names the RENDERER that draws the shots, not art "</span>
+            <span class="s2">"direction. Rename the key."</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">title</span> <span class="ow">and</span> <span class="s2">"title"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="p">:</span>
         <span class="n">meta_data</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span>
     <span class="n">meta</span> <span class="o">=</span> <span class="n">Meta</span><span class="p">(</span><span class="o">**</span><span class="n">meta_data</span><span class="p">)</span>
 
     <span class="n">shots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Shot</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">shot_id</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">[</span><span class="s2">"__shots__"</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">shot_id</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">[</span><span class="s2">"__shots__"</span><span class="p">]:</span>
         <span class="n">shot_yaml</span> <span class="o">=</span> <span class="n">_extract_yaml_block</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="s2">"shot"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">dialogue_block</span> <span class="o">=</span> <span class="n">_extract_dialogue_block</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">shot_id</span><span class="o">=</span><span class="n">shot_id</span><span class="p">)</span>
         <span class="n">entities_block</span> <span class="o">=</span> <span class="n">_extract_entities_block</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
         <span class="n">actions_block</span> <span class="o">=</span> <span class="n">_extract_actions_block</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
         <span class="n">shot_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">"id"</span><span class="p">:</span> <span class="n">shot_id</span><span class="p">,</span>
-            <span class="s2">"style"</span><span class="p">:</span> <span class="n">style</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_style</span><span class="p">,</span>
+            <span class="s2">"renderer"</span><span class="p">:</span> <span class="n">renderer</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_renderer</span><span class="p">,</span>
             <span class="s2">"duration"</span><span class="p">:</span> <span class="n">shot_yaml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration"</span><span class="p">,</span> <span class="n">DEFAULT_DURATION</span><span class="p">),</span>
             <span class="s2">"dialogue"</span><span class="p">:</span> <span class="n">dialogue_block</span><span class="p">,</span>
             <span class="s2">"entities"</span><span class="p">:</span> <span class="n">entities_block</span><span class="p">,</span>
@@ -359,10 +388,10 @@
     <span class="n">shots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">matches</span><span class="p">):</span>
         <span class="n">shot_id</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">style</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">renderer</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">body_start</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
         <span class="n">body_end</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">md_text</span><span class="p">)</span>
-        <span class="n">shots</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">shot_id</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">md_text</span><span class="p">[</span><span class="n">body_start</span><span class="p">:</span><span class="n">body_end</span><span class="p">]))</span>
+        <span class="n">shots</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">shot_id</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="n">md_text</span><span class="p">[</span><span class="n">body_start</span><span class="p">:</span><span class="n">body_end</span><span class="p">]))</span>
     <span class="k">return</span> <span class="p">{</span><span class="s2">"__global__"</span><span class="p">:</span> <span class="n">global_text</span><span class="p">,</span> <span class="s2">"__shots__"</span><span class="p">:</span> <span class="n">shots</span><span class="p">}</span>
 
 
@@ -372,7 +401,7 @@
         <span class="k">if</span> <span class="n">lang</span> <span class="o">==</span> <span class="s2">"yaml"</span> <span class="ow">and</span> <span class="n">lbl</span> <span class="o">==</span> <span class="n">label</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"YAML block </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> must be a mapping"</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">SceneMarkdownError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"YAML block </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> must be a mapping"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">data</span>
     <span class="k">return</span> <span class="kc">None</span>
 
@@ -408,7 +437,7 @@
             <span class="n">match</span> <span class="o">=</span> <span class="n">_DIALOGUE_LINE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
                 <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot_id</span><span class="si">!r}</span><span class="s2">: "</span> <span class="k">if</span> <span class="n">shot_id</span> <span class="k">else</span> <span class="s2">""</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">SceneMarkdownError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">dialogue line </span><span class="si">{</span><span class="n">line</span><span class="si">!r}</span><span class="s2"> is not `speaker: text` or "</span>
                     <span class="s2">"`speaker [emotion]: text` — speaker ids are `[</span><span class="se">\\</span><span class="s2">w-]+`, and "</span>
                     <span class="s2">"the emotion goes in square brackets. A line that does not "</span>
@@ -433,7 +462,7 @@
     <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetRef</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">SceneMarkdownError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"each entry under `yaml entities` must be a mapping; got </span><span class="si">{</span><span class="n">item</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
         <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AssetRef</span><span class="p">(</span><span class="o">**</span><span class="n">item</span><span class="p">))</span>
@@ -463,7 +492,7 @@
     <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">raw</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">SceneMarkdownError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"each entry under `yaml actions` must be a mapping; got </span><span class="si">{</span><span class="n">item</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
         <span class="n">kind</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span>
@@ -518,7 +547,7 @@
             <span class="c1"># the next sync and then from the JSON on the next md edit.</span>
             <span class="n">raw_axes</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"axes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_axes</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">SceneMarkdownError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"actions[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">].axes must be a mapping; got </span><span class="si">{</span><span class="n">raw_axes</span><span class="si">!r}</span><span class="s2">"</span>
                 <span class="p">)</span>
             <span class="n">action</span> <span class="o">=</span> <span class="n">_compose</span><span class="o">.</span><span class="n">expression</span><span class="p">(</span>
@@ -536,7 +565,7 @@
                 <span class="k">else</span> <span class="n">_compose</span><span class="o">.</span><span class="n">DFLT_EXPRESSION_BLEND_S</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">SceneMarkdownError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"actions[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">].kind must be one of tween/set/play/expression; got </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="n">start</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -554,7 +583,7 @@
             <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"YAML block </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> must be a list"</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">SceneMarkdownError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"YAML block </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> must be a list"</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">data</span>
     <span class="k">return</span> <span class="kc">None</span>
 
@@ -571,7 +600,7 @@
 
 <span class="sd">    &gt;&gt;&gt; from an.ir.schema import SceneIR, Meta, Shot</span>
 <span class="sd">    &gt;&gt;&gt; scene = SceneIR(meta=Meta(title="Demo", duration=5.0),</span>
-<span class="sd">    ...                 timeline=[Shot(id="s1", style="cutout", duration=5.0)])</span>
+<span class="sd">    ...                 timeline=[Shot(id="s1", renderer="cutout", duration=5.0)])</span>
 <span class="sd">    &gt;&gt;&gt; md = ir_to_markdown(scene)</span>
 <span class="sd">    &gt;&gt;&gt; "# Demo" in md</span>
 <span class="sd">    True</span>
@@ -591,7 +620,7 @@
             <span class="s2">"width"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">resolution</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
             <span class="s2">"height"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">resolution</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="s2">"default_style"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">default_style</span><span class="p">,</span>
+        <span class="s2">"default_renderer"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">default_renderer</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="k">if</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">step_hz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">meta_dict</span><span class="p">[</span><span class="s2">"step_hz"</span><span class="p">]</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">step_hz</span>
@@ -603,7 +632,7 @@
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">:</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"## Shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">style</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"## Shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">renderer</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">shot_yaml</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"duration"</span><span class="p">:</span> <span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">step_hz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">shot_yaml</span><span class="p">[</span><span class="s2">"step_hz"</span><span class="p">]</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">step_hz</span>

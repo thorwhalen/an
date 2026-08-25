@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.migrate &mdash; an 0.1.59 documentation</title>
+  <title>an.ir.migrate &mdash; an 0.1.60 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
+      <script src="../../../_static/documentation_options.js?v=5fe4e9ad"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -217,6 +217,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
 
@@ -270,9 +271,9 @@
 <span class="sd">    the next additive bump into a refusal of every project on disk (an#105</span>
 <span class="sd">    review). Only the scene kind declares a floor; any other kind must migrate.</span>
 
-<span class="sd">    &gt;&gt;&gt; readable_without_migration("0.1.0")</span>
+<span class="sd">    &gt;&gt;&gt; readable_without_migration("0.2.0")</span>
 <span class="sd">    True</span>
-<span class="sd">    &gt;&gt;&gt; readable_without_migration("0.0.9")</span>
+<span class="sd">    &gt;&gt;&gt; readable_without_migration("0.1.0")  # below the floor since an#106</span>
 <span class="sd">    False</span>
 <span class="sd">    """</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">version_tuple</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
@@ -361,11 +362,17 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Migration</span><span class="p">],</span> <span class="n">Migration</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Decorator: register a migration for one kind in :data:`MIGRATIONS`.</span>
 
-<span class="sd">    &gt;&gt;&gt; @register_migration("SceneIR", "0.0.99", "0.1.0")</span>
+<span class="sd">    Registered against the throwaway ``Widget`` kind from the module docstring,</span>
+<span class="sd">    deliberately: this registry is process-wide, so a doctest that registered a</span>
+<span class="sd">    step for a REAL kind would leave a second path through the ladder for every</span>
+<span class="sd">    test that ran afterwards — which is exactly what happened once, and it</span>
+<span class="sd">    presented as one unrelated test failing only in a full run (an#106).</span>
+
+<span class="sd">    &gt;&gt;&gt; @register_migration("Widget", "1.0", "2.0")</span>
 <span class="sd">    ... def _bump(doc):</span>
-<span class="sd">    ...     doc["version"] = "0.1.0"</span>
+<span class="sd">    ...     doc["widget_version"] = "2.0"</span>
 <span class="sd">    ...     return doc</span>
-<span class="sd">    &gt;&gt;&gt; ("SceneIR", "0.0.99", "0.1.0") in MIGRATIONS</span>
+<span class="sd">    &gt;&gt;&gt; ("Widget", "1.0", "2.0") in MIGRATIONS</span>
 <span class="sd">    True</span>
 <span class="sd">    """</span>
 
@@ -375,6 +382,93 @@
 
     <span class="k">return</span> <span class="n">deco</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_dropped</span><span class="p">(</span><span class="n">before</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">after</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">where</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Say what a migration removed. A silent drop of something the author</span>
+<span class="sd">    wrote is the failure `tests/test_loud_discards.py` exists for, even when</span>
+<span class="sd">    the thing dropped did nothing (an#106 review)."""</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">after</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">before</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="n">gone</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">before</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"style"</span><span class="p">]</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"migrating to 0.2.0 dropped </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">before</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">after</span><span class="p">)</span><span class="si">}</span><span class="s2"> `style` "</span>
+        <span class="sa">f</span><span class="s2">"entit</span><span class="si">{</span><span class="s1">'y'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">before</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">after</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'ies'</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">gone</span><span class="si">}</span><span class="s2">) from </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: "</span>
+        <span class="s2">"the kind was retired in an#106 because it selected nothing — the compiler "</span>
+        <span class="s2">"skipped it and no reader of the styles store existed. Art direction returns "</span>
+        <span class="s2">"as a StylePack (see https://github.com/thorwhalen/an/issues/112)."</span><span class="p">,</span>
+        <span class="c1"># 1 = here, 2 = the migration step, 3 = `migrate()`'s dispatch loop,</span>
+        <span class="c1"># 4 = whoever called `migrate()`. Measured: 3 attributed the warning to</span>
+        <span class="c1"># `an/ir/migrate.py` itself, so a `-W` filter keyed on module would have</span>
+        <span class="c1"># aimed at the library instead of the caller (an#106 review).</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@register_migration</span><span class="p">(</span><span class="n">SCENE_IR</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"0.1.0"</span><span class="p">,</span> <span class="s2">"0.2.0"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_rename_style_to_renderer</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""0.1.0 → 0.2.0 (an#106): the renderer selector stops being called "style".</span>
+
+<span class="sd">    ``Shot.style`` → ``Shot.renderer``, ``Meta.default_style`` →</span>
+<span class="sd">    ``Meta.default_renderer``, and ``AssetRef(kind="style")`` entities are</span>
+<span class="sd">    **dropped**. Dropping is honest here and only here: such an entity selected</span>
+<span class="sd">    nothing — the compiler skipped it and no reader of the styles store existed</span>
+<span class="sd">    — so it was a declaration with no effect, and carrying it forward under a</span>
+<span class="sd">    name the schema no longer accepts would fail validation on a document that</span>
+<span class="sd">    renders identically. Art direction returns as a StylePack (#112), which is</span>
+<span class="sd">    a different thing referenced a different way.</span>
+
+<span class="sd">    This is the first migration in the repo that actually runs (an#105 wired</span>
+<span class="sd">    the read path); before that, it would have been decoration and the rename</span>
+<span class="sd">    would have landed as a silent default.</span>
+
+<span class="sd">    &gt;&gt;&gt; _rename_style_to_renderer({"version": "0.1.0", "meta": {"default_style": "manim"},</span>
+<span class="sd">    ...     "timeline": [{"id": "s", "style": "cutout"}],</span>
+<span class="sd">    ...     "assets": [{"kind": "style", "id": "x", "store": "styles", "ref": "x"}]})</span>
+<span class="sd">    {'version': '0.2.0', 'meta': {'default_renderer': 'manim'}, 'timeline': [{'id': 's', 'renderer': 'cutout'}], 'assets': []}</span>
+<span class="sd">    """</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"meta"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"default_style"</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">:</span>
+        <span class="c1"># The NEW key wins. A document carrying both was hand-repaired by</span>
+        <span class="c1"># someone who read the changelog and forgot to delete the old key;</span>
+        <span class="c1"># overwriting would silently revert their fix (an#106 review).</span>
+        <span class="n">stale</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"default_style"</span><span class="p">)</span>
+        <span class="n">meta</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"default_renderer"</span><span class="p">,</span> <span class="n">stale</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timeline"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">"style"</span> <span class="ow">in</span> <span class="n">shot</span><span class="p">:</span>
+                <span class="n">stale</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"style"</span><span class="p">)</span>
+                <span class="n">shot</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"renderer"</span><span class="p">,</span> <span class="n">stale</span><span class="p">)</span>
+            <span class="c1"># Only rewrite a key the document actually has: a migration that</span>
+            <span class="c1"># ADDS `entities: []` to a shot that declared none changes the</span>
+            <span class="c1"># document for no reason, and every such gratuitous key is one more</span>
+            <span class="c1"># diff for a reader to explain.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"entities"</span><span class="p">),</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">kept</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">e</span>
+                    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">shot</span><span class="p">[</span><span class="s2">"entities"</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"style"</span><span class="p">)</span>
+                <span class="p">]</span>
+                <span class="n">_warn_dropped</span><span class="p">(</span><span class="n">shot</span><span class="p">[</span><span class="s2">"entities"</span><span class="p">],</span> <span class="n">kept</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'id'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">shot</span><span class="p">[</span><span class="s2">"entities"</span><span class="p">]</span> <span class="o">=</span> <span class="n">kept</span>
+    <span class="c1"># `isinstance(..., list)`, not `or []`: a truthy dict would iterate its KEYS</span>
+    <span class="c1"># and a null would become an empty list — inventing a key the document did</span>
+    <span class="c1"># not have (an#106 review).</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"assets"</span><span class="p">),</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">a</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">doc</span><span class="p">[</span><span class="s2">"assets"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"style"</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">_warn_dropped</span><span class="p">(</span><span class="n">doc</span><span class="p">[</span><span class="s2">"assets"</span><span class="p">],</span> <span class="n">kept</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">"the scene's assets"</span><span class="p">)</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s2">"assets"</span><span class="p">]</span> <span class="o">=</span> <span class="n">kept</span>
+    <span class="n">doc</span><span class="p">[</span><span class="s2">"version"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"0.2.0"</span>
+    <span class="c1"># The pair moves together: `compatible_version` is what a *future* build</span>
+    <span class="c1"># reads to decide whether it may skip migrating, so leaving it at 0.1.0</span>
+    <span class="c1"># would advertise that a 0.1.0-shaped document is still readable.</span>
+    <span class="k">if</span> <span class="s2">"compatible_version"</span> <span class="ow">in</span> <span class="n">doc</span><span class="p">:</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s2">"compatible_version"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"0.2.0"</span>
+    <span class="k">return</span> <span class="n">doc</span>
 
 
 <span class="nd">@register_migration</span><span class="p">(</span><span class="n">SCENE_IR</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">SCHEMA_VERSION</span><span class="p">,</span> <span class="n">SCHEMA_VERSION</span><span class="p">)</span>
@@ -397,8 +491,10 @@
 <span class="sd">    migrations registered for this document's kind. Raises ``ValueError`` if no</span>
 <span class="sd">    path exists between the source and target versions.</span>
 
-<span class="sd">    &gt;&gt;&gt; migrate({"version": "0.1.0", "kind": "SceneIR"})["version"]</span>
-<span class="sd">    '0.1.0'</span>
+<span class="sd">    &gt;&gt;&gt; migrate({"version": "0.2.0", "kind": "SceneIR"})["version"]</span>
+<span class="sd">    '0.2.0'</span>
+<span class="sd">    &gt;&gt;&gt; migrate({"version": "0.1.0", "kind": "SceneIR"})["version"]  # the an#106 ladder</span>
+<span class="sd">    '0.2.0'</span>
 <span class="sd">    """</span>
     <span class="n">doc_kind</span> <span class="o">=</span> <span class="n">kind_of</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">)</span>
     <span class="n">target</span> <span class="o">=</span> <span class="n">target_version</span> <span class="k">if</span> <span class="n">target_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">doc_kind</span><span class="o">.</span><span class="n">current_version</span>

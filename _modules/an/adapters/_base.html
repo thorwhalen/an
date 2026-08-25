@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters._base &mdash; an 0.1.59 documentation</title>
+  <title>an.adapters._base &mdash; an 0.1.60 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
+      <script src="../../../_static/documentation_options.js?v=5fe4e9ad"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -185,7 +185,7 @@
 
 <span class="sd">Every backend implements ``Renderer`` and registers itself by name. The</span>
 <span class="sd">orchestrator (or `RenderRouter` in non-agent contexts) picks a renderer per</span>
-<span class="sd">shot by inspecting ``shot.style`` and asking each registered renderer's</span>
+<span class="sd">shot by inspecting ``shot.renderer`` and asking each registered renderer's</span>
 <span class="sd">``can_render``.</span>
 
 <span class="sd">&gt;&gt;&gt; from an.adapters import Renderer</span>
@@ -289,7 +289,14 @@
 <span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">supported_styles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="c1">#: The `Shot.renderer` values this backend claims. It is the ONE place</span>
+    <span class="c1">#: an adapter names them: `can_render` derives from it rather than</span>
+    <span class="c1">#: comparing to its own literal, so an adapter cannot advertise one</span>
+    <span class="c1">#: renderer and accept another. an#106 renamed this from</span>
+    <span class="c1">#: `supported_styles`; the rename is a break for an out-of-tree adapter</span>
+    <span class="c1">#: because `Renderer` is `@runtime_checkable` and 3.12 checks data</span>
+    <span class="c1">#: members, so `isinstance(old_adapter, Renderer)` is now False.</span>
+    <span class="n">supported_renderers</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Renderer.can_render">
 <a class="viewcode-back" href="../../../module_docs/an/adapters/_base.html#an.adapters.Renderer.can_render">[docs]</a>

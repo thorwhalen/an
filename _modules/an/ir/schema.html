@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.59 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.60 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
+      <script src="../../../_static/documentation_options.js?v=5fe4e9ad"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -201,13 +201,13 @@
 <span class="sd">&gt;&gt;&gt; from an.ir.schema import SceneIR, Meta, Shot</span>
 <span class="sd">&gt;&gt;&gt; scene = SceneIR(</span>
 <span class="sd">...     meta=Meta(title="Park Bench", duration=45.0),</span>
-<span class="sd">...     timeline=[Shot(id="s1", style="cutout", duration=45.0)],</span>
+<span class="sd">...     timeline=[Shot(id="s1", renderer="cutout", duration=45.0)],</span>
 <span class="sd">... )</span>
 <span class="sd">&gt;&gt;&gt; scene.version</span>
-<span class="sd">'0.1.0'</span>
+<span class="sd">'0.2.0'</span>
 <span class="sd">&gt;&gt;&gt; scene.kind</span>
 <span class="sd">'SceneIR'</span>
-<span class="sd">&gt;&gt;&gt; scene.timeline[0].style</span>
+<span class="sd">&gt;&gt;&gt; scene.timeline[0].renderer</span>
 <span class="sd">'cutout'</span>
 <span class="sd">"""</span>
 
@@ -226,7 +226,7 @@
     <span class="n">EasingSpec</span><span class="p">,</span>
     <span class="n">PathStr</span><span class="p">,</span>
     <span class="n">Seconds</span><span class="p">,</span>
-    <span class="n">StyleName</span><span class="p">,</span>
+    <span class="n">RendererName</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -293,7 +293,10 @@
 <span class="sd">    'maya'</span>
 <span class="sd">    """</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"character"</span><span class="p">,</span> <span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"voice"</span><span class="p">,</span> <span class="s2">"style"</span><span class="p">,</span> <span class="s2">"prop"</span><span class="p">]</span>
+    <span class="c1">#: ``"style"`` was retired in an#106: it selected nothing (the compiler</span>
+    <span class="c1">#: skipped it, nothing read the styles store) and the name belonged to the</span>
+    <span class="c1">#: renderer selector. Art direction arrives as a StylePack (#112).</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"character"</span><span class="p">,</span> <span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"voice"</span><span class="p">,</span> <span class="s2">"prop"</span><span class="p">]</span>
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">store</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># which store in the project mall</span>
     <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># key inside that store</span>
@@ -568,12 +571,17 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">Shot</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""A single rendered unit. A scene is a sequence of shots.</span>
 
-<span class="sd">    A shot's ``style`` selects the renderer. Every renderer must accept the</span>
+<span class="sd">    A shot's ``renderer`` selects the backend that draws it. Every renderer must accept the</span>
 <span class="sd">    same Shot fields; renderer-specific options go under ``options``.</span>
 <span class="sd">    """</span>
 
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">style</span><span class="p">:</span> <span class="n">StyleName</span> <span class="o">=</span> <span class="s2">"cutout"</span>
+    <span class="c1">#: Which RENDERER draws this shot — not art direction. The field was</span>
+    <span class="c1">#: called `style` until an#106, colliding with the styles store (which</span>
+    <span class="c1">#: holds art direction) and with `AssetRef(kind="style")`; one word for two</span>
+    <span class="c1">#: meanings is how a scene came to declare a "style" that selected a</span>
+    <span class="c1">#: renderer while the thing that actually styles it went unread.</span>
+    <span class="n">renderer</span><span class="p">:</span> <span class="n">RendererName</span> <span class="o">=</span> <span class="s2">"cutout"</span>
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="n">DEFAULT_DURATION</span>
     <span class="n">camera</span><span class="p">:</span> <span class="n">Camera</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">entities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetRef</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
@@ -620,7 +628,7 @@
     <span class="n">duration</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_FPS</span>
     <span class="n">resolution</span><span class="p">:</span> <span class="n">Resolution</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Resolution</span><span class="p">)</span>
-    <span class="n">default_style</span><span class="p">:</span> <span class="n">StyleName</span> <span class="o">=</span> <span class="s2">"cutout"</span>
+    <span class="n">default_renderer</span><span class="p">:</span> <span class="n">RendererName</span> <span class="o">=</span> <span class="s2">"cutout"</span>
     <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="c1">#: Stepped timing for AUTHORED TWEENS, in pose updates per second; ``None``</span>
     <span class="c1">#: (the default) leaves every tween smooth. At 30 fps, ``15`` is "on twos"</span>
@@ -649,7 +657,7 @@
 <span class="sd">    at ``ir/scene.json`` inside an an project.</span>
 
 <span class="sd">    &gt;&gt;&gt; doc = SceneIR(meta=Meta(title="Hello"))</span>
-<span class="sd">    &gt;&gt;&gt; doc.version == '0.1.0'</span>
+<span class="sd">    &gt;&gt;&gt; doc.version == '0.2.0'</span>
 <span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; round_tripped = SceneIR.model_validate_json(doc.model_dump_json())</span>
 <span class="sd">    &gt;&gt;&gt; round_tripped.meta.title</span>

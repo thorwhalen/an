@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.validate &mdash; an 0.1.59 documentation</title>
+  <title>an.ir.validate &mdash; an 0.1.60 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
+      <script src="../../../_static/documentation_options.js?v=5fe4e9ad"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -281,7 +281,11 @@
         <span class="c1"># pre-migration shape and defaults the new fields.</span>
         <span class="n">raw</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">doc</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="s2">"&lt;root&gt;"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"a scene document must be an object, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="s2">"error"</span><span class="p">,</span>
+                <span class="s2">"&lt;root&gt;"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"a scene document must be an object, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="n">report</span>
         <span class="n">scene_from_json_doc</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">DocumentMigrationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -319,10 +323,10 @@
     <span class="p">{</span><span class="s2">"hold"</span><span class="p">,</span> <span class="s2">"push_in"</span><span class="p">,</span> <span class="s2">"pull_out"</span><span class="p">,</span> <span class="s2">"zoom_in"</span><span class="p">,</span> <span class="s2">"zoom_out"</span><span class="p">}</span>
 <span class="p">)</span>
 
-<span class="c1">#: Entity kinds the cutout renderer draws. `voice` and `style` are legitimately</span>
+<span class="c1">#: Entity kinds the cutout renderer draws. `voice` is legitimately</span>
 <span class="c1">#: not drawable — they configure the render rather than appearing in it.</span>
 <span class="n">_DRAWABLE_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"character"</span><span class="p">,</span> <span class="s2">"environment"</span><span class="p">})</span>
-<span class="n">_CONFIGURING_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"voice"</span><span class="p">,</span> <span class="s2">"style"</span><span class="p">})</span>
+<span class="n">_CONFIGURING_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"voice"</span><span class="p">})</span>
 
 <span class="c1">#: Any property outside the transform vocabulary on a set/tween names a swap</span>
 <span class="c1">#: SET, which must be declared by the target entity's descriptor (an#87). The</span>
@@ -599,6 +603,50 @@
         <span class="p">)</span>
 
 
+<span class="c1">#: Keys an#106 retired, and what to write instead. `SceneIR`'s models are</span>
+<span class="c1">#: `extra="allow"` (deliberately — forward compatibility), so a document that</span>
+<span class="c1">#: still carries one of these validates cleanly and renders with the DEFAULT</span>
+<span class="c1">#: renderer. The migration rewrites stored 0.1.x documents, but nothing rewrites</span>
+<span class="c1">#: a document that is already 0.2.0: an agent patch, a hand edit, or a caller</span>
+<span class="c1">#: passing `style=` to `Shot(...)` all produce a permanently dead key that no</span>
+<span class="c1">#: later migration will touch. So it is caught here, at ERROR, by name.</span>
+<span class="n">RETIRED_KEYS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"meta"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"default_style"</span><span class="p">:</span> <span class="s2">"default_renderer"</span><span class="p">},</span>
+    <span class="s2">"shot"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"style"</span><span class="p">:</span> <span class="s2">"renderer"</span><span class="p">},</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_retired_keys</span><span class="p">(</span><span class="n">scene</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One ERROR per retired key still present as an `extra`.</span>
+
+<span class="sd">    &gt;&gt;&gt; from an.ir.schema import Meta, SceneIR, Shot</span>
+<span class="sd">    &gt;&gt;&gt; scene = SceneIR(meta=Meta(), timeline=[Shot(id="s1", style="manim")])</span>
+<span class="sd">    &gt;&gt;&gt; report = ValidationReport()</span>
+<span class="sd">    &gt;&gt;&gt; _check_retired_keys(scene, report)</span>
+<span class="sd">    &gt;&gt;&gt; print(report.findings[0].description)</span>
+<span class="sd">    `style` was renamed to `renderer` (an#106) and this value is being ignored...</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">RETIRED_KEYS</span><span class="p">[</span><span class="s2">"meta"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">model_extra</span> <span class="ow">or</span> <span class="p">{}):</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="s2">"error"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"meta/</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">` was renamed to `</span><span class="si">{</span><span class="n">new</span><span class="si">}</span><span class="s2">` (an#106) and this value is "</span>
+                <span class="sa">f</span><span class="s2">"being ignored — the schema still ACCEPTS it (`extra=</span><span class="se">\"</span><span class="s2">allow</span><span class="se">\"</span><span class="s2">`), "</span>
+                <span class="sa">f</span><span class="s2">"so nothing else will tell you. Rename it to `</span><span class="si">{</span><span class="n">new</span><span class="si">}</span><span class="s2">`."</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">shot</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">RETIRED_KEYS</span><span class="p">[</span><span class="s2">"shot"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">model_extra</span> <span class="ow">or</span> <span class="p">{}):</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"error"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"timeline[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">]/</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">` was renamed to `</span><span class="si">{</span><span class="n">new</span><span class="si">}</span><span class="s2">` (an#106) and this value is "</span>
+                    <span class="sa">f</span><span class="s2">"being ignored — the shot will render with "</span>
+                    <span class="sa">f</span><span class="s2">"`renderer: </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">renderer</span><span class="si">}</span><span class="s2">`. Rename it to `</span><span class="si">{</span><span class="n">new</span><span class="si">}</span><span class="s2">`."</span><span class="p">,</span>
+                <span class="p">)</span>
+
+
 <div class="viewcode-block" id="validate_semantic">
 <a class="viewcode-back" href="../../../module_docs/an/ir/validate.html#an.validate_semantic">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_semantic</span><span class="p">(</span>
@@ -619,6 +667,7 @@
 <span class="sd">    """</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">ValidationReport</span><span class="p">()</span>
 
+    <span class="n">_check_retired_keys</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">duration</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="s2">"meta/duration"</span><span class="p">,</span> <span class="s2">"duration must be non-negative"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">fps</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>

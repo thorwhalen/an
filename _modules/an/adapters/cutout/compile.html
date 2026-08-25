@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.59 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.60 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=755f2e77"></script>
+      <script src="../../../../_static/documentation_options.js?v=5fe4e9ad"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -181,7 +181,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for an.adapters.cutout.compile</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""Compile a top-level `Shot` (style="cutout") into a `CutoutSceneJSON`.</span>
+<span></span><span class="sd">"""Compile a top-level `Shot` (renderer="cutout") into a `CutoutSceneJSON`.</span>
 
 <span class="sd">This is the bridge between the renderer-agnostic `an.ir` types and the</span>
 <span class="sd">cutout-specific JSON contract that the JS runtime will consume in Phase 2B.</span>
@@ -206,7 +206,7 @@
 
 <span class="sd">&gt;&gt;&gt; from an.ir.schema import Meta, SceneIR, Shot</span>
 <span class="sd">&gt;&gt;&gt; from an.adapters.cutout.compile import compile_shot</span>
-<span class="sd">&gt;&gt;&gt; shot = Shot(id="s1", style="cutout", duration=2.0)</span>
+<span class="sd">&gt;&gt;&gt; shot = Shot(id="s1", renderer="cutout", duration=2.0)</span>
 <span class="sd">&gt;&gt;&gt; j = compile_shot(shot, mall={"characters": {}})</span>
 <span class="sd">&gt;&gt;&gt; j.timeline.duration</span>
 <span class="sd">2.0</span>
@@ -787,8 +787,10 @@
 <span class="sd">    measures pixels, where a stand-in is a wrong answer wearing a right one's</span>
 <span class="sd">    clothes (an#33).</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">style</span> <span class="o">!=</span> <span class="s2">"cutout"</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"compile_shot expects style='cutout'; got </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">style</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">renderer</span> <span class="o">!=</span> <span class="s2">"cutout"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"compile_shot expects renderer='cutout'; got </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">renderer</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">step_hz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">step_hz</span><span class="p">)</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">step_hz</span> <span class="o">&lt;=</span> <span class="n">fps</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"step_hz must satisfy 0 &lt; step_hz &lt;= fps (</span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">); got </span><span class="si">{</span><span class="n">step_hz</span><span class="si">!r}</span><span class="s2">. "</span>
@@ -917,7 +919,7 @@
                 <span class="s2">"https://github.com/thorwhalen/an/issues/9. Until then, remove the entity rather than leaving it "</span>
                 <span class="s2">"in the scene, where it would be silently absent from the render."</span>
             <span class="p">)</span>
-        <span class="c1"># `voice` and `style` entities are legitimately not drawable: they</span>
+        <span class="c1"># `voice` entities are legitimately not drawable: they</span>
         <span class="c1"># configure the render rather than appearing in it.</span>
     <span class="k">return</span> <span class="n">NodeJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="n">children</span><span class="p">)</span>
 

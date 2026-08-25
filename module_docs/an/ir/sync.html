@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.59 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.60 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
+      <script src="../../../_static/documentation_options.js?v=5fe4e9ad"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,6 +133,7 @@
 <li class="toctree-l1"><a class="reference internal" href="migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.ir.schema</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.ir.sync</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.SceneMarkdownError"><code class="docutils literal notranslate"><span class="pre">SceneMarkdownError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.SceneValidationError"><code class="docutils literal notranslate"><span class="pre">SceneValidationError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.SyncResult"><code class="docutils literal notranslate"><span class="pre">SyncResult</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.ir_to_markdown"><code class="docutils literal notranslate"><span class="pre">ir_to_markdown()</span></code></a></li>
@@ -219,9 +220,23 @@ camera:</p>
 <span class="pre">maya:</span> <span class="pre">Because</span> <span class="pre">the</span> <span class="pre">pigeons</span> <span class="pre">trust</span> <span class="pre">us.</span>
 <span class="pre">`</span></code></p>
 </div></blockquote>
-<p>A shot heading is <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">Shot</span> <span class="pre">&lt;id&gt;</span> <span class="pre">(&lt;style&gt;)</span></code>. Fenced blocks attach to the
+<p>A shot heading is <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">Shot</span> <span class="pre">&lt;id&gt;</span> <span class="pre">(&lt;renderer&gt;)</span></code> — the parenthesised word names
+the RENDERER, and is captured positionally, so the heading is unchanged by the
+an#106 rename. Fenced blocks attach to the
 nearest enclosing scope. Unknown blocks are preserved as <code class="docutils literal notranslate"><span class="pre">options</span></code> so
 agent extensions don’t get clobbered on round-trip.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.ir.sync.SceneMarkdownError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.ir.sync.</span></span><span class="sig-name descname"><span class="pre">SceneMarkdownError</span></span><a class="reference internal" href="../../../_modules/an/ir/sync.html#SceneMarkdownError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.sync.SceneMarkdownError" title="Link to this definition"></a></dt>
+<dd><p><cite>scene.md</cite> says something this build cannot read — a refusal, not a crash.</p>
+<p>Every parse refusal in this module raises it, so the CLI can tell “the
+human’s file needs one edit” apart from “something broke”. That
+distinction is the whole point of naming it: an#106’s first pass widened
+the CLI’s catch to bare <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> to print these cleanly, which also
+swallowed <code class="docutils literal notranslate"><span class="pre">json.JSONDecodeError</span></code> and <code class="docutils literal notranslate"><span class="pre">CutoutCompileError</span></code> — both
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code> subclasses — and turned a failed render into exit 0.</p>
+</dd></dl>
+
 <dl class="py exception">
 <dt class="sig sig-object py" id="an.ir.sync.SceneValidationError">
 <span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.ir.sync.</span></span><span class="sig-name descname"><span class="pre">SceneValidationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/ir/sync.html#SceneValidationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.sync.SceneValidationError" title="Link to this definition"></a></dt>
@@ -245,7 +260,7 @@ the field.</p>
 <dd><p>Render a SceneIR back into the structured Markdown form.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">Meta</span><span class="p">,</span> <span class="n">Shot</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="p">(</span><span class="n">meta</span><span class="o">=</span><span class="n">Meta</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Demo"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">5.0</span><span class="p">),</span>
-<span class="gp">... </span>                <span class="n">timeline</span><span class="o">=</span><span class="p">[</span><span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s1"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">"cutout"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)])</span>
+<span class="gp">... </span>                <span class="n">timeline</span><span class="o">=</span><span class="p">[</span><span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s1"</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s2">"cutout"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">md</span> <span class="o">=</span> <span class="n">ir_to_markdown</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="s2">"# Demo"</span> <span class="ow">in</span> <span class="n">md</span>
 <span class="go">True</span>
