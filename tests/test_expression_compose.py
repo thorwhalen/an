@@ -36,11 +36,12 @@ ROOT = Path(__file__).resolve().parents[1]
 #: the exemption outlived its wave, and three later PRs claimed "all eight,
 #: no exemption" while the only guard checked seven).
 #:
-#: `prop_swap` is an#108's own scene and is here for exactly one release: it
-#: has no committed ledger row yet, so there is nothing for its hash to be
-#: compared to. `test_no_scene_stays_exempt_from_the_hash_guard_once_it_has_a_row`
-#: goes red the moment a row lands, which is how it gets removed.
-NEW_IN_WAVE: set[str] = {"prop_swap", "stage_pan"}
+#: `prop_swap` and `stage_pan` were here for exactly one release each. an#111
+#: committed a ledger row covering both, and
+#: `test_no_scene_stays_exempt_from_the_hash_guard_once_it_has_a_row` went red
+#: on that very commit — which is how they got removed, and is the whole
+#: lifecycle working as designed rather than as a comment.
+NEW_IN_WAVE: set[str] = set()
 
 
 @pytest.fixture(scope="module")
