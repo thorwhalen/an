@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.stores.scenes &mdash; an 0.1.58 documentation</title>
+  <title>an.stores.scenes &mdash; an 0.1.59 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=d127aa6e"></script>
+      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -200,7 +200,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneIR</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.sync</span><span class="w"> </span><span class="kn">import</span> <span class="n">ir_to_markdown</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.sync</span><span class="w"> </span><span class="kn">import</span> <span class="n">ir_to_markdown</span><span class="p">,</span> <span class="n">scene_from_json_doc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_text</span><span class="p">,</span> <span class="n">_write_json</span><span class="p">,</span> <span class="n">_write_text</span>
 
 
@@ -231,12 +231,19 @@
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">SceneIR</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">_read_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">)))</span>
+        <span class="c1"># Migrated on read (an#105): a stored document may predate this build.</span>
+        <span class="k">return</span> <span class="n">scene_from_json_doc</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">_read_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">)),</span> <span class="n">source</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">SceneIR</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SCENE_KEY</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"only the </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">SCENE_KEY</span><span class="si">!r}</span><span class="s2"> key is supported"</span><span class="p">)</span>
-        <span class="n">scene</span> <span class="o">=</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">SceneIR</span><span class="p">)</span> <span class="k">else</span> <span class="n">SceneIR</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="c1"># A DICT goes through the read boundary too (an#105 review): writing a</span>
+        <span class="c1"># version this build cannot read produced a project `an` refused to open</span>
+        <span class="c1"># — the store would happily persist `version: "0.0.42"`, and the very</span>
+        <span class="c1"># next read raised. Symmetric boundaries or none.</span>
+        <span class="n">scene</span> <span class="o">=</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">SceneIR</span><span class="p">)</span> <span class="k">else</span> <span class="n">scene_from_json_doc</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="n">_write_json</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_path</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">()))</span>
         <span class="n">_write_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">md_path</span><span class="p">,</span> <span class="n">ir_to_markdown</span><span class="p">(</span><span class="n">scene</span><span class="p">))</span>
         <span class="c1"># Equalize mtimes so the JSON wins ties on subsequent sync()s. Pipeline</span>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.migrate &mdash; an 0.1.58 documentation</title>
+  <title>an.ir.migrate &mdash; an 0.1.59 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=d127aa6e"></script>
+      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -138,12 +138,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#an.ir.migrate.DocumentKind.version_of"><code class="docutils literal notranslate"><span class="pre">DocumentKind.version_of()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.DocumentMigrationError"><code class="docutils literal notranslate"><span class="pre">DocumentMigrationError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.KINDS"><code class="docutils literal notranslate"><span class="pre">KINDS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.MIGRATIONS"><code class="docutils literal notranslate"><span class="pre">MIGRATIONS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.kind_of"><code class="docutils literal notranslate"><span class="pre">kind_of()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.migrate"><code class="docutils literal notranslate"><span class="pre">migrate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.readable_without_migration"><code class="docutils literal notranslate"><span class="pre">readable_without_migration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.register_kind"><code class="docutils literal notranslate"><span class="pre">register_kind()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.register_migration"><code class="docutils literal notranslate"><span class="pre">register_migration()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.version_tuple"><code class="docutils literal notranslate"><span class="pre">version_tuple()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.ir.schema</a></li>
@@ -253,6 +256,15 @@ migrator cannot simply reach for <code class="docutils literal notranslate"><spa
 
 </dd></dl>
 
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.ir.migrate.DocumentMigrationError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">DocumentMigrationError</span></span><a class="reference internal" href="../../../_modules/an/ir/migrate.html#DocumentMigrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.migrate.DocumentMigrationError" title="Link to this definition"></a></dt>
+<dd><p>A stored document could not be brought to this build’s schema.</p>
+<p>One name for both boundaries (scene and descriptor), so a caller can catch
+“this file is from another build” without catching every <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> a
+validate might raise.</p>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="an.ir.migrate.KINDS">
 <span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">KINDS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#an.ir.migrate.DocumentKind" title="an.ir.migrate.DocumentKind"><span class="pre">DocumentKind</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CharacterDescriptor':</span> <span class="pre">DocumentKind(name='CharacterDescriptor',</span> <span class="pre">version_field='schema_version',</span> <span class="pre">current_version='0.3.0'),</span> <span class="pre">'SceneIR':</span> <span class="pre">DocumentKind(name='SceneIR',</span> <span class="pre">version_field='version',</span> <span class="pre">current_version='0.1.0')}</span></span><a class="headerlink" href="#an.ir.migrate.KINDS" title="Link to this definition"></a></dt>
@@ -293,6 +305,23 @@ path exists between the source and target versions.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="an.ir.migrate.readable_without_migration">
+<span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">readable_without_migration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.ir.migrate.DocumentKind" title="an.ir.migrate.DocumentKind"><span class="pre">DocumentKind</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../../_modules/an/ir/migrate.html#readable_without_migration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.migrate.readable_without_migration" title="Link to this definition"></a></dt>
+<dd><p>Whether this build reads <code class="docutils literal notranslate"><span class="pre">version</span></code> as-is, per the declared compat floor.</p>
+<p><code class="docutils literal notranslate"><span class="pre">an/base.py</span></code> promises exactly this: <code class="docutils literal notranslate"><span class="pre">COMPATIBLE_VERSION</span></code> is <em>“the
+minimum Scene IR version this code can still read **without migration*</em>”<a href="#id1"><span class="problematic" id="id2">*</span></a>.
+A loader that demands an exact version match ignores that promise and turns
+the next additive bump into a refusal of every project on disk (an#105
+review). Only the scene kind declares a floor; any other kind must migrate.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">readable_without_migration</span><span class="p">(</span><span class="s2">"0.1.0"</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">readable_without_migration</span><span class="p">(</span><span class="s2">"0.0.9"</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="an.ir.migrate.register_kind">
 <span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">register_kind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.ir.migrate.DocumentKind" title="an.ir.migrate.DocumentKind"><span class="pre">DocumentKind</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.ir.migrate.DocumentKind" title="an.ir.migrate.DocumentKind"><span class="pre">DocumentKind</span></a></span></span><a class="reference internal" href="../../../_modules/an/ir/migrate.html#register_kind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.migrate.register_kind" title="Link to this definition"></a></dt>
 <dd><p>Register a document kind. Returns it, so callers can bind the result.</p>
@@ -308,6 +337,20 @@ path exists between the source and target versions.</p>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">doc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="s2">"SceneIR"</span><span class="p">,</span> <span class="s2">"0.0.99"</span><span class="p">,</span> <span class="s2">"0.1.0"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">MIGRATIONS</span>
 <span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.ir.migrate.version_tuple">
+<span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">version_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../../_modules/an/ir/migrate.html#version_tuple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.migrate.version_tuple" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;0.2.10&quot;</span></code> → <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">2,</span> <span class="pre">10)</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> when it is not a version at all.</p>
+<p>Returning <code class="docutils literal notranslate"><span class="pre">None</span></code> rather than raising is what lets a caller tell a
+<em>malformed</em> version field (<code class="docutils literal notranslate"><span class="pre">null</span></code>, a float, <code class="docutils literal notranslate"><span class="pre">&quot;draft&quot;</span></code>) from one that is
+merely older than any registered migration — two different messages for two
+different repairs.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">version_tuple</span><span class="p">(</span><span class="s2">"0.2.10"</span><span class="p">),</span> <span class="n">version_tuple</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span> <span class="n">version_tuple</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+<span class="go">((0, 2, 10), None, None)</span>
 </pre></div>
 </div>
 </dd></dl>

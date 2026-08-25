@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.orchestrate &mdash; an 0.1.58 documentation</title>
+  <title>an.orchestrate &mdash; an 0.1.59 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d127aa6e"></script>
+      <script src="../../_static/documentation_options.js?v=755f2e77"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -207,6 +207,8 @@
     <span class="n">validate_schema</span><span class="p">,</span>
     <span class="n">validate_semantic</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentMigrationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.sync</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneValidationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span><span class="p">,</span> <span class="n">load</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_project</span> <span class="k">as</span> <span class="n">_render_project</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.verify._base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Verifier</span><span class="p">,</span> <span class="n">VerificationReport</span>
@@ -245,6 +247,13 @@
 <span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">project</span><span class="p">:</span> <span class="n">Project</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">DocumentMigrationError</span><span class="p">,</span> <span class="n">SceneValidationError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># NOT "scene.md does not parse": the md may be perfect and the stored</span>
+        <span class="c1"># JSON from another build. Routing an agent to edit the file that is</span>
+        <span class="c1"># fine is the failure `Finding.ir_path` exists to prevent (an#105).</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">ValidationReport</span><span class="p">()</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="s2">"ir/scene.json"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">report</span>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">report</span> <span class="o">=</span> <span class="n">ValidationReport</span><span class="p">()</span>
         <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="s2">"scene.md"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"scene.md does not parse: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>

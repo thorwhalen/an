@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.58 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.59 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=d127aa6e"></script>
+      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -133,9 +133,11 @@
 <li class="toctree-l1"><a class="reference internal" href="migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.ir.schema</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.ir.sync</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.SceneValidationError"><code class="docutils literal notranslate"><span class="pre">SceneValidationError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.SyncResult"><code class="docutils literal notranslate"><span class="pre">SyncResult</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.ir_to_markdown"><code class="docutils literal notranslate"><span class="pre">ir_to_markdown()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.markdown_to_ir"><code class="docutils literal notranslate"><span class="pre">markdown_to_ir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.scene_from_json_doc"><code class="docutils literal notranslate"><span class="pre">scene_from_json_doc()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.sync.sync"><code class="docutils literal notranslate"><span class="pre">sync()</span></code></a></li>
 </ul>
 </li>
@@ -220,6 +222,17 @@ camera:</p>
 <p>A shot heading is <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">Shot</span> <span class="pre">&lt;id&gt;</span> <span class="pre">(&lt;style&gt;)</span></code>. Fenced blocks attach to the
 nearest enclosing scope. Unknown blocks are preserved as <code class="docutils literal notranslate"><span class="pre">options</span></code> so
 agent extensions don’t get clobbered on round-trip.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.ir.sync.SceneValidationError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.ir.sync.</span></span><span class="sig-name descname"><span class="pre">SceneValidationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/ir/sync.html#SceneValidationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.sync.SceneValidationError" title="Link to this definition"></a></dt>
+<dd><p>A stored scene document is not a valid scene — named, with its source.</p>
+<p>The underlying <code class="xref py py-class docutils literal notranslate"><span class="pre">pydantic.ValidationError</span></code> is kept as <code class="docutils literal notranslate"><span class="pre">__cause__</span></code>
+(and as <code class="docutils literal notranslate"><span class="pre">.validation_error</span></code>) so a caller that reports <strong>per field</strong> —
+<code class="docutils literal notranslate"><span class="pre">an.validate_schema</span></code> builds one Finding per error, each with its own
+<code class="docutils literal notranslate"><span class="pre">loc</span></code> — does not have to choose between naming the document and naming
+the field.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="an.ir.sync.SyncResult">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.ir.sync.</span></span><span class="sig-name descname"><span class="pre">SyncResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wrote_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrote_md</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drift_warning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/ir/sync.html#SyncResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.sync.SyncResult" title="Link to this definition"></a></dt>
@@ -270,6 +283,49 @@ agent extensions don’t get clobbered on round-trip.</p>
 <span class="go">'s1'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dialogue</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
 <span class="go">'hi'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.ir.sync.scene_from_json_doc">
+<span class="sig-prename descclassname"><span class="pre">an.ir.sync.</span></span><span class="sig-name descname"><span class="pre">scene_from_json_doc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="schema.html#an.ir.schema.SceneIR" title="an.ir.schema.SceneIR"><span class="pre">SceneIR</span></a></span></span><a class="reference internal" href="../../../_modules/an/ir/sync.html#scene_from_json_doc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.sync.scene_from_json_doc" title="Link to this definition"></a></dt>
+<dd><p>Validate a stored scene document, <strong>migrating it first</strong> (an#105).</p>
+<p>Every path from stored bytes to a <a class="reference internal" href="schema.html#an.ir.schema.SceneIR" title="an.ir.schema.SceneIR"><code class="xref py py-class docutils literal notranslate"><span class="pre">SceneIR</span></code></a> goes
+through here — the store (read <strong>and</strong> write), <code class="docutils literal notranslate"><span class="pre">sync()</span></code>’s two json-wins
+branches, and <code class="docutils literal notranslate"><span class="pre">an.validate_schema</span></code>, which is a read path too because a
+dict or a JSON string handed to it <em>is</em> a stored document. A test walks the
+package’s AST and fails on any other one. Before it existed, <cite>migrate()</cite> was called with
+<cite>kind=”CharacterDescriptor”</cite> at every call site in the tree and with a
+scene at none of them — so a registered scene migration never ran, and
+because <cite>SceneIR</cite> is <code class="docutils literal notranslate"><span class="pre">extra=&quot;allow&quot;</span></code>, a renamed field would have landed
+as a <strong>silent default</strong> on every document already on disk. Registering a
+migration and never running it is worse than not registering one, because
+the registry reads as a promise.</p>
+<p>Three outcomes, three different repairs, so they get three messages:</p>
+<ul class="simple">
+<li><p>a version this build reads (at or above <code class="docutils literal notranslate"><span class="pre">COMPATIBLE_VERSION</span></code>, at or
+below <code class="docutils literal notranslate"><span class="pre">SCHEMA_VERSION</span></code>) is taken <strong>as-is</strong> when no migration is
+registered for it — that is exactly what <code class="docutils literal notranslate"><span class="pre">an/base.py</span></code> promises, and a
+loader that demanded an exact match would refuse every stored project the
+day the version is bumped;</p></li>
+<li><p>a version from the future is refused as <em>written by a newer build</em>,
+because nobody will ever register a downgrade;</p></li>
+<li><p>anything else — an old version with no path, or a malformed field — is
+refused naming the document.</p></li>
+</ul>
+<p>Migration happens <strong>on read, with no write-back</strong>: the document on disk
+keeps its old version until something saves the scene, so a migration must
+stay registered for as long as any project might hold that version. That is
+deliberate — a loader that rewrote every file it opened would turn <cite>an
+validate</cite> into a mutation — but it means the registry only ever grows.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">scene_from_json_doc</span><span class="p">({</span><span class="s2">"version"</span><span class="p">:</span> <span class="s2">"0.1.0"</span><span class="p">,</span> <span class="s2">"meta"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"title"</span><span class="p">:</span> <span class="s2">"t"</span><span class="p">}})</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">title</span>
+<span class="go">'t'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scene_from_json_doc</span><span class="p">({</span><span class="s2">"version"</span><span class="p">:</span> <span class="s2">"0.0.1"</span><span class="p">},</span> <span class="n">source</span><span class="o">=</span><span class="s2">"ir/scene.json"</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">DocumentMigrationError</span>
 </pre></div>
 </div>
 </dd></dl>

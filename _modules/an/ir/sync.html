@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.58 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.59 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=d127aa6e"></script>
+      <script src="../../../_static/documentation_options.js?v=755f2e77"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -229,6 +229,15 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_DURATION</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SCENE_IR</span><span class="p">,</span>
+    <span class="n">DocumentMigrationError</span><span class="p">,</span>
+    <span class="n">migrate</span><span class="p">,</span>
+    <span class="n">readable_without_migration</span><span class="p">,</span>
+    <span class="n">version_tuple</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssetRef</span><span class="p">,</span> <span class="n">Dialogue</span><span class="p">,</span> <span class="n">Meta</span><span class="p">,</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">Shot</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_text</span><span class="p">,</span> <span class="n">_write_json</span><span class="p">,</span> <span class="n">_write_text</span>
 
@@ -727,6 +736,99 @@
 <span class="c1"># -----------------------------------------------------------------------------</span>
 
 
+<div class="viewcode-block" id="SceneValidationError">
+<a class="viewcode-back" href="../../../module_docs/an/ir/sync.html#an.SceneValidationError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SceneValidationError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A stored scene document is not a valid scene — named, with its source.</span>
+
+<span class="sd">    The underlying :class:`pydantic.ValidationError` is kept as ``__cause__``</span>
+<span class="sd">    (and as ``.validation_error``) so a caller that reports **per field** —</span>
+<span class="sd">    ``an.validate_schema`` builds one Finding per error, each with its own</span>
+<span class="sd">    ``loc`` — does not have to choose between naming the document and naming</span>
+<span class="sd">    the field.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">validation_error</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validation_error</span> <span class="o">=</span> <span class="n">validation_error</span></div>
+
+
+
+<div class="viewcode-block" id="scene_from_json_doc">
+<a class="viewcode-back" href="../../../module_docs/an/ir/sync.html#an.scene_from_json_doc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">scene_from_json_doc</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SceneIR</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Validate a stored scene document, **migrating it first** (an#105).</span>
+
+<span class="sd">    Every path from stored bytes to a :class:`~an.ir.schema.SceneIR` goes</span>
+<span class="sd">    through here — the store (read **and** write), ``sync()``'s two json-wins</span>
+<span class="sd">    branches, and ``an.validate_schema``, which is a read path too because a</span>
+<span class="sd">    dict or a JSON string handed to it *is* a stored document. A test walks the</span>
+<span class="sd">    package's AST and fails on any other one. Before it existed, `migrate()` was called with</span>
+<span class="sd">    `kind="CharacterDescriptor"` at every call site in the tree and with a</span>
+<span class="sd">    scene at none of them — so a registered scene migration never ran, and</span>
+<span class="sd">    because `SceneIR` is ``extra="allow"``, a renamed field would have landed</span>
+<span class="sd">    as a **silent default** on every document already on disk. Registering a</span>
+<span class="sd">    migration and never running it is worse than not registering one, because</span>
+<span class="sd">    the registry reads as a promise.</span>
+
+<span class="sd">    Three outcomes, three different repairs, so they get three messages:</span>
+
+<span class="sd">    - a version this build reads (at or above ``COMPATIBLE_VERSION``, at or</span>
+<span class="sd">      below ``SCHEMA_VERSION``) is taken **as-is** when no migration is</span>
+<span class="sd">      registered for it — that is exactly what ``an/base.py`` promises, and a</span>
+<span class="sd">      loader that demanded an exact match would refuse every stored project the</span>
+<span class="sd">      day the version is bumped;</span>
+<span class="sd">    - a version from the future is refused as *written by a newer build*,</span>
+<span class="sd">      because nobody will ever register a downgrade;</span>
+<span class="sd">    - anything else — an old version with no path, or a malformed field — is</span>
+<span class="sd">      refused naming the document.</span>
+
+<span class="sd">    Migration happens **on read, with no write-back**: the document on disk</span>
+<span class="sd">    keeps its old version until something saves the scene, so a migration must</span>
+<span class="sd">    stay registered for as long as any project might hold that version. That is</span>
+<span class="sd">    deliberate — a loader that rewrote every file it opened would turn `an</span>
+<span class="sd">    validate` into a mutation — but it means the registry only ever grows.</span>
+
+<span class="sd">    &gt;&gt;&gt; scene_from_json_doc({"version": "0.1.0", "meta": {"title": "t"}}).meta.title</span>
+<span class="sd">    't'</span>
+<span class="sd">    &gt;&gt;&gt; scene_from_json_doc({"version": "0.0.1"}, source="ir/scene.json")</span>
+<span class="sd">    ... # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    DocumentMigrationError</span>
+<span class="sd">    """</span>
+    <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"scene document"</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SCENE_IR</span><span class="o">.</span><span class="n">version_field</span><span class="p">,</span> <span class="n">SCENE_IR</span><span class="o">.</span><span class="n">current_version</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">migrated</span> <span class="o">=</span> <span class="n">migrate</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">SCENE_IR</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">DocumentMigrationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">readable_without_migration</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">SCENE_IR</span><span class="p">):</span>
+            <span class="n">migrated</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>  <span class="c1"># the declared compat window; read it as it is</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">v</span> <span class="o">:=</span> <span class="n">version_tuple</span><span class="p">(</span><span class="n">version</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="n">version_tuple</span><span class="p">(</span>
+            <span class="n">SCENE_IR</span><span class="o">.</span><span class="n">current_version</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DocumentMigrationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: written by a newer build (schema </span><span class="si">{</span><span class="n">version</span><span class="si">!r}</span><span class="s2">; this build "</span>
+                <span class="sa">f</span><span class="s2">"is </span><span class="si">{</span><span class="n">SCENE_IR</span><span class="o">.</span><span class="n">current_version</span><span class="si">!r}</span><span class="s2">). Upgrade `an` rather than editing "</span>
+                <span class="s2">"the document — a downgrade migration is never registered."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="k">elif</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DocumentMigrationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">SCENE_IR</span><span class="o">.</span><span class="n">version_field</span><span class="si">!r}</span><span class="s2"> is </span><span class="si">{</span><span class="n">version</span><span class="si">!r}</span><span class="s2">, which is not a "</span>
+                <span class="s2">"schema version. Repair the field; the document itself may be fine."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DocumentMigrationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SceneIR</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">migrated</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Named, like the migration refusal above: the common failure is a</span>
+        <span class="c1"># corrupt FIELD, and a nameless pydantic traceback is exactly what this</span>
+        <span class="c1"># boundary exists to replace (an#105 review).</span>
+        <span class="k">raise</span> <span class="n">SceneValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span></div>
+
+
+
 <div class="viewcode-block" id="sync">
 <a class="viewcode-back" href="../../../module_docs/an/ir/sync.html#an.sync">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">sync</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SyncResult</span><span class="p">:</span>
@@ -750,7 +852,7 @@
         <span class="n">result</span><span class="o">.</span><span class="n">wrote_json</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">elif</span> <span class="n">json_exists</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">md_exists</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">_read_text</span><span class="p">(</span><span class="n">json_path</span><span class="p">))</span>
-        <span class="n">scene</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">scene</span> <span class="o">=</span> <span class="n">scene_from_json_doc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">json_path</span><span class="p">)</span>
         <span class="n">_write_text</span><span class="p">(</span><span class="n">md_path</span><span class="p">,</span> <span class="n">ir_to_markdown</span><span class="p">(</span><span class="n">scene</span><span class="p">))</span>
         <span class="n">result</span><span class="o">.</span><span class="n">wrote_md</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">elif</span> <span class="n">md_exists</span> <span class="ow">and</span> <span class="n">json_exists</span><span class="p">:</span>
@@ -764,7 +866,7 @@
         <span class="n">skew</span> <span class="o">=</span> <span class="n">json_mtime</span> <span class="o">-</span> <span class="n">md_mtime</span>
         <span class="k">if</span> <span class="n">skew</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">_read_text</span><span class="p">(</span><span class="n">json_path</span><span class="p">))</span>
-            <span class="n">scene</span> <span class="o">=</span> <span class="n">SceneIR</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">scene</span> <span class="o">=</span> <span class="n">scene_from_json_doc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">json_path</span><span class="p">)</span>
             <span class="n">_write_text</span><span class="p">(</span><span class="n">md_path</span><span class="p">,</span> <span class="n">ir_to_markdown</span><span class="p">(</span><span class="n">scene</span><span class="p">))</span>
             <span class="c1"># Equalize mtimes so this regen doesn't immediately flip the next</span>
             <span class="c1"># sync into "md is newer → regenerate json (losing pipeline state)".</span>
