@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.environments &mdash; an 0.1.65 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="an.expression" href="expression.html" />
+    <link rel="prev" title="an.determinism" href="determinism.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/gaze.html">an.adapters.cutout.gaze</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/play.html">an.characters.play</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="determinism.html">an.determinism</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.environments</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.environments.ENVIRONMENT_DOCUMENT_KIND"><code class="docutils literal notranslate"><span class="pre">ENVIRONMENT_DOCUMENT_KIND</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.environments.EnvironmentDescriptor"><code class="docutils literal notranslate"><span class="pre">EnvironmentDescriptor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.EnvironmentDescriptor.anchors"><code class="docutils literal notranslate"><span class="pre">EnvironmentDescriptor.anchors</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.EnvironmentDescriptor.characters_after"><code class="docutils literal notranslate"><span class="pre">EnvironmentDescriptor.characters_after</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.EnvironmentDescriptor.model_config"><code class="docutils literal notranslate"><span class="pre">EnvironmentDescriptor.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.EnvironmentDescriptor.planes"><code class="docutils literal notranslate"><span class="pre">EnvironmentDescriptor.planes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.EnvironmentDescriptor.source"><code class="docutils literal notranslate"><span class="pre">EnvironmentDescriptor.source</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.environments.Plane"><code class="docutils literal notranslate"><span class="pre">Plane</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.Plane.anchor"><code class="docutils literal notranslate"><span class="pre">Plane.anchor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.Plane.depth"><code class="docutils literal notranslate"><span class="pre">Plane.depth</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.Plane.factors"><code class="docutils literal notranslate"><span class="pre">Plane.factors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.Plane.model_config"><code class="docutils literal notranslate"><span class="pre">Plane.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.Plane.name"><code class="docutils literal notranslate"><span class="pre">Plane.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.Plane.offset"><code class="docutils literal notranslate"><span class="pre">Plane.offset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.Plane.parallax"><code class="docutils literal notranslate"><span class="pre">Plane.parallax</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.Plane.size"><code class="docutils literal notranslate"><span class="pre">Plane.size</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.environments.PlaneArt"><code class="docutils literal notranslate"><span class="pre">PlaneArt</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.PlaneArt.color"><code class="docutils literal notranslate"><span class="pre">PlaneArt.color</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.PlaneArt.model_config"><code class="docutils literal notranslate"><span class="pre">PlaneArt.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.environments.PlaneArt.src"><code class="docutils literal notranslate"><span class="pre">PlaneArt.src</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expression/provider.html">an.expression.provider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/camera.html">an.ir.camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="props.html">an.props</a></li>
+<li class="toctree-l1"><a class="reference internal" href="render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores/props.html">an.stores.props</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">an.environments</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/an/environments.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-an.environments">
+<span id="an-environments"></span><h1>an.environments<a class="headerlink" href="#module-an.environments" title="Link to this heading"></a></h1>
+<p>Environments: a stage made of planes, at declared depths.</p>
+<p>An environment was three scalars — <cite>sky_color</cite>, <cite>ground_color</cite>, <cite>ground_y</cite> —
+merged through an <strong>intersection filter</strong> that silently dropped everything
+else. The test pinning that warning used <cite>parallax_layers: 3</cite> as its example,
+which says what the shape was for.</p>
+<p>An <cite>EnvironmentDescriptor</cite> declares <cite>planes</cite>, and <strong>list order is draw
+order</strong>. There is deliberately no <cite>z</cite> integer: the runtime sets no <cite>zIndex</cite>, so
+a <cite>z</cite> field would be a second source of truth it could not honour, and two
+orderings that can disagree is how the intersecting override got here in the
+first place.</p>
+<p><strong>`depth` is the parallax factor</strong>, in Godot’s <cite>Parallax2D.scroll_scale</cite>
+coordinates — a ratio, not a distance:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><cite>depth</cite></p></th>
+<th class="head"><p>meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><cite>0.0</cite></p></td>
+<td><p>infinitely far: does not PAN — pinned against a camera
+translation. It still scales and rotates with the camera; see
+the limit below.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>0 &lt; d &lt; 1</cite></p></td>
+<td><p>background — Godot’s own sanity range is 0.1 sky → 0.7 forest</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>1.0</cite></p></td>
+<td><p>the character plane; <strong>emits nothing</strong>, which is today’s
+behaviour for everything and why this is byte-identity-free</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>&gt; 1.0</cite></p></td>
+<td><p>foreground: nearer than the characters, moving faster</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>`depth` governs translation only, and that is a stated limit rather than an
+oversight.</strong> The compensation is on <cite>x</cite>/<cite>y</cite>; <cite>root.scale</cite> and <cite>root.rotation</cite>
+multiply the whole composed expression, so no per-plane factor can cancel
+them. Measured: a <cite>depth = 0</cite> plane under <cite>push_in</cite> grows 1.0 → 1.25× and
+drifts, exactly like the character plane.</p>
+<p>Depth-aware zoom is the <strong>dolly</strong>, and the design of record defers it with its
+reason: a true dolly grows the foreground ×1.40 while the moon grows ×1.02,
+where today’s <cite>push_in</cite> grows both ×1.25 — precisely the uniform zoom the 1937
+multiplane camera was built to replace. Until <cite>dolly_in</cite> exists, pair a
+<cite>depth = 0</cite> plate with a pan, not a zoom.</p>
+<p>Sign trap, pinned here because every surveyed tool disagrees: <strong>larger depth =
+nearer = faster.</strong> Unity’s z-derived factor uses the INVERSE convention
+(<cite>f_unity ≡ 1 − f_godot</cite>), so a Unity tutorial read while writing this code
+will produce a stage that parallaxes backwards.</p>
+<p><cite>characters_after</cite> is how a plane gets IN FRONT of the characters — Rive’s
+relative-ordering shape. <cite>None</cite> reproduces the old two-loop behaviour exactly
+(every plane behind every character) and dissolves the tie between two planes
+that share a depth.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.environments.ENVIRONMENT_DOCUMENT_KIND">
+<span class="sig-prename descclassname"><span class="pre">an.environments.</span></span><span class="sig-name descname"><span class="pre">ENVIRONMENT_DOCUMENT_KIND</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="ir/migrate.html#an.ir.migrate.DocumentKind" title="an.ir.migrate.DocumentKind"><span class="pre">DocumentKind</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">DocumentKind(name='EnvironmentDescriptor',</span> <span class="pre">version_field='schema_version',</span> <span class="pre">current_version='0.1.0')</span></span><a class="headerlink" href="#an.environments.ENVIRONMENT_DOCUMENT_KIND" title="Link to this definition"></a></dt>
+<dd><p>Its own versioned document, registered from the module that owns the schema
+— the rule <cite>CharacterDescriptor</cite> and <cite>PropDescriptor</cite> both follow, and the
+reason the registry is keyed per KIND (an#77).</p>
+<p><strong>No migration ladder, deliberately.</strong> The obvious one — “today’s free-form
+<cite>meta.json</cite> entries become plane-less descriptors” — would migrate nothing,
+because a free-form entry ALREADY validates as an <cite>EnvironmentDescriptor</cite>
+with no planes: <cite>extra=”allow”</cite> carries <cite>description</cite>/<cite>tags</cite>/the colour
+scalars through untouched, and every field this model adds has a default.
+There is no shape change to make.</p>
+<p>It was written and then removed in review (an#110): <cite>_environment_descriptor</cite>
+gates on the <cite>kind</cite> tag before migrating, so only a document already written
+in the post-an#110 shape could ever have reached it — a registered migration
+that runs on nothing, which is the decoration <cite>CLAUDE.md</cite>’s “never register
+a migration without a read path that runs it” rule exists to prevent. The
+KIND stays registered: it declares where the version field lives, which is
+what a future real migration will need.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.environments.EnvironmentDescriptor">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.environments.</span></span><span class="sig-name descname"><span class="pre">EnvironmentDescriptor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'0.1.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'EnvironmentDescriptor'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'EnvironmentDescriptor'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">planes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.environments.Plane" title="an.environments.Plane"><span class="pre">Plane</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characters_after</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuple[float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float]]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ir/assets.html#an.ir.assets.AssetSource" title="an.ir.assets.AssetSource"><span class="pre">AssetSource</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~typing.Any]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/environments.html#EnvironmentDescriptor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.environments.EnvironmentDescriptor" title="Link to this definition"></a></dt>
+<dd><p>A stage made of planes. Saved as <code class="docutils literal notranslate"><span class="pre">meta.json</span></code> in the environments store.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">EnvironmentDescriptor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"forest"</span><span class="p">,</span> <span class="n">planes</span><span class="o">=</span><span class="p">[</span>
+<span class="gp">... </span>    <span class="n">Plane</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"sky"</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">Plane</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"trees"</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mf">0.6</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">Plane</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"grass"</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mf">1.4</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">],</span> <span class="n">characters_after</span><span class="o">=</span><span class="s2">"trees"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">planes</span><span class="p">]</span>
+<span class="go">['sky', 'trees', 'grass']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span><span class="o">.</span><span class="n">characters_after</span>
+<span class="go">'trees'</span>
+</pre></div>
+</div>
+<p>List order is draw order, and <cite>characters_after</cite> names the plane the
+characters stand in front of — so <cite>grass</cite> above is a FOREGROUND plane,
+drawn over them. <cite>None</cite> puts every plane behind every character, which is
+what the two-loop builder did before an#110 and is why an environment that
+declares no planes compiles byte-identically.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.EnvironmentDescriptor.anchors">
+<span class="sig-name descname"><span class="pre">anchors</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#an.environments.EnvironmentDescriptor.anchors" title="Link to this definition"></a></dt>
+<dd><p>Named stage marks — a horizon is one of them. A dedicated <cite>horizon</cite>
+field would be two fields for one fact, which is how the intersecting
+override arrived.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.EnvironmentDescriptor.characters_after">
+<span class="sig-name descname"><span class="pre">characters_after</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.environments.EnvironmentDescriptor.characters_after" title="Link to this definition"></a></dt>
+<dd><p>The plane the characters are drawn in FRONT of. <cite>None</cite> = all planes
+behind all characters.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.EnvironmentDescriptor.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'allow',</span> <span class="pre">'populate_by_name':</span> <span class="pre">True,</span> <span class="pre">'validate_by_alias':</span> <span class="pre">True,</span> <span class="pre">'validate_by_name':</span> <span class="pre">True}</span></span><a class="headerlink" href="#an.environments.EnvironmentDescriptor.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.EnvironmentDescriptor.planes">
+<span class="sig-name descname"><span class="pre">planes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.environments.Plane" title="an.environments.Plane"><span class="pre">Plane</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#an.environments.EnvironmentDescriptor.planes" title="Link to this definition"></a></dt>
+<dd><p>the runtime sets no
+<cite>zIndex</cite>, so a second ordering would be one it could not honour.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>LIST ORDER IS DRAW ORDER.</strong> There is no <cite>z</cite> field</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.EnvironmentDescriptor.source">
+<span class="sig-name descname"><span class="pre">source</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="ir/assets.html#an.ir.assets.AssetSource" title="an.ir.assets.AssetSource"><span class="pre">AssetSource</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.environments.EnvironmentDescriptor.source" title="Link to this definition"></a></dt>
+<dd><p>Where this art came from and what its licence obliges. Not decoration:
+<cite>an credits</cite> walked ONLY <cite>mall[“characters”]</cite>, so the PR that gives
+environments art is the PR that closes that hole — otherwise
+<cite>an credits</cite> becomes an affirmative false statement about plates.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.environments.Plane">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.environments.</span></span><span class="sig-name descname"><span class="pre">Plane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">art</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.environments.PlaneArt" title="an.environments.PlaneArt"><span class="pre">PlaneArt</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated[float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~annotated_types.Ge(ge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_PydanticGeneralMetadata(allow_inf_nan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False)]</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple[float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float]</span> <span class="pre">|</span> <span class="pre">None</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple[float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple[float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple[float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float]</span> <span class="pre">|</span> <span class="pre">None</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal['stretch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'contain']</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'contain'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/environments.html#Plane"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.environments.Plane" title="Link to this definition"></a></dt>
+<dd><p>One layer of the stage, at one depth.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Plane</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"sky"</span><span class="p">,</span> <span class="n">art</span><span class="o">=</span><span class="n">PlaneArt</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#cfe9ff"</span><span class="p">),</span> <span class="n">depth</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span><span class="o">.</span><span class="n">depth</span>
+<span class="go">0.1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Plane</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"sky"</span><span class="p">,</span> <span class="n">parallax</span><span class="o">=</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span><span class="o">.</span><span class="n">parallax</span>
+<span class="go">(0.2, 0.0)</span>
+</pre></div>
+</div>
+<p><strong>`extra=”forbid”`, unlike the document that holds it.</strong> An
+<cite>EnvironmentDescriptor</cite> is <cite>extra=”allow”</cite> because the environments store
+is a free-form <cite>meta.json</cite> whose natural shape includes <cite>name</cite>,
+<cite>description</cite> and <cite>tags</cite> — refusing those would hard-fail ordinary data. A
+plane is not free-form: it is a precise instruction to draw something, and
+a misspelled key there is the exact failure an#110 exists to remove. The
+old override path <em>silently dropped</em> every key it did not know, and the
+test pinning that warning used <cite>parallax_layers: 3</cite> as its example.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.Plane.anchor">
+<span class="sig-name descname"><span class="pre">anchor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#an.environments.Plane.anchor" title="Link to this definition"></a></dt>
+<dd><p>The art’s anchor within its own box, in 0..1 per axis.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.Plane.depth">
+<span class="sig-name descname"><span class="pre">depth</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#an.environments.Plane.depth" title="Link to this definition"></a></dt>
+<dd><p>The parallax factor — a RATIO, in Godot’s <cite>Parallax2D.scroll_scale</cite>
+coordinates. <cite>1.0</cite> is the character plane and emits nothing. See this
+module’s docstring for the table and for the Unity sign trap.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="an.environments.Plane.factors">
+<span class="sig-name descname"><span class="pre">factors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/an/environments.html#Plane.factors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.environments.Plane.factors" title="Link to this definition"></a></dt>
+<dd><p>The per-axis parallax factors this plane actually moves by.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Plane</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"p"</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span><span class="o">.</span><span class="n">factors</span><span class="p">()</span>
+<span class="go">(0.4, 0.4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Plane</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"p"</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">parallax</span><span class="o">=</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span><span class="o">.</span><span class="n">factors</span><span class="p">()</span>
+<span class="go">(0.2, 0.0)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.Plane.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#an.environments.Plane.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.Plane.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#an.environments.Plane.name" title="Link to this definition"></a></dt>
+<dd><p>Becomes the scene node’s name, under the environment entity’s id.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.Plane.offset">
+<span class="sig-name descname"><span class="pre">offset</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#an.environments.Plane.offset" title="Link to this definition"></a></dt>
+<dd><p>Where the plane sits, in scene pixels from the stage centre.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.Plane.parallax">
+<span class="sig-name descname"><span class="pre">parallax</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.environments.Plane.parallax" title="Link to this definition"></a></dt>
+<dd><p>Per-axis override of <cite>depth</cite>, for a plane that scrolls horizontally but
+not vertically. <cite>None</cite> means <cite>(depth, depth)</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.Plane.size">
+<span class="sig-name descname"><span class="pre">size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.environments.Plane.size" title="Link to this definition"></a></dt>
+<dd><p><cite>None</cite> = the art’s own extent. A <cite>fill</cite> with no size covers the canvas.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.environments.PlaneArt">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.environments.</span></span><span class="sig-name descname"><span class="pre">PlaneArt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'fill'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'image'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'fill'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'#888888'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/environments.html#PlaneArt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.environments.PlaneArt" title="Link to this definition"></a></dt>
+<dd><p>What a plane is made of.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PlaneArt</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"fill"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#cfe9ff"</span><span class="p">)</span><span class="o">.</span><span class="n">color</span>
+<span class="go">'#cfe9ff'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PlaneArt</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"image"</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">"plates/forest.svg"</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="go">'plates/forest.svg'</span>
+</pre></div>
+</div>
+<p>Two kinds ship, and the omission is deliberate rather than partial:
+<cite>gradient</cite> and <cite>generated</cite> would each need a runtime that can draw them,
+and this package’s standing rule is that schema without a consumer is
+worse than an absent field — the <cite>repeat</cite>/<cite>TilingSprite</cite> decision in
+an#110 is the same call made the same way.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.PlaneArt.color">
+<span class="sig-name descname"><span class="pre">color</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#an.environments.PlaneArt.color" title="Link to this definition"></a></dt>
+<dd><p>a CSS colour.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>fill</cite> only</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.PlaneArt.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid'}</span></span><a class="headerlink" href="#an.environments.PlaneArt.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.environments.PlaneArt.src">
+<span class="sig-name descname"><span class="pre">src</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.environments.PlaneArt.src" title="Link to this definition"></a></dt>
+<dd><p>a path under the environment’s own folder in the store,
+exactly as a character attachment’s <cite>path</cite> is.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>image</cite> only</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="determinism.html" class="btn btn-neutral float-left" title="an.determinism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="expression.html" class="btn btn-neutral float-right" title="an.expression" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

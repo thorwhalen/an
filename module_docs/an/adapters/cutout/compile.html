@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.64 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.65 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=a395f30a"></script>
+      <script src="../../../../_static/documentation_options.js?v=07ed7713"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -63,8 +63,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CONTAIN_FIT"><code class="docutils literal notranslate"><span class="pre">CONTAIN_FIT</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CutoutCompileError"><code class="docutils literal notranslate"><span class="pre">CutoutCompileError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CutoutCompileWarning"><code class="docutils literal notranslate"><span class="pre">CutoutCompileWarning</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.ENVIRONMENT_ART_PREFIX"><code class="docutils literal notranslate"><span class="pre">ENVIRONMENT_ART_PREFIX</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.EYE_NODE_NAMES"><code class="docutils literal notranslate"><span class="pre">EYE_NODE_NAMES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.FOREGROUND_SUFFIX"><code class="docutils literal notranslate"><span class="pre">FOREGROUND_SUFFIX</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.GAZE_ELLIPSE_MARGIN"><code class="docutils literal notranslate"><span class="pre">GAZE_ELLIPSE_MARGIN</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.PLANE_FILL_SPAN"><code class="docutils literal notranslate"><span class="pre">PLANE_FILL_SPAN</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.PROCEDURAL_MOUTH_KEYS"><code class="docutils literal notranslate"><span class="pre">PROCEDURAL_MOUTH_KEYS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.PROP_ART_PREFIX"><code class="docutils literal notranslate"><span class="pre">PROP_ART_PREFIX</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.PUPIL_NODE_NAMES"><code class="docutils literal notranslate"><span class="pre">PUPIL_NODE_NAMES</span></code></a></li>
@@ -73,6 +76,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.blink_phase"><code class="docutils literal notranslate"><span class="pre">blink_phase()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.camera_keys"><code class="docutils literal notranslate"><span class="pre">camera_keys()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.compile_shot"><code class="docutils literal notranslate"><span class="pre">compile_shot()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.foreground_node_name"><code class="docutils literal notranslate"><span class="pre">foreground_node_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.plane_parents"><code class="docutils literal notranslate"><span class="pre">plane_parents()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.step_times"><code class="docutils literal notranslate"><span class="pre">step_times()</span></code></a></li>
 </ul>
 </li>
@@ -138,6 +143,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../environments.html">an.environments</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../expression.html">an.expression</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../expression/axes.html">an.expression.axes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../expression/binding.html">an.expression.binding</a></li>
@@ -289,6 +295,12 @@ idiom, and passing in silence is what this whole change is against.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.ENVIRONMENT_ART_PREFIX">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">ENVIRONMENT_ART_PREFIX</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'environments/'</span></span><a class="headerlink" href="#an.adapters.cutout.compile.ENVIRONMENT_ART_PREFIX" title="Link to this definition"></a></dt>
+<dd><p>The <cite>assets.textures</cite> <cite>src</cite> prefix an environment plate is addressed under.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="an.adapters.cutout.compile.EYE_NODE_NAMES">
 <span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">EYE_NODE_NAMES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'left_eye',</span> <span class="pre">'right_eye'})</span></span><a class="headerlink" href="#an.adapters.cutout.compile.EYE_NODE_NAMES" title="Link to this definition"></a></dt>
 <dd><p>the default rig’s eye slots ARE its node
@@ -301,12 +313,35 @@ names, on both the procedural and the descriptor path.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.FOREGROUND_SUFFIX">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">FOREGROUND_SUFFIX</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'__front'</span></span><a class="headerlink" href="#an.adapters.cutout.compile.FOREGROUND_SUFFIX" title="Link to this definition"></a></dt>
+<dd><p>Suffix for the container holding an environment’s FOREGROUND planes.</p>
+<p>The split has to produce two sibling containers, and before an#110’s review
+both were named <cite>entity.id</cite>. The runtime’s <cite>nodeIndex</cite> is a flat
+<cite>path -&gt; container</cite> dict, so the second silently overwrote the first — an
+authored <cite>set street:x</cite> then moved the foreground half and left the
+background where it was, with no warning from either side: the compiler’s
+collision check compares <cite>(entity/plane, prop)</cite> and never sees <cite>(entity, x)</cite>,
+and the runtime’s unknown-target throw does not fire because the name IS
+known, just bound to the wrong one of two. The determinism report’s
+<cite>node_count</cite> under-counted by one per split environment too.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="an.adapters.cutout.compile.GAZE_ELLIPSE_MARGIN">
 <span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">GAZE_ELLIPSE_MARGIN</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.95</span></span><a class="headerlink" href="#an.adapters.cutout.compile.GAZE_ELLIPSE_MARGIN" title="Link to this definition"></a></dt>
 <dd><p>The summed gaze (x, y), in axis units, is clamped to a circle of this radius
 — the declared travel maps the unit circle onto the sclera’s inner ellipse,
 and 0.95 keeps the whole pupil disc inside it at every angle (measured on
 the synthesized eye: 1.0 pokes out by 2% of the ellipse at the diagonal).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.PLANE_FILL_SPAN">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">PLANE_FILL_SPAN</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4000.0</span></span><a class="headerlink" href="#an.adapters.cutout.compile.PLANE_FILL_SPAN" title="Link to this definition"></a></dt>
+<dd><p>A <cite>fill</cite> plane with no declared size covers the canvas at any camera scale.
+The same 4000 the preset backdrop uses, and for the same reason — the runtime
+centres <cite>root</cite> and applies camera scale, so a huge rect always covers.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -416,6 +451,32 @@ unknown environment ref — from a warning into a <a class="reference internal" 
 Off by default so an asset-less project still renders; on for anything that
 measures pixels, where a stand-in is a wrong answer wearing a right one’s
 clothes (an#33).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.foreground_node_name">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">foreground_node_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/compile.html#foreground_node_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.compile.foreground_node_name" title="Link to this definition"></a></dt>
+<dd><p>The node name an environment’s foreground planes live under.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">foreground_node_name</span><span class="p">(</span><span class="s2">"street"</span><span class="p">)</span>
+<span class="go">'street__front'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.plane_parents">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">plane_parents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../environments.html#an.environments.EnvironmentDescriptor" title="an.environments.EnvironmentDescriptor"><span class="pre">EnvironmentDescriptor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/compile.html#plane_parents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.compile.plane_parents" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{plane</span> <span class="pre">name:</span> <span class="pre">the</span> <span class="pre">node</span> <span class="pre">path</span> <span class="pre">its</span> <span class="pre">channels</span> <span class="pre">must</span> <span class="pre">target}</span></code>.</p>
+<p>One rule, computed the same way by the builder and by the parallax pass —
+the alternative is two places deciding which container a plane ended up in,
+which is the class of drift this wave keeps closing.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.environments</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnvironmentDescriptor</span><span class="p">,</span> <span class="n">Plane</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env</span> <span class="o">=</span> <span class="n">EnvironmentDescriptor</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"e"</span><span class="p">,</span> <span class="n">planes</span><span class="o">=</span><span class="p">[</span><span class="n">Plane</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"a"</span><span class="p">),</span> <span class="n">Plane</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"b"</span><span class="p">)],</span>
+<span class="gp">... </span>                            <span class="n">characters_after</span><span class="o">=</span><span class="s2">"a"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plane_parents</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"street"</span><span class="p">)</span>
+<span class="go">{'a': 'street', 'b': 'street__front'}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.credits &mdash; an 0.1.64 documentation</title>
+  <title>an.credits &mdash; an 0.1.65 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a395f30a"></script>
+      <script src="../../_static/documentation_options.js?v=07ed7713"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -130,6 +130,7 @@
 <li class="toctree-l1"><a class="reference internal" href="data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments.html">an.environments</a></li>
 <li class="toctree-l1"><a class="reference internal" href="expression.html">an.expression</a></li>
 <li class="toctree-l1"><a class="reference internal" href="expression/axes.html">an.expression.axes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="expression/binding.html">an.expression.binding</a></li>
@@ -245,9 +246,14 @@ reason <cite>priv</cite>’s upkeep keeps <cite>unavailable</cite> apart from <c
 <dt class="sig sig-object py" id="an.credits.collect_credits">
 <span class="sig-prename descclassname"><span class="pre">an.credits.</span></span><span class="sig-name descname"><span class="pre">collect_credits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mall</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.credits.CreditsReport" title="an.credits.CreditsReport"><span class="pre">CreditsReport</span></a></span></span><a class="reference internal" href="../../_modules/an/credits.html#collect_credits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.credits.collect_credits" title="Link to this definition"></a></dt>
 <dd><p>Walk a project mall and gather every recorded <code class="xref py py-class docutils literal notranslate"><span class="pre">AssetSource</span></code>.</p>
-<p>Only the characters store carries provenance today. Environments, styles and
-props will as they gain real art; this returns what exists rather than
-pretending the walk is complete.</p>
+<p>Three stores carry provenance: characters, <strong>props</strong> (an#108) and
+<strong>environments</strong> (an#110). Each was added by the PR that gave that store
+real art, which is the rule rather than a coincidence — a walk that skips a
+store holding third-party plates does not return less information, it
+returns an affirmative false statement to exactly the people who need the
+opposite. Styles will join when a StylePack has art (#112).</p>
+<p>Legacy reconstruction runs on characters only: it recovers a DiceBear
+record from <cite>metadata.dicebear_*</cite>, which no other store has ever written.</p>
 </dd></dl>
 
 <dl class="py function">

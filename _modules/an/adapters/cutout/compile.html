@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.64 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.65 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=a395f30a"></script>
+      <script src="../../../../_static/documentation_options.js?v=07ed7713"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -117,6 +117,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data.html">an.data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/environments.html">an.environments</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression.html">an.expression</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/axes.html">an.expression.axes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/expression/binding.html">an.expression.binding</a></li>
@@ -292,6 +293,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.camera</span><span class="w"> </span><span class="kn">import</span> <span class="n">CAMERA_MOVES</span><span class="p">,</span> <span class="n">PAN_FRACTION</span><span class="p">,</span> <span class="n">CameraError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.camera</span><span class="w"> </span><span class="kn">import</span> <span class="n">camera_keys</span> <span class="k">as</span> <span class="n">_camera_keys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentKind</span><span class="p">,</span> <span class="n">migrate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.environments</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ENVIRONMENT_DOCUMENT_KIND</span><span class="p">,</span>
+    <span class="n">EnvironmentDescriptor</span><span class="p">,</span>
+    <span class="n">Plane</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.props</span><span class="w"> </span><span class="kn">import</span> <span class="n">PROP_DOCUMENT_KIND</span><span class="p">,</span> <span class="n">PropDescriptor</span>
 
 
@@ -840,6 +846,11 @@
     <span class="c1"># animation on the synthetic scene root so directors get visible camera</span>
     <span class="c1"># behavior without writing channels by hand.</span>
     <span class="n">_add_camera_clips</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
+    <span class="c1"># After the camera, which reads in the order it happens — though the</span>
+    <span class="c1"># ordering is not load-bearing: the two passes write disjoint targets and</span>
+    <span class="c1"># swapping them is picture-equivalent. What IS load-bearing is that both</span>
+    <span class="c1"># resolve the same `camera_keys`, so they cannot describe different moves.</span>
+    <span class="n">_add_parallax_clips</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
     <span class="c1"># AFTER action + viseme compilation, deliberately: a swap key the timeline</span>
     <span class="c1"># actually USES whose art is missing is recorded as a fallback during</span>
     <span class="c1"># those passes (usage-aware escalation, an#87), and this is the one place</span>
@@ -902,14 +913,19 @@
     <span class="n">n_chars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">char_entities</span><span class="p">)</span>
     <span class="n">char_positions</span> <span class="o">=</span> <span class="n">_layout_character_positions</span><span class="p">(</span><span class="n">n_chars</span><span class="p">)</span>
     <span class="n">char_idx</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="c1"># Process environments first so they sit BEHIND characters in z-order.</span>
+    <span class="c1"># Environments first so they sit BEHIND the characters — except for the</span>
+    <span class="c1"># planes an environment declares as foreground, which is why this is a</span>
+    <span class="c1"># split rather than a loop. Before an#110 the two loops made a plane in</span>
+    <span class="c1"># FRONT of the characters structurally unreachable: entity order could not</span>
+    <span class="c1"># interleave them however the author wrote the scene.</span>
+    <span class="n">in_front</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"environment"</span><span class="p">:</span>
-            <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">_build_environment_subtree</span><span class="p">(</span>
-                    <span class="n">entity</span><span class="p">,</span> <span class="n">environments_store</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span>
-                <span class="p">)</span>
+            <span class="n">node</span><span class="p">,</span> <span class="n">front</span> <span class="o">=</span> <span class="n">_build_environment_subtree</span><span class="p">(</span>
+                <span class="n">entity</span><span class="p">,</span> <span class="n">environments_store</span><span class="p">,</span> <span class="n">textures</span><span class="o">=</span><span class="n">textures</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span>
             <span class="p">)</span>
+            <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">in_front</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">front</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"character"</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">char_positions</span><span class="p">[</span><span class="n">char_idx</span><span class="p">]</span>
@@ -928,6 +944,8 @@
             <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span>
         <span class="c1"># `voice` entities are legitimately not drawable: they</span>
         <span class="c1"># configure the render rather than appearing in it.</span>
+    <span class="c1"># …and last, the foreground planes, over everything.</span>
+    <span class="n">children</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">in_front</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">NodeJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="n">children</span><span class="p">)</span>
 
 
@@ -946,9 +964,20 @@
     <span class="n">entity</span><span class="p">:</span> <span class="n">AssetRef</span><span class="p">,</span>
     <span class="n">env_store</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
+    <span class="n">textures</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AssetJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NodeJSON</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Backdrop: a sky band + a ground band, full canvas width.</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``(the environment node, the planes that go IN FRONT of the characters)``.</span>
+
+<span class="sd">    Two paths, and the second is reached only by a document that asks for it.</span>
+<span class="sd">    A store entry whose `kind` is `EnvironmentDescriptor` **and** which declares</span>
+<span class="sd">    planes builds them, in list order; anything else — a free-form `meta.json`,</span>
+<span class="sd">    a preset name, a ref that is neither — takes the path below unchanged,</span>
+<span class="sd">    which is what keeps every legacy environment byte-identical (an#110).</span>
+<span class="sd">    Re-expressing the presets as planes would move two ledger hashes for no</span>
+<span class="sd">    picture change; a richer default look ships as a NEW preset.</span>
+
+<span class="sd">    Backdrop path: a sky band + a ground band, full canvas width.</span>
 
 <span class="sd">    Picks a preset by ``entity.ref`` (e.g. "park", "night"); the store</span>
 <span class="sd">    can override any of (sky_color, ground_color, ground_y) by ref.</span>
@@ -957,6 +986,25 @@
 <span class="sd">    backdrop, which is a different picture from the one the author asked for</span>
 <span class="sd">    — so it is recorded as a fallback (an#33).</span>
 <span class="sd">    """</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">_environment_descriptor</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">env_store</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">resolutions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">resolutions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">AssetResolutionJSON</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">kind</span><span class="o">=</span><span class="s2">"environment"</span><span class="p">,</span>
+                    <span class="n">store</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">store</span><span class="p">,</span>
+                    <span class="n">ref</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span>
+                    <span class="n">resolved</span><span class="o">=</span><span class="s2">"planes"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_build_plane_subtree</span><span class="p">(</span>
+            <span class="n">entity</span><span class="p">,</span>
+            <span class="n">env</span><span class="p">,</span>
+            <span class="n">textures</span><span class="o">=</span><span class="n">textures</span> <span class="k">if</span> <span class="n">textures</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{},</span>
+            <span class="n">env_store</span><span class="o">=</span><span class="n">env_store</span><span class="p">,</span>
+            <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span><span class="p">,</span>
+        <span class="p">)</span>
     <span class="n">preset_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span> <span class="ow">or</span> <span class="s2">"default"</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="n">known_preset</span> <span class="o">=</span> <span class="n">preset_key</span> <span class="ow">in</span> <span class="n">_ENV_PRESETS</span>
     <span class="n">preset</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_ENV_PRESETS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">preset_key</span><span class="p">,</span> <span class="n">_ENV_PRESETS</span><span class="p">[</span><span class="s2">"default"</span><span class="p">]))</span>
@@ -998,10 +1046,12 @@
                     <span class="c1"># which is the part worth saying.</span>
                     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">"environment </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="si">!r}</span><span class="s2"> declares </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">, which the "</span>
-                        <span class="sa">f</span><span class="s2">"cutout renderer does not read (it uses </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">preset</span><span class="p">)</span><span class="si">}</span><span class="s2">), "</span>
-                        <span class="s2">"so they have no effect on the render. Layered plates "</span>
-                        <span class="s2">"and parallax planes are planned; see "</span>
-                        <span class="s2">"https://github.com/thorwhalen/an/issues/9"</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">"cutout renderer does not read on this path (it uses "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">preset</span><span class="p">)</span><span class="si">}</span><span class="s2">), so they have no effect on the render. "</span>
+                        <span class="s2">"For layered plates and parallax, write an "</span>
+                        <span class="s2">"`EnvironmentDescriptor` with `planes` instead — this is "</span>
+                        <span class="s2">"the free-form preset-override path, which reads exactly "</span>
+                        <span class="s2">"those three keys and drops the rest (an#110)."</span><span class="p">,</span>
                         <span class="n">CutoutCompileWarning</span><span class="p">,</span>
                         <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                     <span class="p">)</span>
@@ -1015,7 +1065,10 @@
     <span class="n">ground_y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">preset</span><span class="p">[</span><span class="s2">"ground_y"</span><span class="p">])</span>
     <span class="n">sky_color</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset</span><span class="p">[</span><span class="s2">"sky_color"</span><span class="p">])</span>
     <span class="n">ground_color</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset</span><span class="p">[</span><span class="s2">"ground_color"</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">NodeJSON</span><span class="p">(</span>
+    <span class="c1"># The node is built exactly as before an#110; only the RETURN grew a second</span>
+    <span class="c1"># element, and it is always empty here — a preset declares no planes, so it</span>
+    <span class="c1"># has nothing to put in front of the characters.</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">NodeJSON</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
         <span class="n">transform</span><span class="o">=</span><span class="n">TransformJSON</span><span class="p">(),</span>
         <span class="n">children</span><span class="o">=</span><span class="p">[</span>
@@ -1035,6 +1088,347 @@
             <span class="p">),</span>
         <span class="p">],</span>
     <span class="p">)</span>
+    <span class="k">return</span> <span class="n">node</span><span class="p">,</span> <span class="p">[]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_plane_subtree</span><span class="p">(</span>
+    <span class="n">entity</span><span class="p">:</span> <span class="n">AssetRef</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">EnvironmentDescriptor</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">textures</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AssetJSON</span><span class="p">],</span>
+    <span class="n">env_store</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+    <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""A declared multiplane stage: planes in list order, split by depth-in-front.</span>
+
+<span class="sd">    Planes whose art cannot be drawn are DROPPED and recorded as a fallback —</span>
+<span class="sd">    not replaced with a stand-in, because a plate that is not there has no</span>
+<span class="sd">    substitute that is not a lie about the picture (an#33). `strict_assets`</span>
+<span class="sd">    then decides whether that is fatal, at the one place that decides it for</span>
+<span class="sd">    every fallback.</span>
+<span class="sd">    """</span>
+    <span class="n">probe</span> <span class="o">=</span> <span class="n">_part_probe</span><span class="p">(</span><span class="n">env_store</span><span class="p">,</span> <span class="n">art_prefix</span><span class="o">=</span><span class="n">ENVIRONMENT_ART_PREFIX</span><span class="p">)</span>
+    <span class="n">ref</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span> <span class="ow">or</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">plane</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">planes</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">_plane_node</span><span class="p">(</span><span class="n">plane</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span> <span class="n">textures</span><span class="o">=</span><span class="n">textures</span><span class="p">,</span> <span class="n">probe</span><span class="o">=</span><span class="n">probe</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">resolutions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">resolutions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">AssetResolutionJSON</span><span class="p">(</span>
+                        <span class="nb">id</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                        <span class="n">kind</span><span class="o">=</span><span class="s2">"environment"</span><span class="p">,</span>
+                        <span class="n">store</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">store</span><span class="p">,</span>
+                        <span class="n">ref</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span>
+                        <span class="n">resolved</span><span class="o">=</span><span class="s2">"missing-plane"</span><span class="p">,</span>
+                        <span class="n">fallback</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"plane </span><span class="si">{</span><span class="n">plane</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> declares art "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">plane</span><span class="o">.</span><span class="n">art</span><span class="o">.</span><span class="n">src</span><span class="si">!r}</span><span class="s2"> which is not in the "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">store</span><span class="si">!r}</span><span class="s2"> store, so the plane was dropped"</span>
+                        <span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="n">behind</span><span class="p">,</span> <span class="n">in_front</span> <span class="o">=</span> <span class="n">_split_planes_around_characters</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+    <span class="n">front_nodes</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">NodeJSON</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">foreground_node_name</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">TransformJSON</span><span class="p">(),</span>
+                <span class="n">children</span><span class="o">=</span><span class="n">in_front</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">in_front</span>
+        <span class="k">else</span> <span class="p">[]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">NodeJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">TransformJSON</span><span class="p">(),</span> <span class="n">children</span><span class="o">=</span><span class="n">behind</span><span class="p">),</span>
+        <span class="n">front_nodes</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="c1">#: The `assets.textures` `src` prefix an environment plate is addressed under.</span>
+<span class="n">ENVIRONMENT_ART_PREFIX</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"environments/"</span>
+
+<span class="c1">#: A `fill` plane with no declared size covers the canvas at any camera scale.</span>
+<span class="c1">#: The same 4000 the preset backdrop uses, and for the same reason — the runtime</span>
+<span class="c1">#: centres `root` and applies camera scale, so a huge rect always covers.</span>
+<span class="n">PLANE_FILL_SPAN</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4000.0</span>
+
+
+<span class="c1">#: Suffix for the container holding an environment's FOREGROUND planes.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The split has to produce two sibling containers, and before an#110's review</span>
+<span class="c1">#: both were named `entity.id`. The runtime's `nodeIndex` is a flat</span>
+<span class="c1">#: `path -&gt; container` dict, so the second silently overwrote the first — an</span>
+<span class="c1">#: authored `set street:x` then moved the foreground half and left the</span>
+<span class="c1">#: background where it was, with no warning from either side: the compiler's</span>
+<span class="c1">#: collision check compares `(entity/plane, prop)` and never sees `(entity, x)`,</span>
+<span class="c1">#: and the runtime's unknown-target throw does not fire because the name IS</span>
+<span class="c1">#: known, just bound to the wrong one of two. The determinism report's</span>
+<span class="c1">#: `node_count` under-counted by one per split environment too.</span>
+<span class="n">FOREGROUND_SUFFIX</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"__front"</span>
+
+
+<div class="viewcode-block" id="foreground_node_name">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/compile.html#an.adapters.cutout.foreground_node_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">foreground_node_name</span><span class="p">(</span><span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The node name an environment's foreground planes live under.</span>
+
+<span class="sd">    &gt;&gt;&gt; foreground_node_name("street")</span>
+<span class="sd">    'street__front'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity_id</span><span class="si">}{</span><span class="n">FOREGROUND_SUFFIX</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<div class="viewcode-block" id="plane_parents">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/compile.html#an.adapters.cutout.plane_parents">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plane_parents</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="s2">"EnvironmentDescriptor"</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``{plane name: the node path its channels must target}``.</span>
+
+<span class="sd">    One rule, computed the same way by the builder and by the parallax pass —</span>
+<span class="sd">    the alternative is two places deciding which container a plane ended up in,</span>
+<span class="sd">    which is the class of drift this wave keeps closing.</span>
+
+<span class="sd">    &gt;&gt;&gt; from an.environments import EnvironmentDescriptor, Plane</span>
+<span class="sd">    &gt;&gt;&gt; env = EnvironmentDescriptor(name="e", planes=[Plane(name="a"), Plane(name="b")],</span>
+<span class="sd">    ...                             characters_after="a")</span>
+<span class="sd">    &gt;&gt;&gt; plane_parents(env, "street")</span>
+<span class="sd">    {'a': 'street', 'b': 'street__front'}</span>
+<span class="sd">    """</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">planes</span><span class="p">]</span>
+    <span class="n">after</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">characters_after</span>
+    <span class="n">cut</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">after</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">after</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="p">(</span><span class="n">entity_id</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">cut</span> <span class="k">else</span> <span class="n">foreground_node_name</span><span class="p">(</span><span class="n">entity_id</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_environment_descriptor</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="n">AssetRef</span><span class="p">,</span> <span class="n">env_store</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"EnvironmentDescriptor | None"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The store's `EnvironmentDescriptor` for ``entity``, or ``None``.</span>
+
+<span class="sd">    ``None`` means "take the preset path", which is every environment written</span>
+<span class="sd">    before an#110 — a free-form `meta.json` with colour scalars, or nothing at</span>
+<span class="sd">    all. That is what keeps the legacy output byte-identical: the plane code</span>
+<span class="sd">    is not reached unless a document says `kind: EnvironmentDescriptor` AND</span>
+<span class="sd">    declares planes.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env_store</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">env_store</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="n">raw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ENVIRONMENT_DOCUMENT_KIND</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">EnvironmentDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+        <span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">raw</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="n">ENVIRONMENT_DOCUMENT_KIND</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">env</span> <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">planes</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plane_node</span><span class="p">(</span>
+    <span class="n">plane</span><span class="p">:</span> <span class="n">Plane</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">textures</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AssetJSON</span><span class="p">],</span>
+    <span class="n">probe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NodeJSON</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One plane as a scene node, or ``None`` when its art cannot be drawn.</span>
+
+<span class="sd">    ``None`` rather than a placeholder: an environment plate that is not on</span>
+<span class="sd">    disk has no stand-in that is not a lie about the picture (an#33), and the</span>
+<span class="sd">    caller records it as a fallback so `strict_assets` can decide.</span>
+<span class="sd">    """</span>
+    <span class="n">art</span> <span class="o">=</span> <span class="n">plane</span><span class="o">.</span><span class="n">art</span>
+    <span class="n">ox</span><span class="p">,</span> <span class="n">oy</span> <span class="o">=</span> <span class="n">plane</span><span class="o">.</span><span class="n">offset</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">TransformJSON</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ox</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">oy</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">art</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"fill"</span><span class="p">:</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">plane</span><span class="o">.</span><span class="n">size</span> <span class="ow">or</span> <span class="p">(</span><span class="n">PLANE_FILL_SPAN</span><span class="p">,</span> <span class="n">PLANE_FILL_SPAN</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">NodeJSON</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">plane</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+            <span class="n">visual</span><span class="o">=</span><span class="n">VisualJSON</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"rect"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">height</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="n">art</span><span class="o">.</span><span class="n">color</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">art</span><span class="o">.</span><span class="n">src</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">src</span> <span class="o">=</span> <span class="n">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">art</span><span class="o">.</span><span class="n">src</span><span class="p">,</span> <span class="n">art_prefix</span><span class="o">=</span><span class="n">ENVIRONMENT_ART_PREFIX</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">probe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">probe</span><span class="p">(</span><span class="n">src</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">alias</span> <span class="o">=</span> <span class="n">_register_texture</span><span class="p">(</span><span class="n">textures</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">plane</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">src</span><span class="p">)</span>
+    <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">probe</span><span class="p">(</span><span class="n">src</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">probe</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">plane</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span> <span class="o">=</span> <span class="n">plane</span><span class="o">.</span><span class="n">anchor</span>
+    <span class="k">return</span> <span class="n">NodeJSON</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">plane</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+        <span class="n">visual</span><span class="o">=</span><span class="n">VisualJSON</span><span class="p">(</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">"svg_sprite"</span><span class="p">,</span>
+            <span class="n">asset_id</span><span class="o">=</span><span class="n">alias</span><span class="p">,</span>
+            <span class="n">anchor_x</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ax</span><span class="p">),</span>
+            <span class="n">anchor_y</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ay</span><span class="p">),</span>
+            <span class="n">fit</span><span class="o">=</span><span class="n">plane</span><span class="o">.</span><span class="n">fit</span><span class="p">,</span>
+            <span class="o">**</span><span class="p">({</span><span class="s2">"width"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s2">"height"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">])}</span> <span class="k">if</span> <span class="n">extent</span> <span class="k">else</span> <span class="p">{}),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_planes_around_characters</span><span class="p">(</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">EnvironmentDescriptor</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``(behind, in_front)`` for the characters, by ``characters_after``.</span>
+
+<span class="sd">    `None` puts everything behind — which is what the old two-loop builder did,</span>
+<span class="sd">    and is why an environment that declares no `characters_after` compiles to</span>
+<span class="sd">    the same picture. A name that matches no plane puts everything behind too,</span>
+<span class="sd">    but says so: silently drawing a foreground plane at the back is a wrong</span>
+<span class="sd">    picture that renders happily.</span>
+
+<span class="sd">    &gt;&gt;&gt; from an.environments import EnvironmentDescriptor, Plane</span>
+<span class="sd">    &gt;&gt;&gt; env = EnvironmentDescriptor(name="e", planes=[Plane(name="a"), Plane(name="b")])</span>
+<span class="sd">    &gt;&gt;&gt; behind, front = _split_planes_around_characters(env, [NodeJSON(name="a"), NodeJSON(name="b")])</span>
+<span class="sd">    &gt;&gt;&gt; [n.name for n in behind], [n.name for n in front]</span>
+<span class="sd">    (['a', 'b'], [])</span>
+<span class="sd">    &gt;&gt;&gt; env = env.model_copy(update={"characters_after": "a"})</span>
+<span class="sd">    &gt;&gt;&gt; behind, front = _split_planes_around_characters(env, [NodeJSON(name="a"), NodeJSON(name="b")])</span>
+<span class="sd">    &gt;&gt;&gt; [n.name for n in behind], [n.name for n in front]</span>
+<span class="sd">    (['a'], ['b'])</span>
+<span class="sd">    """</span>
+    <span class="n">after</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">characters_after</span>
+    <span class="k">if</span> <span class="n">after</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="p">,</span> <span class="p">[]</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">after</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"environment </span><span class="si">{</span><span class="n">env</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> declares characters_after=</span><span class="si">{</span><span class="n">after</span><span class="si">!r}</span><span class="s2">, which "</span>
+            <span class="sa">f</span><span class="s2">"is not one of its planes (</span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">). Every plane is drawn BEHIND the "</span>
+            <span class="s2">"characters, which is the default — a foreground plane silently drawn "</span>
+            <span class="s2">"at the back is a wrong picture that renders happily."</span><span class="p">,</span>
+            <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes</span><span class="p">,</span> <span class="p">[]</span>
+    <span class="n">cut</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">after</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">nodes</span><span class="p">[:</span><span class="n">cut</span><span class="p">],</span> <span class="n">nodes</span><span class="p">[</span><span class="n">cut</span><span class="p">:]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_parallax_clips</span><span class="p">(</span>
+    <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span>
+    <span class="n">mall</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span>
+    <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">],</span>
+    <span class="n">tracks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TrackJSON</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compensate each plane for the camera, one factor per plane.</span>
+
+<span class="sd">    ``plane.x = x0 + (1 − f) · cam_x`` — so a plane at `f = 1` emits **nothing**</span>
+<span class="sd">    and rides the camera exactly as every node did before an#110, and a plane</span>
+<span class="sd">    at `f = 0` is pinned in frame. Screen position works out to</span>
+<span class="sd">    ``(W/2, H/2) + S · (x0 − f · cam)``, which is the affine expression every</span>
+<span class="sd">    surveyed engine uses under a different name.</span>
+
+<span class="sd">    The camera's own channels are emitted separately, on `root`; these are on</span>
+<span class="sd">    the plane nodes, so a plane is free to be tweened by the author as long as</span>
+<span class="sd">    it does not fight this — which is exactly what the collision check below</span>
+<span class="sd">    refuses.</span>
+
+<span class="sd">    **Translation only.** `root.scale` and `root.rotation` multiply the whole</span>
+<span class="sd">    composed expression, so no per-plane factor can cancel them: a `depth = 0`</span>
+<span class="sd">    plate still grows under a push-in. Depth-aware zoom is the dolly, deferred.</span>
+
+<span class="sd">    Ordering note, since the call site's comment used to overstate it: running</span>
+<span class="sd">    this after the camera is TIDY, not load-bearing. The two passes write</span>
+<span class="sd">    disjoint targets (`root:*` versus `entity/plane:*`) and each inspects only</span>
+<span class="sd">    the other's, so swapping them is picture-equivalent and merely reorders the</span>
+<span class="sd">    serialized track list (an#110 review, L1).</span>
+<span class="sd">    """</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">camera_keys</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.001</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">))</span>
+    <span class="n">authored</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">(</span><span class="n">channel</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">channel</span><span class="o">.</span><span class="n">property</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">animation</span> <span class="ow">in</span> <span class="n">animations</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">animation</span><span class="o">.</span><span class="n">channels</span>
+    <span class="p">}</span>
+    <span class="n">env_store</span> <span class="o">=</span> <span class="n">mall</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"environments"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">!=</span> <span class="s2">"environment"</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">_environment_descriptor</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">env_store</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">_emit_plane_compensation</span><span class="p">(</span>
+            <span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">,</span> <span class="n">authored</span><span class="o">=</span><span class="n">authored</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_emit_plane_compensation</span><span class="p">(</span>
+    <span class="n">shot_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">EnvironmentDescriptor</span><span class="p">,</span>
+    <span class="n">keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CameraKey</span><span class="p">],</span>
+    <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">],</span>
+    <span class="n">tracks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TrackJSON</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">authored</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The per-plane half of :func:`_add_parallax_clips`."""</span>
+    <span class="n">parents</span> <span class="o">=</span> <span class="n">plane_parents</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">plane</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">planes</span><span class="p">:</span>
+        <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span> <span class="o">=</span> <span class="n">plane</span><span class="o">.</span><span class="n">factors</span><span class="p">()</span>
+        <span class="n">ox</span><span class="p">,</span> <span class="n">oy</span> <span class="o">=</span> <span class="n">plane</span><span class="o">.</span><span class="n">offset</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parents</span><span class="p">[</span><span class="n">plane</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">plane</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">factor</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">cam_field</span><span class="p">,</span> <span class="n">rest</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">fx</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">ox</span><span class="p">)),</span>
+            <span class="p">(</span><span class="n">fy</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">oy</span><span class="p">)),</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">factor</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="k">continue</span>  <span class="c1"># rides the camera; emitting nothing is the point</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">rest</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">cam_field</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="n">rest</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
+                <span class="k">continue</span>  <span class="c1"># the camera does not move on this axis</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span> <span class="ow">in</span> <span class="n">authored</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot_id</span><span class="si">!r}</span><span class="s2">: plane </span><span class="si">{</span><span class="n">target</span><span class="si">!r}</span><span class="s2"> has depth </span><span class="si">{</span><span class="n">plane</span><span class="o">.</span><span class="n">depth</span><span class="si">}</span><span class="s2"> so "</span>
+                    <span class="sa">f</span><span class="s2">"the stage drives `</span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s2">` on it, and an action also targets "</span>
+                    <span class="s2">"it. Compensation clips are appended last and the evaluators "</span>
+                    <span class="s2">"are later-wins, so the authored channel would be discarded "</span>
+                    <span class="s2">"silently. Give the plane depth 1.0 to animate it by hand, or "</span>
+                    <span class="s2">"move the action to a child node."</span>
+                <span class="p">)</span>
+            <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__parallax__</span><span class="si">{</span><span class="n">shot_id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">entity_id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">plane</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
+                <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+                <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">ChannelJSON</span><span class="p">(</span>
+                        <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                        <span class="nb">property</span><span class="o">=</span><span class="n">prop</span><span class="p">,</span>
+                        <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span>
+                            <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">at</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="n">k</span><span class="o">.</span><span class="n">easing</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+                        <span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">TrackJSON</span><span class="p">(</span>
+                    <span class="n">target_root</span><span class="o">=</span><span class="s2">"__parallax__"</span><span class="p">,</span>
+                    <span class="n">clips</span><span class="o">=</span><span class="p">[</span>
+                        <span class="n">PlacedClipJSON</span><span class="p">(</span>
+                            <span class="n">animation_id</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span>
+                        <span class="p">)</span>
+                    <span class="p">],</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_layout_character_positions</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">spread</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">220.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
