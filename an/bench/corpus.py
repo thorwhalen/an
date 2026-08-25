@@ -250,6 +250,26 @@ DFLT_FIXTURES: dict[str, Fixture] = {
             "not depend on how the frame containing t=0.25 rounds."
         ),
     ),
+    "stage_pan": Fixture(
+        path=f"{CORPUS_DIRNAME}/stage_pan",
+        expect_visual_kinds=frozenset({"rect"}),
+        golden_frames=(0.0, 8 / 24),
+        golden_note=(
+            "three coloured blocks at depths 0.25 / 1.0 / 2.0 under a "
+            "zoom-free pan (an#111). What moves between the goldens is the "
+            "SEPARATION: the blocks start aligned and end 10 / 40 / 80 px "
+            "apart, which is the parallax and nothing else. Frame 8, not the "
+            "mid-frame: the camera travels 5 px per frame and the far plane "
+            "moves a quarter of that, so only every fourth frame lands every "
+            "block on an exact pixel boundary — at any other frame the "
+            "anti-aliased edge changes the exact-colour mask's SIZE, and a "
+            "centroid measured against a different shape is not a "
+            "displacement (the measurement refuses it outright). "
+            "Zoom is held constant on purpose: the x = 0 probe that cancels "
+            "it in the JSON half does not reach a centroid, which sits at the "
+            "plane's own offset."
+        ),
+    ),
     "expressions": Fixture(
         path=f"{CORPUS_DIRNAME}/expressions",
         expect_visual_kinds=frozenset({"svg_sprite"}),

@@ -25,6 +25,7 @@ from typing import Any
 
 from an.bench import contract, golden as G, imageio, masks, metrics as M, palette as P
 from an.bench import png
+from an.adapters.cutout.compile import FOREGROUND_SUFFIX
 from an.bench.capture import (
     SceneCapture,
     capture_fixture,
@@ -580,6 +581,148 @@ def pinned_frames_min_pairwise_changed_px(capture: SceneCapture, times) -> Value
     return measured(changed, closest_pair=[G.frame_key(a), G.frame_key(b)])
 
 
+#: The pan measurement (an#111). Metric and tripwire come from ONE measurement,
+#: as the golden pair does: the boolean and the number must be the same evidence
+#: read two ways, or a reader has to reconcile them.
+STAGE_METRIC_KEY: str = "stage_min_plane_ratio_gap"
+STAGE_TRIPWIRE_KEY: str = "stage_planes_parallaxed"
+
+#: The floor the tripwire fires below, set at HALF the first bless's measured
+#: minimum — the `expression_min_pairwise_changed_px` precedent followed
+#: literally.
+#:
+#: Measured on `stage_pan` at the first bless: **0.375**. Ratios are taken
+#: against the largest mover, so depths 0.25 / 1.0 / 2.0 report as
+#: 0.125 / 0.5 / 1.0 and the closest pair is far/mid. (An earlier draft of this
+#: comment said 0.75, which is the same measurement taken against the
+#: `depth == 1` plane — a reference the pixel half cannot see, which is why
+#: `_reference` is now always the largest mover.)
+STAGE_MIN_RATIO_GAP: float = 0.1875
+
+
+def _plane_colours(capture: SceneCapture) -> dict[str, int]:
+    """``{plane path: packed RGB}`` for every DECLARED plane in the staged scene.
+
+    Read from the document the browser actually loaded, for the same reason
+    `expect_visual_kinds` is: a fixture's own declaration is what the compiler
+    produced, and the staged JSON is the independent second opinion.
+
+    **Scoped by what the document SAYS, not by depth in the tree.** The first
+    version walked `scene.children[*].children[*]` and called every `rect` a
+    plane — which is also the shape of a procedural character's parts, so
+    `single_character` and `dialogue` reported three "planes" (`torso`,
+    `left_arm`, `right_arm`, all one colour) and the tripwire would have called
+    a scene with no stage a flattened stage. The docstring claimed the walk was
+    scoped to environment nodes; nothing in it was (an#111 review, H1).
+
+    The scoping is `asset_resolution`: an environment built from planes records
+    `resolved="planes"`, which is exactly the fact needed and is written by the
+    one place that knows it. A preset backdrop records `preset`/`store`/`default`
+    and its `sky`/`ground` rects are correctly ignored.
+
+    Keyed by full PATH, not bare name, so two environments each with a `sky`
+    cannot overwrite each other.
+    """
+    for shot in capture.shots:
+        doc = shot.scene_json
+        ids = {
+            entry.get("id")
+            for entry in doc.get("asset_resolution", []) or []
+            if entry.get("kind") == "environment" and entry.get("resolved") == "planes"
+        }
+        if not ids:
+            continue
+        out: dict[str, int] = {}
+        for env in doc.get("scene", {}).get("children", []) or []:
+            name = env.get("name") or ""
+            # …and the foreground container an#110 splits off, which carries the
+            # entity's id plus a suffix and holds the rest of the same planes.
+            if name not in ids and name.rsplit(FOREGROUND_SUFFIX, 1)[0] not in ids:
+                continue
+            for child in env.get("children", []) or []:
+                visual = child.get("visual") or {}
+                colour = visual.get("color")
+                if visual.get("kind") == "rect" and isinstance(colour, str):
+                    packed = _packed_hex(colour)
+                    if packed is not None:
+                        out[f"{name}/{child['name']}"] = packed
+        if len(out) >= 2:
+            return out
+    return {}
+
+
+def _packed_hex(colour: str) -> int | None:
+    """``"#204080"`` -> ``0x204080``; anything else -> ``None``."""
+    text = colour.strip().lstrip("#")
+    if len(text) != 6:
+        return None
+    try:
+        return int(text, 16)
+    except ValueError:
+        return None
+
+
+def _stage_pan_values(capture: SceneCapture, times) -> tuple[Value, Value]:
+    """``(stage_min_plane_ratio_gap, stage_planes_parallaxed)`` for one scene.
+
+    Measured on the PRE-ENCODE PNGs, like every other family-B row: the mp4 is
+    `yuv420p`, so an exact-colour mask finds nothing in it (verified while
+    writing this — every plane read zero pixels).
+
+    `unavailable`, never zero, for a scene with fewer than two coloured planes:
+    a scene with nothing to compare has no ratio, and reporting that as a
+    flattened stage would fire the tripwire on every fixture in the corpus.
+    """
+    from an.bench.png import read_png
+    from an.bench.stage import ClippedPlane, measure_pan_pixels, min_ratio_gap
+
+    colours = _plane_colours(capture)
+    if len(colours) < 2:
+        detail = (
+            f"the scene stages {len(colours)} colour-filled plane(s); a ratio "
+            "needs two. Only a multiplane stage has a pan to measure."
+        )
+        return unavailable(detail), unavailable(detail)
+    refs = G.resolve_frames(capture, times)
+    if len(refs) < 2:
+        detail = f"the scene pins {len(refs)} distinct frame(s); a displacement needs two"
+        return unavailable(detail), unavailable(detail)
+    frames = tuple(read_png(G.frame_png_path(capture, r)) for r in refs[:2])
+    try:
+        measurement = measure_pan_pixels(frames, colours)
+    except ClippedPlane as e:
+        # NOT zero: a clipped plane means the instrument could not measure,
+        # and a tripwire that fires on its own failure cries wolf.
+        return unavailable(str(e)), unavailable(str(e))
+    if measurement.is_rigid and all(t.dx == 0 for t in measurement.tracks):
+        # Nothing moved at the probe column. That is what a zoom-only shot
+        # looks like — correctly, since the probe is chosen so a zoom cancels —
+        # and there is no ratio to report. `unavailable`, never zero: a
+        # tripwire that fires on a scene with no pan is crying wolf.
+        detail = (
+            "no plane moved at the probe column, so there is no displacement "
+            "ratio. A zoom cancels there by construction; only a translation "
+            "has a pan to measure."
+        )
+        return unavailable(detail), unavailable(detail)
+    gap = min_ratio_gap(measurement.ratios)
+    ratios = {k: round(v, 6) for k, v in measurement.ratios.items()}
+    return (
+        measured(round(gap, 6), ratios=ratios, reference=measurement.reference),
+        measured(
+            gap > STAGE_MIN_RATIO_GAP,
+            ratios=ratios,
+            floor=STAGE_MIN_RATIO_GAP,
+            detail=(
+                "every plane moved together — the stage panned as one rigid "
+                "image, which is what a flattened parallax looks like"
+                if gap <= STAGE_MIN_RATIO_GAP
+                else ""
+            ),
+        ),
+    )
+
+
 #: Said when a run blessed the goldens it would otherwise have compared against.
 JUST_BLESSED_DETAIL: str = (
     "this run WROTE these goldens, so comparing against them is a tautology: "
@@ -809,6 +952,11 @@ def run_bench(
             values[PAIRWISE_METRIC_KEY] = pinned_frames_min_pairwise_changed_px(
                 capture, fixture.golden_frames
             )
+            stage_metric, stage_tripwire = _stage_pan_values(
+                capture, fixture.golden_frames
+            )
+            values[STAGE_METRIC_KEY] = stage_metric
+            values[STAGE_TRIPWIRE_KEY] = stage_tripwire
             scene_prov["golden"] = {
                 **golden,
                 "chromium_build": chromium_build,

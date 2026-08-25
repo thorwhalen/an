@@ -1,0 +1,46 @@
+{
+  "blessed_at": "2026-08-25T16:41:09Z",
+  "chromium_build": "140.0.7339.16",
+  "criterion": "sha256 of the DECODED RGB array, never the file bytes: Chromium 1187 -> 1223 changes every PNG file and zero pixels.",
+  "fps": 24,
+  "frames": [
+    {
+      "bytes": 1341,
+      "file": "f0000-chromium140.0.7339.16.png",
+      "frame_key": "f0000",
+      "index": 0,
+      "local_index": 0,
+      "sha256": "0bb0a553fc67c7b32ae1e171db76a991aa291ff419c66ba647edfe58874cf54a",
+      "shot_id": "lamp",
+      "time": 0.0
+    },
+    {
+      "bytes": 1750,
+      "file": "f0009-chromium140.0.7339.16.png",
+      "frame_key": "f0009",
+      "index": 9,
+      "local_index": 9,
+      "sha256": "54cab51dd13fe413892580ddb44c50741326425bf31307861939ffa2e59851a5",
+      "shot_id": "lamp",
+      "time": 0.375
+    }
+  ],
+  "git": {
+    "branch": "wave7-pr-6",
+    "dirty": true,
+    "sha": "a71c14a199dd6c8af29e9d385d106cc80862e609"
+  },
+  "reason": "an#108's fixture, blessed in an#111: the two-state prop's first goldens \u2014 a desk lamp `off` at frame 0 and `on` at frame 9, straddling the swap at t=0.25. an#108 added the fixture and did not bless it, so the corpus carried a scene with no committed pixels until here.",
+  "removed": [],
+  "resolution": [
+    320,
+    240
+  ],
+  "scene": "prop_swap",
+  "scene_contract_sha256": "6eeda4dfa4db93f673ff83225f30b732adbf22c61121b69546ead277283e1ac1",
+  "shot_ids": [
+    "lamp"
+  ],
+  "source": "misc/bench/corpus/prop_swap",
+  "what_moves": "a two-state prop swapping mid-shot (an#108): a desk lamp whose `lamp` asset-set goes `off` -> `on` at t=0.25. What moves between the goldens is a texture SWAP and nothing else \u2014 no transform, no easing, no interpolation \u2014 which is why this scene is worth a row the other seven cannot provide: every one of them measures a pose changing continuously, so a regression that broke swap resolution alone (the runtime resolves two swap properties on one node by NAME order, and an#87's failure mode was keeping the PREVIOUS texture in silence) would move no golden anywhere in the corpus. Frame 9 rather than the mid-frame: at 24 fps the swap lands on frame 6, so frame 9 is clear of the boundary in a way that does not depend on how the frame containing t=0.25 rounds."
+}

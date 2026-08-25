@@ -55,13 +55,29 @@ def test_the_render_side_panel_is_fully_measured(ledger):
     metrics that can see a render mutation, so a null here is a blind panel."""
     block = ledger["scenes"][SCENE]
     render_side = {k: r for k, r in block["metrics"].items() if r["side"] == "render"}
+    from an.bench.registry import METRICS
+
     unmeasured = {
-        k: r["state"] for k, r in render_side.items() if r["state"] != "measured"
+        k: r["state"]
+        for k, r in render_side.items()
+        if r["state"] != "measured" and not METRICS[k].requires
     }
     # Family B included, since an#38: a golden the corpus commits makes this a
     # real number rather than a gate, and family B is the ONLY render-side
     # family that can see a change nobody predicted in advance.
     assert unmeasured == {}, unmeasured
+
+    # A row that DECLARES what a scene must have may be null — and only for
+    # that reason. `stage_min_plane_ratio_gap` needs two planes at different
+    # depths, and this scene has no planes at all, so its null is structural
+    # rather than a blind panel (an#111). The exception lives in the registry,
+    # not in a list here, so the panel rule keeps naming its own exceptions.
+    scoped = {k: r for k, r in render_side.items() if METRICS[k].requires}
+    assert scoped, "the exemption must have a subject, or it is dead code"
+    for key, row in scoped.items():
+        assert row["state"] in {"measured", "unavailable"}, (key, row)
+        if row["state"] == "unavailable":
+            assert row.get("detail"), f"{key}: an unavailable row must say why"
 
 
 def test_the_encode_side_panel_is_fully_measured(ledger):

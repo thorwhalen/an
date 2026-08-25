@@ -424,7 +424,7 @@ def _descriptor_for(ref, available_characters) -> CharacterDescriptor | None:
     return None
 
 
-def _check_camera(shot, path: str, report: "ValidationReport") -> None:
+def _check_camera(shot, path: str, report: "ValidationReport", stores=None) -> None:
     """Every way a camera can fail to render, reported for free (an#109).
 
     The rule is `_check_renderable`'s: **error wherever the pipeline raises**,
@@ -458,9 +458,75 @@ def _check_camera(shot, path: str, report: "ValidationReport") -> None:
             "needs two to interpolate between, so this renders as if the "
             "camera were absent. Add a second key, or remove the camera.",
         )
+    _check_flat_pan(shot, keys, path, report, stores)
 
 
-def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
+def _check_flat_pan(shot, keys, path: str, report: "ValidationReport", stores) -> None:
+    """A camera TRANSLATION on a stage with nothing to parallax (an#111).
+
+    A warning, not an error: "pan a single-plane stage" is a legitimate if
+    unexciting request, and the render is correct — the whole picture slides.
+    But it is also exactly what a FLATTENED parallax looks like, which is the
+    null hypothesis the pan measurement exists to exclude, so an author who
+    meant depth should be told the stage has none.
+
+    Silent when no store was supplied: "no store" and "no planes" are
+    different facts, and reporting the first as the second is the mistake
+    an#108's review caught on the prop path.
+    """
+    # A TRANSLATION, not merely an off-centre camera. The first version asked
+    # whether any key had a non-zero x or y, which warns on a pure zoom held at
+    # an offset — a scene with no translation at all (an#111 review, M3).
+    xs = {round(float(k.x), 9) for k in keys}
+    ys = {round(float(k.y), 9) for k in keys}
+    if len(xs) < 2 and len(ys) < 2:
+        return  # the camera does not translate; a zoom has nothing to parallax
+    env_store = (stores or {}).get("environments")
+    if env_store is None:
+        return
+    from an.environments import ENVIRONMENT_DOCUMENT_KIND, EnvironmentDescriptor
+
+    factors: list[tuple[float, float]] = []
+    for entity in shot.entities:
+        if entity.kind != "environment":
+            continue
+        try:
+            raw = env_store[entity.ref]
+        except (KeyError, TypeError):
+            continue
+        if not isinstance(raw, dict) or raw.get("kind") != ENVIRONMENT_DOCUMENT_KIND.name:
+            continue
+        try:
+            # MIGRATED, as the compiler reads it — a pre-flight that validates
+            # a document differently from the thing it predicts is its own
+            # defect, which is the rule `_rig_document` already follows.
+            env = EnvironmentDescriptor.model_validate(
+                migrate(dict(raw), kind=ENVIRONMENT_DOCUMENT_KIND.name)
+            )
+        except Exception:  # noqa: BLE001 — a malformed descriptor is another check's
+            continue
+        # `factors()`, not `depth`: `parallax` OVERRIDES `depth`, so reading the
+        # scalar warns on a stage that parallaxes by override and stays silent
+        # on one that is flat by override — both backwards (an#111 review, M3).
+        factors.extend(p.factors() for p in env.planes)
+    if factors and len({(round(fx, 9), round(fy, 9)) for fx, fy in factors}) > 1:
+        return  # a real multiplane stage
+    report.add(
+        "warning",
+        f"{path}",
+        "the camera translates over a stage with "
+        + (
+            f"{len(factors)} plane(s) all moving at the same rate"
+            if factors
+            else "no declared planes"
+        )
+        + ". The render is correct — the whole picture slides — but it is also "
+        "what a flattened parallax looks like. If depth was the point, give the "
+        "environment `planes` with different `depth` values (an#110).",
+    )
+
+
+def _check_renderable(shot, path: str, report: "ValidationReport", stores=None) -> None:
     """Report, at validate time, what compile and render will refuse.
 
     This is where these checks belong. The compiler and the runtime both refuse
@@ -475,7 +541,7 @@ def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
     predicts is its own defect.
     """
     if shot.camera is not None:
-        _check_camera(shot, f"{path}/camera", report)
+        _check_camera(shot, f"{path}/camera", report, stores=stores)
 
     for j, entity in enumerate(shot.entities):
         if (
@@ -591,11 +657,14 @@ def validate_semantic(
     available_voices: Mapping[str, Any] | None = None,
     available_characters: Mapping[str, Any] | None = None,
     available_props: Mapping[str, Any] | None = None,
+    available_environments: Mapping[str, Any] | None = None,
 ) -> ValidationReport:
     """Cross-field semantic checks. Pass live stores in for cross-store checks.
 
     Both ``available_voices`` and ``available_characters`` accept any mapping;
-    ``available_props`` is the same thing for `kind="prop"` entities (an#108) —
+    ``available_props`` is the same thing for `kind="prop"` entities (an#108),
+    and ``available_environments`` lets the flat-pan warning read a stage's
+    planes (an#111) —
     without it a prop's swaps are reported as having no descriptor, which is
     validate refusing what compile accepts.
     Voices are consulted via ``__contains__`` only; characters additionally
@@ -608,11 +677,17 @@ def validate_semantic(
     report = ValidationReport()
     #: Only the stores actually supplied — an absent one skips its checks
     #: rather than reporting everything it would have found as missing.
+    #: Every store that was actually supplied, keyed by MALL name. The rig
+    #: checks look up `RIG_STORES[kind][0]`, so an `environments` entry is
+    #: inert to them and available to the checks that need it (an#111's flat-pan
+    #: warning reads planes). An absent store means its checks did not RUN —
+    #: never that the thing it holds is missing.
     rig_stores = {
         name: store
         for name, store in (
             ("characters", available_characters),
             ("props", available_props),
+            ("environments", available_environments),
         )
         if store is not None
     }
@@ -648,7 +723,7 @@ def validate_semantic(
         if shot.duration <= 0:
             report.add("error", f"{path}/duration", "shot duration must be > 0")
 
-        _check_renderable(shot, path, report)
+        _check_renderable(shot, path, report, stores=rig_stores)
         _check_swap_references(shot, path, report, rig_stores)
 
         # Entity references resolve?
