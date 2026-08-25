@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from an.adapters.cutout.timeline import timeline_from_scene
 from an.adapters.cutout.compile import (
     CutoutCompileError,
     CutoutCompileWarning,
@@ -58,52 +59,6 @@ def _shot(actions=(), *, duration=2.0):
             AssetRef(kind="character", id="gale", store="characters", ref="gale")
         ],
         actions=list(actions),
-    )
-
-
-def _python_timeline(scene):
-    """The compiled scene as the Python spec's Timeline, for evaluating poses."""
-    from an.adapters.cutout.channel import Channel, Keyframe
-    from an.adapters.cutout.clip import Clip, LoopMode
-    from an.adapters.cutout.timeline import PlacedClip, Timeline, Track
-
-    clips = {
-        aid: Clip(
-            aid,
-            duration=a.duration,
-            # Carried, not defaulted: without it every loop assertion routed
-            # through this helper silently evaluated as `once` (an#7 review).
-            loop_mode=LoopMode(a.loop_mode),
-            channels=[
-                Channel(
-                    ch.target,
-                    ch.property,
-                    [
-                        Keyframe(
-                            k.time,
-                            k.value,
-                            tuple(k.easing) if isinstance(k.easing, list) else k.easing,
-                        )
-                        for k in ch.keyframes
-                    ],
-                )
-                for ch in a.channels
-            ],
-        )
-        for aid, a in scene.animations.items()
-    }
-    return Timeline(
-        duration=scene.timeline.duration,
-        tracks=[
-            Track(
-                t.target_root,
-                [
-                    PlacedClip(clips[p.animation_id], p.start_time, p.duration, p.speed)
-                    for p in t.clips
-                ],
-            )
-            for t in scene.timeline.tracks
-        ],
     )
 
 
@@ -277,7 +232,7 @@ def test_a_non_frame_aligned_numeric_set_still_fires(gale_store):
     # "Still fires" as EVIDENCE, not inference: through the spec evaluator the
     # pose carries the value on every frame from the first sample after `at`
     # — measured, the old 0.001s window hit 0 of 49 frames at 24 fps.
-    tl = _python_timeline(scene)
+    tl = timeline_from_scene(scene)
     frames_with_value = [
         i for i in range(49) if _evaluate(tl, i / 24.0).get(("gale/torso", "scale_x")) == 2.0
     ]
@@ -570,7 +525,7 @@ def test_a_set_holds_only_until_the_next_action_on_its_property(gale_store):
         (pytest.approx(1.8), pytest.approx(1.2)),
     ]
     # And, evaluated through the Python spec, the tween is visible at t=1.25.
-    tl = _python_timeline(scene)
+    tl = timeline_from_scene(scene)
     key = ("gale/torso", "x")
     assert _evaluate(tl, 0.5)[key] == 50.0
     assert _evaluate(tl, 1.25)[key] == pytest.approx(50.0)
@@ -971,7 +926,7 @@ def test_an_active_tween_governs_over_a_hold_at_the_shared_instant(gale_store):
         ),
         mall={"characters": gale_store},
     )
-    tl = _python_timeline(scene)
+    tl = timeline_from_scene(scene)
     key = ("gale/torso", "x")
     assert _evaluate(tl, 0.9)[key] == 50.0
     assert _evaluate(tl, 1.0)[key] == 0.0  # the tween's first frame, not 50

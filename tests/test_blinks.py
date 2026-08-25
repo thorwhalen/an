@@ -236,7 +236,8 @@ def test_an_authored_eye_scale_y_tween_survives_to_the_pose():
     """The done-when's 'an authored eye scale_y tween survives to screen':
     the runtime's post-pose reset used to clobber it on every frame. Blink
     clips sit FIRST on the track, so a later authored clip wins."""
-    from tests.test_swap_channels import _evaluate, _python_timeline
+    from an.adapters.cutout.timeline import timeline_from_scene
+    from tests.test_swap_channels import _evaluate
 
     shot = _procedural_shot(
         duration=2.5,
@@ -252,7 +253,7 @@ def test_an_authored_eye_scale_y_tween_survives_to_the_pose():
         ],
     )
     scene = compile_shot(shot, mall={"characters": {}}, fps=24)
-    tl = _python_timeline(scene)
+    tl = timeline_from_scene(scene)
     key = ("charlie/head/left_eye", "scale_y")
     for t in (0.0, 1.0, 2.0):  # t=1.0 is mid-blink for charlie
         assert _evaluate(tl, t)[key] == 3.0
@@ -265,7 +266,8 @@ def test_an_authored_eye_value_persists_between_blinks_like_any_property():
     an authored tween's end value holds the way `scale_x`'s does. A
     whole-shot 1.0 fill snapped `scale_y` back the frame after the tween
     ended while `scale_x` held — the an#88 review's D2."""
-    from tests.test_swap_channels import _evaluate, _python_timeline
+    from an.adapters.cutout.timeline import timeline_from_scene
+    from tests.test_swap_channels import _evaluate
 
     shot = _procedural_shot(
         duration=2.5,
@@ -278,7 +280,7 @@ def test_an_authored_eye_value_persists_between_blinks_like_any_property():
         ],
     )
     scene = compile_shot(shot, mall={"characters": {}}, fps=24)
-    tl = _python_timeline(scene)
+    tl = timeline_from_scene(scene)
     pose = _evaluate(tl, 0.75)  # after the tweens, outside any blink window
     assert ("charlie/head/left_eye", "scale_y") not in pose
     assert ("charlie/head/left_eye", "scale_x") not in pose
@@ -308,7 +310,8 @@ def test_an_eye_that_rests_closed_does_not_blink(gale_store, tmp_path):
 def test_a_window_straddling_the_shot_start_begins_in_the_right_state(gale_store):
     """Entity `awg` has phase 0.009: its first window is (-0.036, 0.104), CLOSED
     from -0.001 to 0.069 — so frame 0 must be CLOSED (an#88 review D3)."""
-    from tests.test_swap_channels import _evaluate, _python_timeline
+    from an.adapters.cutout.timeline import timeline_from_scene
+    from tests.test_swap_channels import _evaluate
 
     shot = Shot(
         id="s",
@@ -317,7 +320,7 @@ def test_a_window_straddling_the_shot_start_begins_in_the_right_state(gale_store
         entities=[AssetRef(kind="character", id="awg", store="characters", ref="gale")],
     )
     scene = compile_shot(shot, mall={"characters": gale_store}, fps=24)
-    tl = _python_timeline(scene)
+    tl = timeline_from_scene(scene)
     assert _evaluate(tl, 0.0)[("awg/head/left_eye", "eyelid")] == "CLOSED"
     assert _evaluate(tl, 1 / 24)[("awg/head/left_eye", "eyelid")] == "CLOSED"
     assert _evaluate(tl, 0.1)[("awg/head/left_eye", "eyelid")] == "OPEN"
@@ -329,7 +332,8 @@ def test_the_eyelid_channel_is_closed_exactly_for_the_central_half(gale_store):
     order survived the first battery (eyes closed 54% of the time; only the
     browser-lane golden would have noticed)."""
     from an.adapters.cutout.compile import _EYELID_CLOSED_SPAN
-    from tests.test_swap_channels import _evaluate, _python_timeline
+    from an.adapters.cutout.timeline import timeline_from_scene
+    from tests.test_swap_channels import _evaluate
 
     shot = Shot(
         id="s",
@@ -338,7 +342,7 @@ def test_the_eyelid_channel_is_closed_exactly_for_the_central_half(gale_store):
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
     )
     scene = compile_shot(shot, mall={"characters": gale_store}, fps=24)
-    tl = _python_timeline(scene)
+    tl = timeline_from_scene(scene)
     lo, hi = _EYELID_CLOSED_SPAN
     spans = [(s + lo * (e - s), s + hi * (e - s)) for s, e in _blink_windows("gale", 8.0)]
     closed_frames = 0
@@ -429,7 +433,8 @@ def test_the_compiled_squash_matches_the_deleted_runtime_rule_at_every_frame():
     import json
     import subprocess
 
-    from tests.test_swap_channels import _evaluate, _python_timeline
+    from an.adapters.cutout.timeline import timeline_from_scene
+    from tests.test_swap_channels import _evaluate
 
     js = r"""
     function _strHash(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return Math.abs(h); }
@@ -461,7 +466,7 @@ def test_the_compiled_squash_matches_the_deleted_runtime_rule_at_every_frame():
             duration=duration,
             entities=[AssetRef(kind="character", id=name, store="characters", ref="c")],
         )
-        tl = _python_timeline(compile_shot(shot, mall={"characters": {}}, fps=fps))
+        tl = timeline_from_scene(compile_shot(shot, mall={"characters": {}}, fps=fps))
         key = (f"{name}/head/left_eye", "scale_y")
         last = 1.0
         for f, want in enumerate(row):

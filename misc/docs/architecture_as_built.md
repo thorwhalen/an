@@ -94,7 +94,8 @@ an/
 │   │   ├── easing.py        named presets + cubic-Bézier + dispatcher
 │   │   ├── channel.py       Keyframe, Channel, binary-search evaluation
 │   │   ├── clip.py          Clip + LoopMode + Pose/merge_poses, evaluate(clip, t) -> Pose
-│   │   ├── timeline.py      Track, PlacedClip, Timeline, evaluate_timeline -> Pose
+│   │   ├── timeline.py      Track, PlacedClip, Timeline, evaluate_timeline -> Pose,
+│   │   │                    timeline_from_scene (compiled doc -> evaluable Timeline)
 │   │   │                    (these four are the EXECUTABLE SPEC of the runtime's
 │   │   │                    evaluation — application is runtime.js only; the Python
 │   │   │                    applier and scene graph were deleted in an#86, with

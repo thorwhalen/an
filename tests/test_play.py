@@ -70,9 +70,9 @@ def _add_animation(d, name, duration, tracks, *, loop=False):
 
 
 def _timeline(scene):
-    from tests.test_swap_channels import _python_timeline
+    from an.adapters.cutout.timeline import timeline_from_scene
 
-    return _python_timeline(scene)
+    return timeline_from_scene(scene)
 
 
 def _evaluate(tl, t):
@@ -201,13 +201,14 @@ def test_validate_refuses_an_undeclared_animation_before_compile(gale_store):
 def test_a_play_layers_over_the_compiled_blink_by_track_order(gale_store):
     """A played `blink` sits after the compiled blink clips on the track, so
     it wins during its window — the eyes it opens/closes are the author's."""
-    from tests.test_swap_channels import _evaluate, _python_timeline
+    from an.adapters.cutout.timeline import timeline_from_scene
+    from tests.test_swap_channels import _evaluate
 
     scene = compile_shot(
         _shot([sequence(delay(1.0), play("gale", "blink"))], duration=3.0),
         mall={"characters": gale_store},
     )
-    tl = _python_timeline(scene)
+    tl = timeline_from_scene(scene)
     key = ("gale/head/left_eye", "eyelid")
     assert _evaluate(tl, 1.0)[key] == "OPEN"
     assert _evaluate(tl, 1.05)[key] == "CLOSED"
