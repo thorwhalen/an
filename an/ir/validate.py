@@ -474,14 +474,19 @@ def _check_flat_pan(shot, keys, path: str, report: "ValidationReport", stores) -
     different facts, and reporting the first as the second is the mistake
     an#108's review caught on the prop path.
     """
-    if not any(float(k.x) or float(k.y) for k in keys):
-        return  # not a translation; a zoom has nothing to parallax against
+    # A TRANSLATION, not merely an off-centre camera. The first version asked
+    # whether any key had a non-zero x or y, which warns on a pure zoom held at
+    # an offset — a scene with no translation at all (an#111 review, M3).
+    xs = {round(float(k.x), 9) for k in keys}
+    ys = {round(float(k.y), 9) for k in keys}
+    if len(xs) < 2 and len(ys) < 2:
+        return  # the camera does not translate; a zoom has nothing to parallax
     env_store = (stores or {}).get("environments")
     if env_store is None:
         return
     from an.environments import ENVIRONMENT_DOCUMENT_KIND, EnvironmentDescriptor
 
-    depths: list[float] = []
+    factors: list[tuple[float, float]] = []
     for entity in shot.entities:
         if entity.kind != "environment":
             continue
@@ -492,19 +497,27 @@ def _check_flat_pan(shot, keys, path: str, report: "ValidationReport", stores) -
         if not isinstance(raw, dict) or raw.get("kind") != ENVIRONMENT_DOCUMENT_KIND.name:
             continue
         try:
-            env = EnvironmentDescriptor.model_validate(raw)
+            # MIGRATED, as the compiler reads it — a pre-flight that validates
+            # a document differently from the thing it predicts is its own
+            # defect, which is the rule `_rig_document` already follows.
+            env = EnvironmentDescriptor.model_validate(
+                migrate(dict(raw), kind=ENVIRONMENT_DOCUMENT_KIND.name)
+            )
         except Exception:  # noqa: BLE001 — a malformed descriptor is another check's
             continue
-        depths.extend(p.depth for p in env.planes)
-    if depths and len({round(d, 9) for d in depths}) > 1:
+        # `factors()`, not `depth`: `parallax` OVERRIDES `depth`, so reading the
+        # scalar warns on a stage that parallaxes by override and stays silent
+        # on one that is flat by override — both backwards (an#111 review, M3).
+        factors.extend(p.factors() for p in env.planes)
+    if factors and len({(round(fx, 9), round(fy, 9)) for fx, fy in factors}) > 1:
         return  # a real multiplane stage
     report.add(
         "warning",
         f"{path}",
         "the camera translates over a stage with "
         + (
-            f"{len(depths)} plane(s) all at the same depth"
-            if depths
+            f"{len(factors)} plane(s) all moving at the same rate"
+            if factors
             else "no declared planes"
         )
         + ". The render is correct — the whole picture slides — but it is also "

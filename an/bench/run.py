@@ -25,6 +25,7 @@ from typing import Any
 
 from an.bench import contract, golden as G, imageio, masks, metrics as M, palette as P
 from an.bench import png
+from an.adapters.cutout.compile import FOREGROUND_SUFFIX
 from an.bench.capture import (
     SceneCapture,
     capture_fixture,
@@ -600,28 +601,51 @@ STAGE_MIN_RATIO_GAP: float = 0.1875
 
 
 def _plane_colours(capture: SceneCapture) -> dict[str, int]:
-    """``{plane name: packed RGB}`` for every plane node in the STAGED scene.
+    """``{plane path: packed RGB}`` for every DECLARED plane in the staged scene.
 
     Read from the document the browser actually loaded, for the same reason
     `expect_visual_kinds` is: a fixture's own declaration is what the compiler
     produced, and the staged JSON is the independent second opinion.
 
-    Only `rect` visuals directly under an environment node count. A character
-    part is also a rect, so the walk is scoped rather than global — and a plane
-    with image art has no single colour and is skipped, which is why the fixture
-    rule says the pan corpus stays fill-coloured.
+    **Scoped by what the document SAYS, not by depth in the tree.** The first
+    version walked `scene.children[*].children[*]` and called every `rect` a
+    plane — which is also the shape of a procedural character's parts, so
+    `single_character` and `dialogue` reported three "planes" (`torso`,
+    `left_arm`, `right_arm`, all one colour) and the tripwire would have called
+    a scene with no stage a flattened stage. The docstring claimed the walk was
+    scoped to environment nodes; nothing in it was (an#111 review, H1).
+
+    The scoping is `asset_resolution`: an environment built from planes records
+    `resolved="planes"`, which is exactly the fact needed and is written by the
+    one place that knows it. A preset backdrop records `preset`/`store`/`default`
+    and its `sky`/`ground` rects are correctly ignored.
+
+    Keyed by full PATH, not bare name, so two environments each with a `sky`
+    cannot overwrite each other.
     """
     for shot in capture.shots:
         doc = shot.scene_json
+        ids = {
+            entry.get("id")
+            for entry in doc.get("asset_resolution", []) or []
+            if entry.get("kind") == "environment" and entry.get("resolved") == "planes"
+        }
+        if not ids:
+            continue
         out: dict[str, int] = {}
         for env in doc.get("scene", {}).get("children", []) or []:
+            name = env.get("name") or ""
+            # …and the foreground container an#110 splits off, which carries the
+            # entity's id plus a suffix and holds the rest of the same planes.
+            if name not in ids and name.rsplit(FOREGROUND_SUFFIX, 1)[0] not in ids:
+                continue
             for child in env.get("children", []) or []:
                 visual = child.get("visual") or {}
                 colour = visual.get("color")
                 if visual.get("kind") == "rect" and isinstance(colour, str):
                     packed = _packed_hex(colour)
                     if packed is not None:
-                        out[child["name"]] = packed
+                        out[f"{name}/{child['name']}"] = packed
         if len(out) >= 2:
             return out
     return {}

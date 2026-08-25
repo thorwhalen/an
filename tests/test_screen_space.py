@@ -36,13 +36,23 @@ RUNTIME_DIR = Path(__file__).resolve().parents[1] / "an" / "data" / "cutout_runt
 #: rotation and scale under a pivoted parent, which is the case a "just add the
 #: offsets" compositor gets wrong.
 CHAIN = [
-    {"name": "root", "x": 0.0, "y": 0.0, "rotation": 0.0, "scale_x": 1.25,
-     "scale_y": 1.25, "pivot_x": 90.0, "pivot_y": -30.0},
-    {"name": "street", "x": 12.0, "y": -8.0, "rotation": 0.0, "scale_x": 1.0,
+    # The root is identity IN THE DOCUMENT, because that is what the runtime
+    # builds: its own container at the canvas centre, with the document root's
+    # transform explicitly not applied. What reaches it is the POSE below —
+    # which is how the camera works, since `root.pivot` is the camera.
+    {"name": "root", "x": 0.0, "y": 0.0, "rotation": 0.0, "scale_x": 1.0,
      "scale_y": 1.0, "pivot_x": 0.0, "pivot_y": 0.0},
+    # A rotated, pivoted ANCESTOR — the case a camera `rotation` channel
+    # produces, and the one an#111's review found unexercised.
+    {"name": "street", "x": 12.0, "y": -8.0, "rotation": -0.22, "scale_x": 1.1,
+     "scale_y": 0.9, "pivot_x": 14.0, "pivot_y": -6.0},
     {"name": "hills", "x": -40.0, "y": 55.0, "rotation": 0.35, "scale_x": 0.75,
      "scale_y": 2.0, "pivot_x": 5.0, "pivot_y": 7.0},
 ]
+
+#: What the camera writes onto the runtime's root container.
+ROOT_POSE = {"pivot_x": 90.0, "pivot_y": -30.0, "scale_x": 1.25, "scale_y": 1.25,
+             "rotation": 0.18}
 PROBE = (13.0, -21.0)
 WIDTH, HEIGHT = 320, 240
 
@@ -97,10 +107,14 @@ def test_the_compositor_agrees_with_pixi_itself():
     (0, eval)(require('fs').readFileSync({json.dumps(str(bundle))}, 'utf8'));
     {apply_transform}
     const chain = {json.dumps(CHAIN)};
+    const rootPose = {json.dumps(ROOT_POSE)};
     let parent = null, leaf = null;
-    for (const spec of chain) {{
+    for (let i = 0; i < chain.length; i++) {{
         const c = new PIXI.Container();
-        applyTransform(c, spec);
+        // The root gets the POSE, mirroring the runtime: it builds its own
+        // container and applies channel values to it, never the document
+        // root's declared transform.
+        applyTransform(c, i === 0 ? rootPose : chain[i]);
         if (parent) parent.addChild(c);
         parent = c; leaf = c;
     }}
@@ -114,7 +128,12 @@ def test_the_compositor_agrees_with_pixi_itself():
 
     # `toGlobal` is relative to the stage origin; `screen_position` offsets by
     # the canvas centre, which is where `runtime.js` places the root.
-    ours = screen_position(_scene(), "street/hills", point=PROBE)
+    ours = screen_position(
+        _scene(),
+        "street/hills",
+        pose={("root", k): v for k, v in ROOT_POSE.items()},
+        point=PROBE,
+    )
     assert ours[0] - WIDTH / 2 == pytest.approx(engine_x, abs=1e-6)
     assert ours[1] - HEIGHT / 2 == pytest.approx(engine_y, abs=1e-6)
 

@@ -324,3 +324,274 @@ def test_a_zoom_does_not_trigger_the_flat_pan_warning():
     )
     report = validate_semantic(SceneIR(meta=Meta(), timeline=[shot]), available_environments={})
     assert not [f for f in report.findings if "flattened" in f.description]
+
+
+# --- the ledger half, which had no coverage at all (an#111 review, H2) -------
+
+
+def _fake_capture(scene_json: dict):
+    """A `SceneCapture`-shaped object with one shot, for the walk under test."""
+    from types import SimpleNamespace
+
+    return SimpleNamespace(shots=[SimpleNamespace(scene_json=scene_json)])
+
+
+def _staged(children, resolution):
+    return {"scene": {"name": "root", "children": children}, "asset_resolution": resolution}
+
+
+def _rect(name, colour):
+    return {"name": name, "visual": {"kind": "rect", "color": colour}}
+
+
+def test_a_character_s_parts_are_not_planes():
+    """The walk is scoped by what the document SAYS, not by depth.
+
+    The first version called every `rect` two levels down a plane — which is
+    also a procedural character's parts. `single_character` and `dialogue`
+    reported three "planes" (`torso`, `left_arm`, `right_arm`, all one colour),
+    so the tripwire would have called a scene with no stage a flattened stage,
+    with the detail text saying the stage panned rigidly (an#111 review, H1).
+    """
+    from an.bench.run import _plane_colours
+
+    doc = _staged(
+        [{"name": "charlie", "children": [
+            _rect("torso", "#5b394a"), _rect("left_arm", "#5b394a"), _rect("right_arm", "#5b394a")]}],
+        [{"id": "charlie", "kind": "character", "resolved": "placeholder"}],
+    )
+    assert _plane_colours(_fake_capture(doc)) == {}
+
+
+def test_a_preset_backdrops_sky_and_ground_are_not_planes():
+    """They are rects under an environment node — the right shape and the
+    wrong thing. The scoping is `resolved == "planes"`, which only a
+    descriptor-built stage records."""
+    from an.bench.run import _plane_colours
+
+    doc = _staged(
+        [{"name": "park", "children": [_rect("sky", "#cfe9ff"), _rect("ground", "#7cba6f")]}],
+        [{"id": "park", "kind": "environment", "resolved": "preset"}],
+    )
+    assert _plane_colours(_fake_capture(doc)) == {}
+
+
+def test_declared_planes_are_found_including_the_foreground_container():
+    """…and keyed by full PATH, so two environments each with a `sky` cannot
+    overwrite each other."""
+    from an.bench.run import _plane_colours
+
+    doc = _staged(
+        [
+            {"name": "street", "children": [_rect("sky", "#204080"), _rect("road", "#40a060")]},
+            {"name": "street__front", "children": [_rect("rail", "#c04020")]},
+        ],
+        [{"id": "street", "kind": "environment", "resolved": "planes"}],
+    )
+    assert _plane_colours(_fake_capture(doc)) == {
+        "street/sky": 0x204080,
+        "street/road": 0x40A060,
+        "street__front/rail": 0xC04020,
+    }
+
+
+def test_the_tripwire_floor_sits_below_what_the_fixture_measures():
+    """The floor is "half the first bless's measured minimum", and both halves
+    of that sentence are load-bearing: a floor at or above the measured value
+    fires on the very stage it was calibrated against, and a floor of zero can
+    never fire at all. Both mutants survived the first round (an#111 review,
+    H2) because nothing compared the constant to anything.
+    """
+    from an.bench.run import STAGE_MIN_RATIO_GAP
+
+    measured_at_bless = 0.375  # depths 0.25 / 1.0 / 2.0, normalised to the largest mover
+    assert 0.0 < STAGE_MIN_RATIO_GAP < measured_at_bless
+    assert STAGE_MIN_RATIO_GAP == pytest.approx(measured_at_bless / 2)
+    # …and a flattened stage lands under it, which is the point.
+    assert min_ratio_gap({"far": 1.0, "mid": 1.0, "near": 1.0}) < STAGE_MIN_RATIO_GAP
+
+
+def test_an_instrument_failure_is_unavailable_and_never_a_measured_zero():
+    """A tripwire that fires on its own instrument failing cries wolf.
+
+    Stated in a comment and enforced nowhere until this test: the mutant that
+    turns the clipped-plane branch into `measured(0.0), measured(False)` — a
+    red tripwire on a scene nobody could measure — survived (an#111 review, H2).
+    """
+    from an.bench.run import _stage_pan_values
+
+    class _Capture:
+        shots = [
+            type("S", (), {"scene_json": _staged(
+                [{"name": "e", "children": [_rect("a", "#204080"), _rect("b", "#40a060")]}],
+                [{"id": "e", "kind": "environment", "resolved": "planes"}],
+            )})()
+        ]
+
+    # No frames resolve, so the instrument cannot run.
+    import an.bench.golden as G
+
+    original = G.resolve_frames
+    G.resolve_frames = lambda *a, **k: []
+    try:
+        metric, tripwire = _stage_pan_values(_Capture(), (0.0, 1.0))
+    finally:
+        G.resolve_frames = original
+    assert metric.state == "unavailable" and tripwire.state == "unavailable"
+    assert metric.detail
+
+
+def test_a_scene_with_no_planes_is_unavailable_for_a_STRUCTURAL_reason():
+    """`MetricSpec.requires` says a null here is structural rather than a blind
+    panel. That claim is only true if the walk actually finds nothing — which
+    it did not, before the scoping was fixed."""
+    from an.bench.registry import METRICS
+    from an.bench.run import _stage_pan_values
+
+    doc = _staged(
+        [{"name": "charlie", "children": [_rect("torso", "#5b394a")]}],
+        [{"id": "charlie", "kind": "character", "resolved": "placeholder"}],
+    )
+    metric, tripwire = _stage_pan_values(_fake_capture(doc), (0.0, 1.0))
+    assert metric.state == "unavailable"
+    assert "plane" in metric.detail
+    assert METRICS["stage_min_plane_ratio_gap"].requires
+
+
+# --- the limits the review found ---------------------------------------------
+
+
+def test_a_rolling_camera_is_refused_rather_than_measured():
+    """Under a rotation the composed x-displacement is `−fx·A + fy·B`, so the
+    axes mix and a ratio stops being a depth ratio. Measured with rotation 0.6
+    and per-axis factors: one plane read NEGATIVE, and the resulting gap was
+    LARGER than the honest one — so the tripwire passed on a number that meant
+    nothing (an#111 review, M2)."""
+    from an.bench.stage import RotatingCamera
+
+    rolled = Camera(keys=[CameraKey(at=0.0, easing="linear"), CameraKey(at=0.5, x=60.0, rotation=0.6)])
+    with pytest.raises(RotatingCamera, match="rolls"):
+        _measure(rolled)
+
+
+def test_the_probe_point_inverts_the_WHOLE_chain():
+    """An ancestor with an offset, or a plane with its own pivot or scale, left
+    a residual in the displacement — and that residual's `a·(S₁−S₀)` term is
+    exactly the zoom that was supposed to cancel (an#111 review, M1)."""
+    from an.adapters.cutout.serialize import (
+        CutoutSceneJSON,
+        NodeJSON,
+        TimelineJSON,
+        TransformJSON,
+    )
+    from an.adapters.cutout.timeline import screen_position
+    from an.bench.stage import _probe_point
+
+    scene = CutoutSceneJSON(
+        scene=NodeJSON(name="root", children=[
+            NodeJSON(name="street", transform=TransformJSON(x=37.0, y=11.0), children=[
+                NodeJSON(name="hills", transform=TransformJSON(
+                    x=-40.0, y=55.0, pivot_x=5.0, scale_x=2.0))])]),
+        timeline=TimelineJSON(duration=1.0),
+    )
+    scene.meta.width, scene.meta.height = W, H
+    probe = _probe_point(scene, "street/hills")
+    # The probe lands on the SCENE origin, which is the canvas centre.
+    assert screen_position(scene, "street/hills", point=probe) == pytest.approx((W / 2, H / 2))
+
+
+def test_a_CLIPPED_plane_is_unavailable_through_the_ledger_path_too():
+    """The clipped-plane branch specifically, not just "no frames".
+
+    `measure_pan_pixels` raising is one thing; `_stage_pan_values` turning that
+    into a measured zero and a red tripwire is another, and only the second is
+    the failure the comment warns about (an#111 review, H2/N3).
+    """
+    import an.bench.golden as G
+    from an.bench.run import _stage_pan_values
+
+    a = np.full((H, W, 3), 255, np.uint8)
+    b = a.copy()
+    a[10:60, 10:50] = (0x20, 0x40, 0x80)
+    b[10:60, 10:40] = (0x20, 0x40, 0x80)  # a narrower mask: clipped
+    a[80:130, 10:50] = (0x40, 0xA0, 0x60)
+    b[80:130, 10:50] = (0x40, 0xA0, 0x60)
+
+    doc = _staged(
+        [{"name": "e", "children": [_rect("far", "#204080"), _rect("mid", "#40a060")]}],
+        [{"id": "e", "kind": "environment", "resolved": "planes"}],
+    )
+    frames = iter((a, b))
+    originals = (G.resolve_frames, G.frame_png_path)
+    G.resolve_frames = lambda *args, **kw: [object(), object()]
+    G.frame_png_path = lambda *args, **kw: None
+    import an.bench.png as P
+
+    original_read = P.read_png
+    P.read_png = lambda _p: next(frames)
+    try:
+        metric, tripwire = _stage_pan_values(_fake_capture(doc), (0.0, 1.0))
+    finally:
+        G.resolve_frames, G.frame_png_path = originals
+        P.read_png = original_read
+    assert metric.state == "unavailable" and tripwire.state == "unavailable"
+    assert "different shape" in metric.detail
+
+
+# --- the flat-pan warning's four cases ---------------------------------------
+
+
+def _warns_flat(camera, planes):
+    import json as _json
+
+    from an.ir.schema import Meta, SceneIR
+    from an.ir.validate import validate_semantic
+
+    store = (
+        {"p": _json.loads(EnvironmentDescriptor(name="e", planes=planes).model_dump_json())}
+        if planes is not None
+        else {}
+    )
+    shot = Shot(
+        id="s",
+        renderer="cutout",
+        duration=1.0,
+        camera=camera,
+        entities=[AssetRef(kind="environment", id="e", store="environments", ref="p")],
+    )
+    report = validate_semantic(SceneIR(meta=Meta(), timeline=[shot]), available_environments=store)
+    return any("flattened parallax" in f.description for f in report.findings)
+
+
+def test_a_pure_zoom_held_off_centre_does_not_warn():
+    """The guard asks whether the camera TRAVELS, not whether it sits off
+    centre. Asking the latter warned on a scene with no translation at all
+    (an#111 review, M3a)."""
+    held = Camera(keys=[CameraKey(at=0.0, x=100.0), CameraKey(at=1.0, x=100.0, zoom=2.0)])
+    assert not _warns_flat(held, [Plane(name="a")])
+
+
+def test_a_stage_that_parallaxes_by_OVERRIDE_does_not_warn():
+    """`parallax` overrides `depth`, so reading the scalar warns on a stage
+    that is genuinely multiplane (an#111 review, M3b)."""
+    assert not _warns_flat(
+        Camera(move="pan_right"),
+        [Plane(name="a", parallax=(0.2, 0.2)), Plane(name="b", parallax=(2.0, 2.0))],
+    )
+
+
+def test_a_stage_that_is_FLAT_by_override_does_warn():
+    """…and the mirror image: distinct depths, both overridden to the same
+    factor, is exactly the case the warning exists to catch and the one the
+    scalar read missed (an#111 review, M3c)."""
+    assert _warns_flat(
+        Camera(move="pan_right"),
+        [
+            Plane(name="a", depth=0.25, parallax=(1.0, 1.0)),
+            Plane(name="b", depth=2.0, parallax=(1.0, 1.0)),
+        ],
+    )
+
+
+def test_a_pan_over_a_stage_with_no_planes_warns():
+    assert _warns_flat(Camera(move="pan_right"), [])

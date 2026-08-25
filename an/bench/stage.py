@@ -43,6 +43,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 __all__ = [
+    "RotatingCamera",
     "PlaneTrack",
     "PanMeasurement",
     "measure_pan_json",
@@ -158,6 +159,7 @@ def measure_pan_json(
     tl = timeline_from_scene(scene)
     t0, t1 = times
     poses = (evaluate_timeline(tl, t0), evaluate_timeline(tl, t1))
+    _refuse_a_rotating_camera(poses)
     tracks = []
     for path in plane_paths:
         name = path.rsplit("/", 1)[-1]
@@ -167,6 +169,33 @@ def measure_pan_json(
         )
         tracks.append(PlaneTrack(name, x1 - x0, y1 - y0, (depths or {}).get(name)))
     return PanMeasurement(tuple(tracks), _reference(tracks))
+
+
+class RotatingCamera(RuntimeError):
+    """The camera rolls, so a per-axis ratio is not a depth ratio.
+
+    Under a rotation the composed x-displacement is ``−fx·A + fy·B`` with
+    plane-independent ``A``/``B``, so the axes mix and ``Δ_i/Δ_j`` stops being
+    ``f_i/f_j``. Measured with `rotation = 0.6` and per-axis factors: one plane
+    reported a NEGATIVE ratio and the resulting gap was *larger* than the
+    honest one, so the tripwire passed on a number that meant nothing
+    (an#111 review, M2).
+
+    Refused rather than reported. The measurement's whole job is to exclude a
+    camera move that mimics depth; silently reporting one is the failure it
+    exists to prevent, pointed the other way.
+    """
+
+
+def _refuse_a_rotating_camera(poses) -> None:
+    angles = {float(p.get(("root", "rotation"), 0.0) or 0.0) for p in poses}
+    if angles - {0.0}:
+        raise RotatingCamera(
+            f"the camera rolls (root rotation {sorted(angles)}), which mixes the "
+            "x and y displacements, so a plane's ratio is no longer its depth "
+            "ratio. Measure a pan without roll, or measure the axes separately "
+            "against a camera that moves on one of them."
+        )
 
 
 def _probe_point(scene: Any, path: str) -> tuple[float, float]:
@@ -186,11 +215,23 @@ def _probe_point(scene: Any, path: str) -> tuple[float, float]:
     Probed at the plane's own origin instead, ``x0`` survives into the
     displacement, a zoom moves planes at different offsets by different amounts,
     and a scene with no depth reads as parallax.
-    """
-    from an.adapters.cutout.timeline import _node_chain
 
-    node = _node_chain(scene.scene, path)[-1][0]
-    return -float(node.transform.x), -float(node.transform.y)
+    Computed by INVERTING the whole chain, not by negating the last node's
+    ``x``/``y``. The first version did the latter and its docstring claimed the
+    former: an ancestor with an offset, or a plane with its own pivot or scale,
+    left a residual ``a`` in the displacement, whose ``a·(S₁ − S₀)`` term is
+    exactly the zoom that was supposed to cancel (an#111 review, M1). No
+    compiler path produces either shape today — both environment containers sit
+    at identity — so it was a guarantee resting on an unstated invariant.
+    """
+    from an.adapters.cutout.timeline import _node_chain, transform_of
+
+    at = (0.0, 0.0)
+    # Root first, downward, undoing each transform in turn — and skipping the
+    # document root, which the runtime does not apply (see `screen_position`).
+    for node, _ in _node_chain(scene.scene, path)[1:]:
+        at = transform_of(node).unapply(at)
+    return at
 
 
 def _reference(tracks: Sequence[PlaneTrack]) -> str:

@@ -29,11 +29,13 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from an.adapters.cutout.channel import Channel, Keyframe
 from an.adapters.cutout.clip import Clip, LoopMode, Pose, merge_poses
 from an.adapters.cutout.clip import evaluate as _evaluate_clip
+
+from an.adapters.cutout.serialize import TransformJSON
 
 if TYPE_CHECKING:  # pragma: no cover - types only
     from an.adapters.cutout.serialize import CutoutSceneJSON, NodeJSON
@@ -208,6 +210,19 @@ class Transform2D:
     pivot_x: float = 0.0
     pivot_y: float = 0.0
 
+    def unapply(self, point: tuple[float, float]) -> tuple[float, float]:
+        """The inverse of :meth:`apply` — a parent-space point, in local space.
+
+        >>> t = Transform2D(x=10.0, pivot_x=3.0, scale_x=2.0, rotation=0.4)
+        >>> round(t.unapply(t.apply((7.0, -2.0)))[0], 9)
+        7.0
+        """
+        px, py = point[0] - self.x, point[1] - self.y
+        if self.rotation:
+            cos_r, sin_r = math.cos(-self.rotation), math.sin(-self.rotation)
+            px, py = px * cos_r - py * sin_r, px * sin_r + py * cos_r
+        return px / self.scale_x + self.pivot_x, py / self.scale_y + self.pivot_y
+
     def apply(self, point: tuple[float, float]) -> tuple[float, float]:
         """This node's local point, in its PARENT's coordinates.
 
@@ -230,7 +245,7 @@ class Transform2D:
         return self.x + sx, self.y + sy
 
 
-def transform_of(node: NodeJSON, pose: Pose | None = None) -> Transform2D:
+def transform_of(node: NodeJSON | None, pose: Pose | None = None) -> Transform2D:
     """A node's transform, with ``pose`` overriding what the document declares.
 
     The runtime applies a pose value by assigning the property on the display
@@ -238,7 +253,7 @@ def transform_of(node: NodeJSON, pose: Pose | None = None) -> Transform2D:
     which is why the parallax compensation carries the plane's own offset in
     every keyframe instead of an offset from it.
     """
-    t = node.transform
+    t = node.transform if node is not None else TransformJSON()
     values = {
         "x": t.x,
         "y": t.y,
@@ -249,8 +264,8 @@ def transform_of(node: NodeJSON, pose: Pose | None = None) -> Transform2D:
         "pivot_y": t.pivot_y,
     }
     if pose:
-        for (target, prop), value in pose.items():
-            if target == node.name and prop in values and isinstance(value, (int, float)):
+        for (_target, prop), value in pose.items():
+            if prop in values and isinstance(value, (int, float)):
                 values[prop] = float(value)
     return Transform2D(**values)
 
@@ -289,9 +304,22 @@ def screen_position(
     """
     chain = _node_chain(scene.scene, path)
     at = point
-    for node, node_path in reversed(chain):
+    for node, node_path in reversed(chain[1:]):
         at = transform_of(node, _pose_for(pose, node_path)).apply(at)
+    # The root LAST, and from the pose alone. `runtime.js` builds its own root
+    # container at the canvas centre and says so: "Do NOT apply its transform".
+    # What it does apply to that container is pose channels — which is exactly
+    # how the camera works, since `root.pivot` is the camera. Composing the
+    # document root's declared transform as well would diverge from the engine
+    # the moment anything wrote one (an#111 review, L1).
+    root, root_path = chain[0]
+    at = transform_of(_ROOT_AT_REST, _pose_for(pose, root_path)).apply(at)
     return at[0] + scene.meta.width / 2.0, at[1] + scene.meta.height / 2.0
+
+
+#: A stand-in for the runtime's own root container: identity, because that is
+#: what `runtime.js` creates before applying any pose to it.
+_ROOT_AT_REST: Any = None
 
 
 def _pose_for(pose: Pose | None, path: str) -> Pose | None:
