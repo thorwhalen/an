@@ -33,12 +33,64 @@ way would close a cycle.)
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from an.base import SCHEMA_VERSION
+from an.base import COMPATIBLE_VERSION, SCHEMA_VERSION
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
+
+
+class DocumentMigrationError(ValueError):
+    """A stored document could not be brought to this build's schema.
+
+    One name for both boundaries (scene and descriptor), so a caller can catch
+    "this file is from another build" without catching every ``ValueError`` a
+    validate might raise.
+    """
+
+
+def version_tuple(version: Any) -> tuple[int, ...] | None:
+    """``"0.2.10"`` → ``(0, 2, 10)``; ``None`` when it is not a version at all.
+
+    Returning ``None`` rather than raising is what lets a caller tell a
+    *malformed* version field (``null``, a float, ``"draft"``) from one that is
+    merely older than any registered migration — two different messages for two
+    different repairs.
+
+    >>> version_tuple("0.2.10"), version_tuple(0.1), version_tuple(None)
+    ((0, 2, 10), None, None)
+    """
+    if not isinstance(version, str):
+        return None
+    parts = version.split(".")
+    if not all(p.isdigit() for p in parts) or not parts:
+        return None
+    return tuple(int(p) for p in parts)
+
+
+def readable_without_migration(version: Any, kind: DocumentKind | None = None) -> bool:
+    """Whether this build reads ``version`` as-is, per the declared compat floor.
+
+    ``an/base.py`` promises exactly this: ``COMPATIBLE_VERSION`` is *"the
+    minimum Scene IR version this code can still read **without migration**"*.
+    A loader that demands an exact version match ignores that promise and turns
+    the next additive bump into a refusal of every project on disk (an#105
+    review). Only the scene kind declares a floor; any other kind must migrate.
+
+    >>> readable_without_migration("0.1.0")
+    True
+    >>> readable_without_migration("0.0.9")
+    False
+    """
+    v = version_tuple(version)
+    if v is None:
+        return False
+    name = kind.name if kind is not None else DFLT_KIND
+    if name != DFLT_KIND:
+        return False
+    return version_tuple(COMPATIBLE_VERSION) <= v <= version_tuple(SCHEMA_VERSION)
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,7 +193,12 @@ def migrate(
     """
     doc_kind = kind_of(doc, kind=kind)
     target = target_version if target_version is not None else doc_kind.current_version
-    current = dict(doc)  # shallow copy; migrations may mutate
+    # DEEP copy: the shallow one protected the top level only, so a migration
+    # written the way the old comment invited — `doc["meta"]["title"] = …` —
+    # silently rewrote the CALLER's document while leaving its version key
+    # untouched, which is precisely the shape that looks safe (an#105 review).
+    # Wave 7's rename is a nested rename.
+    current = copy.deepcopy(doc)
     src = doc_kind.version_of(current)
 
     steps = {(s, t): fn for (k, s, t), fn in MIGRATIONS.items() if k == doc_kind.name}
@@ -159,7 +216,7 @@ def migrate(
             None,
         )
         if next_step is None:
-            raise ValueError(
+            raise DocumentMigrationError(
                 f"No migration path for {doc_kind.name!r} from {src!r} to "
                 f"{target!r}; registered: {sorted(steps)}"
             )

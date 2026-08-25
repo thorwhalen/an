@@ -72,7 +72,8 @@ an/
 │   ├── schema.py            Pydantic models: SceneIR, Shot, Action, Dialogue, AssetRef, ...
 │   ├── compose.py           sequence/parallel/delay/loop/tween/set_/play + flatten
 │   ├── validate.py          schema + semantic validation, ValidationReport
-│   ├── migrate.py           versioned migration registry (chained)
+│   ├── migrate.py           versioned migration registry (chained); scenes are
+│   │                        migrated on read by sync.scene_from_json_doc (an#105)
 │   └── sync.py              markdown_to_ir / ir_to_markdown / sync (mtime-newer-wins)
 │
 ├── stores/                  dol-backed project mall (MutableMapping facades)

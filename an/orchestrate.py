@@ -24,6 +24,8 @@ from an.ir.validate import (
     validate_schema,
     validate_semantic,
 )
+from an.ir.migrate import DocumentMigrationError
+from an.ir.sync import SceneValidationError
 from an.project import Project, load
 from an.render import render_project as _render_project
 from an.verify._base import Verifier, VerificationReport
@@ -57,6 +59,13 @@ def validate_project(project_dir: str | Path) -> ValidationReport:
     """
     try:
         project: Project = load(project_dir)
+    except (DocumentMigrationError, SceneValidationError) as e:
+        # NOT "scene.md does not parse": the md may be perfect and the stored
+        # JSON from another build. Routing an agent to edit the file that is
+        # fine is the failure `Finding.ir_path` exists to prevent (an#105).
+        report = ValidationReport()
+        report.add("error", "ir/scene.json", str(e))
+        return report
     except ValueError as e:
         report = ValidationReport()
         report.add("error", "scene.md", f"scene.md does not parse: {e}")

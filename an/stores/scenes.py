@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Iterator
 
 from an.ir.schema import SceneIR
-from an.ir.sync import ir_to_markdown
+from an.ir.sync import ir_to_markdown, scene_from_json_doc
 from an.util import _read_text, _write_json, _write_text
 
 
@@ -45,12 +45,19 @@ class ScenesStore(MutableMapping):
             raise KeyError(key)
         if not self.json_path.exists():
             raise KeyError(key)
-        return SceneIR.model_validate(json.loads(_read_text(self.json_path)))
+        # Migrated on read (an#105): a stored document may predate this build.
+        return scene_from_json_doc(
+            json.loads(_read_text(self.json_path)), source=self.json_path
+        )
 
     def __setitem__(self, key: str, value: SceneIR | dict) -> None:
         if key != self.SCENE_KEY:
             raise KeyError(f"only the {self.SCENE_KEY!r} key is supported")
-        scene = value if isinstance(value, SceneIR) else SceneIR.model_validate(value)
+        # A DICT goes through the read boundary too (an#105 review): writing a
+        # version this build cannot read produced a project `an` refused to open
+        # — the store would happily persist `version: "0.0.42"`, and the very
+        # next read raised. Symmetric boundaries or none.
+        scene = value if isinstance(value, SceneIR) else scene_from_json_doc(value)
         _write_json(self.json_path, json.loads(scene.model_dump_json()))
         _write_text(self.md_path, ir_to_markdown(scene))
         # Equalize mtimes so the JSON wins ties on subsequent sync()s. Pipeline

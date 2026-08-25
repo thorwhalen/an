@@ -13,6 +13,7 @@ Layout-overlap checks (boxes off-screen, text behind sprites) live in
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Any, Literal, Mapping
 
@@ -23,7 +24,8 @@ from an.characters.play import art_exists_for, play_problems
 from an.characters.schema import CharacterDescriptor
 from an.expression.binding import expression_problems
 from an.ir.compose import flatten
-from an.ir.migrate import migrate
+from an.ir.migrate import DocumentMigrationError, migrate
+from an.ir.sync import SceneValidationError, scene_from_json_doc
 from an.ir.schema import SceneIR
 
 
@@ -82,10 +84,27 @@ def validate_schema(doc: Any) -> ValidationReport:
     try:
         if isinstance(doc, SceneIR):
             return report
-        if isinstance(doc, str):
-            SceneIR.model_validate_json(doc)
+        # A dict or a JSON string is a STORED document, so it is migrated first
+        # (an#105 review): without this, "validate before you spend" told an
+        # agent a stale project was clean, because `extra="allow"` accepts the
+        # pre-migration shape and defaults the new fields.
+        raw = json.loads(doc) if isinstance(doc, str) else doc
+        if not isinstance(raw, dict):
+            report.add("error", "<root>", f"a scene document must be an object, not {type(raw).__name__}")
+            return report
+        scene_from_json_doc(raw)
+    except DocumentMigrationError as e:
+        report.add("error", "version", str(e))
+    except SceneValidationError as e:
+        # Per FIELD, not one finding for the document: `Finding.ir_path` is what
+        # routes a fix to the layer that can make it (CLAUDE.md pillar 10).
+        underlying = e.validation_error
+        if underlying is None:
+            report.add("error", "<root>", str(e))
         else:
-            SceneIR.model_validate(doc)
+            for err in underlying.errors():
+                loc = "/".join(str(x) for x in err.get("loc", ()))
+                report.add("error", loc or "<root>", err.get("msg", "validation error"))
     except ValidationError as e:
         for err in e.errors():
             loc = "/".join(str(x) for x in err.get("loc", ()))
