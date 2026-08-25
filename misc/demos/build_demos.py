@@ -473,9 +473,16 @@ def _build_multiplane(work: Path) -> Path:
         name="depths",
         planes=[
             Plane(name="sky", art=PlaneArt(kind="fill", color="#cfe4f7"), depth=0.0),
-            *posts("far", "#9db4c8", 0.25, -40.0, 26.0, 150.0, (-560, -220, 120, 460, 800)),
-            Plane(name="ground", art=PlaneArt(kind="fill", color="#89b47f"), depth=1.0,
-                  offset=(0.0, 230.0), size=(6000.0, 400.0)),
+            *posts(
+                "far", "#9db4c8", 0.25, -40.0, 26.0, 150.0, (-560, -220, 120, 460, 800)
+            ),
+            Plane(
+                name="ground",
+                art=PlaneArt(kind="fill", color="#89b47f"),
+                depth=1.0,
+                offset=(0.0, 230.0),
+                size=(6000.0, 400.0),
+            ),
             *posts("near", "#3f4a55", 1.8, 150.0, 44.0, 220.0, (-900, -140, 620, 1400)),
         ],
         characters_after="ground",

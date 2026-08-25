@@ -1004,7 +1004,9 @@ def plane_parents(env: "EnvironmentDescriptor", entity_id: str) -> dict[str, str
     }
 
 
-def _environment_descriptor(entity: AssetRef, env_store: Mapping) -> "EnvironmentDescriptor | None":
+def _environment_descriptor(
+    entity: AssetRef, env_store: Mapping
+) -> "EnvironmentDescriptor | None":
     """The store's `EnvironmentDescriptor` for ``entity``, or ``None``.
 
     ``None`` means "take the preset path", which is every environment written
@@ -1048,7 +1050,9 @@ def _plane_node(
         return NodeJSON(
             name=plane.name,
             transform=transform,
-            visual=VisualJSON(kind="rect", width=float(w), height=float(h), color=art.color),
+            visual=VisualJSON(
+                kind="rect", width=float(w), height=float(h), color=art.color
+            ),
         )
     if not art.src:
         return None
@@ -1067,7 +1071,11 @@ def _plane_node(
             anchor_x=float(ax),
             anchor_y=float(ay),
             fit=plane.fit,
-            **({"width": float(extent[0]), "height": float(extent[1])} if extent else {}),
+            **(
+                {"width": float(extent[0]), "height": float(extent[1])}
+                if extent
+                else {}
+            ),
         ),
     )
 
@@ -1160,7 +1168,14 @@ def _add_parallax_clips(
         if env is None:
             continue
         _emit_plane_compensation(
-            shot.id, entity.id, env, keys, duration, animations, tracks, authored=authored
+            shot.id,
+            entity.id,
+            env,
+            keys,
+            duration,
+            animations,
+            tracks,
+            authored=authored,
         )
 
 
@@ -1187,7 +1202,9 @@ def _emit_plane_compensation(
         ):
             if factor == 1.0:
                 continue  # rides the camera; emitting nothing is the point
-            values = [rest + (1.0 - factor) * float(getattr(k, cam_field)) for k in keys]
+            values = [
+                rest + (1.0 - factor) * float(getattr(k, cam_field)) for k in keys
+            ]
             if all(v == rest for v in values):
                 continue  # the camera does not move on this axis
             if (target, prop) in authored:
