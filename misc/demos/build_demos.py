@@ -504,6 +504,54 @@ def _build_multiplane(work: Path) -> Path:
     return _render(_project(work, scene_md=md, characters=("maya",)))
 
 
+def _build_style_pack(work: Path) -> Path:
+    """The same scene twice, side by side: no pack, then a noir pack.
+
+    Nothing about the scene changes — same characters, same backdrop, same
+    timing. What changes is a single `style_pack:` line in the meta block.
+    """
+    import json
+    import subprocess
+
+    from an.styles import StylePack
+
+    panes = []
+    for variant, pack in (
+        ("plain", None),
+        ("noir", StylePack(name="noir", roles={
+            "skin": "#cfcfcf", "clothing": "#23232b", "hair": "#0d0d0d",
+            "leg": "#15151b", "sky": "#3c3c47", "ground": "#232329",
+        })),
+    ):
+        pane = work / variant
+        pane.mkdir(parents=True, exist_ok=True)
+        meta = _meta("A style pack", 2.0)
+        if pack is not None:
+            (pane / "assets" / "styles").mkdir(parents=True, exist_ok=True)
+            (pane / "assets" / "styles" / "noir.json").write_text(
+                json.dumps(json.loads(pack.model_dump_json()), indent=2), encoding="utf-8"
+            )
+            meta = meta.replace("```\n", "style_pack: noir\n```\n", 1)
+        md = (
+            meta
+            + "\n"
+            + _shot("s1", 2.0)
+            + "\n```yaml entities\n"
+            "- kind: environment\n  id: room\n  store: environments\n  ref: park\n"
+            "- kind: character\n  id: charlie\n  store: characters\n  ref: charlie-v1\n"
+            "```\n"
+        )
+        (pane / "scene.md").write_text(md, encoding="utf-8")
+        panes.append(_render(pane))
+    out = work / "style-pack.mp4"
+    subprocess.run(
+        ["ffmpeg", "-v", "error", "-y", "-i", str(panes[0]), "-i", str(panes[1]),
+         "-filter_complex", "hstack", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out)],
+        check=True,
+    )
+    return out
+
+
 def _build_alpha(work: Path) -> Path:
     md = (
         _meta("A tween on :alpha", 4.0)
@@ -981,6 +1029,29 @@ DEMOS: tuple[Demo, ...] = (
             "be a second ordering it could not honour."
         ),
         build=_build_multiplane,
+    ),
+    Demo(
+        slug="style-pack",
+        title="One line of scene, a different film",
+        shows=(
+            "The same shot twice: no pack on the left, a noir pack on the right. "
+            "Same characters, same backdrop, same timing — the only difference is "
+            "a `style_pack:` line in the meta block. A pack recolours what the "
+            "COMPILER decides: the character palette, the legs, the environment "
+            "preset's sky and ground."
+        ),
+        how=(
+            "An `an.styles.StylePack` in the project's `styles` store — which had "
+            "no reader at all until an#112 — named by `style_pack:` in `yaml meta`. "
+            "`roles` maps a role to a hex colour and `entities` overrides one "
+            "character. A pack may NOT name `lip`, `mouth_fill`, `teeth`, `tongue` "
+            "or `eye_sclera`: those are literals inside `runtime.js`, and a role "
+            "that silently does nothing is worse than an absent one, so declaring "
+            "one is refused. It also does not recolour SVG art — those colours are "
+            "inside the drawings — and the compiler warns naming the rigs it could "
+            "not reach."
+        ),
+        build=_build_style_pack,
     ),
     Demo(
         slug="alpha",

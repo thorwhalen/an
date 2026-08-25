@@ -112,6 +112,7 @@ from an.environments import (
     Plane,
 )
 from an.props import PROP_DOCUMENT_KIND, PropDescriptor
+from an.styles import STYLE_DOCUMENT_KIND, StylePack, resolve_palette
 
 
 # Default placeholder character: a recognizable stick-figure layout in pixel
@@ -137,6 +138,69 @@ _CHARACTER_PALETTES: tuple[tuple[str, str, str], ...] = (
     ("#a87a5d", "#5b3a8a", "#2a2a2a"),  # darker skin, purple clothes, black
     ("#e8c39e", "#d97706", "#5e3a1f"),  # warm skin, orange clothes, brown
 )
+
+
+def style_pack_for(scene_meta, styles_store: Mapping) -> "StylePack | None":
+    """The `StylePack` a scene declares, or ``None`` (an#112).
+
+    ``None`` for every document written before an#112 and for every scene that
+    declares no pack — which is what makes this feature byte-identity-free: the
+    no-pack path is a lookup with a default, not a rewrite.
+
+    A declared pack that is missing, or is not a `StylePack`, RAISES. An art
+    direction the author asked for and did not get is a different picture that
+    renders happily, which is the an#33 failure this package refuses everywhere
+    else.
+    """
+    key = getattr(scene_meta, "style_pack", None)
+    if not key:
+        return None
+    raw = None
+    if key in styles_store:
+        try:
+            raw = styles_store[key]
+        except KeyError:
+            raw = None
+    if not isinstance(raw, dict) or raw.get("kind") != STYLE_DOCUMENT_KIND.name:
+        raise CutoutCompileError(
+            f"the scene declares style_pack={key!r}, which is "
+            + ("not a StylePack" if raw is not None else "not in the styles store")
+            + ". A pack the author asked for and did not get is a DIFFERENT "
+            "picture that renders happily — the failure an#33 exists to stop. "
+            "Create it, or remove `style_pack` from the scene's meta."
+        )
+    return StylePack.model_validate(migrate(dict(raw), kind=STYLE_DOCUMENT_KIND.name))
+
+
+def _warn_about_art_a_pack_cannot_reach(
+    pack: "StylePack | None", reached: set[str], skipped: set[str]
+) -> None:
+    """Say which entities the pack did not touch, and why.
+
+    A pack recolours what the COMPILER decides. An SVG rig's colours are inside
+    its art, and this package deliberately does not rewrite SVG at compile time
+    (see `an.styles`) — so a scene of SVG characters under a pack renders
+    exactly as it did, and the author has to hear that from the compiler rather
+    than from the frames.
+    """
+    if pack is None or not skipped:
+        return
+    warnings.warn(
+        f"style pack {pack.name!r} could not reach {sorted(skipped)}: their art "
+        "is SVG, whose colours live inside the drawings. A pack recolours what "
+        "the compiler decides — procedural rigs, the environment presets — and "
+        "reaches SVG art through the character factory at authoring time "
+        f"(`an character new --style-pack`), not here. It did reach "
+        f"{sorted(reached) or 'nothing in this shot'}.",
+        CutoutCompileWarning,
+        stacklevel=3,
+    )
+
+
+#: The procedural rig's leg colour — a literal the palette table never
+#: carried, which is why it is a named constant rather than two copies of a
+#: string. A `StylePack`'s `leg` role replaces it.
+DFLT_LEG_COLOUR: str = "#2c3e50"
 
 
 def _palette_for(entity_id: str) -> tuple[str, str, str]:
@@ -568,6 +632,7 @@ def compile_shot(
     strict_assets: bool = False,
     step_hz: float | None = None,
     expression_provider: ExpressionProvider | None = None,
+    style_pack: "StylePack | None" = None,
 ) -> CutoutSceneJSON:
     """Compile a single cutout-style `Shot` to its JS-runtime JSON form.
 
@@ -616,7 +681,7 @@ def compile_shot(
     textures: dict[str, AssetJSON] = {}
     resolutions: list[AssetResolutionJSON] = []
     scene_root = _build_scene_root(
-        shot, mall, textures=textures, resolutions=resolutions
+        shot, mall, textures=textures, resolutions=resolutions, style_pack=style_pack
     )
     vocab = _swap_vocabulary(scene_root, shot, mall)
     animations, tracks = _compile_actions(
@@ -691,6 +756,7 @@ def _build_scene_root(
     *,
     textures: dict[str, AssetJSON] | None = None,
     resolutions: list[AssetResolutionJSON] | None = None,
+    style_pack: "StylePack | None" = None,
 ) -> NodeJSON:
     """Construct the cutout scene tree under a single root from shot.entities.
 
@@ -720,10 +786,17 @@ def _build_scene_root(
     # FRONT of the characters structurally unreachable: entity order could not
     # interleave them however the author wrote the scene.
     in_front: list[NodeJSON] = []
+    reached: set[str] = set()
+    skipped: set[str] = set()
     for entity in shot.entities:
         if entity.kind == "environment":
             node, front = _build_environment_subtree(
-                entity, environments_store, textures=textures, resolutions=resolutions
+                entity,
+                environments_store,
+                textures=textures,
+                resolutions=resolutions,
+                style_pack=style_pack,
+                reached=reached,
             )
             children.append(node)
             in_front.extend(front)
@@ -732,7 +805,13 @@ def _build_scene_root(
             x = char_positions[char_idx]
             char_idx += 1
             sub = _build_character_subtree(
-                entity, characters_store, textures=textures, resolutions=resolutions
+                entity,
+                characters_store,
+                textures=textures,
+                resolutions=resolutions,
+                style_pack=style_pack,
+                reached=reached,
+                skipped=skipped,
             )
             sub.transform.x = x
             _apply_stage_placement(sub, entity)
@@ -747,6 +826,7 @@ def _build_scene_root(
         # configure the render rather than appearing in it.
     # …and last, the foreground planes, over everything.
     children.extend(in_front)
+    _warn_about_art_a_pack_cannot_reach(style_pack, reached, skipped)
     return NodeJSON(name="root", children=children)
 
 
@@ -767,6 +847,8 @@ def _build_environment_subtree(
     *,
     textures: dict[str, AssetJSON] | None = None,
     resolutions: list[AssetResolutionJSON] | None = None,
+    style_pack: "StylePack | None" = None,
+    reached: set[str] | None = None,
 ) -> tuple[NodeJSON, list[NodeJSON]]:
     """``(the environment node, the planes that go IN FRONT of the characters)``.
 
@@ -864,8 +946,15 @@ def _build_environment_subtree(
     # wide rects will always cover.
     huge = 4000.0
     ground_y = float(preset["ground_y"])
-    sky_color = str(preset["sky_color"])
-    ground_color = str(preset["ground_color"])
+    # A lookup with a default, as everywhere else a pack reaches.
+    sky_color = (
+        style_pack.colour_for("sky", entity=entity.id) if style_pack else None
+    ) or str(preset["sky_color"])
+    ground_color = (
+        style_pack.colour_for("ground", entity=entity.id) if style_pack else None
+    ) or str(preset["ground_color"])
+    if style_pack is not None and reached is not None:
+        reached.add(entity.id)
     # The node is built exactly as before an#110; only the RETURN grew a second
     # element, and it is always empty here — a preset declares no planes, so it
     # has nothing to put in front of the characters.
@@ -1356,6 +1445,9 @@ def _build_character_subtree(
     *,
     textures: dict[str, AssetJSON] | None = None,
     resolutions: list[AssetResolutionJSON] | None = None,
+    style_pack: "StylePack | None" = None,
+    reached: set[str] | None = None,
+    skipped: set[str] | None = None,
 ) -> NodeJSON:
     """Build a NodeJSON subtree for one character.
 
@@ -1397,6 +1489,11 @@ def _build_character_subtree(
 
     if char_meta.get("kind") == "CharacterDescriptor":
         _record("descriptor")
+        # An SVG rig's colours live inside its drawings, and a pack does not
+        # rewrite SVG at compile time (see `an.styles`). Recorded so the
+        # compiler can say WHICH entities it could not reach, by name.
+        if skipped is not None:
+            skipped.add(entity.id)
         return _build_svg_character_subtree(
             entity,
             char_meta,
@@ -1430,16 +1527,26 @@ def _build_character_subtree(
         )
 
     parts = declared_parts or _PLACEHOLDER_PARTS
-    skin, clothing, hair = _palette_for(entity.id)
+    # A LOOKUP WITH A DEFAULT, not a rewrite: with no pack — every document
+    # before an#112 — the literals below come back unchanged and the compiled
+    # node is the node this code always produced.
+    skin, clothing, hair = resolve_palette(
+        style_pack, entity.id, _palette_for(entity.id)
+    )
+    leg = (
+        style_pack.colour_for("leg", entity=entity.id) if style_pack else None
+    ) or DFLT_LEG_COLOUR
+    if style_pack is not None and reached is not None:
+        reached.add(entity.id)
     # Per-part color: head/limbs are skin colour, torso/arm-clothing is the
-    # clothing colour. Override via a future store.parts.colors mapping.
+    # clothing colour.
     part_color: dict[str, str] = {
         "head": skin,
         "torso": clothing,
         "left_arm": clothing,
         "right_arm": clothing,
-        "left_leg": "#2c3e50",
-        "right_leg": "#2c3e50",
+        "left_leg": leg,
+        "right_leg": leg,
     }
     children: list[NodeJSON] = []
     for part in parts:

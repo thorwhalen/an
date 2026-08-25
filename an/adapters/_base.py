@@ -75,6 +75,12 @@ class RenderContext:
     #: matter where the knob lives, and a document that carries its own timing
     #: policy is the honest one. Omit-when-unset keeps the unset case free.
     step_hz: float | None = None
+
+    #: The `StylePack` this render is drawn under, already resolved from the
+    #: scene's `meta.style_pack` (an#112). Resolved ONCE per render rather than
+    #: per shot: a pack is art direction for a project, and a scene whose shots
+    #: disagreed about it would be two scenes.
+    style_pack: Any = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 
