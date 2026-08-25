@@ -102,7 +102,8 @@ from an.characters.schema import (
     Slot,
 )
 from an.characters.svg_utils import raster_size
-from an.ir.migrate import migrate
+from an.ir.migrate import DocumentKind, migrate
+from an.props import PROP_DOCUMENT_KIND, PropDescriptor
 
 
 # Default placeholder character: a recognizable stick-figure layout in pixel
@@ -695,6 +696,7 @@ def _build_scene_root(
     children: list[NodeJSON] = []
     characters_store = mall.get("characters") or {}
     environments_store = mall.get("environments") or {}
+    props_store = mall.get("props") or {}
     char_entities = [e for e in shot.entities if e.kind == "character"]
     n_chars = len(char_entities)
     char_positions = _layout_character_positions(n_chars)
@@ -715,15 +717,14 @@ def _build_scene_root(
                 entity, characters_store, textures=textures, resolutions=resolutions
             )
             sub.transform.x = x
+            _apply_stage_placement(sub, entity)
             children.append(sub)
         elif entity.kind == "prop":
-            raise CutoutCompileError(
-                f"shot {shot.id!r}: entity {entity.id!r} is a prop, which the "
-                "cutout renderer does not draw yet. Props — images, nine-slice "
-                "panels, things a character holds — are planned; see "
-                "https://github.com/thorwhalen/an/issues/9. Until then, remove the entity rather than leaving it "
-                "in the scene, where it would be silently absent from the render."
+            sub = _build_prop_subtree(
+                entity, props_store, textures=textures, resolutions=resolutions
             )
+            _apply_stage_placement(sub, entity)
+            children.append(sub)
         # `voice` entities are legitimately not drawable: they
         # configure the render rather than appearing in it.
     return NodeJSON(name="root", children=children)
@@ -851,6 +852,91 @@ def _layout_character_positions(n: int, *, spread: float = 220.0) -> list[float]
         return [0.0]
     step = spread / (n - 1)
     return [-spread / 2 + i * step for i in range(n)]
+
+
+def _apply_stage_placement(node: NodeJSON, entity: AssetRef) -> None:
+    """Apply ``entity.stage`` to a built subtree, in place.
+
+    A no-op when the entity declares none, which is every document written
+    before an#108 — and the reason this is hash-free: an unplaced entity's
+    node is the node the old code produced, byte for byte, because neither
+    branch runs.
+
+    `at` REPLACES the computed layout rather than offsetting it. Offsetting
+    would make a placed character's x depend on how many other characters are
+    in the shot, so adding a third character would move the two that were
+    explicitly placed — placement that moves is not placement.
+    """
+    stage = entity.stage
+    if stage is None:
+        return
+    if stage.at is not None:
+        node.transform.x, node.transform.y = float(stage.at[0]), float(stage.at[1])
+    if stage.scale != 1.0:
+        node.transform.scale_x *= float(stage.scale)
+        node.transform.scale_y *= float(stage.scale)
+
+
+def _build_prop_subtree(
+    entity: AssetRef,
+    props_store: Mapping,
+    *,
+    textures: dict[str, AssetJSON] | None = None,
+    resolutions: list[AssetResolutionJSON] | None = None,
+) -> NodeJSON:
+    """Build the subtree for one prop, through the SAME rig builder.
+
+    The only differences from a character are the store, the `props/` art
+    prefix, and the descriptor model — which is why an#108 made the first two
+    arguments rather than writing a second builder.
+
+    There is deliberately **no placeholder fallback**. A character whose art
+    cannot be resolved draws the built-in humanoid, because a scene that still
+    renders is more useful than one that raises. That reasoning inverts here:
+    the placeholder IS a humanoid, so an unresolvable lamp would render as a
+    *person* (the an#33 failure mode, arriving through the fallback meant to
+    prevent it). A prop that cannot be resolved raises instead, naming the
+    store and the ref.
+    """
+    if resolutions is None:
+        resolutions = []
+    meta: dict[str, Any] = {}
+    if entity.ref in props_store:
+        try:
+            value = props_store[entity.ref]
+            if isinstance(value, dict):
+                meta = value
+        except KeyError:
+            meta = {}
+    if meta.get("kind") != PROP_DOCUMENT_KIND.name:
+        raise CutoutCompileError(
+            f"prop {entity.id!r} refers to {entity.ref!r} in the "
+            f"{entity.store!r} store, which is not a PropDescriptor"
+            + (" (the store has no such entry)" if not meta else f" (kind={meta.get('kind')!r})")
+            + ". A prop has no placeholder rig on purpose: the built-in "
+            "placeholder is a HUMANOID, so falling back would draw a person "
+            "where the prop should be. Create it with a `prop.json` whose "
+            f"`kind` is {PROP_DOCUMENT_KIND.name!r}, or remove the entity."
+        )
+    resolutions.append(
+        AssetResolutionJSON(
+            id=entity.id,
+            kind="prop",
+            store=entity.store,
+            ref=entity.ref,
+            resolved="descriptor",
+        )
+    )
+    return _build_svg_character_subtree(
+        entity,
+        meta,
+        textures=textures if textures is not None else {},
+        probe=_part_probe(props_store, art_prefix=PROP_ART_PREFIX),
+        resolutions=resolutions,
+        art_prefix=PROP_ART_PREFIX,
+        descriptor_model=PropDescriptor,
+        document_kind=PROP_DOCUMENT_KIND,
+    )
 
 
 def _build_character_subtree(
@@ -1062,6 +1148,10 @@ CONTAIN_FIT: str = "contain"
 #: (an#108).
 CHARACTER_ART_PREFIX: str = "characters/"
 
+#: The same, for props. Both are keys of `render.ASSET_SRC_PREFIX_TO_STORE`,
+#: which is what decides where the staging step copies the art from.
+PROP_ART_PREFIX: str = "props/"
+
 
 def _svg_asset_src(
     ref: str, rel_path: str, *, art_prefix: str = CHARACTER_ART_PREFIX
@@ -1240,6 +1330,8 @@ def _build_svg_character_subtree(
     probe: Callable[[str], tuple[bool, tuple[float, float] | None]] | None = None,
     resolutions: list[AssetResolutionJSON] | None = None,
     art_prefix: str = CHARACTER_ART_PREFIX,
+    descriptor_model: type = CharacterDescriptor,
+    document_kind: DocumentKind = CHARACTER_DOCUMENT_KIND,
 ) -> NodeJSON:
     """Build the scene subtree for a character, **from its descriptor's rig**.
 
@@ -1263,8 +1355,12 @@ def _build_svg_character_subtree(
     used, and failing that the runtime's ``contain`` fit draws the art at its
     natural shape — never stretched to a fabricated box.
     """
-    desc = CharacterDescriptor.model_validate(
-        migrate(dict(desc_data), kind=CHARACTER_DOCUMENT_KIND.name)
+    # Two documents, one builder. `PropDescriptor` carries the same field NAMES
+    # the rig maths reads — view_box, bones, slots, skins, asset_sets,
+    # face_overlay — and differs only in what it seeds when they are empty, so
+    # the code below never asks which kind it has (an#108).
+    desc = descriptor_model.model_validate(
+        migrate(dict(desc_data), kind=document_kind.name)
     )
     ref = entity.ref or entity.id
     _, _, _, view_box_height = desc.view_box

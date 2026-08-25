@@ -282,7 +282,9 @@ def _extract_actions_block(text: str) -> list:
 
     Supported entry shapes (one per item in the YAML list):
       - ``{kind: tween, target, property, to, duration, [from_], [easing], [start]}``
-      - ``{kind: set,   target, property, value, [at]}``
+      - ``{kind: set,   target, property, value, [at]}`` — `at`, never
+        `start`: a `set` is instantaneous, and `start` on one RAISES rather
+        than being silently dropped as it was before an#108.
       - ``{kind: play,  target, animation, [duration], [speed], [loop], [start]}``
         — resolved at compile against the target entity's descriptor
         ``animations`` (an#7). ``loop`` omitted means the animation's own.
@@ -323,6 +325,23 @@ def _extract_actions_block(text: str) -> list:
                 easing=easing,
             )
         elif kind == "set":
+            if "start" in item:
+                # A REFUSAL, not an alias. `start` is the wrapper key for
+                # actions that HAVE a duration — the parser turns it into
+                # `sequence(delay(start), action)`. A `set` is instantaneous,
+                # so its time IS `at`, and giving one number two names is how
+                # a scene ends up with both.
+                #
+                # It was silently dropped before an#108: `start` is popped only
+                # for tween/play/expression, and this branch reads `at` alone,
+                # so `{kind: set, start: 1.0}` compiled to a swap at t=0. The
+                # author sees a lamp that is lit from the first frame and no
+                # message anywhere.
+                raise SceneMarkdownError(
+                    f"actions[{i}] is a `set` with `start: {item['start']!r}`, "
+                    "which does nothing: a `set` is instantaneous and its time "
+                    f"is `at:`. Write `at: {item['start']!r}`."
+                )
             action = _compose.set_(
                 item["target"],
                 item["property"],

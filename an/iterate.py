@@ -136,8 +136,9 @@ The IR shape (relevant fields):
       - duration (seconds, float)
       - camera: {move: "hold"|"push_in"|"pull_out"|"zoom_in"|"zoom_out", ...}
       - entities: list of {kind, id, store, ref, ...}
-        "kind" MUST be one of: character, environment, voice.
-        "prop" is declared by the IR but NOT rendered — it raises. Do not emit one.
+        "kind" MUST be one of: character, environment, voice, prop.
+        A "prop" needs a PropDescriptor in the props store; it has no
+        placeholder rig, so an unknown ref raises rather than drawing a person.
       - actions: list of action dicts (kind ∈ {tween, set, play, expression, sequence, parallel, delay, loop})
         A tween/set action's "property" is EITHER a transform:
           x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, skew_y,
@@ -259,6 +260,7 @@ def iterate(
         new_scene,
         available_voices=project.mall.get("voices"),
         available_characters=project.mall.get("characters"),
+        available_props=project.mall.get("props"),
     )
     full_report = schema_report.merge(semantic_report)
 

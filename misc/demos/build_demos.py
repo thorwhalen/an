@@ -298,6 +298,39 @@ def _build_emotion_visemes(work: Path) -> Path:
     return out
 
 
+def _build_prop(work: Path) -> Path:
+    """A two-state prop switching mid-shot: a desk lamp going on.
+
+    The lamp is a `PropDescriptor` — one bone, one slot, no face, no blink —
+    and the switch is the SAME swap-channel machinery a character's viseme
+    uses. That is the whole point of an#108: a prop is not a new document type
+    with a `states` field, it is the rig machinery pointed at a different
+    store.
+    """
+    import shutil
+
+    from an.props import PROP_DOCUMENT_KIND  # noqa: F401  (documents the kind)
+
+    fixture = Path(__file__).resolve().parents[1] / "bench" / "corpus" / "prop_swap"
+    (work / "assets").mkdir(parents=True, exist_ok=True)
+    shutil.copytree(fixture / "assets" / "props", work / "assets" / "props")
+    md = (
+        _meta("A prop with two states", 2.5)
+        + "\n"
+        + _shot("s1", 2.5)
+        + "\n```yaml entities\n"
+        "- kind: environment\n  id: room\n  store: environments\n  ref: default\n"
+        "- kind: prop\n  id: lamp\n  store: props\n  ref: lamp\n"
+        "  stage:\n    at:\n    - 0.0\n    - 150.0\n    scale: 1.1\n"
+        "```\n"
+        "\n```yaml actions\n"
+        "- kind: set\n  target: lamp/body\n  property: lamp\n  value: 'on'\n  at: 1.25\n"
+        "```\n"
+    )
+    (work / "scene.md").write_text(md, encoding="utf-8")
+    return _render(work)
+
+
 def _build_gaze(work: Path) -> Path:
     """The same authored sweep twice, side by side: the pupils alone on the
     left (a character that has the eye stack but whose saccades are held at
@@ -676,6 +709,28 @@ DEMOS: tuple[Demo, ...] = (
             "content-hash cache re-synthesizes only what actually changed."
         ),
         build=_build_lipsync,
+    ),
+    Demo(
+        slug="prop",
+        title="A prop with two states",
+        shows=(
+            "A desk lamp switches on at 1.25 s. The lamp is a **prop**, not a "
+            "character: one bone, one slot, no face, no blink — and no placeholder "
+            "rig, because the built-in placeholder is a humanoid and falling back "
+            "would draw a person where the lamp should be. The switch is the same "
+            "swap-channel machinery a character's mouth uses, so two states cost a "
+            "second drawing and one line of scene."
+        ),
+        how=(
+            "`assets/props/lamp/prop.json` declares "
+            "`asset_sets: {lamp: {off: …, on: …}}`, and the shot says "
+            "`- kind: set / target: lamp/body / property: lamp / value: 'on' / at: 1.25`. "
+            "`stage: {at: [x, y], scale: s}` on the entity places it. The descriptor is "
+            "`an.props.PropDescriptor`; the compiler builds it through the SAME rig "
+            "builder as a character (`an/adapters/cutout/compile.py`), with the art "
+            "store as an argument."
+        ),
+        build=_build_prop,
     ),
     Demo(
         slug="expressions",

@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import model_serializer, BaseModel, ConfigDict, Field, model_validator
 
 from an.base import (
     COMPATIBLE_VERSION,
@@ -90,6 +90,41 @@ class Camera(_IRModel):
 # -----------------------------------------------------------------------------
 
 
+class StagePlacement(_IRModel):
+    """Where an entity stands on the stage, and how big it is.
+
+    >>> StagePlacement(at=(120.0, -40.0), scale=0.5).at
+    (120.0, -40.0)
+    >>> StagePlacement().at is None
+    True
+
+    `at` is in SCENE pixels relative to the stage centre — the same space the
+    compiler already places characters in — so an author reads it off the same
+    ruler as a camera pivot. `scale` multiplies the rig's own uniform scale.
+
+    Deliberately only two fields today. #108 sketches `depth` and `after` as
+    well; both belong to the stage vocabulary that arrives with the translating
+    camera (#109) and plane environments (#110), and shipping either now would
+    put a knob in the schema that nothing reads — which is worse than an absent
+    one, because a scene that sets it renders identically and says nothing.
+    """
+
+    #: ``(x, y)`` in scene pixels from the stage centre. ``None`` = default layout.
+    #:
+    #: `allow_inf_nan=False` on both fields, and it is not pedantry: pydantic
+    #: serializes `inf` and `nan` to JSON **null**, and re-validating that JSON
+    #: raises — so a scene file written with either is corrupt one way, and the
+    #: author finds out on the next load rather than at the edit that did it
+    #: (an#108 review, M-1). `gt=0` already refuses `scale=0` and `scale=-1`; it
+    #: does not refuse `inf`.
+    at: tuple[
+        Annotated[float, Field(allow_inf_nan=False)],
+        Annotated[float, Field(allow_inf_nan=False)],
+    ] | None = None
+    #: Uniform scale multiplier on the built rig. ``1.0`` = the rig's own size.
+    scale: float = Field(default=1.0, gt=0, allow_inf_nan=False)
+
+
 class AssetRef(_IRModel):
     """Reference to an entry in a project store.
 
@@ -110,6 +145,33 @@ class AssetRef(_IRModel):
     store: str  # which store in the project mall
     ref: str  # key inside that store
     overrides: dict[str, Any] | None = None
+
+    #: Where on the stage this entity stands. ``None`` — the default and what
+    #: every existing document has — means "wherever the layout puts it",
+    #: which for characters is the evenly-spaced row the compiler computes.
+    #:
+    #: **Additive by construction, and hash-free by construction**: the
+    #: contract hashes the COMPILED document, and an `AssetRef` never reaches
+    #: it. So this field can grow without retiring a single ledger row.
+    stage: StagePlacement | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_unset_stage(self, handler):
+        """Serialize ``stage: null`` out of existence when it is unset.
+
+        The precedent is `serialize._omit_unset_step_hz`, and the reason is
+        the same one scaled down: every committed `ir/scene.json` in this repo
+        — corpus fixtures, examples, and whatever a user has on disk — was
+        written before this field existed. A defaulted `null` on every
+        `AssetRef` would rewrite all of them on the next `an sync`, and
+        `test_every_speaking_corpus_scene_ir_is_reproducible_from_its_md`
+        would be red until each was regenerated. A field nobody set should
+        leave no trace (an#108).
+        """
+        data = handler(self)
+        if self.stage is None:
+            data.pop("stage", None)
+        return data
 
 
 # -----------------------------------------------------------------------------
