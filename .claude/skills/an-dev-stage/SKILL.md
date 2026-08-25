@@ -16,14 +16,18 @@ fixed.
    `world = position + M·(local − pivot)`, so `root.pivot_x/y` *is* a 2D camera. A translating
    camera was a **compiler** change with **zero runtime change**, which is why it is checked on
    every PR rather than only on a labelled one. **Landed:** `Camera.keys` + `CameraKey`,
-   `pan_left`/`pan_right`/`tilt_up`/`tilt_down`, the `camera_keys` resolver validate and compile
+   `pan_left`/`pan_right`/`tilt_up`/`tilt_down`, the `an.ir.camera.camera_keys` resolver validate and compile literally
    share, the collision rule, and the migration dropping `position`/`target`/`focal_length`
    (schema `0.3.0`). Note **no corpus fixture emits a camera clip**, so the contract-hash guard is
    vacuously green for the camera: `tests/test_camera.py` pins the emitted document directly.
-2. **`migrate()` never runs on a SceneIR.** Every call in the tree passes
-   `kind="CharacterDescriptor"`; `ScenesStore.__getitem__`, `sync()` and `project.load` validate
-   raw JSON. A registered scene migration is decoration until the read path is wired — and with
-   `extra="allow"`, a renamed field lands as a **silent default**, not an error. Wire it first.
+2. **`migrate()` runs on a SceneIR — since an#105, and only since then.** Before it, every call
+   in the tree passed `kind="CharacterDescriptor"` and a registered scene migration was decoration.
+   `scene_from_json_doc` is now the single choke point every read goes through (an AST test fails
+   on any other), and an#106 and an#109 both ship real ladders. What has NOT changed is why it
+   mattered: with `extra="allow"`, a renamed or removed field lands as a **silent default**, not an
+   error — and a document already at the current version is never migrated again, so a retired key
+   that reaches one is permanent. That last route is `an.ir.validate`'s `RETIRED_KEYS` /
+   `RETIRED_CAMERA_KEYS`, because no migration can see it.
 3. **Environment art in front of the characters is structurally unreachable today**, not merely
    missing: `_build_scene_root` runs environments and characters in two separate loops
    (env `:701-707`, characters `:708-724`), so entity order cannot interleave them. (A *node*

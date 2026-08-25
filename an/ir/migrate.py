@@ -228,7 +228,11 @@ def _drop_dead_camera_fields(doc: dict[str, Any]) -> dict[str, Any]:
     >>> _drop_dead_camera_fields(doc)["timeline"][0]["camera"]
     {'move': 'hold'}
     """
-    doc = dict(doc)
+    # DEEP, because this migration POPS from nested camera dicts: a shallow
+    # copy leaves `timeline`, each shot and each camera shared with the
+    # caller, so `camera.pop(...)` strips the input the caller still holds.
+    # The `return doc` shape reads as pure and was not (an#109 review, M-4).
+    doc = copy.deepcopy(dict(doc))
     doc["version"] = "0.3.0"
     if "compatible_version" in doc:
         doc["compatible_version"] = "0.3.0"

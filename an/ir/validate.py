@@ -23,6 +23,7 @@ from an.base import TRANSFORM_PROPERTIES
 from an.characters.play import art_exists_for, play_problems
 from an.characters.schema import CharacterDescriptor
 from an.expression.binding import expression_problems
+from an.ir.camera import CAMERA_MOVES, CameraError, camera_keys
 from an.ir.compose import flatten
 from an.ir.migrate import DocumentMigrationError, migrate
 from an.ir.sync import SceneValidationError, scene_from_json_doc
@@ -121,27 +122,14 @@ def validate_schema(doc: Any) -> ValidationReport:
 # -----------------------------------------------------------------------------
 
 
-#: Camera moves the cutout renderer implements. `hold` is a real no-op.
+#: Camera moves the renderer implements. `hold` is a real no-op.
 #:
-#: Duplicated from the compiler deliberately: importing it here would make the
-#: IR layer depend on an adapter, which is the wrong direction. The test suite
-#: pins the two together instead — the same shape `artful` uses for vocabulary
-#: shared across packages that must not depend on each other.
-_RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(
-    {
-        "hold",
-        "push_in",
-        "pull_out",
-        "zoom_in",
-        "zoom_out",
-        # an#109: the camera translates. `root.pivot` was already a 2D camera
-        # and already runtime-applied — the move names were the missing half.
-        "pan_left",
-        "pan_right",
-        "tilt_up",
-        "tilt_down",
-    }
-)
+#: **Derived, not duplicated.** This was a hand-maintained frozenset reconciled
+#: with the compiler's table by a test — which works, and is not what "a move
+#: that validates cannot then raise" means; that means ONE table (an#109
+#: review, H-1). It moved to `an.ir.camera`, which is the IR layer, so validate
+#: can import it without depending on an adapter.
+_RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(CAMERA_MOVES)
 
 #: Entity kinds the cutout renderer draws. `voice` is legitimately
 #: not drawable — they configure the render rather than appearing in it.
@@ -436,65 +424,40 @@ def _descriptor_for(ref, available_characters) -> CharacterDescriptor | None:
     return None
 
 
-def _check_camera(camera, path: str, duration: float, report: "ValidationReport") -> None:
+def _check_camera(shot, path: str, report: "ValidationReport") -> None:
     """Every way a camera can fail to render, reported for free (an#109).
 
     The rule is `_check_renderable`'s: **error wherever the pipeline raises**,
-    so validate's verdict and the compiler's agree. The one that is not a
-    raise is the last: a translation on a stage whose planes all move with the
-    camera is flat, not broken, and "pan a single-plane stage" is a legitimate
-    if unexciting request — so it is a warning, and it will mean more once
-    #110 gives planes a depth to differ on.
+    so validate's verdict and the compiler's agree — and it is kept by calling
+    the compiler's own resolver rather than restating its rules. The one
+    finding that is NOT a raise is the last, and it is a warning: too few keys
+    is a pose rather than a move, which renders as if the camera were absent.
+    Nothing breaks, so nothing fails; the author still wrote a camera block
+    that does nothing, so it is still worth saying.
+
+    ``width``/``height`` are 1 because nothing here reads the resolved
+    distance — only whether resolving RAISES. Passing the real canvas would
+    make the check depend on a resolution the IR layer does not have.
     """
-    if camera.move is not None and camera.keys is not None:
-        report.add(
-            "error",
-            path,
-            f"camera sets BOTH move={camera.move!r} and keys "
-            f"({len(camera.keys)} of them). They are two front doors on one "
-            "path; a scene that sets both says two things about the same "
-            "camera. Compiling this shot raises.",
-        )
+    camera = shot.camera
+    if camera is None:
         return
-    if camera.move:
-        if camera.move.strip() not in _RENDERABLE_CAMERA_MOVES:
-            report.add(
-                "error",
-                f"{path}/move",
-                f"camera.move={camera.move!r} is not implemented by the "
-                f"cutout renderer (it has: {sorted(_RENDERABLE_CAMERA_MOVES)}). "
-                "Rendering this shot raises.",
-            )
+    # Every refusal, from the resolver the COMPILER uses. Not a second copy of
+    # its rules: `camera_keys` raises exactly where compiling raises, so this
+    # cannot drift from what it predicts (an#109 review, H-1).
+    try:
+        keys = camera_keys(shot, width=1, height=1)
+    except CameraError as e:
+        report.add("error", path, f"{e} Rendering this shot raises.")
         return
-    keys = camera.keys
-    if keys is None:
-        return
-    if len(keys) == 1:
+    if camera.keys is not None and len(keys) < 2:
         report.add(
             "warning",
             f"{path}/keys",
-            "a single camera key is a pose, not a move: the compiler needs two "
-            "to interpolate between, so this renders as if the camera were "
-            "absent. Add a second key, or remove the camera.",
+            f"{len(keys)} camera key(s) is a pose, not a move: the compiler "
+            "needs two to interpolate between, so this renders as if the "
+            "camera were absent. Add a second key, or remove the camera.",
         )
-    times = [float(k.at) for k in keys]
-    if times != sorted(times):
-        report.add(
-            "error",
-            f"{path}/keys",
-            f"camera keys are not in time order ({times}). The compiler emits "
-            "them as keyframes in list order, so an out-of-order key runs the "
-            "camera backwards.",
-        )
-    for i, t in enumerate(times):
-        if not (0.0 <= t <= duration):
-            report.add(
-                "error",
-                f"{path}/keys/{i}/at",
-                f"camera key at {t} is outside the shot (0 … {duration}). A "
-                "keyframe past the end never plays; one before the start makes "
-                "the shot open mid-move.",
-            )
 
 
 def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
@@ -512,7 +475,7 @@ def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
     predicts is its own defect.
     """
     if shot.camera is not None:
-        _check_camera(shot.camera, f"{path}/camera", shot.duration, report)
+        _check_camera(shot, f"{path}/camera", report)
 
     for j, entity in enumerate(shot.entities):
         if (

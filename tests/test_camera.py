@@ -13,6 +13,8 @@ existed. Five named zoom moves, eight corpus scenes, no exemption.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from an.adapters.cutout.compile import (
@@ -22,6 +24,7 @@ from an.adapters.cutout.compile import (
     camera_keys,
     compile_shot,
 )
+from an.ir.camera import CameraError
 from an.ir.schema import Camera, CameraKey, Meta, SceneIR, SetAction, Shot
 from an.ir.validate import validate_semantic
 
@@ -184,13 +187,20 @@ def test_validate_refuses_keys_that_cannot_play(keys, needle):
     ]
 
 
-def test_a_single_key_is_a_warning_not_an_error():
+@pytest.mark.parametrize("keys", [[], [CameraKey(at=0.0, x=50.0)]])
+def test_too_few_keys_is_a_warning_not_an_error(keys):
     """A pose, not a move: it renders as if the camera were absent. Worth
     saying — the author wrote a camera block that does nothing — and not worth
-    failing, because nothing breaks."""
-    report = _validate(_shot(Camera(keys=[CameraKey(at=0.0, x=50.0)])))
+    failing, because nothing breaks.
+
+    `keys=[]` is included because it produced NO finding at all while one key
+    produced a warning, though both render identically (an#109 review, L-1).
+    """
+    report = _validate(_shot(Camera(keys=list(keys))))
     assert report.passed
-    assert any("single camera key" in f.description for f in report.findings)
+    assert any("pose, not a move" in f.description for f in report.findings), [
+        f.description for f in report.findings
+    ]
 
 
 def test_a_zero_or_negative_zoom_is_refused_by_the_schema():
@@ -242,3 +252,199 @@ def test_a_channel_on_a_child_node_is_not_a_collision():
         actions=[SetAction(target="someone", property="scale_x", value=3.0)],
     )
     compile_shot(shot, fps=24, width=320, height=240)  # must not raise
+
+
+# --- the review's survivors --------------------------------------------------
+
+
+def test_a_pan_travels_a_third_of_the_frame():
+    """`PAN_FRACTION` pinned to the NUMBER, not to itself.
+
+    The first version of the pan-distance tests computed the expected value
+    from the constant under test, so any non-zero value passed and the one
+    number a named pan has to choose was guarded by nothing (an#109 review,
+    H-3). This asserts the third, and a resolution where a third is an
+    unmistakable 320 px.
+    """
+    assert PAN_FRACTION == pytest.approx(1 / 3)
+    scene = compile_shot(_shot(Camera(move="pan_right")), fps=24, width=960, height=240)
+    assert _channels(scene)["pivot_x"][1][1] == pytest.approx(320.0)
+
+
+def test_the_camera_drives_every_key_field_it_declares():
+    """`rotation` had no test, so dropping its row from `_CAMERA_CHANNELS`
+    compiled a `CameraKey(rotation=…)` to NOTHING — silently — with the whole
+    suite green (an#109 review, M-3/M5). Every field of `CameraKey` that names
+    a property must reach one."""
+    scene = compile_shot(
+        _shot(Camera(keys=[
+            CameraKey(at=0.0),
+            CameraKey(at=2.0, x=-10.0, y=5.0, zoom=1.5, rotation=0.3),
+        ])),
+        fps=24,
+        width=320,
+        height=240,
+    )
+    assert set(_channels(scene)) == {"pivot_x", "pivot_y", "scale_x", "scale_y", "rotation"}
+    assert _channels(scene)["rotation"][1][1] == pytest.approx(0.3)
+
+
+def test_the_collision_check_sees_every_authored_animation():
+    """The rule's TRIGGER was tested; its COVERAGE was not.
+
+    Narrowing the `authored` snapshot to one animation left the detector
+    half-blind and the suite stayed green (an#109 review, M-3/M6). A shot with
+    several authored channels, only the LAST of which collides, is the case
+    that notices.
+    """
+    shot = _shot(
+        Camera(move="push_in"),
+        actions=[
+            SetAction(target="someone", property="x", value=1.0),
+            SetAction(target="other", property="y", value=2.0),
+            SetAction(target="root", property="scale_y", value=3.0),
+        ],
+    )
+    with pytest.raises(CutoutCompileError, match="root:scale_y"):
+        compile_shot(shot, fps=24, width=320, height=240)
+
+
+def test_a_move_with_surrounding_whitespace_is_the_move():
+    """`move="  "` errored at validate and no-opped at compile — the exact seam
+    `camera_keys` was written to close, reintroduced on the validate side
+    (an#109 review, M-1). One resolver, so there is one answer."""
+    for blank in ("", "  ", "\t"):
+        shot = _shot(Camera(move=blank))
+        assert _validate(shot).passed, blank
+        assert compile_shot(shot, fps=24, width=320, height=240).animations == {}, blank
+    padded = _shot(Camera(move="  push_in  "))
+    assert _validate(padded).passed
+    assert set(_channels(compile_shot(padded, fps=24, width=320, height=240))) == {
+        "scale_x",
+        "scale_y",
+    }
+
+
+def test_a_single_key_does_not_become_a_two_key_animation():
+    """The `len(keys) < 2` guard. Loosening it to `< 1` (or removing it) makes
+    a one-key camera emit a one-keyframe channel, which the evaluator holds
+    forever — a pose silently promoted to a move."""
+    scene = compile_shot(
+        _shot(Camera(keys=[CameraKey(at=0.0, x=50.0)])), fps=24, width=320, height=240
+    )
+    assert scene.animations == {} and scene.timeline.tracks == []
+
+
+def test_a_zero_duration_shot_does_not_divide_by_itself():
+    """`max(0.001, duration)` is the floor a named move's terminal key lands
+    on. Without it a zero-duration shot emits two keyframes at the same time,
+    which is a curve with no domain."""
+    scene = compile_shot(
+        Shot(id="s1", renderer="cutout", duration=0.0, camera=Camera(move="push_in")),
+        fps=24,
+        width=320,
+        height=240,
+    )
+    times = [t for t, _, _ in _channels(scene)["scale_x"]]
+    assert times[0] != times[1], times
+    # …and the CLIP that plays them. `camera_keys` floors the key times and
+    # the emitter floors the clip; they are two places and both matter, since
+    # a zero-length clip is active at no time at all.
+    (clip,) = scene.timeline.tracks[0].clips
+    assert clip.duration > 0.0, clip.duration
+    assert scene.animations["__camera__s1_scale_x"].duration > 0.0
+
+
+# --- schema 0.3.0: the three surfaces a retired camera field arrives by ------
+
+
+def test_a_stored_document_loses_the_dead_camera_fields_on_read():
+    from an.ir.sync import scene_from_json_doc
+
+    scene = scene_from_json_doc({
+        "version": "0.2.0",
+        "kind": "SceneIR",
+        "meta": {},
+        "timeline": [{
+            "id": "s1",
+            "renderer": "cutout",
+            "duration": 1.0,
+            "camera": {"position": [0.0, 0.0, 0.0], "target": [0.0, 0.0, 0.0],
+                       "focal_length": 50.0, "move": "push_in"},
+        }],
+    })
+    assert scene.timeline[0].camera.move == "push_in"
+    assert not (scene.timeline[0].camera.model_extra or {})
+
+
+def test_a_default_value_is_dropped_in_silence_and_a_typed_one_is_not():
+    """Warning about a field the WRITER emitted would be noise on exactly the
+    documents that had nothing to do with it — every `scene.md` this package
+    ever generated carries all three. A value someone TYPED is different."""
+    import warnings
+
+    from an.ir.migrate import _drop_dead_camera_fields
+
+    def migrate_one(camera):
+        doc = {"version": "0.2.0", "kind": "SceneIR", "timeline": [{"id": "s1", "camera": camera}]}
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            out = _drop_dead_camera_fields(doc)
+        return out["timeline"][0]["camera"], [str(w.message) for w in caught]
+
+    kept, quiet = migrate_one({"focal_length": 50.0, "position": [0.0, 0.0, 0.0], "move": "hold"})
+    assert kept == {"move": "hold"} and quiet == []
+
+    kept, loud = migrate_one({"focal_length": 85.0, "move": "hold"})
+    assert kept == {"move": "hold"}
+    assert len(loud) == 1 and "focal_length" in loud[0]
+
+
+def test_the_markdown_surface_follows_the_same_rule():
+    """`scene.md` carries no schema version, so the migration cannot reach it —
+    the parser applies the rule instead."""
+    import warnings
+
+    from an.ir.sync import markdown_to_ir
+
+    def parse(camera_yaml):
+        md = (
+            "# X\n\n```yaml meta\ntitle: X\nduration: 1\nfps: 24\n"
+            "default_renderer: cutout\n```\n\n## Shot s1 (cutout)\n\n"
+            f"```yaml shot\nduration: 1\ncamera:\n{camera_yaml}```\n"
+        )
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            scene = markdown_to_ir(md)
+        return scene.timeline[0].camera, [str(w.message) for w in caught]
+
+    camera, quiet = parse("  move: hold\n  focal_length: 50.0\n")
+    assert not (camera.model_extra or {}) and quiet == []
+
+    camera, loud = parse("  move: hold\n  focal_length: 85.0\n")
+    assert not (camera.model_extra or {})
+    assert len(loud) == 1 and "focal_length" in loud[0]
+
+
+def test_a_document_already_at_the_current_version_is_caught_at_validate():
+    """The one route no migration can ever reach: a camera block that came
+    through a sync carrying the keys as `extra="allow"` extras keeps them
+    forever, because nothing migrates a current document again."""
+    shot = _shot(Camera(move="hold", focal_length=50.0))
+    report = _validate(shot)
+    assert report.passed  # a warning, not an error — they select nothing
+    assert any("focal_length" in f.description for f in report.findings), [
+        f.description for f in report.findings
+    ]
+
+
+def test_the_migration_does_not_mutate_the_callers_document():
+    """`dict(doc)` is shallow, so `camera.pop(...)` stripped the INPUT — and
+    the `return doc` shape reads as a pure function (an#109 review, M-4)."""
+    from an.ir.migrate import _drop_dead_camera_fields
+
+    doc = {"version": "0.2.0", "kind": "SceneIR",
+           "timeline": [{"id": "s1", "camera": {"focal_length": 50.0, "move": "hold"}}]}
+    snapshot = json.loads(json.dumps(doc))
+    _drop_dead_camera_fields(doc)
+    assert doc == snapshot
