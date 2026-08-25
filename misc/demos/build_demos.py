@@ -445,6 +445,58 @@ def _build_pan(work: Path) -> Path:
     return _render(_project(work, scene_md=md, characters=("maya", "charlie")))
 
 
+def _build_multiplane(work: Path) -> Path:
+    """Three depths under one pan, with something at each depth to look at.
+
+    Full-width bands would show nothing: a solid colour sliding sideways is
+    still a solid colour. So each plane carries a row of posts, and what you
+    watch is the rows separating — the far row barely moves, the near row
+    overtakes the character.
+    """
+    import json
+
+    from an.environments import EnvironmentDescriptor, Plane, PlaneArt
+
+    def posts(prefix: str, color: str, depth: float, y: float, w: float, h: float, xs):
+        return [
+            Plane(
+                name=f"{prefix}{i}",
+                art=PlaneArt(kind="fill", color=color),
+                depth=depth,
+                offset=(x, y),
+                size=(w, h),
+            )
+            for i, x in enumerate(xs)
+        ]
+
+    env = EnvironmentDescriptor(
+        name="depths",
+        planes=[
+            Plane(name="sky", art=PlaneArt(kind="fill", color="#cfe4f7"), depth=0.0),
+            *posts("far", "#9db4c8", 0.25, -40.0, 26.0, 150.0, (-560, -220, 120, 460, 800)),
+            Plane(name="ground", art=PlaneArt(kind="fill", color="#89b47f"), depth=1.0,
+                  offset=(0.0, 230.0), size=(6000.0, 400.0)),
+            *posts("near", "#3f4a55", 1.8, 150.0, 44.0, 220.0, (-900, -140, 620, 1400)),
+        ],
+        characters_after="ground",
+    )
+    d = work / "assets" / "environments" / "depths"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "meta.json").write_text(
+        json.dumps(json.loads(env.model_dump_json()), indent=2), encoding="utf-8"
+    )
+    md = (
+        _meta("Three depths under one pan", 3.0)
+        + "\n"
+        + _shot("s1", 3.0, camera="pan_right")
+        + "\n```yaml entities\n"
+        "- kind: environment\n  id: depths\n  store: environments\n  ref: depths\n"
+        "- kind: character\n  id: maya\n  store: characters\n  ref: maya\n"
+        "```\n"
+    )
+    return _render(_project(work, scene_md=md, characters=("maya",)))
+
+
 def _build_alpha(work: Path) -> Path:
     md = (
         _meta("A tween on :alpha", 4.0)
@@ -898,6 +950,30 @@ DEMOS: tuple[Demo, ...] = (
             "distance."
         ),
         build=_build_pan,
+    ),
+    Demo(
+        slug="multiplane",
+        title="Three depths under one pan",
+        shows=(
+            "One camera move, three speeds. The far posts barely shift, the ground "
+            "and the character move with the camera, and the near posts overtake "
+            "them — which is what a multiplane stage is for and what a single "
+            "backdrop cannot do. The near row is drawn IN FRONT of the character; "
+            "before an#110 that was structurally impossible, because environments "
+            "and characters were built in two separate loops and no entity order "
+            "could interleave them."
+        ),
+        how=(
+            "An `EnvironmentDescriptor` in the environments store whose `planes` "
+            "each carry a `depth` — Godot's ratio, where `1.0` is the character "
+            "plane and emits nothing at all, `0` is frozen in frame, and `>1` is "
+            "nearer than the characters. `characters_after: ground` names the plane "
+            "they stand in front of. The compiler emits one compensation channel "
+            "per plane per axis (`plane.x = x0 + (1 − depth)·cam_x`); list order is "
+            "draw order, because the runtime has no `zIndex` and a `z` field would "
+            "be a second ordering it could not honour."
+        ),
+        build=_build_multiplane,
     ),
     Demo(
         slug="alpha",

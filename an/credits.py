@@ -110,27 +110,36 @@ class CreditsReport:
 def collect_credits(mall: Mapping[str, Any]) -> CreditsReport:
     """Walk a project mall and gather every recorded :class:`AssetSource`.
 
-    Only the characters store carries provenance today. Environments, styles and
-    props will as they gain real art; this returns what exists rather than
-    pretending the walk is complete.
+    Three stores carry provenance: characters, **props** (an#108) and
+    **environments** (an#110). Each was added by the PR that gave that store
+    real art, which is the rule rather than a coincidence — a walk that skips a
+    store holding third-party plates does not return less information, it
+    returns an affirmative false statement to exactly the people who need the
+    opposite. Styles will join when a StylePack has art (#112).
+
+    Legacy reconstruction runs on characters only: it recovers a DiceBear
+    record from `metadata.dicebear_*`, which no other store has ever written.
     """
     report = CreditsReport()
-    characters = mall.get("characters")
-    if characters is None:
-        return report
-    for key in sorted(characters):
-        try:
-            descriptor = characters[key]
-        except Exception:  # noqa: BLE001 — an unreadable entry is not a credit
+    for store_name in ("characters", "props", "environments"):
+        store = mall.get(store_name)
+        if store is None:
             continue
-        source = getattr(descriptor, "source", None)
-        if source is None and isinstance(descriptor, Mapping):
-            raw = descriptor.get("source")
-            source = AssetSource.model_validate(raw) if raw else None
-        if source is None:
-            source = _reconstruct_legacy_source(descriptor)
-        if source is not None:
-            report.entries.append(CreditEntry(asset=f"characters/{key}", source=source))
+        for key in sorted(store):
+            try:
+                descriptor = store[key]
+            except Exception:  # noqa: BLE001 — an unreadable entry is not a credit
+                continue
+            source = getattr(descriptor, "source", None)
+            if source is None and isinstance(descriptor, Mapping):
+                raw = descriptor.get("source")
+                source = AssetSource.model_validate(raw) if raw else None
+            if source is None and store_name == "characters":
+                source = _reconstruct_legacy_source(descriptor)
+            if source is not None:
+                report.entries.append(
+                    CreditEntry(asset=f"{store_name}/{key}", source=source)
+                )
     return report
 
 

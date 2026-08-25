@@ -106,6 +106,11 @@ from an.characters.svg_utils import raster_size
 from an.ir.camera import CAMERA_MOVES, PAN_FRACTION, CameraError
 from an.ir.camera import camera_keys as _camera_keys
 from an.ir.migrate import DocumentKind, migrate
+from an.environments import (
+    ENVIRONMENT_DOCUMENT_KIND,
+    EnvironmentDescriptor,
+    Plane,
+)
 from an.props import PROP_DOCUMENT_KIND, PropDescriptor
 
 
@@ -643,6 +648,10 @@ def compile_shot(
     # animation on the synthetic scene root so directors get visible camera
     # behavior without writing channels by hand.
     _add_camera_clips(shot, animations, tracks, width=width, height=height)
+    # AFTER the camera, because it compensates for it: each plane's factor is
+    # applied to the camera's own key list, so the two cannot describe
+    # different moves.
+    _add_parallax_clips(shot, mall, animations, tracks, width=width, height=height)
     # AFTER action + viseme compilation, deliberately: a swap key the timeline
     # actually USES whose art is missing is recorded as a fallback during
     # those passes (usage-aware escalation, an#87), and this is the one place
@@ -704,14 +713,19 @@ def _build_scene_root(
     n_chars = len(char_entities)
     char_positions = _layout_character_positions(n_chars)
     char_idx = 0
-    # Process environments first so they sit BEHIND characters in z-order.
+    # Environments first so they sit BEHIND the characters — except for the
+    # planes an environment declares as foreground, which is why this is a
+    # split rather than a loop. Before an#110 the two loops made a plane in
+    # FRONT of the characters structurally unreachable: entity order could not
+    # interleave them however the author wrote the scene.
+    in_front: list[NodeJSON] = []
     for entity in shot.entities:
         if entity.kind == "environment":
-            children.append(
-                _build_environment_subtree(
-                    entity, environments_store, resolutions=resolutions
-                )
+            node, front = _build_environment_subtree(
+                entity, environments_store, textures=textures, resolutions=resolutions
             )
+            children.append(node)
+            in_front.extend(front)
     for entity in shot.entities:
         if entity.kind == "character":
             x = char_positions[char_idx]
@@ -730,6 +744,8 @@ def _build_scene_root(
             children.append(sub)
         # `voice` entities are legitimately not drawable: they
         # configure the render rather than appearing in it.
+    # …and last, the foreground planes, over everything.
+    children.extend(in_front)
     return NodeJSON(name="root", children=children)
 
 
@@ -748,9 +764,20 @@ def _build_environment_subtree(
     entity: AssetRef,
     env_store: Mapping,
     *,
+    textures: dict[str, AssetJSON] | None = None,
     resolutions: list[AssetResolutionJSON] | None = None,
-) -> NodeJSON:
-    """Backdrop: a sky band + a ground band, full canvas width.
+) -> tuple[NodeJSON, list[NodeJSON]]:
+    """``(the environment node, the planes that go IN FRONT of the characters)``.
+
+    Two paths, and the second is reached only by a document that asks for it.
+    A store entry whose `kind` is `EnvironmentDescriptor` **and** which declares
+    planes builds them, in list order; anything else — a free-form `meta.json`,
+    a preset name, a ref that is neither — takes the path below unchanged,
+    which is what keeps every legacy environment byte-identical (an#110).
+    Re-expressing the presets as planes would move two ledger hashes for no
+    picture change; a richer default look ships as a NEW preset.
+
+    Backdrop path: a sky band + a ground band, full canvas width.
 
     Picks a preset by ``entity.ref`` (e.g. "park", "night"); the store
     can override any of (sky_color, ground_color, ground_y) by ref.
@@ -759,6 +786,25 @@ def _build_environment_subtree(
     backdrop, which is a different picture from the one the author asked for
     — so it is recorded as a fallback (an#33).
     """
+    env = _environment_descriptor(entity, env_store)
+    if env is not None:
+        if resolutions is not None:
+            resolutions.append(
+                AssetResolutionJSON(
+                    id=entity.id,
+                    kind="environment",
+                    store=entity.store,
+                    ref=entity.ref,
+                    resolved="planes",
+                )
+            )
+        return _build_plane_subtree(
+            entity,
+            env,
+            textures=textures if textures is not None else {},
+            env_store=env_store,
+            resolutions=resolutions,
+        )
     preset_key = (entity.ref or "default").lower()
     known_preset = preset_key in _ENV_PRESETS
     preset = dict(_ENV_PRESETS.get(preset_key, _ENV_PRESETS["default"]))
@@ -800,10 +846,12 @@ def _build_environment_subtree(
                     # which is the part worth saying.
                     warnings.warn(
                         f"environment {entity.ref!r} declares {unknown}, which the "
-                        f"cutout renderer does not read (it uses {sorted(preset)}), "
-                        "so they have no effect on the render. Layered plates "
-                        "and parallax planes are planned; see "
-                        "https://github.com/thorwhalen/an/issues/9",
+                        f"cutout renderer does not read on this path (it uses "
+                        f"{sorted(preset)}), so they have no effect on the render. "
+                        "For layered plates and parallax, write an "
+                        "`EnvironmentDescriptor` with `planes` instead — this is "
+                        "the free-form preset-override path, which reads exactly "
+                        "those three keys and drops the rest (an#110).",
                         CutoutCompileWarning,
                         stacklevel=2,
                     )
@@ -817,7 +865,10 @@ def _build_environment_subtree(
     ground_y = float(preset["ground_y"])
     sky_color = str(preset["sky_color"])
     ground_color = str(preset["ground_color"])
-    return NodeJSON(
+    # The node is built exactly as before an#110; only the RETURN grew a second
+    # element, and it is always empty here — a preset declares no planes, so it
+    # has nothing to put in front of the characters.
+    node = NodeJSON(
         name=entity.id,
         transform=TransformJSON(),
         children=[
@@ -837,6 +888,277 @@ def _build_environment_subtree(
             ),
         ],
     )
+    return node, []
+
+
+def _build_plane_subtree(
+    entity: AssetRef,
+    env: EnvironmentDescriptor,
+    *,
+    textures: dict[str, AssetJSON],
+    env_store: Mapping,
+    resolutions: list[AssetResolutionJSON] | None = None,
+) -> tuple[NodeJSON, list[NodeJSON]]:
+    """A declared multiplane stage: planes in list order, split by depth-in-front.
+
+    Planes whose art cannot be drawn are DROPPED and recorded as a fallback —
+    not replaced with a stand-in, because a plate that is not there has no
+    substitute that is not a lie about the picture (an#33). `strict_assets`
+    then decides whether that is fatal, at the one place that decides it for
+    every fallback.
+    """
+    probe = _part_probe(env_store, art_prefix=ENVIRONMENT_ART_PREFIX)
+    ref = entity.ref or entity.id
+    nodes: list[NodeJSON] = []
+    for plane in env.planes:
+        node = _plane_node(plane, ref=ref, textures=textures, probe=probe)
+        if node is None:
+            if resolutions is not None:
+                resolutions.append(
+                    AssetResolutionJSON(
+                        id=entity.id,
+                        kind="environment",
+                        store=entity.store,
+                        ref=entity.ref,
+                        resolved="missing-plane",
+                        fallback=True,
+                        detail=(
+                            f"plane {plane.name!r} declares art "
+                            f"{plane.art.src!r} which is not in the "
+                            f"{entity.store!r} store, so the plane was dropped"
+                        ),
+                    )
+                )
+            continue
+        nodes.append(node)
+    behind, in_front = _split_planes_around_characters(env, nodes)
+    front_nodes = [
+        NodeJSON(name=entity.id, transform=TransformJSON(), children=in_front)
+    ] if in_front else []
+    return (
+        NodeJSON(name=entity.id, transform=TransformJSON(), children=behind),
+        front_nodes,
+    )
+
+
+#: The `assets.textures` `src` prefix an environment plate is addressed under.
+ENVIRONMENT_ART_PREFIX: str = "environments/"
+
+#: A `fill` plane with no declared size covers the canvas at any camera scale.
+#: The same 4000 the preset backdrop uses, and for the same reason — the runtime
+#: centres `root` and applies camera scale, so a huge rect always covers.
+PLANE_FILL_SPAN: float = 4000.0
+
+
+def _environment_descriptor(entity: AssetRef, env_store: Mapping) -> "EnvironmentDescriptor | None":
+    """The store's `EnvironmentDescriptor` for ``entity``, or ``None``.
+
+    ``None`` means "take the preset path", which is every environment written
+    before an#110 — a free-form `meta.json` with colour scalars, or nothing at
+    all. That is what keeps the legacy output byte-identical: the plane code
+    is not reached unless a document says `kind: EnvironmentDescriptor` AND
+    declares planes.
+    """
+    if entity.ref not in env_store:
+        return None
+    try:
+        raw = env_store[entity.ref]
+    except KeyError:
+        return None
+    if not isinstance(raw, dict) or raw.get("kind") != ENVIRONMENT_DOCUMENT_KIND.name:
+        return None
+    env = EnvironmentDescriptor.model_validate(
+        migrate(dict(raw), kind=ENVIRONMENT_DOCUMENT_KIND.name)
+    )
+    return env if env.planes else None
+
+
+def _plane_node(
+    plane: Plane,
+    *,
+    ref: str,
+    textures: dict[str, AssetJSON],
+    probe=None,
+) -> NodeJSON | None:
+    """One plane as a scene node, or ``None`` when its art cannot be drawn.
+
+    ``None`` rather than a placeholder: an environment plate that is not on
+    disk has no stand-in that is not a lie about the picture (an#33), and the
+    caller records it as a fallback so `strict_assets` can decide.
+    """
+    art = plane.art
+    ox, oy = plane.offset
+    transform = TransformJSON(x=float(ox), y=float(oy))
+    if art.kind == "fill":
+        w, h = plane.size or (PLANE_FILL_SPAN, PLANE_FILL_SPAN)
+        return NodeJSON(
+            name=plane.name,
+            transform=transform,
+            visual=VisualJSON(kind="rect", width=float(w), height=float(h), color=art.color),
+        )
+    if not art.src:
+        return None
+    src = _svg_asset_src(ref, art.src, art_prefix=ENVIRONMENT_ART_PREFIX)
+    if probe is not None and not probe(src)[0]:
+        return None
+    alias = _register_texture(textures, f"{ref}.{plane.name}", src)
+    extent = (probe(src)[1] if probe else None) or plane.size
+    ax, ay = plane.anchor
+    return NodeJSON(
+        name=plane.name,
+        transform=transform,
+        visual=VisualJSON(
+            kind="svg_sprite",
+            asset_id=alias,
+            anchor_x=float(ax),
+            anchor_y=float(ay),
+            fit=plane.fit,
+            **({"width": float(extent[0]), "height": float(extent[1])} if extent else {}),
+        ),
+    )
+
+
+def _split_planes_around_characters(
+    env: EnvironmentDescriptor, nodes: list[NodeJSON]
+) -> tuple[list[NodeJSON], list[NodeJSON]]:
+    """``(behind, in_front)`` for the characters, by ``characters_after``.
+
+    `None` puts everything behind — which is what the old two-loop builder did,
+    and is why an environment that declares no `characters_after` compiles to
+    the same picture. A name that matches no plane puts everything behind too,
+    but says so: silently drawing a foreground plane at the back is a wrong
+    picture that renders happily.
+
+    >>> from an.environments import EnvironmentDescriptor, Plane
+    >>> env = EnvironmentDescriptor(name="e", planes=[Plane(name="a"), Plane(name="b")])
+    >>> behind, front = _split_planes_around_characters(env, [NodeJSON(name="a"), NodeJSON(name="b")])
+    >>> [n.name for n in behind], [n.name for n in front]
+    (['a', 'b'], [])
+    >>> env = env.model_copy(update={"characters_after": "a"})
+    >>> behind, front = _split_planes_around_characters(env, [NodeJSON(name="a"), NodeJSON(name="b")])
+    >>> [n.name for n in behind], [n.name for n in front]
+    (['a'], ['b'])
+    """
+    after = env.characters_after
+    if after is None:
+        return nodes, []
+    names = [n.name for n in nodes]
+    if after not in names:
+        warnings.warn(
+            f"environment {env.name!r} declares characters_after={after!r}, which "
+            f"is not one of its planes ({names}). Every plane is drawn BEHIND the "
+            "characters, which is the default — a foreground plane silently drawn "
+            "at the back is a wrong picture that renders happily.",
+            CutoutCompileWarning,
+            stacklevel=3,
+        )
+        return nodes, []
+    cut = names.index(after) + 1
+    return nodes[:cut], nodes[cut:]
+
+
+def _add_parallax_clips(
+    shot: Shot,
+    mall: Mapping[str, Mapping],
+    animations: dict[str, AnimationClipJSON],
+    tracks: list[TrackJSON],
+    *,
+    width: int,
+    height: int,
+) -> None:
+    """Compensate each plane for the camera, one factor per plane.
+
+    ``plane.x = x0 + (1 − f) · cam_x`` — so a plane at `f = 1` emits **nothing**
+    and rides the camera exactly as every node did before an#110, and a plane
+    at `f = 0` is pinned in frame. Screen position works out to
+    ``(W/2, H/2) + S · (x0 − f · cam)``, which is the affine expression every
+    surveyed engine uses under a different name.
+
+    The camera's own channels are emitted separately, on `root`; these are on
+    the plane nodes, so a plane is free to be tweened by the author as long as
+    it does not fight this — which is exactly what the collision check below
+    refuses.
+    """
+    keys = camera_keys(shot, width=width, height=height)
+    if len(keys) < 2:
+        return
+    duration = max(0.001, float(shot.duration))
+    authored = {
+        (channel.target, channel.property)
+        for animation in animations.values()
+        for channel in animation.channels
+    }
+    env_store = mall.get("environments") or {}
+    for entity in shot.entities:
+        if entity.kind != "environment":
+            continue
+        env = _environment_descriptor(entity, env_store)
+        if env is None:
+            continue
+        _emit_plane_compensation(
+            shot.id, entity.id, env, keys, duration, animations, tracks, authored=authored
+        )
+
+
+def _emit_plane_compensation(
+    shot_id: str,
+    entity_id: str,
+    env: EnvironmentDescriptor,
+    keys: list[CameraKey],
+    duration: float,
+    animations: dict[str, AnimationClipJSON],
+    tracks: list[TrackJSON],
+    *,
+    authored: set[tuple[str, str]],
+) -> None:
+    """The per-plane half of :func:`_add_parallax_clips`."""
+    for plane in env.planes:
+        fx, fy = plane.factors()
+        ox, oy = plane.offset
+        target = f"{entity_id}/{plane.name}"
+        for factor, prop, cam_field, rest in (
+            (fx, "x", "x", float(ox)),
+            (fy, "y", "y", float(oy)),
+        ):
+            if factor == 1.0:
+                continue  # rides the camera; emitting nothing is the point
+            values = [rest + (1.0 - factor) * float(getattr(k, cam_field)) for k in keys]
+            if all(v == rest for v in values):
+                continue  # the camera does not move on this axis
+            if (target, prop) in authored:
+                raise CutoutCompileError(
+                    f"shot {shot_id!r}: plane {target!r} has depth {plane.depth} so "
+                    f"the stage drives `{prop}` on it, and an action also targets "
+                    "it. Compensation clips are appended last and the evaluators "
+                    "are later-wins, so the authored channel would be discarded "
+                    "silently. Give the plane depth 1.0 to animate it by hand, or "
+                    "move the action to a child node."
+                )
+            anim_id = f"__parallax__{shot_id}_{entity_id}_{plane.name}_{prop}"
+            animations[anim_id] = AnimationClipJSON(
+                name=anim_id,
+                duration=duration,
+                channels=[
+                    ChannelJSON(
+                        target=target,
+                        property=prop,
+                        keyframes=[
+                            KeyframeJSON(time=float(k.at), value=v, easing=k.easing)
+                            for k, v in zip(keys, values)
+                        ],
+                    )
+                ],
+            )
+            tracks.append(
+                TrackJSON(
+                    target_root="__parallax__",
+                    clips=[
+                        PlacedClipJSON(
+                            animation_id=anim_id, start_time=0.0, duration=duration
+                        )
+                    ],
+                )
+            )
 
 
 def _layout_character_positions(n: int, *, spread: float = 220.0) -> list[float]:
