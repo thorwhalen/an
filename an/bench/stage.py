@@ -252,7 +252,9 @@ def _reference(tracks: Sequence[PlaneTrack]) -> str:
     return min(tracks, key=lambda t: (-abs(t.dx), t.name)).name
 
 
-def plane_centroids(frame: Any, colours: Mapping[str, int]) -> dict[str, tuple[float, float, int]]:
+def plane_centroids(
+    frame: Any, colours: Mapping[str, int]
+) -> dict[str, tuple[float, float, int]]:
     """``{plane: (cx, cy, pixel count)}`` for exact-colour masks.
 
     `an/bench/masks.py` is deliberately not reused: it has no colour

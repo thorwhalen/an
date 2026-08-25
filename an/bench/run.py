@@ -685,7 +685,9 @@ def _stage_pan_values(capture: SceneCapture, times) -> tuple[Value, Value]:
         return unavailable(detail), unavailable(detail)
     refs = G.resolve_frames(capture, times)
     if len(refs) < 2:
-        detail = f"the scene pins {len(refs)} distinct frame(s); a displacement needs two"
+        detail = (
+            f"the scene pins {len(refs)} distinct frame(s); a displacement needs two"
+        )
         return unavailable(detail), unavailable(detail)
     frames = tuple(read_png(G.frame_png_path(capture, r)) for r in refs[:2])
     try:

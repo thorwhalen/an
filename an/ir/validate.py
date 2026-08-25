@@ -494,7 +494,10 @@ def _check_flat_pan(shot, keys, path: str, report: "ValidationReport", stores) -
             raw = env_store[entity.ref]
         except (KeyError, TypeError):
             continue
-        if not isinstance(raw, dict) or raw.get("kind") != ENVIRONMENT_DOCUMENT_KIND.name:
+        if (
+            not isinstance(raw, dict)
+            or raw.get("kind") != ENVIRONMENT_DOCUMENT_KIND.name
+        ):
             continue
         try:
             # MIGRATED, as the compiler reads it — a pre-flight that validates
