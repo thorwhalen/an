@@ -98,6 +98,13 @@ class Renderer(Protocol):
     """
 
     name: str
+    #: The `Shot.renderer` values this backend claims. It is the ONE place
+    #: an adapter names them: `can_render` derives from it rather than
+    #: comparing to its own literal, so an adapter cannot advertise one
+    #: renderer and accept another. an#106 renamed this from
+    #: `supported_styles`; the rename is a break for an out-of-tree adapter
+    #: because `Renderer` is `@runtime_checkable` and 3.12 checks data
+    #: members, so `isinstance(old_adapter, Renderer)` is now False.
     supported_renderers: tuple[str, ...]
 
     def can_render(self, shot: Shot) -> bool:

@@ -25,7 +25,7 @@ class RemotionRenderer:
     supported_renderers: tuple[str, ...] = ("motion_graphics",)
 
     def can_render(self, shot: Shot) -> bool:
-        return shot.renderer == "motion_graphics"
+        return shot.renderer in self.supported_renderers
 
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         if shutil.which("npx") is None:

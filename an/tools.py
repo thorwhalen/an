@@ -48,15 +48,7 @@ def validate(project_dir: str) -> str:
 
 def sync(project_dir: str) -> str:
     """Reconcile scene.md and ir/scene.json inside ``project_dir``."""
-    try:
-        result = _sync(project_dir)
-    except ValueError as e:
-        # A message for a human, not a traceback — the rule `an validate`
-        # already follows. ValueError, not the two named subclasses: the
-        # `scene.md` refusals (an unparseable dialogue line, `default_style:`)
-        # are plain ValueErrors, and they are the ones a user actually hits
-        # (an#106 review found sync and render stack-dumping on them).
-        return str(e)
+    result = _sync(project_dir)
     parts = []
     if result.wrote_json:
         parts.append("regenerated ir/scene.json from scene.md")
@@ -125,21 +117,18 @@ def render(
             parallel_arg = int(parallel)
         except ValueError:
             return f"invalid --parallel value: {parallel!r}; use a number or 'auto'"
-    try:
-        output_path = _render_project(
-            project_dir,
-            output_name=output_name,
-            tts=tts,
-            lipsync=lipsync,
-            parallel=parallel_arg,
-            strict_assets=strict_assets,
-            supersample=supersample,
-            pix_fmt=pix_fmt or None,
-            step_hz=step_hz or None,
-            language=language,
-        )
-    except ValueError as e:
-        return str(e)
+    output_path = _render_project(
+        project_dir,
+        output_name=output_name,
+        tts=tts,
+        lipsync=lipsync,
+        parallel=parallel_arg,
+        strict_assets=strict_assets,
+        supersample=supersample,
+        pix_fmt=pix_fmt or None,
+        step_hz=step_hz or None,
+        language=language,
+    )
     return f"rendered: {output_path}"
 
 

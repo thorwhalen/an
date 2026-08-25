@@ -291,7 +291,7 @@ class CutoutRenderer:
     supported_renderers: tuple[str, ...] = ("cutout",)
 
     def can_render(self, shot: Shot) -> bool:
-        return shot.renderer == "cutout"
+        return shot.renderer in self.supported_renderers
 
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         """Render ``shot`` to mp4 using ``ctx`` for paths + parameters."""

@@ -31,14 +31,14 @@ class ManimRenderer:
     """Manim Community Edition renderer (skeleton).
 
     Implements the ``Renderer`` Protocol. ``can_render`` is True for shots
-    whose ``style`` is ``"manim"``.
+    whose ``renderer`` is ``"manim"``.
     """
 
     name: str = "manim"
     supported_renderers: tuple[str, ...] = ("manim",)
 
     def can_render(self, shot: Shot) -> bool:
-        return shot.renderer == "manim"
+        return shot.renderer in self.supported_renderers
 
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         if shutil.which("manim") is None:

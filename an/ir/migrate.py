@@ -190,7 +190,11 @@ def _warn_dropped(before: list, after: list, *, where: str) -> None:
         "the kind was retired in an#106 because it selected nothing — the compiler "
         "skipped it and no reader of the styles store existed. Art direction returns "
         "as a StylePack (see https://github.com/thorwhalen/an/issues/112).",
-        stacklevel=3,
+        # 1 = here, 2 = the migration step, 3 = `migrate()`'s dispatch loop,
+        # 4 = whoever called `migrate()`. Measured: 3 attributed the warning to
+        # `an/ir/migrate.py` itself, so a `-W` filter keyed on module would have
+        # aimed at the library instead of the caller (an#106 review).
+        stacklevel=4,
     )
 
 

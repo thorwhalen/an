@@ -11,7 +11,7 @@ fraction of a second so the CLI is snappy.
 
 from __future__ import annotations
 
-from typing import Literal, TypeAlias
+from typing import Literal, TypeAlias, get_args
 
 # -- Versioning ---------------------------------------------------------------
 
@@ -171,9 +171,7 @@ RendererName: TypeAlias = Literal[
     "whiteboard",
 ]
 
-SUPPORTED_RENDERERS: tuple[str, ...] = (
-    "cutout",
-    "manim",
-    "motion_graphics",
-    "whiteboard",
-)
+#: The same vocabulary as :data:`RendererName`, as a runtime tuple — DERIVED
+#: from it, because a hand-typed second copy is a second SSOT that drifts on
+#: the day a renderer is added and nothing fails.
+SUPPORTED_RENDERERS: tuple[str, ...] = get_args(RendererName)

@@ -1,4 +1,4 @@
-"""Compile a top-level `Shot` (style="cutout") into a `CutoutSceneJSON`.
+"""Compile a top-level `Shot` (renderer="cutout") into a `CutoutSceneJSON`.
 
 This is the bridge between the renderer-agnostic `an.ir` types and the
 cutout-specific JSON contract that the JS runtime will consume in Phase 2B.

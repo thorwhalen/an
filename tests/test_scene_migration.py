@@ -14,6 +14,7 @@ that **registering is enough**, which is exactly what was not true.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -317,6 +318,28 @@ def test_validate_schema_migrates_too(a_registered_migration):
     assert validate_schema({"version": OLD, "kind": "SceneIR", "old_title": "x"}).passed
 
 
+def _line(text: str, prefix: str) -> str:
+    """The one line of `text` starting with `prefix` — or a failure naming it."""
+    hits = [ln for ln in text.splitlines() if ln.startswith(prefix)]
+    assert len(hits) == 1, f"{prefix!r} matched {len(hits)} lines"
+    return hits[0]
+
+
+def _cli(args: list[str]):
+    """Run the real typer app in-process and return typer's Result.
+
+    Not a subprocess: `result.exception` is what distinguishes "printed a
+    refusal" from "swallowed a bug", and a subprocess only exposes the exit
+    code and the text.
+    """
+    from typer.testing import CliRunner
+
+    from an.__main__ import build_app
+    from an.tools import _dispatch_funcs, _dispatch_namespaces
+
+    return CliRunner().invoke(build_app(_dispatch_funcs, _dispatch_namespaces), args)
+
+
 def test_an_validate_blames_the_stored_json_not_the_markdown(tmp_path):
     """`an validate` printed "scene.md does not parse" for a document whose md
     parses perfectly — routing an agent to edit the wrong file (an#105 review,
@@ -338,8 +361,12 @@ def test_an_validate_blames_the_stored_json_not_the_markdown(tmp_path):
     report = validate_project(root)
     (finding,) = [f for f in report.findings if f.severity == "error"]
     assert finding.ir_path == "ir/scene.json" and "scene.md does not parse" not in finding.description
-    assert "0.0.1" in tools.sync(str(root))
-    assert "0.0.1" in tools.render(str(root))
+    # …and the CLI prints the refusal rather than a traceback, WITHOUT
+    # reporting success: `an sync` / `an render` exit 1.
+    for cmd in (["sync", str(root)], ["render", str(root)]):
+        result = _cli(cmd)
+        assert "0.0.1" in result.output, result.output
+        assert result.exit_code == 1, (cmd, result.exit_code, result.output)
 
 
 # --- an#106: the rename, and what it must not do quietly ---------------------
@@ -494,7 +521,11 @@ def test_dropping_a_style_entity_is_audible():
     """A silent drop of something the author wrote is the failure
     `tests/test_loud_discards.py` exists for — even when the thing dropped did
     nothing."""
-    with pytest.warns(UserWarning, match="style"):
+    # `match=` on the ID, not on the word "style": the word is in the
+    # boilerplate, so `gone` computed from the wrong list (emitting an empty
+    # `[]`) or the ids dropped from the format string both passed (an#106
+    # review, L1).
+    with pytest.warns(UserWarning, match=r"\['s'\]"):
         scene_from_json_doc(
             {
                 "version": "0.1.0",
@@ -529,13 +560,34 @@ def test_the_iterate_prompt_teaches_the_schema_it_patches_against():
     assert not re.search(r"\bstyle\b", _SYSTEM_PROMPT, re.I), [
         line for line in _SYSTEM_PROMPT.splitlines() if re.search(r"\bstyle\b", line, re.I)
     ]
-    assert "default_renderer" in _SYSTEM_PROMPT and "- renderer (" in _SYSTEM_PROMPT
-    for name in RendererName.__args__:
-        assert name in _SYSTEM_PROMPT, name
-    kinds = AssetRef.model_fields["kind"].annotation.__args__
-    for kind in kinds:
-        assert kind in _SYSTEM_PROMPT, kind
-    assert "style" not in [k for k in kinds], "the retired kind must not be back"
+    assert "default_renderer" in _SYSTEM_PROMPT
+
+    # SET EQUALITY against the parsed enumeration, not `name in prompt`.
+    # Containment anywhere in a 4 KB string is nearly free: measured, deleting
+    # `voice` from the kind line still passed (`voice_ref` appears in the
+    # dialogue fields), so did deleting `character` (6 other occurrences), and
+    # an `AssetRef.kind` value of `"set"` would pass on `asset_sets` alone —
+    # the exact mutant class this test claims to defend (an#106 review, M2).
+    renderers = set(RendererName.__args__)
+    taught_renderers = set(
+        re.findall(r'"([a-z_]+)"', _line(_SYSTEM_PROMPT, "      - renderer ("))
+    )
+    assert taught_renderers == renderers, taught_renderers ^ renderers
+
+    kinds = set(AssetRef.model_fields["kind"].annotation.__args__)
+    taught_kinds = {
+        k.strip()
+        for k in _line(_SYSTEM_PROMPT, '        "kind" MUST be one of:')
+        .split(":", 1)[1]
+        .rstrip(".")
+        .split(",")
+    }
+    # `prop` is declared by the IR and deliberately NOT offered: the very next
+    # prompt line tells the model not to emit one, and a renderer raises on it.
+    # So the prompt teaches the kinds MINUS prop — and this asserts exactly
+    # that, so retiring `prop` or adding a fifth kind both fail here.
+    assert taught_kinds == kinds - {"prop"}, taught_kinds ^ (kinds - {"prop"})
+    assert "\"prop\" is declared by the IR but NOT rendered" in _SYSTEM_PROMPT
 
 
 def test_an_sync_and_an_render_report_the_markdown_refusal(tmp_path):
@@ -548,5 +600,112 @@ def test_an_sync_and_an_render_report_the_markdown_refusal(tmp_path):
         "# X\n\n```yaml meta\ntitle: X\nduration: 1\ndefault_style: manim\n```\n", encoding="utf-8"
     )
     (root / "ir" / "scene.json").unlink()
-    for out in (tools.sync(str(root)), tools.render(str(root)), tools.validate(str(root))):
-        assert "default_renderer" in out, out
+    # `an validate` turns it into a Finding and exits 0 — that is what validate
+    # is for. `an sync` and `an render` print the same sentence and exit 1.
+    assert "default_renderer" in tools.validate(str(root))
+    for cmd in (["sync", str(root)], ["render", str(root)]):
+        result = _cli(cmd)
+        assert "default_renderer" in result.output, result.output
+        assert result.exit_code == 1, (cmd, result.exit_code, result.output)
+
+
+def test_the_cli_prints_a_refusal_but_never_swallows_a_bug(tmp_path):
+    """The catch is three NAMED types, not `ValueError`.
+
+    an#106's first pass caught bare `ValueError` inside `an.tools`, reasoning
+    that every refusal is one. So is `json.JSONDecodeError`. So is
+    `CutoutCompileError`. So is pydantic's `ValidationError`. Measured on that
+    build: a corrupt `ir/scene.json` printed one nameless line — `Expecting
+    property name enclosed in double quotes: line 1 column 3 (char 2)` — and
+    `an sync` exited **0**, as did `an render` on a shot that failed to
+    compile. Anything checking an exit code read a broken project as fine.
+
+    So this asserts the boundary in BOTH directions: the refusal is a sentence
+    with exit 1, and a corrupt document is still an uncaught traceback with
+    exit 1. Widening the catch to `ValueError` or `Exception` fails the second
+    half; narrowing it to nothing fails the first."""
+    import os
+
+    root = init(tmp_path / "p")
+    json_path = root / "ir" / "scene.json"
+    json_path.write_text("{ this is not json", encoding="utf-8")
+    md_mtime = (root / "scene.md").stat().st_mtime
+    os.utime(json_path, (md_mtime + 10, md_mtime + 10))
+
+    result = _cli(["sync", str(root)])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, json.JSONDecodeError), result.exception
+    assert not isinstance(result.exception, SystemExit)
+
+
+def test_the_assets_filter_reads_a_list_or_leaves_the_value_alone():
+    """`assets` is a list of AssetRefs — unless the document is malformed.
+
+    The style-entity filter used `doc.get("assets") or []`, which iterates a
+    DICT's keys and rebuilds it as a list of strings, and turns `null` into
+    `[]`. Both destroy the caller's data on the way to a rename that has
+    nothing to do with assets. Measured on the reverted guard:
+    `{"assets": {"hero": {...}}}` migrated to `{"assets": ["hero"]}`."""
+    from an.ir.migrate import _rename_style_to_renderer
+
+    assert _rename_style_to_renderer({"version": "0.1.0", "assets": None})["assets"] is None
+    weird = {"hero": {"kind": "character"}}
+    assert _rename_style_to_renderer({"version": "0.1.0", "assets": weird})["assets"] == weird
+
+
+def test_a_retired_key_that_survives_migration_is_an_ERROR_at_validate():
+    """The prompt fix narrows the odds; THIS closes the hole.
+
+    A `style` key can still reach a 0.2.0 document — an agent patch, a hand
+    edit, `Shot(style=...)` in a caller. `Shot` is `extra="allow"`, so it
+    validates cleanly and renders with the DEFAULT renderer, and the migration
+    will never look at it again because the document is already 0.2.0. Without
+    this check, `iterate()` reports success for a change it did not make."""
+    from an.ir.schema import Meta, SceneIR, Shot
+    from an.ir.validate import validate_semantic
+
+    scene = SceneIR(meta=Meta(), timeline=[Shot(id="s1", renderer="cutout", style="manim")])
+    report = validate_semantic(scene)
+    assert not report.passed
+    (finding,) = [f for f in report.findings if f.ir_path == "timeline[0]/style"]
+    assert finding.severity == "error" and "renderer" in finding.description
+
+    meta_scene = SceneIR(meta=Meta(default_style="manim"), timeline=[])
+    meta_report = validate_semantic(meta_scene)
+    assert not meta_report.passed
+    assert meta_report.findings[0].ir_path == "meta/default_style"
+
+
+def test_every_renderer_name_is_claimed_by_exactly_one_adapter():
+    """`supported_renderers` is the adapter's ONE declaration of what it draws.
+
+    Before an#106 it was `supported_styles`, it had zero readers, and each
+    adapter's `can_render` compared `shot.renderer` to its own literal — two
+    SSOTs for one fact, free to disagree. `can_render` derives from the tuple
+    now, and this pins the other half: every value the schema allows has an
+    adapter, and no two adapters claim the same one."""
+    import an.adapters  # noqa: F401  (registers the three stub backends)
+    import an.adapters.cutout  # noqa: F401  (registers the real one)
+    from an.adapters._base import get_renderer, list_renderers
+    from an.base import SUPPORTED_RENDERERS
+
+    claimed: dict[str, list[str]] = {}
+    for name in list_renderers():
+        renderer = get_renderer(name)
+        for name in renderer.supported_renderers:
+            claimed.setdefault(name, []).append(renderer.name)
+    assert set(claimed) == set(SUPPORTED_RENDERERS), set(claimed) ^ set(SUPPORTED_RENDERERS)
+    assert all(len(v) == 1 for v in claimed.values()), claimed
+
+    # …and the declaration is the one that decides. An adapter whose
+    # `can_render` answers for a renderer its tuple does not claim (or refuses
+    # one it does) is advertising one thing and doing another — the exact
+    # drift that having two SSOTs allows.
+    from an.ir.schema import Shot
+
+    for name in list_renderers():
+        renderer = get_renderer(name)
+        answers = {
+            n for n in SUPPORTED_RENDERERS if renderer.can_render(Shot(id="s", renderer=n))
+        }
+        assert answers == set(renderer.supported_renderers), (name, answers)

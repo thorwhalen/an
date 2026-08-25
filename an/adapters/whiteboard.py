@@ -23,7 +23,7 @@ class WhiteboardRenderer:
     supported_renderers: tuple[str, ...] = ("whiteboard",)
 
     def can_render(self, shot: Shot) -> bool:
-        return shot.renderer == "whiteboard"
+        return shot.renderer in self.supported_renderers
 
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         raise WhiteboardRenderError(

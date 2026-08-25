@@ -56,6 +56,8 @@ from typing import Any, Callable
 
 import typer
 
+from an.ir.migrate import DocumentMigrationError
+from an.ir.sync import SceneMarkdownError, SceneValidationError
 from an.tools import _dispatch_funcs, _dispatch_namespaces
 
 
@@ -106,6 +108,16 @@ def help_text(func: Callable[..., Any]) -> str | None:
     return "\n".join(out)
 
 
+#: Errors whose repair is a human editing their own file. The CLI prints these
+#: as a sentence and exits 1; everything else keeps its traceback, because a
+#: traceback is the right output for a bug and the wrong output for a typo.
+_REFUSALS: tuple[type[BaseException], ...] = (
+    DocumentMigrationError,
+    SceneMarkdownError,
+    SceneValidationError,
+)
+
+
 def _printing(func: Callable[..., Any]) -> Callable[..., Any]:
     """Wrap ``func`` so its return value reaches the terminal.
 
@@ -126,7 +138,19 @@ def _printing(func: Callable[..., Any]) -> Callable[..., Any]:
 
     @functools.wraps(func)
     def run(*args: Any, **kwargs: Any) -> None:
-        result = func(*args, **kwargs)
+        try:
+            result = func(*args, **kwargs)
+        except _REFUSALS as e:
+            # A message for a human, and still a failure. These three types are
+            # the ones whose repair is "edit one line of your own file", so a
+            # traceback would bury the sentence that says which line. Anything
+            # else keeps its traceback: an#106's first pass caught bare
+            # `ValueError` here-ish (in `an.tools`) and swallowed
+            # `json.JSONDecodeError` and `CutoutCompileError` with it, so a
+            # corrupt `ir/scene.json` and a failed render both printed one
+            # nameless line and exited 0.
+            typer.echo(str(e))
+            raise typer.Exit(1) from e
         if result is not None:
             typer.echo(result)
 
