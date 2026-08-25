@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.63 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=681c63c7"></script>
+      <script src="../../../_static/documentation_options.js?v=a395f30a"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -126,6 +126,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/camera.html">an.ir.camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
@@ -205,8 +206,9 @@
 <span class="sd">...     meta=Meta(title="Park Bench", duration=45.0),</span>
 <span class="sd">...     timeline=[Shot(id="s1", renderer="cutout", duration=45.0)],</span>
 <span class="sd">... )</span>
-<span class="sd">&gt;&gt;&gt; scene.version</span>
-<span class="sd">'0.2.0'</span>
+<span class="sd">&gt;&gt;&gt; from an.base import SCHEMA_VERSION</span>
+<span class="sd">&gt;&gt;&gt; scene.version == SCHEMA_VERSION</span>
+<span class="sd">True</span>
 <span class="sd">&gt;&gt;&gt; scene.kind</span>
 <span class="sd">'SceneIR'</span>
 <span class="sd">&gt;&gt;&gt; scene.timeline[0].renderer</span>
@@ -258,21 +260,73 @@
 
 
 
+<div class="viewcode-block" id="CameraKey">
+<a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.CameraKey">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CameraKey</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""One camera pose at one time — the explicit door behind the named moves.</span>
+
+<span class="sd">    &gt;&gt;&gt; CameraKey(at=1.0, x=-160.0, zoom=1.25).x</span>
+<span class="sd">    -160.0</span>
+
+<span class="sd">    **Sign convention**, stated because every surveyed tool disagrees: `+x`</span>
+<span class="sd">    moves the CAMERA right, which moves the content left. `zoom` is on-screen</span>
+<span class="sd">    magnification, so `1.25` means "everything 25% bigger", and it composes</span>
+<span class="sd">    through the pivot — a push-in during a pan zooms toward what the camera is</span>
+<span class="sd">    looking at rather than toward a fixed frame centre. `rotation` is camera</span>
+<span class="sd">    roll in radians.</span>
+
+<span class="sd">    `easing` defaults to **`None`, not `"ease_in_out"`**, and that is not a</span>
+<span class="sd">    style choice: today's emitter puts `"ease_in_out"` on the first keyframe</span>
+<span class="sd">    and `null` on the terminal one, so a per-key default of `"ease_in_out"`</span>
+<span class="sd">    would put it on both and move every camera scene's contract hash. The</span>
+<span class="sd">    named moves supply the easing they have always supplied.</span>
+<span class="sd">    """</span>
+
+    <span class="n">at</span><span class="p">:</span> <span class="n">Seconds</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="c1">#: Camera position in scene pixels. `+x` moves the camera right.</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="c1">#: On-screen magnification. Must be &gt; 0 — a zero or negative zoom is not a</span>
+    <span class="c1">#: camera, and the compiler would emit a degenerate root scale.</span>
+    <span class="n">zoom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="c1">#: Camera roll, radians.</span>
+    <span class="n">rotation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">easing</span><span class="p">:</span> <span class="n">EasingSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
 <div class="viewcode-block" id="Camera">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.Camera">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Camera</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Camera state for a shot. Minimal placeholder; expanded in P2."""</span>
+<span class="w">    </span><span class="sd">"""Camera state for a shot: a named move, or explicit keys.</span>
 
-    <span class="n">position</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-    <span class="n">target</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-    <span class="n">focal_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">50.0</span>
-    <span class="c1"># Interpreted by the adapter. The cutout renderer implements</span>
-    <span class="c1"># hold | push_in | pull_out | zoom_in | zoom_out and RAISES on anything</span>
-    <span class="c1"># else. It deliberately does not list "pan_left": the camera is a scale</span>
-    <span class="c1"># tween on the scene root, so it cannot translate at all, and advertising</span>
-    <span class="c1"># a move nothing implements is how it came to be documented here and dead</span>
-    <span class="c1"># in the compiler. A translating camera lands in Wave 7 of #9.</span>
-    <span class="n">move</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+<span class="sd">    &gt;&gt;&gt; Camera(move="push_in").move</span>
+<span class="sd">    'push_in'</span>
+<span class="sd">    &gt;&gt;&gt; Camera(keys=[CameraKey(at=0.0), CameraKey(at=2.0, x=-200.0)]).keys[1].x</span>
+<span class="sd">    -200.0</span>
+
+<span class="sd">    **One code path, two front doors** — the shape the dialogue `[emotion]`</span>
+<span class="sd">    sugar already uses. A named `move` desugars to a key list; `keys` is that</span>
+<span class="sd">    list written out. Setting both raises, because a scene that says two</span>
+<span class="sd">    things about the same camera has no reading that is not a guess.</span>
+
+<span class="sd">    `keys` defaults to `None`, not `[]`, and that too is load-bearing: the</span>
+<span class="sd">    markdown writer dumps the camera with `exclude_none=True`, which KEEPS</span>
+<span class="sd">    empty lists — an empty default would write `keys: []` into every camera</span>
+<span class="sd">    block it regenerates.</span>
+
+<span class="sd">    `position`, `target` and `focal_length` were removed in an#109. They were</span>
+<span class="sd">    written into every `scene.md` this package ever generated and read by</span>
+<span class="sd">    nothing; a registered migration drops them.</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: A named preset — sugar for `keys`. The cutout renderer's vocabulary is</span>
+    <span class="c1">#: `an.adapters.cutout.compile.CAMERA_MOVES`; validate and the compiler are</span>
+    <span class="c1">#: pinned to the same table by test, because a move that validates and then</span>
+    <span class="c1">#: raises is the failure `_check_renderable` exists to prevent.</span>
+    <span class="n">move</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: The explicit door. `None` = use `move`.</span>
+    <span class="n">keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CameraKey</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
@@ -310,10 +364,13 @@
     <span class="c1">#: author finds out on the next load rather than at the edit that did it</span>
     <span class="c1">#: (an#108 review, M-1). `gt=0` already refuses `scale=0` and `scale=-1`; it</span>
     <span class="c1">#: does not refuse `inf`.</span>
-    <span class="n">at</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span>
-        <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)],</span>
-        <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)],</span>
-    <span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">at</span><span class="p">:</span> <span class="p">(</span>
+        <span class="nb">tuple</span><span class="p">[</span>
+            <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)],</span>
+            <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)],</span>
+        <span class="p">]</span>
+        <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="c1">#: Uniform scale multiplier on the built rig. ``1.0`` = the rig's own size.</span>
     <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -723,8 +780,9 @@
 <span class="sd">    A document is portable, diffable, and renderer-agnostic. Persisted as JSON</span>
 <span class="sd">    at ``ir/scene.json`` inside an an project.</span>
 
+<span class="sd">    &gt;&gt;&gt; from an.base import SCHEMA_VERSION</span>
 <span class="sd">    &gt;&gt;&gt; doc = SceneIR(meta=Meta(title="Hello"))</span>
-<span class="sd">    &gt;&gt;&gt; doc.version == '0.2.0'</span>
+<span class="sd">    &gt;&gt;&gt; doc.version == SCHEMA_VERSION</span>
 <span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; round_tripped = SceneIR.model_validate_json(doc.model_dump_json())</span>
 <span class="sd">    &gt;&gt;&gt; round_tripped.meta.title</span>

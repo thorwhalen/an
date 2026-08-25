@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.63 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=681c63c7"></script>
+      <script src="../../../../_static/documentation_options.js?v=a395f30a"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -71,6 +71,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.RUNTIME_APPLIED_PROPERTIES"><code class="docutils literal notranslate"><span class="pre">RUNTIME_APPLIED_PROPERTIES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.SCENE_PX_PER_VIEW_BOX"><code class="docutils literal notranslate"><span class="pre">SCENE_PX_PER_VIEW_BOX</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.blink_phase"><code class="docutils literal notranslate"><span class="pre">blink_phase()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.camera_keys"><code class="docutils literal notranslate"><span class="pre">camera_keys()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.compile_shot"><code class="docutils literal notranslate"><span class="pre">compile_shot()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.step_times"><code class="docutils literal notranslate"><span class="pre">step_times()</span></code></a></li>
 </ul>
@@ -146,6 +147,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ir/camera.html">an.ir.camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ir/compose.html">an.ir.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ir/migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ir/schema.html">an.ir.schema</a></li>
@@ -370,6 +372,16 @@ driving it all along.</p>
 <span class="go">0.762</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.camera_keys">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">camera_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ir/schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../ir/schema.html#an.ir.schema.CameraKey" title="an.ir.schema.CameraKey"><span class="pre">CameraKey</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/compile.html#camera_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.compile.camera_keys" title="Link to this definition"></a></dt>
+<dd><p><a class="reference internal" href="../../ir/camera.html#an.ir.camera.camera_keys" title="an.ir.camera.camera_keys"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.ir.camera.camera_keys()</span></code></a>, with its refusal typed for this adapter.</p>
+<p>The resolver itself lives in the IR layer so <cite>an.ir.validate</cite> can call the
+SAME function — one table, not two reconciled by a test. This wrapper only
+re-raises <cite>CameraError</cite> as a <cite>CutoutCompileError</cite>, which is the compiler’s
+own boundary contract: every failure out of <cite>compile_shot</cite> is one type.</p>
 </dd></dl>
 
 <dl class="py function">

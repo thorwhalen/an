@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.migrate &mdash; an 0.1.63 documentation</title>
+  <title>an.ir.migrate &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=681c63c7"></script>
+      <script src="../../../_static/documentation_options.js?v=a395f30a"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -126,6 +126,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/camera.html">an.ir.camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
@@ -273,7 +274,8 @@
 <span class="sd">    the next additive bump into a refusal of every project on disk (an#105</span>
 <span class="sd">    review). Only the scene kind declares a floor; any other kind must migrate.</span>
 
-<span class="sd">    &gt;&gt;&gt; readable_without_migration("0.2.0")</span>
+<span class="sd">    &gt;&gt;&gt; from an.base import SCHEMA_VERSION</span>
+<span class="sd">    &gt;&gt;&gt; readable_without_migration(SCHEMA_VERSION)</span>
 <span class="sd">    True</span>
 <span class="sd">    &gt;&gt;&gt; readable_without_migration("0.1.0")  # below the floor since an#106</span>
 <span class="sd">    False</span>
@@ -409,6 +411,76 @@
     <span class="p">)</span>
 
 
+<span class="c1">#: Camera fields an#109 removed, and why each was dead. They were written into</span>
+<span class="c1">#: every `scene.md` this package ever generated — five committed documents in</span>
+<span class="c1">#: this repo alone — and read by NOTHING: `rg focal_length an/ tests/` found</span>
+<span class="c1">#: the schema line and no consumer.</span>
+<span class="n">RETIRED_CAMERA_FIELDS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"position"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">,</span> <span class="s2">"focal_length"</span><span class="p">)</span>
+
+
+<span class="nd">@register_migration</span><span class="p">(</span><span class="n">SCENE_IR</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"0.2.0"</span><span class="p">,</span> <span class="s2">"0.3.0"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_drop_dead_camera_fields</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""0.2.0 → 0.3.0 (an#109): the camera stops carrying a lens it never had.</span>
+
+<span class="sd">    `position`, `target` and `focal_length` described a 3D camera this package</span>
+<span class="sd">    has never had — the cutout camera is `root.pivot` plus `root.scale`, which</span>
+<span class="sd">    is two dimensions and a zoom. They defaulted, serialized, round-tripped</span>
+<span class="sd">    through every `scene.md`, and were read by nothing.</span>
+
+<span class="sd">    Dropped silently, unlike an#106's `kind="style"` entities: a defaulted</span>
+<span class="sd">    field nobody set is not something the author wrote, and warning about it</span>
+<span class="sd">    on every stored document would be noise on exactly the documents that had</span>
+<span class="sd">    nothing to do with it. A NON-default value is a different matter and is</span>
+<span class="sd">    reported, because that one someone typed.</span>
+
+<span class="sd">    &gt;&gt;&gt; doc = {"version": "0.2.0", "kind": "SceneIR", "timeline": [</span>
+<span class="sd">    ...     {"id": "s1", "camera": {"focal_length": 50.0, "move": "hold"}}]}</span>
+<span class="sd">    &gt;&gt;&gt; _drop_dead_camera_fields(doc)["timeline"][0]["camera"]</span>
+<span class="sd">    {'move': 'hold'}</span>
+<span class="sd">    """</span>
+    <span class="c1"># DEEP, because this migration POPS from nested camera dicts: a shallow</span>
+    <span class="c1"># copy leaves `timeline`, each shot and each camera shared with the</span>
+    <span class="c1"># caller, so `camera.pop(...)` strips the input the caller still holds.</span>
+    <span class="c1"># The `return doc` shape reads as pure and was not (an#109 review, M-4).</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">doc</span><span class="p">))</span>
+    <span class="n">doc</span><span class="p">[</span><span class="s2">"version"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"0.3.0"</span>
+    <span class="k">if</span> <span class="s2">"compatible_version"</span> <span class="ow">in</span> <span class="n">doc</span><span class="p">:</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s2">"compatible_version"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"0.3.0"</span>
+    <span class="n">shots</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timeline"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shots</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">doc</span>
+    <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"position"</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="s2">"target"</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="s2">"focal_length"</span><span class="p">:</span> <span class="mf">50.0</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">shots</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">camera</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"camera"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_is_default</span><span class="p">(</span><span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="n">want</span> <span class="o">=</span> <span class="n">defaults</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">want</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="n">want</span>
+            <span class="k">return</span> <span class="n">value</span> <span class="o">==</span> <span class="n">want</span>
+
+        <span class="n">authored</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">f</span><span class="p">:</span> <span class="n">camera</span><span class="p">[</span><span class="n">f</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">RETIRED_CAMERA_FIELDS</span>
+            <span class="k">if</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">camera</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_default</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">camera</span><span class="p">[</span><span class="n">f</span><span class="p">])</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">RETIRED_CAMERA_FIELDS</span><span class="p">:</span>
+            <span class="n">camera</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">authored</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"migrating to 0.3.0 dropped camera </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">authored</span><span class="p">)</span><span class="si">}</span><span class="s2"> from shot "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'id'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">: an#109 removed them because they described a "</span>
+                <span class="s2">"3D camera this package never had — the cutout camera is "</span>
+                <span class="s2">"`root.pivot` plus `root.scale`. A non-default value was set, so "</span>
+                <span class="s2">"this one is said out loud; the defaults are dropped in silence."</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">doc</span>
+
+
 <span class="nd">@register_migration</span><span class="p">(</span><span class="n">SCENE_IR</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"0.1.0"</span><span class="p">,</span> <span class="s2">"0.2.0"</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_rename_style_to_renderer</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""0.1.0 → 0.2.0 (an#106): the renderer selector stops being called "style".</span>
@@ -495,10 +567,11 @@
 <span class="sd">    migrations registered for this document's kind. Raises ``ValueError`` if no</span>
 <span class="sd">    path exists between the source and target versions.</span>
 
-<span class="sd">    &gt;&gt;&gt; migrate({"version": "0.2.0", "kind": "SceneIR"})["version"]</span>
-<span class="sd">    '0.2.0'</span>
-<span class="sd">    &gt;&gt;&gt; migrate({"version": "0.1.0", "kind": "SceneIR"})["version"]  # the an#106 ladder</span>
-<span class="sd">    '0.2.0'</span>
+<span class="sd">    &gt;&gt;&gt; from an.base import SCHEMA_VERSION</span>
+<span class="sd">    &gt;&gt;&gt; migrate({"version": SCHEMA_VERSION, "kind": "SceneIR"})["version"] == SCHEMA_VERSION</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; migrate({"version": "0.1.0", "kind": "SceneIR"})["version"] == SCHEMA_VERSION</span>
+<span class="sd">    True</span>
 <span class="sd">    """</span>
     <span class="n">doc_kind</span> <span class="o">=</span> <span class="n">kind_of</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">)</span>
     <span class="n">target</span> <span class="o">=</span> <span class="n">target_version</span> <span class="k">if</span> <span class="n">target_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">doc_kind</span><span class="o">.</span><span class="n">current_version</span>

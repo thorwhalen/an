@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.migrate &mdash; an 0.1.63 documentation</title>
+  <title>an.ir.migrate &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=681c63c7"></script>
+      <script src="../../../_static/documentation_options.js?v=a395f30a"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -129,6 +129,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="camera.html">an.ir.camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compose.html">an.ir.compose</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.ir.migrate</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#why-the-kind-is-part-of-the-key">Why the kind is part of the key</a></li>
@@ -141,6 +142,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.DocumentMigrationError"><code class="docutils literal notranslate"><span class="pre">DocumentMigrationError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.KINDS"><code class="docutils literal notranslate"><span class="pre">KINDS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.MIGRATIONS"><code class="docutils literal notranslate"><span class="pre">MIGRATIONS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.RETIRED_CAMERA_FIELDS"><code class="docutils literal notranslate"><span class="pre">RETIRED_CAMERA_FIELDS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.kind_of"><code class="docutils literal notranslate"><span class="pre">kind_of()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.migrate"><code class="docutils literal notranslate"><span class="pre">migrate()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.migrate.readable_without_migration"><code class="docutils literal notranslate"><span class="pre">readable_without_migration()</span></code></a></li>
@@ -269,19 +271,28 @@ validate might raise.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="an.ir.migrate.KINDS">
-<span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">KINDS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#an.ir.migrate.DocumentKind" title="an.ir.migrate.DocumentKind"><span class="pre">DocumentKind</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CharacterDescriptor':</span> <span class="pre">DocumentKind(name='CharacterDescriptor',</span> <span class="pre">version_field='schema_version',</span> <span class="pre">current_version='0.3.0'),</span> <span class="pre">'PropDescriptor':</span> <span class="pre">DocumentKind(name='PropDescriptor',</span> <span class="pre">version_field='schema_version',</span> <span class="pre">current_version='0.1.0'),</span> <span class="pre">'SceneIR':</span> <span class="pre">DocumentKind(name='SceneIR',</span> <span class="pre">version_field='version',</span> <span class="pre">current_version='0.2.0')}</span></span><a class="headerlink" href="#an.ir.migrate.KINDS" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">KINDS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#an.ir.migrate.DocumentKind" title="an.ir.migrate.DocumentKind"><span class="pre">DocumentKind</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CharacterDescriptor':</span> <span class="pre">DocumentKind(name='CharacterDescriptor',</span> <span class="pre">version_field='schema_version',</span> <span class="pre">current_version='0.3.0'),</span> <span class="pre">'PropDescriptor':</span> <span class="pre">DocumentKind(name='PropDescriptor',</span> <span class="pre">version_field='schema_version',</span> <span class="pre">current_version='0.1.0'),</span> <span class="pre">'SceneIR':</span> <span class="pre">DocumentKind(name='SceneIR',</span> <span class="pre">version_field='version',</span> <span class="pre">current_version='0.3.0')}</span></span><a class="headerlink" href="#an.ir.migrate.KINDS" title="Link to this definition"></a></dt>
 <dd><p>Registered document kinds, by their <code class="docutils literal notranslate"><span class="pre">kind</span></code> tag.</p>
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="an.ir.migrate.MIGRATIONS">
-<span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">MIGRATIONS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{('CharacterDescriptor',</span> <span class="pre">'0.1.0',</span> <span class="pre">'0.2.0'):</span> <span class="pre">&lt;function</span> <span class="pre">_character_0_1_0_to_0_2_0&gt;,</span> <span class="pre">('CharacterDescriptor',</span> <span class="pre">'0.2.0',</span> <span class="pre">'0.3.0'):</span> <span class="pre">&lt;function</span> <span class="pre">_character_0_2_0_to_0_3_0&gt;,</span> <span class="pre">('SceneIR',</span> <span class="pre">'0.1.0',</span> <span class="pre">'0.2.0'):</span> <span class="pre">&lt;function</span> <span class="pre">_rename_style_to_renderer&gt;,</span> <span class="pre">('SceneIR',</span> <span class="pre">'0.2.0',</span> <span class="pre">'0.2.0'):</span> <span class="pre">&lt;function</span> <span class="pre">_identity&gt;}</span></span><a class="headerlink" href="#an.ir.migrate.MIGRATIONS" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">MIGRATIONS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{('CharacterDescriptor',</span> <span class="pre">'0.1.0',</span> <span class="pre">'0.2.0'):</span> <span class="pre">&lt;function</span> <span class="pre">_character_0_1_0_to_0_2_0&gt;,</span> <span class="pre">('CharacterDescriptor',</span> <span class="pre">'0.2.0',</span> <span class="pre">'0.3.0'):</span> <span class="pre">&lt;function</span> <span class="pre">_character_0_2_0_to_0_3_0&gt;,</span> <span class="pre">('SceneIR',</span> <span class="pre">'0.1.0',</span> <span class="pre">'0.2.0'):</span> <span class="pre">&lt;function</span> <span class="pre">_rename_style_to_renderer&gt;,</span> <span class="pre">('SceneIR',</span> <span class="pre">'0.2.0',</span> <span class="pre">'0.3.0'):</span> <span class="pre">&lt;function</span> <span class="pre">_drop_dead_camera_fields&gt;,</span> <span class="pre">('SceneIR',</span> <span class="pre">'0.3.0',</span> <span class="pre">'0.3.0'):</span> <span class="pre">&lt;function</span> <span class="pre">_identity&gt;}</span></span><a class="headerlink" href="#an.ir.migrate.MIGRATIONS" title="Link to this definition"></a></dt>
 <dd><p>(kind, from_version, to_version) -&gt; migration function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Registry</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.ir.migrate.RETIRED_CAMERA_FIELDS">
+<span class="sig-prename descclassname"><span class="pre">an.ir.migrate.</span></span><span class="sig-name descname"><span class="pre">RETIRED_CAMERA_FIELDS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('position',</span> <span class="pre">'target',</span> <span class="pre">'focal_length')</span></span><a class="headerlink" href="#an.ir.migrate.RETIRED_CAMERA_FIELDS" title="Link to this definition"></a></dt>
+<dd><p>Camera fields an#109 removed, and why each was dead. They were written into
+every <cite>scene.md</cite> this package ever generated — five committed documents in
+this repo alone — and read by NOTHING: <cite>rg focal_length an/ tests/</cite> found
+the schema line and no consumer.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -300,10 +311,11 @@ answer would be a fabrication.</p>
 <p>Walks the migration registry one step at a time, considering only the
 migrations registered for this document’s kind. Raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if no
 path exists between the source and target versions.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">migrate</span><span class="p">({</span><span class="s2">"version"</span><span class="p">:</span> <span class="s2">"0.2.0"</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"SceneIR"</span><span class="p">})[</span><span class="s2">"version"</span><span class="p">]</span>
-<span class="go">'0.2.0'</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">migrate</span><span class="p">({</span><span class="s2">"version"</span><span class="p">:</span> <span class="s2">"0.1.0"</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"SceneIR"</span><span class="p">})[</span><span class="s2">"version"</span><span class="p">]</span>  <span class="c1"># the an#106 ladder</span>
-<span class="go">'0.2.0'</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">SCHEMA_VERSION</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">migrate</span><span class="p">({</span><span class="s2">"version"</span><span class="p">:</span> <span class="n">SCHEMA_VERSION</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"SceneIR"</span><span class="p">})[</span><span class="s2">"version"</span><span class="p">]</span> <span class="o">==</span> <span class="n">SCHEMA_VERSION</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">migrate</span><span class="p">({</span><span class="s2">"version"</span><span class="p">:</span> <span class="s2">"0.1.0"</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"SceneIR"</span><span class="p">})[</span><span class="s2">"version"</span><span class="p">]</span> <span class="o">==</span> <span class="n">SCHEMA_VERSION</span>
+<span class="go">True</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -317,7 +329,8 @@ minimum Scene IR version this code can still read **without migration*</em>”<a
 A loader that demands an exact version match ignores that promise and turns
 the next additive bump into a refusal of every project on disk (an#105
 review). Only the scene kind declares a floor; any other kind must migrate.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">readable_without_migration</span><span class="p">(</span><span class="s2">"0.2.0"</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">SCHEMA_VERSION</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">readable_without_migration</span><span class="p">(</span><span class="n">SCHEMA_VERSION</span><span class="p">)</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">readable_without_migration</span><span class="p">(</span><span class="s2">"0.1.0"</span><span class="p">)</span>  <span class="c1"># below the floor since an#106</span>
 <span class="go">False</span>

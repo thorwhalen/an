@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.63 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=681c63c7"></script>
+      <script src="../../../../_static/documentation_options.js?v=a395f30a"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -126,6 +126,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/camera.html">an.ir.camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
@@ -250,6 +251,7 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlatAction</span><span class="p">,</span> <span class="n">flatten</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CameraKey</span><span class="p">,</span>
     <span class="n">Action</span><span class="p">,</span>
     <span class="n">AssetRef</span><span class="p">,</span>
     <span class="n">ExpressionAction</span><span class="p">,</span>
@@ -287,6 +289,8 @@
     <span class="n">Slot</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.svg_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">raster_size</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.camera</span><span class="w"> </span><span class="kn">import</span> <span class="n">CAMERA_MOVES</span><span class="p">,</span> <span class="n">PAN_FRACTION</span><span class="p">,</span> <span class="n">CameraError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.camera</span><span class="w"> </span><span class="kn">import</span> <span class="n">camera_keys</span> <span class="k">as</span> <span class="n">_camera_keys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentKind</span><span class="p">,</span> <span class="n">migrate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.props</span><span class="w"> </span><span class="kn">import</span> <span class="n">PROP_DOCUMENT_KIND</span><span class="p">,</span> <span class="n">PropDescriptor</span>
 
@@ -835,7 +839,7 @@
     <span class="c1"># Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale</span>
     <span class="c1"># animation on the synthetic scene root so directors get visible camera</span>
     <span class="c1"># behavior without writing channels by hand.</span>
-    <span class="n">_add_camera_clips</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">)</span>
+    <span class="n">_add_camera_clips</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
     <span class="c1"># AFTER action + viseme compilation, deliberately: a swap key the timeline</span>
     <span class="c1"># actually USES whose art is missing is recorded as a fallback during</span>
     <span class="c1"># those passes (usage-aware escalation, an#87), and this is the one place</span>
@@ -1109,7 +1113,11 @@
         <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"prop </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> refers to </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="si">!r}</span><span class="s2"> in the "</span>
             <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">store</span><span class="si">!r}</span><span class="s2"> store, which is not a PropDescriptor"</span>
-            <span class="o">+</span> <span class="p">(</span><span class="s2">" (the store has no such entry)"</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">meta</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">" (kind=</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'kind'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">)"</span><span class="p">)</span>
+            <span class="o">+</span> <span class="p">(</span>
+                <span class="s2">" (the store has no such entry)"</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">meta</span>
+                <span class="k">else</span> <span class="sa">f</span><span class="s2">" (kind=</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'kind'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">)"</span>
+            <span class="p">)</span>
             <span class="o">+</span> <span class="s2">". A prop has no placeholder rig on purpose: the built-in "</span>
             <span class="s2">"placeholder is a HUMANOID, so falling back would draw a person "</span>
             <span class="s2">"where the prop should be. Create it with a `prop.json` whose "</span>
@@ -3216,59 +3224,101 @@
 
 
 <span class="c1"># How much each named camera move zooms (final scale relative to start).</span>
-<span class="n">_CAMERA_MOVES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"hold"</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
-    <span class="s2">"push_in"</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">),</span>
-    <span class="s2">"pull_out"</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">),</span>
-    <span class="s2">"zoom_in"</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">),</span>
-    <span class="s2">"zoom_out"</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">),</span>
-<span class="p">}</span>
+<span class="c1">#: Which `root` property each `CameraKey` field drives, and the value the key</span>
+<span class="c1">#: carries when the camera is doing nothing. A channel is emitted ONLY for a</span>
+<span class="c1">#: property whose keys are not all at rest, which is what keeps `push_in`</span>
+<span class="c1">#: byte-identical to the document it produced before an#109 — and what makes</span>
+<span class="c1">#: `pan_left` emit pivots and no scales.</span>
+<span class="n">_CAMERA_CHANNELS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"pivot_x"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"pivot_y"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"zoom"</span><span class="p">,</span> <span class="s2">"scale_x"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"zoom"</span><span class="p">,</span> <span class="s2">"scale_y"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"rotation"</span><span class="p">,</span> <span class="s2">"rotation"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="camera_keys">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/compile.html#an.adapters.cutout.camera_keys">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">camera_keys</span><span class="p">(</span><span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CameraKey</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">""":func:`an.ir.camera.camera_keys`, with its refusal typed for this adapter.</span>
+
+<span class="sd">    The resolver itself lives in the IR layer so `an.ir.validate` can call the</span>
+<span class="sd">    SAME function — one table, not two reconciled by a test. This wrapper only</span>
+<span class="sd">    re-raises `CameraError` as a `CutoutCompileError`, which is the compiler's</span>
+<span class="sd">    own boundary contract: every failure out of `compile_shot` is one type.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_camera_keys</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">CameraError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_add_camera_clips</span><span class="p">(</span>
     <span class="n">shot</span><span class="p">:</span> <span class="n">Shot</span><span class="p">,</span>
     <span class="n">animations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnimationClipJSON</span><span class="p">],</span>
     <span class="n">tracks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TrackJSON</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""If shot.camera.move is a known named move, emit a scale tween on the</span>
-<span class="sd">    synthetic scene root over the shot's full duration.</span>
+<span class="w">    </span><span class="sd">"""Emit the shot's camera as channels on the synthetic scene root.</span>
 
-<span class="sd">    The synthetic root container in the JS runtime sits at canvas center and</span>
-<span class="sd">    scales the entire scene; per-character motion remains independent.</span>
+<span class="sd">    The root container sits at canvas centre; PixiJS composes</span>
+<span class="sd">    ``world = position + M·(local − pivot)``, so `root.pivot` IS a 2D camera</span>
+<span class="sd">    and `root.scale` is its zoom. Both were already applied by the runtime and</span>
+<span class="sd">    already in ``RUNTIME_APPLIED_PROPERTIES`` before an#109 — which is why a</span>
+<span class="sd">    translating camera is a COMPILER change with zero runtime change, and is</span>
+<span class="sd">    therefore checked on every PR rather than only on a labelled one.</span>
+
+<span class="sd">    Only properties that actually vary get a channel. That is what keeps the</span>
+<span class="sd">    five zoom moves byte-identical to the documents they produced before this</span>
+<span class="sd">    existed, and it is asserted rather than assumed.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">move</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="c1"># Normalise BEFORE the emptiness test, or the guard grows an arbitrary seam:</span>
-    <span class="c1"># `move=""` fell through the falsiness check and was ignored, while</span>
-    <span class="c1"># `move="  "` reached the lookup and raised. Same input, two behaviours.</span>
-    <span class="n">move</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">move</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">move</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="k">if</span> <span class="n">move</span> <span class="o">==</span> <span class="s2">"hold"</span><span class="p">:</span>
-        <span class="k">return</span>  <span class="c1"># a real, correct no-op — not an unknown move</span>
-    <span class="k">if</span> <span class="n">move</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_CAMERA_MOVES</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> asks for camera.move=</span><span class="si">{</span><span class="n">move</span><span class="si">!r}</span><span class="s2">, which the cutout "</span>
-            <span class="sa">f</span><span class="s2">"renderer does not implement (it has: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CAMERA_MOVES</span><span class="p">)</span><span class="si">}</span><span class="s2">). "</span>
-            <span class="s2">"A translating camera — pan, track, whip-pan — needs a real 2D "</span>
-            <span class="s2">"camera node with per-layer parallax, which is planned (see "</span>
-            <span class="s2">"https://github.com/thorwhalen/an/issues/9); today the camera is a "</span>
-            <span class="s2">"scale tween on the scene root and cannot move sideways."</span>
-        <span class="p">)</span>
-    <span class="n">start_scale</span><span class="p">,</span> <span class="n">end_scale</span> <span class="o">=</span> <span class="n">_CAMERA_MOVES</span><span class="p">[</span><span class="n">move</span><span class="p">]</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">camera_keys</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span>  <span class="c1"># `hold`, an empty list, or a single pose: nothing to animate</span>
     <span class="n">duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.001</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">duration</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"scale_x"</span><span class="p">,</span> <span class="s2">"scale_y"</span><span class="p">):</span>
-        <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__camera__</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">"</span>
+    <span class="c1"># What the author already targeted on `root`. Camera clips are appended</span>
+    <span class="c1"># LAST and the evaluators are later-wins, so a collision does not error —</span>
+    <span class="c1"># it silently discards the author's channel. Measured before an#109:</span>
+    <span class="c1"># `set root scale_x 3.0` together with `camera.move: push_in` evaluated to</span>
+    <span class="c1"># 1.25 at the shot's end, the authored 3.0 gone, no warning anywhere.</span>
+    <span class="n">authored</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">(</span><span class="n">channel</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">channel</span><span class="o">.</span><span class="n">property</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">animation</span> <span class="ow">in</span> <span class="n">animations</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">animation</span><span class="o">.</span><span class="n">channels</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">rest</span> <span class="ow">in</span> <span class="n">_CAMERA_CHANNELS</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">field</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="n">rest</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span> <span class="ow">in</span> <span class="n">authored</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"shot </span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2">: the camera drives `root:</span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s2">` and an "</span>
+                <span class="sa">f</span><span class="s2">"action also targets it. Camera clips are appended last and "</span>
+                <span class="s2">"the evaluators are later-wins, so the authored channel would "</span>
+                <span class="s2">"be discarded silently — which is why this raises instead. "</span>
+                <span class="s2">"Move the action to a child node, or express the camera with "</span>
+                <span class="s2">"`camera.keys` so both live in one place.</span><span class="se">\n\n</span><span class="s2">"</span>
+                <span class="s2">"A deliberate divergence from the face solver, which resolves "</span>
+                <span class="s2">"the same class of collision by warning and letting the author "</span>
+                <span class="s2">"win: a camera is not a face, and a silently-ignored pan is "</span>
+                <span class="s2">"worse than a refused compile. Additive folding is the "</span>
+                <span class="s2">"eventual answer and is not this wave."</span>
+            <span class="p">)</span>
+        <span class="n">anim_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"__camera__</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s2">"</span>
         <span class="n">animations</span><span class="p">[</span><span class="n">anim_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">AnimationClipJSON</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">anim_id</span><span class="p">,</span>
             <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
             <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
                 <span class="n">ChannelJSON</span><span class="p">(</span>
                     <span class="n">target</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span>
-                    <span class="nb">property</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span>
+                    <span class="nb">property</span><span class="o">=</span><span class="n">prop</span><span class="p">,</span>
                     <span class="n">keyframes</span><span class="o">=</span><span class="p">[</span>
-                        <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">start_scale</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="s2">"ease_in_out"</span><span class="p">),</span>
-                        <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">end_scale</span><span class="p">),</span>
+                        <span class="n">KeyframeJSON</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">at</span><span class="p">),</span> <span class="n">value</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">easing</span><span class="o">=</span><span class="n">k</span><span class="o">.</span><span class="n">easing</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
                     <span class="p">],</span>
                 <span class="p">)</span>
             <span class="p">],</span>

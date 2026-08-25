@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.validate &mdash; an 0.1.63 documentation</title>
+  <title>an.ir.validate &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=681c63c7"></script>
+      <script src="../../../_static/documentation_options.js?v=a395f30a"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -126,6 +126,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/camera.html">an.ir.camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
@@ -208,6 +209,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.play</span><span class="w"> </span><span class="kn">import</span> <span class="n">art_exists_for</span><span class="p">,</span> <span class="n">play_problems</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.characters.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">CharacterDescriptor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.expression.binding</span><span class="w"> </span><span class="kn">import</span> <span class="n">expression_problems</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.camera</span><span class="w"> </span><span class="kn">import</span> <span class="n">CAMERA_MOVES</span><span class="p">,</span> <span class="n">CameraError</span><span class="p">,</span> <span class="n">camera_keys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">flatten</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.migrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentMigrationError</span><span class="p">,</span> <span class="n">migrate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.sync</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneValidationError</span><span class="p">,</span> <span class="n">scene_from_json_doc</span>
@@ -315,15 +317,14 @@
 <span class="c1"># -----------------------------------------------------------------------------</span>
 
 
-<span class="c1">#: Camera moves the cutout renderer implements. `hold` is a real no-op.</span>
+<span class="c1">#: Camera moves the renderer implements. `hold` is a real no-op.</span>
 <span class="c1">#:</span>
-<span class="c1">#: Duplicated from the compiler deliberately: importing it here would make the</span>
-<span class="c1">#: IR layer depend on an adapter, which is the wrong direction. The test suite</span>
-<span class="c1">#: pins the two together instead — the same shape `artful` uses for vocabulary</span>
-<span class="c1">#: shared across packages that must not depend on each other.</span>
-<span class="n">_RENDERABLE_CAMERA_MOVES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
-    <span class="p">{</span><span class="s2">"hold"</span><span class="p">,</span> <span class="s2">"push_in"</span><span class="p">,</span> <span class="s2">"pull_out"</span><span class="p">,</span> <span class="s2">"zoom_in"</span><span class="p">,</span> <span class="s2">"zoom_out"</span><span class="p">}</span>
-<span class="p">)</span>
+<span class="c1">#: **Derived, not duplicated.** This was a hand-maintained frozenset reconciled</span>
+<span class="c1">#: with the compiler's table by a test — which works, and is not what "a move</span>
+<span class="c1">#: that validates cannot then raise" means; that means ONE table (an#109</span>
+<span class="c1">#: review, H-1). It moved to `an.ir.camera`, which is the IR layer, so validate</span>
+<span class="c1">#: can import it without depending on an adapter.</span>
+<span class="n">_RENDERABLE_CAMERA_MOVES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">CAMERA_MOVES</span><span class="p">)</span>
 
 <span class="c1">#: Entity kinds the cutout renderer draws. `voice` is legitimately</span>
 <span class="c1">#: not drawable — they configure the render rather than appearing in it.</span>
@@ -423,9 +424,7 @@
     <span class="c1">#: the first as the second is how a caller who passes only characters gets</span>
     <span class="c1">#: an error on every prop swap in a scene that compiles fine.</span>
     <span class="n">unchecked</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">eid</span>
-        <span class="k">for</span> <span class="n">eid</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">rigs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">RIG_STORES</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">kind</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="n">eid</span> <span class="k">for</span> <span class="n">eid</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">rigs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">RIG_STORES</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">kind</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="kc">None</span>
     <span class="p">}</span>
     <span class="c1"># The expression and dialogue-emotion checks below are CHARACTER-only:</span>
     <span class="c1"># a prop has no face.</span>
@@ -569,9 +568,7 @@
         <span class="c1"># H3). Same rule the rig builder's probe uses: a store with no</span>
         <span class="c1"># filesystem root can answer nothing, so it must assume presence rather</span>
         <span class="c1"># than drop every key.</span>
-        <span class="n">art_exists</span> <span class="o">=</span> <span class="n">art_exists_for</span><span class="p">(</span>
-            <span class="n">stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">RIG_STORES</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span>
-        <span class="p">)</span>
+        <span class="n">art_exists</span> <span class="o">=</span> <span class="n">art_exists_for</span><span class="p">(</span><span class="n">stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">RIG_STORES</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">art_exists</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">skin</span> <span class="o">=</span> <span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"skins"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
             <span class="n">slots</span> <span class="o">=</span> <span class="n">skin</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slots"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -622,6 +619,42 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_camera</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Every way a camera can fail to render, reported for free (an#109).</span>
+
+<span class="sd">    The rule is `_check_renderable`'s: **error wherever the pipeline raises**,</span>
+<span class="sd">    so validate's verdict and the compiler's agree — and it is kept by calling</span>
+<span class="sd">    the compiler's own resolver rather than restating its rules. The one</span>
+<span class="sd">    finding that is NOT a raise is the last, and it is a warning: too few keys</span>
+<span class="sd">    is a pose rather than a move, which renders as if the camera were absent.</span>
+<span class="sd">    Nothing breaks, so nothing fails; the author still wrote a camera block</span>
+<span class="sd">    that does nothing, so it is still worth saying.</span>
+
+<span class="sd">    ``width``/``height`` are 1 because nothing here reads the resolved</span>
+<span class="sd">    distance — only whether resolving RAISES. Passing the real canvas would</span>
+<span class="sd">    make the check depend on a resolution the IR layer does not have.</span>
+<span class="sd">    """</span>
+    <span class="n">camera</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span>
+    <span class="k">if</span> <span class="n">camera</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="c1"># Every refusal, from the resolver the COMPILER uses. Not a second copy of</span>
+    <span class="c1"># its rules: `camera_keys` raises exactly where compiling raises, so this</span>
+    <span class="c1"># cannot drift from what it predicts (an#109 review, H-1).</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">camera_keys</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">CameraError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> Rendering this shot raises."</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">camera</span><span class="o">.</span><span class="n">keys</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="s2">"warning"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/keys"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span><span class="si">}</span><span class="s2"> camera key(s) is a pose, not a move: the compiler "</span>
+            <span class="s2">"needs two to interpolate between, so this renders as if the "</span>
+            <span class="s2">"camera were absent. Add a second key, or remove the camera."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_renderable</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Report, at validate time, what compile and render will refuse.</span>
 
@@ -636,15 +669,8 @@
 <span class="sd">    the pipeline's verdict agree. A validator that disagrees with the thing it</span>
 <span class="sd">    predicts is its own defect.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">move</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">move</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_RENDERABLE_CAMERA_MOVES</span><span class="p">:</span>
-            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                <span class="s2">"error"</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/camera/move"</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">"camera.move=</span><span class="si">{</span><span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">move</span><span class="si">!r}</span><span class="s2"> is not implemented by the "</span>
-                <span class="sa">f</span><span class="s2">"cutout renderer (it has: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_RENDERABLE_CAMERA_MOVES</span><span class="p">)</span><span class="si">}</span><span class="s2">). "</span>
-                <span class="s2">"Rendering this shot raises."</span><span class="p">,</span>
-            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">shot</span><span class="o">.</span><span class="n">camera</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_check_camera</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/camera"</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">entity</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">):</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -699,6 +725,18 @@
     <span class="s2">"shot"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"style"</span><span class="p">:</span> <span class="s2">"renderer"</span><span class="p">},</span>
 <span class="p">}</span>
 
+<span class="c1">#: an#109's removed camera fields. A WARNING, not an error, and the difference</span>
+<span class="c1">#: is the harm: a surviving `style` silently picks the wrong RENDERER, while</span>
+<span class="c1">#: these three selected nothing — they described a 3D camera this package never</span>
+<span class="c1">#: had. What is left is dead weight in a file, so it is worth saying and not</span>
+<span class="c1">#: worth failing over.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Reported at all because the migration cannot reach them: a document already</span>
+<span class="c1">#: at the current version is never migrated again, so a camera block that came</span>
+<span class="c1">#: through a sync between the version bump and this check keeps them forever as</span>
+<span class="c1">#: `extra="allow"` extras, and nothing else looks.</span>
+<span class="n">RETIRED_CAMERA_KEYS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"position"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">,</span> <span class="s2">"focal_length"</span><span class="p">})</span>
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_retired_keys</span><span class="p">(</span><span class="n">scene</span><span class="p">:</span> <span class="n">SceneIR</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""One ERROR per retired key still present as an `extra`.</span>
@@ -720,6 +758,17 @@
                 <span class="sa">f</span><span class="s2">"so nothing else will tell you. Rename it to `</span><span class="si">{</span><span class="n">new</span><span class="si">}</span><span class="s2">`."</span><span class="p">,</span>
             <span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">shot</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="p">):</span>
+        <span class="n">camera_extra</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">camera</span><span class="p">,</span> <span class="s2">"model_extra"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">stale</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">RETIRED_CAMERA_KEYS</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">camera_extra</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">stale</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="s2">"warning"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"timeline[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">]/camera"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"camera carries </span><span class="si">{</span><span class="n">stale</span><span class="si">}</span><span class="s2">, removed in an#109 — they described a "</span>
+                <span class="s2">"3D camera this package never had (the cutout camera is "</span>
+                <span class="s2">"`root.pivot` plus `root.scale`) and are read by nothing. "</span>
+                <span class="s2">"`an sync` drops them; they are harmless until then."</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">RETIRED_KEYS</span><span class="p">[</span><span class="s2">"shot"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">model_extra</span> <span class="ow">or</span> <span class="p">{}):</span>
                 <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
@@ -838,7 +887,9 @@
                         <span class="s2">"has no placeholder rig (rendering this shot raises)"</span>
                     <span class="p">)</span>
                 <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-                    <span class="s2">"error"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/entities/</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> ref </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="si">!r}</span><span class="s2"> </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="s2">"error"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/entities/</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> ref </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="si">!r}</span><span class="s2"> </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                 <span class="p">)</span>
 
         <span class="c1"># Dialogue voice refs resolve?</span>

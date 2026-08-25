@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.data.cutout_runtime &mdash; an 0.1.64 documentation</title>
+  <title>an.ir.camera &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -24,8 +24,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="an.determinism" href="../determinism.html" />
-    <link rel="prev" title="an.data" href="../data.html" /> 
+    <link rel="next" title="an.ir.compose" href="compose.html" />
+    <link rel="prev" title="an.ir.assets" href="assets.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -118,7 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../data.html">an.data</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/cutout_runtime.html">an.data.cutout_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../determinism.html">an.determinism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../expression.html">an.expression</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../expression/axes.html">an.expression.axes</a></li>
@@ -128,13 +128,19 @@
 <li class="toctree-l1"><a class="reference internal" href="../expression/provider.html">an.expression.provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ir/assets.html">an.ir.assets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ir/camera.html">an.ir.camera</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ir/compose.html">an.ir.compose</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ir/migrate.html">an.ir.migrate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ir/schema.html">an.ir.schema</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ir/sync.html">an.ir.sync</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="assets.html">an.ir.assets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.ir.camera</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.camera.CAMERA_MOVES"><code class="docutils literal notranslate"><span class="pre">CAMERA_MOVES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.camera.CameraError"><code class="docutils literal notranslate"><span class="pre">CameraError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.camera.PAN_FRACTION"><code class="docutils literal notranslate"><span class="pre">PAN_FRACTION</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.camera.camera_keys"><code class="docutils literal notranslate"><span class="pre">camera_keys()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validate.html">an.ir.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../iterate.html">an.iterate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../orchestrate.html">an.orchestrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../preview.html">an.preview</a></li>
@@ -176,9 +182,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">an.data.cutout_runtime</li>
+      <li class="breadcrumb-item active">an.ir.camera</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../_sources/module_docs/an/data/cutout_runtime.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../_sources/module_docs/an/ir/camera.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -186,17 +192,82 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-an.data.cutout_runtime">
-<span id="an-data-cutout-runtime"></span><h1>an.data.cutout_runtime<a class="headerlink" href="#module-an.data.cutout_runtime" title="Link to this heading"></a></h1>
-<p>Cutout JS runtime — see README.md in this directory.</p>
+  <section id="module-an.ir.camera">
+<span id="an-ir-camera"></span><h1>an.ir.camera<a class="headerlink" href="#module-an.ir.camera" title="Link to this heading"></a></h1>
+<p>Camera semantics: the named moves, and the one resolver that expands them.</p>
+<p>This module exists because the alternative was two hand-maintained tables. The
+compiler owned <cite>CAMERA_MOVES</cite> and <cite>an.ir.validate</cite> owned a frozenset of the
+same names, reconciled by a test — which works, and is not what “a move that
+validates cannot then raise” means. It means <em>one table</em>.</p>
+<p>It lives under <cite>an/ir/</cite> rather than in the cutout adapter because the IR layer
+must not import an adapter, and validate is in the IR layer. The camera is IR
+semantics anyway: <cite>Camera</cite>/<cite>CameraKey</cite> are schema models, and a renderer that
+cannot honour a move says so through <cite>can_render</cite>, not by keeping its own
+vocabulary.</p>
+<p>The geometry it encodes, verified numerically against the vendored PixiJS
+composition: <cite>root.pivot</cite> IS a 2D camera, because PixiJS composes
+<code class="docutils literal notranslate"><span class="pre">world</span> <span class="pre">=</span> <span class="pre">position</span> <span class="pre">+</span> <span class="pre">M·(local</span> <span class="pre">−</span> <span class="pre">pivot)</span></code> and the runtime indexes the centre
+container as <code class="docutils literal notranslate"><span class="pre">root</span></code>. <cite>+x</cite> moves the CAMERA right, which moves content left.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.ir.camera.CAMERA_MOVES">
+<span class="sig-prename descclassname"><span class="pre">an.ir.camera.</span></span><span class="sig-name descname"><span class="pre">CAMERA_MOVES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="schema.html#an.ir.schema.CameraKey" title="an.ir.schema.CameraKey"><span class="pre">CameraKey</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'hold':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'pan_left':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'pan_right':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'pull_out':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'push_in':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'tilt_down':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'tilt_up':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'zoom_in':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'zoom_out':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></span><a class="headerlink" href="#an.ir.camera.CAMERA_MOVES" title="Link to this definition"></a></dt>
+<dd><p>The named moves, as KEY LISTS. <cite>move</cite> is sugar over <cite>keys</cite> — one code path,
+two front doors.</p>
+<p>The five zoom moves must desugar to <strong>exactly</strong> the document they produced
+before an#109, which is more specific than “a scale tween”: two animations
+named <cite>__camera__&lt;shot&gt;_scale_x</cite>/<cite>_scale_y</cite>, one channel each targeting
+<cite>root</cite>, keyframes <cite>[(0.0, s0, “ease_in_out”), (duration, s1, null)]</cite>, on two
+tracks rooted at <cite>“__camera__”</cite>, and <strong>no pivot channels</strong>. The emitter emits
+only the channels that actually vary, which is what makes that true rather
+than merely intended — and what keeps every camera scene’s contract hash
+where it was.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.ir.camera.CameraError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.ir.camera.</span></span><span class="sig-name descname"><span class="pre">CameraError</span></span><a class="reference internal" href="../../../_modules/an/ir/camera.html#CameraError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.camera.CameraError" title="Link to this definition"></a></dt>
+<dd><p>A camera that cannot be resolved into keys.</p>
+<p>A plain <cite>ValueError</cite> subclass so the IR layer can raise it without knowing
+about any renderer; the cutout compiler re-raises it as a
+<cite>CutoutCompileError</cite> at its own boundary.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.ir.camera.PAN_FRACTION">
+<span class="sig-prename descclassname"><span class="pre">an.ir.camera.</span></span><span class="sig-name descname"><span class="pre">PAN_FRACTION</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.3333333333333333</span></span><a class="headerlink" href="#an.ir.camera.PAN_FRACTION" title="Link to this definition"></a></dt>
+<dd><p>How far a pan travels, as a fraction of the canvas width (a tilt uses the
+same fraction of the height). A third of the frame is a legible move at any
+resolution and is the one number a named pan has to choose; an author who
+wants a different distance writes <cite>keys</cite> and says so.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.ir.camera.camera_keys">
+<span class="sig-prename descclassname"><span class="pre">an.ir.camera.</span></span><span class="sig-name descname"><span class="pre">camera_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="schema.html#an.ir.schema.Shot" title="an.ir.schema.Shot"><span class="pre">Shot</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="schema.html#an.ir.schema.CameraKey" title="an.ir.schema.CameraKey"><span class="pre">CameraKey</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/ir/camera.html#camera_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.ir.camera.camera_keys" title="Link to this definition"></a></dt>
+<dd><p>The shot’s camera as an explicit key list — the ONE resolver.</p>
+<p><cite>move</cite> and <cite>keys</cite> are two front doors on one path. <strong>Validate calls this
+and so does the compiler</strong>, which is what makes “a move that validates
+cannot then raise” true by construction rather than by two tables agreeing
+— the arrangement it replaced (an#109 review, H-1).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.ir.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Camera</span><span class="p">,</span> <span class="n">Shot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">push</span> <span class="o">=</span> <span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s"</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s2">"cutout"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">camera</span><span class="o">=</span><span class="n">Camera</span><span class="p">(</span><span class="n">move</span><span class="o">=</span><span class="s2">"push_in"</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">k</span><span class="o">.</span><span class="n">at</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">zoom</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">camera_keys</span><span class="p">(</span><span class="n">push</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">320</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">240</span><span class="p">)]</span>
+<span class="go">[(0.0, 1.0), (2.0, 1.25)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pan</span> <span class="o">=</span> <span class="n">Shot</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">"s"</span><span class="p">,</span> <span class="n">renderer</span><span class="o">=</span><span class="s2">"cutout"</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">camera</span><span class="o">=</span><span class="n">Camera</span><span class="p">(</span><span class="n">move</span><span class="o">=</span><span class="s2">"pan_left"</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">k</span><span class="o">.</span><span class="n">at</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">camera_keys</span><span class="p">(</span><span class="n">pan</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">320</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">240</span><span class="p">)]</span>
+<span class="go">[(0.0, 0.0), (2.0, -106.667)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../data.html" class="btn btn-neutral float-left" title="an.data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../determinism.html" class="btn btn-neutral float-right" title="an.determinism" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="assets.html" class="btn btn-neutral float-left" title="an.ir.assets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="compose.html" class="btn btn-neutral float-right" title="an.ir.compose" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

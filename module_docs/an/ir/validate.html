@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.validate &mdash; an 0.1.63 documentation</title>
+  <title>an.ir.validate &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=681c63c7"></script>
+      <script src="../../../_static/documentation_options.js?v=a395f30a"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -129,11 +129,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="camera.html">an.ir.camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compose.html">an.ir.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">an.ir.schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sync.html">an.ir.sync</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.ir.validate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.ir.validate.RETIRED_CAMERA_KEYS"><code class="docutils literal notranslate"><span class="pre">RETIRED_CAMERA_KEYS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.validate.RETIRED_KEYS"><code class="docutils literal notranslate"><span class="pre">RETIRED_KEYS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.validate.RIG_STORES"><code class="docutils literal notranslate"><span class="pre">RIG_STORES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.ir.validate.ValidationFinding"><code class="docutils literal notranslate"><span class="pre">ValidationFinding</span></code></a></li>
@@ -205,6 +207,20 @@ zero-duration shots, voice refs missing from a voices store.</p></li>
 </ul>
 <p>Layout-overlap checks (boxes off-screen, text behind sprites) live in
 <code class="docutils literal notranslate"><span class="pre">an.verify.layout</span></code>, not here, because they need a render context.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.ir.validate.RETIRED_CAMERA_KEYS">
+<span class="sig-prename descclassname"><span class="pre">an.ir.validate.</span></span><span class="sig-name descname"><span class="pre">RETIRED_CAMERA_KEYS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'focal_length',</span> <span class="pre">'position',</span> <span class="pre">'target'})</span></span><a class="headerlink" href="#an.ir.validate.RETIRED_CAMERA_KEYS" title="Link to this definition"></a></dt>
+<dd><p>an#109’s removed camera fields. A WARNING, not an error, and the difference
+is the harm: a surviving <cite>style</cite> silently picks the wrong RENDERER, while
+these three selected nothing — they described a 3D camera this package never
+had. What is left is dead weight in a file, so it is worth saying and not
+worth failing over.</p>
+<p>Reported at all because the migration cannot reach them: a document already
+at the current version is never migrated again, so a camera block that came
+through a sync between the version bump and this check keeps them forever as
+<cite>extra=”allow”</cite> extras, and nothing else looks.</p>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="an.ir.validate.RETIRED_KEYS">
 <span class="sig-prename descclassname"><span class="pre">an.ir.validate.</span></span><span class="sig-name descname"><span class="pre">RETIRED_KEYS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'meta':</span> <span class="pre">{'default_style':</span> <span class="pre">'default_renderer'},</span> <span class="pre">'shot':</span> <span class="pre">{'style':</span> <span class="pre">'renderer'}}</span></span><a class="headerlink" href="#an.ir.validate.RETIRED_KEYS" title="Link to this definition"></a></dt>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.base &mdash; an 0.1.63 documentation</title>
+  <title>an.base &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=681c63c7"></script>
+      <script src="../../_static/documentation_options.js?v=a395f30a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -126,6 +126,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/camera.html">an.ir.camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/compose.html">an.ir.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/schema.html">an.ir.schema</a></li>
@@ -204,10 +205,13 @@
 <span class="c1">#: changes, also bump COMPATIBLE_VERSION and add a migration in `ir.migrate`.</span>
 <span class="c1">#: 0.2.0 renamed `Shot.style` -&gt; `Shot.renderer` and `Meta.default_style` -&gt;</span>
 <span class="c1">#: `Meta.default_renderer`, and retired `AssetRef(kind="style")` (an#106).</span>
-<span class="n">SCHEMA_VERSION</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.2.0"</span>
+<span class="c1">#: 0.3.0 removed `Camera.position` / `.target` / `.focal_length`, which</span>
+<span class="c1">#: described a 3D camera this package never had, and gave `Camera` a `keys`</span>
+<span class="c1">#: list so it can translate (an#109).</span>
+<span class="n">SCHEMA_VERSION</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.3.0"</span>
 
 <span class="c1">#: Minimum Scene IR version this code can still read without migration.</span>
-<span class="n">COMPATIBLE_VERSION</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.2.0"</span>
+<span class="n">COMPATIBLE_VERSION</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.3.0"</span>
 
 
 <span class="c1"># -- Render defaults ----------------------------------------------------------</span>

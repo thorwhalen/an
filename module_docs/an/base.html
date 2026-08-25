@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.base &mdash; an 0.1.63 documentation</title>
+  <title>an.base &mdash; an 0.1.64 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=681c63c7"></script>
+      <script src="../../_static/documentation_options.js?v=a395f30a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -144,6 +144,7 @@
 <li class="toctree-l1"><a class="reference internal" href="genre.html">an.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ir.html">an.ir</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ir/camera.html">an.ir.camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ir/compose.html">an.ir.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ir/migrate.html">an.ir.migrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ir/schema.html">an.ir.schema</a></li>
@@ -211,7 +212,7 @@ their own subpackages and are re-exported from <cite>an</cite> itself.</p>
 fraction of a second so the CLI is snappy.</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="an.base.COMPATIBLE_VERSION">
-<span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">COMPATIBLE_VERSION</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'0.2.0'</span></span><a class="headerlink" href="#an.base.COMPATIBLE_VERSION" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">COMPATIBLE_VERSION</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'0.3.0'</span></span><a class="headerlink" href="#an.base.COMPATIBLE_VERSION" title="Link to this definition"></a></dt>
 <dd><p>Minimum Scene IR version this code can still read without migration.</p>
 </dd></dl>
 
@@ -290,11 +291,14 @@ the torso, not children of it.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="an.base.SCHEMA_VERSION">
-<span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">SCHEMA_VERSION</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'0.2.0'</span></span><a class="headerlink" href="#an.base.SCHEMA_VERSION" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">SCHEMA_VERSION</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'0.3.0'</span></span><a class="headerlink" href="#an.base.SCHEMA_VERSION" title="Link to this definition"></a></dt>
 <dd><p>Current Scene IR schema version. Bump on additive changes; on breaking
 changes, also bump COMPATIBLE_VERSION and add a migration in <cite>ir.migrate</cite>.
 0.2.0 renamed <cite>Shot.style</cite> -&gt; <cite>Shot.renderer</cite> and <cite>Meta.default_style</cite> -&gt;
-<cite>Meta.default_renderer</cite>, and retired <cite>AssetRef(kind=”style”)</cite> (an#106).</p>
+<cite>Meta.default_renderer</cite>, and retired <cite>AssetRef(kind=”style”)</cite> (an#106).
+0.3.0 removed <cite>Camera.position</cite> / <cite>.target</cite> / <cite>.focal_length</cite>, which
+described a 3D camera this package never had, and gave <cite>Camera</cite> a <cite>keys</cite>
+list so it can translate (an#109).</p>
 </dd></dl>
 
 <dl class="py data">
