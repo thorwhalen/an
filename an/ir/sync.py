@@ -46,7 +46,15 @@ from typing import Any
 import yaml
 
 from an.base import DEFAULT_DURATION
-from an.ir.migrate import SCENE_IR, migrate
+from pydantic import ValidationError
+
+from an.ir.migrate import (
+    SCENE_IR,
+    DocumentMigrationError,
+    migrate,
+    readable_without_migration,
+    version_tuple,
+)
 from an.ir.schema import AssetRef, Dialogue, Meta, SceneIR, Shot
 from an.util import _read_text, _write_json, _write_text
 
@@ -536,38 +544,91 @@ def _actions_to_yaml_list(actions: list) -> list[dict]:
 # -----------------------------------------------------------------------------
 
 
-class SceneMigrationError(ValueError):
-    """A stored scene document could not be brought to this build's schema."""
+class SceneValidationError(ValueError):
+    """A stored scene document is not a valid scene — named, with its source.
+
+    The underlying :class:`pydantic.ValidationError` is kept as ``__cause__``
+    (and as ``.validation_error``) so a caller that reports **per field** —
+    ``an.validate_schema`` builds one Finding per error, each with its own
+    ``loc`` — does not have to choose between naming the document and naming
+    the field.
+    """
+
+    def __init__(self, message: str, validation_error=None) -> None:
+        super().__init__(message)
+        self.validation_error = validation_error
 
 
 def scene_from_json_doc(doc: dict, *, source: str | Path | None = None) -> SceneIR:
     """Validate a stored scene document, **migrating it first** (an#105).
 
-    Every read path goes through here. Before this existed, `migrate()` was
-    called with `kind="CharacterDescriptor"` at every call site in the tree and
-    with a scene at none of them — so a registered scene migration never ran,
-    and because :class:`~an.ir.schema.SceneIR` is ``extra="allow"``, a renamed
-    field would have landed as a **silent default** on every document already
-    on disk: the old key surviving as an extra, the new key defaulting, and no
-    error anywhere. Registering a migration and never running it is worse than
-    not registering one, because the registry reads as a promise.
+    Every path from stored bytes to a :class:`~an.ir.schema.SceneIR` goes
+    through here — the store (read **and** write), ``sync()``'s two json-wins
+    branches, and ``an.validate_schema``, which is a read path too because a
+    dict or a JSON string handed to it *is* a stored document. A test walks the
+    package's AST and fails on any other one. Before it existed, `migrate()` was called with
+    `kind="CharacterDescriptor"` at every call site in the tree and with a
+    scene at none of them — so a registered scene migration never ran, and
+    because `SceneIR` is ``extra="allow"``, a renamed field would have landed
+    as a **silent default** on every document already on disk. Registering a
+    migration and never running it is worse than not registering one, because
+    the registry reads as a promise.
 
-    A document whose version has no path to this build's is a loud refusal
-    naming the file, not a silent validate against whatever the fields happen
-    to be:
+    Three outcomes, three different repairs, so they get three messages:
+
+    - a version this build reads (at or above ``COMPATIBLE_VERSION``, at or
+      below ``SCHEMA_VERSION``) is taken **as-is** when no migration is
+      registered for it — that is exactly what ``an/base.py`` promises, and a
+      loader that demanded an exact match would refuse every stored project the
+      day the version is bumped;
+    - a version from the future is refused as *written by a newer build*,
+      because nobody will ever register a downgrade;
+    - anything else — an old version with no path, or a malformed field — is
+      refused naming the document.
+
+    Migration happens **on read, with no write-back**: the document on disk
+    keeps its old version until something saves the scene, so a migration must
+    stay registered for as long as any project might hold that version. That is
+    deliberate — a loader that rewrote every file it opened would turn `an
+    validate` into a mutation — but it means the registry only ever grows.
 
     >>> scene_from_json_doc({"version": "0.1.0", "meta": {"title": "t"}}).meta.title
     't'
     >>> scene_from_json_doc({"version": "0.0.1"}, source="ir/scene.json")
+    ... # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
-    an.ir.sync.SceneMigrationError: ir/scene.json: No migration path for 'SceneIR' ...
+    DocumentMigrationError
     """
+    where = str(source) if source is not None else "scene document"
+    version = doc.get(SCENE_IR.version_field, SCENE_IR.current_version)
     try:
-        migrated = migrate(dict(doc), kind=SCENE_IR.name)
-    except ValueError as e:
-        raise SceneMigrationError(f"{source or 'scene document'}: {e}") from e
-    return SceneIR.model_validate(migrated)
+        migrated = migrate(doc, kind=SCENE_IR.name)
+    except DocumentMigrationError as e:
+        if readable_without_migration(version, SCENE_IR):
+            migrated = dict(doc)  # the declared compat window; read it as it is
+        elif (v := version_tuple(version)) is not None and v > version_tuple(
+            SCENE_IR.current_version
+        ):
+            raise DocumentMigrationError(
+                f"{where}: written by a newer build (schema {version!r}; this build "
+                f"is {SCENE_IR.current_version!r}). Upgrade `an` rather than editing "
+                "the document — a downgrade migration is never registered."
+            ) from e
+        elif v is None:
+            raise DocumentMigrationError(
+                f"{where}: {SCENE_IR.version_field!r} is {version!r}, which is not a "
+                "schema version. Repair the field; the document itself may be fine."
+            ) from e
+        else:
+            raise DocumentMigrationError(f"{where}: {e}") from e
+    try:
+        return SceneIR.model_validate(migrated)
+    except ValidationError as e:
+        # Named, like the migration refusal above: the common failure is a
+        # corrupt FIELD, and a nameless pydantic traceback is exactly what this
+        # boundary exists to replace (an#105 review).
+        raise SceneValidationError(f"{where}: {e}", e) from e
 
 
 def sync(project_dir: str | Path) -> SyncResult:

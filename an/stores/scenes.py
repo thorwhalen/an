@@ -53,7 +53,11 @@ class ScenesStore(MutableMapping):
     def __setitem__(self, key: str, value: SceneIR | dict) -> None:
         if key != self.SCENE_KEY:
             raise KeyError(f"only the {self.SCENE_KEY!r} key is supported")
-        scene = value if isinstance(value, SceneIR) else SceneIR.model_validate(value)
+        # A DICT goes through the read boundary too (an#105 review): writing a
+        # version this build cannot read produced a project `an` refused to open
+        # — the store would happily persist `version: "0.0.42"`, and the very
+        # next read raised. Symmetric boundaries or none.
+        scene = value if isinstance(value, SceneIR) else scene_from_json_doc(value)
         _write_json(self.json_path, json.loads(scene.model_dump_json()))
         _write_text(self.md_path, ir_to_markdown(scene))
         # Equalize mtimes so the JSON wins ties on subsequent sync()s. Pipeline
