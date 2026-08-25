@@ -83,7 +83,7 @@ def _render_dialogue_scene(
                   resolution=Resolution(width=320, height=240)),
         timeline=[
             Shot(
-                id="s1", style="cutout", duration=duration,
+                id="s1", renderer="cutout", duration=duration,
                 entities=[
                     AssetRef(kind="character", id="c",
                              store="characters", ref="c-v1")
@@ -152,7 +152,7 @@ def test_silent_shot_has_long_silence_span():
         proj.scene = SceneIR(
             meta=Meta(title="t", duration=1.0, fps=12,
                       resolution=Resolution(width=160, height=120)),
-            timeline=[Shot(id="s1", style="cutout", duration=1.0)],
+            timeline=[Shot(id="s1", renderer="cutout", duration=1.0)],
         )
         proj.mall["scenes"]["main"] = proj.scene
         out = render_project(root, output_name="silent")

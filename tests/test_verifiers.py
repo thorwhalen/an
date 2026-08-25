@@ -17,7 +17,7 @@ from an.verify import LayoutLintVerifier, HumanInTheLoopVerifier
 def test_clean_scene_passes_lint():
     scene = SceneIR(
         meta=Meta(title="x", duration=5.0),
-        timeline=[Shot(id="s1", style="cutout", duration=5.0)],
+        timeline=[Shot(id="s1", renderer="cutout", duration=5.0)],
     )
     report = LayoutLintVerifier().verify(scene)
     assert report.passed

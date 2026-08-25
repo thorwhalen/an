@@ -30,7 +30,9 @@ Markdown convention (v0.1, kept simple — extended in P5):
     maya: Because the pigeons trust us.
     ```
 
-A shot heading is ``## Shot <id> (<style>)``. Fenced blocks attach to the
+A shot heading is ``## Shot <id> (<renderer>)`` — the parenthesised word names
+the RENDERER, and is captured positionally, so the heading is unchanged by the
+an#106 rename. Fenced blocks attach to the
 nearest enclosing scope. Unknown blocks are preserved as ``options`` so
 agent extensions don't get clobbered on round-trip.
 """
@@ -65,6 +67,18 @@ _FENCE_RE = re.compile(
 _SHOT_HEADING_RE = re.compile(
     r"^##\s+Shot\s+(\S+)(?:\s+\(([^)]+)\))?\s*$", re.MULTILINE
 )
+
+
+class SceneMarkdownError(ValueError):
+    """`scene.md` says something this build cannot read — a refusal, not a crash.
+
+    Every parse refusal in this module raises it, so the CLI can tell "the
+    human's file needs one edit" apart from "something broke". That
+    distinction is the whole point of naming it: an#106's first pass widened
+    the CLI's catch to bare ``ValueError`` to print these cleanly, which also
+    swallowed ``json.JSONDecodeError`` and ``CutoutCompileError`` — both
+    ``ValueError`` subclasses — and turned a failed render into exit 0.
+    """
 
 
 @dataclass(slots=True)
@@ -117,19 +131,31 @@ def markdown_to_ir(md_text: str) -> SceneIR:
     global_text = parts["__global__"]
 
     meta_data = _extract_yaml_block(global_text, "meta") or {}
+    if "default_style" in meta_data:
+        # A REFUSAL, not a silent rename. `scene.md` is the human SSOT and
+        # carries no schema version, so nothing here can tell "written before
+        # an#106" from "typed today" — and `Meta` is `extra="allow"`, so
+        # dropping it would leave the author's declared renderer silently
+        # replaced by the default. The stored JSON is migrated instead; a
+        # hand-edited md is the author's to fix, once.
+        raise SceneMarkdownError(
+            "`default_style:` in the meta block was renamed to `default_renderer:` "
+            "(an#106): it names the RENDERER that draws the shots, not art "
+            "direction. Rename the key."
+        )
     if title and "title" not in meta_data:
         meta_data["title"] = title
     meta = Meta(**meta_data)
 
     shots: list[Shot] = []
-    for shot_id, style, body in parts["__shots__"]:
+    for shot_id, renderer, body in parts["__shots__"]:
         shot_yaml = _extract_yaml_block(body, "shot") or {}
         dialogue_block = _extract_dialogue_block(body, shot_id=shot_id)
         entities_block = _extract_entities_block(body)
         actions_block = _extract_actions_block(body)
         shot_kwargs: dict[str, Any] = {
             "id": shot_id,
-            "style": style or meta.default_style,
+            "renderer": renderer or meta.default_renderer,
             "duration": shot_yaml.get("duration", DEFAULT_DURATION),
             "dialogue": dialogue_block,
             "entities": entities_block,
@@ -170,10 +196,10 @@ def _split_by_shots(md_text: str) -> dict[str, Any]:
     shots: list[tuple[str, str | None, str]] = []
     for i, m in enumerate(matches):
         shot_id = m.group(1)
-        style = m.group(2)
+        renderer = m.group(2)
         body_start = m.end()
         body_end = matches[i + 1].start() if i + 1 < len(matches) else len(md_text)
-        shots.append((shot_id, style, md_text[body_start:body_end]))
+        shots.append((shot_id, renderer, md_text[body_start:body_end]))
     return {"__global__": global_text, "__shots__": shots}
 
 
@@ -183,7 +209,7 @@ def _extract_yaml_block(text: str, label: str) -> dict[str, Any] | None:
         if lang == "yaml" and lbl == label:
             data = yaml.safe_load(body) or {}
             if not isinstance(data, dict):
-                raise ValueError(f"YAML block {label!r} must be a mapping")
+                raise SceneMarkdownError(f"YAML block {label!r} must be a mapping")
             return data
     return None
 
@@ -219,7 +245,7 @@ def _extract_dialogue_block(text: str, *, shot_id: str | None = None) -> list[Di
             match = _DIALOGUE_LINE_RE.match(line)
             if not match:
                 where = f"shot {shot_id!r}: " if shot_id else ""
-                raise ValueError(
+                raise SceneMarkdownError(
                     f"{where}dialogue line {line!r} is not `speaker: text` or "
                     "`speaker [emotion]: text` — speaker ids are `[\\w-]+`, and "
                     "the emotion goes in square brackets. A line that does not "
@@ -244,7 +270,7 @@ def _extract_entities_block(text: str) -> list[AssetRef]:
     out: list[AssetRef] = []
     for item in raw:
         if not isinstance(item, dict):
-            raise ValueError(
+            raise SceneMarkdownError(
                 f"each entry under `yaml entities` must be a mapping; got {item!r}"
             )
         out.append(AssetRef(**item))
@@ -274,7 +300,7 @@ def _extract_actions_block(text: str) -> list:
     out = []
     for i, item in enumerate(raw):
         if not isinstance(item, dict):
-            raise ValueError(
+            raise SceneMarkdownError(
                 f"each entry under `yaml actions` must be a mapping; got {item!r}"
             )
         kind = item.get("kind")
@@ -329,7 +355,7 @@ def _extract_actions_block(text: str) -> list:
             # the next sync and then from the JSON on the next md edit.
             raw_axes = item.get("axes") or {}
             if not isinstance(raw_axes, dict):
-                raise ValueError(
+                raise SceneMarkdownError(
                     f"actions[{i}].axes must be a mapping; got {raw_axes!r}"
                 )
             action = _compose.expression(
@@ -347,7 +373,7 @@ def _extract_actions_block(text: str) -> list:
                 else _compose.DFLT_EXPRESSION_BLEND_S,
             )
         else:
-            raise ValueError(
+            raise SceneMarkdownError(
                 f"actions[{i}].kind must be one of tween/set/play/expression; got {kind!r}"
             )
         if start is not None and float(start) > 0:
@@ -365,7 +391,7 @@ def _extract_yaml_list_block(text: str, label: str) -> list[Any] | None:
             if data is None:
                 return []
             if not isinstance(data, list):
-                raise ValueError(f"YAML block {label!r} must be a list")
+                raise SceneMarkdownError(f"YAML block {label!r} must be a list")
             return data
     return None
 
@@ -380,7 +406,7 @@ def ir_to_markdown(scene: SceneIR) -> str:
 
     >>> from an.ir.schema import SceneIR, Meta, Shot
     >>> scene = SceneIR(meta=Meta(title="Demo", duration=5.0),
-    ...                 timeline=[Shot(id="s1", style="cutout", duration=5.0)])
+    ...                 timeline=[Shot(id="s1", renderer="cutout", duration=5.0)])
     >>> md = ir_to_markdown(scene)
     >>> "# Demo" in md
     True
@@ -400,7 +426,7 @@ def ir_to_markdown(scene: SceneIR) -> str:
             "width": scene.meta.resolution.width,
             "height": scene.meta.resolution.height,
         },
-        "default_style": scene.meta.default_style,
+        "default_renderer": scene.meta.default_renderer,
     }
     if scene.meta.step_hz is not None:
         meta_dict["step_hz"] = scene.meta.step_hz
@@ -412,7 +438,7 @@ def ir_to_markdown(scene: SceneIR) -> str:
         parts.append(scene.meta.notes.rstrip() + "\n")
 
     for shot in scene.timeline:
-        parts.append(f"## Shot {shot.id} ({shot.style})\n")
+        parts.append(f"## Shot {shot.id} ({shot.renderer})\n")
         shot_yaml: dict[str, Any] = {"duration": shot.duration}
         if shot.step_hz is not None:
             shot_yaml["step_hz"] = shot.step_hz

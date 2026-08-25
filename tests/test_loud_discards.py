@@ -66,7 +66,7 @@ def _character(entity_id: str = "charlie") -> AssetRef:
 def test_an_unknown_camera_move_raises_and_names_the_wave():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[_character()],
         camera=Camera(move="pan_left"),
@@ -83,7 +83,7 @@ def test_hold_is_a_real_no_op_and_must_not_raise():
     """
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[_character()],
         camera=Camera(move="hold"),
@@ -95,7 +95,7 @@ def test_hold_is_a_real_no_op_and_must_not_raise():
 def test_the_implemented_moves_still_compile(move):
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[_character()],
         camera=Camera(move=move),
@@ -150,7 +150,7 @@ def test_a_play_on_a_descriptor_less_entity_is_refused_not_faked():
     """
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=4.0,
         entities=[_character()],
         actions=[PlayAction(target="charlie", animation="walk", duration=4.0)],
@@ -168,7 +168,7 @@ def test_narration_raises_rather_than_producing_neither_audio_nor_video():
         timeline=[
             Shot(
                 id="s1",
-                style="cutout",
+                renderer="cutout",
                 duration=1.0,
                 narration=[Narration(text="once upon a time")],
             )
@@ -207,7 +207,7 @@ def test_the_helper_actually_reaches_the_viseme_branch():
     """
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[_character()],
         dialogue=[_spoken_line("charlie")],
@@ -229,7 +229,7 @@ def test_an_off_screen_speaker_warns_and_emits_no_channel():
     """
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         dialogue=[_spoken_line("narrator")],
     )
@@ -246,7 +246,7 @@ def test_a_typo_speaker_names_the_scenes_actual_mouths():
     """The whole reason the skip warns instead of passing silently."""
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[_character("charlie")],
         dialogue=[_spoken_line("charlei")],
@@ -266,7 +266,7 @@ def test_a_prop_entity_raises_naming_the_shot_and_a_reachable_issue():
     """
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[AssetRef(kind="prop", id="banner", store="characters", ref="b-v1")],
     )
@@ -290,16 +290,17 @@ def test_no_user_facing_error_cites_an_internal_wave_number():
             )
 
 
-@pytest.mark.parametrize("kind", ["voice", "style"])
+@pytest.mark.parametrize("kind", ["voice"])
 def test_non_drawable_entity_kinds_are_legitimately_ignored(kind):
-    """`voice` and `style` configure the render rather than appearing in it.
+    """A `voice` configures the render rather than appearing in it.
 
-    They must not be swept into the prop error — that would make the guard fire
-    on correct scenes.
+    It must not be swept into the prop error — that would make the guard fire
+    on correct scenes. (`style` was the other such kind until an#106 retired
+    it: it selected nothing, and the word belonged to the renderer.)
     """
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[AssetRef(kind=kind, id="v", store="voices", ref="v-v1")],
     )
@@ -319,7 +320,7 @@ def test_an_unread_environment_key_warns_rather_than_raising():
     """
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[AssetRef(kind="environment", id="env", store="environments", ref="park")],
     )
@@ -332,7 +333,7 @@ def test_ordinary_store_metadata_does_not_break_a_render():
     """The regression the raise-version would have shipped."""
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[AssetRef(kind="environment", id="env", store="environments", ref="park")],
     )
@@ -347,7 +348,7 @@ def test_ordinary_store_metadata_does_not_break_a_render():
 def test_a_known_environment_key_still_overrides():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[AssetRef(kind="environment", id="env", store="environments", ref="park")],
     )
@@ -603,13 +604,13 @@ def test_a_js_runtime_throw_arrives_as_a_typed_error_naming_the_frame():
 # ------------------ 10. validate must agree with the pipeline it predicts
 
 _UNRENDERABLE_SHOTS = {
-    "camera": lambda: Shot(id="s1", style="cutout", duration=1.0,
+    "camera": lambda: Shot(id="s1", renderer="cutout", duration=1.0,
                            entities=[_character()], camera=Camera(move="pan_left")),
-    "prop": lambda: Shot(id="s1", style="cutout", duration=1.0,
+    "prop": lambda: Shot(id="s1", renderer="cutout", duration=1.0,
                          entities=[AssetRef(kind="prop", id="b", store="characters", ref="b-v1")]),
-    "narration": lambda: Shot(id="s1", style="cutout", duration=1.0,
+    "narration": lambda: Shot(id="s1", renderer="cutout", duration=1.0,
                               narration=[Narration(text="once")]),
-    "play": lambda: Shot(id="s1", style="cutout", duration=1.0, entities=[_character()],
+    "play": lambda: Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()],
                          actions=[PlayAction(target="charlie", animation="walk", duration=1.0)]),
 }
 
@@ -647,8 +648,8 @@ def test_validate_reports_every_scene_the_pipeline_refuses(name):
 def test_validate_still_passes_a_scene_that_renders():
     """The other half: the pre-flight must not reject working scenes.
 
-    `voice` and `style` entities configure the render rather than appearing in
-    it, and `hold` is a real no-op — all three would be easy to sweep up here.
+    A `voice` entity configures the render rather than appearing in it, and
+    `hold` is a real no-op — both would be easy to sweep up here.
     """
     from an.ir.schema import Meta, Resolution
     from an.ir.validate import validate_semantic
@@ -658,12 +659,11 @@ def test_validate_still_passes_a_scene_that_renders():
                   resolution=Resolution(width=64, height=48)),
         timeline=[
             Shot(
-                id="s1", style="cutout", duration=1.0,
+                id="s1", renderer="cutout", duration=1.0,
                 camera=Camera(move="hold"),
                 entities=[
                     _character(),
                     AssetRef(kind="voice", id="v", store="voices", ref="v-v1"),
-                    AssetRef(kind="style", id="s", store="styles", ref="s-v1"),
                 ],
                 dialogue=[Dialogue(speaker="charlie", text="hi")],
             )
@@ -691,7 +691,7 @@ def test_an_empty_camera_move_is_treated_like_any_other_unusable_value():
     """`move=""` used to be ignored while `move="  "` raised — same input, two
     behaviours, purely because falsiness was tested before normalisation."""
     for blank in ("", "   ", "\t"):
-        shot = Shot(id="s1", style="cutout", duration=1.0,
+        shot = Shot(id="s1", renderer="cutout", duration=1.0,
                     entities=[_character()], camera=Camera(move=blank))
         compile_shot(shot)  # a blank move is "no move", consistently
 
@@ -764,7 +764,7 @@ def test_no_doc_offers_a_targeting_example_that_no_rig_builds():
     """
     real = _runtime_node_paths(
         _build_scene_root(
-            Shot(id="s1", style="cutout", duration=1.0, entities=[_character()]),
+            Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()]),
             {},
             textures={},
         )
@@ -807,7 +807,7 @@ def test_a_missing_character_descriptor_is_no_longer_silent():
     perfectly about a picture that was not the picture, and the agreement read
     as a clean positive result.
     """
-    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    shot = Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()])
     with pytest.warns(CutoutCompileWarning) as record:
         compile_shot(shot, mall={"characters": {}})
     msg = "\n".join(str(w.message) for w in record)
@@ -818,7 +818,7 @@ def test_a_missing_character_descriptor_is_no_longer_silent():
 
 def test_strict_assets_refuses_to_draw_a_stand_in():
     """The gate anything measuring pixels needs."""
-    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    shot = Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()])
     with pytest.raises(CutoutCompileError) as e:
         compile_shot(shot, mall={"characters": {}}, strict_assets=True)
     msg = str(e.value)
@@ -833,7 +833,7 @@ def test_strict_assets_is_off_by_default_so_an_assetless_project_still_renders()
     `examples/single_character` reaches the placeholder rig through exactly
     this path and must keep rendering from a clean checkout.
     """
-    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    shot = Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()])
     with pytest.warns(CutoutCompileWarning):
         scene = compile_shot(shot, mall={"characters": {}})
     assert scene.scene.children, "the placeholder rig must still be drawn"
@@ -846,7 +846,7 @@ def test_the_compiled_scene_distinguishes_two_identical_pictures():
     SAME scene tree — so no assertion over the rendered pixels, the visual
     kinds, or the node paths can tell them apart. The record has to carry it.
     """
-    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    shot = Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()])
     with pytest.warns(CutoutCompileWarning):
         missing = compile_shot(shot, mall={"characters": {}})
     intended = compile_shot(shot, mall=_placeholder_rig_store())
@@ -863,7 +863,7 @@ def test_the_compiled_scene_distinguishes_two_identical_pictures():
 
 def test_a_descriptor_backed_character_is_not_a_fallback():
     """The guard must not fire on the case it exists to protect."""
-    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    shot = Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()])
     descriptor = {
         "kind": "CharacterDescriptor",
         "name": "c-v1",
@@ -884,7 +884,7 @@ def test_an_environment_ref_that_names_nothing_draws_the_default_audibly():
     """
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[
             AssetRef(kind="environment", id="env", store="environments", ref="kitchen")
@@ -902,7 +902,7 @@ def test_a_built_in_environment_preset_is_not_a_fallback(ref):
     """Presets are a documented built-in, not a stand-in for a missing asset."""
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[
             AssetRef(kind="environment", id="env", store="environments", ref=ref)
@@ -947,7 +947,7 @@ def test_the_render_path_threads_strict_assets_to_the_compiler(monkeypatch):
     monkeypatch.setattr(render_mod, "compile_shot", _spy)
     monkeypatch.setattr(render_mod, "_ensure_ffmpeg_available", lambda: None)
 
-    shot = Shot(id="s1", style="cutout", duration=1.0, entities=[_character()])
+    shot = Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()])
     ctx = RenderContext(mall={}, work_dir=Path("."), strict_assets=True)
     with pytest.raises(_Stop):
         render_mod.CutoutRenderer().render(shot, ctx)

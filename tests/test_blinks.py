@@ -43,7 +43,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures" / "characters"
 def _procedural_shot(duration=2.5, actions=()):
     return Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=duration,
         entities=[AssetRef(kind="character", id="charlie", store="characters", ref="c")],
         actions=list(actions),
@@ -180,7 +180,7 @@ def test_an_eye_with_closed_art_blinks_by_eyelid_swap(gale_store):
     # OPEN-only channel — correct, and not what this test is about.
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=8.0,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
     )
@@ -203,7 +203,7 @@ def test_a_rig_without_closed_eye_art_falls_back_to_the_squash(gale_store, tmp_p
     # per-window clips mean a shot with no window has no clip at all.
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=8.0,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
     )
@@ -220,7 +220,7 @@ def test_a_baked_face_character_has_no_eyes_and_so_no_blinks():
     }
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=3.0,
         entities=[AssetRef(kind="character", id="diane", store="characters", ref="d")],
     )
@@ -297,7 +297,7 @@ def test_an_eye_that_rests_closed_does_not_blink(gale_store, tmp_path):
     desc_path.write_text(_json.dumps(doc), encoding="utf-8")
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=8.0,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
     )
@@ -312,7 +312,7 @@ def test_a_window_straddling_the_shot_start_begins_in_the_right_state(gale_store
 
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[AssetRef(kind="character", id="awg", store="characters", ref="gale")],
     )
@@ -333,7 +333,7 @@ def test_the_eyelid_channel_is_closed_exactly_for_the_central_half(gale_store):
 
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=8.0,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
     )
@@ -368,7 +368,7 @@ def test_a_baked_face_never_blinks_even_if_the_rig_builds_eye_nodes(gale_store, 
     desc_path.write_text(_json.dumps(doc), encoding="utf-8")
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=8.0,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
     )
@@ -398,7 +398,7 @@ def test_an_unnested_eye_slot_still_blinks_by_its_leaf_name(gale_store, tmp_path
     desc_path.write_text(_json.dumps(doc), encoding="utf-8")
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=8.0,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
     )
@@ -457,7 +457,7 @@ def test_the_compiled_squash_matches_the_deleted_runtime_rule_at_every_frame():
     for (name, fps, duration), row in zip(cases, expected):
         shot = Shot(
             id="s",
-            style="cutout",
+            renderer="cutout",
             duration=duration,
             entities=[AssetRef(kind="character", id=name, store="characters", ref="c")],
         )

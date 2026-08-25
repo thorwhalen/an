@@ -47,9 +47,9 @@ Backends registered: `cutout` (real, with face rig + a compile-time FACE SOLVER 
 
 `scene.md` supports these fenced blocks:
 
-- ` ```yaml meta ` — title, duration, fps, resolution, default_style, notes, and optional `step_hz` (stepped timing for tweens: `0 < step_hz <= fps`; `15` at 30 fps = "on twos").
+- ` ```yaml meta ` — title, duration, fps, resolution, default_renderer, notes, and optional `step_hz` (stepped timing for tweens: `0 < step_hz <= fps`; `15` at 30 fps = "on twos").
 - ` ```yaml shot ` — duration, camera (with `move: hold | push_in | pull_out | zoom_in | zoom_out`), options, and optional `step_hz` (overrides the scene's for this shot).
-- ` ```yaml entities ` — list of AssetRef-shaped dicts. `kind` ∈ `character | environment | voice | style`. Environment refs: `park | indoor | night | sunset | default`.
+- ` ```yaml entities ` — list of AssetRef-shaped dicts. `kind` ∈ `character | environment | voice` (an#106 retired `style`: it selected nothing, and the word named the renderer; art direction arrives as a StylePack, #112). Environment refs: `park | indoor | night | sunset | default`.
   - **`kind: prop` is declared by the IR but NOT rendered** — the compiler raises rather than dropping it. Props land in Wave 7 of #9. Do not put one in a scene.
   - An environment override may only carry keys the renderer reads (`sky_color`, `ground_color`, `ground_y`). Anything else **warns and is dropped** — an intersection filter, not a refusal (`compile.py`'s `_build_environment_subtree`). Verified 2026-08-25 against a claim here that it raises: it does not, so a `planes:` key would vanish with a warning. Wave 7 of #9 is where planes become real and this becomes a refusal.
   - **A ref the stores can't supply gets a stand-in, and says so.** A character with no descriptor renders the placeholder rig; an environment ref that is neither a store entry nor a built-in preset (`park`/`indoor`/`night`/`sunset`/`default`) renders the default backdrop. Both warn, and both are recorded per entity in the compiled scene's `asset_resolution`. Pass `--strict-assets` to make them fatal.

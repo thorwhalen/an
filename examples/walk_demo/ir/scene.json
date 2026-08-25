@@ -1,172 +1,27 @@
 {
-  "assets": [],
-  "compatible_version": "0.1.0",
+  "version": "0.2.0",
+  "compatible_version": "0.2.0",
   "kind": "SceneIR",
   "meta": {
+    "title": "Walk Demo",
     "author": "",
-    "default_style": "cutout",
     "duration": 4.0,
     "fps": 24,
-    "notes": "",
     "resolution": {
-      "height": 360,
-      "width": 640
+      "width": 640,
+      "height": 360
     },
-    "title": "Walk Demo"
+    "default_renderer": "cutout",
+    "notes": "",
+    "step_hz": null
   },
+  "assets": [],
   "timeline": [
     {
-      "actions": [
-        {
-          "duration": 3.5,
-          "easing": "ease_in_out",
-          "from_value": -250,
-          "kind": "tween",
-          "name": null,
-          "property": "x",
-          "target": "alpha",
-          "to_value": 250
-        },
-        {
-          "duration": 0.5,
-          "easing": "ease_in_out",
-          "from_value": -0.05,
-          "kind": "tween",
-          "name": null,
-          "property": "rotation",
-          "target": "alpha/torso",
-          "to_value": 0.05
-        },
-        {
-          "children": [
-            {
-              "duration": 0.5,
-              "kind": "delay",
-              "name": null
-            },
-            {
-              "duration": 0.5,
-              "easing": "ease_in_out",
-              "from_value": null,
-              "kind": "tween",
-              "name": null,
-              "property": "rotation",
-              "target": "alpha/torso",
-              "to_value": -0.05
-            }
-          ],
-          "kind": "sequence",
-          "name": null
-        },
-        {
-          "children": [
-            {
-              "duration": 1.0,
-              "kind": "delay",
-              "name": null
-            },
-            {
-              "duration": 0.5,
-              "easing": "ease_in_out",
-              "from_value": null,
-              "kind": "tween",
-              "name": null,
-              "property": "rotation",
-              "target": "alpha/torso",
-              "to_value": 0.05
-            }
-          ],
-          "kind": "sequence",
-          "name": null
-        },
-        {
-          "children": [
-            {
-              "duration": 1.5,
-              "kind": "delay",
-              "name": null
-            },
-            {
-              "duration": 0.5,
-              "easing": "ease_in_out",
-              "from_value": null,
-              "kind": "tween",
-              "name": null,
-              "property": "rotation",
-              "target": "alpha/torso",
-              "to_value": -0.05
-            }
-          ],
-          "kind": "sequence",
-          "name": null
-        },
-        {
-          "children": [
-            {
-              "duration": 2.0,
-              "kind": "delay",
-              "name": null
-            },
-            {
-              "duration": 0.5,
-              "easing": "ease_in_out",
-              "from_value": null,
-              "kind": "tween",
-              "name": null,
-              "property": "rotation",
-              "target": "alpha/torso",
-              "to_value": 0.05
-            }
-          ],
-          "kind": "sequence",
-          "name": null
-        },
-        {
-          "children": [
-            {
-              "duration": 2.5,
-              "kind": "delay",
-              "name": null
-            },
-            {
-              "duration": 0.5,
-              "easing": "ease_in_out",
-              "from_value": null,
-              "kind": "tween",
-              "name": null,
-              "property": "rotation",
-              "target": "alpha/torso",
-              "to_value": -0.05
-            }
-          ],
-          "kind": "sequence",
-          "name": null
-        },
-        {
-          "children": [
-            {
-              "duration": 3.0,
-              "kind": "delay",
-              "name": null
-            },
-            {
-              "duration": 0.5,
-              "easing": "ease_in_out",
-              "from_value": null,
-              "kind": "tween",
-              "name": null,
-              "property": "rotation",
-              "target": "alpha/torso",
-              "to_value": 0.0
-            }
-          ],
-          "kind": "sequence",
-          "name": null
-        }
-      ],
+      "id": "walk",
+      "renderer": "cutout",
+      "duration": 4.0,
       "camera": {
-        "focal_length": 50.0,
-        "move": "push_in",
         "position": [
           0.0,
           0.0,
@@ -176,17 +31,175 @@
           0.0,
           0.0,
           0.0
-        ]
+        ],
+        "focal_length": 50.0,
+        "move": "push_in"
       },
+      "entities": [
+        {
+          "kind": "character",
+          "id": "alpha",
+          "store": "characters",
+          "ref": "alpha-v1",
+          "overrides": null
+        }
+      ],
+      "actions": [
+        {
+          "name": null,
+          "kind": "tween",
+          "target": "alpha",
+          "property": "x",
+          "to_value": 250,
+          "from_value": -250,
+          "duration": 3.5,
+          "easing": "ease_in_out"
+        },
+        {
+          "name": null,
+          "kind": "tween",
+          "target": "alpha/torso",
+          "property": "rotation",
+          "to_value": 0.05,
+          "from_value": -0.05,
+          "duration": 0.5,
+          "easing": "ease_in_out"
+        },
+        {
+          "name": null,
+          "kind": "sequence",
+          "children": [
+            {
+              "name": null,
+              "kind": "delay",
+              "duration": 0.5
+            },
+            {
+              "name": null,
+              "kind": "tween",
+              "target": "alpha/torso",
+              "property": "rotation",
+              "to_value": -0.05,
+              "from_value": null,
+              "duration": 0.5,
+              "easing": "ease_in_out"
+            }
+          ]
+        },
+        {
+          "name": null,
+          "kind": "sequence",
+          "children": [
+            {
+              "name": null,
+              "kind": "delay",
+              "duration": 1.0
+            },
+            {
+              "name": null,
+              "kind": "tween",
+              "target": "alpha/torso",
+              "property": "rotation",
+              "to_value": 0.05,
+              "from_value": null,
+              "duration": 0.5,
+              "easing": "ease_in_out"
+            }
+          ]
+        },
+        {
+          "name": null,
+          "kind": "sequence",
+          "children": [
+            {
+              "name": null,
+              "kind": "delay",
+              "duration": 1.5
+            },
+            {
+              "name": null,
+              "kind": "tween",
+              "target": "alpha/torso",
+              "property": "rotation",
+              "to_value": -0.05,
+              "from_value": null,
+              "duration": 0.5,
+              "easing": "ease_in_out"
+            }
+          ]
+        },
+        {
+          "name": null,
+          "kind": "sequence",
+          "children": [
+            {
+              "name": null,
+              "kind": "delay",
+              "duration": 2.0
+            },
+            {
+              "name": null,
+              "kind": "tween",
+              "target": "alpha/torso",
+              "property": "rotation",
+              "to_value": 0.05,
+              "from_value": null,
+              "duration": 0.5,
+              "easing": "ease_in_out"
+            }
+          ]
+        },
+        {
+          "name": null,
+          "kind": "sequence",
+          "children": [
+            {
+              "name": null,
+              "kind": "delay",
+              "duration": 2.5
+            },
+            {
+              "name": null,
+              "kind": "tween",
+              "target": "alpha/torso",
+              "property": "rotation",
+              "to_value": -0.05,
+              "from_value": null,
+              "duration": 0.5,
+              "easing": "ease_in_out"
+            }
+          ]
+        },
+        {
+          "name": null,
+          "kind": "sequence",
+          "children": [
+            {
+              "name": null,
+              "kind": "delay",
+              "duration": 3.0
+            },
+            {
+              "name": null,
+              "kind": "tween",
+              "target": "alpha/torso",
+              "property": "rotation",
+              "to_value": 0.0,
+              "from_value": null,
+              "duration": 0.5,
+              "easing": "ease_in_out"
+            }
+          ]
+        }
+      ],
       "dialogue": [
         {
-          "audio_ref": "c8cad54f0b85335cb3095231677d82e00a74b9dc44cb38de33d19a7f410440f6",
+          "speaker": "alpha",
+          "text": "Off I go, on a quick stroll.",
+          "voice_ref": null,
+          "start": 0.0,
           "duration": 1.857596,
           "emotion": null,
-          "speaker": "alpha",
-          "start": 0.0,
-          "text": "Off I go, on a quick stroll.",
-          "viseme_ref": "dfaad399460e707ae05471160dfb8d458a044cbbdba537815950a3b6d4d6530e",
           "viseme_track": {
             "fps_hint": null,
             "keyframes": [
@@ -288,24 +301,14 @@
               }
             ]
           },
-          "voice_ref": null
+          "word_timings": null,
+          "audio_ref": "c8cad54f0b85335cb3095231677d82e00a74b9dc44cb38de33d19a7f410440f6",
+          "viseme_ref": "dfaad399460e707ae05471160dfb8d458a044cbbdba537815950a3b6d4d6530e"
         }
       ],
-      "duration": 4.0,
-      "entities": [
-        {
-          "id": "alpha",
-          "kind": "character",
-          "overrides": null,
-          "ref": "alpha-v1",
-          "store": "characters"
-        }
-      ],
-      "id": "walk",
       "narration": [],
       "options": {},
-      "style": "cutout"
+      "step_hz": null
     }
-  ],
-  "version": "0.1.0"
+  ]
 }

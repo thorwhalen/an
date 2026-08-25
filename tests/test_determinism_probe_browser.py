@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.browser, pytest.mark.ffmpeg]
 #: frames are pure cost.
 SHOT = Shot(
     id="s1",
-    style="cutout",
+    renderer="cutout",
     duration=0.25,
     entities=[AssetRef(kind="character", id="charlie", store="characters", ref="c-v1")],
 )

@@ -40,7 +40,7 @@ def rigs():
 
 
 def _shot(entity, ref, actions=(), duration=2.0):
-    return Shot(id="s", style="cutout", duration=duration, entities=[AssetRef(kind="character", id=entity, store="characters", ref=ref)], actions=list(actions))
+    return Shot(id="s", renderer="cutout", duration=duration, entities=[AssetRef(kind="character", id=entity, store="characters", ref=ref)], actions=list(actions))
 
 
 def _pupil(js, t, entity="g", prop="x", side="left"):
@@ -291,7 +291,7 @@ def test_a_procedural_rig_warns_for_a_preset_without_a_mouth_form():
     warning for `skeptical`/`thinking`/`neutral` (no mouth form)."""
     from an.adapters.cutout.compile import CutoutCompileWarning
 
-    shot = Shot(id="s", style="cutout", duration=1.0, entities=[AssetRef(kind="character", id="p", store="characters", ref="p-v1")], actions=[expression("p", "skeptical")])
+    shot = Shot(id="s", renderer="cutout", duration=1.0, entities=[AssetRef(kind="character", id="p", store="characters", ref="p-v1")], actions=[expression("p", "skeptical")])
     with pytest.warns(CutoutCompileWarning, match="no descriptor"):
         compile_shot(shot, mall={"characters": {}}, fps=24)
 

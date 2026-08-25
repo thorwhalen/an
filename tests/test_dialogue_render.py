@@ -38,7 +38,7 @@ def test_dialogue_scene_renders_to_mp4():
             timeline=[
                 Shot(
                     id="s1",
-                    style="cutout",
+                    renderer="cutout",
                     duration=3.0,
                     entities=[
                         AssetRef(
@@ -87,7 +87,7 @@ def test_mouth_changes_across_frames():
             ),
             timeline=[
                 Shot(
-                    id="s1", style="cutout", duration=1.5,
+                    id="s1", renderer="cutout", duration=1.5,
                     entities=[
                         AssetRef(
                             kind="character",

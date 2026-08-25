@@ -63,7 +63,7 @@ def test_entity_round_trip_via_constructed_ir():
         timeline=[
             Shot(
                 id="s1",
-                style="cutout",
+                renderer="cutout",
                 duration=1.0,
                 entities=[
                     AssetRef(

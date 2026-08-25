@@ -20,10 +20,10 @@ class WhiteboardRenderer:
     """Whiteboard-style renderer (stub)."""
 
     name: str = "whiteboard"
-    supported_styles: tuple[str, ...] = ("whiteboard",)
+    supported_renderers: tuple[str, ...] = ("whiteboard",)
 
     def can_render(self, shot: Shot) -> bool:
-        return shot.style == "whiteboard"
+        return shot.renderer in self.supported_renderers
 
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         raise WhiteboardRenderError(

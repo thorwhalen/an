@@ -35,7 +35,7 @@ def test_produce_audio_for_scene_stamps_visemes():
         timeline=[
             Shot(
                 id="s1",
-                style="cutout",
+                renderer="cutout",
                 duration=5.0,
                 dialogue=[
                     Dialogue(speaker="charlie", text="Hi there."),
@@ -60,7 +60,7 @@ def test_scene_walking_is_idempotent():
         timeline=[
             Shot(
                 id="s1",
-                style="cutout",
+                renderer="cutout",
                 duration=2.0,
                 dialogue=[Dialogue(speaker="x", text="hi")],
             )
@@ -97,7 +97,7 @@ def test_dialogue_with_explicit_start_is_respected():
         timeline=[
             Shot(
                 id="s1",
-                style="cutout",
+                renderer="cutout",
                 duration=10.0,
                 dialogue=[
                     Dialogue(speaker="x", text="late line", start=5.0),

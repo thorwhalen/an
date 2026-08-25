@@ -31,7 +31,7 @@ def count_drawable_entities(scene_json: dict) -> int:
     """Top-level entities under the synthetic root.
 
     Named for what it counts. "n_entities" is ambiguous in this codebase — the
-    IR's ``shot.entities`` includes ``voice`` and ``style`` refs that configure
+    IR's ``shot.entities`` includes ``voice`` refs that configure
     the render rather than appearing in it, so the two numbers differ on every
     scene with dialogue. Both are recorded; only this one is inside the hash.
 

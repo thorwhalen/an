@@ -32,7 +32,7 @@ def test_renderer_basic_smoke():
     """Render a 1-second cutout shot to mp4."""
     shot = Shot(
         id="smoke",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         actions=[tween("root", "x", to=100.0, duration=1.0)],
     )
@@ -73,8 +73,8 @@ def test_renderer_basic_smoke():
 
 def test_renderer_rejects_non_cutout_shot():
     renderer = CutoutRenderer()
-    assert not renderer.can_render(Shot(id="x", style="manim", duration=1.0))
-    assert renderer.can_render(Shot(id="x", style="cutout", duration=1.0))
+    assert not renderer.can_render(Shot(id="x", renderer="manim", duration=1.0))
+    assert renderer.can_render(Shot(id="x", renderer="cutout", duration=1.0))
 
 
 @pytest.mark.browser
@@ -160,7 +160,7 @@ def test_hiding_the_stage_canvas_breaks_element_capture():
 @pytest.mark.ffmpeg
 def test_renderer_carries_provenance():
     """Render result should describe what produced it."""
-    shot = Shot(id="prov", style="cutout", duration=0.25)
+    shot = Shot(id="prov", renderer="cutout", duration=0.25)
     with tempfile.TemporaryDirectory() as d:
         mall = build_project_mall(d, ensure=True)
         ctx = RenderContext(

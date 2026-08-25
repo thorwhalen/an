@@ -34,6 +34,7 @@ way would close a cycle.)
 from __future__ import annotations
 
 import copy
+import warnings
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -79,9 +80,9 @@ def readable_without_migration(version: Any, kind: DocumentKind | None = None) -
     the next additive bump into a refusal of every project on disk (an#105
     review). Only the scene kind declares a floor; any other kind must migrate.
 
-    >>> readable_without_migration("0.1.0")
+    >>> readable_without_migration("0.2.0")
     True
-    >>> readable_without_migration("0.0.9")
+    >>> readable_without_migration("0.1.0")  # below the floor since an#106
     False
     """
     v = version_tuple(version)
@@ -155,11 +156,17 @@ def register_migration(
 ) -> Callable[[Migration], Migration]:
     """Decorator: register a migration for one kind in :data:`MIGRATIONS`.
 
-    >>> @register_migration("SceneIR", "0.0.99", "0.1.0")
+    Registered against the throwaway ``Widget`` kind from the module docstring,
+    deliberately: this registry is process-wide, so a doctest that registered a
+    step for a REAL kind would leave a second path through the ladder for every
+    test that ran afterwards — which is exactly what happened once, and it
+    presented as one unrelated test failing only in a full run (an#106).
+
+    >>> @register_migration("Widget", "1.0", "2.0")
     ... def _bump(doc):
-    ...     doc["version"] = "0.1.0"
+    ...     doc["widget_version"] = "2.0"
     ...     return doc
-    >>> ("SceneIR", "0.0.99", "0.1.0") in MIGRATIONS
+    >>> ("Widget", "1.0", "2.0") in MIGRATIONS
     True
     """
 
@@ -168,6 +175,93 @@ def register_migration(
         return fn
 
     return deco
+
+
+def _warn_dropped(before: list, after: list, *, where: str) -> None:
+    """Say what a migration removed. A silent drop of something the author
+    wrote is the failure `tests/test_loud_discards.py` exists for, even when
+    the thing dropped did nothing (an#106 review)."""
+    if len(after) == len(before):
+        return
+    gone = [e.get("id") for e in before if isinstance(e, dict) and e.get("kind") == "style"]
+    warnings.warn(
+        f"migrating to 0.2.0 dropped {len(before) - len(after)} `style` "
+        f"entit{'y' if len(before) - len(after) == 1 else 'ies'} ({gone}) from {where}: "
+        "the kind was retired in an#106 because it selected nothing — the compiler "
+        "skipped it and no reader of the styles store existed. Art direction returns "
+        "as a StylePack (see https://github.com/thorwhalen/an/issues/112).",
+        # 1 = here, 2 = the migration step, 3 = `migrate()`'s dispatch loop,
+        # 4 = whoever called `migrate()`. Measured: 3 attributed the warning to
+        # `an/ir/migrate.py` itself, so a `-W` filter keyed on module would have
+        # aimed at the library instead of the caller (an#106 review).
+        stacklevel=4,
+    )
+
+
+@register_migration(SCENE_IR.name, "0.1.0", "0.2.0")
+def _rename_style_to_renderer(doc: dict[str, Any]) -> dict[str, Any]:
+    """0.1.0 → 0.2.0 (an#106): the renderer selector stops being called "style".
+
+    ``Shot.style`` → ``Shot.renderer``, ``Meta.default_style`` →
+    ``Meta.default_renderer``, and ``AssetRef(kind="style")`` entities are
+    **dropped**. Dropping is honest here and only here: such an entity selected
+    nothing — the compiler skipped it and no reader of the styles store existed
+    — so it was a declaration with no effect, and carrying it forward under a
+    name the schema no longer accepts would fail validation on a document that
+    renders identically. Art direction returns as a StylePack (#112), which is
+    a different thing referenced a different way.
+
+    This is the first migration in the repo that actually runs (an#105 wired
+    the read path); before that, it would have been decoration and the rename
+    would have landed as a silent default.
+
+    >>> _rename_style_to_renderer({"version": "0.1.0", "meta": {"default_style": "manim"},
+    ...     "timeline": [{"id": "s", "style": "cutout"}],
+    ...     "assets": [{"kind": "style", "id": "x", "store": "styles", "ref": "x"}]})
+    {'version': '0.2.0', 'meta': {'default_renderer': 'manim'}, 'timeline': [{'id': 's', 'renderer': 'cutout'}], 'assets': []}
+    """
+    meta = doc.get("meta")
+    if isinstance(meta, dict) and "default_style" in meta:
+        # The NEW key wins. A document carrying both was hand-repaired by
+        # someone who read the changelog and forgot to delete the old key;
+        # overwriting would silently revert their fix (an#106 review).
+        stale = meta.pop("default_style")
+        meta.setdefault("default_renderer", stale)
+    for shot in doc.get("timeline") or []:
+        if isinstance(shot, dict):
+            if "style" in shot:
+                stale = shot.pop("style")
+                shot.setdefault("renderer", stale)
+            # Only rewrite a key the document actually has: a migration that
+            # ADDS `entities: []` to a shot that declared none changes the
+            # document for no reason, and every such gratuitous key is one more
+            # diff for a reader to explain.
+            if isinstance(shot.get("entities"), list):
+                kept = [
+                    e
+                    for e in shot["entities"]
+                    if not (isinstance(e, dict) and e.get("kind") == "style")
+                ]
+                _warn_dropped(shot["entities"], kept, where=f"shot {shot.get('id')!r}")
+                shot["entities"] = kept
+    # `isinstance(..., list)`, not `or []`: a truthy dict would iterate its KEYS
+    # and a null would become an empty list — inventing a key the document did
+    # not have (an#106 review).
+    if isinstance(doc.get("assets"), list):
+        kept = [
+            a
+            for a in doc["assets"]
+            if not (isinstance(a, dict) and a.get("kind") == "style")
+        ]
+        _warn_dropped(doc["assets"], kept, where="the scene's assets")
+        doc["assets"] = kept
+    doc["version"] = "0.2.0"
+    # The pair moves together: `compatible_version` is what a *future* build
+    # reads to decide whether it may skip migrating, so leaving it at 0.1.0
+    # would advertise that a 0.1.0-shaped document is still readable.
+    if "compatible_version" in doc:
+        doc["compatible_version"] = "0.2.0"
+    return doc
 
 
 @register_migration(SCENE_IR.name, SCHEMA_VERSION, SCHEMA_VERSION)
@@ -188,8 +282,10 @@ def migrate(
     migrations registered for this document's kind. Raises ``ValueError`` if no
     path exists between the source and target versions.
 
-    >>> migrate({"version": "0.1.0", "kind": "SceneIR"})["version"]
-    '0.1.0'
+    >>> migrate({"version": "0.2.0", "kind": "SceneIR"})["version"]
+    '0.2.0'
+    >>> migrate({"version": "0.1.0", "kind": "SceneIR"})["version"]  # the an#106 ladder
+    '0.2.0'
     """
     doc_kind = kind_of(doc, kind=kind)
     target = target_version if target_version is not None else doc_kind.current_version

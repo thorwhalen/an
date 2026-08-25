@@ -22,10 +22,10 @@ class RemotionRenderer:
     """Remotion-based renderer (skeleton)."""
 
     name: str = "remotion"
-    supported_styles: tuple[str, ...] = ("motion_graphics",)
+    supported_renderers: tuple[str, ...] = ("motion_graphics",)
 
     def can_render(self, shot: Shot) -> bool:
-        return shot.style == "motion_graphics"
+        return shot.renderer in self.supported_renderers
 
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         if shutil.which("npx") is None:

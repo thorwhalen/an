@@ -17,7 +17,7 @@ You're helping the user develop a scene specification that will end up as `scene
    - Beats: what happens in order
    - Dialogue: do characters speak, what about, voice tone
    - Camera: static or moves
-4. **Check the asset library** before generating new things. If `mall["characters"]` already has a "Maya", offer to reuse her instead of inventing a new character. Same for environments, voices, styles.
+4. **Check the asset library** before generating new things. If `mall["characters"]` already has a "Maya", offer to reuse her instead of inventing a new character. Same for environments and voices. (There is no styles store to check: `AssetRef(kind="style")` was retired in an#106 — art direction returns as a StylePack, an#112.)
    - **Also check each reused character's `asset_sets`** — declared swap sets (`hands`, `body_facing`, `eyelid`, …) turn direction like "Maya turns to face left" or "she points" into a NAMED-KEY change rather than a transform the director has to invent: `{kind: set, target: maya/torso, property: body_facing, value: left, at: 3.5}`. Offer the declared keys by name; never author a swap on a set or key the descriptor does not declare (compile refuses it, listing the declared ones).
 5. **Echo the spec back as a draft `scene.md`** for approval before writing anything to disk.
 
@@ -25,12 +25,12 @@ You're helping the user develop a scene specification that will end up as `scene
 
 - **Voice:** ask only if dialogue is in scope. Defer to Phase 3 for actual TTS — at Phase 1, just record voice intent in the spec.
 - **Timing per shot:** propose totals; offer to break into shots only if the user wants control.
-- **Style:** assume cutout unless the request is mathematical (lean Manim) or purely typographic / motion-graphics (lean Remotion).
+- **Renderer:** assume cutout unless the request is mathematical (lean Manim) or purely typographic / motion-graphics (lean Remotion). The key is `renderer:` on a shot and `default_renderer:` in `meta` — `style` was retired in an#106 and a document carrying it renders with the DEFAULT renderer, silently.
 
 ## What NOT to ask
 
 - File paths, fps, resolution — defaults work.
-- Backend choice — the orchestrator picks based on style.
+- Backend choice — the orchestrator picks based on the shot's `renderer`.
 - Whether to render — Phase 1 doesn't render. Don't promise it.
 
 ## Confirm-before-write

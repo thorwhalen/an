@@ -62,7 +62,7 @@ def test_silent_shot_still_has_audio_stream():
         proj.scene = SceneIR(
             meta=Meta(title="silent", duration=0.5, fps=12,
                       resolution=Resolution(width=160, height=120)),
-            timeline=[Shot(id="s1", style="cutout", duration=0.5)],
+            timeline=[Shot(id="s1", renderer="cutout", duration=0.5)],
         )
         proj.mall["scenes"]["main"] = proj.scene
         out = render_project(root, output_name="silent")
@@ -82,7 +82,7 @@ def test_dialogue_shot_carries_audio_stream():
                       resolution=Resolution(width=240, height=180)),
             timeline=[
                 Shot(
-                    id="s1", style="cutout", duration=2.0,
+                    id="s1", renderer="cutout", duration=2.0,
                     entities=[
                         AssetRef(kind="character", id="c",
                                  store="characters", ref="c-v1")
@@ -114,9 +114,9 @@ def test_multi_shot_concat_preserves_audio():
             meta=Meta(title="x", duration=2.0, fps=12,
                       resolution=Resolution(width=160, height=120)),
             timeline=[
-                Shot(id="quiet", style="cutout", duration=1.0),
+                Shot(id="quiet", renderer="cutout", duration=1.0),
                 Shot(
-                    id="loud", style="cutout", duration=1.0,
+                    id="loud", renderer="cutout", duration=1.0,
                     dialogue=[Dialogue(speaker="x", text="hi")],
                 ),
             ],

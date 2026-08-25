@@ -131,10 +131,10 @@ _RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(
     {"hold", "push_in", "pull_out", "zoom_in", "zoom_out"}
 )
 
-#: Entity kinds the cutout renderer draws. `voice` and `style` are legitimately
+#: Entity kinds the cutout renderer draws. `voice` is legitimately
 #: not drawable — they configure the render rather than appearing in it.
 _DRAWABLE_ENTITY_KINDS: frozenset[str] = frozenset({"character", "environment"})
-_CONFIGURING_ENTITY_KINDS: frozenset[str] = frozenset({"voice", "style"})
+_CONFIGURING_ENTITY_KINDS: frozenset[str] = frozenset({"voice"})
 
 #: Any property outside the transform vocabulary on a set/tween names a swap
 #: SET, which must be declared by the target entity's descriptor (an#87). The
@@ -411,6 +411,50 @@ def _check_step_hz(
         )
 
 
+#: Keys an#106 retired, and what to write instead. `SceneIR`'s models are
+#: `extra="allow"` (deliberately — forward compatibility), so a document that
+#: still carries one of these validates cleanly and renders with the DEFAULT
+#: renderer. The migration rewrites stored 0.1.x documents, but nothing rewrites
+#: a document that is already 0.2.0: an agent patch, a hand edit, or a caller
+#: passing `style=` to `Shot(...)` all produce a permanently dead key that no
+#: later migration will touch. So it is caught here, at ERROR, by name.
+RETIRED_KEYS: dict[str, dict[str, str]] = {
+    "meta": {"default_style": "default_renderer"},
+    "shot": {"style": "renderer"},
+}
+
+
+def _check_retired_keys(scene: SceneIR, report: "ValidationReport") -> None:
+    """One ERROR per retired key still present as an `extra`.
+
+    >>> from an.ir.schema import Meta, SceneIR, Shot
+    >>> scene = SceneIR(meta=Meta(), timeline=[Shot(id="s1", style="manim")])
+    >>> report = ValidationReport()
+    >>> _check_retired_keys(scene, report)
+    >>> print(report.findings[0].description)
+    `style` was renamed to `renderer` (an#106) and this value is being ignored...
+    """
+    for key, new in RETIRED_KEYS["meta"].items():
+        if key in (scene.meta.model_extra or {}):
+            report.add(
+                "error",
+                f"meta/{key}",
+                f"`{key}` was renamed to `{new}` (an#106) and this value is "
+                f"being ignored — the schema still ACCEPTS it (`extra=\"allow\"`), "
+                f"so nothing else will tell you. Rename it to `{new}`.",
+            )
+    for i, shot in enumerate(scene.timeline):
+        for key, new in RETIRED_KEYS["shot"].items():
+            if key in (shot.model_extra or {}):
+                report.add(
+                    "error",
+                    f"timeline[{i}]/{key}",
+                    f"`{key}` was renamed to `{new}` (an#106) and this value is "
+                    f"being ignored — the shot will render with "
+                    f"`renderer: {shot.renderer}`. Rename it to `{new}`.",
+                )
+
+
 def validate_semantic(
     scene: SceneIR,
     *,
@@ -429,6 +473,7 @@ def validate_semantic(
     """
     report = ValidationReport()
 
+    _check_retired_keys(scene, report)
     if scene.meta.duration < 0:
         report.add("error", "meta/duration", "duration must be non-negative")
     if scene.meta.fps <= 0:

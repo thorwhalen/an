@@ -35,7 +35,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures" / "characters"
 def _shot(actions=(), *, duration=2.0, camera=None, step_hz=None, entity="c"):
     return Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=duration,
         camera=camera,
         step_hz=step_hz,
@@ -260,7 +260,7 @@ def test_swap_tweens_blinks_and_plays_are_not_resampled(tmp_path):
     # (an#89 review). The presence assertion keeps it from going vacuous again.
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=6.0,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
         actions=[

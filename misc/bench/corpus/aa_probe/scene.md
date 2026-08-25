@@ -8,7 +8,7 @@ fps: 24
 resolution:
   width: 320
   height: 240
-default_style: cutout
+default_renderer: cutout
 ```
 
 ## Shot probe (cutout)

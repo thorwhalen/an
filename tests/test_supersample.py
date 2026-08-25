@@ -45,7 +45,7 @@ def test_the_factor_never_reaches_the_compiled_scene_document():
     from an.adapters.cutout.compile import compile_shot
     from an.ir.schema import Shot
 
-    shot = Shot(id="s1", duration=1.0, style="cutout")
+    shot = Shot(id="s1", duration=1.0, renderer="cutout")
     compiled = compile_shot(shot, mall={}, fps=24, width=320, height=240)
     baseline = scenes_contract_sha256([_as_dict(compiled)])
 

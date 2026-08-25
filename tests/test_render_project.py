@@ -40,7 +40,7 @@ def test_init_then_render_produces_mp4():
             timeline=[
                 Shot(
                     id="s1",
-                    style="cutout",
+                    renderer="cutout",
                     duration=1.0,
                     actions=[tween("root", "x", to=50.0, duration=1.0)],
                 )
@@ -71,8 +71,8 @@ def test_render_concatenates_multiple_shots():
                 resolution=Resolution(width=160, height=120),
             ),
             timeline=[
-                Shot(id="a", style="cutout", duration=1.0),
-                Shot(id="b", style="cutout", duration=1.0),
+                Shot(id="a", renderer="cutout", duration=1.0),
+                Shot(id="b", renderer="cutout", duration=1.0),
             ],
         )
         proj.mall["scenes"]["main"] = proj.scene

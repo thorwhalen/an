@@ -173,7 +173,7 @@ def test_expression_problems_name_every_exit():
 
 def _shot(actions=(), dialogue=(), duration=2.0):
     return Shot(
-        id="s", style="cutout", duration=duration,
+        id="s", renderer="cutout", duration=duration,
         entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
         actions=list(actions), dialogue=list(dialogue),
     )

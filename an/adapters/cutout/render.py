@@ -283,15 +283,15 @@ class CutoutRenderer:
     >>> r = CutoutRenderer()
     >>> r.name
     'cutout'
-    >>> r.supported_styles
+    >>> r.supported_renderers
     ('cutout',)
     """
 
     name: str = "cutout"
-    supported_styles: tuple[str, ...] = ("cutout",)
+    supported_renderers: tuple[str, ...] = ("cutout",)
 
     def can_render(self, shot: Shot) -> bool:
-        return shot.style == "cutout"
+        return shot.renderer in self.supported_renderers
 
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         """Render ``shot`` to mp4 using ``ctx`` for paths + parameters."""

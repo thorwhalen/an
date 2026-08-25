@@ -11,16 +11,18 @@ fraction of a second so the CLI is snappy.
 
 from __future__ import annotations
 
-from typing import Literal, TypeAlias
+from typing import Literal, TypeAlias, get_args
 
 # -- Versioning ---------------------------------------------------------------
 
 #: Current Scene IR schema version. Bump on additive changes; on breaking
 #: changes, also bump COMPATIBLE_VERSION and add a migration in `ir.migrate`.
-SCHEMA_VERSION: str = "0.1.0"
+#: 0.2.0 renamed `Shot.style` -> `Shot.renderer` and `Meta.default_style` ->
+#: `Meta.default_renderer`, and retired `AssetRef(kind="style")` (an#106).
+SCHEMA_VERSION: str = "0.2.0"
 
 #: Minimum Scene IR version this code can still read without migration.
-COMPATIBLE_VERSION: str = "0.1.0"
+COMPATIBLE_VERSION: str = "0.2.0"
 
 
 # -- Render defaults ----------------------------------------------------------
@@ -159,19 +161,17 @@ Seconds: TypeAlias = float
 EasingSpec: TypeAlias = str | tuple[float, float, float, float] | list[float]
 
 
-# -- Style enum ---------------------------------------------------------------
+# -- Renderer enum ---------------------------------------------------------------
 
-#: The renderer-style of a shot. The orchestrator uses this to pick an adapter.
-StyleName: TypeAlias = Literal[
+#: Which renderer draws a shot. The orchestrator uses this to pick an adapter.
+RendererName: TypeAlias = Literal[
     "cutout",
     "manim",
     "motion_graphics",
     "whiteboard",
 ]
 
-SUPPORTED_STYLES: tuple[str, ...] = (
-    "cutout",
-    "manim",
-    "motion_graphics",
-    "whiteboard",
-)
+#: The same vocabulary as :data:`RendererName`, as a runtime tuple — DERIVED
+#: from it, because a hand-typed second copy is a second SSOT that drifts on
+#: the day a renderer is added and nothing fails.
+SUPPORTED_RENDERERS: tuple[str, ...] = get_args(RendererName)

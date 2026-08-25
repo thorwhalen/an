@@ -55,7 +55,7 @@ def test_two_characters_render_distinct_and_mouth_animates():
             ),
             timeline=[
                 Shot(
-                    id="s1", style="cutout", duration=2.0,
+                    id="s1", renderer="cutout", duration=2.0,
                     entities=[
                         AssetRef(kind="character", id="alpha",
                                  store="characters", ref="alpha-v1"),

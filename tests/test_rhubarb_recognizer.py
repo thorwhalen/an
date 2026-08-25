@@ -144,7 +144,7 @@ def test_render_resolves_a_named_lipsync_with_the_language(monkeypatch, tmp_path
     proj = load(root)
     proj.scene = SceneIR(
         meta=Meta(title="t", duration=1.0, fps=12),
-        timeline=[Shot(id="s", style="cutout", duration=1.0, dialogue=[Dialogue(speaker="c", text="hi")])],
+        timeline=[Shot(id="s", renderer="cutout", duration=1.0, dialogue=[Dialogue(speaker="c", text="hi")])],
     )
     proj.mall["scenes"]["main"] = proj.scene
     seen = {}

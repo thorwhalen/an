@@ -260,7 +260,7 @@ def test_a_compiled_scene_s_swap_set_aliases_flow_into_the_palette(tmp_path):
     scene = compile_shot(
         Shot(
             id="s",
-            style="cutout",
+            renderer="cutout",
             duration=1.0,
             entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
         ),

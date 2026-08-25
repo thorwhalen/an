@@ -42,7 +42,7 @@ def gale_store(tmp_path):
 def _shot(actions, duration=6.0):
     return Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=duration,
         entities=[AssetRef(kind="character", id="gale", store="characters", ref="gale")],
         actions=list(actions),
@@ -157,7 +157,7 @@ def test_an_undeclared_animation_is_refused_naming_the_declared_ones(gale_store)
 def test_a_procedural_entity_cannot_play_anything():
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
         actions=[play("c", "idle_breath")],
@@ -384,7 +384,7 @@ def test_bone_root_animates_the_entity_container(gale_store):
 def test_a_play_targets_its_own_entity_when_two_share_a_rig(gale_store):
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[
             AssetRef(kind="character", id="abel", store="characters", ref="gale"),

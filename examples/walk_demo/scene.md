@@ -8,7 +8,7 @@ fps: 24
 resolution:
   width: 640
   height: 360
-default_style: cutout
+default_renderer: cutout
 ```
 
 ## Shot walk (cutout)

@@ -34,9 +34,11 @@ fixed.
 5. **`CharacterDescriptor(name="sword")` is a seven-bone humanoid with a face and a blink**
    (`model_post_init` re-seeds from an empty list). "A prop is just a character" is the option
    with the most landmines, not the cheapest.
-6. **The styles store has no reader**, `AssetRef(kind="style")` is validated and then skipped,
-   and colours live in three disconnected places (compiler, runtime literals, factory — which
-   has *two* disagreeing palette tables).
+6. **The styles store has no reader**, and colours live in three disconnected places (compiler,
+   runtime literals, factory — which has *two* disagreeing palette tables). `AssetRef(kind="style")`
+   was validated and then skipped; an#106 retired it (the schema no longer accepts it, and the
+   0.1.0 → 0.2.0 migration drops it from stored documents) because it selected nothing and the
+   word belonged to the renderer. Art direction returns as a StylePack (#112).
 
 ## 1. The model — one camera, one factor per plane
 
@@ -153,8 +155,8 @@ A pack must not declare a role it cannot change — `lip`, `mouth_fill`, `teeth`
 ## 5. Order of work
 
 
-`0` wire `migrate()` into the SceneIR read path → `1` `Shot.style` → `Shot.renderer` (+ retire
-`kind="style"`), one migration → `2` promote `_python_timeline` → `3` props (extraction alone,
+`0` wire `migrate()` into the SceneIR read path **(landed, an#105)** → `1` `Shot.style` →
+`Shot.renderer` (+ retire `kind="style"`), one migration **(landed, an#106)** → `2` promote `_python_timeline` → `3` props (extraction alone,
 then the path) → `4` the translating camera → `5` plane environments (store-declared only) →
 `6` the `stage_pan` fixture, goldens, metric, tripwire → `7` StylePack.
 

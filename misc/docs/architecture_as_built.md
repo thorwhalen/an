@@ -170,7 +170,7 @@ Project.load(dir)
    │     ↳ writes scene back to mall["scenes"]["main"] (mtime equalized)
    │
    ├─ for each shot in scene.timeline:
-   │     renderer = RendererRegistry.find_for(shot)        ← matches on shot.style
+   │     renderer = RendererRegistry.find_for(shot)        ← matches on shot.renderer
    │     result = renderer.render(shot, ctx)
    │     ↳ cutout: compile_shot(shot, mall) → CutoutSceneJSON
    │              → spin Chromium via Playwright
@@ -308,7 +308,7 @@ title: ...
 duration: 12
 fps: 24
 resolution: { width: 640, height: 360 }
-default_style: cutout
+default_renderer: cutout
 ```
 
 ## Shot s1 (cutout)

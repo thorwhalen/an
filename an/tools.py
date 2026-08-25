@@ -14,8 +14,6 @@ from pathlib import Path
 from an.check_requirements import check_requirements as _check_requirements
 from an.check_requirements import format_report
 from an.ir.sync import sync as _sync
-from an.ir.migrate import DocumentMigrationError
-from an.ir.sync import SceneValidationError
 from an.orchestrate import render_project as _render_project
 from an.orchestrate import validate_project
 from an.project import init as _init
@@ -50,12 +48,7 @@ def validate(project_dir: str) -> str:
 
 def sync(project_dir: str) -> str:
     """Reconcile scene.md and ir/scene.json inside ``project_dir``."""
-    try:
-        result = _sync(project_dir)
-    except (DocumentMigrationError, SceneValidationError) as e:
-        # A message for a human, not a traceback — the same rule `an validate`
-        # already follows (an#105 review moved the stack dump here).
-        return str(e)
+    result = _sync(project_dir)
     parts = []
     if result.wrote_json:
         parts.append("regenerated ir/scene.json from scene.md")
@@ -124,21 +117,18 @@ def render(
             parallel_arg = int(parallel)
         except ValueError:
             return f"invalid --parallel value: {parallel!r}; use a number or 'auto'"
-    try:
-        output_path = _render_project(
-            project_dir,
-            output_name=output_name,
-            tts=tts,
-            lipsync=lipsync,
-            parallel=parallel_arg,
-            strict_assets=strict_assets,
-            supersample=supersample,
-            pix_fmt=pix_fmt or None,
-            step_hz=step_hz or None,
-            language=language,
-        )
-    except (DocumentMigrationError, SceneValidationError) as e:
-        return str(e)
+    output_path = _render_project(
+        project_dir,
+        output_name=output_name,
+        tts=tts,
+        lipsync=lipsync,
+        parallel=parallel_arg,
+        strict_assets=strict_assets,
+        supersample=supersample,
+        pix_fmt=pix_fmt or None,
+        step_hz=step_hz or None,
+        language=language,
+    )
     return f"rendered: {output_path}"
 
 

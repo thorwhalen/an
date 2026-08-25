@@ -29,7 +29,7 @@ def test_roundtrip_stability():
         timeline=[
             Shot(
                 id="s1",
-                style="cutout",
+                renderer="cutout",
                 duration=5.0,
                 camera=Camera(move="push_in"),
                 dialogue=[Dialogue(speaker="charlie", text="hi")],

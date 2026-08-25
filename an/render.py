@@ -1,7 +1,7 @@
 """Project-level rendering: per-shot mp4 → final composited mp4 via ffmpeg concat.
 
 The orchestrator picks a renderer per shot from the registry (matched on
-``shot.style``) and renders each shot in isolation, then concatenates the
+``shot.renderer``) and renders each shot in isolation, then concatenates the
 per-shot outputs into one final mp4 written to ``project.mall["output"]``.
 
 Phase 2D ships the cutout path; later phases register Manim / Remotion / etc.
@@ -248,7 +248,7 @@ def render(
         if r is None:
             raise RenderError(
                 f"no renderer registered for shot {shot.id!r} "
-                f"(style={shot.style!r}); registered: "
+                f"(renderer={shot.renderer!r}); registered: "
                 f"{list(_DEFAULT_REGISTRY.names())}"
             )
         shot_renderers.append((shot, r))
