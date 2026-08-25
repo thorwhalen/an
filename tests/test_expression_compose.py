@@ -48,7 +48,7 @@ def _track(*codes):
 
 def _shot(actions=(), dialogue=(), duration=2.0, ref="c", entity="c"):
     return Shot(
-        id="s", style="cutout", duration=duration,
+        id="s", renderer="cutout", duration=duration,
         entities=[AssetRef(kind="character", id=entity, store="characters", ref=ref)],
         actions=list(actions), dialogue=list(dialogue),
     )
@@ -212,7 +212,7 @@ def test_a_baked_face_refuses_an_authored_expression_and_warns_on_sugar(mall):
 
 
 def test_a_procedural_rig_takes_an_expression_as_a_no_op_with_a_warning():
-    shot = Shot(id="s", style="cutout", duration=1.0, entities=[AssetRef(kind="character", id="p", store="characters", ref="p-v1")], actions=[expression("p", "happy")])
+    shot = Shot(id="s", renderer="cutout", duration=1.0, entities=[AssetRef(kind="character", id="p", store="characters", ref="p-v1")], actions=[expression("p", "happy")])
     with pytest.warns(CutoutCompileWarning, match="no descriptor"):
         js = compile_shot(shot, mall={"characters": {}}, fps=24)
     assert not _face_channels(js)
@@ -509,7 +509,7 @@ def test_axis_ranges_hold_on_what_reaches_the_rig():
     from an.expression import DefaultExpressionProvider, preset_axes
 
     assert preset_axes("neutral", axes={"brow_height_l": 5.0}, intensity=0.5)["brow_height_l"] == 0.5
-    shot = Shot(id="s", style="cutout", duration=1.0, entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
+    shot = Shot(id="s", renderer="cutout", duration=1.0, entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
                 actions=[expression("c", "surprised", blend=0.0), expression("c", "surprised", blend=0.0)])
     curves = {c.axis: c.samples for c in DefaultExpressionProvider().curves(shot, "c", fps=4)}
     assert max(curves["brow_height_l"]) == 1.0

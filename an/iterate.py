@@ -129,7 +129,7 @@ instruction, and you reply with a structured patch on that JSON tree.
 
 The IR shape (relevant fields):
 
-  - meta: {title, author, duration, fps, resolution, default_style, notes}
+  - meta: {title, author, duration, fps, resolution, default_renderer, notes}
   - timeline: a list of shots, each with:
       - id (string, unique)
       - style ("cutout" | "manim" | "motion_graphics" | "whiteboard")

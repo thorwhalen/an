@@ -11,7 +11,7 @@ from an.ir.schema import AssetRef, Shot
 
 
 def test_empty_shot_compiles_to_minimal_scene():
-    shot = Shot(id="s1", style="cutout", duration=3.0)
+    shot = Shot(id="s1", renderer="cutout", duration=3.0)
     j = compile_shot(shot)
     assert j.timeline.duration == 3.0
     assert j.scene.name == "root"
@@ -21,7 +21,7 @@ def test_empty_shot_compiles_to_minimal_scene():
 
 
 def test_non_cutout_style_rejected():
-    shot = Shot(id="s1", style="manim", duration=1.0)
+    shot = Shot(id="s1", renderer="manim", duration=1.0)
     with pytest.raises(ValueError, match="cutout"):
         compile_shot(shot)
 
@@ -29,7 +29,7 @@ def test_non_cutout_style_rejected():
 def test_character_entity_creates_subtree():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[
             AssetRef(
@@ -58,7 +58,7 @@ def test_character_entity_creates_subtree():
 def test_character_uses_store_provided_parts_when_present():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[
             AssetRef(kind="character", id="maya", store="characters", ref="maya-v1")
@@ -73,7 +73,7 @@ def test_character_uses_store_provided_parts_when_present():
 def test_tween_compiles_to_animation_plus_placed_clip():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         actions=[tween("charlie/torso", "rotation", to=1.5, duration=1.0)],
     )
@@ -100,7 +100,7 @@ def test_tween_compiles_to_animation_plus_placed_clip():
 def test_sequence_flattens_to_correct_start_times():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=3.0,
         actions=[
             sequence(
@@ -120,7 +120,7 @@ def test_sequence_flattens_to_correct_start_times():
 def test_set_action_compiles_to_step_keyframe():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         actions=[set_("a", "x", 5.0, at=0.5)],
     )
@@ -136,7 +136,7 @@ def test_set_action_compiles_to_step_keyframe():
 def test_compile_output_round_trips_through_serialize():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[
             AssetRef(kind="character", id="c", store="characters", ref="c-v1")
@@ -161,7 +161,7 @@ def test_compiler_refuses_bool_and_none_keyframe_values():
     from an.ir.schema import SetAction, TweenAction
 
     def _shot(action):
-        return Shot(id="s", style="cutout", duration=1.0, actions=[action])
+        return Shot(id="s", renderer="cutout", duration=1.0, actions=[action])
 
     for bad in (True, False, None):
         with _pytest.raises(CutoutCompileError, match="bool and None"):

@@ -30,7 +30,9 @@ Markdown convention (v0.1, kept simple — extended in P5):
     maya: Because the pigeons trust us.
     ```
 
-A shot heading is ``## Shot <id> (<style>)``. Fenced blocks attach to the
+A shot heading is ``## Shot <id> (<renderer>)`` — the parenthesised word names
+the RENDERER, and is captured positionally, so the heading is unchanged by the
+an#106 rename. Fenced blocks attach to the
 nearest enclosing scope. Unknown blocks are preserved as ``options`` so
 agent extensions don't get clobbered on round-trip.
 """
@@ -117,19 +119,31 @@ def markdown_to_ir(md_text: str) -> SceneIR:
     global_text = parts["__global__"]
 
     meta_data = _extract_yaml_block(global_text, "meta") or {}
+    if "default_style" in meta_data:
+        # A REFUSAL, not a silent rename. `scene.md` is the human SSOT and
+        # carries no schema version, so nothing here can tell "written before
+        # an#106" from "typed today" — and `Meta` is `extra="allow"`, so
+        # dropping it would leave the author's declared renderer silently
+        # replaced by the default. The stored JSON is migrated instead; a
+        # hand-edited md is the author's to fix, once.
+        raise ValueError(
+            "`default_style:` in the meta block was renamed to `default_renderer:` "
+            "(an#106): it names the RENDERER that draws the shots, not art "
+            "direction. Rename the key."
+        )
     if title and "title" not in meta_data:
         meta_data["title"] = title
     meta = Meta(**meta_data)
 
     shots: list[Shot] = []
-    for shot_id, style, body in parts["__shots__"]:
+    for shot_id, renderer, body in parts["__shots__"]:
         shot_yaml = _extract_yaml_block(body, "shot") or {}
         dialogue_block = _extract_dialogue_block(body, shot_id=shot_id)
         entities_block = _extract_entities_block(body)
         actions_block = _extract_actions_block(body)
         shot_kwargs: dict[str, Any] = {
             "id": shot_id,
-            "style": style or meta.default_style,
+            "renderer": renderer or meta.default_renderer,
             "duration": shot_yaml.get("duration", DEFAULT_DURATION),
             "dialogue": dialogue_block,
             "entities": entities_block,
@@ -400,7 +414,7 @@ def ir_to_markdown(scene: SceneIR) -> str:
             "width": scene.meta.resolution.width,
             "height": scene.meta.resolution.height,
         },
-        "default_style": scene.meta.default_style,
+        "default_renderer": scene.meta.default_renderer,
     }
     if scene.meta.step_hz is not None:
         meta_dict["step_hz"] = scene.meta.step_hz
@@ -412,7 +426,7 @@ def ir_to_markdown(scene: SceneIR) -> str:
         parts.append(scene.meta.notes.rstrip() + "\n")
 
     for shot in scene.timeline:
-        parts.append(f"## Shot {shot.id} ({shot.style})\n")
+        parts.append(f"## Shot {shot.id} ({shot.renderer})\n")
         shot_yaml: dict[str, Any] = {"duration": shot.duration}
         if shot.step_hz is not None:
             shot_yaml["step_hz"] = shot.step_hz

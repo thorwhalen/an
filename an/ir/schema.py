@@ -18,13 +18,13 @@ Doctest:
 >>> from an.ir.schema import SceneIR, Meta, Shot
 >>> scene = SceneIR(
 ...     meta=Meta(title="Park Bench", duration=45.0),
-...     timeline=[Shot(id="s1", style="cutout", duration=45.0)],
+...     timeline=[Shot(id="s1", renderer="cutout", duration=45.0)],
 ... )
 >>> scene.version
-'0.1.0'
+'0.2.0'
 >>> scene.kind
 'SceneIR'
->>> scene.timeline[0].style
+>>> scene.timeline[0].renderer
 'cutout'
 """
 
@@ -43,7 +43,7 @@ from an.base import (
     EasingSpec,
     PathStr,
     Seconds,
-    StyleName,
+    RendererName,
 )
 
 
@@ -102,7 +102,10 @@ class AssetRef(_IRModel):
     'maya'
     """
 
-    kind: Literal["character", "environment", "voice", "style", "prop"]
+    #: ``"style"`` was retired in an#106: it selected nothing (the compiler
+    #: skipped it, nothing read the styles store) and the name belonged to the
+    #: renderer selector. Art direction arrives as a StylePack (#112).
+    kind: Literal["character", "environment", "voice", "prop"]
     id: str
     store: str  # which store in the project mall
     ref: str  # key inside that store
@@ -340,7 +343,12 @@ class Shot(_IRModel):
     """
 
     id: str
-    style: StyleName = "cutout"
+    #: Which RENDERER draws this shot — not art direction. The field was
+    #: called `style` until an#106, colliding with the styles store (which
+    #: holds art direction) and with `AssetRef(kind="style")`; one word for two
+    #: meanings is how a scene came to declare a "style" that selected a
+    #: renderer while the thing that actually styles it went unread.
+    renderer: RendererName = "cutout"
     duration: Seconds = DEFAULT_DURATION
     camera: Camera | None = None
     entities: list[AssetRef] = Field(default_factory=list)
@@ -381,7 +389,7 @@ class Meta(_IRModel):
     duration: Seconds = 0.0
     fps: int = DEFAULT_FPS
     resolution: Resolution = Field(default_factory=Resolution)
-    default_style: StyleName = "cutout"
+    default_renderer: RendererName = "cutout"
     notes: str = ""
     #: Stepped timing for AUTHORED TWEENS, in pose updates per second; ``None``
     #: (the default) leaves every tween smooth. At 30 fps, ``15`` is "on twos"
@@ -407,7 +415,7 @@ class SceneIR(_IRModel):
     at ``ir/scene.json`` inside an an project.
 
     >>> doc = SceneIR(meta=Meta(title="Hello"))
-    >>> doc.version == '0.1.0'
+    >>> doc.version == '0.2.0'
     True
     >>> round_tripped = SceneIR.model_validate_json(doc.model_dump_json())
     >>> round_tripped.meta.title

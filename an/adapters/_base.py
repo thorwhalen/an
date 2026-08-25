@@ -2,7 +2,7 @@
 
 Every backend implements ``Renderer`` and registers itself by name. The
 orchestrator (or `RenderRouter` in non-agent contexts) picks a renderer per
-shot by inspecting ``shot.style`` and asking each registered renderer's
+shot by inspecting ``shot.renderer`` and asking each registered renderer's
 ``can_render``.
 
 >>> from an.adapters import Renderer

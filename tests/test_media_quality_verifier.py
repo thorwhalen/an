@@ -49,7 +49,7 @@ def test_default_orchestrator_uses_media_quality():
         proj.scene = SceneIR(
             meta=Meta(title="x", duration=0.5, fps=12,
                       resolution=Resolution(width=160, height=120)),
-            timeline=[Shot(id="s1", style="cutout", duration=0.5)],
+            timeline=[Shot(id="s1", renderer="cutout", duration=0.5)],
         )
         proj.mall["scenes"]["main"] = proj.scene
         report = orchestrate(root, output_name="x")
@@ -72,7 +72,7 @@ def test_dialogue_render_with_offline_tts_flagged_as_silent():
                       resolution=Resolution(width=240, height=180)),
             timeline=[
                 Shot(
-                    id="s1", style="cutout", duration=1.5,
+                    id="s1", renderer="cutout", duration=1.5,
                     entities=[
                         AssetRef(kind="character", id="c",
                                  store="characters", ref="c-v1")

@@ -8,7 +8,7 @@ fps: 24
 resolution:
   width: 320
   height: 240
-default_style: cutout
+default_renderer: cutout
 ```
 
 ## Shot line (cutout)
@@ -29,7 +29,6 @@ duration: 1.0
   target: talker/head
   property: y
   value: -89
-  at: 0.0
 ```
 
 ```dialogue

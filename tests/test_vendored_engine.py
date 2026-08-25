@@ -157,7 +157,7 @@ def test_a_render_succeeds_with_the_outside_world_switched_off(
         timeline=[
             Shot(
                 id="s1",
-                style="cutout",
+                renderer="cutout",
                 duration=0.25,
                 entities=[
                     AssetRef(

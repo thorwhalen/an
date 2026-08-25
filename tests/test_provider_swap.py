@@ -53,7 +53,7 @@ def _two_lines() -> SceneIR:
         meta=Meta(title="t", duration=2.0),
         timeline=[
             Shot(
-                id="s1", style="cutout", duration=2.0,
+                id="s1", renderer="cutout", duration=2.0,
                 dialogue=[
                     Dialogue(speaker="x", text="hello"),
                     Dialogue(speaker="y", text="world"),

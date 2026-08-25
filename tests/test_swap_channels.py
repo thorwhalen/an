@@ -52,7 +52,7 @@ def gale_store(tmp_path):
 def _shot(actions=(), *, duration=2.0):
     return Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=duration,
         entities=[
             AssetRef(kind="character", id="gale", store="characters", ref="gale")
@@ -597,7 +597,7 @@ def test_the_ir_validator_reads_the_migrated_descriptor(tmp_path):
         timeline=[
             Shot(
                 id="s",
-                style="cutout",
+                renderer="cutout",
                 duration=1.0,
                 entities=[AssetRef(kind="character", id="robo", store="characters", ref="robo")],
                 actions=[
@@ -683,7 +683,7 @@ def test_a_lowercase_authored_viseme_on_a_procedural_rig_is_refused():
     reached the runtime's case-sensitive throw (an#87 review)."""
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
         actions=[SetAction(target="c/head/mouth", property="viseme", value="a")],
@@ -703,7 +703,7 @@ def test_the_procedural_mouth_declares_its_set_as_data():
     mirror of the runtime's `_anDrawSets`."""
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
     )

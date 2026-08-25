@@ -593,8 +593,8 @@ def compile_shot(
     measures pixels, where a stand-in is a wrong answer wearing a right one's
     clothes (an#33).
     """
-    if shot.style != "cutout":
-        raise ValueError(f"compile_shot expects style='cutout'; got {shot.style!r}")
+    if shot.renderer != "cutout":
+        raise ValueError(f"compile_shot expects style='cutout'; got {shot.renderer!r}")
     if step_hz is not None and not (math.isfinite(step_hz) and 0 < step_hz <= fps):
         raise CutoutCompileError(
             f"step_hz must satisfy 0 < step_hz <= fps ({fps}); got {step_hz!r}. "

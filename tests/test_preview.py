@@ -31,7 +31,7 @@ def _seed_project_with_shot(root: Path) -> Path:
             duration=1.0,
             resolution=Resolution(width=320, height=240),
         ),
-        timeline=[Shot(id="only", style="cutout", duration=1.0)],
+        timeline=[Shot(id="only", renderer="cutout", duration=1.0)],
     )
     save(proj)
     return root
@@ -62,8 +62,8 @@ def test_stage_preview_picks_named_shot():
         proj.scene = SceneIR(
             meta=Meta(title="multi", duration=2.0),
             timeline=[
-                Shot(id="a", style="cutout", duration=1.0),
-                Shot(id="b", style="cutout", duration=1.0),
+                Shot(id="a", renderer="cutout", duration=1.0),
+                Shot(id="b", renderer="cutout", duration=1.0),
             ],
         )
         save(proj)
@@ -86,7 +86,7 @@ def test_stage_preview_rejects_non_cutout_style():
         proj = load(root)
         proj.scene = SceneIR(
             meta=Meta(title="manim", duration=1.0),
-            timeline=[Shot(id="m", style="manim", duration=1.0)],
+            timeline=[Shot(id="m", renderer="manim", duration=1.0)],
         )
         save(proj)
         with pytest.raises(PreviewError):

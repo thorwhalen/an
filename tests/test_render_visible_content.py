@@ -59,7 +59,7 @@ def test_rendered_character_is_visible():
             timeline=[
                 Shot(
                     id="s1",
-                    style="cutout",
+                    renderer="cutout",
                     duration=0.5,
                     entities=[
                         AssetRef(

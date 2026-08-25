@@ -116,7 +116,7 @@ def test_apply_patches_to_ir_round_trips_through_schema():
         timeline=[
             Shot(
                 id="s1",
-                style="cutout",
+                renderer="cutout",
                 duration=3.0,
                 dialogue=[Dialogue(speaker="x", text="old")],
             )
@@ -158,7 +158,7 @@ def test_iterate_dialogue_text_change_live():
             timeline=[
                 Shot(
                     id="opener",
-                    style="cutout",
+                    renderer="cutout",
                     duration=3.0,
                     dialogue=[
                         Dialogue(
@@ -213,7 +213,7 @@ def test_iterate_dry_run_does_not_persist():
             timeline=[
                 Shot(
                     id="s1",
-                    style="cutout",
+                    renderer="cutout",
                     duration=2.0,
                     dialogue=[
                         Dialogue(speaker="x", text="orig", emotion="neutral")

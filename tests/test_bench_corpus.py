@@ -93,7 +93,7 @@ def test_the_fixture_that_uses_the_placeholder_rig_declares_it(tmp_path):
 
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[
             AssetRef(

@@ -79,9 +79,9 @@ def readable_without_migration(version: Any, kind: DocumentKind | None = None) -
     the next additive bump into a refusal of every project on disk (an#105
     review). Only the scene kind declares a floor; any other kind must migrate.
 
-    >>> readable_without_migration("0.1.0")
+    >>> readable_without_migration("0.2.0")
     True
-    >>> readable_without_migration("0.0.9")
+    >>> readable_without_migration("0.1.0")  # below the floor since an#106
     False
     """
     v = version_tuple(version)
@@ -155,11 +155,17 @@ def register_migration(
 ) -> Callable[[Migration], Migration]:
     """Decorator: register a migration for one kind in :data:`MIGRATIONS`.
 
-    >>> @register_migration("SceneIR", "0.0.99", "0.1.0")
+    Registered against the throwaway ``Widget`` kind from the module docstring,
+    deliberately: this registry is process-wide, so a doctest that registered a
+    step for a REAL kind would leave a second path through the ladder for every
+    test that ran afterwards — which is exactly what happened once, and it
+    presented as one unrelated test failing only in a full run (an#106).
+
+    >>> @register_migration("Widget", "1.0", "2.0")
     ... def _bump(doc):
-    ...     doc["version"] = "0.1.0"
+    ...     doc["widget_version"] = "2.0"
     ...     return doc
-    >>> ("SceneIR", "0.0.99", "0.1.0") in MIGRATIONS
+    >>> ("Widget", "1.0", "2.0") in MIGRATIONS
     True
     """
 
@@ -168,6 +174,59 @@ def register_migration(
         return fn
 
     return deco
+
+
+@register_migration(SCENE_IR.name, "0.1.0", "0.2.0")
+def _rename_style_to_renderer(doc: dict[str, Any]) -> dict[str, Any]:
+    """0.1.0 → 0.2.0 (an#106): the renderer selector stops being called "style".
+
+    ``Shot.style`` → ``Shot.renderer``, ``Meta.default_style`` →
+    ``Meta.default_renderer``, and ``AssetRef(kind="style")`` entities are
+    **dropped**. Dropping is honest here and only here: such an entity selected
+    nothing — the compiler skipped it and no reader of the styles store existed
+    — so it was a declaration with no effect, and carrying it forward under a
+    name the schema no longer accepts would fail validation on a document that
+    renders identically. Art direction returns as a StylePack (#112), which is
+    a different thing referenced a different way.
+
+    This is the first migration in the repo that actually runs (an#105 wired
+    the read path); before that, it would have been decoration and the rename
+    would have landed as a silent default.
+
+    >>> _rename_style_to_renderer({"version": "0.1.0", "meta": {"default_style": "manim"},
+    ...     "timeline": [{"id": "s", "style": "cutout"}],
+    ...     "assets": [{"kind": "style", "id": "x", "store": "styles", "ref": "x"}]})
+    {'version': '0.2.0', 'meta': {'default_renderer': 'manim'}, 'timeline': [{'id': 's', 'renderer': 'cutout'}], 'assets': []}
+    """
+    meta = doc.get("meta")
+    if isinstance(meta, dict) and "default_style" in meta:
+        meta["default_renderer"] = meta.pop("default_style")
+    for shot in doc.get("timeline") or []:
+        if isinstance(shot, dict):
+            if "style" in shot:
+                shot["renderer"] = shot.pop("style")
+            # Only rewrite a key the document actually has: a migration that
+            # ADDS `entities: []` to a shot that declared none changes the
+            # document for no reason, and every such gratuitous key is one more
+            # diff for a reader to explain.
+            if isinstance(shot.get("entities"), list):
+                shot["entities"] = [
+                    e
+                    for e in shot["entities"]
+                    if not (isinstance(e, dict) and e.get("kind") == "style")
+                ]
+    if "assets" in doc:
+        doc["assets"] = [
+            a for a in (doc.get("assets") or [])
+            if not (isinstance(a, dict) and a.get("kind") == "style")
+        ]
+    doc["version"] = "0.2.0"
+    # The pair moves together: `compatible_version` is what a *future* build
+    # reads to decide whether it may skip migrating, so leaving it at 0.1.0
+    # would advertise that a 0.1.0-shaped document is still readable.
+    if "compatible_version" in doc:
+        doc["compatible_version"] = "0.2.0"
+    return doc
 
 
 @register_migration(SCENE_IR.name, SCHEMA_VERSION, SCHEMA_VERSION)
@@ -188,8 +247,10 @@ def migrate(
     migrations registered for this document's kind. Raises ``ValueError`` if no
     path exists between the source and target versions.
 
-    >>> migrate({"version": "0.1.0", "kind": "SceneIR"})["version"]
-    '0.1.0'
+    >>> migrate({"version": "0.2.0", "kind": "SceneIR"})["version"]
+    '0.2.0'
+    >>> migrate({"version": "0.1.0", "kind": "SceneIR"})["version"]  # the an#106 ladder
+    '0.2.0'
     """
     doc_kind = kind_of(doc, kind=kind)
     target = target_version if target_version is not None else doc_kind.current_version

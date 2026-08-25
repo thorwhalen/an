@@ -214,16 +214,19 @@ def test_the_compat_window_is_honoured(monkeypatch):
     # package `__init__`; the modules come from `sys.modules`.
     mig = sys.modules["an.ir.migrate"]
     sync_mod = sys.modules["an.ir.sync"]
-    bumped = mig.DocumentKind("SceneIR", "version", "0.2.0")
+    # Pinned to invented versions, not the repo's current ones: this asserts
+    # the RULE, and must not start passing or failing when the schema moves.
+    bumped = mig.DocumentKind("SceneIR", "version", "7.3.0")
     monkeypatch.setitem(mig.KINDS, "SceneIR", bumped)
-    monkeypatch.setattr(mig, "SCHEMA_VERSION", "0.2.0")
+    monkeypatch.setattr(mig, "SCHEMA_VERSION", "7.3.0")
+    monkeypatch.setattr(mig, "COMPATIBLE_VERSION", "7.1.0")
     monkeypatch.setattr(sync_mod, "SCENE_IR", bumped)
-    doc = {"version": "0.1.0", "kind": "SceneIR", "meta": {"title": "still readable"}}
-    assert mig.readable_without_migration("0.1.0", bumped) is True
+    doc = {"version": "7.1.0", "kind": "SceneIR", "meta": {"title": "still readable"}}
+    assert mig.readable_without_migration("7.1.0", bumped) is True
     assert scene_from_json_doc(doc).meta.title == "still readable", "the compat floor was ignored"
     # …but below the floor is still a refusal.
     with pytest.raises(DocumentMigrationError):
-        scene_from_json_doc({"version": "0.0.9", "kind": "SceneIR"})
+        scene_from_json_doc({"version": "7.0.9", "kind": "SceneIR"})
 
 
 def test_a_document_from_a_newer_build_says_so():
@@ -337,3 +340,93 @@ def test_an_validate_blames_the_stored_json_not_the_markdown(tmp_path):
     assert finding.ir_path == "ir/scene.json" and "scene.md does not parse" not in finding.description
     assert "0.0.1" in tools.sync(str(root))
     assert "0.0.1" in tools.render(str(root))
+
+
+# --- an#106: the rename, and what it must not do quietly ---------------------
+
+
+def test_a_stored_0_1_0_document_is_renamed_on_read(tmp_path):
+    """The wave's first real migration, through the read path an#105 wired."""
+    project = tmp_path / "p"
+    (project / "ir").mkdir(parents=True)
+    (project / "ir" / "scene.json").write_text(
+        json.dumps(
+            {
+                "version": "0.1.0",
+                "kind": "SceneIR",
+                "meta": {"title": "t", "default_style": "manim"},
+                "timeline": [{"id": "s1", "style": "cutout", "duration": 1.0}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    scene = ScenesStore(project)["main"]
+    assert scene.version == "0.2.0" and scene.compatible_version == "0.2.0"
+    assert scene.meta.default_renderer == "manim"
+    assert scene.timeline[0].renderer == "cutout"
+    assert "style" not in scene.timeline[0].model_dump()
+
+
+def test_a_retired_style_entity_is_dropped_not_carried(tmp_path):
+    """`AssetRef(kind="style")` selected nothing — the compiler skipped it and
+    no reader of the styles store existed — so the migration drops it rather
+    than carrying a kind the schema no longer accepts into a validate error on
+    a document that renders identically. Art direction returns as a StylePack
+    (#112). This is the one place dropping is honest, and it is written down."""
+    doc = {
+        "version": "0.1.0",
+        "kind": "SceneIR",
+        "timeline": [
+            {
+                "id": "s1",
+                "style": "cutout",
+                "duration": 1.0,
+                "entities": [
+                    {"kind": "style", "id": "s", "store": "styles", "ref": "s-v1"},
+                    {"kind": "voice", "id": "v", "store": "voices", "ref": "v-v1"},
+                ],
+            }
+        ],
+    }
+    scene = scene_from_json_doc(doc)
+    kinds = [e.kind for e in scene.timeline[0].entities]
+    assert kinds == ["voice"], kinds
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):  # and a NEW one is refused outright
+        from an.ir.schema import AssetRef
+
+        AssetRef(kind="style", id="s", store="styles", ref="s")
+
+
+def test_the_migration_adds_no_key_the_document_did_not_have():
+    """A migration that invents `entities: []` changes a document for no
+    reason, and every gratuitous key is one more diff a reader must explain."""
+    from an.ir.migrate import _rename_style_to_renderer
+
+    out = _rename_style_to_renderer({"version": "0.1.0", "timeline": [{"id": "s", "style": "cutout"}]})
+    assert out["timeline"][0] == {"id": "s", "renderer": "cutout"}
+
+
+def test_default_style_in_scene_md_is_refused_not_silently_dropped():
+    """`scene.md` is the human SSOT and carries no schema version, so nothing
+    can tell "written before an#106" from "typed today" — and `Meta` is
+    `extra="allow"`, so dropping the key would silently replace the author's
+    declared renderer with the default."""
+    from an.ir.sync import markdown_to_ir
+
+    md = "# X\n\n```yaml meta\ntitle: X\nduration: 1\ndefault_style: manim\n```\n"
+    with pytest.raises(ValueError, match="default_renderer"):
+        markdown_to_ir(md)
+
+
+def test_the_shot_heading_is_unchanged_by_the_rename():
+    """`## Shot s1 (cutout)` captures the renderer POSITIONALLY, so no scene.md
+    heading changes and no downstream package that writes one needs an edit."""
+    from an.ir.schema import Meta, SceneIR, Shot
+    from an.ir.sync import ir_to_markdown, markdown_to_ir
+
+    scene = SceneIR(meta=Meta(title="t", duration=1.0), timeline=[Shot(id="s1", renderer="cutout", duration=1.0)])
+    md = ir_to_markdown(scene)
+    assert "## Shot s1 (cutout)" in md
+    assert markdown_to_ir(md).timeline[0].renderer == "cutout"

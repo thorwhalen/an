@@ -36,7 +36,7 @@ maya: hi
     assert scene.meta.fps == 24
     assert len(scene.timeline) == 1
     assert scene.timeline[0].id == "s1"
-    assert scene.timeline[0].style == "cutout"
+    assert scene.timeline[0].renderer == "cutout"
     assert [d.speaker for d in scene.timeline[0].dialogue] == ["charlie", "maya"]
     assert scene.timeline[0].dialogue[0].text == "hello there"
 

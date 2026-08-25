@@ -128,7 +128,7 @@ def test_vision_lm_full_pipeline_returns_findings():
                       resolution=Resolution(width=240, height=180)),
             timeline=[
                 Shot(
-                    id="s1", style="cutout", duration=0.5,
+                    id="s1", renderer="cutout", duration=0.5,
                     entities=[
                         AssetRef(kind="character", id="c",
                                  store="characters", ref="c-v1")

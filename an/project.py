@@ -30,7 +30,7 @@ from an.util import _read_text, _write_json, _write_text
 _ANIMA_TOML_TEMPLATE = """# an project config
 [project]
 name = "{name}"
-default_style = "cutout"
+default_renderer = "cutout"
 
 [render]
 fps = {fps}

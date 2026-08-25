@@ -68,7 +68,7 @@ def _first_keyframe_value(shot: Shot, *, target: str, prop: str):
 def _shot_with_tween(prop: str, *, to_value, from_value=None) -> Shot:
     return Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[
             AssetRef(kind="character", id="charlie", store="characters", ref="c-v1")
@@ -268,7 +268,7 @@ def test_an_alpha_tween_changes_the_rendered_pixels(hermetic_browser, tmp_path):
         timeline=[
             Shot(
                 id="s1",
-                style="cutout",
+                renderer="cutout",
                 duration=1.0,
                 entities=[
                     AssetRef(

@@ -32,7 +32,7 @@ def test_renderer_registry_round_trips():
         supported_styles = ("cutout",)
 
         def can_render(self, shot):
-            return shot.style == "cutout"
+            return shot.renderer == "cutout"
 
         def render(self, shot, ctx):
             return RenderResult(mp4_path=Path("/tmp/x.mp4"), duration=shot.duration)
@@ -40,10 +40,10 @@ def test_renderer_registry_round_trips():
     reg = RendererRegistry()
     reg.register(Fake())
     assert "fake" in reg.names()
-    found = reg.find_for(Shot(id="s1", style="cutout", duration=1.0))
+    found = reg.find_for(Shot(id="s1", renderer="cutout", duration=1.0))
     assert found is not None
     assert found.name == "fake"
-    none_found = reg.find_for(Shot(id="s2", style="manim", duration=1.0))
+    none_found = reg.find_for(Shot(id="s2", renderer="manim", duration=1.0))
     assert none_found is None
 
 

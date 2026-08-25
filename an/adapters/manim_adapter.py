@@ -38,7 +38,7 @@ class ManimRenderer:
     supported_styles: tuple[str, ...] = ("manim",)
 
     def can_render(self, shot: Shot) -> bool:
-        return shot.style == "manim"
+        return shot.renderer == "manim"
 
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         if shutil.which("manim") is None:

@@ -37,7 +37,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def _shot(keys, *, duration=1.0, fps=24):
     return Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=duration + 0.5,
         entities=[AssetRef(kind="character", id="c", store="characters", ref="c-v1")],
         dialogue=[
@@ -161,7 +161,7 @@ def test_provenance_carries_the_rate_per_shot():
     from an.adapters.cutout.serialize import to_dict
 
     speaking = to_dict(_compile(_shot(CLUSTER)))
-    silent = to_dict(_compile(Shot(id="q", style="cutout", duration=1.0)))
+    silent = to_dict(_compile(Shot(id="q", renderer="cutout", duration=1.0)))
     prov = shot_policy_provenance([NS(shot_id="a", scene_json=speaking), NS(shot_id="b", scene_json=silent)])
     assert prov["viseme_keyframes_per_second"]["b"] is None
     assert prov["viseme_keyframes_per_second"]["a"] > 0
@@ -358,7 +358,7 @@ def test_a_raw_key_past_the_line_end_is_not_emitted():
 
     track = VisemeTrack(keyframes=[VisemeKeyframe(time=0.0, viseme="X"), VisemeKeyframe(time=0.4, viseme="D"), VisemeKeyframe(time=1.2, viseme="A")])
     shot = Shot(
-        id="s", style="cutout", duration=2.0,
+        id="s", renderer="cutout", duration=2.0,
         entities=[AssetRef(kind="character", id="c", store="characters", ref="c-v1")],
         dialogue=[Dialogue(speaker="c", text="hi", start=0.0, duration=1.0, viseme_track=track)],
     )
@@ -416,7 +416,7 @@ def test_out_of_order_dialogue_lines_are_emitted_in_time_order():
     line2 = Dialogue(speaker="c", text="two", start=0.71, duration=0.71, viseme_track=track("A"))
     for order in ([line1, line2], [line2, line1]):
         shot = Shot(
-            id="s", style="cutout", duration=2.0,
+            id="s", renderer="cutout", duration=2.0,
             entities=[AssetRef(kind="character", id="c", store="characters", ref="c-v1")],
             dialogue=list(order),
         )

@@ -89,7 +89,7 @@ def _meta(title: str, duration: float) -> str:
         resolution:
           width: {w}
           height: {h}
-        default_style: cutout
+        default_renderer: cutout
         ```
         """
     )
@@ -577,7 +577,7 @@ def _build_lipsync_coarticulation(work: Path) -> Path:
     )
     shot = Shot(
         id="p",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[
             AssetRef(kind="character", id="maya", store="characters", ref="maya")

@@ -440,7 +440,7 @@ class TestSvgCharacterCompile:
 
         shot = Shot(
             id="s1",
-            style="cutout",
+            renderer="cutout",
             duration=2.0,
             entities=[
                 AssetRef(id="maya", kind="character", store="characters", ref="maya")
@@ -502,7 +502,7 @@ class TestSvgCharacterCompile:
 
         shot = Shot(
             id="s1",
-            style="cutout",
+            renderer="cutout",
             duration=2.0,
             entities=[
                 AssetRef(id="bob", kind="character", store="characters", ref="bob")

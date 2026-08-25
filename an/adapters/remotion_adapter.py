@@ -25,7 +25,7 @@ class RemotionRenderer:
     supported_styles: tuple[str, ...] = ("motion_graphics",)
 
     def can_render(self, shot: Shot) -> bool:
-        return shot.style == "motion_graphics"
+        return shot.renderer == "motion_graphics"
 
     def render(self, shot: Shot, ctx: RenderContext) -> RenderResult:
         if shutil.which("npx") is None:

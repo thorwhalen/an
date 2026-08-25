@@ -12,7 +12,7 @@ fps: 24
 resolution:
   width: 480
   height: 360
-default_style: cutout
+default_renderer: cutout
 ```
 
 ## Shot s1 (cutout)

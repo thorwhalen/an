@@ -39,7 +39,7 @@ def _line_with_visemes(speaker="charlie") -> Dialogue:
 def test_viseme_track_produces_channel_on_mouth():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[_entity()],
         dialogue=[_line_with_visemes()],
@@ -63,7 +63,7 @@ def test_viseme_track_produces_channel_on_mouth():
 def test_viseme_track_added_to_speaker_track():
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[_entity("maya")],
         dialogue=[_line_with_visemes("maya")],
@@ -84,7 +84,7 @@ def test_dialogue_without_viseme_track_skipped():
     """No visemes → no mouth channel emitted."""
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[_entity()],
         dialogue=[Dialogue(speaker="charlie", text="silent")],
@@ -100,7 +100,7 @@ def test_head_node_has_mouth_child():
     """The placeholder character should now expose a mouth child node."""
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[_entity()],
     )
@@ -134,7 +134,7 @@ def test_dicebear_character_skips_mouth_overlay_and_viseme_channel():
     }
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[
             AssetRef(kind="character", id="diane", store="characters", ref="diane-v1")
@@ -172,7 +172,7 @@ def test_a_stored_0_2_0_dicebear_descriptor_migrates_to_a_declared_baked_face():
     }
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[
             AssetRef(kind="character", id="diane", store="characters", ref="diane-v1")
@@ -199,7 +199,7 @@ def test_offline_character_still_emits_viseme_channel():
     }
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=2.0,
         entities=[
             AssetRef(kind="character", id="rex", store="characters", ref="rex-v1")

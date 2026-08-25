@@ -178,7 +178,7 @@ def test_a_degenerate_part_svg_raises_instead_of_hanging(tmp_path, monkeypatch):
 
     shot = Shot(
         id="s1",
-        style="cutout",
+        renderer="cutout",
         duration=0.25,
         entities=[
             AssetRef(kind="character", id="c", store="characters", ref="wedge-v1")

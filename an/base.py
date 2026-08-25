@@ -17,10 +17,12 @@ from typing import Literal, TypeAlias
 
 #: Current Scene IR schema version. Bump on additive changes; on breaking
 #: changes, also bump COMPATIBLE_VERSION and add a migration in `ir.migrate`.
-SCHEMA_VERSION: str = "0.1.0"
+#: 0.2.0 renamed `Shot.style` -> `Shot.renderer` and `Meta.default_style` ->
+#: `Meta.default_renderer`, and retired `AssetRef(kind="style")` (an#106).
+SCHEMA_VERSION: str = "0.2.0"
 
 #: Minimum Scene IR version this code can still read without migration.
-COMPATIBLE_VERSION: str = "0.1.0"
+COMPATIBLE_VERSION: str = "0.2.0"
 
 
 # -- Render defaults ----------------------------------------------------------
@@ -162,14 +164,14 @@ EasingSpec: TypeAlias = str | tuple[float, float, float, float] | list[float]
 # -- Style enum ---------------------------------------------------------------
 
 #: The renderer-style of a shot. The orchestrator uses this to pick an adapter.
-StyleName: TypeAlias = Literal[
+RendererName: TypeAlias = Literal[
     "cutout",
     "manim",
     "motion_graphics",
     "whiteboard",
 ]
 
-SUPPORTED_STYLES: tuple[str, ...] = (
+SUPPORTED_RENDERERS: tuple[str, ...] = (
     "cutout",
     "manim",
     "motion_graphics",

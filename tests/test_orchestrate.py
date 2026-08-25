@@ -21,7 +21,7 @@ def test_orchestrate_skip_render_runs_lint_only():
         proj = load(root)
         proj.scene = SceneIR(
             meta=Meta(title="t", duration=2.0),
-            timeline=[Shot(id="s1", style="cutout", duration=2.0)],
+            timeline=[Shot(id="s1", renderer="cutout", duration=2.0)],
         )
         proj.mall["scenes"]["main"] = proj.scene
         report = orchestrate(root, skip_render=True)
@@ -60,7 +60,7 @@ def test_orchestrate_full_pipeline_renders():
         proj.scene = SceneIR(
             meta=Meta(title="t", duration=0.5, fps=12,
                       resolution=Resolution(width=160, height=120)),
-            timeline=[Shot(id="s1", style="cutout", duration=0.5,
+            timeline=[Shot(id="s1", renderer="cutout", duration=0.5,
                            entities=[AssetRef(kind="character", id="c",
                                               store="characters", ref="c-v1")])],
         )

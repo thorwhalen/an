@@ -218,7 +218,7 @@ def test_the_blink_phase_dependence_on_the_entity_name_is_recorded():
 
     shot = Shot(
         id="s",
-        style="cutout",
+        renderer="cutout",
         duration=1.0,
         entities=[AssetRef(kind="character", id="charlie", store="characters", ref="c")],
     )

@@ -39,15 +39,15 @@ def test_can_render_routes_by_style():
         (WhiteboardRenderer(), "whiteboard"),
     ]
     for renderer, style in cases:
-        assert renderer.can_render(Shot(id="x", style=style, duration=1.0))
-        assert not renderer.can_render(Shot(id="x", style="cutout", duration=1.0))
+        assert renderer.can_render(Shot(id="x", renderer=style, duration=1.0))
+        assert not renderer.can_render(Shot(id="x", renderer="cutout", duration=1.0))
 
 
 def test_whiteboard_render_raises_clear_stub_error():
     with tempfile.TemporaryDirectory() as d:
         mall = build_project_mall(d, ensure=True)
         ctx = RenderContext(mall=mall, work_dir=Path(d))
-        shot = Shot(id="x", style="whiteboard", duration=1.0)
+        shot = Shot(id="x", renderer="whiteboard", duration=1.0)
         with pytest.raises(WhiteboardRenderError, match="stub"):
             WhiteboardRenderer().render(shot, ctx)
 
@@ -58,7 +58,7 @@ def test_remotion_render_raises_clear_stub_error_when_npx_present():
     with tempfile.TemporaryDirectory() as d:
         mall = build_project_mall(d, ensure=True)
         ctx = RenderContext(mall=mall, work_dir=Path(d))
-        shot = Shot(id="x", style="motion_graphics", duration=1.0)
+        shot = Shot(id="x", renderer="motion_graphics", duration=1.0)
         with pytest.raises(RemotionRenderError, match="skeleton"):
             RemotionRenderer().render(shot, ctx)
 
@@ -68,7 +68,7 @@ def test_manim_render_errors_when_binary_missing():
     with tempfile.TemporaryDirectory() as d:
         mall = build_project_mall(d, ensure=True)
         ctx = RenderContext(mall=mall, work_dir=Path(d))
-        shot = Shot(id="x", style="manim", duration=0.5)
+        shot = Shot(id="x", renderer="manim", duration=0.5)
         with pytest.raises(ManimRenderError, match="manim CLI"):
             ManimRenderer().render(shot, ctx)
 
@@ -79,7 +79,7 @@ def test_manim_render_produces_mp4_when_installed():
     with tempfile.TemporaryDirectory() as d:
         mall = build_project_mall(d, ensure=True)
         ctx = RenderContext(mall=mall, work_dir=Path(d))
-        shot = Shot(id="m1", style="manim", duration=0.25)
+        shot = Shot(id="m1", renderer="manim", duration=0.25)
         result = ManimRenderer().render(shot, ctx)
         assert result.mp4_path.exists()
         assert result.mp4_path.stat().st_size > 0

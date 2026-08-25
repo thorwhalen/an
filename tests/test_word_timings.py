@@ -50,7 +50,7 @@ class _WordlessLipSync:
 def _scene():
     return SceneIR(
         meta=Meta(title="t", duration=2.0),
-        timeline=[Shot(id="s", style="cutout", duration=2.0, dialogue=[Dialogue(speaker="a", text="Hold the shape")])],
+        timeline=[Shot(id="s", renderer="cutout", duration=2.0, dialogue=[Dialogue(speaker="a", text="Hold the shape")])],
     )
 
 
