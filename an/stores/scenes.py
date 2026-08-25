@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Iterator
 
 from an.ir.schema import SceneIR
-from an.ir.sync import ir_to_markdown
+from an.ir.sync import ir_to_markdown, scene_from_json_doc
 from an.util import _read_text, _write_json, _write_text
 
 
@@ -45,7 +45,10 @@ class ScenesStore(MutableMapping):
             raise KeyError(key)
         if not self.json_path.exists():
             raise KeyError(key)
-        return SceneIR.model_validate(json.loads(_read_text(self.json_path)))
+        # Migrated on read (an#105): a stored document may predate this build.
+        return scene_from_json_doc(
+            json.loads(_read_text(self.json_path)), source=self.json_path
+        )
 
     def __setitem__(self, key: str, value: SceneIR | dict) -> None:
         if key != self.SCENE_KEY:

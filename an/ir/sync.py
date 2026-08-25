@@ -46,6 +46,7 @@ from typing import Any
 import yaml
 
 from an.base import DEFAULT_DURATION
+from an.ir.migrate import SCENE_IR, migrate
 from an.ir.schema import AssetRef, Dialogue, Meta, SceneIR, Shot
 from an.util import _read_text, _write_json, _write_text
 
@@ -535,6 +536,40 @@ def _actions_to_yaml_list(actions: list) -> list[dict]:
 # -----------------------------------------------------------------------------
 
 
+class SceneMigrationError(ValueError):
+    """A stored scene document could not be brought to this build's schema."""
+
+
+def scene_from_json_doc(doc: dict, *, source: str | Path | None = None) -> SceneIR:
+    """Validate a stored scene document, **migrating it first** (an#105).
+
+    Every read path goes through here. Before this existed, `migrate()` was
+    called with `kind="CharacterDescriptor"` at every call site in the tree and
+    with a scene at none of them — so a registered scene migration never ran,
+    and because :class:`~an.ir.schema.SceneIR` is ``extra="allow"``, a renamed
+    field would have landed as a **silent default** on every document already
+    on disk: the old key surviving as an extra, the new key defaulting, and no
+    error anywhere. Registering a migration and never running it is worse than
+    not registering one, because the registry reads as a promise.
+
+    A document whose version has no path to this build's is a loud refusal
+    naming the file, not a silent validate against whatever the fields happen
+    to be:
+
+    >>> scene_from_json_doc({"version": "0.1.0", "meta": {"title": "t"}}).meta.title
+    't'
+    >>> scene_from_json_doc({"version": "0.0.1"}, source="ir/scene.json")
+    Traceback (most recent call last):
+    ...
+    an.ir.sync.SceneMigrationError: ir/scene.json: No migration path for 'SceneIR' ...
+    """
+    try:
+        migrated = migrate(dict(doc), kind=SCENE_IR.name)
+    except ValueError as e:
+        raise SceneMigrationError(f"{source or 'scene document'}: {e}") from e
+    return SceneIR.model_validate(migrated)
+
+
 def sync(project_dir: str | Path) -> SyncResult:
     """Reconcile ``scene.md`` and ``ir/scene.json`` inside a project directory.
 
@@ -556,7 +591,7 @@ def sync(project_dir: str | Path) -> SyncResult:
         result.wrote_json = True
     elif json_exists and not md_exists:
         data = json.loads(_read_text(json_path))
-        scene = SceneIR.model_validate(data)
+        scene = scene_from_json_doc(data, source=json_path)
         _write_text(md_path, ir_to_markdown(scene))
         result.wrote_md = True
     elif md_exists and json_exists:
@@ -570,7 +605,7 @@ def sync(project_dir: str | Path) -> SyncResult:
         skew = json_mtime - md_mtime
         if skew > 0.5:
             data = json.loads(_read_text(json_path))
-            scene = SceneIR.model_validate(data)
+            scene = scene_from_json_doc(data, source=json_path)
             _write_text(md_path, ir_to_markdown(scene))
             # Equalize mtimes so this regen doesn't immediately flip the next
             # sync into "md is newer → regenerate json (losing pipeline state)".
