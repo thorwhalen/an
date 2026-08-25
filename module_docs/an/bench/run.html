@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.run &mdash; an 0.1.65 documentation</title>
+  <title>an.bench.run &mdash; an 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -24,7 +24,7 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="an.characters" href="../characters.html" />
+    <link rel="next" title="an.bench.stage" href="stage.html" />
     <link rel="prev" title="an.bench.registry" href="registry.html" /> 
 </head>
 
@@ -104,6 +104,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.GOLDEN_METRIC_KEY"><code class="docutils literal notranslate"><span class="pre">GOLDEN_METRIC_KEY</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.JUST_BLESSED_DETAIL"><code class="docutils literal notranslate"><span class="pre">JUST_BLESSED_DETAIL</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.MIN_PINNED_FRAMES_FOR_PAIRWISE"><code class="docutils literal notranslate"><span class="pre">MIN_PINNED_FRAMES_FOR_PAIRWISE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.run.STAGE_METRIC_KEY"><code class="docutils literal notranslate"><span class="pre">STAGE_METRIC_KEY</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.run.STAGE_MIN_RATIO_GAP"><code class="docutils literal notranslate"><span class="pre">STAGE_MIN_RATIO_GAP</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.conversion_distance"><code class="docutils literal notranslate"><span class="pre">conversion_distance()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.format_panel"><code class="docutils literal notranslate"><span class="pre">format_panel()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.lossless_reference"><code class="docutils literal notranslate"><span class="pre">lossless_reference()</span></code></a></li>
@@ -114,6 +116,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.run.viseme_keyframes_per_second"><code class="docutils literal notranslate"><span class="pre">viseme_keyframes_per_second()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="stage.html">an.bench.stage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../characters/dicebear.html">an.characters.dicebear</a></li>
@@ -244,6 +247,28 @@ a real capture this row is always measured (the render-side panel may not
 be null — <cite>tests/test_bench_capture.py</cite>).</p>
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.run.STAGE_METRIC_KEY">
+<span class="sig-prename descclassname"><span class="pre">an.bench.run.</span></span><span class="sig-name descname"><span class="pre">STAGE_METRIC_KEY</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'stage_min_plane_ratio_gap'</span></span><a class="headerlink" href="#an.bench.run.STAGE_METRIC_KEY" title="Link to this definition"></a></dt>
+<dd><p>The pan measurement (an#111). Metric and tripwire come from ONE measurement,
+as the golden pair does: the boolean and the number must be the same evidence
+read two ways, or a reader has to reconcile them.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.run.STAGE_MIN_RATIO_GAP">
+<span class="sig-prename descclassname"><span class="pre">an.bench.run.</span></span><span class="sig-name descname"><span class="pre">STAGE_MIN_RATIO_GAP</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1875</span></span><a class="headerlink" href="#an.bench.run.STAGE_MIN_RATIO_GAP" title="Link to this definition"></a></dt>
+<dd><p>The floor the tripwire fires below, set at HALF the first bless’s measured
+minimum — the <cite>expression_min_pairwise_changed_px</cite> precedent followed
+literally.</p>
+<p>Measured on <cite>stage_pan</cite> at the first bless: <strong>0.375</strong>. Ratios are taken
+against the largest mover, so depths 0.25 / 1.0 / 2.0 report as
+0.125 / 0.5 / 1.0 and the closest pair is far/mid. (An earlier draft of this
+comment said 0.75, which is the same measurement taken against the
+<cite>depth == 1</cite> plane — a reference the pixel half cannot see, which is why
+<cite>_reference</cite> is now always the largest mover.)</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="an.bench.run.conversion_distance">
 <span class="sig-prename descclassname"><span class="pre">an.bench.run.</span></span><span class="sig-name descname"><span class="pre">conversion_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lossless_mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/an/bench/run.html#conversion_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.run.conversion_distance" title="Link to this definition"></a></dt>
@@ -370,7 +395,7 @@ in the registry moves it.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="registry.html" class="btn btn-neutral float-left" title="an.bench.registry" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../characters.html" class="btn btn-neutral float-right" title="an.characters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="stage.html" class="btn btn-neutral float-right" title="an.bench.stage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

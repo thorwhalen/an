@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.65 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -97,6 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/stage.html">an.bench.stage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
@@ -491,6 +492,20 @@
     <span class="n">provisional</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">unreviewed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">tripwire</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1">#: What a scene must HAVE for this row to exist at all, or ``""`` when the</span>
+    <span class="c1">#: row applies to every scene (an#111).</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: The render-side panel rule is "nothing may be null on a real capture,</span>
+    <span class="c1">#: because a null render-side row is a blind panel". That rule assumes</span>
+    <span class="c1">#: every metric could have been measured. `stage_min_plane_ratio_gap`</span>
+    <span class="c1">#: could not: a displacement ratio needs two planes moving at different</span>
+    <span class="c1">#: depths, and `single_character` has no planes at all — so its null is</span>
+    <span class="c1">#: structural, not a gap in the instrument.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: Declared rather than hardcoded in the test, so the panel rule keeps</span>
+    <span class="c1">#: naming its own exceptions instead of a test file carrying a list the</span>
+    <span class="c1">#: registry does not know about.</span>
+    <span class="n">requires</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="n">notes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">tuple</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1279,6 +1294,111 @@
                 <span class="s2">"REFUTED: only the global-moment reduction is blind. Killing "</span>
                 <span class="s2">"SSIM outright would have discarded the best numpy-only detector "</span>
                 <span class="s2">"available."</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"stage_min_plane_ratio_gap"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"B"</span><span class="p">,</span>
+            <span class="n">requires</span><span class="o">=</span><span class="s2">"a multiplane stage: two or more colour-filled planes"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">"diagnostic"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"ratio"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The smallest gap between any two planes' displacement RATIOS "</span>
+                <span class="s2">"on a panning multiplane stage (an#111). Each plane's centroid "</span>
+                <span class="s2">"displacement is divided by the reference plane's, so a stage "</span>
+                <span class="s2">"that parallaxes gives the declared depths back — on "</span>
+                <span class="s2">"`stage_pan`, 0.25 / 1.0 / 2.0 — and a stage that flattened "</span>
+                <span class="s2">"gives every plane 1.0 and this row zero. `unavailable`, never "</span>
+                <span class="s2">"zero, for a scene with fewer than two colour-filled planes: "</span>
+                <span class="s2">"a scene with nothing to compare has no ratio, and reporting "</span>
+                <span class="s2">"that as flattened would fire on every other fixture."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"Not a quality dial: a larger gap is not a better picture, "</span>
+                    <span class="s2">"it is a fixture whose depths are further apart. It exists "</span>
+                    <span class="s2">"so a regression that flattens the parallax moves a ledger "</span>
+                    <span class="s2">"number instead of waiting for someone to look at a GIF."</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"not_applicable"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"computed on the pre-encode PNGs; no encode change can reach it"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"AA-off changes which pixels carry a plane's exact colour "</span>
+                        <span class="s2">"along its edges, so a centroid can shift by a fraction of "</span>
+                        <span class="s2">"a pixel and the mask COUNT can change — which the "</span>
+                        <span class="s2">"measurement refuses outright as a clipped plane. Gated, "</span>
+                        <span class="s2">"not predicted: the outcome is 'the instrument declines', "</span>
+                        <span class="s2">"which is neither better nor worse."</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gate</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"same as disabled_aa: an edge-quality lever moves the exact-"</span>
+                        <span class="s2">"colour mask's boundary, and this measurement is defined on "</span>
+                        <span class="s2">"exact colours"</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"The trap this metric is shaped around: today's centre-anchored "</span>
+                <span class="s2">"zoom ALREADY gives unequal per-plane displacements, so 'the "</span>
+                <span class="s2">"planes moved at different rates' is satisfied by a scene with no "</span>
+                <span class="s2">"parallax at all. The JSON half of the measurement probes at "</span>
+                <span class="s2">"scene-space x = 0, where the zoom term cancels exactly; the pixel "</span>
+                <span class="s2">"half cannot (a centroid sits at the plane's own offset), so the "</span>
+                <span class="s2">"`stage_pan` fixture holds zoom CONSTANT instead."</span><span class="p">,</span>
+                <span class="s2">"Ratios are taken against the LARGEST mover, always. The pixel "</span>
+                <span class="s2">"half cannot see a `depth`, so a depth-aware reference makes the "</span>
+                <span class="s2">"two halves report different numbers for one stage — measured "</span>
+                <span class="s2">"while this landed: 0.75 against the `depth == 1` plane and 0.375 "</span>
+                <span class="s2">"against the largest mover, for the same measurement."</span><span class="p">,</span>
+                <span class="s2">"Measured at the first bless: 0.375, the far/mid gap on depths "</span>
+                <span class="s2">"0.25 / 1.0 / 2.0 (reported as ratios 0.125 / 0.5 / 1.0). The "</span>
+                <span class="s2">"`stage_planes_parallaxed` tripwire's floor is half of it, which "</span>
+                <span class="s2">"is the `expression_min_pairwise_changed_px` precedent followed "</span>
+                <span class="s2">"literally."</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">_spec</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">"stage_planes_parallaxed"</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="s2">"B"</span><span class="p">,</span>
+            <span class="n">requires</span><span class="o">=</span><span class="s2">"a multiplane stage: two or more colour-filled planes"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">"tripwire"</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">"boolean"</span><span class="p">,</span>
+            <span class="n">sentence</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"True when the planes moved at DIFFERENT rates — i.e. the stage "</span>
+                <span class="s2">"parallaxed rather than panning as one rigid image. The same "</span>
+                <span class="s2">"measurement as `stage_min_plane_ratio_gap`, read as a verdict: "</span>
+                <span class="s2">"a boolean and the number beside it must be the same evidence, "</span>
+                <span class="s2">"or a reader has to reconcile them."</span>
+            <span class="p">),</span>
+            <span class="n">optimum</span><span class="o">=</span><span class="n">Optimum</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"guard"</span><span class="p">,</span>
+                <span class="n">note</span><span class="o">=</span><span class="s2">"A change detector. Counts zero toward any criterion."</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"high_crf"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span>
+                    <span class="s2">"not_applicable"</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="s2">"computed on the pre-encode PNGs"</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="s2">"disabled_aa"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s2">"see stage_min_plane_ratio_gap"</span><span class="p">),</span>
+                <span class="s2">"supersample"</span><span class="p">:</span> <span class="n">Prediction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="s2">"see stage_min_plane_ratio_gap"</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">notes</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"There is deliberately NO `flat_camera` mutation lever to prove "</span>
+                <span class="s2">"this fires. A compile-time parallax change moves the scene's "</span>
+                <span class="s2">"contract hash, so `bench-compare` refuses the row at "</span>
+                <span class="s2">"comparability before any family is examined — the recorded "</span>
+                <span class="s2">"`step_hz` verdict, verbatim. The proof belongs in "</span>
+                <span class="s2">"`an bench-mutants` as a declared guard mutant."</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">),</span>
         <span class="n">_spec</span><span class="p">(</span>

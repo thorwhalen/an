@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.corpus &mdash; an 0.1.65 documentation</title>
+  <title>an.bench.corpus &mdash; an 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -97,6 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/stage.html">an.bench.stage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
@@ -441,6 +442,26 @@
             <span class="s2">"Frame 9 rather than the mid-frame: at 24 fps the swap lands on "</span>
             <span class="s2">"frame 6, so frame 9 is clear of the boundary in a way that does "</span>
             <span class="s2">"not depend on how the frame containing t=0.25 rounds."</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="s2">"stage_pan"</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">CORPUS_DIRNAME</span><span class="si">}</span><span class="s2">/stage_pan"</span><span class="p">,</span>
+        <span class="n">expect_visual_kinds</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">({</span><span class="s2">"rect"</span><span class="p">}),</span>
+        <span class="n">golden_frames</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mi">8</span> <span class="o">/</span> <span class="mi">24</span><span class="p">),</span>
+        <span class="n">golden_note</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"three coloured blocks at depths 0.25 / 1.0 / 2.0 under a "</span>
+            <span class="s2">"zoom-free pan (an#111). What moves between the goldens is the "</span>
+            <span class="s2">"SEPARATION: the blocks start aligned and end 10 / 40 / 80 px "</span>
+            <span class="s2">"apart, which is the parallax and nothing else. Frame 8, not the "</span>
+            <span class="s2">"mid-frame: the camera travels 5 px per frame and the far plane "</span>
+            <span class="s2">"moves a quarter of that, so only every fourth frame lands every "</span>
+            <span class="s2">"block on an exact pixel boundary — at any other frame the "</span>
+            <span class="s2">"anti-aliased edge changes the exact-colour mask's SIZE, and a "</span>
+            <span class="s2">"centroid measured against a different shape is not a "</span>
+            <span class="s2">"displacement (the measurement refuses it outright). "</span>
+            <span class="s2">"Zoom is held constant on purpose: the x = 0 probe that cancels "</span>
+            <span class="s2">"it in the JSON half does not reach a centroid, which sits at the "</span>
+            <span class="s2">"plane's own offset."</span>
         <span class="p">),</span>
     <span class="p">),</span>
     <span class="s2">"expressions"</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">(</span>

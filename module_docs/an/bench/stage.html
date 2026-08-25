@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>an.bench.stage &mdash; an 0.1.66 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=3015fd79"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="an.characters" href="../characters.html" />
+    <link rel="prev" title="an.bench.run" href="run.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            an
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../an.html">an</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../__main__.html">an.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters.html">an.adapters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/_base.html">an.adapters._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout.html">an.adapters.cutout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/channel.html">an.adapters.cutout.channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/clip.html">an.adapters.cutout.clip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/coarticulate.html">an.adapters.cutout.coarticulate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/compile.html">an.adapters.cutout.compile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/easing.html">an.adapters.cutout.easing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/fidelity.html">an.adapters.cutout.fidelity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/gaze.html">an.adapters.cutout.gaze</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/render.html">an.adapters.cutout.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/runtime_files.html">an.adapters.cutout.runtime_files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/serialize.html">an.adapters.cutout.serialize</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/supersample.html">an.adapters.cutout.supersample</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/cutout/timeline.html">an.adapters.cutout.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/manim_adapter.html">an.adapters.manim_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/remotion_adapter.html">an.adapters.remotion_adapter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapters/whiteboard.html">an.adapters.whiteboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio.html">an.audio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/elevenlabs_tts.html">an.audio.elevenlabs_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/injectable_lipsync.html">an.audio.injectable_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/lipsync.html">an.audio.lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/mac_say_tts.html">an.audio.mac_say_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_lipsync.html">an.audio.offline_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/offline_tts.html">an.audio.offline_tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/pipeline.html">an.audio.pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/providers.html">an.audio.providers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/rhubarb_lipsync.html">an.audio.rhubarb_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/tts.html">an.audio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base.html">an.base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bench.html">an.bench</a></li>
+<li class="toctree-l1"><a class="reference internal" href="capture.html">an.bench.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare.html">an.bench.compare</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contract.html">an.bench.contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpus.html">an.bench.corpus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environment.html">an.bench.environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="golden.html">an.bench.golden</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imageio.html">an.bench.imageio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ledger.html">an.bench.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masks.html">an.bench.masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">an.bench.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mutants.html">an.bench.mutants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mutations.html">an.bench.mutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="palette.html">an.bench.palette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">an.bench.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="png.html">an.bench.png</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">an.bench.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run.html">an.bench.run</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.stage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.stage.PanMeasurement"><code class="docutils literal notranslate"><span class="pre">PanMeasurement</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.stage.PanMeasurement.is_rigid"><code class="docutils literal notranslate"><span class="pre">PanMeasurement.is_rigid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.stage.PanMeasurement.ratios"><code class="docutils literal notranslate"><span class="pre">PanMeasurement.ratios</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.stage.PanMeasurement.reference"><code class="docutils literal notranslate"><span class="pre">PanMeasurement.reference</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.stage.PlaneTrack"><code class="docutils literal notranslate"><span class="pre">PlaneTrack</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.stage.PlaneTrack.depth"><code class="docutils literal notranslate"><span class="pre">PlaneTrack.depth</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.stage.RotatingCamera"><code class="docutils literal notranslate"><span class="pre">RotatingCamera</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.stage.measure_pan_json"><code class="docutils literal notranslate"><span class="pre">measure_pan_json()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.stage.measure_pan_pixels"><code class="docutils literal notranslate"><span class="pre">measure_pan_pixels()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.stage.min_ratio_gap"><code class="docutils literal notranslate"><span class="pre">min_ratio_gap()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.stage.plane_centroids"><code class="docutils literal notranslate"><span class="pre">plane_centroids()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../characters.html">an.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/cli.html">an.characters.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/dicebear.html">an.characters.dicebear</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/factory.html">an.characters.factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/idle.html">an.characters.idle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/licenses.html">an.characters.licenses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/mouth_set.html">an.characters.mouth_set</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/play.html">an.characters.play</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/promote.html">an.characters.promote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/record.html">an.characters.record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/schema.html">an.characters.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/silhouette.html">an.characters.silhouette</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/svg_utils.html">an.characters.svg_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../characters/validate.html">an.characters.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../check_requirements.html">an.check_requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../conftest.html">an.conftest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../credits.html">an.credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">an.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/cutout_runtime.html">an.data.cutout_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../determinism.html">an.determinism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments.html">an.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression.html">an.expression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/axes.html">an.expression.axes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/binding.html">an.expression.binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/blendshapes.html">an.expression.blendshapes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/presets.html">an.expression.presets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../expression/provider.html">an.expression.provider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genre.html">an.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir.html">an.ir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/assets.html">an.ir.assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/camera.html">an.ir.camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/compose.html">an.ir.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/migrate.html">an.ir.migrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/schema.html">an.ir.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/sync.html">an.ir.sync</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ir/validate.html">an.ir.validate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orchestrate.html">an.orchestrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../preview.html">an.preview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../props.html">an.props</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../render.html">an.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores.html">an.stores</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/_common.html">an.stores._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/artifacts.html">an.stores.artifacts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/characters.html">an.stores.characters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/decisions.html">an.stores.decisions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/props.html">an.stores.props</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/scenes.html">an.stores.scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/styles.html">an.stores.styles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">an.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../util.html">an.util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify.html">an.verify</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/_base.html">an.verify._base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/human.html">an.verify.human</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/layout.html">an.verify.layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media.html">an.verify.media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/media_quality.html">an.verify.media_quality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../verify/vision.html">an.verify.vision</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">an</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">an.bench.stage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/an/bench/stage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-an.bench.stage">
+<span id="an-bench-stage"></span><h1>an.bench.stage<a class="headerlink" href="#module-an.bench.stage" title="Link to this heading"></a></h1>
+<p>Measuring a pan: does the stage move as planes, or as one rigid image?</p>
+<p><strong>The trap the epic’s own sentence sets.</strong> “The planes moved at different
+rates” is satisfied by a scene with <em>no parallax whatsoever</em>, because a
+centre-anchored zoom already produces unequal per-plane displacements. The
+honest null hypothesis is <strong>“the camera moved the whole stage as one rigid
+image”</strong>, and a zoom has to be excluded rather than assumed away.</p>
+<p><strong>The quantity.</strong> Probe each plane at scene-space <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">0</span></code> — the canvas
+centre column. There the zoom term vanishes <em>exactly</em>:</p>
+<blockquote>
+<div><p>Δ_i = s₁ · p_i · D₁          ratio_ij = Δ_i / Δ_j = p_i / p_j   (any zoom)</p>
+</div></blockquote>
+<p>Under a rigid pan every ratio is exactly 1, so the measurement can tell a
+parallaxing stage from a zooming one. Two additions the epic does not require:</p>
+<ul class="simple">
+<li><p>assert <code class="docutils literal notranslate"><span class="pre">Δy</span> <span class="pre">≈</span> <span class="pre">0</span></code>, so a pan is distinguishable from a zoom — but only for a
+ZOOM-FREE pan: §4 endorses zoom composing through the pivot, and a pan+zoom
+shot measures a non-zero Δy by design;</p></li>
+<li><p>assert the ORDERING <code class="docutils literal notranslate"><span class="pre">p_far</span> <span class="pre">&lt;</span> <span class="pre">p_mid</span> <span class="pre">&lt;</span> <span class="pre">p_near</span></code>, because wrong-order parallax
+is a real bug that a bare inequality passes. It is a <strong>bonus, not a second
+gate</strong>: the zoom false positive satisfies the ordering too. Only the x = 0
+probe excludes a zoom.</p></li>
+</ul>
+<p>Two measurements, deliberately different instruments:</p>
+<p><strong>(a) JSON</strong> — free, on every PR, from the compiled document through
+<a class="reference internal" href="../adapters/cutout/timeline.html#an.adapters.cutout.timeline.screen_position" title="an.adapters.cutout.timeline.screen_position"><code class="xref py py-func docutils literal notranslate"><span class="pre">an.adapters.cutout.timeline.screen_position()</span></code></a>. Composed screen space,
+not local channel values: a rigid pan on <code class="docutils literal notranslate"><span class="pre">root</span></code> leaves every plane’s local
+<code class="docutils literal notranslate"><span class="pre">Δx</span></code> at zero.</p>
+<p><strong>(b) Pixels</strong> — on a labelled PR, per-plane centroids over exact-colour
+masks. The <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">0</span></code> cancellation does <strong>not</strong> reach (b): a centroid sits at
+the plane’s own offset, not at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">0</span></code>, so the fixture holds zoom constant.
+And each mask’s pixel COUNT is asserted unchanged between frames, because a
+plane panning partly off-canvas biases its centroid — measured, that read a
+<code class="docutils literal notranslate"><span class="pre">depth</span> <span class="pre">=</span> <span class="pre">2</span></code> plane as 1.975.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.stage.PanMeasurement">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.stage.</span></span><span class="sig-name descname"><span class="pre">PanMeasurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tracks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#an.bench.stage.PlaneTrack" title="an.bench.stage.PlaneTrack"><span class="pre">PlaneTrack</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/stage.html#PanMeasurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.stage.PanMeasurement" title="Link to this definition"></a></dt>
+<dd><p>What a pan did, plane by plane.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="an.bench.stage.PanMeasurement.is_rigid">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_rigid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#an.bench.stage.PanMeasurement.is_rigid" title="Link to this definition"></a></dt>
+<dd><p>True when every plane moved by the same amount — the null
+hypothesis, and what a stage with no parallax looks like.</p>
+<p>Computed from the DISPLACEMENTS, not from the ratios, because a stage
+that did not move at all has no ratios (the reference is zero, so every
+ratio is NaN) and is nonetheless as rigid as a stage can be. Reading it
+off the ratios made a pure zoom — which cancels to zero displacement at
+the probe column, exactly as intended — report as parallaxing.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PanMeasurement</span><span class="p">((</span><span class="n">PlaneTrack</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">PlaneTrack</span><span class="p">(</span><span class="s2">"b"</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span> <span class="s2">"b"</span><span class="p">)</span><span class="o">.</span><span class="n">is_rigid</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PanMeasurement</span><span class="p">((</span><span class="n">PlaneTrack</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">PlaneTrack</span><span class="p">(</span><span class="s2">"b"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span> <span class="s2">"b"</span><span class="p">)</span><span class="o">.</span><span class="n">is_rigid</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PanMeasurement</span><span class="p">((</span><span class="n">PlaneTrack</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">PlaneTrack</span><span class="p">(</span><span class="s2">"b"</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span> <span class="s2">"b"</span><span class="p">)</span><span class="o">.</span><span class="n">is_rigid</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="an.bench.stage.PanMeasurement.ratios">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ratios</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#an.bench.stage.PanMeasurement.ratios" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{plane:</span> <span class="pre">Δ_i</span> <span class="pre">/</span> <span class="pre">Δ_ref}</span></code>. A rigid stage gives 1.0 for every plane.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">PanMeasurement</span><span class="p">((</span><span class="n">PlaneTrack</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">PlaneTrack</span><span class="p">(</span><span class="s2">"b"</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span> <span class="s2">"b"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">ratios</span>
+<span class="go">{'a': 0.25, 'b': 1.0}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.stage.PanMeasurement.reference">
+<span class="sig-name descname"><span class="pre">reference</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#an.bench.stage.PanMeasurement.reference" title="Link to this definition"></a></dt>
+<dd><p>always the largest mover, so
+the JSON and pixel halves agree and the number does not depend on what
+a descriptor declares (<code class="xref py py-func docutils literal notranslate"><span class="pre">_reference()</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The plane every ratio is taken against</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="an.bench.stage.PlaneTrack">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.stage.</span></span><span class="sig-name descname"><span class="pre">PlaneTrack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/stage.html#PlaneTrack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.stage.PlaneTrack" title="Link to this definition"></a></dt>
+<dd><p>One plane’s displacement between the two probed times.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.stage.PlaneTrack.depth">
+<span class="sig-name descname"><span class="pre">depth</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.bench.stage.PlaneTrack.depth" title="Link to this definition"></a></dt>
+<dd><p>The declared parallax factor, when the caller knows it.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="an.bench.stage.RotatingCamera">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.stage.</span></span><span class="sig-name descname"><span class="pre">RotatingCamera</span></span><a class="reference internal" href="../../../_modules/an/bench/stage.html#RotatingCamera"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.stage.RotatingCamera" title="Link to this definition"></a></dt>
+<dd><p>The camera rolls, so a per-axis ratio is not a depth ratio.</p>
+<p>Under a rotation the composed x-displacement is <code class="docutils literal notranslate"><span class="pre">−fx·A</span> <span class="pre">+</span> <span class="pre">fy·B</span></code> with
+plane-independent <code class="docutils literal notranslate"><span class="pre">A</span></code>/<code class="docutils literal notranslate"><span class="pre">B</span></code>, so the axes mix and <code class="docutils literal notranslate"><span class="pre">Δ_i/Δ_j</span></code> stops being
+<code class="docutils literal notranslate"><span class="pre">f_i/f_j</span></code>. Measured with <cite>rotation = 0.6</cite> and per-axis factors: one plane
+reported a NEGATIVE ratio and the resulting gap was <em>larger</em> than the
+honest one, so the tripwire passed on a number that meant nothing
+(an#111 review, M2).</p>
+<p>Refused rather than reported. The measurement’s whole job is to exclude a
+camera move that mimics depth; silently reporting one is the failure it
+exists to prevent, pointed the other way.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.stage.measure_pan_json">
+<span class="sig-prename descclassname"><span class="pre">an.bench.stage.</span></span><span class="sig-name descname"><span class="pre">measure_pan_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">depths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.bench.stage.PanMeasurement" title="an.bench.stage.PanMeasurement"><span class="pre">PanMeasurement</span></a></span></span><a class="reference internal" href="../../../_modules/an/bench/stage.html#measure_pan_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.stage.measure_pan_json" title="Link to this definition"></a></dt>
+<dd><p>Measurement (a): composed screen displacement, probed at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">plane_paths</span></code> are full node paths (<code class="docutils literal notranslate"><span class="pre">&quot;depths/far&quot;</span></code>); the returned
+tracks are keyed by the LAST segment, which is the plane’s own name.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.stage.measure_pan_pixels">
+<span class="sig-prename descclassname"><span class="pre">an.bench.stage.</span></span><span class="sig-name descname"><span class="pre">measure_pan_pixels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">depths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.bench.stage.PanMeasurement" title="an.bench.stage.PanMeasurement"><span class="pre">PanMeasurement</span></a></span></span><a class="reference internal" href="../../../_modules/an/bench/stage.html#measure_pan_pixels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.stage.measure_pan_pixels" title="Link to this definition"></a></dt>
+<dd><p>Measurement (b): per-plane centroid displacement between two frames.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.stage.min_ratio_gap">
+<span class="sig-prename descclassname"><span class="pre">an.bench.stage.</span></span><span class="sig-name descname"><span class="pre">min_ratio_gap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ratios</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../../_modules/an/bench/stage.html#min_ratio_gap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.stage.min_ratio_gap" title="Link to this definition"></a></dt>
+<dd><p>The smallest gap between any two planes’ ratios.</p>
+<p>This is the number the ledger row reports and the tripwire guards. Zero
+means two planes moved together, which on a stage that declares distinct
+depths means the parallax flattened.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">min_ratio_gap</span><span class="p">({</span><span class="s2">"far"</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s2">"mid"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"near"</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">})</span>
+<span class="go">0.75</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">min_ratio_gap</span><span class="p">({</span><span class="s2">"far"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"mid"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">})</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.stage.plane_centroids">
+<span class="sig-prename descclassname"><span class="pre">an.bench.stage.</span></span><span class="sig-name descname"><span class="pre">plane_centroids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/stage.html#plane_centroids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.stage.plane_centroids" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{plane:</span> <span class="pre">(cx,</span> <span class="pre">cy,</span> <span class="pre">pixel</span> <span class="pre">count)}</span></code> for exact-colour masks.</p>
+<p><cite>an/bench/masks.py</cite> is deliberately not reused: it has no colour
+selection. The primitive is <cite>metrics.pack_rgb</cite> plus equality — one integer
+per colour, compared exactly, so a plane’s mask cannot pick up an
+anti-aliased edge pixel from its neighbour.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="run.html" class="btn btn-neutral float-left" title="an.bench.run" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../characters.html" class="btn btn-neutral float-right" title="an.characters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

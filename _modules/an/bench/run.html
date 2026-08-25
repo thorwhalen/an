@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.run &mdash; an 0.1.65 documentation</title>
+  <title>an.bench.run &mdash; an 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -97,6 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/png.html">an.bench.png</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/bench/stage.html">an.bench.stage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
@@ -212,6 +213,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench</span><span class="w"> </span><span class="kn">import</span> <span class="n">contract</span><span class="p">,</span> <span class="n">golden</span> <span class="k">as</span> <span class="n">G</span><span class="p">,</span> <span class="n">imageio</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">metrics</span> <span class="k">as</span> <span class="n">M</span><span class="p">,</span> <span class="n">palette</span> <span class="k">as</span> <span class="n">P</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench</span><span class="w"> </span><span class="kn">import</span> <span class="n">png</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.compile</span><span class="w"> </span><span class="kn">import</span> <span class="n">FOREGROUND_SUFFIX</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.capture</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">SceneCapture</span><span class="p">,</span>
     <span class="n">capture_fixture</span><span class="p">,</span>
@@ -779,6 +781,148 @@
 
 
 
+<span class="c1">#: The pan measurement (an#111). Metric and tripwire come from ONE measurement,</span>
+<span class="c1">#: as the golden pair does: the boolean and the number must be the same evidence</span>
+<span class="c1">#: read two ways, or a reader has to reconcile them.</span>
+<span class="n">STAGE_METRIC_KEY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"stage_min_plane_ratio_gap"</span>
+<span class="n">STAGE_TRIPWIRE_KEY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"stage_planes_parallaxed"</span>
+
+<span class="c1">#: The floor the tripwire fires below, set at HALF the first bless's measured</span>
+<span class="c1">#: minimum — the `expression_min_pairwise_changed_px` precedent followed</span>
+<span class="c1">#: literally.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Measured on `stage_pan` at the first bless: **0.375**. Ratios are taken</span>
+<span class="c1">#: against the largest mover, so depths 0.25 / 1.0 / 2.0 report as</span>
+<span class="c1">#: 0.125 / 0.5 / 1.0 and the closest pair is far/mid. (An earlier draft of this</span>
+<span class="c1">#: comment said 0.75, which is the same measurement taken against the</span>
+<span class="c1">#: `depth == 1` plane — a reference the pixel half cannot see, which is why</span>
+<span class="c1">#: `_reference` is now always the largest mover.)</span>
+<span class="n">STAGE_MIN_RATIO_GAP</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1875</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plane_colours</span><span class="p">(</span><span class="n">capture</span><span class="p">:</span> <span class="n">SceneCapture</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``{plane path: packed RGB}`` for every DECLARED plane in the staged scene.</span>
+
+<span class="sd">    Read from the document the browser actually loaded, for the same reason</span>
+<span class="sd">    `expect_visual_kinds` is: a fixture's own declaration is what the compiler</span>
+<span class="sd">    produced, and the staged JSON is the independent second opinion.</span>
+
+<span class="sd">    **Scoped by what the document SAYS, not by depth in the tree.** The first</span>
+<span class="sd">    version walked `scene.children[*].children[*]` and called every `rect` a</span>
+<span class="sd">    plane — which is also the shape of a procedural character's parts, so</span>
+<span class="sd">    `single_character` and `dialogue` reported three "planes" (`torso`,</span>
+<span class="sd">    `left_arm`, `right_arm`, all one colour) and the tripwire would have called</span>
+<span class="sd">    a scene with no stage a flattened stage. The docstring claimed the walk was</span>
+<span class="sd">    scoped to environment nodes; nothing in it was (an#111 review, H1).</span>
+
+<span class="sd">    The scoping is `asset_resolution`: an environment built from planes records</span>
+<span class="sd">    `resolved="planes"`, which is exactly the fact needed and is written by the</span>
+<span class="sd">    one place that knows it. A preset backdrop records `preset`/`store`/`default`</span>
+<span class="sd">    and its `sky`/`ground` rects are correctly ignored.</span>
+
+<span class="sd">    Keyed by full PATH, not bare name, so two environments each with a `sky`</span>
+<span class="sd">    cannot overwrite each other.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">shot</span> <span class="ow">in</span> <span class="n">capture</span><span class="o">.</span><span class="n">shots</span><span class="p">:</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">shot</span><span class="o">.</span><span class="n">scene_json</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asset_resolution"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"environment"</span> <span class="ow">and</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"resolved"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"planes"</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ids</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scene"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+            <span class="c1"># …and the foreground container an#110 splits off, which carries the</span>
+            <span class="c1"># entity's id plus a suffix and holds the rest of the same planes.</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ids</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="n">FOREGROUND_SUFFIX</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]:</span>
+                <span class="n">visual</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"visual"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+                <span class="n">colour</span> <span class="o">=</span> <span class="n">visual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"color"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">visual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"rect"</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">packed</span> <span class="o">=</span> <span class="n">_packed_hex</span><span class="p">(</span><span class="n">colour</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">packed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">out</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">child</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">out</span>
+    <span class="k">return</span> <span class="p">{}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_packed_hex</span><span class="p">(</span><span class="n">colour</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``"#204080"`` -&gt; ``0x204080``; anything else -&gt; ``None``."""</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">colour</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"#"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stage_pan_values</span><span class="p">(</span><span class="n">capture</span><span class="p">:</span> <span class="n">SceneCapture</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Value</span><span class="p">,</span> <span class="n">Value</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``(stage_min_plane_ratio_gap, stage_planes_parallaxed)`` for one scene.</span>
+
+<span class="sd">    Measured on the PRE-ENCODE PNGs, like every other family-B row: the mp4 is</span>
+<span class="sd">    `yuv420p`, so an exact-colour mask finds nothing in it (verified while</span>
+<span class="sd">    writing this — every plane read zero pixels).</span>
+
+<span class="sd">    `unavailable`, never zero, for a scene with fewer than two coloured planes:</span>
+<span class="sd">    a scene with nothing to compare has no ratio, and reporting that as a</span>
+<span class="sd">    flattened stage would fire the tripwire on every fixture in the corpus.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.png</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_png</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClippedPlane</span><span class="p">,</span> <span class="n">measure_pan_pixels</span><span class="p">,</span> <span class="n">min_ratio_gap</span>
+
+    <span class="n">colours</span> <span class="o">=</span> <span class="n">_plane_colours</span><span class="p">(</span><span class="n">capture</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">colours</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the scene stages </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">colours</span><span class="p">)</span><span class="si">}</span><span class="s2"> colour-filled plane(s); a ratio "</span>
+            <span class="s2">"needs two. Only a multiplane stage has a pan to measure."</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">),</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
+    <span class="n">refs</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">resolve_frames</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"the scene pins </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span><span class="si">}</span><span class="s2"> distinct frame(s); a displacement needs two"</span>
+        <span class="k">return</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">),</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
+    <span class="n">frames</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">read_png</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">frame_png_path</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">measurement</span> <span class="o">=</span> <span class="n">measure_pan_pixels</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">colours</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ClippedPlane</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># NOT zero: a clipped plane means the instrument could not measure,</span>
+        <span class="c1"># and a tripwire that fires on its own failure cries wolf.</span>
+        <span class="k">return</span> <span class="n">unavailable</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)),</span> <span class="n">unavailable</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">measurement</span><span class="o">.</span><span class="n">is_rigid</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">dx</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">measurement</span><span class="o">.</span><span class="n">tracks</span><span class="p">):</span>
+        <span class="c1"># Nothing moved at the probe column. That is what a zoom-only shot</span>
+        <span class="c1"># looks like — correctly, since the probe is chosen so a zoom cancels —</span>
+        <span class="c1"># and there is no ratio to report. `unavailable`, never zero: a</span>
+        <span class="c1"># tripwire that fires on a scene with no pan is crying wolf.</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"no plane moved at the probe column, so there is no displacement "</span>
+            <span class="s2">"ratio. A zoom cancels there by construction; only a translation "</span>
+            <span class="s2">"has a pan to measure."</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">),</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
+    <span class="n">gap</span> <span class="o">=</span> <span class="n">min_ratio_gap</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">ratios</span><span class="p">)</span>
+    <span class="n">ratios</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">measurement</span><span class="o">.</span><span class="n">ratios</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">measured</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">gap</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">ratios</span><span class="o">=</span><span class="n">ratios</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">measurement</span><span class="o">.</span><span class="n">reference</span><span class="p">),</span>
+        <span class="n">measured</span><span class="p">(</span>
+            <span class="n">gap</span> <span class="o">&gt;</span> <span class="n">STAGE_MIN_RATIO_GAP</span><span class="p">,</span>
+            <span class="n">ratios</span><span class="o">=</span><span class="n">ratios</span><span class="p">,</span>
+            <span class="n">floor</span><span class="o">=</span><span class="n">STAGE_MIN_RATIO_GAP</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"every plane moved together — the stage panned as one rigid "</span>
+                <span class="s2">"image, which is what a flattened parallax looks like"</span>
+                <span class="k">if</span> <span class="n">gap</span> <span class="o">&lt;=</span> <span class="n">STAGE_MIN_RATIO_GAP</span>
+                <span class="k">else</span> <span class="s2">""</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+
 <span class="c1">#: Said when a run blessed the goldens it would otherwise have compared against.</span>
 <span class="n">JUST_BLESSED_DETAIL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="p">(</span>
     <span class="s2">"this run WROTE these goldens, so comparing against them is a tautology: "</span>
@@ -1019,6 +1163,11 @@
             <span class="n">values</span><span class="p">[</span><span class="n">PAIRWISE_METRIC_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">pinned_frames_min_pairwise_changed_px</span><span class="p">(</span>
                 <span class="n">capture</span><span class="p">,</span> <span class="n">fixture</span><span class="o">.</span><span class="n">golden_frames</span>
             <span class="p">)</span>
+            <span class="n">stage_metric</span><span class="p">,</span> <span class="n">stage_tripwire</span> <span class="o">=</span> <span class="n">_stage_pan_values</span><span class="p">(</span>
+                <span class="n">capture</span><span class="p">,</span> <span class="n">fixture</span><span class="o">.</span><span class="n">golden_frames</span>
+            <span class="p">)</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">STAGE_METRIC_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">stage_metric</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">STAGE_TRIPWIRE_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">stage_tripwire</span>
             <span class="n">scene_prov</span><span class="p">[</span><span class="s2">"golden"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="o">**</span><span class="n">golden</span><span class="p">,</span>
                 <span class="s2">"chromium_build"</span><span class="p">:</span> <span class="n">chromium_build</span><span class="p">,</span>

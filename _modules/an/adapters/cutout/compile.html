@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.65 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -97,6 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/png.html">an.bench.png</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/stage.html">an.bench.stage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
@@ -1209,7 +1210,9 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_environment_descriptor</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="n">AssetRef</span><span class="p">,</span> <span class="n">env_store</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"EnvironmentDescriptor | None"</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_environment_descriptor</span><span class="p">(</span>
+    <span class="n">entity</span><span class="p">:</span> <span class="n">AssetRef</span><span class="p">,</span> <span class="n">env_store</span><span class="p">:</span> <span class="n">Mapping</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"EnvironmentDescriptor | None"</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The store's `EnvironmentDescriptor` for ``entity``, or ``None``.</span>
 
 <span class="sd">    ``None`` means "take the preset path", which is every environment written</span>
@@ -1253,7 +1256,9 @@
         <span class="k">return</span> <span class="n">NodeJSON</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">plane</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-            <span class="n">visual</span><span class="o">=</span><span class="n">VisualJSON</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">"rect"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">height</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="n">art</span><span class="o">.</span><span class="n">color</span><span class="p">),</span>
+            <span class="n">visual</span><span class="o">=</span><span class="n">VisualJSON</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"rect"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">height</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="n">art</span><span class="o">.</span><span class="n">color</span>
+            <span class="p">),</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">art</span><span class="o">.</span><span class="n">src</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -1272,7 +1277,11 @@
             <span class="n">anchor_x</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ax</span><span class="p">),</span>
             <span class="n">anchor_y</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ay</span><span class="p">),</span>
             <span class="n">fit</span><span class="o">=</span><span class="n">plane</span><span class="o">.</span><span class="n">fit</span><span class="p">,</span>
-            <span class="o">**</span><span class="p">({</span><span class="s2">"width"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s2">"height"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">])}</span> <span class="k">if</span> <span class="n">extent</span> <span class="k">else</span> <span class="p">{}),</span>
+            <span class="o">**</span><span class="p">(</span>
+                <span class="p">{</span><span class="s2">"width"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s2">"height"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">])}</span>
+                <span class="k">if</span> <span class="n">extent</span>
+                <span class="k">else</span> <span class="p">{}</span>
+            <span class="p">),</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
@@ -1365,7 +1374,14 @@
         <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="n">_emit_plane_compensation</span><span class="p">(</span>
-            <span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span><span class="p">,</span> <span class="n">authored</span><span class="o">=</span><span class="n">authored</span>
+            <span class="n">shot</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">env</span><span class="p">,</span>
+            <span class="n">keys</span><span class="p">,</span>
+            <span class="n">duration</span><span class="p">,</span>
+            <span class="n">animations</span><span class="p">,</span>
+            <span class="n">tracks</span><span class="p">,</span>
+            <span class="n">authored</span><span class="o">=</span><span class="n">authored</span><span class="p">,</span>
         <span class="p">)</span>
 
 
@@ -1392,7 +1408,9 @@
         <span class="p">):</span>
             <span class="k">if</span> <span class="n">factor</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
                 <span class="k">continue</span>  <span class="c1"># rides the camera; emitting nothing is the point</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">rest</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">cam_field</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">rest</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">cam_field</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span>
+            <span class="p">]</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="n">rest</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
                 <span class="k">continue</span>  <span class="c1"># the camera does not move on this axis</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span> <span class="ow">in</span> <span class="n">authored</span><span class="p">:</span>

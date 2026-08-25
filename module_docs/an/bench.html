@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench &mdash; an 0.1.65 documentation</title>
+  <title>an.bench &mdash; an 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -86,7 +86,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.BenchError"><code class="docutils literal notranslate"><span class="pre">BenchError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.GoldenError"><code class="docutils literal notranslate"><span class="pre">GoldenError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.LedgerSchemaError"><code class="docutils literal notranslate"><span class="pre">LedgerSchemaError</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#an.bench.MetricSpec"><code class="docutils literal notranslate"><span class="pre">MetricSpec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.MetricSpec"><code class="docutils literal notranslate"><span class="pre">MetricSpec</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.bench.MetricSpec.requires"><code class="docutils literal notranslate"><span class="pre">MetricSpec.requires</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.PngFormatError"><code class="docutils literal notranslate"><span class="pre">PngFormatError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.Prediction"><code class="docutils literal notranslate"><span class="pre">Prediction</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.RegistryError"><code class="docutils literal notranslate"><span class="pre">RegistryError</span></code></a></li>
@@ -125,6 +128,7 @@
 <li class="toctree-l1"><a class="reference internal" href="bench/png.html">an.bench.png</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bench/registry.html">an.bench.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bench/stage.html">an.bench.stage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="characters/dicebear.html">an.characters.dicebear</a></li>
@@ -256,8 +260,24 @@ so it can never move under a deliberate degradation.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="an.bench.MetricSpec">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">MetricSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">key:</span> <span class="pre">str,</span> <span class="pre">family:</span> <span class="pre">~typing.Literal['A',</span> <span class="pre">'B',</span> <span class="pre">'C',</span> <span class="pre">'D',</span> <span class="pre">'E',</span> <span class="pre">'F',</span> <span class="pre">'G'],</span> <span class="pre">unit:</span> <span class="pre">str,</span> <span class="pre">optimum:</span> <span class="pre">~an.bench.registry.Optimum,</span> <span class="pre">predictions:</span> <span class="pre">dict[str,</span> <span class="pre">~an.bench.registry.Prediction],</span> <span class="pre">sentence:</span> <span class="pre">str,</span> <span class="pre">role:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">reference:</span> <span class="pre">~typing.Literal['lossless',</span> <span class="pre">'source_png',</span> <span class="pre">'none']</span> <span class="pre">=</span> <span class="pre">'none',</span> <span class="pre">provisional:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">unreviewed:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">tripwire:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">notes:</span> <span class="pre">tuple[str,</span> <span class="pre">...]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/bench/registry.html#MetricSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.MetricSpec" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.bench.</span></span><span class="sig-name descname"><span class="pre">MetricSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">key:</span> <span class="pre">str,</span> <span class="pre">family:</span> <span class="pre">~typing.Literal['A',</span> <span class="pre">'B',</span> <span class="pre">'C',</span> <span class="pre">'D',</span> <span class="pre">'E',</span> <span class="pre">'F',</span> <span class="pre">'G'],</span> <span class="pre">unit:</span> <span class="pre">str,</span> <span class="pre">optimum:</span> <span class="pre">~an.bench.registry.Optimum,</span> <span class="pre">predictions:</span> <span class="pre">dict[str,</span> <span class="pre">~an.bench.registry.Prediction],</span> <span class="pre">sentence:</span> <span class="pre">str,</span> <span class="pre">role:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">reference:</span> <span class="pre">~typing.Literal['lossless',</span> <span class="pre">'source_png',</span> <span class="pre">'none']</span> <span class="pre">=</span> <span class="pre">'none',</span> <span class="pre">provisional:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">unreviewed:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">tripwire:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">requires:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'',</span> <span class="pre">notes:</span> <span class="pre">tuple[str,</span> <span class="pre">...]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/bench/registry.html#MetricSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.MetricSpec" title="Link to this definition"></a></dt>
 <dd><p>One row of the panel.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.bench.MetricSpec.requires">
+<span class="sig-name descname"><span class="pre">requires</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#an.bench.MetricSpec.requires" title="Link to this definition"></a></dt>
+<dd><p>What a scene must HAVE for this row to exist at all, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> when the
+row applies to every scene (an#111).</p>
+<p>The render-side panel rule is “nothing may be null on a real capture,
+because a null render-side row is a blind panel”. That rule assumes
+every metric could have been measured. <cite>stage_min_plane_ratio_gap</cite>
+could not: a displacement ratio needs two planes moving at different
+depths, and <cite>single_character</cite> has no planes at all — so its null is
+structural, not a gap in the instrument.</p>
+<p>Declared rather than hardcoded in the test, so the panel rule keeps
+naming its own exceptions instead of a test file carrying a list the
+registry does not know about.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py exception">

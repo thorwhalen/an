@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.timeline &mdash; an 0.1.65 documentation</title>
+  <title>an.adapters.cutout.timeline &mdash; an 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -72,8 +72,15 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.timeline.Timeline"><code class="docutils literal notranslate"><span class="pre">Timeline</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.timeline.Track"><code class="docutils literal notranslate"><span class="pre">Track</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.timeline.Transform2D"><code class="docutils literal notranslate"><span class="pre">Transform2D</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.cutout.timeline.Transform2D.apply"><code class="docutils literal notranslate"><span class="pre">Transform2D.apply()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.cutout.timeline.Transform2D.unapply"><code class="docutils literal notranslate"><span class="pre">Transform2D.unapply()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.timeline.evaluate_timeline"><code class="docutils literal notranslate"><span class="pre">evaluate_timeline()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.timeline.screen_position"><code class="docutils literal notranslate"><span class="pre">screen_position()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.timeline.timeline_from_scene"><code class="docutils literal notranslate"><span class="pre">timeline_from_scene()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.timeline.transform_of"><code class="docutils literal notranslate"><span class="pre">transform_of()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../manim_adapter.html">an.adapters.manim_adapter</a></li>
@@ -110,6 +117,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../bench/png.html">an.bench.png</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bench/registry.html">an.bench.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bench/stage.html">an.bench.stage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../characters/dicebear.html">an.characters.dicebear</a></li>
@@ -250,10 +258,78 @@ decides what to do with the ramps. Additive blending lands in 2B.</p></li>
 runtime can use it to scope rendering); evaluation does not filter by it.</p>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="an.adapters.cutout.timeline.Transform2D">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.timeline.</span></span><span class="sig-name descname"><span class="pre">Transform2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pivot_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pivot_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/timeline.html#Transform2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.timeline.Transform2D" title="Link to this definition"></a></dt>
+<dd><p>One node’s local transform, in the runtime’s own vocabulary.</p>
+<p>Field names and defaults mirror <cite>applyTransform</cite> in <cite>runtime.js</cite> exactly —
+<cite>x</cite>, <cite>y</cite>, <cite>rotation</cite>, <cite>scale_x</cite>, <cite>scale_y</cite>, <cite>pivot_x</cite>, <cite>pivot_y</cite> — because
+the point of this class is to agree with the vendored engine rather than to
+re-derive it. <cite>skew</cite> is deliberately absent: PixiJS composes skew into the
+same matrix, but no emitter in this package produces a skew channel, and a
+field nothing writes is a claim this compositor cannot honour.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="an.adapters.cutout.timeline.Transform2D.apply">
+<span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/timeline.html#Transform2D.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.timeline.Transform2D.apply" title="Link to this definition"></a></dt>
+<dd><p>This node’s local point, in its PARENT’s coordinates.</p>
+<p><code class="docutils literal notranslate"><span class="pre">world</span> <span class="pre">=</span> <span class="pre">position</span> <span class="pre">+</span> <span class="pre">M·(local</span> <span class="pre">−</span> <span class="pre">pivot)</span></code> — the composition PixiJS
+performs, and the reason <cite>root.pivot</cite> is a 2D camera: moving the pivot
+moves everything the node contains, in the opposite direction.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Transform2D</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+<span class="go">(10.0, 0.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Transform2D</span><span class="p">(</span><span class="n">pivot_x</span><span class="o">=</span><span class="mf">25.0</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+<span class="go">(-25.0, 0.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Transform2D</span><span class="p">(</span><span class="n">scale_x</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">((</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+<span class="go">(10.0, 0.0)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="an.adapters.cutout.timeline.Transform2D.unapply">
+<span class="sig-name descname"><span class="pre">unapply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/timeline.html#Transform2D.unapply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.timeline.Transform2D.unapply" title="Link to this definition"></a></dt>
+<dd><p>The inverse of <a class="reference internal" href="#an.adapters.cutout.timeline.Transform2D.apply" title="an.adapters.cutout.timeline.Transform2D.apply"><code class="xref py py-meth docutils literal notranslate"><span class="pre">apply()</span></code></a> — a parent-space point, in local space.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Transform2D</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">pivot_x</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">scale_x</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">unapply</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">apply</span><span class="p">((</span><span class="mf">7.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">)))[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">9</span><span class="p">)</span>
+<span class="go">7.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="an.adapters.cutout.timeline.evaluate_timeline">
 <span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.timeline.</span></span><span class="sig-name descname"><span class="pre">evaluate_timeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#an.adapters.cutout.timeline.Timeline" title="an.adapters.cutout.timeline.Timeline"><span class="pre">Timeline</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/timeline.html#evaluate_timeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.timeline.evaluate_timeline" title="Link to this definition"></a></dt>
 <dd><p>Evaluate <code class="docutils literal notranslate"><span class="pre">timeline</span></code> at time <code class="docutils literal notranslate"><span class="pre">t</span></code>, merging poses across tracks/clips.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.timeline.screen_position">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.timeline.</span></span><span class="sig-name descname"><span class="pre">screen_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../cutout.html#an.adapters.cutout.CutoutSceneJSON" title="an.adapters.cutout.CutoutSceneJSON"><span class="pre">CutoutSceneJSON</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="clip.html#an.adapters.cutout.clip.Pose" title="an.adapters.cutout.clip.Pose"><span class="pre">Pose</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/timeline.html#screen_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.timeline.screen_position" title="Link to this definition"></a></dt>
+<dd><p>Where <code class="docutils literal notranslate"><span class="pre">point</span></code> in <code class="docutils literal notranslate"><span class="pre">path</span></code>’s local space lands on the canvas.</p>
+<p>The composition the runtime performs, walked from the node up to <cite>root</cite>
+and then offset by the canvas centre — which is where <cite>runtime.js</cite> places
+the root container.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pose</span></code> is keyed by the FULL path (<cite>“street/hills”</cite>), matching what
+<cite>evaluate_timeline</cite> returns, and each node reads only its own entry.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.serialize</span><span class="w"> </span><span class="kn">import</span> <span class="n">CutoutSceneJSON</span><span class="p">,</span> <span class="n">NodeJSON</span><span class="p">,</span> <span class="n">TimelineJSON</span><span class="p">,</span> <span class="n">TransformJSON</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span> <span class="o">=</span> <span class="n">CutoutSceneJSON</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">scene</span><span class="o">=</span><span class="n">NodeJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="p">[</span>
+<span class="gp">... </span>        <span class="n">NodeJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"hill"</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">TransformJSON</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">40.0</span><span class="p">))]),</span>
+<span class="gp">... </span>    <span class="n">timeline</span><span class="o">=</span><span class="n">TimelineJSON</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="mi">320</span><span class="p">,</span> <span class="mi">240</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">screen_position</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="s2">"hill"</span><span class="p">)</span>
+<span class="go">(200.0, 120.0)</span>
+</pre></div>
+</div>
+<p>…and moving the camera’s pivot moves it the other way, which is the whole
+reason <cite>root.pivot</cite> is the camera:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">screen_position</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="s2">"hill"</span><span class="p">,</span> <span class="n">pose</span><span class="o">=</span><span class="p">{(</span><span class="s2">"root"</span><span class="p">,</span> <span class="s2">"pivot_x"</span><span class="p">):</span> <span class="mf">25.0</span><span class="p">})</span>
+<span class="go">(175.0, 120.0)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -279,6 +355,16 @@ stay a tuple for <cite>Keyframe</cite>.</p>
 <span class="go">5.0</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.adapters.cutout.timeline.transform_of">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.timeline.</span></span><span class="sig-name descname"><span class="pre">transform_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../cutout.html#an.adapters.cutout.NodeJSON" title="an.adapters.cutout.NodeJSON"><span class="pre">NodeJSON</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="clip.html#an.adapters.cutout.clip.Pose" title="an.adapters.cutout.clip.Pose"><span class="pre">Pose</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#an.adapters.cutout.timeline.Transform2D" title="an.adapters.cutout.timeline.Transform2D"><span class="pre">Transform2D</span></a></span></span><a class="reference internal" href="../../../../_modules/an/adapters/cutout/timeline.html#transform_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.cutout.timeline.transform_of" title="Link to this definition"></a></dt>
+<dd><p>A node’s transform, with <code class="docutils literal notranslate"><span class="pre">pose</span></code> overriding what the document declares.</p>
+<p>The runtime applies a pose value by assigning the property on the display
+object, so a channel REPLACES the declared value rather than adding to it —
+which is why the parallax compensation carries the plane’s own offset in
+every keyframe instead of an offset from it.</p>
 </dd></dl>
 
 </section>

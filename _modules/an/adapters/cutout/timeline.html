@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.timeline &mdash; an 0.1.65 documentation</title>
+  <title>an.adapters.cutout.timeline &mdash; an 0.1.66 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=07ed7713"></script>
+      <script src="../../../../_static/documentation_options.js?v=3015fd79"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -97,6 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/png.html">an.bench.png</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/registry.html">an.bench.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/run.html">an.bench.run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/bench/stage.html">an.bench.stage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters.html">an.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/cli.html">an.characters.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/characters/dicebear.html">an.characters.dicebear</a></li>
@@ -214,15 +215,18 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.channel</span><span class="w"> </span><span class="kn">import</span> <span class="n">Channel</span><span class="p">,</span> <span class="n">Keyframe</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.clip</span><span class="w"> </span><span class="kn">import</span> <span class="n">Clip</span><span class="p">,</span> <span class="n">LoopMode</span><span class="p">,</span> <span class="n">Pose</span><span class="p">,</span> <span class="n">merge_poses</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.clip</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate</span> <span class="k">as</span> <span class="n">_evaluate_clip</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.serialize</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformJSON</span>
+
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover - types only</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.serialize</span><span class="w"> </span><span class="kn">import</span> <span class="n">CutoutSceneJSON</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.serialize</span><span class="w"> </span><span class="kn">import</span> <span class="n">CutoutSceneJSON</span><span class="p">,</span> <span class="n">NodeJSON</span>
 
 
 <div class="viewcode-block" id="PlacedClip">
@@ -378,6 +382,196 @@
         <span class="p">],</span>
     <span class="p">)</span></div>
 
+
+
+<span class="c1"># --- screen space -------------------------------------------------------------</span>
+<span class="c1">#</span>
+<span class="c1"># `evaluate_timeline` returns a POSE — `{(target, property): value}` — and a</span>
+<span class="c1"># pose is not a position. Nothing in `an/` composed one until an#111, which is</span>
+<span class="c1"># why the pan measurement could not be written: a rigid pan on `root` leaves</span>
+<span class="c1"># every plane's LOCAL x at zero, so a local channel reads "no parallax" for a</span>
+<span class="c1"># stage that is parallaxing correctly.</span>
+
+
+<div class="viewcode-block" id="Transform2D">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/timeline.html#an.adapters.cutout.timeline.Transform2D">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Transform2D</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One node's local transform, in the runtime's own vocabulary.</span>
+
+<span class="sd">    Field names and defaults mirror `applyTransform` in `runtime.js` exactly —</span>
+<span class="sd">    `x`, `y`, `rotation`, `scale_x`, `scale_y`, `pivot_x`, `pivot_y` — because</span>
+<span class="sd">    the point of this class is to agree with the vendored engine rather than to</span>
+<span class="sd">    re-derive it. `skew` is deliberately absent: PixiJS composes skew into the</span>
+<span class="sd">    same matrix, but no emitter in this package produces a skew channel, and a</span>
+<span class="sd">    field nothing writes is a claim this compositor cannot honour.</span>
+<span class="sd">    """</span>
+
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">rotation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">scale_x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">scale_y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">pivot_x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">pivot_y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+<div class="viewcode-block" id="Transform2D.unapply">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/timeline.html#an.adapters.cutout.timeline.Transform2D.unapply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unapply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The inverse of :meth:`apply` — a parent-space point, in local space.</span>
+
+<span class="sd">        &gt;&gt;&gt; t = Transform2D(x=10.0, pivot_x=3.0, scale_x=2.0, rotation=0.4)</span>
+<span class="sd">        &gt;&gt;&gt; round(t.unapply(t.apply((7.0, -2.0)))[0], 9)</span>
+<span class="sd">        7.0</span>
+<span class="sd">        """</span>
+        <span class="n">px</span><span class="p">,</span> <span class="n">py</span> <span class="o">=</span> <span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation</span><span class="p">:</span>
+            <span class="n">cos_r</span><span class="p">,</span> <span class="n">sin_r</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation</span><span class="p">)</span>
+            <span class="n">px</span><span class="p">,</span> <span class="n">py</span> <span class="o">=</span> <span class="n">px</span> <span class="o">*</span> <span class="n">cos_r</span> <span class="o">-</span> <span class="n">py</span> <span class="o">*</span> <span class="n">sin_r</span><span class="p">,</span> <span class="n">px</span> <span class="o">*</span> <span class="n">sin_r</span> <span class="o">+</span> <span class="n">py</span> <span class="o">*</span> <span class="n">cos_r</span>
+        <span class="k">return</span> <span class="n">px</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pivot_x</span><span class="p">,</span> <span class="n">py</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pivot_y</span></div>
+
+
+<div class="viewcode-block" id="Transform2D.apply">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/timeline.html#an.adapters.cutout.timeline.Transform2D.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""This node's local point, in its PARENT's coordinates.</span>
+
+<span class="sd">        ``world = position + M·(local − pivot)`` — the composition PixiJS</span>
+<span class="sd">        performs, and the reason `root.pivot` is a 2D camera: moving the pivot</span>
+<span class="sd">        moves everything the node contains, in the opposite direction.</span>
+
+<span class="sd">        &gt;&gt;&gt; Transform2D(x=10.0).apply((0.0, 0.0))</span>
+<span class="sd">        (10.0, 0.0)</span>
+<span class="sd">        &gt;&gt;&gt; Transform2D(pivot_x=25.0).apply((0.0, 0.0))</span>
+<span class="sd">        (-25.0, 0.0)</span>
+<span class="sd">        &gt;&gt;&gt; Transform2D(scale_x=2.0).apply((5.0, 0.0))</span>
+<span class="sd">        (10.0, 0.0)</span>
+<span class="sd">        """</span>
+        <span class="n">lx</span><span class="p">,</span> <span class="n">ly</span> <span class="o">=</span> <span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pivot_x</span><span class="p">,</span> <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pivot_y</span>
+        <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="n">lx</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_x</span><span class="p">,</span> <span class="n">ly</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_y</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation</span><span class="p">:</span>
+            <span class="n">cos_r</span><span class="p">,</span> <span class="n">sin_r</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation</span><span class="p">)</span>
+            <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="n">sx</span> <span class="o">*</span> <span class="n">cos_r</span> <span class="o">-</span> <span class="n">sy</span> <span class="o">*</span> <span class="n">sin_r</span><span class="p">,</span> <span class="n">sx</span> <span class="o">*</span> <span class="n">sin_r</span> <span class="o">+</span> <span class="n">sy</span> <span class="o">*</span> <span class="n">cos_r</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">sx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">sy</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="transform_of">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/timeline.html#an.adapters.cutout.timeline.transform_of">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">transform_of</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">NodeJSON</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pose</span><span class="p">:</span> <span class="n">Pose</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Transform2D</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A node's transform, with ``pose`` overriding what the document declares.</span>
+
+<span class="sd">    The runtime applies a pose value by assigning the property on the display</span>
+<span class="sd">    object, so a channel REPLACES the declared value rather than adding to it —</span>
+<span class="sd">    which is why the parallax compensation carries the plane's own offset in</span>
+<span class="sd">    every keyframe instead of an offset from it.</span>
+<span class="sd">    """</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">transform</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">TransformJSON</span><span class="p">()</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"x"</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+        <span class="s2">"y"</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+        <span class="s2">"rotation"</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">rotation</span><span class="p">,</span>
+        <span class="s2">"scale_x"</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">scale_x</span><span class="p">,</span>
+        <span class="s2">"scale_y"</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">scale_y</span><span class="p">,</span>
+        <span class="s2">"pivot_x"</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">pivot_x</span><span class="p">,</span>
+        <span class="s2">"pivot_y"</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">pivot_y</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">pose</span><span class="p">:</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">_target</span><span class="p">,</span> <span class="n">prop</span><span class="p">),</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">pose</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">values</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="n">values</span><span class="p">[</span><span class="n">prop</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Transform2D</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="screen_position">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/timeline.html#an.adapters.cutout.timeline.screen_position">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">screen_position</span><span class="p">(</span>
+    <span class="n">scene</span><span class="p">:</span> <span class="n">CutoutSceneJSON</span><span class="p">,</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">pose</span><span class="p">:</span> <span class="n">Pose</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">point</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Where ``point`` in ``path``'s local space lands on the canvas.</span>
+
+<span class="sd">    The composition the runtime performs, walked from the node up to `root`</span>
+<span class="sd">    and then offset by the canvas centre — which is where `runtime.js` places</span>
+<span class="sd">    the root container.</span>
+
+<span class="sd">    ``pose`` is keyed by the FULL path (`"street/hills"`), matching what</span>
+<span class="sd">    `evaluate_timeline` returns, and each node reads only its own entry.</span>
+
+<span class="sd">    &gt;&gt;&gt; from an.adapters.cutout.serialize import CutoutSceneJSON, NodeJSON, TimelineJSON, TransformJSON</span>
+<span class="sd">    &gt;&gt;&gt; scene = CutoutSceneJSON(</span>
+<span class="sd">    ...     scene=NodeJSON(name="root", children=[</span>
+<span class="sd">    ...         NodeJSON(name="hill", transform=TransformJSON(x=40.0))]),</span>
+<span class="sd">    ...     timeline=TimelineJSON(duration=1.0),</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; scene.meta.width, scene.meta.height = 320, 240</span>
+<span class="sd">    &gt;&gt;&gt; screen_position(scene, "hill")</span>
+<span class="sd">    (200.0, 120.0)</span>
+
+<span class="sd">    …and moving the camera's pivot moves it the other way, which is the whole</span>
+<span class="sd">    reason `root.pivot` is the camera:</span>
+
+<span class="sd">    &gt;&gt;&gt; screen_position(scene, "hill", pose={("root", "pivot_x"): 25.0})</span>
+<span class="sd">    (175.0, 120.0)</span>
+<span class="sd">    """</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">_node_chain</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">scene</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="n">at</span> <span class="o">=</span> <span class="n">point</span>
+    <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">node_path</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+        <span class="n">at</span> <span class="o">=</span> <span class="n">transform_of</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">_pose_for</span><span class="p">(</span><span class="n">pose</span><span class="p">,</span> <span class="n">node_path</span><span class="p">))</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">at</span><span class="p">)</span>
+    <span class="c1"># The root LAST, and from the pose alone. `runtime.js` builds its own root</span>
+    <span class="c1"># container at the canvas centre and says so: "Do NOT apply its transform".</span>
+    <span class="c1"># What it does apply to that container is pose channels — which is exactly</span>
+    <span class="c1"># how the camera works, since `root.pivot` is the camera. Composing the</span>
+    <span class="c1"># document root's declared transform as well would diverge from the engine</span>
+    <span class="c1"># the moment anything wrote one (an#111 review, L1).</span>
+    <span class="n">root</span><span class="p">,</span> <span class="n">root_path</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">at</span> <span class="o">=</span> <span class="n">transform_of</span><span class="p">(</span><span class="n">_ROOT_AT_REST</span><span class="p">,</span> <span class="n">_pose_for</span><span class="p">(</span><span class="n">pose</span><span class="p">,</span> <span class="n">root_path</span><span class="p">))</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">at</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">at</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">at</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mf">2.0</span></div>
+
+
+
+<span class="c1">#: A stand-in for the runtime's own root container: identity, because that is</span>
+<span class="c1">#: what `runtime.js` creates before applying any pose to it.</span>
+<span class="n">_ROOT_AT_REST</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_pose_for</span><span class="p">(</span><span class="n">pose</span><span class="p">:</span> <span class="n">Pose</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Pose</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The pose entries for one node, re-keyed to its bare name."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pose</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">prop</span><span class="p">):</span> <span class="n">value</span> <span class="k">for</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">prop</span><span class="p">),</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">pose</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="n">path</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_node_chain</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">NodeJSON</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``[(node, its path)]`` from ``path`` up to and including the root.</span>
+
+<span class="sd">    Raises rather than returning an empty chain: a path that names no node is a</span>
+<span class="sd">    caller error, and silently measuring the root's position instead is the</span>
+<span class="sd">    kind of plausible wrong answer this package refuses elsewhere.</span>
+<span class="sd">    """</span>
+    <span class="n">chain</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">root</span><span class="p">,</span> <span class="n">root</span><span class="o">.</span><span class="n">name</span><span class="p">)]</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">root</span>
+    <span class="n">walked</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">part</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">where</span> <span class="o">=</span> <span class="s2">"/"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">walked</span><span class="p">)</span> <span class="ow">or</span> <span class="n">root</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"no node </span><span class="si">{</span><span class="n">part</span><span class="si">!r}</span><span class="s2"> under </span><span class="si">{</span><span class="n">where</span><span class="si">!r}</span><span class="s2">; it has "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="n">walked</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">found</span>
+        <span class="n">chain</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">node</span><span class="p">,</span> <span class="s2">"/"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">walked</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">chain</span>
 </pre></div>
 
            </div>
