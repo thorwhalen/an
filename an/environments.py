@@ -17,12 +17,26 @@ coordinates — a ratio, not a distance:
 ===========  ===============================================================
 `depth`      meaning
 ===========  ===============================================================
-`0.0`        infinitely far: frozen in frame, neither pans nor scales
+`0.0`        infinitely far: does not PAN — pinned against a camera
+             translation. It still scales and rotates with the camera; see
+             the limit below.
 `0 < d < 1`  background — Godot's own sanity range is 0.1 sky → 0.7 forest
 `1.0`        the character plane; **emits nothing**, which is today's
              behaviour for everything and why this is byte-identity-free
 `> 1.0`      foreground: nearer than the characters, moving faster
 ===========  ===============================================================
+
+**`depth` governs translation only, and that is a stated limit rather than an
+oversight.** The compensation is on `x`/`y`; `root.scale` and `root.rotation`
+multiply the whole composed expression, so no per-plane factor can cancel
+them. Measured: a `depth = 0` plane under `push_in` grows 1.0 → 1.25× and
+drifts, exactly like the character plane.
+
+Depth-aware zoom is the **dolly**, and the design of record defers it with its
+reason: a true dolly grows the foreground ×1.40 while the moon grows ×1.02,
+where today's `push_in` grows both ×1.25 — precisely the uniform zoom the 1937
+multiplane camera was built to replace. Until `dolly_in` exists, pair a
+`depth = 0` plate with a pan, not a zoom.
 
 Sign trap, pinned here because every surveyed tool disagrees: **larger depth =
 nearer = faster.** Unity's z-derived factor uses the INVERSE convention
@@ -39,10 +53,10 @@ from __future__ import annotations
 
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from an.ir.assets import AssetSource
-from an.ir.migrate import DocumentKind, register_kind, register_migration
+from an.ir.migrate import DocumentKind, register_kind
 
 __all__ = [
     "ENVIRONMENT_SCHEMA_VERSION",
@@ -57,6 +71,21 @@ ENVIRONMENT_SCHEMA_VERSION = "0.1.0"
 #: Its own versioned document, registered from the module that owns the schema
 #: — the rule `CharacterDescriptor` and `PropDescriptor` both follow, and the
 #: reason the registry is keyed per KIND (an#77).
+#:
+#: **No migration ladder, deliberately.** The obvious one — "today's free-form
+#: `meta.json` entries become plane-less descriptors" — would migrate nothing,
+#: because a free-form entry ALREADY validates as an `EnvironmentDescriptor`
+#: with no planes: `extra="allow"` carries `description`/`tags`/the colour
+#: scalars through untouched, and every field this model adds has a default.
+#: There is no shape change to make.
+#:
+#: It was written and then removed in review (an#110): `_environment_descriptor`
+#: gates on the `kind` tag before migrating, so only a document already written
+#: in the post-an#110 shape could ever have reached it — a registered migration
+#: that runs on nothing, which is the decoration `CLAUDE.md`'s "never register
+#: a migration without a read path that runs it" rule exists to prevent. The
+#: KIND stays registered: it declares where the version field lives, which is
+#: what a future real migration will need.
 ENVIRONMENT_DOCUMENT_KIND: DocumentKind = register_kind(
     DocumentKind(
         name="EnvironmentDescriptor",
@@ -191,22 +220,25 @@ class EnvironmentDescriptor(_EnvModel):
 
     metadata: dict[str, Any] = Field(default_factory=dict)
 
+    @model_validator(mode="after")
+    def _plane_names_are_unique(self) -> "EnvironmentDescriptor":
+        """Two planes with one name is a silent loss, not a duplicate drawing.
 
-@register_migration(ENVIRONMENT_DOCUMENT_KIND.name, "0.0.0", ENVIRONMENT_SCHEMA_VERSION)
-def _adopt_the_free_form_environment(doc: dict[str, Any]) -> dict[str, Any]:
-    """0.0.0 → 0.1.0: today's free-form entries become plane-less descriptors.
-
-    Every environment on disk is a `JsonSidecarStore` `meta.json` with whatever
-    keys its author wrote — commonly `name`, `description`, `tags`, and the
-    three colour scalars the preset path reads. They are carried through
-    untouched: `extra="allow"` keeps them, `planes` defaults to empty, and a
-    plane-less descriptor takes the preset path, so the compiled document does
-    not move.
-
-    >>> _adopt_the_free_form_environment({"name": "park", "tags": ["outdoor"]})
-    {'name': 'park', 'tags': ['outdoor'], 'schema_version': '0.1.0', 'kind': 'EnvironmentDescriptor'}
-    """
-    doc = dict(doc)
-    doc["schema_version"] = ENVIRONMENT_SCHEMA_VERSION
-    doc.setdefault("kind", ENVIRONMENT_DOCUMENT_KIND.name)
-    return doc
+        A plane's name becomes its node name AND its parallax animation id, so
+        the second of a pair overwrites the first in the animations dict while
+        `tracks` still holds two clips pointing at the survivor: both planes
+        draw, one depth is honoured, nothing warns (an#110 review, M3). It also
+        makes `characters_after` ambiguous — the split matches the first.
+        """
+        seen: dict[str, int] = {}
+        for plane in self.planes:
+            seen[plane.name] = seen.get(plane.name, 0) + 1
+        dupes = sorted(n for n, c in seen.items() if c > 1)
+        if dupes:
+            raise ValueError(
+                f"environment {self.name!r} declares planes with duplicate names "
+                f"{dupes}. A plane's name is its node name and its parallax "
+                "animation id, so one of each pair would draw with the other's "
+                "depth and nothing would say so."
+            )
+        return self

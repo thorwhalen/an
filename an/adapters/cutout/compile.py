@@ -648,9 +648,10 @@ def compile_shot(
     # animation on the synthetic scene root so directors get visible camera
     # behavior without writing channels by hand.
     _add_camera_clips(shot, animations, tracks, width=width, height=height)
-    # AFTER the camera, because it compensates for it: each plane's factor is
-    # applied to the camera's own key list, so the two cannot describe
-    # different moves.
+    # After the camera, which reads in the order it happens — though the
+    # ordering is not load-bearing: the two passes write disjoint targets and
+    # swapping them is picture-equivalent. What IS load-bearing is that both
+    # resolve the same `camera_keys`, so they cannot describe different moves.
     _add_parallax_clips(shot, mall, animations, tracks, width=width, height=height)
     # AFTER action + viseme compilation, deliberately: a swap key the timeline
     # actually USES whose art is missing is recorded as a fallback during
@@ -932,9 +933,17 @@ def _build_plane_subtree(
             continue
         nodes.append(node)
     behind, in_front = _split_planes_around_characters(env, nodes)
-    front_nodes = [
-        NodeJSON(name=entity.id, transform=TransformJSON(), children=in_front)
-    ] if in_front else []
+    front_nodes = (
+        [
+            NodeJSON(
+                name=foreground_node_name(entity.id),
+                transform=TransformJSON(),
+                children=in_front,
+            )
+        ]
+        if in_front
+        else []
+    )
     return (
         NodeJSON(name=entity.id, transform=TransformJSON(), children=behind),
         front_nodes,
@@ -948,6 +957,51 @@ ENVIRONMENT_ART_PREFIX: str = "environments/"
 #: The same 4000 the preset backdrop uses, and for the same reason — the runtime
 #: centres `root` and applies camera scale, so a huge rect always covers.
 PLANE_FILL_SPAN: float = 4000.0
+
+
+#: Suffix for the container holding an environment's FOREGROUND planes.
+#:
+#: The split has to produce two sibling containers, and before an#110's review
+#: both were named `entity.id`. The runtime's `nodeIndex` is a flat
+#: `path -> container` dict, so the second silently overwrote the first — an
+#: authored `set street:x` then moved the foreground half and left the
+#: background where it was, with no warning from either side: the compiler's
+#: collision check compares `(entity/plane, prop)` and never sees `(entity, x)`,
+#: and the runtime's unknown-target throw does not fire because the name IS
+#: known, just bound to the wrong one of two. The determinism report's
+#: `node_count` under-counted by one per split environment too.
+FOREGROUND_SUFFIX: str = "__front"
+
+
+def foreground_node_name(entity_id: str) -> str:
+    """The node name an environment's foreground planes live under.
+
+    >>> foreground_node_name("street")
+    'street__front'
+    """
+    return f"{entity_id}{FOREGROUND_SUFFIX}"
+
+
+def plane_parents(env: "EnvironmentDescriptor", entity_id: str) -> dict[str, str]:
+    """``{plane name: the node path its channels must target}``.
+
+    One rule, computed the same way by the builder and by the parallax pass —
+    the alternative is two places deciding which container a plane ended up in,
+    which is the class of drift this wave keeps closing.
+
+    >>> from an.environments import EnvironmentDescriptor, Plane
+    >>> env = EnvironmentDescriptor(name="e", planes=[Plane(name="a"), Plane(name="b")],
+    ...                             characters_after="a")
+    >>> plane_parents(env, "street")
+    {'a': 'street', 'b': 'street__front'}
+    """
+    names = [p.name for p in env.planes]
+    after = env.characters_after
+    cut = names.index(after) + 1 if after in names else len(names)
+    return {
+        name: (entity_id if i < cut else foreground_node_name(entity_id))
+        for i, name in enumerate(names)
+    }
 
 
 def _environment_descriptor(entity: AssetRef, env_store: Mapping) -> "EnvironmentDescriptor | None":
@@ -1078,6 +1132,16 @@ def _add_parallax_clips(
     the plane nodes, so a plane is free to be tweened by the author as long as
     it does not fight this — which is exactly what the collision check below
     refuses.
+
+    **Translation only.** `root.scale` and `root.rotation` multiply the whole
+    composed expression, so no per-plane factor can cancel them: a `depth = 0`
+    plate still grows under a push-in. Depth-aware zoom is the dolly, deferred.
+
+    Ordering note, since the call site's comment used to overstate it: running
+    this after the camera is TIDY, not load-bearing. The two passes write
+    disjoint targets (`root:*` versus `entity/plane:*`) and each inspects only
+    the other's, so swapping them is picture-equivalent and merely reorders the
+    serialized track list (an#110 review, L1).
     """
     keys = camera_keys(shot, width=width, height=height)
     if len(keys) < 2:
@@ -1112,10 +1176,11 @@ def _emit_plane_compensation(
     authored: set[tuple[str, str]],
 ) -> None:
     """The per-plane half of :func:`_add_parallax_clips`."""
+    parents = plane_parents(env, entity_id)
     for plane in env.planes:
         fx, fy = plane.factors()
         ox, oy = plane.offset
-        target = f"{entity_id}/{plane.name}"
+        target = f"{parents[plane.name]}/{plane.name}"
         for factor, prop, cam_field, rest in (
             (fx, "x", "x", float(ox)),
             (fy, "y", "y", float(oy)),

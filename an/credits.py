@@ -19,6 +19,8 @@ answers, and collapsing them is exactly how an obligation goes missing.
 
 from __future__ import annotations
 
+import warnings
+
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -107,6 +109,10 @@ class CreditsReport:
         return "\n".join(lines)
 
 
+class CreditsWarning(UserWarning):
+    """A credits walk could not read something it was asked to read."""
+
+
 def collect_credits(mall: Mapping[str, Any]) -> CreditsReport:
     """Walk a project mall and gather every recorded :class:`AssetSource`.
 
@@ -125,7 +131,24 @@ def collect_credits(mall: Mapping[str, Any]) -> CreditsReport:
         store = mall.get(store_name)
         if store is None:
             continue
-        for key in sorted(store):
+        try:
+            keys = sorted(store)
+        except Exception:  # noqa: BLE001 — see below
+            # The ITERATION, not just the per-key read. an#110 took this walk
+            # from one store to three, so an unreadable backing store went from
+            # "characters are missing" to "`an credits` raises" — and a credits
+            # report that cannot run is the one output whose absence is
+            # indistinguishable from "no third-party assets", which is the
+            # false compliance statement this module exists to avoid.
+            warnings.warn(
+                f"the {store_name!r} store could not be listed, so its assets are "
+                "absent from this report. That is a GAP, not a clean bill: "
+                "re-run when the store is readable.",
+                CreditsWarning,
+                stacklevel=2,
+            )
+            continue
+        for key in keys:
             try:
                 descriptor = store[key]
             except Exception:  # noqa: BLE001 — an unreadable entry is not a credit

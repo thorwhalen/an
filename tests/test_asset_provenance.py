@@ -13,6 +13,8 @@ stock flags carried an undischarged obligation.
 
 from __future__ import annotations
 
+import json
+
 from pathlib import Path
 
 import pytest
@@ -390,3 +392,44 @@ def test_a_legacy_character_of_an_unrecognised_style_is_unverified_not_clear():
     )
     report = collect_credits({"characters": {"old": legacy}})
     assert len(report.unverified) == 1, "an unknown style must not read as clear"
+
+
+def test_credits_walks_props_and_environments_not_characters_alone():
+    """The PR that gives a store real art is the PR that closes the hole —
+    otherwise the report becomes an affirmative false statement about plates
+    (an#108, an#110)."""
+    from an.credits import collect_credits
+    from an.ir.assets import AssetSource
+
+    src = AssetSource(provider="openverse", id="x/1", license="cc-by-4.0")
+    raw = json.loads(src.model_dump_json())
+    report = collect_credits({
+        "characters": {},
+        "props": {"lamp": {"kind": "PropDescriptor", "name": "lamp", "source": raw}},
+        "environments": {"street": {"kind": "EnvironmentDescriptor", "name": "street", "source": raw}},
+    })
+    assert sorted(e.asset for e in report.entries) == ["environments/street", "props/lamp"]
+
+
+def test_a_store_that_cannot_be_LISTED_is_a_gap_not_a_clean_bill():
+    """The iteration was unguarded while the per-key read was, and an#110 took
+    this walk from one store to three — so one unreadable backing store went
+    from "characters are missing" to "`an credits` raises". A credits report
+    that cannot run is the one output whose absence is indistinguishable from
+    "no third-party assets" (an#110 review, M4)."""
+    import warnings
+
+    from an.credits import CreditsWarning, collect_credits
+
+    class Unlistable:
+        def __iter__(self):
+            raise RuntimeError("backend down")
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        report = collect_credits({"characters": {}, "environments": Unlistable()})
+    assert report.entries == []
+    assert any(isinstance(w.message, CreditsWarning) for w in caught), [
+        str(w.message) for w in caught
+    ]
+    assert any("GAP" in str(w.message) for w in caught)
