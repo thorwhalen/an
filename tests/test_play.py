@@ -23,6 +23,7 @@ import math
 import shutil
 from pathlib import Path
 
+from an.adapters.cutout.timeline import evaluate_timeline
 import pytest
 
 from an.adapters.cutout.compile import SCENE_PX_PER_VIEW_BOX, CutoutCompileError, compile_shot
@@ -73,12 +74,6 @@ def _timeline(scene):
     from an.adapters.cutout.timeline import timeline_from_scene
 
     return timeline_from_scene(scene)
-
-
-def _evaluate(tl, t):
-    from tests.test_swap_channels import _evaluate as ev
-
-    return ev(tl, t)
 
 
 def _rest(scene, slot):
@@ -202,7 +197,6 @@ def test_a_play_layers_over_the_compiled_blink_by_track_order(gale_store):
     """A played `blink` sits after the compiled blink clips on the track, so
     it wins during its window — the eyes it opens/closes are the author's."""
     from an.adapters.cutout.timeline import timeline_from_scene
-    from tests.test_swap_channels import _evaluate
 
     scene = compile_shot(
         _shot([sequence(delay(1.0), play("gale", "blink"))], duration=3.0),
@@ -210,9 +204,9 @@ def test_a_play_layers_over_the_compiled_blink_by_track_order(gale_store):
     )
     tl = timeline_from_scene(scene)
     key = ("gale/head/left_eye", "eyelid")
-    assert _evaluate(tl, 1.0)[key] == "OPEN"
-    assert _evaluate(tl, 1.05)[key] == "CLOSED"
-    assert _evaluate(tl, 1.17)[key] == "OPEN"
+    assert evaluate_timeline(tl, 1.0)[key] == "OPEN"
+    assert evaluate_timeline(tl, 1.05)[key] == "CLOSED"
+    assert evaluate_timeline(tl, 1.17)[key] == "OPEN"
 
 
 # ------------------------------------------------ the samples, not the envelope
@@ -296,7 +290,7 @@ def test_speed_scales_the_played_clip(gale_store):
     scene = compile_shot(_shot([play("gale", "idle_breath", speed=2.0)]), mall={"characters": gale_store}, fps=24)
     placed = next(p for t in scene.timeline.tracks for p in t.clips if p.animation_id.startswith("__play__"))
     assert placed.speed == 2.0
-    pose = _evaluate(_timeline(scene), 0.75)
+    pose = evaluate_timeline(_timeline(scene), 0.75)
     assert pose[("gale/torso", "y")] == pytest.approx(_rest(scene, "torso").y + 2.0 * K, abs=1e-6)
 
 
@@ -313,20 +307,20 @@ def test_a_looping_play_without_duration_runs_to_the_shot_end(gale_store):
     tl = _timeline(scene)
     rest_y = _rest(scene, "torso").y
     # 7.5 s = 1.5 s into the SECOND cycle: the same peak as 1.5 s.
-    assert _evaluate(tl, 7.5)[("gale/torso", "y")] == pytest.approx(rest_y + 2.0 * K, abs=1e-6)
-    assert _evaluate(tl, 1.5)[("gale/torso", "y")] == pytest.approx(rest_y + 2.0 * K, abs=1e-6)
+    assert evaluate_timeline(tl, 7.5)[("gale/torso", "y")] == pytest.approx(rest_y + 2.0 * K, abs=1e-6)
+    assert evaluate_timeline(tl, 1.5)[("gale/torso", "y")] == pytest.approx(rest_y + 2.0 * K, abs=1e-6)
     # And the widening is by `speed`, so the window still lands on the shot end.
     fast = compile_shot(_shot([play("gale", "idle_breath", speed=2.0)], duration=12.0), mall={"characters": gale_store})
     placed = next(p for t in fast.timeline.tracks for p in t.clips if p.animation_id.startswith("__play__"))
     assert placed.duration == pytest.approx(24.0)
-    assert ("gale/torso", "y") in _evaluate(_timeline(fast), 11.9)
+    assert ("gale/torso", "y") in evaluate_timeline(_timeline(fast), 11.9)
 
 
 def test_a_non_looping_play_keeps_its_natural_window(gale_store):
     scene = compile_shot(_shot([play("gale", "blink")], duration=12.0), mall={"characters": gale_store})
     placed = next(p for t in scene.timeline.tracks for p in t.clips if p.animation_id.startswith("__play__"))
     assert placed.duration is None
-    assert _evaluate(_timeline(scene), 6.0).get(("gale/head/left_eye", "eyelid"), "OPEN") == "OPEN"
+    assert evaluate_timeline(_timeline(scene), 6.0).get(("gale/head/left_eye", "eyelid"), "OPEN") == "OPEN"
 
 
 def test_a_widened_play_loops_at_its_natural_period(gale_store):
@@ -335,8 +329,8 @@ def test_a_widened_play_loops_at_its_natural_period(gale_store):
     scene = compile_shot(_shot([play("gale", "idle_breath", duration=12.0)], duration=12.0), mall={"characters": gale_store}, fps=24)
     tl = _timeline(scene)
     y = ("gale/torso", "y")
-    assert _evaluate(tl, 7.5)[y] == pytest.approx(_evaluate(tl, 1.5)[y], abs=1e-6)
-    assert _evaluate(tl, 7.5)[y] != pytest.approx(_rest(scene, "torso").y, abs=1e-3)
+    assert evaluate_timeline(tl, 7.5)[y] == pytest.approx(evaluate_timeline(tl, 1.5)[y], abs=1e-6)
+    assert evaluate_timeline(tl, 7.5)[y] != pytest.approx(_rest(scene, "torso").y, abs=1e-3)
 
 
 # ------------------------------------------------------- one set per slot track
@@ -355,7 +349,7 @@ def test_a_slot_track_resolves_to_one_set_never_split_across_two(gale_store):
     (clip,) = _play_clips(scene).values()
     left = [c for c in clip.channels if c.target == "gale/head/left_eye"]
     assert [c.property for c in left] == ["eyelid"]
-    assert _evaluate(_timeline(scene), 1.05)[("gale/head/left_eye", "eyelid")] == "CLOSED"
+    assert evaluate_timeline(_timeline(scene), 1.05)[("gale/head/left_eye", "eyelid")] == "CLOSED"
 
 
 def test_two_sets_covering_a_track_is_an_error_naming_both(gale_store):

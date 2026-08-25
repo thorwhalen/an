@@ -30,7 +30,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from an.adapters.cutout.clip import Clip, Pose, merge_poses
+from an.adapters.cutout.channel import Channel, Keyframe
+from an.adapters.cutout.clip import Clip, LoopMode, Pose, merge_poses
 from an.adapters.cutout.clip import evaluate as _evaluate_clip
 
 if TYPE_CHECKING:  # pragma: no cover - types only
@@ -118,29 +119,15 @@ def timeline_from_scene(scene: CutoutSceneJSON) -> Timeline:
     list-valued `easing`, which is a cubic-bezier control quadruple and must
     stay a tuple for `Keyframe`.
 
-    >>> from an.adapters.cutout.serialize import (
-    ...     AnimationClipJSON, ChannelJSON, CutoutSceneJSON, KeyframeJSON,
-    ...     NodeJSON, PlacedClipJSON, TimelineJSON, TrackJSON,
-    ... )
-    >>> scene = CutoutSceneJSON(
-    ...     scene=NodeJSON(name="root"),
-    ...     animations={"slide": AnimationClipJSON(
-    ...         name="slide", duration=1.0,
-    ...         channels=[ChannelJSON(target="a", property="x", keyframes=[
-    ...             KeyframeJSON(time=0.0, value=0.0),
-    ...             KeyframeJSON(time=1.0, value=10.0),
-    ...         ])],
-    ...     )},
-    ...     timeline=TimelineJSON(duration=2.0, tracks=[
-    ...         TrackJSON(target_root="a", clips=[PlacedClipJSON(animation_id="slide", start_time=0.5)]),
-    ...     ]),
-    ... )
-    >>> evaluate_timeline(timeline_from_scene(scene), 1.0)[("a", "x")]
+    >>> from an.adapters.cutout.compile import compile_shot
+    >>> from an.ir.compose import tween
+    >>> from an.ir.schema import Shot
+    >>> shot = Shot(id="s1", renderer="cutout", duration=2.0,
+    ...             actions=[tween("root", "x", 10.0, 1.0, from_=0.0)])
+    >>> scene = compile_shot(shot, mall=None, fps=24)
+    >>> evaluate_timeline(timeline_from_scene(scene), 0.5)[("root", "x")]
     5.0
     """
-    from an.adapters.cutout.channel import Channel, Keyframe
-    from an.adapters.cutout.clip import LoopMode
-
     clips = {
         aid: Clip(
             aid,
@@ -170,7 +157,19 @@ def timeline_from_scene(scene: CutoutSceneJSON) -> Timeline:
             Track(
                 t.target_root,
                 [
-                    PlacedClip(clips[p.animation_id], p.start_time, p.duration, p.speed)
+                    PlacedClip(
+                        clips[p.animation_id],
+                        p.start_time,
+                        p.duration,
+                        p.speed,
+                        # Carried for the same reason as `target_root`: nothing
+                        # reads them YET (`evaluate_timeline` records the ramps
+                        # and does not apply them — additive blending is 2B),
+                        # and a reader that quietly drops a field it was handed
+                        # is a lossy "rebuilds the evaluable form".
+                        p.blend_in,
+                        p.blend_out,
+                    )
                     for p in t.clips
                 ],
             )

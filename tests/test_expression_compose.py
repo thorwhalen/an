@@ -24,8 +24,7 @@ from an.ir.sync import ir_to_markdown, markdown_to_ir
 from an.ir.validate import validate_semantic
 from an.project import init, load
 
-from an.adapters.cutout.timeline import timeline_from_scene
-from .test_swap_channels import _evaluate
+from an.adapters.cutout.timeline import evaluate_timeline, timeline_from_scene
 
 ROOT = Path(__file__).resolve().parents[1]
 #: Corpus scenes this wave added — their contract hash is allowed to move.
@@ -87,10 +86,10 @@ def test_emotion_and_an_override_compose_in_one_pose_order_independently(mall):
     poses = []
     for order in ((a, b), (b, a)):
         js = compile_shot(_shot(actions=list(order)), mall=mall, fps=24, strict_assets=True)
-        poses.append(_evaluate(timeline_from_scene(js), 1.0))
+        poses.append(evaluate_timeline(timeline_from_scene(js), 1.0))
     assert poses[0] == poses[1]
     pose = poses[0]
-    neutral = _evaluate(timeline_from_scene(compile_shot(_shot(), mall=mall, fps=24, strict_assets=True)), 1.0)
+    neutral = evaluate_timeline(timeline_from_scene(compile_shot(_shot(), mall=mall, fps=24, strict_assets=True)), 1.0)
     rest_rot = neutral.get(("c/head/left_brow", "rotation"), 0.0)
     assert pose[("c/head/left_brow", "rotation")] == pytest.approx(rest_rot + 0.8 * 0.35), "angry's furrow"
     assert pose[("c/head/right_brow", "rotation")] == pytest.approx(-(pose[("c/head/left_brow", "rotation")]))
@@ -167,7 +166,7 @@ def test_authored_wins_over_the_expression_with_a_warning(mall):
     shot = _shot(actions=[expression("c", "angry", blend=0.0), tween("c/head/left_brow", "rotation", to=1.0, duration=2.0)])
     with pytest.warns(CutoutCompileWarning, match="authored channel on 'c/head/left_brow':'rotation'"):
         js = compile_shot(shot, mall=mall, fps=24, strict_assets=True)
-    pose = _evaluate(timeline_from_scene(js), 2.0)
+    pose = evaluate_timeline(timeline_from_scene(js), 2.0)
     assert pose[("c/head/left_brow", "rotation")] == pytest.approx(1.0)
     # The face clip sits at the FRONT of the track, like blinks.
     d = to_dict(js)
@@ -228,7 +227,7 @@ def test_a_line_under_a_preset_uses_the_variant_set(mall):
     d = to_dict(js)
     (clip,) = [a for k, a in d["animations"].items() if k.startswith("__viseme__")]
     assert clip["channels"][0]["property"] == "viseme@happy"
-    pose = _evaluate(timeline_from_scene(js), 0.5)
+    pose = evaluate_timeline(timeline_from_scene(js), 0.5)
     assert pose[("c/head/mouth", "viseme@happy")] == "D"
     assert ("c/head/mouth", "viseme") not in pose, "one mouth swap property live per instant"
 
@@ -237,9 +236,9 @@ def test_a_silent_expression_holds_the_variants_rest_outside_lines(mall):
     line = Dialogue(speaker="c", text="hi", start=1.0, duration=0.5, viseme_track=_track("X", "D", "X"))
     js = compile_shot(_shot(actions=[expression("c", "happy", blend=0.0)], dialogue=[line]), mall=mall, fps=24, strict_assets=True)
     tl = timeline_from_scene(js)
-    assert _evaluate(tl, 0.5)[("c/head/mouth", "viseme@happy")] == "X"
-    assert _evaluate(tl, 1.2)[("c/head/mouth", "viseme@happy")] == "D"
-    assert _evaluate(tl, 1.9)[("c/head/mouth", "viseme@happy")] == "X"
+    assert evaluate_timeline(tl, 0.5)[("c/head/mouth", "viseme@happy")] == "X"
+    assert evaluate_timeline(tl, 1.2)[("c/head/mouth", "viseme@happy")] == "D"
+    assert evaluate_timeline(tl, 1.9)[("c/head/mouth", "viseme@happy")] == "X"
     holds = sorted(k for k in to_dict(js)["animations"] if k.startswith("__face_mouth__"))
     assert len(holds) == 4, holds  # variant rest before/after the line, neutral rest before/after
     assert sum("_neutral_" in k for k in holds) == 2
@@ -249,7 +248,7 @@ def test_a_missing_variant_falls_back_to_the_neutral_set_with_a_warning(mall):
     line = Dialogue(speaker="plain", text="hi", start=0.2, duration=0.6, viseme_track=_track("X", "D", "X"))
     with pytest.warns(UserWarning, match="viseme@happy"):
         js = compile_shot(_shot(actions=[expression("plain", "happy", blend=0.0)], dialogue=[line], ref="plain", entity="plain"), mall=mall, fps=24, strict_assets=True)
-    assert _evaluate(timeline_from_scene(js), 0.5)[("plain/head/mouth", "viseme")] == "D"
+    assert evaluate_timeline(timeline_from_scene(js), 0.5)[("plain/head/mouth", "viseme")] == "D"
 
 
 # ---------------------------------------------------------------- the six enumerations
@@ -392,7 +391,7 @@ def test_the_mouth_variant_art_is_a_corner_move_only():
 
 
 def _pose(js, t):
-    return _evaluate(timeline_from_scene(js), t)
+    return evaluate_timeline(timeline_from_scene(js), t)
 
 
 def test_the_mouth_returns_to_neutral_after_a_variant_span(mall):
@@ -426,7 +425,7 @@ def test_no_frame_carries_a_hold_and_the_lines_own_key(mall):
     tl = timeline_from_scene(js)
     for f in range(0, 49):
         t = f / 24
-        pose = _evaluate(tl, t)
+        pose = evaluate_timeline(tl, t)
         mouth = {k[1]: v for k, v in pose.items() if k[0] == "c/head/mouth"}
         if 0.5 <= t <= 1.0 + 1e-9:
             assert mouth.get("viseme@sad") in ("X", "D"), (t, mouth)

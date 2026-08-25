@@ -154,10 +154,19 @@ def test_a_compiled_scene_evaluates_at_a_time_without_a_browser():
     # reads it — poses are keyed by channel target — so nothing else here would
     # notice it being dropped. The compositor an#111 needs is exactly the
     # consumer that will, so carry it faithfully now.
+    # `target_root` is the subtree a track drives, and track ORDER is the
+    # documented priority rule ("last track wins on conflict") — which
+    # `evaluate_timeline` does read. Both pinned as sequences, so a reordering
+    # or a dropped root fails here rather than in a blink test three modules
+    # away that is about something else.
     assert [t.target_root for t in tl.tracks] == [
         t.target_root for t in scene.timeline.tracks
     ]
     assert tl.duration == scene.timeline.duration
+
+    assert [p.duration for p in tl.tracks[0].clips] == [
+        p.duration for p in scene.timeline.tracks[0].clips
+    ]
 
 
 def test_the_reader_carries_loop_mode():
@@ -217,3 +226,113 @@ def test_the_reader_carries_a_cubic_bezier_easing_as_a_tuple():
     ]
     assert any(isinstance(e, tuple) and len(e) == 4 for e in easings), easings
     assert not any(isinstance(e, list) for e in easings), easings
+
+
+def test_a_dangling_animation_id_is_loud():
+    """A track naming an animation the document does not carry is a compiler
+    bug, and the reader's job is to say so where it happens. Degrading to an
+    empty clip would render a still frame that looks like a deliberate hold."""
+    from an.adapters.cutout.serialize import PlacedClipJSON, TimelineJSON, TrackJSON
+
+    scene = _compiled([])
+    scene.animations = {}
+    scene.timeline = TimelineJSON(
+        duration=1.0,
+        tracks=[TrackJSON(target_root="a", clips=[PlacedClipJSON(animation_id="ghost")])],
+    )
+    with pytest.raises(KeyError, match="ghost"):
+        timeline_from_scene(scene)
+
+
+def test_every_placement_field_survives_the_read():
+    """Field fidelity needs a document whose fields DIFFER.
+
+    The compiler's own output is uniform — one track per entity, every
+    placement at `start_time=0.0` with `blend_in/out = 0.0` — so asserting
+    fidelity against it is vacuous, and measurably so: with the compiled
+    fixture, dropping `start_time`, dropping both blend ramps and reversing
+    the track order all survived (an#107 review, M1/M2/M4). This one is
+    hand-built on purpose, with three tracks and no two fields alike.
+
+    `start_time` and `speed` were previously pinned only by blink and viseme
+    tests in five other modules — guards that evaporate the day one of those
+    is rewritten, because they are about animation semantics, not about this
+    reader. `blend_in`/`blend_out` were pinned by nothing at all: they are
+    declared by `PlacedClipJSON`, accepted by `PlacedClip`, and read by no
+    one yet — `evaluate_timeline` records the ramps and does not apply them
+    (additive blending is 2B) — so the reader silently dropped them and the
+    whole suite stayed green. That is the same argument that carries
+    `target_root`, and it got the opposite answer in the same function.
+    """
+    from an.adapters.cutout.serialize import (
+        AnimationClipJSON,
+        ChannelJSON,
+        KeyframeJSON,
+        PlacedClipJSON,
+        TimelineJSON,
+        TrackJSON,
+    )
+
+    scene = _compiled([])
+    scene.animations = {
+        name: AnimationClipJSON(
+            name=name,
+            duration=1.0,
+            channels=[
+                ChannelJSON(
+                    target=name,
+                    property="x",
+                    keyframes=[KeyframeJSON(time=0.0, value=0.0), KeyframeJSON(time=1.0, value=1.0)],
+                )
+            ],
+        )
+        for name in ("a", "b", "c")
+    }
+    scene.timeline = TimelineJSON(
+        duration=9.0,
+        tracks=[
+            TrackJSON(
+                target_root=name,
+                clips=[
+                    PlacedClipJSON(
+                        animation_id=name,
+                        start_time=start,
+                        duration=dur,
+                        speed=speed,
+                        blend_in=bi,
+                        blend_out=bo,
+                    )
+                ],
+            )
+            for name, start, dur, speed, bi, bo in (
+                ("a", 0.5, 2.0, 1.5, 0.1, 0.2),
+                ("b", 3.25, None, 0.5, 0.3, 0.0),
+                ("c", 6.0, 1.0, 2.0, 0.0, 0.4),
+            )
+        ],
+    )
+    tl = timeline_from_scene(scene)
+
+    # Track ORDER is the documented priority rule ("last track wins on
+    # conflict") and `evaluate_timeline` does read it — so it is asserted as a
+    # sequence, not a set.
+    assert [t.target_root for t in tl.tracks] == ["a", "b", "c"]
+    placed = [p for t in tl.tracks for p in t.clips]
+    assert [p.start_time for p in placed] == [0.5, 3.25, 6.0]
+    assert [p.duration for p in placed] == [2.0, None, 1.0]
+    assert [p.speed for p in placed] == [1.5, 0.5, 2.0]
+    assert [(p.blend_in, p.blend_out) for p in placed] == [(0.1, 0.2), (0.3, 0.0), (0.0, 0.4)]
+    assert [p.clip.name for p in placed] == ["a", "b", "c"]
+
+    # Which of the two names is authoritative, when they disagree? The MAP KEY:
+    # `PlacedClipJSON.animation_id` is documented as "name lookup into the
+    # AnimationClipJSON map", so the key is what a track can actually reach and
+    # `AnimationClipJSON.name` is a label. The compiler always writes them
+    # equal, which is exactly why a document where they differ is the only way
+    # to pin the answer.
+    scene.animations = {"under_key": scene.animations["a"].model_copy(update={"name": "label"})}
+    scene.timeline = TimelineJSON(
+        duration=1.0,
+        tracks=[TrackJSON(target_root="a", clips=[PlacedClipJSON(animation_id="under_key")])],
+    )
+    assert timeline_from_scene(scene).tracks[0].clips[0].clip.name == "under_key"
