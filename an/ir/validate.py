@@ -229,9 +229,7 @@ def _check_swap_references(
     #: the first as the second is how a caller who passes only characters gets
     #: an error on every prop swap in a scene that compiles fine.
     unchecked = {
-        eid
-        for eid, e in rigs.items()
-        if stores.get(RIG_STORES[e.kind][0]) is None
+        eid for eid, e in rigs.items() if stores.get(RIG_STORES[e.kind][0]) is None
     }
     # The expression and dialogue-emotion checks below are CHARACTER-only:
     # a prop has no face.
@@ -375,9 +373,7 @@ def _check_swap_references(
         # H3). Same rule the rig builder's probe uses: a store with no
         # filesystem root can answer nothing, so it must assume presence rather
         # than drop every key.
-        art_exists = art_exists_for(
-            stores.get(RIG_STORES[entity.kind][0]), entity.ref
-        )
+        art_exists = art_exists_for(stores.get(RIG_STORES[entity.kind][0]), entity.ref)
         if art_exists is not None:
             skin = (desc.get("skins") or {}).get("default") or {}
             slots = skin.get("slots") or {}
@@ -642,7 +638,9 @@ def validate_semantic(
                         "has no placeholder rig (rendering this shot raises)"
                     )
                 report.add(
-                    "error", f"{path}/entities/{j}", f"{entity.kind} ref {entity.ref!r} {why}"
+                    "error",
+                    f"{path}/entities/{j}",
+                    f"{entity.kind} ref {entity.ref!r} {why}",
                 )
 
         # Dialogue voice refs resolve?

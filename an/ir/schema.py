@@ -117,10 +117,13 @@ class StagePlacement(_IRModel):
     #: author finds out on the next load rather than at the edit that did it
     #: (an#108 review, M-1). `gt=0` already refuses `scale=0` and `scale=-1`; it
     #: does not refuse `inf`.
-    at: tuple[
-        Annotated[float, Field(allow_inf_nan=False)],
-        Annotated[float, Field(allow_inf_nan=False)],
-    ] | None = None
+    at: (
+        tuple[
+            Annotated[float, Field(allow_inf_nan=False)],
+            Annotated[float, Field(allow_inf_nan=False)],
+        ]
+        | None
+    ) = None
     #: Uniform scale multiplier on the built rig. ``1.0`` = the rig's own size.
     scale: float = Field(default=1.0, gt=0, allow_inf_nan=False)
 

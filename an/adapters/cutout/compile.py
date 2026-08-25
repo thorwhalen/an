@@ -912,7 +912,11 @@ def _build_prop_subtree(
         raise CutoutCompileError(
             f"prop {entity.id!r} refers to {entity.ref!r} in the "
             f"{entity.store!r} store, which is not a PropDescriptor"
-            + (" (the store has no such entry)" if not meta else f" (kind={meta.get('kind')!r})")
+            + (
+                " (the store has no such entry)"
+                if not meta
+                else f" (kind={meta.get('kind')!r})"
+            )
             + ". A prop has no placeholder rig on purpose: the built-in "
             "placeholder is a HUMANOID, so falling back would draw a person "
             "where the prop should be. Create it with a `prop.json` whose "
