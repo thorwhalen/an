@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.render &mdash; an 0.1.61 documentation</title>
+  <title>an.adapters.cutout.render &mdash; an 0.1.62 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=fb9c6db4"></script>
+      <script src="../../../../_static/documentation_options.js?v=cc64e7de"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -142,6 +142,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/props.html">an.stores.props</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
@@ -753,12 +754,17 @@
 <span class="c1">#:</span>
 <span class="c1">#: A ``src`` reads ``&lt;prefix&gt;/&lt;ref&gt;/parts/head.svg`` and resolves to</span>
 <span class="c1">#: ``mall[store]._root/&lt;ref&gt;/parts/head.svg``. Only ``characters/`` is emitted</span>
-<span class="c1">#: by the compiler today; the other two are here because environments, styles</span>
-<span class="c1">#: and props all route through this same staging step as they land, and the</span>
+<span class="c1">#: by the compiler today; the others are here because environments, styles and</span>
+<span class="c1">#: props all route through this same staging step as they land, and the</span>
 <span class="c1">#: previous hardcoded ``characters/`` test silently dropped everything else.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The prefix IS the store name plus a slash for all four, which is not an</span>
+<span class="c1">#: accident worth relying on: the map is the contract, and a fifth kind whose</span>
+<span class="c1">#: store is named differently must still work.</span>
 <span class="n">ASSET_SRC_PREFIX_TO_STORE</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"characters/"</span><span class="p">:</span> <span class="s2">"characters"</span><span class="p">,</span>
     <span class="s2">"environments/"</span><span class="p">:</span> <span class="s2">"environments"</span><span class="p">,</span>
+    <span class="s2">"props/"</span><span class="p">:</span> <span class="s2">"props"</span><span class="p">,</span>
     <span class="s2">"styles/"</span><span class="p">:</span> <span class="s2">"styles"</span><span class="p">,</span>
 <span class="p">}</span>
 

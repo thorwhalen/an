@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.render &mdash; an 0.1.61 documentation</title>
+  <title>an.adapters.cutout.render &mdash; an 0.1.62 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=fb9c6db4"></script>
+      <script src="../../../../_static/documentation_options.js?v=cc64e7de"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../stores/characters.html">an.stores.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/decisions.html">an.stores.decisions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/props.html">an.stores.props</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/voices.html">an.stores.voices</a></li>
@@ -224,13 +225,16 @@ timeout apart from a load failure and say something different about each.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="an.adapters.cutout.render.ASSET_SRC_PREFIX_TO_STORE">
-<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">ASSET_SRC_PREFIX_TO_STORE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'characters/':</span> <span class="pre">'characters',</span> <span class="pre">'environments/':</span> <span class="pre">'environments',</span> <span class="pre">'styles/':</span> <span class="pre">'styles'}</span></span><a class="headerlink" href="#an.adapters.cutout.render.ASSET_SRC_PREFIX_TO_STORE" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.render.</span></span><span class="sig-name descname"><span class="pre">ASSET_SRC_PREFIX_TO_STORE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'characters/':</span> <span class="pre">'characters',</span> <span class="pre">'environments/':</span> <span class="pre">'environments',</span> <span class="pre">'props/':</span> <span class="pre">'props',</span> <span class="pre">'styles/':</span> <span class="pre">'styles'}</span></span><a class="headerlink" href="#an.adapters.cutout.render.ASSET_SRC_PREFIX_TO_STORE" title="Link to this definition"></a></dt>
 <dd><p>Texture <code class="docutils literal notranslate"><span class="pre">src</span></code> prefix → the mall store that resolves the rest of the path.</p>
 <p>A <code class="docutils literal notranslate"><span class="pre">src</span></code> reads <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;/&lt;ref&gt;/parts/head.svg</span></code> and resolves to
 <code class="docutils literal notranslate"><span class="pre">mall[store]._root/&lt;ref&gt;/parts/head.svg</span></code>. Only <code class="docutils literal notranslate"><span class="pre">characters/</span></code> is emitted
-by the compiler today; the other two are here because environments, styles
-and props all route through this same staging step as they land, and the
+by the compiler today; the others are here because environments, styles and
+props all route through this same staging step as they land, and the
 previous hardcoded <code class="docutils literal notranslate"><span class="pre">characters/</span></code> test silently dropped everything else.</p>
+<p>The prefix IS the store name plus a slash for all four, which is not an
+accident worth relying on: the map is the contract, and a fifth kind whose
+store is named differently must still work.</p>
 </dd></dl>
 
 <dl class="py exception">

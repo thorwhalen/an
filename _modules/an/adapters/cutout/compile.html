@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.61 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.62 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=fb9c6db4"></script>
+      <script src="../../../../_static/documentation_options.js?v=cc64e7de"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -142,6 +142,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/props.html">an.stores.props</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
@@ -1247,9 +1248,26 @@
 <span class="n">CONTAIN_FIT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"contain"</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rel_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Path used inside the runtime dir, relative to ``index.html``."""</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">"characters/</span><span class="si">{</span><span class="n">ref</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">rel_path</span><span class="si">}</span><span class="s2">"</span>
+<span class="c1">#: The `assets.textures` `src` prefix a rig's art is addressed under, which is</span>
+<span class="c1">#: also the mall store that resolves it (`render.ASSET_SRC_PREFIX_TO_STORE`).</span>
+<span class="c1">#: A parameter rather than a literal because the rig builder is the same code</span>
+<span class="c1">#: for a character and for a prop, and the store is the ONLY thing that differs</span>
+<span class="c1">#: about where their art lives. Two hardcoded copies of `"characters/"` — the</span>
+<span class="c1">#: `src` builder and the probe's own — reached three call sites, and that is</span>
+<span class="c1">#: what made "a prop is a rig too" read as a rewrite instead of an argument</span>
+<span class="c1">#: (an#108).</span>
+<span class="n">CHARACTER_ART_PREFIX</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"characters/"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rel_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">art_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CHARACTER_ART_PREFIX</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Path used inside the runtime dir, relative to ``index.html``.</span>
+
+<span class="sd">    &gt;&gt;&gt; _svg_asset_src("maya", "parts/head.svg")</span>
+<span class="sd">    'characters/maya/parts/head.svg'</span>
+<span class="sd">    &gt;&gt;&gt; _svg_asset_src("lamp", "parts/body.svg", art_prefix="props/")</span>
+<span class="sd">    'props/lamp/parts/body.svg'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">art_prefix</span><span class="si">}{</span><span class="n">ref</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">rel_path</span><span class="si">}</span><span class="s2">"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_register_texture</span><span class="p">(</span>
@@ -1265,6 +1283,8 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_part_probe</span><span class="p">(</span>
     <span class="n">characters_store</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">art_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CHARACTER_ART_PREFIX</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""A probe answering ``(art exists, the size it rasterises at)`` for a part.</span>
 
@@ -1287,7 +1307,7 @@
     <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="n">base</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-    <span class="n">prefix</span> <span class="o">=</span> <span class="s2">"characters/"</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="n">art_prefix</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">probe</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">src</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
@@ -1413,6 +1433,7 @@
     <span class="n">textures</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AssetJSON</span><span class="p">],</span>
     <span class="n">probe</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">art_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CHARACTER_ART_PREFIX</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NodeJSON</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Build the scene subtree for a character, **from its descriptor's rig**.</span>
 
@@ -1462,7 +1483,7 @@
         <span class="c1"># (both eye slots carry `open`/`closed`), and the old `{entity}.{name}`</span>
         <span class="c1"># alias space was silently first-wins on cross-slot collision.</span>
         <span class="n">alias</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">slot_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">attachment_name</span><span class="si">}</span><span class="s2">"</span>
-        <span class="k">return</span> <span class="n">_register_texture</span><span class="p">(</span><span class="n">textures</span><span class="p">,</span> <span class="n">alias</span><span class="p">,</span> <span class="n">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">attachment</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">_register_texture</span><span class="p">(</span><span class="n">textures</span><span class="p">,</span> <span class="n">alias</span><span class="p">,</span> <span class="n">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">attachment</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">art_prefix</span><span class="o">=</span><span class="n">art_prefix</span><span class="p">))</span>
 
     <span class="c1"># Every attachment in the skin is registered, not just the active one, so a</span>
     <span class="c1"># swap has its texture already loaded when the key changes.</span>
@@ -1478,7 +1499,7 @@
     <span class="k">for</span> <span class="n">slot_name</span><span class="p">,</span> <span class="n">attachments</span> <span class="ow">in</span> <span class="n">skin</span><span class="o">.</span><span class="n">slots</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">resolved_here</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">att</span> <span class="ow">in</span> <span class="n">attachments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">src</span> <span class="o">=</span> <span class="n">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">att</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">src</span> <span class="o">=</span> <span class="n">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">att</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">art_prefix</span><span class="o">=</span><span class="n">art_prefix</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">probe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">probe</span><span class="p">(</span><span class="n">src</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="n">missing_art</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">slot_name</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">att</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
                 <span class="k">continue</span>
@@ -1515,7 +1536,7 @@
         <span class="n">bone_x</span> <span class="o">+=</span> <span class="n">attachment</span><span class="o">.</span><span class="n">x</span>
         <span class="n">bone_y</span> <span class="o">+=</span> <span class="n">attachment</span><span class="o">.</span><span class="n">y</span>
 
-        <span class="n">src</span> <span class="o">=</span> <span class="n">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">attachment</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="n">_svg_asset_src</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">attachment</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">art_prefix</span><span class="o">=</span><span class="n">art_prefix</span><span class="p">)</span>
         <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">probe</span><span class="p">(</span><span class="n">src</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">probe</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
             <span class="p">(</span><span class="n">attachment</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">attachment</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">attachment</span><span class="o">.</span><span class="n">width</span> <span class="ow">and</span> <span class="n">attachment</span><span class="o">.</span><span class="n">height</span>

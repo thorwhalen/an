@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.61 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.62 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=fb9c6db4"></script>
+      <script src="../../../../_static/documentation_options.js?v=cc64e7de"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -58,6 +58,7 @@
 <li class="toctree-l1"><a class="reference internal" href="clip.html">an.adapters.cutout.clip</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coarticulate.html">an.adapters.cutout.coarticulate</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.adapters.cutout.compile</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CHARACTER_ART_PREFIX"><code class="docutils literal notranslate"><span class="pre">CHARACTER_ART_PREFIX</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.COARTICULATION_ENABLED"><code class="docutils literal notranslate"><span class="pre">COARTICULATION_ENABLED</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CONTAIN_FIT"><code class="docutils literal notranslate"><span class="pre">CONTAIN_FIT</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.adapters.cutout.compile.CutoutCompileError"><code class="docutils literal notranslate"><span class="pre">CutoutCompileError</span></code></a></li>
@@ -160,6 +161,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../stores/characters.html">an.stores.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/decisions.html">an.stores.decisions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../stores/props.html">an.stores.props</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stores/voices.html">an.stores.voices</a></li>
@@ -228,6 +230,19 @@ mall). It reads only.</p>
 <span class="go">2.0</span>
 </pre></div>
 </div>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.adapters.cutout.compile.CHARACTER_ART_PREFIX">
+<span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">CHARACTER_ART_PREFIX</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'characters/'</span></span><a class="headerlink" href="#an.adapters.cutout.compile.CHARACTER_ART_PREFIX" title="Link to this definition"></a></dt>
+<dd><p>The <cite>assets.textures</cite> <cite>src</cite> prefix a rig’s art is addressed under, which is
+also the mall store that resolves it (<cite>render.ASSET_SRC_PREFIX_TO_STORE</cite>).
+A parameter rather than a literal because the rig builder is the same code
+for a character and for a prop, and the store is the ONLY thing that differs
+about where their art lives. Two hardcoded copies of <cite>“characters/”</cite> — the
+<cite>src</cite> builder and the probe’s own — reached three call sites, and that is
+what made “a prop is a rig too” read as a rewrite instead of an argument
+(an#108).</p>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="an.adapters.cutout.compile.COARTICULATION_ENABLED">
 <span class="sig-prename descclassname"><span class="pre">an.adapters.cutout.compile.</span></span><span class="sig-name descname"><span class="pre">COARTICULATION_ENABLED</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#an.adapters.cutout.compile.COARTICULATION_ENABLED" title="Link to this definition"></a></dt>

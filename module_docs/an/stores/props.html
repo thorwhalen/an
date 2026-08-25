@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.stores.scenes &mdash; an 0.1.62 documentation</title>
+  <title>an.stores.props &mdash; an 0.1.62 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -24,8 +24,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="an.stores.styles" href="styles.html" />
-    <link rel="prev" title="an.stores.props" href="props.html" /> 
+    <link rel="next" title="an.stores.scenes" href="scenes.html" />
+    <link rel="prev" title="an.stores.environments" href="environments.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -145,11 +145,11 @@
 <li class="toctree-l1"><a class="reference internal" href="characters.html">an.stores.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="decisions.html">an.stores.decisions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environments.html">an.stores.environments</a></li>
-<li class="toctree-l1"><a class="reference internal" href="props.html">an.stores.props</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">an.stores.scenes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#an.stores.scenes.ScenesStore"><code class="docutils literal notranslate"><span class="pre">ScenesStore</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">an.stores.props</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.stores.props.PropsStore"><code class="docutils literal notranslate"><span class="pre">PropsStore</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="voices.html">an.stores.voices</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tools.html">an.tools</a></li>
@@ -177,9 +177,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">an.stores.scenes</li>
+      <li class="breadcrumb-item active">an.stores.props</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../_sources/module_docs/an/stores/scenes.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../_sources/module_docs/an/stores/props.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -187,20 +187,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-an.stores.scenes">
-<span id="an-stores-scenes"></span><h1>an.stores.scenes<a class="headerlink" href="#module-an.stores.scenes" title="Link to this heading"></a></h1>
-<p>Scenes store — wraps the project’s <code class="docutils literal notranslate"><span class="pre">scene.md</span></code> + <code class="docutils literal notranslate"><span class="pre">ir/scene.json</span></code> pair.</p>
-<p>Right now an an project contains exactly one scene (“main”), so this store
-exposes only the <code class="docutils literal notranslate"><span class="pre">&quot;main&quot;</span></code> key. Future versions can support multi-scene
-projects by promoting siblings inside a <code class="docutils literal notranslate"><span class="pre">scenes/</span></code> directory.</p>
-<p>Reading returns a <code class="docutils literal notranslate"><span class="pre">SceneIR</span></code>. Writing accepts a <code class="docutils literal notranslate"><span class="pre">SceneIR</span></code> (or a dict that
-validates as one) and persists both the JSON and the regenerated Markdown.</p>
+  <section id="module-an.stores.props">
+<span id="an-stores-props"></span><h1>an.stores.props<a class="headerlink" href="#module-an.stores.props" title="Link to this heading"></a></h1>
+<p>Props store — descriptor + sidecar folder per prop.</p>
+<p>A prop is a rig whose art is not a person: a lamp, a sword, a sign. It is
+stored exactly like a character — a JSON descriptor beside a <code class="docutils literal notranslate"><span class="pre">parts/</span></code>
+folder of SVGs — because the cutout compiler builds both from the same rig
+builder, and the store is the ONLY thing that differs about where their art
+lives (an#108). What differs is the <em>descriptor</em>: a prop declares no face,
+no blink, and no humanoid skeleton.</p>
+<p>Kept a separate store rather than a <code class="docutils literal notranslate"><span class="pre">kind</span></code> field on the characters store,
+for the reason the compiler keeps them apart: <code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">character</span> <span class="pre">validate</span></code>
+scores a correct prop as 21 blocking findings, and the character
+placeholder fallback draws a <em>person</em> where a lamp should be.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="an.stores.scenes.ScenesStore">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.stores.scenes.</span></span><span class="sig-name descname"><span class="pre">ScenesStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/stores/scenes.html#ScenesStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.stores.scenes.ScenesStore" title="Link to this definition"></a></dt>
-<dd><p><cite>MutableMapping</cite> exposing the scene file pair under a project root.</p>
-<p>Keys: currently always <code class="docutils literal notranslate"><span class="pre">&quot;main&quot;</span></code>. The store enforces this by raising
-<code class="docutils literal notranslate"><span class="pre">KeyError</span></code> for other keys.</p>
+<dt class="sig sig-object py" id="an.stores.props.PropsStore">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.stores.props.</span></span><span class="sig-name descname"><span class="pre">PropsStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/stores/props.html#PropsStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.stores.props.PropsStore" title="Link to this definition"></a></dt>
+<dd><p>Per-prop directory store.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">d</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">store</span> <span class="o">=</span> <span class="n">PropsStore</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">store</span><span class="p">[</span><span class="s1">'lamp'</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Desk lamp'</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">store</span><span class="p">[</span><span class="s1">'lamp'</span><span class="p">][</span><span class="s1">'name'</span><span class="p">]</span>
+<span class="go">'Desk lamp'</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
@@ -209,8 +220,8 @@ validates as one) and persists both the JSON and the regenerated Markdown.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="props.html" class="btn btn-neutral float-left" title="an.stores.props" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="styles.html" class="btn btn-neutral float-right" title="an.stores.styles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="environments.html" class="btn btn-neutral float-left" title="an.stores.environments" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scenes.html" class="btn btn-neutral float-right" title="an.stores.scenes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

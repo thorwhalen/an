@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.capture &mdash; an 0.1.61 documentation</title>
+  <title>an.bench.capture &mdash; an 0.1.62 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=fb9c6db4"></script>
+      <script src="../../../_static/documentation_options.js?v=cc64e7de"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -142,6 +142,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/characters.html">an.stores.characters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/decisions.html">an.stores.decisions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/environments.html">an.stores.environments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/props.html">an.stores.props</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
@@ -517,10 +518,32 @@
 
 
 
+<div class="viewcode-block" id="GitStatusUnavailable">
+<a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.GitStatusUnavailable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GitStatusUnavailable</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""`git status` did not answer, so "the tree is clean" is not known.</span>
+
+<span class="sd">    Separated from an empty result on purpose. `git status` failing prints</span>
+<span class="sd">    nothing to stdout, so `check=False` turned every failure into "no dirty</span>
+<span class="sd">    paths" — indistinguishable from a clean tree, and *silently* so. Measured:</span>
+<span class="sd">    a concurrent `git` in a linked worktree of this repo takes `index.lock`,</span>
+<span class="sd">    `git status` exits nonzero with empty stdout, and</span>
+<span class="sd">    `test_a_capture_leaves_the_repository_untouched` fails with `[] != [...]`</span>
+<span class="sd">    — an assertion about the capture, pointing at nothing, in a run that has</span>
+<span class="sd">    been green fifty times. A check that could not run is not evidence that</span>
+<span class="sd">    nothing is wrong.</span>
+<span class="sd">    """</span></div>
+
+
+
 <div class="viewcode-block" id="dirty_paths">
 <a class="viewcode-back" href="../../../module_docs/an/bench/capture.html#an.bench.capture.dirty_paths">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">dirty_paths</span><span class="p">(</span><span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""`git status --porcelain` lines, so a capture can prove it touched nothing."""</span>
+<span class="w">    </span><span class="sd">"""`git status --porcelain` lines, so a capture can prove it touched nothing.</span>
+
+<span class="sd">    Raises :class:`GitStatusUnavailable` when git does not answer, rather than</span>
+<span class="sd">    reporting a clean tree it never observed.</span>
+<span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 
     <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
@@ -530,6 +553,12 @@
         <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GitStatusUnavailable</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"`git status` exited </span><span class="si">{</span><span class="n">out</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">repo_root</span><span class="si">}</span><span class="s2">: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">stderr</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">''</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'no stderr'</span><span class="si">}</span><span class="s2">. A concurrent git in a "</span>
+            <span class="s2">"linked worktree holding `index.lock` is the usual cause."</span>
+        <span class="p">)</span>
     <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span></div>
 
 </pre></div>
