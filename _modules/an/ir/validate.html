@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.validate &mdash; an 0.1.62 documentation</title>
+  <title>an.ir.validate &mdash; an 0.1.63 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=cc64e7de"></script>
+      <script src="../../../_static/documentation_options.js?v=681c63c7"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -135,6 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/props.html">an.props</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
@@ -326,7 +327,12 @@
 
 <span class="c1">#: Entity kinds the cutout renderer draws. `voice` is legitimately</span>
 <span class="c1">#: not drawable — they configure the render rather than appearing in it.</span>
-<span class="n">_DRAWABLE_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"character"</span><span class="p">,</span> <span class="s2">"environment"</span><span class="p">})</span>
+<span class="c1">#: an#108: `prop` moved from "declared by the IR but not drawn" to drawn.</span>
+<span class="c1">#: validate's verdict IS compile's, so this set and the compiler's</span>
+<span class="c1">#: entity dispatch are pinned equal by test — a validator that passes a</span>
+<span class="c1">#: scene the compiler refuses is worse than no validator, because it is</span>
+<span class="c1">#: trusted.</span>
+<span class="n">_DRAWABLE_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"character"</span><span class="p">,</span> <span class="s2">"environment"</span><span class="p">,</span> <span class="s2">"prop"</span><span class="p">})</span>
 <span class="n">_CONFIGURING_ENTITY_KINDS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"voice"</span><span class="p">})</span>
 
 <span class="c1">#: Any property outside the transform vocabulary on a set/tween names a swap</span>
@@ -342,8 +348,46 @@
 <span class="n">_PROCEDURAL_SWAP_SETS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"viseme"</span><span class="p">})</span>
 
 
+<span class="c1">#: Entity kind → (the mall store holding its rig, the descriptor `kind` tag</span>
+<span class="c1">#: that store's documents carry). `environment` and `voice` are absent because</span>
+<span class="c1">#: neither has a rig to declare asset sets on.</span>
+<span class="n">RIG_STORES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"character"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"characters"</span><span class="p">,</span> <span class="s2">"CharacterDescriptor"</span><span class="p">),</span>
+    <span class="s2">"prop"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"props"</span><span class="p">,</span> <span class="s2">"PropDescriptor"</span><span class="p">),</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rig_document</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">stores</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The MIGRATED descriptor behind ``entity``, or ``None``.</span>
+
+<span class="sd">    Migrated because that is how the compiler reads it: every committed</span>
+<span class="sd">    pre-0.3.0 character descriptor has no `asset_sets` on disk (0.1.0 carries</span>
+<span class="sd">    `viseme_map`; `eyelid` is migration-seeded), so the raw dict would refuse</span>
+<span class="sd">    swaps the compiler accepts.</span>
+
+<span class="sd">    Keyed on the entity's KIND rather than on "is it a character", so a prop's</span>
+<span class="sd">    descriptor is found in the props store (an#108). It also refuses a</span>
+<span class="sd">    document of the wrong kind in the right store — a `CharacterDescriptor`</span>
+<span class="sd">    under `assets/props/` is not a prop, and the compiler says so too.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">store_name</span><span class="p">,</span> <span class="n">want_kind</span> <span class="o">=</span> <span class="n">RIG_STORES</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">store</span> <span class="o">=</span> <span class="n">stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">store_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">store</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">candidate</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="n">want_kind</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="n">want_kind</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_swap_references</span><span class="p">(</span>
-    <span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">,</span> <span class="n">available_characters</span>
+    <span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="s2">"ValidationReport"</span><span class="p">,</span> <span class="n">stores</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""A set/tween on a non-transform property must name a declared asset set</span>
 <span class="sd">    and key of its target entity's descriptor, and a `play` must resolve</span>
@@ -351,16 +395,42 @@
 <span class="sd">    pays for TTS or a Chromium launch, because compile raises on both</span>
 <span class="sd">    (an#87, an#7). Same charter as `_check_renderable`; needs the store, so</span>
 <span class="sd">    it runs from `validate_semantic`'s shot loop — and ONLY then: with</span>
-<span class="sd">    `available_characters=None` neither check runs, so a bare</span>
-<span class="sd">    `validate_semantic(scene)` passes a play the compiler will refuse.</span>
+<span class="sd">    no stores neither check runs, so a bare `validate_semantic(scene)` passes</span>
+<span class="sd">    a play the compiler will refuse.</span>
+
+<span class="sd">    ``stores`` is keyed by MALL NAME, not by entity kind, and `RIG_STORES`</span>
+<span class="sd">    maps between them — because an#108 gave props the same rig machinery, and</span>
+<span class="sd">    a check that only knows how to find a *character's* descriptor reports</span>
+<span class="sd">    "no descriptor declaring asset sets" for a lamp whose descriptor is right</span>
+<span class="sd">    there in the props store.</span>
 
 <span class="sd">    Descriptor-less (procedural) entities get a carve-out for `viseme` — the</span>
 <span class="sd">    compiler validates its codes against the drawn-mouth shapes — and an</span>
 <span class="sd">    error for anything else, matching the compiler's verdicts.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">available_characters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">stores</span><span class="p">:</span>
         <span class="k">return</span>
+    <span class="c1"># PER-KIND, not per-call. an#108's first pass changed the gate from</span>
+    <span class="c1"># "characters store absent → skip" to "no stores at all → skip", which made</span>
+    <span class="c1"># `validate_semantic(scene, available_characters=X)` — the signature every</span>
+    <span class="c1"># caller outside this repo has — report EVERY prop swap as</span>
+    <span class="c1"># "has no descriptor declaring asset sets" on a scene that compiles fine.</span>
+    <span class="c1"># A store that was not supplied means the check did not run for that kind;</span>
+    <span class="c1"># it never means the descriptor is missing.</span>
+    <span class="n">rigs</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="n">RIG_STORES</span><span class="p">}</span>
+    <span class="c1">#: Entities whose rig store was not supplied. Their checks are SKIPPED, not</span>
+    <span class="c1">#: failed: "no store" and "no descriptor" are different facts, and reporting</span>
+    <span class="c1">#: the first as the second is how a caller who passes only characters gets</span>
+    <span class="c1">#: an error on every prop swap in a scene that compiles fine.</span>
+    <span class="n">unchecked</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">eid</span>
+        <span class="k">for</span> <span class="n">eid</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">rigs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">RIG_STORES</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">kind</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="kc">None</span>
+    <span class="p">}</span>
+    <span class="c1"># The expression and dialogue-emotion checks below are CHARACTER-only:</span>
+    <span class="c1"># a prop has no face.</span>
     <span class="n">refs_by_entity</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">ref</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"character"</span><span class="p">}</span>
+    <span class="n">available_characters</span> <span class="o">=</span> <span class="n">stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"characters"</span><span class="p">)</span>
     <span class="c1"># `play` (an#7): resolved against the target entity's MIGRATED descriptor</span>
     <span class="c1"># by `an.characters.play` — the SAME code the compiler resolves with, so</span>
     <span class="c1"># validate's verdict is compile's (an unknown bone property, a bone with</span>
@@ -374,20 +444,20 @@
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">leaf</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"play"</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">entity_id</span> <span class="o">=</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">leaf</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">ref</span> <span class="o">=</span> <span class="n">refs_by_entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">)</span>
-            <span class="n">desc</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">candidate</span> <span class="o">=</span> <span class="n">available_characters</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span>
-                <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-                    <span class="n">candidate</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
-                    <span class="ow">and</span> <span class="n">candidate</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"CharacterDescriptor"</span>
-                <span class="p">):</span>
-                    <span class="n">desc</span> <span class="o">=</span> <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
-                        <span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">)</span>
-                    <span class="p">)</span>
+            <span class="k">if</span> <span class="n">entity_id</span> <span class="ow">in</span> <span class="n">unchecked</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">entity</span> <span class="o">=</span> <span class="n">rigs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">)</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="n">_rig_document</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">stores</span><span class="p">)</span> <span class="k">if</span> <span class="n">entity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="c1"># `play` resolves against a CHARACTER's animations. A prop has an</span>
+            <span class="c1"># `animations` field so the shared rig builder can read the same</span>
+            <span class="c1"># attribute on either document, but nothing seeds it and no author</span>
+            <span class="c1"># tool writes one — so a `play` on a prop lands here with the same</span>
+            <span class="c1"># "no descriptor" verdict the compiler gives it.</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">CharacterDescriptor</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">doc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"character"</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
             <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
                     <span class="s2">"error"</span><span class="p">,</span>
@@ -400,7 +470,7 @@
             <span class="k">for</span> <span class="n">problem</span> <span class="ow">in</span> <span class="n">play_problems</span><span class="p">(</span>
                 <span class="n">desc</span><span class="p">,</span>
                 <span class="n">leaf</span><span class="o">.</span><span class="n">animation</span><span class="p">,</span>
-                <span class="n">art_exists</span><span class="o">=</span><span class="n">art_exists_for</span><span class="p">(</span><span class="n">available_characters</span><span class="p">,</span> <span class="n">ref</span><span class="p">),</span>
+                <span class="n">art_exists</span><span class="o">=</span><span class="n">art_exists_for</span><span class="p">(</span><span class="n">stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"characters"</span><span class="p">),</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="p">),</span>
             <span class="p">):</span>
                 <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
                     <span class="s2">"error"</span><span class="p">,</span>
@@ -466,22 +536,10 @@
             <span class="k">continue</span>
         <span class="n">target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
         <span class="n">entity_id</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">ref</span> <span class="o">=</span> <span class="n">refs_by_entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">)</span>
-        <span class="n">desc</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">candidate</span> <span class="o">=</span> <span class="n">available_characters</span><span class="p">[</span><span class="n">ref</span><span class="p">]</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-                <span class="n">candidate</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
-                <span class="ow">and</span> <span class="n">candidate</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"CharacterDescriptor"</span>
-            <span class="p">):</span>
-                <span class="c1"># The MIGRATED document, as the compiler reads it: every</span>
-                <span class="c1"># committed pre-0.3.0 descriptor has no `asset_sets` on disk</span>
-                <span class="c1"># (0.1.0 carries `viseme_map`; `eyelid` is migration-seeded),</span>
-                <span class="c1"># so the raw dict would refuse swaps the compiler accepts.</span>
-                <span class="n">desc</span> <span class="o">=</span> <span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"CharacterDescriptor"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entity_id</span> <span class="ow">in</span> <span class="n">unchecked</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">entity</span> <span class="o">=</span> <span class="n">rigs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">)</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">_rig_document</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">stores</span><span class="p">)</span> <span class="k">if</span> <span class="n">entity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">desc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">prop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_PROCEDURAL_SWAP_SETS</span><span class="p">:</span>
                 <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
@@ -504,6 +562,31 @@
             <span class="p">)</span>
             <span class="k">continue</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="n">declared</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="c1"># …and the ART has to be there. The compiler registers only the</span>
+        <span class="c1"># attachments whose files resolve and then refuses a key whose art is</span>
+        <span class="c1"># missing, so a key that is DECLARED but undrawable passed validate and</span>
+        <span class="c1"># raised at compile — with `strict_assets` either way (an#108 review,</span>
+        <span class="c1"># H3). Same rule the rig builder's probe uses: a store with no</span>
+        <span class="c1"># filesystem root can answer nothing, so it must assume presence rather</span>
+        <span class="c1"># than drop every key.</span>
+        <span class="n">art_exists</span> <span class="o">=</span> <span class="n">art_exists_for</span><span class="p">(</span>
+            <span class="n">stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">RIG_STORES</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">art_exists</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">skin</span> <span class="o">=</span> <span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"skins"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="n">slots</span> <span class="o">=</span> <span class="n">skin</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slots"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="n">drawable</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">attachment_name</span> <span class="ow">in</span> <span class="n">keys</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+                    <span class="n">art_exists</span><span class="p">(</span><span class="n">att</span><span class="p">[</span><span class="s2">"path"</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">atts</span> <span class="ow">in</span> <span class="n">slots</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">attachment_name</span> <span class="ow">in</span> <span class="n">atts</span>
+                    <span class="k">for</span> <span class="n">att</span> <span class="ow">in</span> <span class="p">(</span><span class="n">atts</span><span class="p">[</span><span class="n">attachment_name</span><span class="p">],)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">att</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">att</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="p">{</span><span class="n">k_</span><span class="p">:</span> <span class="n">v_</span> <span class="k">for</span> <span class="n">k_</span><span class="p">,</span> <span class="n">v_</span> <span class="ow">in</span> <span class="n">keys</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k_</span> <span class="ow">in</span> <span class="n">drawable</span><span class="p">}</span>
         <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">v</span>
             <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span>
@@ -655,10 +738,14 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">available_voices</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">available_characters</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">available_props</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Cross-field semantic checks. Pass live stores in for cross-store checks.</span>
 
-<span class="sd">    Both ``available_voices`` and ``available_characters`` accept any mapping.</span>
+<span class="sd">    Both ``available_voices`` and ``available_characters`` accept any mapping;</span>
+<span class="sd">    ``available_props`` is the same thing for `kind="prop"` entities (an#108) —</span>
+<span class="sd">    without it a prop's swaps are reported as having no descriptor, which is</span>
+<span class="sd">    validate refusing what compile accepts.</span>
 <span class="sd">    Voices are consulted via ``__contains__`` only; characters additionally</span>
 <span class="sd">    via ``__getitem__`` (the swap-reference and `play` checks read descriptor</span>
 <span class="sd">    dicts, an#87 / an#7). Pass ``None`` to skip those checks — and know that</span>
@@ -667,6 +754,16 @@
 <span class="sd">    always passes it).</span>
 <span class="sd">    """</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">ValidationReport</span><span class="p">()</span>
+    <span class="c1">#: Only the stores actually supplied — an absent one skips its checks</span>
+    <span class="c1">#: rather than reporting everything it would have found as missing.</span>
+    <span class="n">rig_stores</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">store</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">store</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s2">"characters"</span><span class="p">,</span> <span class="n">available_characters</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"props"</span><span class="p">,</span> <span class="n">available_props</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">}</span>
 
     <span class="n">_check_retired_keys</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">scene</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">duration</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -700,20 +797,49 @@
             <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"error"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/duration"</span><span class="p">,</span> <span class="s2">"shot duration must be &gt; 0"</span><span class="p">)</span>
 
         <span class="n">_check_renderable</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
-        <span class="n">_check_swap_references</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">available_characters</span><span class="p">)</span>
+        <span class="n">_check_swap_references</span><span class="p">(</span><span class="n">shot</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">rig_stores</span><span class="p">)</span>
 
         <span class="c1"># Entity references resolve?</span>
-        <span class="k">if</span> <span class="n">available_characters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">entity</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">):</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"character"</span>
-                    <span class="ow">and</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available_characters</span>
-                <span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">entity</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RIG_STORES</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">store_name</span><span class="p">,</span> <span class="n">want_kind</span> <span class="o">=</span> <span class="n">RIG_STORES</span><span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="p">]</span>
+            <span class="n">store</span> <span class="o">=</span> <span class="n">rig_stores</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">store_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>  <span class="c1"># store not supplied → this check did not run</span>
+            <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"character"</span><span class="p">:</span>
+                <span class="c1"># A WARNING: the compiler falls back to the built-in placeholder</span>
+                <span class="c1"># rig and the scene still renders. Deliberately not escalated —</span>
+                <span class="c1"># an asset-less project rendering placeholders is a supported</span>
+                <span class="c1"># way to work.</span>
+                <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">store</span><span class="p">:</span>
                     <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
                         <span class="s2">"warning"</span><span class="p">,</span>
                         <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/entities/</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                         <span class="sa">f</span><span class="s2">"character ref </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="si">!r}</span><span class="s2"> not in characters store"</span><span class="p">,</span>
                     <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="c1"># A prop has NO placeholder rig — the placeholder IS a humanoid, so</span>
+            <span class="c1"># falling back would draw a person where the prop should be — which</span>
+            <span class="c1"># makes an unresolvable prop a hard raise at compile. The pre-flight</span>
+            <span class="c1"># for a hard raise is an ERROR, and before an#108's review this arm</span>
+            <span class="c1"># did not exist at all: the harsher outcome had the weaker</span>
+            <span class="c1"># prediction, and `an validate` said "passed" about a scene that</span>
+            <span class="c1"># cannot render.</span>
+            <span class="k">if</span> <span class="n">_rig_document</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">rig_stores</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">ref</span> <span class="ow">in</span> <span class="n">store</span><span class="p">:</span>
+                    <span class="n">why</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"is in the </span><span class="si">{</span><span class="n">store_name</span><span class="si">!r}</span><span class="s2"> store but is not a "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">want_kind</span><span class="si">}</span><span class="s2"> (rendering this shot raises)"</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">why</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"is not in the </span><span class="si">{</span><span class="n">store_name</span><span class="si">!r}</span><span class="s2"> store, and a </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> "</span>
+                        <span class="s2">"has no placeholder rig (rendering this shot raises)"</span>
+                    <span class="p">)</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"error"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/entities/</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> ref </span><span class="si">{</span><span class="n">entity</span><span class="o">.</span><span class="n">ref</span><span class="si">!r}</span><span class="s2"> </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
 
         <span class="c1"># Dialogue voice refs resolve?</span>
         <span class="k">if</span> <span class="n">available_voices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

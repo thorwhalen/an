@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.corpus &mdash; an 0.1.62 documentation</title>
+  <title>an.bench.corpus &mdash; an 0.1.63 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=cc64e7de"></script>
+      <script src="../../../_static/documentation_options.js?v=681c63c7"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -135,6 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/props.html">an.props</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
@@ -420,6 +421,25 @@
         <span class="n">expect_visual_kinds</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">({</span><span class="s2">"svg_sprite"</span><span class="p">}),</span>
         <span class="n">golden_frames</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span>
         <span class="n">golden_note</span><span class="o">=</span><span class="s2">"the head plate rotating through 0.3 rad (1,187 px)."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"prop_swap"</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">(</span>
+        <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">CORPUS_DIRNAME</span><span class="si">}</span><span class="s2">/prop_swap"</span><span class="p">,</span>
+        <span class="n">expect_visual_kinds</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">({</span><span class="s2">"svg_sprite"</span><span class="p">}),</span>
+        <span class="n">golden_frames</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.375</span><span class="p">),</span>
+        <span class="n">golden_note</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"a two-state prop swapping mid-shot (an#108): a desk lamp whose "</span>
+            <span class="s2">"`lamp` asset-set goes `off` -&gt; `on` at t=0.25. What moves between "</span>
+            <span class="s2">"the goldens is a texture SWAP and nothing else — no transform, no "</span>
+            <span class="s2">"easing, no interpolation — which is why this scene is worth a row "</span>
+            <span class="s2">"the other seven cannot provide: every one of them measures a pose "</span>
+            <span class="s2">"changing continuously, so a regression that broke swap resolution "</span>
+            <span class="s2">"alone (the runtime resolves two swap properties on one node by "</span>
+            <span class="s2">"NAME order, and an#87's failure mode was keeping the PREVIOUS "</span>
+            <span class="s2">"texture in silence) would move no golden anywhere in the corpus. "</span>
+            <span class="s2">"Frame 9 rather than the mid-frame: at 24 fps the swap lands on "</span>
+            <span class="s2">"frame 6, so frame 9 is clear of the boundary in a way that does "</span>
+            <span class="s2">"not depend on how the frame containing t=0.25 rounds."</span>
+        <span class="p">),</span>
     <span class="p">),</span>
     <span class="s2">"expressions"</span><span class="p">:</span> <span class="n">Fixture</span><span class="p">(</span>
         <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">CORPUS_DIRNAME</span><span class="si">}</span><span class="s2">/expressions"</span><span class="p">,</span>

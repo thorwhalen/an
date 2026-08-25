@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.sync &mdash; an 0.1.62 documentation</title>
+  <title>an.ir.sync &mdash; an 0.1.63 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=cc64e7de"></script>
+      <script src="../../../_static/documentation_options.js?v=681c63c7"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -135,6 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/props.html">an.props</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
@@ -475,7 +476,9 @@
 
 <span class="sd">    Supported entry shapes (one per item in the YAML list):</span>
 <span class="sd">      - ``{kind: tween, target, property, to, duration, [from_], [easing], [start]}``</span>
-<span class="sd">      - ``{kind: set,   target, property, value, [at]}``</span>
+<span class="sd">      - ``{kind: set,   target, property, value, [at]}`` — `at`, never</span>
+<span class="sd">        `start`: a `set` is instantaneous, and `start` on one RAISES rather</span>
+<span class="sd">        than being silently dropped as it was before an#108.</span>
 <span class="sd">      - ``{kind: play,  target, animation, [duration], [speed], [loop], [start]}``</span>
 <span class="sd">        — resolved at compile against the target entity's descriptor</span>
 <span class="sd">        ``animations`` (an#7). ``loop`` omitted means the animation's own.</span>
@@ -516,6 +519,23 @@
                 <span class="n">easing</span><span class="o">=</span><span class="n">easing</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"set"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"start"</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+                <span class="c1"># A REFUSAL, not an alias. `start` is the wrapper key for</span>
+                <span class="c1"># actions that HAVE a duration — the parser turns it into</span>
+                <span class="c1"># `sequence(delay(start), action)`. A `set` is instantaneous,</span>
+                <span class="c1"># so its time IS `at`, and giving one number two names is how</span>
+                <span class="c1"># a scene ends up with both.</span>
+                <span class="c1">#</span>
+                <span class="c1"># It was silently dropped before an#108: `start` is popped only</span>
+                <span class="c1"># for tween/play/expression, and this branch reads `at` alone,</span>
+                <span class="c1"># so `{kind: set, start: 1.0}` compiled to a swap at t=0. The</span>
+                <span class="c1"># author sees a lamp that is lit from the first frame and no</span>
+                <span class="c1"># message anywhere.</span>
+                <span class="k">raise</span> <span class="n">SceneMarkdownError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"actions[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] is a `set` with `start: </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">'start'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">`, "</span>
+                    <span class="s2">"which does nothing: a `set` is instantaneous and its time "</span>
+                    <span class="sa">f</span><span class="s2">"is `at:`. Write `at: </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">'start'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">`."</span>
+                <span class="p">)</span>
             <span class="n">action</span> <span class="o">=</span> <span class="n">_compose</span><span class="o">.</span><span class="n">set_</span><span class="p">(</span>
                 <span class="n">item</span><span class="p">[</span><span class="s2">"target"</span><span class="p">],</span>
                 <span class="n">item</span><span class="p">[</span><span class="s2">"property"</span><span class="p">],</span>

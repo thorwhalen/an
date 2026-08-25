@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.62 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.63 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=cc64e7de"></script>
+      <script src="../../../_static/documentation_options.js?v=681c63c7"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -135,6 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/props.html">an.props</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/render.html">an.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores.html">an.stores</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/_common.html">an.stores._common</a></li>
@@ -216,7 +217,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">model_validator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_serializer</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">model_validator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">COMPATIBLE_VERSION</span><span class="p">,</span>
@@ -280,6 +281,44 @@
 <span class="c1"># -----------------------------------------------------------------------------</span>
 
 
+<div class="viewcode-block" id="StagePlacement">
+<a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.StagePlacement">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StagePlacement</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Where an entity stands on the stage, and how big it is.</span>
+
+<span class="sd">    &gt;&gt;&gt; StagePlacement(at=(120.0, -40.0), scale=0.5).at</span>
+<span class="sd">    (120.0, -40.0)</span>
+<span class="sd">    &gt;&gt;&gt; StagePlacement().at is None</span>
+<span class="sd">    True</span>
+
+<span class="sd">    `at` is in SCENE pixels relative to the stage centre — the same space the</span>
+<span class="sd">    compiler already places characters in — so an author reads it off the same</span>
+<span class="sd">    ruler as a camera pivot. `scale` multiplies the rig's own uniform scale.</span>
+
+<span class="sd">    Deliberately only two fields today. #108 sketches `depth` and `after` as</span>
+<span class="sd">    well; both belong to the stage vocabulary that arrives with the translating</span>
+<span class="sd">    camera (#109) and plane environments (#110), and shipping either now would</span>
+<span class="sd">    put a knob in the schema that nothing reads — which is worse than an absent</span>
+<span class="sd">    one, because a scene that sets it renders identically and says nothing.</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: ``(x, y)`` in scene pixels from the stage centre. ``None`` = default layout.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: `allow_inf_nan=False` on both fields, and it is not pedantry: pydantic</span>
+    <span class="c1">#: serializes `inf` and `nan` to JSON **null**, and re-validating that JSON</span>
+    <span class="c1">#: raises — so a scene file written with either is corrupt one way, and the</span>
+    <span class="c1">#: author finds out on the next load rather than at the edit that did it</span>
+    <span class="c1">#: (an#108 review, M-1). `gt=0` already refuses `scale=0` and `scale=-1`; it</span>
+    <span class="c1">#: does not refuse `inf`.</span>
+    <span class="n">at</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span>
+        <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)],</span>
+        <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)],</span>
+    <span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: Uniform scale multiplier on the built rig. ``1.0`` = the rig's own size.</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">allow_inf_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="AssetRef">
 <a class="viewcode-back" href="../../../module_docs/an/ir/schema.html#an.AssetRef">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AssetRef</span><span class="p">(</span><span class="n">_IRModel</span><span class="p">):</span>
@@ -301,7 +340,34 @@
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">store</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># which store in the project mall</span>
     <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># key inside that store</span>
-    <span class="n">overrides</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">overrides</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#: Where on the stage this entity stands. ``None`` — the default and what</span>
+    <span class="c1">#: every existing document has — means "wherever the layout puts it",</span>
+    <span class="c1">#: which for characters is the evenly-spaced row the compiler computes.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: **Additive by construction, and hash-free by construction**: the</span>
+    <span class="c1">#: contract hashes the COMPILED document, and an `AssetRef` never reaches</span>
+    <span class="c1">#: it. So this field can grow without retiring a single ledger row.</span>
+    <span class="n">stage</span><span class="p">:</span> <span class="n">StagePlacement</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@model_serializer</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"wrap"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_omit_unset_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Serialize ``stage: null`` out of existence when it is unset.</span>
+
+<span class="sd">        The precedent is `serialize._omit_unset_step_hz`, and the reason is</span>
+<span class="sd">        the same one scaled down: every committed `ir/scene.json` in this repo</span>
+<span class="sd">        — corpus fixtures, examples, and whatever a user has on disk — was</span>
+<span class="sd">        written before this field existed. A defaulted `null` on every</span>
+<span class="sd">        `AssetRef` would rewrite all of them on the next `an sync`, and</span>
+<span class="sd">        `test_every_speaking_corpus_scene_ir_is_reproducible_from_its_md`</span>
+<span class="sd">        would be red until each was regenerated. A field nobody set should</span>
+<span class="sd">        leave no trace (an#108).</span>
+<span class="sd">        """</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">handler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"stage"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
 
 
 
