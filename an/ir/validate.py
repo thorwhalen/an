@@ -90,7 +90,11 @@ def validate_schema(doc: Any) -> ValidationReport:
         # pre-migration shape and defaults the new fields.
         raw = json.loads(doc) if isinstance(doc, str) else doc
         if not isinstance(raw, dict):
-            report.add("error", "<root>", f"a scene document must be an object, not {type(raw).__name__}")
+            report.add(
+                "error",
+                "<root>",
+                f"a scene document must be an object, not {type(raw).__name__}",
+            )
             return report
         scene_from_json_doc(raw)
     except DocumentMigrationError as e:
