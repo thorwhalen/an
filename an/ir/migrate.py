@@ -34,6 +34,7 @@ way would close a cycle.)
 from __future__ import annotations
 
 import copy
+import warnings
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -176,6 +177,23 @@ def register_migration(
     return deco
 
 
+def _warn_dropped(before: list, after: list, *, where: str) -> None:
+    """Say what a migration removed. A silent drop of something the author
+    wrote is the failure `tests/test_loud_discards.py` exists for, even when
+    the thing dropped did nothing (an#106 review)."""
+    if len(after) == len(before):
+        return
+    gone = [e.get("id") for e in before if isinstance(e, dict) and e.get("kind") == "style"]
+    warnings.warn(
+        f"migrating to 0.2.0 dropped {len(before) - len(after)} `style` "
+        f"entit{'y' if len(before) - len(after) == 1 else 'ies'} ({gone}) from {where}: "
+        "the kind was retired in an#106 because it selected nothing — the compiler "
+        "skipped it and no reader of the styles store existed. Art direction returns "
+        "as a StylePack (see https://github.com/thorwhalen/an/issues/112).",
+        stacklevel=3,
+    )
+
+
 @register_migration(SCENE_IR.name, "0.1.0", "0.2.0")
 def _rename_style_to_renderer(doc: dict[str, Any]) -> dict[str, Any]:
     """0.1.0 → 0.2.0 (an#106): the renderer selector stops being called "style".
@@ -200,26 +218,39 @@ def _rename_style_to_renderer(doc: dict[str, Any]) -> dict[str, Any]:
     """
     meta = doc.get("meta")
     if isinstance(meta, dict) and "default_style" in meta:
-        meta["default_renderer"] = meta.pop("default_style")
+        # The NEW key wins. A document carrying both was hand-repaired by
+        # someone who read the changelog and forgot to delete the old key;
+        # overwriting would silently revert their fix (an#106 review).
+        stale = meta.pop("default_style")
+        meta.setdefault("default_renderer", stale)
     for shot in doc.get("timeline") or []:
         if isinstance(shot, dict):
             if "style" in shot:
-                shot["renderer"] = shot.pop("style")
+                stale = shot.pop("style")
+                shot.setdefault("renderer", stale)
             # Only rewrite a key the document actually has: a migration that
             # ADDS `entities: []` to a shot that declared none changes the
             # document for no reason, and every such gratuitous key is one more
             # diff for a reader to explain.
             if isinstance(shot.get("entities"), list):
-                shot["entities"] = [
+                kept = [
                     e
                     for e in shot["entities"]
                     if not (isinstance(e, dict) and e.get("kind") == "style")
                 ]
-    if "assets" in doc:
-        doc["assets"] = [
-            a for a in (doc.get("assets") or [])
+                _warn_dropped(shot["entities"], kept, where=f"shot {shot.get('id')!r}")
+                shot["entities"] = kept
+    # `isinstance(..., list)`, not `or []`: a truthy dict would iterate its KEYS
+    # and a null would become an empty list — inventing a key the document did
+    # not have (an#106 review).
+    if isinstance(doc.get("assets"), list):
+        kept = [
+            a
+            for a in doc["assets"]
             if not (isinstance(a, dict) and a.get("kind") == "style")
         ]
+        _warn_dropped(doc["assets"], kept, where="the scene's assets")
+        doc["assets"] = kept
     doc["version"] = "0.2.0"
     # The pair moves together: `compatible_version` is what a *future* build
     # reads to decide whether it may skip migrating, so leaving it at 0.1.0

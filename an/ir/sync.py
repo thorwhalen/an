@@ -394,7 +394,7 @@ def ir_to_markdown(scene: SceneIR) -> str:
 
     >>> from an.ir.schema import SceneIR, Meta, Shot
     >>> scene = SceneIR(meta=Meta(title="Demo", duration=5.0),
-    ...                 timeline=[Shot(id="s1", style="cutout", duration=5.0)])
+    ...                 timeline=[Shot(id="s1", renderer="cutout", duration=5.0)])
     >>> md = ir_to_markdown(scene)
     >>> "# Demo" in md
     True

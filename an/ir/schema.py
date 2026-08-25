@@ -338,7 +338,7 @@ class Narration(_IRModel):
 class Shot(_IRModel):
     """A single rendered unit. A scene is a sequence of shots.
 
-    A shot's ``style`` selects the renderer. Every renderer must accept the
+    A shot's ``renderer`` selects the backend that draws it. Every renderer must accept the
     same Shot fields; renderer-specific options go under ``options``.
     """
 

@@ -248,7 +248,7 @@ def render(
         if r is None:
             raise RenderError(
                 f"no renderer registered for shot {shot.id!r} "
-                f"(style={shot.renderer!r}); registered: "
+                f"(renderer={shot.renderer!r}); registered: "
                 f"{list(_DEFAULT_REGISTRY.names())}"
             )
         shot_renderers.append((shot, r))

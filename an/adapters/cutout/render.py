@@ -283,12 +283,12 @@ class CutoutRenderer:
     >>> r = CutoutRenderer()
     >>> r.name
     'cutout'
-    >>> r.supported_styles
+    >>> r.supported_renderers
     ('cutout',)
     """
 
     name: str = "cutout"
-    supported_styles: tuple[str, ...] = ("cutout",)
+    supported_renderers: tuple[str, ...] = ("cutout",)
 
     def can_render(self, shot: Shot) -> bool:
         return shot.renderer == "cutout"

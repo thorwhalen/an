@@ -131,10 +131,10 @@ _RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(
     {"hold", "push_in", "pull_out", "zoom_in", "zoom_out"}
 )
 
-#: Entity kinds the cutout renderer draws. `voice` and `style` are legitimately
+#: Entity kinds the cutout renderer draws. `voice` is legitimately
 #: not drawable — they configure the render rather than appearing in it.
 _DRAWABLE_ENTITY_KINDS: frozenset[str] = frozenset({"character", "environment"})
-_CONFIGURING_ENTITY_KINDS: frozenset[str] = frozenset({"voice", "style"})
+_CONFIGURING_ENTITY_KINDS: frozenset[str] = frozenset({"voice"})
 
 #: Any property outside the transform vocabulary on a set/tween names a swap
 #: SET, which must be declared by the target entity's descriptor (an#87). The

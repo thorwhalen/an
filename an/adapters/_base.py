@@ -98,7 +98,7 @@ class Renderer(Protocol):
     """
 
     name: str
-    supported_styles: tuple[str, ...]
+    supported_renderers: tuple[str, ...]
 
     def can_render(self, shot: Shot) -> bool:
         """Return True if this renderer can render ``shot``."""

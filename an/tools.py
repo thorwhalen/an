@@ -14,8 +14,6 @@ from pathlib import Path
 from an.check_requirements import check_requirements as _check_requirements
 from an.check_requirements import format_report
 from an.ir.sync import sync as _sync
-from an.ir.migrate import DocumentMigrationError
-from an.ir.sync import SceneValidationError
 from an.orchestrate import render_project as _render_project
 from an.orchestrate import validate_project
 from an.project import init as _init
@@ -52,9 +50,12 @@ def sync(project_dir: str) -> str:
     """Reconcile scene.md and ir/scene.json inside ``project_dir``."""
     try:
         result = _sync(project_dir)
-    except (DocumentMigrationError, SceneValidationError) as e:
-        # A message for a human, not a traceback — the same rule `an validate`
-        # already follows (an#105 review moved the stack dump here).
+    except ValueError as e:
+        # A message for a human, not a traceback — the rule `an validate`
+        # already follows. ValueError, not the two named subclasses: the
+        # `scene.md` refusals (an unparseable dialogue line, `default_style:`)
+        # are plain ValueErrors, and they are the ones a user actually hits
+        # (an#106 review found sync and render stack-dumping on them).
         return str(e)
     parts = []
     if result.wrote_json:
@@ -137,7 +138,7 @@ def render(
             step_hz=step_hz or None,
             language=language,
         )
-    except (DocumentMigrationError, SceneValidationError) as e:
+    except ValueError as e:
         return str(e)
     return f"rendered: {output_path}"
 

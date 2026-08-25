@@ -161,9 +161,9 @@ Seconds: TypeAlias = float
 EasingSpec: TypeAlias = str | tuple[float, float, float, float] | list[float]
 
 
-# -- Style enum ---------------------------------------------------------------
+# -- Renderer enum ---------------------------------------------------------------
 
-#: The renderer-style of a shot. The orchestrator uses this to pick an adapter.
+#: Which renderer draws a shot. The orchestrator uses this to pick an adapter.
 RendererName: TypeAlias = Literal[
     "cutout",
     "manim",

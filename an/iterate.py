@@ -132,11 +132,11 @@ The IR shape (relevant fields):
   - meta: {title, author, duration, fps, resolution, default_renderer, notes}
   - timeline: a list of shots, each with:
       - id (string, unique)
-      - style ("cutout" | "manim" | "motion_graphics" | "whiteboard")
+      - renderer ("cutout" | "manim" | "motion_graphics" | "whiteboard")
       - duration (seconds, float)
       - camera: {move: "hold"|"push_in"|"pull_out"|"zoom_in"|"zoom_out", ...}
       - entities: list of {kind, id, store, ref, ...}
-        "kind" MUST be one of: character, environment, voice, style.
+        "kind" MUST be one of: character, environment, voice.
         "prop" is declared by the IR but NOT rendered — it raises. Do not emit one.
       - actions: list of action dicts (kind ∈ {tween, set, play, expression, sequence, parallel, delay, loop})
         A tween/set action's "property" is EITHER a transform:

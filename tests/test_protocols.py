@@ -29,7 +29,7 @@ def test_render_result_dataclass():
 def test_renderer_registry_round_trips():
     class Fake:
         name = "fake"
-        supported_styles = ("cutout",)
+        supported_renderers = ("cutout",)
 
         def can_render(self, shot):
             return shot.renderer == "cutout"
@@ -50,7 +50,7 @@ def test_renderer_registry_round_trips():
 def test_renderer_protocol_runtime_check():
     class Fake:
         name = "fake"
-        supported_styles = ("cutout",)
+        supported_renderers = ("cutout",)
 
         def can_render(self, shot):
             return True

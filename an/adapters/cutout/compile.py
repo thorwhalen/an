@@ -23,7 +23,7 @@ mall). It reads only.
 
 >>> from an.ir.schema import Meta, SceneIR, Shot
 >>> from an.adapters.cutout.compile import compile_shot
->>> shot = Shot(id="s1", style="cutout", duration=2.0)
+>>> shot = Shot(id="s1", renderer="cutout", duration=2.0)
 >>> j = compile_shot(shot, mall={"characters": {}})
 >>> j.timeline.duration
 2.0
@@ -594,7 +594,9 @@ def compile_shot(
     clothes (an#33).
     """
     if shot.renderer != "cutout":
-        raise ValueError(f"compile_shot expects style='cutout'; got {shot.renderer!r}")
+        raise ValueError(
+            f"compile_shot expects renderer='cutout'; got {shot.renderer!r}"
+        )
     if step_hz is not None and not (math.isfinite(step_hz) and 0 < step_hz <= fps):
         raise CutoutCompileError(
             f"step_hz must satisfy 0 < step_hz <= fps ({fps}); got {step_hz!r}. "
@@ -722,7 +724,7 @@ def _build_scene_root(
                 "https://github.com/thorwhalen/an/issues/9. Until then, remove the entity rather than leaving it "
                 "in the scene, where it would be silently absent from the render."
             )
-        # `voice` and `style` entities are legitimately not drawable: they
+        # `voice` entities are legitimately not drawable: they
         # configure the render rather than appearing in it.
     return NodeJSON(name="root", children=children)
 

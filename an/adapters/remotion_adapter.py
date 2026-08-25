@@ -22,7 +22,7 @@ class RemotionRenderer:
     """Remotion-based renderer (skeleton)."""
 
     name: str = "remotion"
-    supported_styles: tuple[str, ...] = ("motion_graphics",)
+    supported_renderers: tuple[str, ...] = ("motion_graphics",)
 
     def can_render(self, shot: Shot) -> bool:
         return shot.renderer == "motion_graphics"

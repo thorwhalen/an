@@ -169,7 +169,7 @@ def _compile_scene_to(
 
     if shot.renderer != "cutout":
         raise PreviewError(
-            f"shot {shot.id!r} has style={shot.renderer!r}; live preview supports "
+            f"shot {shot.id!r} has renderer={shot.renderer!r}; live preview supports "
             f"'cutout' only. Render this shot via `an render` instead."
         )
 

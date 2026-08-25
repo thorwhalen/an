@@ -404,8 +404,13 @@ def test_the_migration_adds_no_key_the_document_did_not_have():
     reason, and every gratuitous key is one more diff a reader must explain."""
     from an.ir.migrate import _rename_style_to_renderer
 
-    out = _rename_style_to_renderer({"version": "0.1.0", "timeline": [{"id": "s", "style": "cutout"}]})
+    doc = {"version": "0.1.0", "timeline": [{"id": "s", "style": "cutout"}]}
+    out = _rename_style_to_renderer(dict(doc))
     assert out["timeline"][0] == {"id": "s", "renderer": "cutout"}
+    # …and no key at the TOP level either: the first version of this test only
+    # looked inside `timeline`, so a mutant that added `assets: []` to every
+    # document survived it (an#106 review).
+    assert set(out) == {"version", "timeline"}, sorted(out)
 
 
 def test_default_style_in_scene_md_is_refused_not_silently_dropped():
@@ -426,7 +431,122 @@ def test_the_shot_heading_is_unchanged_by_the_rename():
     from an.ir.schema import Meta, SceneIR, Shot
     from an.ir.sync import ir_to_markdown, markdown_to_ir
 
-    scene = SceneIR(meta=Meta(title="t", duration=1.0), timeline=[Shot(id="s1", renderer="cutout", duration=1.0)])
+    # A NON-default renderer, or the round trip proves nothing: with
+    # `renderer="cutout"` the parser reading the heading and the parser
+    # ignoring it produce the same answer (an#106 review).
+    scene = SceneIR(
+        meta=Meta(title="t", duration=1.0, default_renderer="cutout"),
+        timeline=[Shot(id="s1", renderer="manim", duration=1.0)],
+    )
     md = ir_to_markdown(scene)
-    assert "## Shot s1 (cutout)" in md
-    assert markdown_to_ir(md).timeline[0].renderer == "cutout"
+    assert "## Shot s1 (manim)" in md
+    assert markdown_to_ir(md).timeline[0].renderer == "manim", "the heading is what selects it"
+
+
+def test_the_migration_writes_compatible_version_when_the_document_has_it():
+    """M3: every document `an` writes carries `compatible_version`, and leaving
+    it at 0.1.0 would advertise that a 0.1.0-shaped document is still readable
+    as-is. The earlier test's fixture omitted the key, so the pydantic default
+    satisfied its assertion whether or not the migration did anything."""
+    from an.ir.migrate import _rename_style_to_renderer
+
+    out = _rename_style_to_renderer(
+        {"version": "0.1.0", "compatible_version": "0.1.0", "timeline": []}
+    )
+    assert out["compatible_version"] == "0.2.0" and out["version"] == "0.2.0"
+
+
+def test_a_scene_level_style_asset_is_dropped_too():
+    """`SceneIR.assets` is the other place a style ref could sit; only
+    `Shot.entities` had a test, and the scene-level filter was killed by the
+    docstring doctest alone (an#106 review)."""
+    out = scene_from_json_doc(
+        {
+            "version": "0.1.0",
+            "kind": "SceneIR",
+            "assets": [
+                {"kind": "style", "id": "s", "store": "styles", "ref": "s"},
+                {"kind": "voice", "id": "v", "store": "voices", "ref": "v"},
+            ],
+        }
+    )
+    assert [a.kind for a in out.assets] == ["voice"]
+
+
+def test_a_hand_repaired_document_is_not_reverted():
+    """A user who read the changelog, added `renderer`, and forgot to delete
+    `style` had their fix silently overwritten by the stale key (an#106
+    review). The new key wins."""
+    from an.ir.migrate import _rename_style_to_renderer
+
+    out = _rename_style_to_renderer(
+        {
+            "version": "0.1.0",
+            "meta": {"default_style": "manim", "default_renderer": "cutout"},
+            "timeline": [{"id": "s", "style": "manim", "renderer": "cutout"}],
+        }
+    )
+    assert out["meta"] == {"default_renderer": "cutout"}
+    assert out["timeline"][0] == {"id": "s", "renderer": "cutout"}
+
+
+def test_dropping_a_style_entity_is_audible():
+    """A silent drop of something the author wrote is the failure
+    `tests/test_loud_discards.py` exists for — even when the thing dropped did
+    nothing."""
+    with pytest.warns(UserWarning, match="style"):
+        scene_from_json_doc(
+            {
+                "version": "0.1.0",
+                "kind": "SceneIR",
+                "timeline": [
+                    {
+                        "id": "s1",
+                        "style": "cutout",
+                        "duration": 1.0,
+                        "entities": [{"kind": "style", "id": "s", "store": "styles", "ref": "s"}],
+                    }
+                ],
+            }
+        )
+
+
+def test_the_iterate_prompt_teaches_the_schema_it_patches_against():
+    """M14 — and the defect that made this test necessary: the model-facing
+    grammar still said `style` and `kind: style` after the rename, so a patch
+    the loop reported as applied landed as an `extra="allow"` no-op and the
+    shot kept its default renderer. Derived from the TYPES, never typed out:
+    a list in prose is a second SSOT that drifts silently."""
+    from an.base import RendererName
+    from an.ir.schema import AssetRef
+    from an.iterate import _SYSTEM_PROMPT
+
+    # The WORD, not a spelling of it: the first version of this guard checked
+    # for `default_style` and `"style"`, and a mutant that wrote the field as
+    # `- style ("cutout" | …)` walked straight through (an#106 review).
+    import re
+
+    assert not re.search(r"\bstyle\b", _SYSTEM_PROMPT, re.I), [
+        line for line in _SYSTEM_PROMPT.splitlines() if re.search(r"\bstyle\b", line, re.I)
+    ]
+    assert "default_renderer" in _SYSTEM_PROMPT and "- renderer (" in _SYSTEM_PROMPT
+    for name in RendererName.__args__:
+        assert name in _SYSTEM_PROMPT, name
+    kinds = AssetRef.model_fields["kind"].annotation.__args__
+    for kind in kinds:
+        assert kind in _SYSTEM_PROMPT, kind
+    assert "style" not in [k for k in kinds], "the retired kind must not be back"
+
+
+def test_an_sync_and_an_render_report_the_markdown_refusal(tmp_path):
+    """The refusal a user is guaranteed to hit — `default_style:` in a hand
+    written scene.md — reached the CLI as a traceback (an#106 review)."""
+    from an import tools
+
+    root = init(tmp_path / "p")
+    (root / "scene.md").write_text(
+        "# X\n\n```yaml meta\ntitle: X\nduration: 1\ndefault_style: manim\n```\n", encoding="utf-8"
+    )
+    (root / "ir" / "scene.json").unlink()
+    for out in (tools.sync(str(root)), tools.render(str(root)), tools.validate(str(root))):
+        assert "default_renderer" in out, out

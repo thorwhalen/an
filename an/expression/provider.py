@@ -18,7 +18,7 @@ construction.
 
 >>> from an.ir.schema import AssetRef, Dialogue, Shot
 >>> from an.ir.compose import expression
->>> shot = Shot(id="s", style="cutout", duration=1.0,
+>>> shot = Shot(id="s", renderer="cutout", duration=1.0,
 ...             entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
 ...             actions=[expression("c", "angry", blend=0.0)])
 >>> [s.preset for s in expression_spans(shot, "c")]
