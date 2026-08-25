@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.timeline &mdash; an 0.1.60 documentation</title>
+  <title>an.adapters.cutout.timeline &mdash; an 0.1.61 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=5fe4e9ad"></script>
+      <script src="../../../../_static/documentation_options.js?v=fb9c6db4"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -211,9 +211,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.clip</span><span class="w"> </span><span class="kn">import</span> <span class="n">Clip</span><span class="p">,</span> <span class="n">Pose</span><span class="p">,</span> <span class="n">merge_poses</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.channel</span><span class="w"> </span><span class="kn">import</span> <span class="n">Channel</span><span class="p">,</span> <span class="n">Keyframe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.clip</span><span class="w"> </span><span class="kn">import</span> <span class="n">Clip</span><span class="p">,</span> <span class="n">LoopMode</span><span class="p">,</span> <span class="n">Pose</span><span class="p">,</span> <span class="n">merge_poses</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.clip</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate</span> <span class="k">as</span> <span class="n">_evaluate_clip</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover - types only</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.serialize</span><span class="w"> </span><span class="kn">import</span> <span class="n">CutoutSceneJSON</span>
 
 
 <div class="viewcode-block" id="PlacedClip">
@@ -292,6 +297,82 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">track_poses</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{}</span>
     <span class="k">return</span> <span class="n">merge_poses</span><span class="p">(</span><span class="o">*</span><span class="n">track_poses</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="timeline_from_scene">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/timeline.html#an.adapters.cutout.timeline.timeline_from_scene">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">timeline_from_scene</span><span class="p">(</span><span class="n">scene</span><span class="p">:</span> <span class="n">CutoutSceneJSON</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Timeline</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The compiled scene's `timeline`/`animations` as this module's `Timeline`.</span>
+
+<span class="sd">    `compile_shot` produces a serialisable document (`an.adapters.cutout.serialize`)</span>
+<span class="sd">    for the JS runtime; this rebuilds the *evaluable* form, so a caller can ask</span>
+<span class="sd">    what a compiled scene's pose is at time `t` without a browser. It is the</span>
+<span class="sd">    Python side of the parity contract: `evaluate_timeline` over this object is</span>
+<span class="sd">    the executable spec `runtime.js` is tested against.</span>
+
+<span class="sd">    Two fields are carried rather than defaulted, and both have cost a bug:</span>
+<span class="sd">    `loop_mode` (without it every loop evaluated as `once` — an#7) and a</span>
+<span class="sd">    list-valued `easing`, which is a cubic-bezier control quadruple and must</span>
+<span class="sd">    stay a tuple for `Keyframe`.</span>
+
+<span class="sd">    &gt;&gt;&gt; from an.adapters.cutout.compile import compile_shot</span>
+<span class="sd">    &gt;&gt;&gt; from an.ir.compose import tween</span>
+<span class="sd">    &gt;&gt;&gt; from an.ir.schema import Shot</span>
+<span class="sd">    &gt;&gt;&gt; shot = Shot(id="s1", renderer="cutout", duration=2.0,</span>
+<span class="sd">    ...             actions=[tween("root", "x", 10.0, 1.0, from_=0.0)])</span>
+<span class="sd">    &gt;&gt;&gt; scene = compile_shot(shot, mall=None, fps=24)</span>
+<span class="sd">    &gt;&gt;&gt; evaluate_timeline(timeline_from_scene(scene), 0.5)[("root", "x")]</span>
+<span class="sd">    5.0</span>
+<span class="sd">    """</span>
+    <span class="n">clips</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">aid</span><span class="p">:</span> <span class="n">Clip</span><span class="p">(</span>
+            <span class="n">aid</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+            <span class="n">loop_mode</span><span class="o">=</span><span class="n">LoopMode</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">loop_mode</span><span class="p">),</span>
+            <span class="n">channels</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">Channel</span><span class="p">(</span>
+                    <span class="n">ch</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+                    <span class="n">ch</span><span class="o">.</span><span class="n">property</span><span class="p">,</span>
+                    <span class="p">[</span>
+                        <span class="n">Keyframe</span><span class="p">(</span>
+                            <span class="n">k</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                            <span class="n">k</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                            <span class="nb">tuple</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">easing</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">easing</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">k</span><span class="o">.</span><span class="n">easing</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ch</span><span class="o">.</span><span class="n">keyframes</span>
+                    <span class="p">],</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">channels</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">aid</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">animations</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">Timeline</span><span class="p">(</span>
+        <span class="n">duration</span><span class="o">=</span><span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+        <span class="n">tracks</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">Track</span><span class="p">(</span>
+                <span class="n">t</span><span class="o">.</span><span class="n">target_root</span><span class="p">,</span>
+                <span class="p">[</span>
+                    <span class="n">PlacedClip</span><span class="p">(</span>
+                        <span class="n">clips</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">animation_id</span><span class="p">],</span>
+                        <span class="n">p</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+                        <span class="n">p</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                        <span class="n">p</span><span class="o">.</span><span class="n">speed</span><span class="p">,</span>
+                        <span class="c1"># Carried for the same reason as `target_root`: nothing</span>
+                        <span class="c1"># reads them YET (`evaluate_timeline` records the ramps</span>
+                        <span class="c1"># and does not apply them — additive blending is 2B),</span>
+                        <span class="c1"># and a reader that quietly drops a field it was handed</span>
+                        <span class="c1"># is a lossy "rebuilds the evaluable form".</span>
+                        <span class="n">p</span><span class="o">.</span><span class="n">blend_in</span><span class="p">,</span>
+                        <span class="n">p</span><span class="o">.</span><span class="n">blend_out</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">clips</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">scene</span><span class="o">.</span><span class="n">timeline</span><span class="o">.</span><span class="n">tracks</span>
+        <span class="p">],</span>
+    <span class="p">)</span></div>
 
 </pre></div>
 
