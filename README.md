@@ -47,7 +47,7 @@ A project is a small directory:
 my-scene/
 ├── scene.md            # human Markdown — what you and the agent edit
 ├── ir/scene.json       # Pydantic-validated SSOT (auto-synced)
-├── assets/             # characters, environments, voices, styles
+├── assets/             # characters, props, environments, voices, styles
 ├── artifacts/          # audio, viseme tracks, per-shot mp4s (content-hash cached)
 ├── output/             # final mp4s
 └── .an/                # decisions log + agent memory

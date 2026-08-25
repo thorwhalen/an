@@ -43,6 +43,7 @@ __all__ = [
     "EnvironmentsStore",
     "VoicesStore",
     "StylesStore",
+    "PropsStore",
     "ScenesStore",
     "AudioArtifactStore",
     "VisemeArtifactStore",

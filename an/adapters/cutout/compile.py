@@ -1056,8 +1056,9 @@ CONTAIN_FIT: str = "contain"
 #: also the mall store that resolves it (`render.ASSET_SRC_PREFIX_TO_STORE`).
 #: A parameter rather than a literal because the rig builder is the same code
 #: for a character and for a prop, and the store is the ONLY thing that differs
-#: about where their art lives — three copies of the string `"characters/"`
-#: were what made "a prop is a rig too" a rewrite instead of an argument
+#: about where their art lives. Two hardcoded copies of `"characters/"` — the
+#: `src` builder and the probe's own — reached three call sites, and that is
+#: what made "a prop is a rig too" read as a rewrite instead of an argument
 #: (an#108).
 CHARACTER_ART_PREFIX: str = "characters/"
 

@@ -19,6 +19,7 @@ def test_init_creates_full_layout():
             "ir/scene.json",
             "an.toml",
             "assets/characters",
+            "assets/props",
             "assets/environments",
             "assets/voices",
             "assets/styles",

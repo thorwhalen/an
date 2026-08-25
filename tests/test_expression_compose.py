@@ -27,8 +27,15 @@ from an.project import init, load
 from an.adapters.cutout.timeline import evaluate_timeline, timeline_from_scene
 
 ROOT = Path(__file__).resolve().parents[1]
-#: Corpus scenes this wave added — their contract hash is allowed to move.
-NEW_IN_WAVE_6 = {"expressions"}
+#: Corpus scenes whose contract hash is allowed to move in the PR that ADDS
+#: them — a scene with no committed ledger row has nothing to be compared to.
+#: `expressions` was Wave 6's own scene and carried this exemption while
+#: an#103 landed; it has had a row since, so the set is empty and the guard
+#: covers all eight. Keep it empty unless a PR is adding a scene, and empty it
+#: again in the PR that first blesses that scene's row (an#108 review, H-1:
+#: the exemption outlived its wave, and three later PRs claimed "all eight,
+#: no exemption" while the only guard checked seven).
+NEW_IN_WAVE: set[str] = set()
 
 
 @pytest.fixture(scope="module")
@@ -145,8 +152,8 @@ def test_every_corpus_contract_hash_equals_the_committed_ledger_row():
     row = max(rows, key=lambda r: r["generated_at"])
     checked = 0
     for name, fx in DFLT_FIXTURES.items():
-        if name not in row["scenes"] or name in NEW_IN_WAVE_6:
-            continue  # `expressions` is this wave's own scene; its hash moves with the solver
+        if name not in row["scenes"] or name in NEW_IN_WAVE:
+            continue  # only a scene the newest clean row has never measured
         checked += 1
         with tempfile.TemporaryDirectory() as tmp:
             work = stage_copy(ROOT / fx.path, Path(tmp))
@@ -159,7 +166,41 @@ def test_every_corpus_contract_hash_equals_the_committed_ledger_row():
                 for s in scene.timeline
             ]
         assert contract.scenes_contract_sha256(docs) == row["scenes"][name]["provenance"]["scene_contract_sha256"], name
-    assert checked >= 7, checked
+    # Every fixture, not "at least most of them". A floor below the corpus size
+    # lets a scene fall out of the guard — by an exemption, or by dropping out
+    # of the ledger row — while the count still passes.
+    #
+    # And the two ways of falling out are asserted SEPARATELY from the count,
+    # because a count derived from `NEW_IN_WAVE` moves with it: growing the
+    # exemption shrinks both sides and the equality holds. Only comparing the
+    # exemption against the row can catch that (an#108 review, H-1).
+    unmeasured = set(DFLT_FIXTURES) - set(row["scenes"])
+    assert unmeasured == NEW_IN_WAVE, (
+        f"scenes with no row in {row.get('commit', '?')}: {sorted(unmeasured)}; "
+        f"declared new: {sorted(NEW_IN_WAVE)}"
+    )
+    assert checked == len(DFLT_FIXTURES) - len(NEW_IN_WAVE), (
+        sorted(DFLT_FIXTURES), sorted(row["scenes"]), checked
+    )
+
+
+def test_no_scene_stays_exempt_from_the_hash_guard_once_it_has_a_row():
+    """An exemption is legitimate for exactly one thing: a scene the newest
+    committed row has never measured, because there is nothing to compare to.
+
+    It is not legitimate as a standing waiver, and it does not expire on its
+    own — `NEW_IN_WAVE_6 = {"expressions"}` outlived Wave 6 by four PRs, three
+    of which stated "all eight corpus hashes, no exemption" while the only
+    guard in the repo checked seven (an#108 review, H-1). The guard above
+    cannot notice: its expected count is derived from the same set.
+    """
+    rows = [json.load(open(p)) for p in ROOT.glob("misc/bench/ledger/*.json") if "dirty" not in p.name]
+    row = max(rows, key=lambda r: r["generated_at"])
+    stale = sorted(n for n in NEW_IN_WAVE if n in row["scenes"])
+    assert not stale, (
+        f"{stale} have committed ledger rows, so their hashes are comparable "
+        "and the exemption is now a hole. Remove them from NEW_IN_WAVE."
+    )
 
 
 def test_authored_wins_over_the_expression_with_a_warning(mall):
