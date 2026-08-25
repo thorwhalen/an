@@ -47,6 +47,22 @@ def _shot(*, actions=(), stage=None, ref="lamp", duration=2.0) -> Shot:
     )
 
 
+def _validate(shot, mall):
+    """`validate_semantic` over one shot, WITH the stores.
+
+    Without them the prop checks skip — deliberately, since "no store" and "no
+    descriptor" are different facts — so a test that omits them asserts
+    nothing.
+    """
+    from an.ir.schema import Meta, SceneIR
+
+    return validate_semantic(
+        SceneIR(meta=Meta(), timeline=[shot]),
+        available_characters=mall.get("characters"),
+        available_props=mall.get("props"),
+    )
+
+
 def _node(scene, name):
     def walk(n):
         if n.name == name:
@@ -71,15 +87,18 @@ def test_a_prop_compiles_instead_of_raising(mall):
     assert _node(scene, "body") is not None
 
 
-def test_validate_agrees_that_a_prop_is_renderable():
+def test_validate_agrees_that_a_prop_is_renderable(mall):
     """`_check_renderable` predicts what compile refuses. It used to predict a
     refusal that no longer happens — which is the same defect as missing one,
-    pointing the other way."""
-    from an.ir.schema import Meta, SceneIR
+    pointing the other way.
 
-    report = validate_semantic(SceneIR(meta=Meta(), timeline=[_shot()]))
-    kinds = [f for f in report.findings if "entities/0" in f.ir_path]
-    assert not kinds, [f.description for f in kinds]
+    Passing the STORE is the load-bearing half. The first version of this test
+    passed none, so it asserted the absence of findings from a check that never
+    ran — it would have passed identically if validate looked at nothing at
+    all (an#108 review, H6).
+    """
+    report = _validate(_shot(), mall)
+    assert report.passed, [f"[{f.severity}] {f.ir_path}: {f.description}" for f in report.findings]
 
 
 def test_a_set_action_times_itself_with_at_not_start():
@@ -356,3 +375,124 @@ duration: 2
     once = markdown_to_ir(md)
     twice = markdown_to_ir(ir_to_markdown(once))
     assert twice.timeline[0].actions[0].at == 1.25
+
+
+# --- validate's verdict IS compile's, on the prop path -----------------------
+
+
+def _compiles(shot, mall) -> bool:
+    try:
+        compile_shot(shot, mall=mall, fps=24, strict_assets=True)
+        return True
+    except CutoutCompileError:
+        return False
+
+
+@pytest.mark.parametrize(
+    "name,make",
+    [
+        ("resolves", lambda: _shot()),
+        ("missing ref", lambda: _shot(ref="chandelier")),
+        ("undeclared key", lambda: _shot(actions=[SetAction(target="lamp/body", property="lamp", value="flickering")])),
+        ("declared key", lambda: _shot(actions=[SetAction(target="lamp/body", property="lamp", value="on", at=1.0)])),
+        ("unknown channel", lambda: _shot(actions=[SetAction(target="lamp/body", property="glow", value="on")])),
+    ],
+)
+def test_validate_and_compile_reach_the_same_verdict(mall, name, make):
+    """The claim, tested as a claim.
+
+    `test_the_drawable_kinds_are_exactly_what_the_compiler_dispatches_on` pins
+    which KINDS are dispatched. It says nothing about descriptor resolution,
+    which is where the two actually disagreed: a prop ref missing from the
+    store, and a `CharacterDescriptor` sitting in the props store, both passed
+    validate and raised at compile (an#108 review, H1/H2). The harsher outcome
+    had the weaker prediction — a prop raises where a character falls back —
+    which is the exact inversion of what a pre-flight is for.
+    """
+    shot = make()
+    assert _validate(shot, mall).passed is _compiles(shot, mall), name
+
+
+def test_a_wrong_kind_document_in_the_props_store_is_an_ERROR_at_validate(tmp_path):
+    """Not merely "no descriptor": a `CharacterDescriptor` under `assets/props/`
+    is reported by name, because the fix is to move or retype the file rather
+    than to write one."""
+    store = PropsStore(tmp_path)
+    store["lamp"] = {"kind": "CharacterDescriptor", "name": "lamp"}
+    report = _validate(_shot(), {"props": store})
+    (finding,) = [f for f in report.findings if f.severity == "error"]
+    assert "PropDescriptor" in finding.description and "'props'" in finding.description
+
+
+def test_a_declared_key_whose_ART_is_missing_is_caught_at_validate(mall, tmp_path):
+    """The compiler registers only attachments whose files resolve, then
+    refuses a key whose art is gone. Validate read the DECLARED set, so a key
+    that cannot be drawn passed the free pre-flight and raised after the
+    author had paid for a browser launch — with `strict_assets` either way
+    (an#108 review, H3)."""
+    import os
+
+    os.remove(Path(mall["props"]._root) / "lamp" / "parts" / "on.svg")
+    shot = _shot(actions=[SetAction(target="lamp/body", property="lamp", value="on", at=0.5)])
+    report = _validate(shot, mall)
+    assert not report.passed
+    assert any("'off'" in f.description for f in report.findings), [
+        f.description for f in report.findings
+    ]
+    assert not _compiles(shot, mall)
+
+
+def test_a_store_that_was_not_supplied_skips_its_checks_rather_than_failing_them(mall):
+    """"No store" and "no descriptor" are different facts.
+
+    an#108's first pass changed the gate from "characters store absent → skip"
+    to "no stores at all → skip", which made
+    `validate_semantic(scene, available_characters=X)` — the signature every
+    caller outside this repo has — report EVERY prop swap as
+    "has no descriptor declaring asset sets" on a scene that compiles fine
+    (an#108 review, H5).
+    """
+    from an.ir.schema import Meta, SceneIR
+
+    shot = _shot(actions=[SetAction(target="lamp/body", property="lamp", value="on", at=0.5)])
+    scene = SceneIR(meta=Meta(), timeline=[shot])
+    assert validate_semantic(scene, available_characters={}).passed
+    assert validate_semantic(scene).passed
+    # …and supplying it does check.
+    assert _validate(_shot(ref="ghost"), mall).passed is False
+
+
+def test_an_expression_on_a_prop_is_an_error_even_though_it_compiles(mall):
+    """A DELIBERATE divergence, written down so it is not mistaken for the
+    other kind.
+
+    `_check_renderable`'s rule is "error wherever the pipeline raises". This is
+    the other rule: an `expression` targeting a prop compiles to NOTHING — the
+    face solver skips a non-character — and a silent no-op is what
+    `test_loud_discards.py` exists to prevent. So validate errors on a scene
+    that renders, on purpose, and says why: "it would compile to nothing".
+    """
+    from an.ir.compose import expression
+
+    shot = _shot(actions=[expression("lamp", preset="happy", duration=0.5)])
+    report = _validate(shot, mall)
+    assert not report.passed
+    assert any("compile to nothing" in f.description for f in report.findings), [
+        f.description for f in report.findings
+    ]
+    assert _compiles(shot, mall), "and it does compile — that is the divergence"
+
+
+def test_stage_placement_refuses_a_value_that_cannot_survive_a_round_trip():
+    """`inf` and `nan` serialize to JSON `null`, and re-validating that raises.
+    A scene file written with either is corrupt one way, and the author would
+    find out on the next load rather than at the edit that did it."""
+    import pydantic
+
+    for kwargs in ({"scale": float("inf")}, {"at": (float("nan"), 0.0)}, {"at": (float("inf"), 0.0)}):
+        with pytest.raises(pydantic.ValidationError):
+            StagePlacement(**kwargs)
+    # `gt=0` already covered these; pinned so the guard is not "loosened back".
+    for kwargs in ({"scale": 0.0}, {"scale": -1.0}):
+        with pytest.raises(pydantic.ValidationError):
+            StagePlacement(**kwargs)

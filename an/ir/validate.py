@@ -216,7 +216,23 @@ def _check_swap_references(
     """
     if not stores:
         return
+    # PER-KIND, not per-call. an#108's first pass changed the gate from
+    # "characters store absent → skip" to "no stores at all → skip", which made
+    # `validate_semantic(scene, available_characters=X)` — the signature every
+    # caller outside this repo has — report EVERY prop swap as
+    # "has no descriptor declaring asset sets" on a scene that compiles fine.
+    # A store that was not supplied means the check did not run for that kind;
+    # it never means the descriptor is missing.
     rigs = {e.id: e for e in shot.entities if e.kind in RIG_STORES}
+    #: Entities whose rig store was not supplied. Their checks are SKIPPED, not
+    #: failed: "no store" and "no descriptor" are different facts, and reporting
+    #: the first as the second is how a caller who passes only characters gets
+    #: an error on every prop swap in a scene that compiles fine.
+    unchecked = {
+        eid
+        for eid, e in rigs.items()
+        if stores.get(RIG_STORES[e.kind][0]) is None
+    }
     # The expression and dialogue-emotion checks below are CHARACTER-only:
     # a prop has no face.
     refs_by_entity = {e.id: e.ref for e in shot.entities if e.kind == "character"}
@@ -234,6 +250,8 @@ def _check_swap_references(
             if getattr(leaf, "kind", None) != "play":
                 continue
             entity_id = (getattr(leaf, "target", "") or "").split("/", 1)[0]
+            if entity_id in unchecked:
+                continue
             entity = rigs.get(entity_id)
             doc = _rig_document(entity, stores) if entity is not None else None
             # `play` resolves against a CHARACTER's animations. A prop has an
@@ -324,6 +342,8 @@ def _check_swap_references(
             continue
         target = getattr(action, "target", "") or ""
         entity_id = target.split("/", 1)[0]
+        if entity_id in unchecked:
+            continue
         entity = rigs.get(entity_id)
         desc = _rig_document(entity, stores) if entity is not None else None
         if desc is None:
@@ -348,6 +368,31 @@ def _check_swap_references(
             )
             continue
         keys = declared.get(prop) or {}
+        # …and the ART has to be there. The compiler registers only the
+        # attachments whose files resolve and then refuses a key whose art is
+        # missing, so a key that is DECLARED but undrawable passed validate and
+        # raised at compile — with `strict_assets` either way (an#108 review,
+        # H3). Same rule the rig builder's probe uses: a store with no
+        # filesystem root can answer nothing, so it must assume presence rather
+        # than drop every key.
+        art_exists = art_exists_for(
+            stores.get(RIG_STORES[entity.kind][0]), entity.ref
+        )
+        if art_exists is not None:
+            skin = (desc.get("skins") or {}).get("default") or {}
+            slots = skin.get("slots") or {}
+            drawable = {
+                key
+                for key, attachment_name in keys.items()
+                if any(
+                    art_exists(att["path"])
+                    for atts in slots.values()
+                    if attachment_name in atts
+                    for att in (atts[attachment_name],)
+                    if isinstance(att, dict) and att.get("path")
+                )
+            }
+            keys = {k_: v_ for k_, v_ in keys.items() if k_ in drawable}
         values = [
             v
             for v in (
@@ -559,17 +604,46 @@ def validate_semantic(
         _check_swap_references(shot, path, report, rig_stores)
 
         # Entity references resolve?
-        if available_characters is not None:
-            for j, entity in enumerate(shot.entities):
-                if (
-                    entity.kind == "character"
-                    and entity.ref not in available_characters
-                ):
+        for j, entity in enumerate(shot.entities):
+            if entity.kind not in RIG_STORES:
+                continue
+            store_name, want_kind = RIG_STORES[entity.kind]
+            store = rig_stores.get(store_name)
+            if store is None:
+                continue  # store not supplied → this check did not run
+            if entity.kind == "character":
+                # A WARNING: the compiler falls back to the built-in placeholder
+                # rig and the scene still renders. Deliberately not escalated —
+                # an asset-less project rendering placeholders is a supported
+                # way to work.
+                if entity.ref not in store:
                     report.add(
                         "warning",
                         f"{path}/entities/{j}",
                         f"character ref {entity.ref!r} not in characters store",
                     )
+                continue
+            # A prop has NO placeholder rig — the placeholder IS a humanoid, so
+            # falling back would draw a person where the prop should be — which
+            # makes an unresolvable prop a hard raise at compile. The pre-flight
+            # for a hard raise is an ERROR, and before an#108's review this arm
+            # did not exist at all: the harsher outcome had the weaker
+            # prediction, and `an validate` said "passed" about a scene that
+            # cannot render.
+            if _rig_document(entity, rig_stores) is None:
+                if entity.ref in store:
+                    why = (
+                        f"is in the {store_name!r} store but is not a "
+                        f"{want_kind} (rendering this shot raises)"
+                    )
+                else:
+                    why = (
+                        f"is not in the {store_name!r} store, and a {entity.kind} "
+                        "has no placeholder rig (rendering this shot raises)"
+                    )
+                report.add(
+                    "error", f"{path}/entities/{j}", f"{entity.kind} ref {entity.ref!r} {why}"
+                )
 
         # Dialogue voice refs resolve?
         if available_voices is not None:

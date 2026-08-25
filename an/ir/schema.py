@@ -110,9 +110,19 @@ class StagePlacement(_IRModel):
     """
 
     #: ``(x, y)`` in scene pixels from the stage centre. ``None`` = default layout.
-    at: tuple[float, float] | None = None
+    #:
+    #: `allow_inf_nan=False` on both fields, and it is not pedantry: pydantic
+    #: serializes `inf` and `nan` to JSON **null**, and re-validating that JSON
+    #: raises — so a scene file written with either is corrupt one way, and the
+    #: author finds out on the next load rather than at the edit that did it
+    #: (an#108 review, M-1). `gt=0` already refuses `scale=0` and `scale=-1`; it
+    #: does not refuse `inf`.
+    at: tuple[
+        Annotated[float, Field(allow_inf_nan=False)],
+        Annotated[float, Field(allow_inf_nan=False)],
+    ] | None = None
     #: Uniform scale multiplier on the built rig. ``1.0`` = the rig's own size.
-    scale: float = Field(default=1.0, gt=0)
+    scale: float = Field(default=1.0, gt=0, allow_inf_nan=False)
 
 
 class AssetRef(_IRModel):

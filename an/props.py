@@ -28,8 +28,12 @@ each of which turns a one-field change into a silent wrong render:
 2. The compiler's placeholder fallback draws a **person** where a lamp should
    be (the an#33 failure mode), so a prop whose art fails to resolve renders
    as a humanoid rather than as nothing.
-3. `an character validate` scores a correct prop at 21 blocking findings —
-   `REQUIRED_PARTS` (12) plus `MOUTH_SHAPES` (9), none of which a lamp has.
+3. `an character validate` scores a correct prop at **22** blocking findings —
+   `REQUIRED_PARTS` (12) plus `MOUTH_SHAPES` (9), none of which a lamp has,
+   plus "has no character.json", which is the tool saying out loud that it was
+   handed the wrong kind of document. (Measured on
+   `tests/fixtures/props/lamp/`; an earlier draft of this docstring said 21,
+   having added the two lists without running the tool.)
 
 **Why not a new minimal document with `states`.** That is `asset_sets`
 renamed: it would need a rename table at the compiler boundary and would cap a
