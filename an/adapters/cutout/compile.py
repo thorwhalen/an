@@ -1052,9 +1052,26 @@ SCENE_PX_PER_VIEW_BOX: float = 345.0
 CONTAIN_FIT: str = "contain"
 
 
-def _svg_asset_src(ref: str, rel_path: str) -> str:
-    """Path used inside the runtime dir, relative to ``index.html``."""
-    return f"characters/{ref}/{rel_path}"
+#: The `assets.textures` `src` prefix a rig's art is addressed under, which is
+#: also the mall store that resolves it (`render.ASSET_SRC_PREFIX_TO_STORE`).
+#: A parameter rather than a literal because the rig builder is the same code
+#: for a character and for a prop, and the store is the ONLY thing that differs
+#: about where their art lives. Two hardcoded copies of `"characters/"` — the
+#: `src` builder and the probe's own — reached three call sites, and that is
+#: what made "a prop is a rig too" read as a rewrite instead of an argument
+#: (an#108).
+CHARACTER_ART_PREFIX: str = "characters/"
+
+
+def _svg_asset_src(ref: str, rel_path: str, *, art_prefix: str = CHARACTER_ART_PREFIX) -> str:
+    """Path used inside the runtime dir, relative to ``index.html``.
+
+    >>> _svg_asset_src("maya", "parts/head.svg")
+    'characters/maya/parts/head.svg'
+    >>> _svg_asset_src("lamp", "parts/body.svg", art_prefix="props/")
+    'props/lamp/parts/body.svg'
+    """
+    return f"{art_prefix}{ref}/{rel_path}"
 
 
 def _register_texture(
@@ -1070,6 +1087,8 @@ def _register_texture(
 
 def _part_probe(
     characters_store: Mapping,
+    *,
+    art_prefix: str = CHARACTER_ART_PREFIX,
 ) -> Callable[[str], tuple[bool, tuple[float, float] | None]] | None:
     """A probe answering ``(art exists, the size it rasterises at)`` for a part.
 
@@ -1092,7 +1111,7 @@ def _part_probe(
     if root is None:
         return None
     base = Path(root)
-    prefix = "characters/"
+    prefix = art_prefix
 
     def probe(src: str) -> tuple[bool, tuple[float, float] | None]:
         if not src.startswith(prefix):
@@ -1218,6 +1237,7 @@ def _build_svg_character_subtree(
     textures: dict[str, AssetJSON],
     probe: Callable[[str], tuple[bool, tuple[float, float] | None]] | None = None,
     resolutions: list[AssetResolutionJSON] | None = None,
+    art_prefix: str = CHARACTER_ART_PREFIX,
 ) -> NodeJSON:
     """Build the scene subtree for a character, **from its descriptor's rig**.
 
@@ -1267,7 +1287,7 @@ def _build_svg_character_subtree(
         # (both eye slots carry `open`/`closed`), and the old `{entity}.{name}`
         # alias space was silently first-wins on cross-slot collision.
         alias = f"{entity.id}.{slot_name}.{attachment_name}"
-        return _register_texture(textures, alias, _svg_asset_src(ref, attachment.path))
+        return _register_texture(textures, alias, _svg_asset_src(ref, attachment.path, art_prefix=art_prefix))
 
     # Every attachment in the skin is registered, not just the active one, so a
     # swap has its texture already loaded when the key changes.
@@ -1283,7 +1303,7 @@ def _build_svg_character_subtree(
     for slot_name, attachments in skin.slots.items():
         resolved_here: dict[str, str] = {}
         for name, att in attachments.items():
-            src = _svg_asset_src(ref, att.path)
+            src = _svg_asset_src(ref, att.path, art_prefix=art_prefix)
             if probe is not None and not probe(src)[0]:
                 missing_art.append((slot_name, name, att.path))
                 continue
@@ -1320,7 +1340,7 @@ def _build_svg_character_subtree(
         bone_x += attachment.x
         bone_y += attachment.y
 
-        src = _svg_asset_src(ref, attachment.path)
+        src = _svg_asset_src(ref, attachment.path, art_prefix=art_prefix)
         extent = (probe(src)[1] if probe else None) or (
             (attachment.width, attachment.height)
             if attachment.width and attachment.height

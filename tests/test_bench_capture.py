@@ -231,3 +231,22 @@ def test_the_copy_does_not_inherit_a_previous_render(tmp_path):
         )
     finally:
         cleanup(capture)
+
+
+def test_dirty_paths_refuses_to_report_a_tree_it_could_not_read(tmp_path):
+    """"Clean" and "git did not answer" were the same value, and silently.
+
+    `git status` prints nothing to stdout when it fails, so `check=False` made
+    every failure read as an empty dirty-path list. That is not hypothetical:
+    a concurrent git in a linked worktree of this repo takes `index.lock`,
+    `git status` exits nonzero with empty stdout, and
+    `test_a_capture_leaves_the_repository_untouched` above fails as
+    `[] != [...]` — an assertion about the capture, pointing at nothing, in a
+    run that had been green fifty times.
+    """
+    from an.bench.capture import GitStatusUnavailable, dirty_paths
+
+    not_a_repo = tmp_path / "elsewhere"
+    not_a_repo.mkdir()
+    with pytest.raises(GitStatusUnavailable, match="git status"):
+        dirty_paths(not_a_repo)

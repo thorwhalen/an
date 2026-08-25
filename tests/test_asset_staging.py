@@ -100,7 +100,10 @@ def test_every_declared_prefix_maps_to_a_real_mall_store():
 @pytest.mark.parametrize(
     "src,needle",
     [
-        ("props/banner.png", "prefix is not one of"),
+        # NOT `props/` — that became a real prefix in an#108, and a test whose
+        # "unknown" example quietly turns known stops testing the unknown
+        # branch while staying green.
+        ("widgets/banner.png", "prefix is not one of"),
         ("characters/amy-v1/parts/missing.svg", "was not found at"),
     ],
 )

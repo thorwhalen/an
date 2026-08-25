@@ -310,8 +310,27 @@ def cleanup(capture: SceneCapture) -> None:
         shutil.rmtree(base, ignore_errors=True)
 
 
+class GitStatusUnavailable(RuntimeError):
+    """`git status` did not answer, so "the tree is clean" is not known.
+
+    Separated from an empty result on purpose. `git status` failing prints
+    nothing to stdout, so `check=False` turned every failure into "no dirty
+    paths" — indistinguishable from a clean tree, and *silently* so. Measured:
+    a concurrent `git` in a linked worktree of this repo takes `index.lock`,
+    `git status` exits nonzero with empty stdout, and
+    `test_a_capture_leaves_the_repository_untouched` fails with `[] != [...]`
+    — an assertion about the capture, pointing at nothing, in a run that has
+    been green fifty times. A check that could not run is not evidence that
+    nothing is wrong.
+    """
+
+
 def dirty_paths(repo_root: Path) -> list[str]:
-    """`git status --porcelain` lines, so a capture can prove it touched nothing."""
+    """`git status --porcelain` lines, so a capture can prove it touched nothing.
+
+    Raises :class:`GitStatusUnavailable` when git does not answer, rather than
+    reporting a clean tree it never observed.
+    """
     import subprocess
 
     out = subprocess.run(
@@ -321,4 +340,10 @@ def dirty_paths(repo_root: Path) -> list[str]:
         text=True,
         check=False,
     )
+    if out.returncode != 0:
+        raise GitStatusUnavailable(
+            f"`git status` exited {out.returncode} in {repo_root}: "
+            f"{(out.stderr or '').strip() or 'no stderr'}. A concurrent git in a "
+            "linked worktree holding `index.lock` is the usual cause."
+        )
     return sorted(line for line in out.stdout.splitlines() if line.strip())

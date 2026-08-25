@@ -107,6 +107,7 @@ def test_mall_keys_match_spec():
             "environments",
             "output",
             "previews",
+            "props",
             "scenes",
             "shots",
             "styles",
