@@ -23,6 +23,7 @@ from an.base import TRANSFORM_PROPERTIES
 from an.characters.play import art_exists_for, play_problems
 from an.characters.schema import CharacterDescriptor
 from an.expression.binding import expression_problems
+from an.ir.camera import CAMERA_MOVES, CameraError, camera_keys
 from an.ir.compose import flatten
 from an.ir.migrate import DocumentMigrationError, migrate
 from an.ir.sync import SceneValidationError, scene_from_json_doc
@@ -121,15 +122,14 @@ def validate_schema(doc: Any) -> ValidationReport:
 # -----------------------------------------------------------------------------
 
 
-#: Camera moves the cutout renderer implements. `hold` is a real no-op.
+#: Camera moves the renderer implements. `hold` is a real no-op.
 #:
-#: Duplicated from the compiler deliberately: importing it here would make the
-#: IR layer depend on an adapter, which is the wrong direction. The test suite
-#: pins the two together instead — the same shape `artful` uses for vocabulary
-#: shared across packages that must not depend on each other.
-_RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(
-    {"hold", "push_in", "pull_out", "zoom_in", "zoom_out"}
-)
+#: **Derived, not duplicated.** This was a hand-maintained frozenset reconciled
+#: with the compiler's table by a test — which works, and is not what "a move
+#: that validates cannot then raise" means; that means ONE table (an#109
+#: review, H-1). It moved to `an.ir.camera`, which is the IR layer, so validate
+#: can import it without depending on an adapter.
+_RENDERABLE_CAMERA_MOVES: frozenset[str] = frozenset(CAMERA_MOVES)
 
 #: Entity kinds the cutout renderer draws. `voice` is legitimately
 #: not drawable — they configure the render rather than appearing in it.
@@ -424,6 +424,42 @@ def _descriptor_for(ref, available_characters) -> CharacterDescriptor | None:
     return None
 
 
+def _check_camera(shot, path: str, report: "ValidationReport") -> None:
+    """Every way a camera can fail to render, reported for free (an#109).
+
+    The rule is `_check_renderable`'s: **error wherever the pipeline raises**,
+    so validate's verdict and the compiler's agree — and it is kept by calling
+    the compiler's own resolver rather than restating its rules. The one
+    finding that is NOT a raise is the last, and it is a warning: too few keys
+    is a pose rather than a move, which renders as if the camera were absent.
+    Nothing breaks, so nothing fails; the author still wrote a camera block
+    that does nothing, so it is still worth saying.
+
+    ``width``/``height`` are 1 because nothing here reads the resolved
+    distance — only whether resolving RAISES. Passing the real canvas would
+    make the check depend on a resolution the IR layer does not have.
+    """
+    camera = shot.camera
+    if camera is None:
+        return
+    # Every refusal, from the resolver the COMPILER uses. Not a second copy of
+    # its rules: `camera_keys` raises exactly where compiling raises, so this
+    # cannot drift from what it predicts (an#109 review, H-1).
+    try:
+        keys = camera_keys(shot, width=1, height=1)
+    except CameraError as e:
+        report.add("error", path, f"{e} Rendering this shot raises.")
+        return
+    if camera.keys is not None and len(keys) < 2:
+        report.add(
+            "warning",
+            f"{path}/keys",
+            f"{len(keys)} camera key(s) is a pose, not a move: the compiler "
+            "needs two to interpolate between, so this renders as if the "
+            "camera were absent. Add a second key, or remove the camera.",
+        )
+
+
 def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
     """Report, at validate time, what compile and render will refuse.
 
@@ -438,15 +474,8 @@ def _check_renderable(shot, path: str, report: "ValidationReport") -> None:
     the pipeline's verdict agree. A validator that disagrees with the thing it
     predicts is its own defect.
     """
-    if shot.camera is not None and shot.camera.move:
-        if shot.camera.move not in _RENDERABLE_CAMERA_MOVES:
-            report.add(
-                "error",
-                f"{path}/camera/move",
-                f"camera.move={shot.camera.move!r} is not implemented by the "
-                f"cutout renderer (it has: {sorted(_RENDERABLE_CAMERA_MOVES)}). "
-                "Rendering this shot raises.",
-            )
+    if shot.camera is not None:
+        _check_camera(shot, f"{path}/camera", report)
 
     for j, entity in enumerate(shot.entities):
         if (
@@ -501,6 +530,18 @@ RETIRED_KEYS: dict[str, dict[str, str]] = {
     "shot": {"style": "renderer"},
 }
 
+#: an#109's removed camera fields. A WARNING, not an error, and the difference
+#: is the harm: a surviving `style` silently picks the wrong RENDERER, while
+#: these three selected nothing — they described a 3D camera this package never
+#: had. What is left is dead weight in a file, so it is worth saying and not
+#: worth failing over.
+#:
+#: Reported at all because the migration cannot reach them: a document already
+#: at the current version is never migrated again, so a camera block that came
+#: through a sync between the version bump and this check keeps them forever as
+#: `extra="allow"` extras, and nothing else looks.
+RETIRED_CAMERA_KEYS: frozenset[str] = frozenset({"position", "target", "focal_length"})
+
 
 def _check_retired_keys(scene: SceneIR, report: "ValidationReport") -> None:
     """One ERROR per retired key still present as an `extra`.
@@ -522,6 +563,17 @@ def _check_retired_keys(scene: SceneIR, report: "ValidationReport") -> None:
                 f"so nothing else will tell you. Rename it to `{new}`.",
             )
     for i, shot in enumerate(scene.timeline):
+        camera_extra = getattr(shot.camera, "model_extra", None) or {}
+        stale = sorted(RETIRED_CAMERA_KEYS & set(camera_extra))
+        if stale:
+            report.add(
+                "warning",
+                f"timeline[{i}]/camera",
+                f"camera carries {stale}, removed in an#109 — they described a "
+                "3D camera this package never had (the cutout camera is "
+                "`root.pivot` plus `root.scale`) and are read by nothing. "
+                "`an sync` drops them; they are harmless until then.",
+            )
         for key, new in RETIRED_KEYS["shot"].items():
             if key in (shot.model_extra or {}):
                 report.add(

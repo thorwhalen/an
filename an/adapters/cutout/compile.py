@@ -65,6 +65,7 @@ from an.characters.play import (
 )
 from an.ir.compose import FlatAction, flatten
 from an.ir.schema import (
+    CameraKey,
     Action,
     AssetRef,
     ExpressionAction,
@@ -102,6 +103,8 @@ from an.characters.schema import (
     Slot,
 )
 from an.characters.svg_utils import raster_size
+from an.ir.camera import CAMERA_MOVES, PAN_FRACTION, CameraError
+from an.ir.camera import camera_keys as _camera_keys
 from an.ir.migrate import DocumentKind, migrate
 from an.props import PROP_DOCUMENT_KIND, PropDescriptor
 
@@ -639,7 +642,7 @@ def compile_shot(
     # Phase 7: wire camera.move ("push_in", "pull_out", "hold") into a scale
     # animation on the synthetic scene root so directors get visible camera
     # behavior without writing channels by hand.
-    _add_camera_clips(shot, animations, tracks)
+    _add_camera_clips(shot, animations, tracks, width=width, height=height)
     # AFTER action + viseme compilation, deliberately: a swap key the timeline
     # actually USES whose art is missing is recorded as a fallback during
     # those passes (usage-aware escalation, an#87), and this is the one place
@@ -3020,59 +3023,98 @@ def _subtract_intervals(
 
 
 # How much each named camera move zooms (final scale relative to start).
-_CAMERA_MOVES: dict[str, tuple[float, float]] = {
-    "hold": (1.0, 1.0),
-    "push_in": (1.0, 1.25),
-    "pull_out": (1.0, 0.8),
-    "zoom_in": (1.0, 1.5),
-    "zoom_out": (1.0, 0.7),
-}
+#: Which `root` property each `CameraKey` field drives, and the value the key
+#: carries when the camera is doing nothing. A channel is emitted ONLY for a
+#: property whose keys are not all at rest, which is what keeps `push_in`
+#: byte-identical to the document it produced before an#109 — and what makes
+#: `pan_left` emit pivots and no scales.
+_CAMERA_CHANNELS: tuple[tuple[str, str, float], ...] = (
+    ("x", "pivot_x", 0.0),
+    ("y", "pivot_y", 0.0),
+    ("zoom", "scale_x", 1.0),
+    ("zoom", "scale_y", 1.0),
+    ("rotation", "rotation", 0.0),
+)
+
+
+def camera_keys(shot: Shot, *, width: int, height: int) -> list[CameraKey]:
+    """:func:`an.ir.camera.camera_keys`, with its refusal typed for this adapter.
+
+    The resolver itself lives in the IR layer so `an.ir.validate` can call the
+    SAME function — one table, not two reconciled by a test. This wrapper only
+    re-raises `CameraError` as a `CutoutCompileError`, which is the compiler's
+    own boundary contract: every failure out of `compile_shot` is one type.
+    """
+    try:
+        return _camera_keys(shot, width=width, height=height)
+    except CameraError as e:
+        raise CutoutCompileError(str(e)) from e
 
 
 def _add_camera_clips(
     shot: Shot,
     animations: dict[str, AnimationClipJSON],
     tracks: list[TrackJSON],
+    *,
+    width: int,
+    height: int,
 ) -> None:
-    """If shot.camera.move is a known named move, emit a scale tween on the
-    synthetic scene root over the shot's full duration.
+    """Emit the shot's camera as channels on the synthetic scene root.
 
-    The synthetic root container in the JS runtime sits at canvas center and
-    scales the entire scene; per-character motion remains independent.
+    The root container sits at canvas centre; PixiJS composes
+    ``world = position + M·(local − pivot)``, so `root.pivot` IS a 2D camera
+    and `root.scale` is its zoom. Both were already applied by the runtime and
+    already in ``RUNTIME_APPLIED_PROPERTIES`` before an#109 — which is why a
+    translating camera is a COMPILER change with zero runtime change, and is
+    therefore checked on every PR rather than only on a labelled one.
+
+    Only properties that actually vary get a channel. That is what keeps the
+    five zoom moves byte-identical to the documents they produced before this
+    existed, and it is asserted rather than assumed.
     """
-    if shot.camera is None or shot.camera.move is None:
-        return
-    # Normalise BEFORE the emptiness test, or the guard grows an arbitrary seam:
-    # `move=""` fell through the falsiness check and was ignored, while
-    # `move="  "` reached the lookup and raised. Same input, two behaviours.
-    move = shot.camera.move.strip()
-    if not move:
-        return
-    if move == "hold":
-        return  # a real, correct no-op — not an unknown move
-    if move not in _CAMERA_MOVES:
-        raise CutoutCompileError(
-            f"shot {shot.id!r} asks for camera.move={move!r}, which the cutout "
-            f"renderer does not implement (it has: {sorted(_CAMERA_MOVES)}). "
-            "A translating camera — pan, track, whip-pan — needs a real 2D "
-            "camera node with per-layer parallax, which is planned (see "
-            "https://github.com/thorwhalen/an/issues/9); today the camera is a "
-            "scale tween on the scene root and cannot move sideways."
-        )
-    start_scale, end_scale = _CAMERA_MOVES[move]
+    keys = camera_keys(shot, width=width, height=height)
+    if len(keys) < 2:
+        return  # `hold`, an empty list, or a single pose: nothing to animate
     duration = max(0.001, float(shot.duration))
-    for axis in ("scale_x", "scale_y"):
-        anim_id = f"__camera__{shot.id}_{axis}"
+    # What the author already targeted on `root`. Camera clips are appended
+    # LAST and the evaluators are later-wins, so a collision does not error —
+    # it silently discards the author's channel. Measured before an#109:
+    # `set root scale_x 3.0` together with `camera.move: push_in` evaluated to
+    # 1.25 at the shot's end, the authored 3.0 gone, no warning anywhere.
+    authored = {
+        (channel.target, channel.property)
+        for animation in animations.values()
+        for channel in animation.channels
+    }
+    for field, prop, rest in _CAMERA_CHANNELS:
+        values = [float(getattr(k, field)) for k in keys]
+        if all(v == rest for v in values):
+            continue
+        if ("root", prop) in authored:
+            raise CutoutCompileError(
+                f"shot {shot.id!r}: the camera drives `root:{prop}` and an "
+                f"action also targets it. Camera clips are appended last and "
+                "the evaluators are later-wins, so the authored channel would "
+                "be discarded silently — which is why this raises instead. "
+                "Move the action to a child node, or express the camera with "
+                "`camera.keys` so both live in one place.\n\n"
+                "A deliberate divergence from the face solver, which resolves "
+                "the same class of collision by warning and letting the author "
+                "win: a camera is not a face, and a silently-ignored pan is "
+                "worse than a refused compile. Additive folding is the "
+                "eventual answer and is not this wave."
+            )
+        anim_id = f"__camera__{shot.id}_{prop}"
         animations[anim_id] = AnimationClipJSON(
             name=anim_id,
             duration=duration,
             channels=[
                 ChannelJSON(
                     target="root",
-                    property=axis,
+                    property=prop,
                     keyframes=[
-                        KeyframeJSON(time=0.0, value=start_scale, easing="ease_in_out"),
-                        KeyframeJSON(time=duration, value=end_scale),
+                        KeyframeJSON(time=float(k.at), value=v, easing=k.easing)
+                        for k, v in zip(keys, values)
                     ],
                 )
             ],

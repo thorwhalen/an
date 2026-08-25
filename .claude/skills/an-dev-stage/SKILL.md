@@ -11,18 +11,23 @@ fixed.
 
 ## 0. Six facts that change what you would otherwise write
 
-1. **The camera already exists.** `runtime.js` indexes the centre container as `"root"`
-   (`:648-656`) and PixiJS composes `world = position + M·(local − pivot)`, so `root.pivot_x/y`
-   *is* a 2D camera. `pivot_x`, `pivot_y`, `rotation`, `scale_x`, `scale_y` are all already
-   applied by the runtime and already in `RUNTIME_APPLIED_PROPERTIES`. A translating camera is a
-   **compiler** change with **zero runtime change** — so its *compiled document* is checked on
-   every PR; the pixels still need the labelled lane. And note **no corpus fixture emits a camera
-   clip today**, so the contract-hash guard is vacuously green for the camera: pin the emitted
-   document directly.
-2. **`migrate()` never runs on a SceneIR.** Every call in the tree passes
-   `kind="CharacterDescriptor"`; `ScenesStore.__getitem__`, `sync()` and `project.load` validate
-   raw JSON. A registered scene migration is decoration until the read path is wired — and with
-   `extra="allow"`, a renamed field lands as a **silent default**, not an error. Wire it first.
+1. **The camera already exists — and since an#109 it translates.** `runtime.js` indexes the
+   centre container as `"root"` (`:648-656`) and PixiJS composes
+   `world = position + M·(local − pivot)`, so `root.pivot_x/y` *is* a 2D camera. A translating
+   camera was a **compiler** change with **zero runtime change**, which is why it is checked on
+   every PR rather than only on a labelled one. **Landed:** `Camera.keys` + `CameraKey`,
+   `pan_left`/`pan_right`/`tilt_up`/`tilt_down`, the `an.ir.camera.camera_keys` resolver validate and compile literally
+   share, the collision rule, and the migration dropping `position`/`target`/`focal_length`
+   (schema `0.3.0`). Note **no corpus fixture emits a camera clip**, so the contract-hash guard is
+   vacuously green for the camera: `tests/test_camera.py` pins the emitted document directly.
+2. **`migrate()` runs on a SceneIR — since an#105, and only since then.** Before it, every call
+   in the tree passed `kind="CharacterDescriptor"` and a registered scene migration was decoration.
+   `scene_from_json_doc` is now the single choke point every read goes through (an AST test fails
+   on any other), and an#106 and an#109 both ship real ladders. What has NOT changed is why it
+   mattered: with `extra="allow"`, a renamed or removed field lands as a **silent default**, not an
+   error — and a document already at the current version is never migrated again, so a retired key
+   that reaches one is permanent. That last route is `an.ir.validate`'s `RETIRED_KEYS` /
+   `RETIRED_CAMERA_KEYS`, because no migration can see it.
 3. **Environment art in front of the characters is structurally unreachable today**, not merely
    missing: `_build_scene_root` runs environments and characters in two separate loops
    (env `:701-707`, characters `:708-724`), so entity order cannot interleave them. (A *node*
@@ -159,8 +164,9 @@ A pack must not declare a role it cannot change — `lip`, `mouth_fill`, `teeth`
 
 `0` wire `migrate()` into the SceneIR read path **(landed, an#105)** → `1` `Shot.style` →
 `Shot.renderer` (+ retire `kind="style"`), one migration **(landed, an#106)** → `2` promote the
-scene→`Timeline` reader as `timeline_from_scene` **(landed, an#107)** → `3` props (extraction alone,
-then the path) → `4` the translating camera → `5` plane environments (store-declared only) →
+scene→`Timeline` reader as `timeline_from_scene` **(landed, an#107)** → `3` props — the extraction
+alone, then the path **(landed, an#108: PRs #117 and #118)** → `4` the translating camera
+**(landed, an#109)** → `5` plane environments (store-declared only) →
 `6` the `stage_pan` fixture, goldens, metric, tripwire → `7` StylePack.
 
 Everything through `4` moves no hash. `5`–`7` move one, deliberately, for a scene that did not

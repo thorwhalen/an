@@ -80,7 +80,8 @@ def readable_without_migration(version: Any, kind: DocumentKind | None = None) -
     the next additive bump into a refusal of every project on disk (an#105
     review). Only the scene kind declares a floor; any other kind must migrate.
 
-    >>> readable_without_migration("0.2.0")
+    >>> from an.base import SCHEMA_VERSION
+    >>> readable_without_migration(SCHEMA_VERSION)
     True
     >>> readable_without_migration("0.1.0")  # below the floor since an#106
     False
@@ -200,6 +201,76 @@ def _warn_dropped(before: list, after: list, *, where: str) -> None:
     )
 
 
+#: Camera fields an#109 removed, and why each was dead. They were written into
+#: every `scene.md` this package ever generated — five committed documents in
+#: this repo alone — and read by NOTHING: `rg focal_length an/ tests/` found
+#: the schema line and no consumer.
+RETIRED_CAMERA_FIELDS: tuple[str, ...] = ("position", "target", "focal_length")
+
+
+@register_migration(SCENE_IR.name, "0.2.0", "0.3.0")
+def _drop_dead_camera_fields(doc: dict[str, Any]) -> dict[str, Any]:
+    """0.2.0 → 0.3.0 (an#109): the camera stops carrying a lens it never had.
+
+    `position`, `target` and `focal_length` described a 3D camera this package
+    has never had — the cutout camera is `root.pivot` plus `root.scale`, which
+    is two dimensions and a zoom. They defaulted, serialized, round-tripped
+    through every `scene.md`, and were read by nothing.
+
+    Dropped silently, unlike an#106's `kind="style"` entities: a defaulted
+    field nobody set is not something the author wrote, and warning about it
+    on every stored document would be noise on exactly the documents that had
+    nothing to do with it. A NON-default value is a different matter and is
+    reported, because that one someone typed.
+
+    >>> doc = {"version": "0.2.0", "kind": "SceneIR", "timeline": [
+    ...     {"id": "s1", "camera": {"focal_length": 50.0, "move": "hold"}}]}
+    >>> _drop_dead_camera_fields(doc)["timeline"][0]["camera"]
+    {'move': 'hold'}
+    """
+    # DEEP, because this migration POPS from nested camera dicts: a shallow
+    # copy leaves `timeline`, each shot and each camera shared with the
+    # caller, so `camera.pop(...)` strips the input the caller still holds.
+    # The `return doc` shape reads as pure and was not (an#109 review, M-4).
+    doc = copy.deepcopy(dict(doc))
+    doc["version"] = "0.3.0"
+    if "compatible_version" in doc:
+        doc["compatible_version"] = "0.3.0"
+    shots = doc.get("timeline")
+    if not isinstance(shots, list):
+        return doc
+    defaults = {"position": [0.0, 0.0, 0.0], "target": [0.0, 0.0, 0.0], "focal_length": 50.0}
+    for shot in shots:
+        if not isinstance(shot, dict):
+            continue
+        camera = shot.get("camera")
+        if not isinstance(camera, dict):
+            continue
+        def _is_default(field: str, value: Any) -> bool:
+            want = defaults[field]
+            if isinstance(want, list):
+                return isinstance(value, (list, tuple)) and list(value) == want
+            return value == want
+
+        authored = {
+            f: camera[f]
+            for f in RETIRED_CAMERA_FIELDS
+            if f in camera and not _is_default(f, camera[f])
+        }
+        for f in RETIRED_CAMERA_FIELDS:
+            camera.pop(f, None)
+        if authored:
+            warnings.warn(
+                f"migrating to 0.3.0 dropped camera {sorted(authored)} from shot "
+                f"{shot.get('id')!r}: an#109 removed them because they described a "
+                "3D camera this package never had — the cutout camera is "
+                "`root.pivot` plus `root.scale`. A non-default value was set, so "
+                "this one is said out loud; the defaults are dropped in silence.",
+                stacklevel=4,
+            )
+    return doc
+
+
 @register_migration(SCENE_IR.name, "0.1.0", "0.2.0")
 def _rename_style_to_renderer(doc: dict[str, Any]) -> dict[str, Any]:
     """0.1.0 → 0.2.0 (an#106): the renderer selector stops being called "style".
@@ -284,10 +355,11 @@ def migrate(
     migrations registered for this document's kind. Raises ``ValueError`` if no
     path exists between the source and target versions.
 
-    >>> migrate({"version": "0.2.0", "kind": "SceneIR"})["version"]
-    '0.2.0'
-    >>> migrate({"version": "0.1.0", "kind": "SceneIR"})["version"]  # the an#106 ladder
-    '0.2.0'
+    >>> from an.base import SCHEMA_VERSION
+    >>> migrate({"version": SCHEMA_VERSION, "kind": "SceneIR"})["version"] == SCHEMA_VERSION
+    True
+    >>> migrate({"version": "0.1.0", "kind": "SceneIR"})["version"] == SCHEMA_VERSION
+    True
     """
     doc_kind = kind_of(doc, kind=kind)
     target = target_version if target_version is not None else doc_kind.current_version

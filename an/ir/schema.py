@@ -20,8 +20,9 @@ Doctest:
 ...     meta=Meta(title="Park Bench", duration=45.0),
 ...     timeline=[Shot(id="s1", renderer="cutout", duration=45.0)],
 ... )
->>> scene.version
-'0.2.0'
+>>> from an.base import SCHEMA_VERSION
+>>> scene.version == SCHEMA_VERSION
+True
 >>> scene.kind
 'SceneIR'
 >>> scene.timeline[0].renderer
@@ -70,19 +71,68 @@ class Resolution(_IRModel):
     height: int = DEFAULT_RESOLUTION[1]
 
 
-class Camera(_IRModel):
-    """Camera state for a shot. Minimal placeholder; expanded in P2."""
+class CameraKey(_IRModel):
+    """One camera pose at one time — the explicit door behind the named moves.
 
-    position: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    target: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    focal_length: float = 50.0
-    # Interpreted by the adapter. The cutout renderer implements
-    # hold | push_in | pull_out | zoom_in | zoom_out and RAISES on anything
-    # else. It deliberately does not list "pan_left": the camera is a scale
-    # tween on the scene root, so it cannot translate at all, and advertising
-    # a move nothing implements is how it came to be documented here and dead
-    # in the compiler. A translating camera lands in Wave 7 of #9.
+    >>> CameraKey(at=1.0, x=-160.0, zoom=1.25).x
+    -160.0
+
+    **Sign convention**, stated because every surveyed tool disagrees: `+x`
+    moves the CAMERA right, which moves the content left. `zoom` is on-screen
+    magnification, so `1.25` means "everything 25% bigger", and it composes
+    through the pivot — a push-in during a pan zooms toward what the camera is
+    looking at rather than toward a fixed frame centre. `rotation` is camera
+    roll in radians.
+
+    `easing` defaults to **`None`, not `"ease_in_out"`**, and that is not a
+    style choice: today's emitter puts `"ease_in_out"` on the first keyframe
+    and `null` on the terminal one, so a per-key default of `"ease_in_out"`
+    would put it on both and move every camera scene's contract hash. The
+    named moves supply the easing they have always supplied.
+    """
+
+    at: Seconds = 0.0
+    #: Camera position in scene pixels. `+x` moves the camera right.
+    x: float = Field(default=0.0, allow_inf_nan=False)
+    y: float = Field(default=0.0, allow_inf_nan=False)
+    #: On-screen magnification. Must be > 0 — a zero or negative zoom is not a
+    #: camera, and the compiler would emit a degenerate root scale.
+    zoom: float = Field(default=1.0, gt=0, allow_inf_nan=False)
+    #: Camera roll, radians.
+    rotation: float = Field(default=0.0, allow_inf_nan=False)
+    easing: EasingSpec | None = None
+
+
+class Camera(_IRModel):
+    """Camera state for a shot: a named move, or explicit keys.
+
+    >>> Camera(move="push_in").move
+    'push_in'
+    >>> Camera(keys=[CameraKey(at=0.0), CameraKey(at=2.0, x=-200.0)]).keys[1].x
+    -200.0
+
+    **One code path, two front doors** — the shape the dialogue `[emotion]`
+    sugar already uses. A named `move` desugars to a key list; `keys` is that
+    list written out. Setting both raises, because a scene that says two
+    things about the same camera has no reading that is not a guess.
+
+    `keys` defaults to `None`, not `[]`, and that too is load-bearing: the
+    markdown writer dumps the camera with `exclude_none=True`, which KEEPS
+    empty lists — an empty default would write `keys: []` into every camera
+    block it regenerates.
+
+    `position`, `target` and `focal_length` were removed in an#109. They were
+    written into every `scene.md` this package ever generated and read by
+    nothing; a registered migration drops them.
+    """
+
+    #: A named preset — sugar for `keys`. The cutout renderer's vocabulary is
+    #: `an.adapters.cutout.compile.CAMERA_MOVES`; validate and the compiler are
+    #: pinned to the same table by test, because a move that validates and then
+    #: raises is the failure `_check_renderable` exists to prevent.
     move: str | None = None
+    #: The explicit door. `None` = use `move`.
+    keys: list[CameraKey] | None = None
 
 
 # -----------------------------------------------------------------------------
@@ -479,8 +529,9 @@ class SceneIR(_IRModel):
     A document is portable, diffable, and renderer-agnostic. Persisted as JSON
     at ``ir/scene.json`` inside an an project.
 
+    >>> from an.base import SCHEMA_VERSION
     >>> doc = SceneIR(meta=Meta(title="Hello"))
-    >>> doc.version == '0.2.0'
+    >>> doc.version == SCHEMA_VERSION
     True
     >>> round_tripped = SceneIR.model_validate_json(doc.model_dump_json())
     >>> round_tripped.meta.title

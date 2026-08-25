@@ -16,15 +16,6 @@ default_renderer: cutout
 ```yaml shot
 duration: 4.0
 camera:
-  position:
-  - 0.0
-  - 0.0
-  - 0.0
-  target:
-  - 0.0
-  - 0.0
-  - 0.0
-  focal_length: 50.0
   move: push_in
 ```
 
