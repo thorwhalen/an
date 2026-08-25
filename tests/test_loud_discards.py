@@ -30,7 +30,7 @@ from pathlib import Path
 import pytest
 
 from an.adapters.cutout.compile import (
-    _CAMERA_MOVES,
+    CAMERA_MOVES,
     _build_scene_root,
     _runtime_node_paths,
     CutoutCompileError,
@@ -40,6 +40,7 @@ from an.adapters.cutout.compile import (
 )
 from an.audio.pipeline import AudioPipelineError, produce_audio_for_scene
 from an.ir.schema import (
+    CameraKey,
     AssetRef,
     Camera,
     Dialogue,
@@ -63,16 +64,26 @@ def _character(entity_id: str = "charlie") -> AssetRef:
 # ------------------------------------------------------------------- 1. camera
 
 
-def test_an_unknown_camera_move_raises_and_names_the_wave():
+def test_an_unknown_camera_move_raises_and_lists_the_ones_that_exist():
+    """`pan_left` was this test's unknown move until an#109 implemented it.
+
+    Which is the point of the test rather than an inconvenience: an
+    unimplemented move must RAISE, and the day one becomes implemented the
+    test has to be given a name that is still unknown — otherwise it quietly
+    stops testing anything, which is how `test_bench_corpus`'s "unknown
+    prefix" example rotted (an#108).
+    """
     shot = Shot(
         id="s1",
         renderer="cutout",
         duration=1.0,
         entities=[_character()],
-        camera=Camera(move="pan_left"),
+        camera=Camera(move="whip_pan"),
     )
-    with pytest.raises(CutoutCompileError, match="pan_left"):
+    with pytest.raises(CutoutCompileError, match="whip_pan") as e:
         compile_shot(shot)
+    # …and names what DOES exist, so the reader's next move is obvious.
+    assert "pan_left" in str(e.value) and "push_in" in str(e.value)
 
 
 def test_hold_is_a_real_no_op_and_must_not_raise():
@@ -128,7 +139,7 @@ def test_the_schema_no_longer_advertises_a_move_the_compiler_lacks():
         if re.search(r"not implement|does not|RAISES|raises|NOT\b", line):
             disclaimed |= set(re.findall(r'"(\w+)"', line))
     advertised = quoted - disclaimed
-    unimplemented = sorted(advertised - set(_CAMERA_MOVES) - {"hold"})
+    unimplemented = sorted(advertised - set(CAMERA_MOVES) - {"hold"})
     assert not unimplemented, (
         f"Camera's docs present {unimplemented} as usable move names, but the "
         "cutout compiler does not implement them and now raises"
@@ -616,7 +627,10 @@ def test_a_js_runtime_throw_arrives_as_a_typed_error_naming_the_frame():
 
 _UNRENDERABLE_SHOTS = {
     "camera": lambda: Shot(id="s1", renderer="cutout", duration=1.0,
-                           entities=[_character()], camera=Camera(move="pan_left")),
+                           entities=[_character()], camera=Camera(move="whip_pan")),
+    "camera both doors": lambda: Shot(id="s1", renderer="cutout", duration=1.0,
+                                      entities=[_character()],
+                                      camera=Camera(move="push_in", keys=[CameraKey(at=0.0)])),
     "narration": lambda: Shot(id="s1", renderer="cutout", duration=1.0,
                               narration=[Narration(text="once")]),
     "play": lambda: Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()],
@@ -691,7 +705,7 @@ def test_the_validators_camera_list_matches_the_compilers():
     """
     from an.ir.validate import _RENDERABLE_CAMERA_MOVES
 
-    assert set(_RENDERABLE_CAMERA_MOVES) == set(_CAMERA_MOVES), (
+    assert set(_RENDERABLE_CAMERA_MOVES) == set(CAMERA_MOVES), (
         "the validator and the compiler disagree about which camera moves exist"
     )
 

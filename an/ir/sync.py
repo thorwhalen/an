@@ -42,6 +42,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -163,7 +164,9 @@ def markdown_to_ir(md_text: str) -> SceneIR:
         }
         # Camera, options, etc., come straight from the YAML if present.
         if "camera" in shot_yaml:
-            shot_kwargs["camera"] = shot_yaml["camera"]
+            shot_kwargs["camera"] = _strip_retired_camera_fields(
+                shot_yaml["camera"], shot_id=shot_id
+            )
         if "options" in shot_yaml:
             shot_kwargs["options"] = shot_yaml["options"]
         # Whitelisted, like `camera`: this reader enumerates shot keys, so a
@@ -185,6 +188,54 @@ def _extract_title(md_text: str) -> str:
         if line.startswith("# ") and not line.startswith("## "):
             return line[2:].strip()
     return ""
+
+
+#: What a camera block's dead fields defaulted to, so a value someone actually
+#: TYPED can be told apart from one the writer emitted.
+_RETIRED_CAMERA_DEFAULTS: dict[str, Any] = {
+    "position": [0.0, 0.0, 0.0],
+    "target": [0.0, 0.0, 0.0],
+    "focal_length": 50.0,
+}
+
+
+def _strip_retired_camera_fields(camera: Any, *, shot_id: str) -> Any:
+    """Drop an#109's removed camera fields from a `scene.md` camera block.
+
+    The stored-JSON side is a registered migration; this is the same rule on
+    the surface that carries no schema version. Dropped SILENTLY when the value
+    is the default the writer emitted — every `scene.md` this package generated
+    since 0.1.0 carries `position`, `target` and `focal_length`, and warning on
+    all of them would be noise on exactly the documents that had nothing to do
+    with it. A non-default value warns, because that one someone typed.
+
+    Not a refusal, unlike an#106's `default_style:`. That rename would have
+    silently replaced the author's declared RENDERER with the default; these
+    fields selected nothing at all — they described a 3D camera this package has
+    never had, and were read by nothing.
+    """
+    if not isinstance(camera, dict):
+        return camera
+    camera = dict(camera)
+    authored = {}
+    for field, default in _RETIRED_CAMERA_DEFAULTS.items():
+        if field not in camera:
+            continue
+        value = camera.pop(field)
+        if isinstance(default, list):
+            if not (isinstance(value, (list, tuple)) and list(value) == default):
+                authored[field] = value
+        elif value != default:
+            authored[field] = value
+    if authored:
+        warnings.warn(
+            f"shot {shot_id!r}: camera {sorted(authored)} dropped — an#109 "
+            "removed them because they described a 3D camera this package "
+            "never had (the cutout camera is `root.pivot` plus `root.scale`). "
+            "A non-default value was set, so this is said out loud.",
+            stacklevel=3,
+        )
+    return camera
 
 
 def _split_by_shots(md_text: str) -> dict[str, Any]:

@@ -417,7 +417,7 @@ def _build_gaze_plus_expression(work: Path) -> Path:
 
 def _build_camera(work: Path) -> Path:
     parts = [_meta("The camera moves the compiler implements", 8.0)]
-    for i, move in enumerate(("hold", "push_in", "pull_out", "zoom_in"), start=1):
+    for i, move in enumerate(("hold", "push_in", "pan_right", "zoom_in"), start=1):
         parts += [
             "\n",
             _shot(f"s{i}", 2.0, camera=move),
@@ -426,6 +426,23 @@ def _build_camera(work: Path) -> Path:
             f"\n```dialogue\nmaya: {move}\n```\n",
         ]
     return _render(_project(work, scene_md="".join(parts), characters=("maya",)))
+
+
+def _build_pan(work: Path) -> Path:
+    """A pan across two characters, so the translation is legible.
+
+    One character would slide off and read as "the character moved". Two,
+    spaced apart, read as the camera moving between them — which is what it
+    is: `root.pivot` translating, with every child riding along.
+    """
+    md = (
+        _meta("The camera pans", 3.0)
+        + "\n"
+        + _shot("s1", 3.0, camera="pan_right")
+        + "\n"
+        + _entities("maya", "charlie")
+    )
+    return _render(_project(work, scene_md=md, characters=("maya", "charlie")))
 
 
 def _build_alpha(work: Path) -> Path:
@@ -847,17 +864,40 @@ DEMOS: tuple[Demo, ...] = (
         slug="camera",
         title="The camera moves that actually exist",
         shows=(
-            "`hold`, `push_in`, `pull_out`, `zoom_in` — and that is the whole list. "
-            "The camera is a scale tween on the scene root, so it cannot translate: "
-            "there is no pan. An unrecognised move **raises** rather than rendering "
-            "nothing, which is how `pan_left` once came to be documented and dead."
+            "`hold`, `push_in`, `pan_right`, `zoom_in` — four of the nine the compiler "
+            "implements, one per shot. An unrecognised move **raises** rather than "
+            "rendering nothing, which is how `pan_left` once came to be documented and "
+            "dead; an#109 implemented it instead."
         ),
         how=(
-            "`camera: {move: push_in}` in the shot block → `_add_camera_clips`. "
-            "The four shots run in the order listed above; the scale change is what "
-            "you are watching for."
+            "`camera: {move: push_in}` in the shot block → `camera_keys` → "
+            "`_add_camera_clips`. The four shots run in the order listed above; a zoom "
+            "is a `root` scale and a pan is a `root` pivot, and only the properties "
+            "that actually vary get a channel."
         ),
         build=_build_camera,
+    ),
+    Demo(
+        slug="pan",
+        title="The camera pans",
+        shows=(
+            "The camera translates. Two characters stand apart and the frame moves "
+            "between them — nobody walks. Before an#109 this was impossible and said "
+            "so: the camera was a scale tween on the scene root, and `pan_left` was "
+            "documented and dead. It turned out the camera already existed — PixiJS "
+            "composes `world = position + M·(local − pivot)`, and the runtime has "
+            "always indexed the centre container as `root` — so this is a **compiler** "
+            "change with no runtime change at all."
+        ),
+        how=(
+            "`camera: {move: pan_right}` in the shot block. A named move is sugar for "
+            "`camera: {keys: [...]}`, which is the same code path written out — "
+            "`camera_keys` in `an/adapters/cutout/compile.py` resolves one to the "
+            "other, and validate calls it too, so a move that validates cannot then "
+            "raise. A pan travels a third of the frame; write `keys` for any other "
+            "distance."
+        ),
+        build=_build_pan,
     ),
     Demo(
         slug="alpha",

@@ -19,10 +19,13 @@ from typing import Literal, TypeAlias, get_args
 #: changes, also bump COMPATIBLE_VERSION and add a migration in `ir.migrate`.
 #: 0.2.0 renamed `Shot.style` -> `Shot.renderer` and `Meta.default_style` ->
 #: `Meta.default_renderer`, and retired `AssetRef(kind="style")` (an#106).
-SCHEMA_VERSION: str = "0.2.0"
+#: 0.3.0 removed `Camera.position` / `.target` / `.focal_length`, which
+#: described a 3D camera this package never had, and gave `Camera` a `keys`
+#: list so it can translate (an#109).
+SCHEMA_VERSION: str = "0.3.0"
 
 #: Minimum Scene IR version this code can still read without migration.
-COMPATIBLE_VERSION: str = "0.2.0"
+COMPATIBLE_VERSION: str = "0.3.0"
 
 
 # -- Render defaults ----------------------------------------------------------

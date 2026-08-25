@@ -16,15 +16,6 @@ default_renderer: cutout
 ```yaml shot
 duration: 6.0
 camera:
-  position:
-  - 0.0
-  - 0.0
-  - 0.0
-  target:
-  - 0.0
-  - 0.0
-  - 0.0
-  focal_length: 50.0
   move: hold
 ```
 
@@ -52,15 +43,6 @@ charlie [thinking]: Did you ever wonder why we always meet here?
 ```yaml shot
 duration: 6.0
 camera:
-  position:
-  - 0.0
-  - 0.0
-  - 0.0
-  target:
-  - 0.0
-  - 0.0
-  - 0.0
-  focal_length: 50.0
   move: push_in
 ```
 

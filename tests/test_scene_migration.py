@@ -388,7 +388,13 @@ def test_a_stored_0_1_0_document_is_renamed_on_read(tmp_path):
         encoding="utf-8",
     )
     scene = ScenesStore(project)["main"]
-    assert scene.version == "0.2.0" and scene.compatible_version == "0.2.0"
+    # Derived, not typed: the whole point of the ladder is that a stored 0.1.0
+    # document arrives at whatever THIS build reads, so a literal here would
+    # have to be edited on every bump and would say nothing when it wasn't.
+    from an.base import COMPATIBLE_VERSION, SCHEMA_VERSION
+
+    assert scene.version == SCHEMA_VERSION
+    assert scene.compatible_version == COMPATIBLE_VERSION
     assert scene.meta.default_renderer == "manim"
     assert scene.timeline[0].renderer == "cutout"
     assert "style" not in scene.timeline[0].model_dump()
