@@ -27,6 +27,7 @@ Evaluation semantics in Phase 2A:
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -35,7 +36,7 @@ from an.adapters.cutout.clip import Clip, LoopMode, Pose, merge_poses
 from an.adapters.cutout.clip import evaluate as _evaluate_clip
 
 if TYPE_CHECKING:  # pragma: no cover - types only
-    from an.adapters.cutout.serialize import CutoutSceneJSON
+    from an.adapters.cutout.serialize import CutoutSceneJSON, NodeJSON
 
 
 @dataclass(slots=True)
@@ -176,3 +177,152 @@ def timeline_from_scene(scene: CutoutSceneJSON) -> Timeline:
             for t in scene.timeline.tracks
         ],
     )
+
+
+# --- screen space -------------------------------------------------------------
+#
+# `evaluate_timeline` returns a POSE — `{(target, property): value}` — and a
+# pose is not a position. Nothing in `an/` composed one until an#111, which is
+# why the pan measurement could not be written: a rigid pan on `root` leaves
+# every plane's LOCAL x at zero, so a local channel reads "no parallax" for a
+# stage that is parallaxing correctly.
+
+
+@dataclass(frozen=True, slots=True)
+class Transform2D:
+    """One node's local transform, in the runtime's own vocabulary.
+
+    Field names and defaults mirror `applyTransform` in `runtime.js` exactly —
+    `x`, `y`, `rotation`, `scale_x`, `scale_y`, `pivot_x`, `pivot_y` — because
+    the point of this class is to agree with the vendored engine rather than to
+    re-derive it. `skew` is deliberately absent: PixiJS composes skew into the
+    same matrix, but no emitter in this package produces a skew channel, and a
+    field nothing writes is a claim this compositor cannot honour.
+    """
+
+    x: float = 0.0
+    y: float = 0.0
+    rotation: float = 0.0
+    scale_x: float = 1.0
+    scale_y: float = 1.0
+    pivot_x: float = 0.0
+    pivot_y: float = 0.0
+
+    def apply(self, point: tuple[float, float]) -> tuple[float, float]:
+        """This node's local point, in its PARENT's coordinates.
+
+        ``world = position + M·(local − pivot)`` — the composition PixiJS
+        performs, and the reason `root.pivot` is a 2D camera: moving the pivot
+        moves everything the node contains, in the opposite direction.
+
+        >>> Transform2D(x=10.0).apply((0.0, 0.0))
+        (10.0, 0.0)
+        >>> Transform2D(pivot_x=25.0).apply((0.0, 0.0))
+        (-25.0, 0.0)
+        >>> Transform2D(scale_x=2.0).apply((5.0, 0.0))
+        (10.0, 0.0)
+        """
+        lx, ly = point[0] - self.pivot_x, point[1] - self.pivot_y
+        sx, sy = lx * self.scale_x, ly * self.scale_y
+        if self.rotation:
+            cos_r, sin_r = math.cos(self.rotation), math.sin(self.rotation)
+            sx, sy = sx * cos_r - sy * sin_r, sx * sin_r + sy * cos_r
+        return self.x + sx, self.y + sy
+
+
+def transform_of(node: NodeJSON, pose: Pose | None = None) -> Transform2D:
+    """A node's transform, with ``pose`` overriding what the document declares.
+
+    The runtime applies a pose value by assigning the property on the display
+    object, so a channel REPLACES the declared value rather than adding to it —
+    which is why the parallax compensation carries the plane's own offset in
+    every keyframe instead of an offset from it.
+    """
+    t = node.transform
+    values = {
+        "x": t.x,
+        "y": t.y,
+        "rotation": t.rotation,
+        "scale_x": t.scale_x,
+        "scale_y": t.scale_y,
+        "pivot_x": t.pivot_x,
+        "pivot_y": t.pivot_y,
+    }
+    if pose:
+        for (target, prop), value in pose.items():
+            if target == node.name and prop in values and isinstance(value, (int, float)):
+                values[prop] = float(value)
+    return Transform2D(**values)
+
+
+def screen_position(
+    scene: CutoutSceneJSON,
+    path: str,
+    *,
+    pose: Pose | None = None,
+    point: tuple[float, float] = (0.0, 0.0),
+) -> tuple[float, float]:
+    """Where ``point`` in ``path``'s local space lands on the canvas.
+
+    The composition the runtime performs, walked from the node up to `root`
+    and then offset by the canvas centre — which is where `runtime.js` places
+    the root container.
+
+    ``pose`` is keyed by the FULL path (`"street/hills"`), matching what
+    `evaluate_timeline` returns, and each node reads only its own entry.
+
+    >>> from an.adapters.cutout.serialize import CutoutSceneJSON, NodeJSON, TimelineJSON, TransformJSON
+    >>> scene = CutoutSceneJSON(
+    ...     scene=NodeJSON(name="root", children=[
+    ...         NodeJSON(name="hill", transform=TransformJSON(x=40.0))]),
+    ...     timeline=TimelineJSON(duration=1.0),
+    ... )
+    >>> scene.meta.width, scene.meta.height = 320, 240
+    >>> screen_position(scene, "hill")
+    (200.0, 120.0)
+
+    …and moving the camera's pivot moves it the other way, which is the whole
+    reason `root.pivot` is the camera:
+
+    >>> screen_position(scene, "hill", pose={("root", "pivot_x"): 25.0})
+    (175.0, 120.0)
+    """
+    chain = _node_chain(scene.scene, path)
+    at = point
+    for node, node_path in reversed(chain):
+        at = transform_of(node, _pose_for(pose, node_path)).apply(at)
+    return at[0] + scene.meta.width / 2.0, at[1] + scene.meta.height / 2.0
+
+
+def _pose_for(pose: Pose | None, path: str) -> Pose | None:
+    """The pose entries for one node, re-keyed to its bare name."""
+    if not pose:
+        return None
+    name = path.rsplit("/", 1)[-1]
+    return {
+        (name, prop): value for (target, prop), value in pose.items() if target == path
+    }
+
+
+def _node_chain(root: NodeJSON, path: str) -> list[tuple[NodeJSON, str]]:
+    """``[(node, its path)]`` from ``path`` up to and including the root.
+
+    Raises rather than returning an empty chain: a path that names no node is a
+    caller error, and silently measuring the root's position instead is the
+    kind of plausible wrong answer this package refuses elsewhere.
+    """
+    chain: list[tuple[NodeJSON, str]] = [(root, root.name)]
+    node = root
+    walked: list[str] = []
+    for part in path.split("/"):
+        found = next((c for c in node.children if c.name == part), None)
+        if found is None:
+            where = "/".join(walked) or root.name
+            raise KeyError(
+                f"no node {part!r} under {where!r}; it has "
+                f"{[c.name for c in node.children]}"
+            )
+        walked.append(part)
+        node = found
+        chain.append((node, "/".join(walked)))
+    return chain

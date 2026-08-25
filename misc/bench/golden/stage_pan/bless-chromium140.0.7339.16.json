@@ -1,0 +1,46 @@
+{
+  "blessed_at": "2026-08-25T16:41:12Z",
+  "chromium_build": "140.0.7339.16",
+  "criterion": "sha256 of the DECODED RGB array, never the file bytes: Chromium 1187 -> 1223 changes every PNG file and zero pixels.",
+  "fps": 24,
+  "frames": [
+    {
+      "bytes": 834,
+      "file": "f0000-chromium140.0.7339.16.png",
+      "frame_key": "f0000",
+      "index": 0,
+      "local_index": 0,
+      "sha256": "0d7229cc908d67ccdeb0d606e9f84541bbf9633162d6bee43647545d4a10c677",
+      "shot_id": "pan",
+      "time": 0.0
+    },
+    {
+      "bytes": 841,
+      "file": "f0008-chromium140.0.7339.16.png",
+      "frame_key": "f0008",
+      "index": 8,
+      "local_index": 8,
+      "sha256": "d28e77ea382f1aa350678bc36f30464c869f2fa9b87c487a85e4da6f64e3705d",
+      "shot_id": "pan",
+      "time": 0.3333333333333333
+    }
+  ],
+  "git": {
+    "branch": "wave7-pr-6",
+    "dirty": true,
+    "sha": "a71c14a199dd6c8af29e9d385d106cc80862e609"
+  },
+  "reason": "an#111: the stage_pan fixture's first goldens \u2014 three planes at depths 0.25/1.0/2.0 under a zoom-free pan, pinned at frames 0 and 8 where every plane's displacement is an exact pixel count",
+  "removed": [],
+  "resolution": [
+    320,
+    240
+  ],
+  "scene": "stage_pan",
+  "scene_contract_sha256": "f45b7035e6fc1cd5ea84327b64e02b0e679306fe4e943bbdccbb6be475610474",
+  "shot_ids": [
+    "pan"
+  ],
+  "source": "misc/bench/corpus/stage_pan",
+  "what_moves": "three coloured blocks at depths 0.25 / 1.0 / 2.0 under a zoom-free pan (an#111). What moves between the goldens is the SEPARATION: the blocks start aligned and end 10 / 40 / 80 px apart, which is the parallax and nothing else. Frame 8, not the mid-frame: the camera travels 5 px per frame and the far plane moves a quarter of that, so only every fourth frame lands every block on an exact pixel boundary \u2014 at any other frame the anti-aliased edge changes the exact-colour mask's SIZE, and a centroid measured against a different shape is not a displacement (the measurement refuses it outright). Zoom is held constant on purpose: the x = 0 probe that cancels it in the JSON half does not reach a centroid, which sits at the plane's own offset."
+}

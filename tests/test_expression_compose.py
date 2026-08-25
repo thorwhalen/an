@@ -40,7 +40,7 @@ ROOT = Path(__file__).resolve().parents[1]
 #: has no committed ledger row yet, so there is nothing for its hash to be
 #: compared to. `test_no_scene_stays_exempt_from_the_hash_guard_once_it_has_a_row`
 #: goes red the moment a row lands, which is how it gets removed.
-NEW_IN_WAVE: set[str] = {"prop_swap"}
+NEW_IN_WAVE: set[str] = {"prop_swap", "stage_pan"}
 
 
 @pytest.fixture(scope="module")

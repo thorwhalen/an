@@ -287,6 +287,20 @@ class MetricSpec:
     provisional: bool = False
     unreviewed: bool = False
     tripwire: bool = False
+    #: What a scene must HAVE for this row to exist at all, or ``""`` when the
+    #: row applies to every scene (an#111).
+    #:
+    #: The render-side panel rule is "nothing may be null on a real capture,
+    #: because a null render-side row is a blind panel". That rule assumes
+    #: every metric could have been measured. `stage_min_plane_ratio_gap`
+    #: could not: a displacement ratio needs two planes moving at different
+    #: depths, and `single_character` has no planes at all — so its null is
+    #: structural, not a gap in the instrument.
+    #:
+    #: Declared rather than hardcoded in the test, so the panel rule keeps
+    #: naming its own exceptions instead of a test file carrying a list the
+    #: registry does not know about.
+    requires: str = ""
     notes: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
@@ -1074,6 +1088,111 @@ METRICS: dict[str, MetricSpec] = {
                 "REFUTED: only the global-moment reduction is blind. Killing "
                 "SSIM outright would have discarded the best numpy-only detector "
                 "available.",
+            ),
+        ),
+        _spec(
+            key="stage_min_plane_ratio_gap",
+            family="B",
+            requires="a multiplane stage: two or more colour-filled planes",
+            role="diagnostic",
+            unit="ratio",
+            sentence=(
+                "The smallest gap between any two planes' displacement RATIOS "
+                "on a panning multiplane stage (an#111). Each plane's centroid "
+                "displacement is divided by the reference plane's, so a stage "
+                "that parallaxes gives the declared depths back — on "
+                "`stage_pan`, 0.25 / 1.0 / 2.0 — and a stage that flattened "
+                "gives every plane 1.0 and this row zero. `unavailable`, never "
+                "zero, for a scene with fewer than two colour-filled planes: "
+                "a scene with nothing to compare has no ratio, and reporting "
+                "that as flattened would fire on every other fixture."
+            ),
+            optimum=Optimum(
+                kind="guard",
+                note=(
+                    "Not a quality dial: a larger gap is not a better picture, "
+                    "it is a fixture whose depths are further apart. It exists "
+                    "so a regression that flattens the parallax moves a ledger "
+                    "number instead of waiting for someone to look at a GIF."
+                ),
+            ),
+            predictions={
+                "high_crf": Prediction(
+                    "not_applicable",
+                    reason="computed on the pre-encode PNGs; no encode change can reach it",
+                ),
+                "disabled_aa": Prediction(
+                    None,
+                    gate=(
+                        "AA-off changes which pixels carry a plane's exact colour "
+                        "along its edges, so a centroid can shift by a fraction of "
+                        "a pixel and the mask COUNT can change — which the "
+                        "measurement refuses outright as a clipped plane. Gated, "
+                        "not predicted: the outcome is 'the instrument declines', "
+                        "which is neither better nor worse."
+                    ),
+                ),
+                "supersample": Prediction(
+                    None,
+                    gate=(
+                        "same as disabled_aa: an edge-quality lever moves the exact-"
+                        "colour mask's boundary, and this measurement is defined on "
+                        "exact colours"
+                    ),
+                ),
+            },
+            notes=(
+                "The trap this metric is shaped around: today's centre-anchored "
+                "zoom ALREADY gives unequal per-plane displacements, so 'the "
+                "planes moved at different rates' is satisfied by a scene with no "
+                "parallax at all. The JSON half of the measurement probes at "
+                "scene-space x = 0, where the zoom term cancels exactly; the pixel "
+                "half cannot (a centroid sits at the plane's own offset), so the "
+                "`stage_pan` fixture holds zoom CONSTANT instead.",
+                "Ratios are taken against the LARGEST mover, always. The pixel "
+                "half cannot see a `depth`, so a depth-aware reference makes the "
+                "two halves report different numbers for one stage — measured "
+                "while this landed: 0.75 against the `depth == 1` plane and 0.375 "
+                "against the largest mover, for the same measurement.",
+                "Measured at the first bless: 0.375, the far/mid gap on depths "
+                "0.25 / 1.0 / 2.0 (reported as ratios 0.125 / 0.5 / 1.0). The "
+                "`stage_planes_parallaxed` tripwire's floor is half of it, which "
+                "is the `expression_min_pairwise_changed_px` precedent followed "
+                "literally.",
+            ),
+        ),
+        _spec(
+            key="stage_planes_parallaxed",
+            family="B",
+            requires="a multiplane stage: two or more colour-filled planes",
+            role="tripwire",
+            unit="boolean",
+            sentence=(
+                "True when the planes moved at DIFFERENT rates — i.e. the stage "
+                "parallaxed rather than panning as one rigid image. The same "
+                "measurement as `stage_min_plane_ratio_gap`, read as a verdict: "
+                "a boolean and the number beside it must be the same evidence, "
+                "or a reader has to reconcile them."
+            ),
+            optimum=Optimum(
+                kind="guard",
+                note="A change detector. Counts zero toward any criterion.",
+            ),
+            predictions={
+                "high_crf": Prediction(
+                    "not_applicable",
+                    reason="computed on the pre-encode PNGs",
+                ),
+                "disabled_aa": Prediction(None, gate="see stage_min_plane_ratio_gap"),
+                "supersample": Prediction(None, gate="see stage_min_plane_ratio_gap"),
+            },
+            notes=(
+                "There is deliberately NO `flat_camera` mutation lever to prove "
+                "this fires. A compile-time parallax change moves the scene's "
+                "contract hash, so `bench-compare` refuses the row at "
+                "comparability before any family is examined — the recorded "
+                "`step_hz` verdict, verbatim. The proof belongs in "
+                "`an bench-mutants` as a declared guard mutant.",
             ),
         ),
         _spec(
