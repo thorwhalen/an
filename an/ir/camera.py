@@ -150,7 +150,9 @@ def camera_keys(shot: Shot, *, width: int, height: int) -> list[CameraKey]:
     return [k.model_copy(update={"x": k.x * span, "y": k.y * span}) for k in keys]
 
 
-def _refuse_keys_that_cannot_play(shot: Shot, keys: list[CameraKey], duration: float) -> None:
+def _refuse_keys_that_cannot_play(
+    shot: Shot, keys: list[CameraKey], duration: float
+) -> None:
     """Keys the compiler would emit as keyframes that never play.
 
     Raised rather than warned, and raised HERE rather than only reported by

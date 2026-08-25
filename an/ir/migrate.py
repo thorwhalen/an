@@ -239,13 +239,18 @@ def _drop_dead_camera_fields(doc: dict[str, Any]) -> dict[str, Any]:
     shots = doc.get("timeline")
     if not isinstance(shots, list):
         return doc
-    defaults = {"position": [0.0, 0.0, 0.0], "target": [0.0, 0.0, 0.0], "focal_length": 50.0}
+    defaults = {
+        "position": [0.0, 0.0, 0.0],
+        "target": [0.0, 0.0, 0.0],
+        "focal_length": 50.0,
+    }
     for shot in shots:
         if not isinstance(shot, dict):
             continue
         camera = shot.get("camera")
         if not isinstance(camera, dict):
             continue
+
         def _is_default(field: str, value: Any) -> bool:
             want = defaults[field]
             if isinstance(want, list):
