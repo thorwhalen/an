@@ -183,7 +183,9 @@ def _warn_dropped(before: list, after: list, *, where: str) -> None:
     the thing dropped did nothing (an#106 review)."""
     if len(after) == len(before):
         return
-    gone = [e.get("id") for e in before if isinstance(e, dict) and e.get("kind") == "style"]
+    gone = [
+        e.get("id") for e in before if isinstance(e, dict) and e.get("kind") == "style"
+    ]
     warnings.warn(
         f"migrating to 0.2.0 dropped {len(before) - len(after)} `style` "
         f"entit{'y' if len(before) - len(after) == 1 else 'ies'} ({gone}) from {where}: "

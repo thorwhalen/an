@@ -440,7 +440,7 @@ def _check_retired_keys(scene: SceneIR, report: "ValidationReport") -> None:
                 "error",
                 f"meta/{key}",
                 f"`{key}` was renamed to `{new}` (an#106) and this value is "
-                f"being ignored — the schema still ACCEPTS it (`extra=\"allow\"`), "
+                f'being ignored — the schema still ACCEPTS it (`extra="allow"`), '
                 f"so nothing else will tell you. Rename it to `{new}`.",
             )
     for i, shot in enumerate(scene.timeline):
