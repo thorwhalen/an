@@ -450,3 +450,184 @@ def test_a_non_python_mutant_is_still_checked_for_everything_but_syntax():
         assert any("occurs 0 times" in p for p in problems), problems
     finally:
         mutants_mod.MUTANTS = original
+
+
+# ------------------------------------ an#67: a killed sweep must not leave one
+
+
+#: The mutated spelling used by the interruption fixtures. Plausible on
+#: purpose — that is the property that makes a leftover dangerous.
+_VICTIM_OLD = 'VALUE = "original"'
+_VICTIM_NEW = 'VALUE = "mutated"'
+_VICTIM_ORIGINAL = _VICTIM_OLD + "\n"
+_VICTIM_MUTATED = _VICTIM_NEW + "\n"
+#: How long the parent waits for the child to write the mutation / to die.
+_INTERRUPT_TIMEOUT_S = 60.0
+#: How long the fixture's guard file blocks for. Long enough that the kill
+#: always lands mid-run (the parent signals within ~0.1 s of the mutation
+#: appearing), short enough that a leaked grandchild cannot outlive the suite.
+_GUARD_SLEEP_S = 30
+
+
+def _victim_mutant(**overrides):
+    """One synthetic mutant over a throwaway tree, so no real file is touched."""
+    from an.bench.mutants import Mutant
+
+    fields = dict(
+        name="victim",
+        file="victim.py",
+        old=_VICTIM_OLD,
+        new=_VICTIM_NEW,
+        caught_by="test_victim.py",
+        why="a fixture, not a claim about any guard",
+    )
+    fields.update(overrides)
+    return Mutant(**fields)
+
+
+def _victim_tree(tmp_path, *, mutated: bool = False):
+    """A minimal root `run_mutants` can operate on: one victim, one slow guard."""
+    (tmp_path / "victim.py").write_text(
+        _VICTIM_MUTATED if mutated else _VICTIM_ORIGINAL, encoding="utf-8"
+    )
+    (tmp_path / "test_victim.py").write_text(
+        f"import time\n\n\ndef test_slow():\n    time.sleep({_GUARD_SLEEP_S})\n",
+        encoding="utf-8",
+    )
+    return tmp_path
+
+
+@pytest.mark.parametrize("signame", ["SIGTERM", "SIGINT"])
+def test_a_killed_sweep_restores_the_tree(tmp_path, signame):
+    """MUTATION: drop `restore_on_termination` from `run_mutants` (SIGTERM only).
+
+    Ctrl-C was always fine — SIGINT raises `KeyboardInterrupt` and the `finally`
+    runs. SIGTERM stops the interpreter without raising, so nothing ran and the
+    mutated file stayed on disk; a real `pkill -f bench-mutants` left one there
+    (an#67). Both are asserted, because the SIGINT case is what pins that the
+    fix for the other one did not break the path that already worked.
+
+    A real signal to a real process, not a simulated one: what is being tested
+    is precisely whether the interpreter's teardown reaches the restore.
+    """
+    import os
+    import signal
+    import subprocess
+    import sys
+    import time
+
+    if sys.platform == "win32":
+        pytest.skip(
+            "Windows has no POSIX signal delivery: SIGTERM terminates without "
+            "running handlers and os.kill refuses SIGINT, so this asserts "
+            "nothing there"
+        )
+
+    root = _victim_tree(tmp_path)
+    driver = tmp_path / "_drive.py"
+    # `.format`, not an f-string: an f-string containing a backslash is 3.12+
+    # syntax and this package supports 3.10, where the whole FILE would then
+    # fail to parse — the collection-time failure `test_browser_gate.py` exists
+    # to keep out of this suite.
+    driver.write_text(
+        (
+            "import sys\n"
+            "from pathlib import Path\n"
+            "from an.bench import mutants as M\n"
+            "\n"
+            "M.MUTANTS = (M.Mutant(name='victim', file='victim.py', "
+            "old={old!r}, new={new!r}, caught_by='test_victim.py', "
+            "why='a fixture'),)\n"
+            "M.run_mutants(root=Path(sys.argv[1]))\n"
+        ).format(old=_VICTIM_OLD, new=_VICTIM_NEW),
+        encoding="utf-8",
+    )
+    victim = root / "victim.py"
+    child = subprocess.Popen(
+        [sys.executable, str(driver), str(root)],
+        cwd=root,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        deadline = time.monotonic() + _INTERRUPT_TIMEOUT_S
+        while victim.read_text(encoding="utf-8") != _VICTIM_MUTATED:
+            assert child.poll() is None, (
+                "the child exited before it mutated anything, so the kill below "
+                f"would prove nothing: {child.communicate()}"
+            )
+            assert time.monotonic() < deadline, "the child never wrote the mutation"
+            time.sleep(0.05)
+        os.kill(child.pid, getattr(signal, signame))
+        child.communicate(timeout=_INTERRUPT_TIMEOUT_S)
+    finally:
+        if child.poll() is None:  # pragma: no cover - only on a failing run
+            child.kill()
+            child.communicate()
+    assert victim.read_text(encoding="utf-8") == _VICTIM_ORIGINAL, (
+        f"{signame} left the tree mutated — this is the an#67 defect, and the "
+        "mutation is plausible enough to be committed unnoticed"
+    )
+
+
+def test_a_file_left_mutated_is_reported_as_an_interrupted_run(tmp_path, monkeypatch):
+    """MUTATION: fold the leftover branch back into the `occurs 0 times` message.
+
+    SIGKILL cannot be handled, so the next run's report is the only thing left.
+    "occurs 0 times" sends the reader looking for a refactor that never
+    happened; the message has to name the kill, the file and the repair.
+    """
+    from an.bench.mutants import check_sites
+
+    _victim_tree(tmp_path, mutated=True)
+    monkeypatch.setattr("an.bench.mutants.MUTANTS", (_victim_mutant(),))
+
+    problems = check_sites(tmp_path)
+
+    assert len(problems) == 1, problems
+    (problem,) = problems
+    assert "LEFT MUTATED" in problem
+    assert "victim.py" in problem
+    assert _VICTIM_OLD in problem, "the repair must be spelled out"
+    assert "occurs 0 times" not in problem
+
+
+def test_a_moved_site_is_not_reported_as_an_interrupted_run(tmp_path, monkeypatch):
+    """The other direction: the two diagnoses must stay distinct.
+
+    MUTATION: report every absent site as a leftover.
+
+    A refactor that moved the code and a kill that left the mutation are
+    different failures with different repairs, and calling the first one a
+    leftover would send a reader to `git checkout` a file they had just
+    legitimately edited.
+    """
+    from an.bench.mutants import check_sites
+
+    root = _victim_tree(tmp_path)
+    (root / "victim.py").write_text('VALUE = "moved on"\n', encoding="utf-8")
+    monkeypatch.setattr("an.bench.mutants.MUTANTS", (_victim_mutant(),))
+
+    (problem,) = check_sites(root)
+
+    assert "occurs 0 times" in problem
+    assert "LEFT MUTATED" not in problem
+
+
+def test_the_signal_boundary_puts_the_previous_handlers_back():
+    """MUTATION: drop the `finally` that restores the previous handlers.
+
+    `an.bench.mutants` is importable, and a library that permanently rewires
+    SIGTERM for its process is a worse defect than the one this fixes.
+    """
+    import signal
+
+    from an.bench.mutants import RESTORE_ON_SIGNALS, restore_on_termination
+
+    before = {sig: signal.getsignal(sig) for sig in RESTORE_ON_SIGNALS}
+    with restore_on_termination() as took:
+        assert set(took) == set(RESTORE_ON_SIGNALS), "nothing was actually taken"
+        for sig in took:
+            assert signal.getsignal(sig) not in (before[sig], signal.SIG_DFL)
+    assert {sig: signal.getsignal(sig) for sig in RESTORE_ON_SIGNALS} == before

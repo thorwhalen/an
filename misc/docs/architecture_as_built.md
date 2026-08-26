@@ -78,7 +78,9 @@ an/
 │   ├── golden.py            the golden gate and `--bless`; compares DECODED pixels
 │   ├── compare.py           two rows in, a verdict or a REFUSAL out (an#40)
 │   ├── mutations.py         the levers, through seams the shipped code has
-│   ├── mutants.py           guard mutants as DATA, so the proof re-runs
+│   ├── mutants.py           guard mutants as DATA, so the proof re-runs; a killed
+│   │                        sweep restores (SIGTERM raises) and the next run names
+│   │                        a leftover as one (SIGKILL cannot be caught) — an#67
 │   ├── environment.py       the environment tuple, split by comparison scope
 │   └── run.py               capture -> panel -> row
 │

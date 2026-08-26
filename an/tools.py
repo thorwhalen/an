@@ -460,7 +460,14 @@ def bench_mutants(names: str = "", quiet: bool = False) -> str:
     """
     import sys as _sys
 
-    from an.bench.mutants import MUTANTS, MutantError, format_results, run_mutants
+    from an.bench.mutants import (
+        INTERRUPTED_EXIT_CODE,
+        MUTANTS,
+        MutantError,
+        MutantRunInterrupted,
+        format_results,
+        run_mutants,
+    )
 
     wanted = [n.strip() for n in names.split(",") if n.strip()] or None
     if wanted:
@@ -480,6 +487,12 @@ def bench_mutants(names: str = "", quiet: bool = False) -> str:
         # print the warning and pass (an#41 review).
         print(e)
         _sys.exit(1)
+    except MutantRunInterrupted as e:
+        # A sweep is slow enough that interrupting it is normal (an#67). Say
+        # that the tree survived, because the alternative — a traceback — leaves
+        # a reader wondering whether a mutated file is still on disk.
+        print(f"{e}\nthe tree was restored; nothing was left mutated")
+        _sys.exit(INTERRUPTED_EXIT_CODE)
     survivors = [r for r in results if not r["caught"]]
     text = (
         f"{len(results) - len(survivors)}/{len(results)} caught"

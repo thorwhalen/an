@@ -377,6 +377,30 @@ Three properties of the declaration, each earned:
 
 Add one whenever you add a guard. If it survives, the guard is decoration.
 
+**A killed sweep does not leave the mutation on disk** (an#67), and that is two
+mechanisms because they cover different kills:
+
+- **SIGTERM is turned into an exception** for the duration
+  (`restore_on_termination`), so the restoring `finally` runs. Ctrl-C never
+  needed this — SIGINT raises — but `kill`, a timeout, an agent harness reaping
+  a background task and a closing terminal do not raise, and the sweep is slow
+  enough that interrupting it is the normal thing to do. The previous handlers
+  go back on the way out: this module is importable, and a library that
+  permanently rewires SIGTERM is a worse defect than the one it fixes.
+- **SIGKILL cannot be handled at all**, so the load-bearing half is the
+  recovery: `check_sites` — first thing in every sweep, and in the default CI
+  leg through `test_every_declared_mutant_still_applies` — recognises a file
+  whose mutated text is present and whose original is gone, and reports it as an
+  interrupted run naming the file, the mutant and the exact restoring edit.
+
+Why that matters more here than in an ordinary tool: **every mutation in this
+registry is chosen to be plausible.** A leftover compiles, renders, produces
+frames of the declared size and leaves the suite green apart from the one test
+that names it — so it is a defect a developer can commit without noticing, and
+the next run's message is the only thing standing in the way. If you see
+`LEFT MUTATED` in a `check_sites` report, do not go looking for the refactor
+that moved the code; there was none.
+
 ## Two measured facts that change what counts as a witness
 
 Both found while building an#38, both by running the levers rather than by
