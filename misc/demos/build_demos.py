@@ -518,10 +518,20 @@ def _build_style_pack(work: Path) -> Path:
     panes = []
     for variant, pack in (
         ("plain", None),
-        ("noir", StylePack(name="noir", roles={
-            "skin": "#cfcfcf", "clothing": "#23232b", "hair": "#0d0d0d",
-            "leg": "#15151b", "sky": "#3c3c47", "ground": "#232329",
-        })),
+        (
+            "noir",
+            StylePack(
+                name="noir",
+                roles={
+                    "skin": "#cfcfcf",
+                    "clothing": "#23232b",
+                    "hair": "#0d0d0d",
+                    "leg": "#15151b",
+                    "sky": "#3c3c47",
+                    "ground": "#232329",
+                },
+            ),
+        ),
     ):
         pane = work / variant
         pane.mkdir(parents=True, exist_ok=True)
@@ -529,14 +539,12 @@ def _build_style_pack(work: Path) -> Path:
         if pack is not None:
             (pane / "assets" / "styles").mkdir(parents=True, exist_ok=True)
             (pane / "assets" / "styles" / "noir.json").write_text(
-                json.dumps(json.loads(pack.model_dump_json()), indent=2), encoding="utf-8"
+                json.dumps(json.loads(pack.model_dump_json()), indent=2),
+                encoding="utf-8",
             )
             meta = meta.replace("```\n", "style_pack: noir\n```\n", 1)
         md = (
-            meta
-            + "\n"
-            + _shot("s1", 2.0)
-            + "\n```yaml entities\n"
+            meta + "\n" + _shot("s1", 2.0) + "\n```yaml entities\n"
             "- kind: environment\n  id: room\n  store: environments\n  ref: park\n"
             "- kind: character\n  id: charlie\n  store: characters\n  ref: charlie-v1\n"
             "```\n"
@@ -545,8 +553,24 @@ def _build_style_pack(work: Path) -> Path:
         panes.append(_render(pane))
     out = work / "style-pack.mp4"
     subprocess.run(
-        ["ffmpeg", "-v", "error", "-y", "-i", str(panes[0]), "-i", str(panes[1]),
-         "-filter_complex", "hstack", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", str(out)],
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-i",
+            str(panes[0]),
+            "-i",
+            str(panes[1]),
+            "-filter_complex",
+            "hstack",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-an",
+            str(out),
+        ],
         check=True,
     )
     return out
