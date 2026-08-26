@@ -546,7 +546,11 @@ class Meta(_IRModel):
         should leave no trace (an#112).
         """
         data = handler(self)
-        if isinstance(data, dict) and data.get("style_pack") is None:
+        # Truthiness, not `is None`: an empty string is not a pack — the
+        # resolver already treats it as none — and serializing a visible
+        # `style_pack: ""` that does nothing is the shape this omit exists to
+        # prevent (an#112 review, L2).
+        if isinstance(data, dict) and not data.get("style_pack"):
             data.pop("style_pack", None)
         return data
 

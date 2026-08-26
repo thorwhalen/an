@@ -19,15 +19,23 @@ and they are the reason this module is small:
    wrong-tone lid.
 4. `tint` occurs zero times in the runtime.
 
-A pack reaches SVG art **through the factory, at authoring time** — which
-already owns the colour seams — and the compiler **warns**, naming the entities
-it could not reach. A pack that silently did nothing to an SVG rig would be the
+**Nothing recolours SVG art today.** A pack seam in the character factory —
+which already owns the colour seams — is the obvious home for it and is NOT
+built; the compiler **warns**, naming the entities it could not reach, and says
+so rather than pointing at a flag that does not exist. Until then, an SVG rig
+is recoloured by editing its art or generating it in the colours you want. A pack that silently did nothing to an SVG rig would be the
 worst of the options.
 
 **A pack must not declare a role it cannot change.** `lip`, `mouth_fill`,
 `teeth`, `tongue` and the eye's white are literals inside `runtime.js`; a role
 that resolves to nothing is worse than an absent one, and :data:`UNREACHABLE_ROLES`
 plus its test is what keeps the list honest.
+
+**No `line.width`.** A first draft carried one, and nothing read it: the
+procedural rig's stroke is a `runtime.js` literal and an SVG rig's is inside
+its drawing, so the field was written, serialized, and consumed nowhere — the
+same shape this module refuses in `UNREACHABLE_ROLES`, and a rule is not a rule
+if it exempts the module that states it. It comes back when something reads it.
 
 Colours are **hex strings**, deliberately not DTCG colour objects:
 `bench/palette.py` mirrors `runtime.js` verbatim, and a second colour
@@ -48,7 +56,6 @@ __all__ = [
     "STYLE_DOCUMENT_KIND",
     "REACHABLE_ROLES",
     "UNREACHABLE_ROLES",
-    "LineStyle",
     "StylePack",
     "resolve_palette",
 ]
@@ -67,8 +74,14 @@ STYLE_DOCUMENT_KIND: DocumentKind = register_kind(
 #: stamps them into the document the runtime draws.
 #:
 #: `skin`, `clothing` and `hair` are `_CHARACTER_PALETTES`' three components;
-#: `leg` is the compiler's own separate literal for legs; `pupil` is stamped as
-#: the eye visual's `color`; `sky` and `ground` are the environment presets'.
+#: `leg` and `pupil` are the compiler's own literals (`DFLT_LEG_COLOUR`,
+#: `DFLT_PUPIL_COLOUR`); `sky` and `ground` are the environment presets'.
+#:
+#: Every one of these is compiled with a marker colour and asserted to reach
+#: the document by `tests/test_styles.py`. `pupil` shipped in this set wired to
+#: NOTHING (an#112 review) because the guard checked set membership against the
+#: set it was checking — a declared-reachable role that reaches nothing is the
+#: same defect as an unreachable one, and it needs the same kind of test.
 REACHABLE_ROLES: frozenset[str] = frozenset(
     {"skin", "clothing", "hair", "leg", "pupil", "sky", "ground"}
 )
@@ -86,14 +99,6 @@ UNREACHABLE_ROLES: dict[str, str] = {
     "tongue": "runtime.js `_TONGUE_COLOR`",
     "eye_sclera": "runtime.js draws the eye white as a literal 0xffffff in makeEye",
 }
-
-
-class LineStyle(BaseModel):
-    """Outline weight. One field, because one is what the runtime reads."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    width: float = Field(default=1.0, ge=0.0, allow_inf_nan=False)
 
 
 class StylePack(BaseModel):
@@ -132,7 +137,6 @@ class StylePack(BaseModel):
     roles: dict[str, str] = Field(default_factory=dict)
     #: ``{entity id: {role: "#rrggbb"}}`` — a per-entity override of `roles`.
     entities: dict[str, dict[str, str]] = Field(default_factory=dict)
-    line: LineStyle = Field(default_factory=LineStyle)
     source: AssetSource | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 

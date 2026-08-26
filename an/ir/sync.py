@@ -504,7 +504,7 @@ def ir_to_markdown(scene: SceneIR) -> str:
     # keys, so a field added to `Meta` and not named here silently drops on
     # write — which is the an#89 trap, and the reason a round-trip test is the
     # thing that catches it (an#112).
-    if scene.meta.style_pack is not None:
+    if scene.meta.style_pack:
         meta_dict["style_pack"] = scene.meta.style_pack
     parts.append("```yaml meta")
     parts.append(yaml.safe_dump(meta_dict, sort_keys=False).rstrip())

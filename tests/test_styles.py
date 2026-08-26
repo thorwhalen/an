@@ -85,9 +85,13 @@ def test_a_scene_with_no_pack_compiles_to_exactly_what_it_always_did():
         warnings.simplefilter("ignore", CutoutCompileWarning)
         a = _compiled(None)
         b = _compiled(StylePack(name="empty"))
-    # An empty pack changes nothing either: it mentions no role, so every
-    # `colour_for` returns None and every caller keeps its literal.
-    assert a.model_dump_json() == b.model_dump_json()
+    # An empty pack changes no PIXEL: it mentions no role, so every
+    # `colour_for` returns None and every caller keeps its literal. It IS
+    # recorded in the meta, because that field is provenance — "this render
+    # ran under a pack" is true even when the pack said nothing.
+    assert a.scene.model_dump_json() == b.scene.model_dump_json()
+    assert a.meta.style_pack is None and b.meta.style_pack == "empty"
+    assert a.model_dump_json() == b.model_dump_json().replace(',"style_pack":"empty"', "")
 
 
 def test_an_unset_style_pack_leaves_no_trace_in_either_document():
@@ -149,7 +153,6 @@ def test_the_unreachable_list_matches_the_runtime_literals_it_names():
     make_eye = make_eye[: make_eye.index("\n    }")]
     assert "beginFill(0xffffff" in make_eye
     assert "visualSpec.color" in make_eye
-    assert "pupil" in UNREACHABLE_ROLES or "pupil" in REACHABLE_ROLES
     assert "pupil" in REACHABLE_ROLES and "eye_sclera" in UNREACHABLE_ROLES
 
 
@@ -161,6 +164,51 @@ def test_an_unknown_role_is_refused_too():
 
 
 # --- what a pack changes ------------------------------------------------------
+
+
+@pytest.mark.parametrize("role", sorted(REACHABLE_ROLES))
+def test_every_role_declared_REACHABLE_actually_reaches_the_document(role):
+    """The counterpart `UNREACHABLE_ROLES` never had, and its absence is how
+    `pupil` shipped declared-reachable and wired to nothing.
+
+    `an.styles` refuses a role that silently does nothing. A role declared
+    reachable and read by no code is the same defect pointing the other way,
+    and the guard that was supposed to catch it asserted set membership against
+    the set it was checking — a tautology in the same file (an#112 review, H1).
+
+    This compiles. A marker colour on one role must appear in the compiled
+    document, or the declaration is a lie.
+    """
+    import warnings
+
+    marker = "#abcdef"
+    shot = Shot(
+        id="s1",
+        renderer="cutout",
+        duration=1.0,
+        entities=[
+            AssetRef(kind="environment", id="room", store="environments", ref="park"),
+            AssetRef(kind="character", id="charlie", store="characters", ref="c"),
+        ],
+    )
+    if role == "leg":
+        # The placeholder rig has no legs (`_PLACEHOLDER_PARTS`), so the role
+        # needs a character that declares them — which is also why the leg
+        # assertion in the older test below had to be left out of its own set.
+        store = {"c": {"parts": ["torso", "left_leg", "right_leg"]}}
+    else:
+        store = {}
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", CutoutCompileWarning)
+        scene = compile_shot(
+            shot,
+            mall={"characters": store},
+            fps=24,
+            width=W,
+            height=H,
+            style_pack=StylePack(name="probe", roles={role: marker}),
+        )
+    assert marker in _colours(scene), f"{role} is declared reachable and reaches nothing"
 
 
 def test_a_pack_recolours_the_procedural_rig_and_the_environment_preset():
@@ -294,3 +342,176 @@ def test_the_benchs_palette_derivation_picks_up_a_pack():
     plain = {h.lower() for h in without["palette_hex"]}
     assert {"#d8d8d8", "#3a3a44"} <= painted
     assert plain & {"#d8d8d8", "#3a3a44"} == set()
+
+
+# --- the wiring, which had no test at all (an#112 review, M2) ---------------
+
+
+def test_the_render_path_resolves_the_pack_from_the_scenes_meta():
+    """Hop one of the wiring: `scene.meta.style_pack` → `RenderContext`.
+
+    Nothing tested that `an render` applies a pack at all — every other test
+    here calls `compile_shot` with it already resolved, so this hop could have
+    been deleted with a green suite (an#112 review, M2/M16).
+    """
+    import json as _json
+    import tempfile
+    from pathlib import Path as _Path
+
+    import an.adapters.cutout.render as render_mod
+    from an.project import init, load
+    from an.render import render as render_project
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = init(_Path(tmp) / "p")
+        (root / "assets" / "styles").mkdir(parents=True, exist_ok=True)
+        (root / "assets" / "styles" / "noir.json").write_text(
+            _json.dumps(_json.loads(StylePack(name="noir", roles={"sky": "#3a3a44"}).model_dump_json())),
+            encoding="utf-8",
+        )
+        # `an init` scaffolds a scene with NO shots, so the render refuses
+        # before reaching a renderer — add one, or this tests nothing.
+        md = (root / "scene.md").read_text(encoding="utf-8").replace(
+            "default_renderer: cutout", "default_renderer: cutout\nstyle_pack: noir"
+        )
+        md += "\n## Shot s1 (cutout)\n\n```yaml shot\nduration: 1.0\n```\n"
+        (root / "scene.md").write_text(md, encoding="utf-8")
+        (root / "ir" / "scene.json").unlink(missing_ok=True)
+
+        seen: list[object] = []
+        original = render_mod.CutoutRenderer.render
+
+        def spy(self, shot, ctx):
+            seen.append(ctx.style_pack)
+            raise RuntimeError("stop before the browser")
+
+        render_mod.CutoutRenderer.render = spy
+        try:
+            with pytest.raises(Exception):
+                render_project(load(root), auto_audio=False)
+        finally:
+            render_mod.CutoutRenderer.render = original
+
+    assert seen, "the renderer was never reached"
+    assert getattr(seen[0], "name", None) == "noir", seen
+
+
+def test_the_renderer_hands_the_pack_to_the_compiler():
+    """Hop two: `RenderContext.style_pack` → `compile_shot`. Dropping it left
+    the feature inert with a green suite (an#112 review, M17)."""
+    import tempfile
+    from pathlib import Path as _Path
+
+    import an.adapters.cutout.render as render_mod
+
+    seen: list[object] = []
+    original = render_mod.compile_shot
+
+    def spy(*args, **kwargs):
+        seen.append(kwargs.get("style_pack"))
+        raise RuntimeError("stop before the browser")
+
+    render_mod.compile_shot = spy
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = render_mod.RenderContext(
+                mall={},
+                work_dir=_Path(tmp),
+                style_pack=StylePack(name="noir"),
+            )
+            with pytest.raises(Exception):
+                render_mod.CutoutRenderer().render(_shot(), ctx)
+    finally:
+        render_mod.compile_shot = original
+
+    assert seen and getattr(seen[0], "name", None) == "noir", seen
+
+
+def test_the_preview_path_carries_it_too():
+    """`an preview` compiled without the pack, so a project declaring one
+    previewed in the default palette and rendered in the pack's — the author
+    iterating against the wrong picture (an#112 review, H2)."""
+    import inspect
+
+    import an.preview as preview_mod
+
+    src = inspect.getsource(preview_mod)
+    assert "style_pack=style_pack_for(" in src
+
+
+def test_a_per_entity_override_reaches_the_CHARACTER_palette():
+    """The existing override test used the environment only, so dropping
+    `entity=` from `resolve_palette` passed the suite (an#112 review, M3)."""
+    import warnings
+
+    pack = StylePack(
+        name="noir",
+        roles={"skin": "#d8d8d8"},
+        entities={"charlie": {"skin": "#00ff00"}},
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", CutoutCompileWarning)
+        painted = set(_colours(_compiled(pack)))
+    assert "#00ff00" in painted and "#d8d8d8" not in painted
+
+
+def test_the_leg_role_reaches_a_character_that_HAS_legs():
+    """The older test declares a `leg` colour and leaves it out of its own
+    assertion, because the placeholder rig has no legs — so the role was
+    effectively untested (an#112 review, M5)."""
+    import warnings
+
+    shot = Shot(
+        id="s1", renderer="cutout", duration=1.0,
+        entities=[AssetRef(kind="character", id="charlie", store="characters", ref="c")],
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", CutoutCompileWarning)
+        scene = compile_shot(
+            shot,
+            mall={"characters": {"c": {"parts": ["torso", "left_leg", "right_leg"]}}},
+            fps=24,
+            style_pack=StylePack(name="noir", roles={"leg": "#101014"}),
+        )
+    assert "#101014" in _colours(scene)
+
+
+def test_the_default_leg_and_pupil_colours_are_the_literals_they_replaced():
+    """Both moved from inline literals into named constants. A constant whose
+    value drifts is a picture change nobody asked for, and only a labelled
+    golden run would otherwise catch it."""
+    from an.adapters.cutout.compile import DFLT_LEG_COLOUR, DFLT_PUPIL_COLOUR
+
+    assert DFLT_LEG_COLOUR == "#2c3e50"
+    assert DFLT_PUPIL_COLOUR == "#1a1a1a"
+
+
+def test_the_compiled_document_records_which_pack_produced_it():
+    """It recorded nothing: `compile_shot` never passed `style_pack` into the
+    meta, so the field its docstring called provenance was unconditionally
+    None (an#112 review, H4)."""
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", CutoutCompileWarning)
+        assert _compiled(StylePack(name="noir")).meta.style_pack == "noir"
+        assert _compiled(None).meta.style_pack is None
+
+
+def test_the_pack_has_no_field_that_nothing_reads():
+    """`LineStyle` was written, serialized and consumed nowhere — the shape
+    `UNREACHABLE_ROLES` refuses, in the module that states the rule. Removed;
+    this keeps it removed until something reads it (an#112 review, M1)."""
+    assert not hasattr(StylePack(name="x"), "line")
+    assert "LineStyle" not in dir(__import__("an.styles", fromlist=["x"]))
+
+
+def test_an_empty_style_pack_name_is_not_a_pack_in_any_of_the_three_places():
+    """The resolver treated `""` as no pack while both serializers wrote a
+    visible `style_pack: ""` — a field that renders and does nothing."""
+    assert style_pack_for(Meta(style_pack=""), {}) is None
+    assert "style_pack" not in json.loads(Meta(style_pack="").model_dump_json())
+    from an.ir.sync import ir_to_markdown
+    from an.ir.schema import SceneIR
+
+    assert "style_pack" not in ir_to_markdown(SceneIR(meta=Meta(style_pack="")))

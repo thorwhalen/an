@@ -188,9 +188,11 @@ def _warn_about_art_a_pack_cannot_reach(
     warnings.warn(
         f"style pack {pack.name!r} could not reach {sorted(skipped)}: their art "
         "is SVG, whose colours live inside the drawings. A pack recolours what "
-        "the compiler decides — procedural rigs, the environment presets — and "
-        "reaches SVG art through the character factory at authoring time "
-        f"(`an character new --style-pack`), not here. It did reach "
+        "the COMPILER decides — procedural rigs, the environment presets — and "
+        "nothing recolours SVG today: edit the art, or generate the character "
+        "in the colours you want. (A pack seam in the character factory is the "
+        "obvious home for that and is NOT built — an#112 says so rather than "
+        "pointing you at a flag that does not exist.) It did reach "
         f"{sorted(reached) or 'nothing in this shot'}.",
         CutoutCompileWarning,
         stacklevel=3,
@@ -201,6 +203,11 @@ def _warn_about_art_a_pack_cannot_reach(
 #: carried, which is why it is a named constant rather than two copies of a
 #: string. A `StylePack`'s `leg` role replaces it.
 DFLT_LEG_COLOUR: str = "#2c3e50"
+
+#: The procedural rig's pupil colour. `makeEye` reads it from the document —
+#: the eye WHITE beside it is a literal and cannot be reached, which is the
+#: split `REACHABLE_ROLES` / `UNREACHABLE_ROLES` records.
+DFLT_PUPIL_COLOUR: str = "#1a1a1a"
 
 
 def _palette_for(entity_id: str) -> tuple[str, str, str]:
@@ -736,6 +743,7 @@ def compile_shot(
             blink_phases=blink_phases,
             step_hz=step_hz,
             gaze_seeds=gaze_seeds,
+            style_pack=style_pack.name if style_pack is not None else None,
         ),
         scene=scene_root,
         animations=animations,
@@ -1603,14 +1611,20 @@ def _build_character_subtree(
                         ),
                     )
                 )
-            # Eyes: white sclera + dark pupil drawn together by makeEye.
+            # Eyes: white sclera + dark pupil drawn together by makeEye, which
+            # reads `visualSpec.color` for the PUPIL — so a pack reaches it,
+            # while the white is a `runtime.js` literal and cannot be reached
+            # (`an.styles.UNREACHABLE_ROLES`).
+            pupil = (
+                style_pack.colour_for("pupil", entity=entity.id) if style_pack else None
+            ) or DFLT_PUPIL_COLOUR
             for eye_name, ex in (("left_eye", -10.0), ("right_eye", 10.0)):
                 child.children.append(
                     NodeJSON(
                         name=eye_name,
                         transform=TransformJSON(x=ex, y=-3.0),
                         visual=VisualJSON(
-                            kind="eye", width=10.0, height=8.0, color="#1a1a1a"
+                            kind="eye", width=10.0, height=8.0, color=pupil
                         ),
                     )
                 )
