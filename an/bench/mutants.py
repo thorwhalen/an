@@ -37,6 +37,10 @@ gone, and reports it as an interrupted run with the exact repair. The recovery
 path is the load-bearing half: what makes a leftover dangerous is that every
 mutation here is chosen to be *plausible*, so the tree compiles, renders and
 stays green apart from one test, and a developer can commit it without noticing.
+That recovery reads "the mutation is present and the original is gone", which is
+an assumption about the DECLARATION — so ``check_sites`` also refuses a mutant
+whose substitution leaves its own ``old`` text behind, because such a mutant is
+invisible to the recovery and a later sweep would restore *to* the leftover.
 """
 
 from __future__ import annotations
@@ -577,8 +581,19 @@ MUTANTS: tuple[Mutant, ...] = (
     Mutant(
         name="mux_argv_is_checked_by_subset_not_equality",
         file="an/adapters/cutout/render.py",
-        old='        "-c:v",\n        "libx264",',
-        new='        "-tune",\n        "animation",\n        "-c:v",\n        "libx264",',
+        # Anchored ACROSS the insertion point — `"-pix_fmt",` is in the `old`
+        # text purely so the mutation *splits* it rather than prefixing it. An
+        # earlier spelling put the two new flags in front of `-c:v`, which made
+        # `old` a substring of `new`: the mutated file still contained the
+        # original text, so the SIGKILL recovery path in `check_sites` was blind
+        # to this one mutant of the 43 and a subsequent sweep laundered the
+        # leftover into its `original`. `check_sites` now refuses any mutant
+        # with that shape, so this anchor is load-bearing rather than cosmetic.
+        old='        "-c:v",\n        "libx264",\n        "-pix_fmt",',
+        new=(
+            '        "-c:v",\n        "libx264",\n'
+            '        "-tune",\n        "animation",\n        "-pix_fmt",'
+        ),
         caught_by="tests/test_encode_pins.py",
         why=(
             "`-tune animation` is a measured-and-rejected flag (0.8%) and this "
@@ -726,9 +741,17 @@ def restore_on_termination(
     The previous handlers are restored on the way out, because this module is
     importable and a library that permanently rewires SIGTERM is a worse defect
     than the one it fixes. Yields the signals it actually took, which is empty
-    off the main thread (``signal.signal`` refuses there) and on a platform that
-    will not have them — a caller that wants to *report* the coverage can, and
-    the restore itself never depends on it.
+    off the main thread (``signal.signal`` refuses there), on a platform that
+    will not have them, and for any signal arriving already ``SIG_IGN`` — a
+    caller that wants to *report* the coverage can, and the restore itself never
+    depends on it.
+
+    An inherited ``SIG_IGN`` is left alone. ``nohup`` and most detach wrappers
+    ignore SIGHUP so a long job survives the terminal closing, and a sweep is
+    exactly the job someone detaches; taking the signal there would convert a
+    deliberately-protected run into a partial one exiting 130. There is nothing
+    to protect against either way — a signal that is ignored is never delivered,
+    so it cannot leave a mutation on disk.
 
     **SIGKILL cannot be handled at all**, which is why the recovery path in
     :func:`check_sites` is the load-bearing half of this fix and this is the
@@ -745,6 +768,16 @@ def restore_on_termination(
     try:
         for sig in signals:
             try:
+                if signal.getsignal(sig) is signal.SIG_IGN:
+                    # An INHERITED ignore is a decision somebody already made,
+                    # and overriding it changes behaviour in the one case where
+                    # the operator was explicit: `nohup an bench-mutants &`
+                    # leaves SIGHUP ignored precisely so closing the terminal
+                    # does not stop the sweep. Taking it would turn that into a
+                    # partial sweep exiting 130 — a safe tree, but not the run
+                    # that was asked for. An ignored signal also cannot leave a
+                    # mutation on disk, because it is never delivered.
+                    continue
                 previous[sig] = signal.signal(sig, _raise)
             except (ValueError, OSError):
                 # Not the main thread, or the platform refuses this signal.
@@ -754,7 +787,13 @@ def restore_on_termination(
         yield tuple(previous)
     finally:
         for sig, handler in previous.items():
-            with contextlib.suppress(ValueError, OSError):
+            # `TypeError` too: `getsignal` returns None for a handler installed
+            # from C, and `signal.signal(sig, None)` raises it. Restoring is
+            # impossible in that case, and letting it out would REPLACE an
+            # in-flight `MutantRunInterrupted` — turning "the tree was restored"
+            # into a traceback about the restore of a handler nobody asked
+            # about, after the tree had already been put back.
+            with contextlib.suppress(ValueError, OSError, TypeError):
                 signal.signal(sig, handler)
 
 
@@ -785,6 +824,26 @@ def check_sites(root: Path | None = None) -> list[str]:
             problems.append(f"{mutant.name}: the mutation is a no-op")
         if not (base / mutant.caught_by).is_file():
             problems.append(f"{mutant.name}: {mutant.caught_by} does not exist")
+        if count == 1:
+            mutated = source.replace(mutant.old, mutant.new, 1)
+            if mutant.old in mutated:
+                # The recovery path recognises a leftover as "the mutation is
+                # present and the original is gone". That second half is an
+                # ASSUMPTION about the declaration, and one mutant broke it: its
+                # `new` prefixed its `old` rather than replacing it, so the
+                # mutated file still contained the original text, `check_sites`
+                # returned no problems at all on a tree carrying it, and the
+                # next sweep read the mutation as the `original` it restores to
+                # — laundering the damage into the baseline while reporting
+                # health. Asserted from the REAL substitution rather than from
+                # `mutant.old in mutant.new`, which misses the case where the
+                # replacement re-creates `old` across its own boundary.
+                problems.append(
+                    f"{mutant.name}: applying it leaves its own `old` text in "
+                    f"{mutant.file}, so a tree left mutated by a SIGKILL would "
+                    "be invisible to the recovery path above. Re-anchor `old` "
+                    "so the mutation replaces it rather than extending it."
+                )
         if count == 1 and mutant.file.endswith(".py"):
             # A mutant that produces unparseable Python breaks COLLECTION, and
             # a collection error is not a guard catching anything. Checked here,
@@ -800,7 +859,7 @@ def check_sites(root: Path | None = None) -> list[str]:
             # had to be mutation-tested by hand and the proof lived in a
             # docstring rather than in `an bench-mutants`.
             try:
-                compile(source.replace(mutant.old, mutant.new, 1), mutant.file, "exec")
+                compile(mutated, mutant.file, "exec")
             except SyntaxError as e:
                 problems.append(
                     f"{mutant.name}: applying it makes {mutant.file} unparseable "

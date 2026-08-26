@@ -27,6 +27,19 @@ from an.stores import build_project_mall
 from an.util import _read_text, _write_json, _write_text
 
 
+#: Seeded by :func:`init` and read by nothing — ``load`` never opens it, and
+#: there is no ``tomllib`` anywhere in the package (see
+#: ``tests/test_bench_corpus.py::test_no_corpus_fixture_ships_an_an_toml``). It
+#: is documentation of the project layout that happens to be valid TOML.
+#:
+#: The providers therefore have to match the DEFAULTS, not an aspiration. They
+#: used to say ``tts = "elevenlabs"``: inert today, but the only place in the
+#: repo stating a paid provider as a project default, in the file a user opens
+#: to learn what the defaults are. The day somebody wires config reading — the
+#: natural next step for a file that exists and is documented — every project
+#: ever created by ``an init`` would begin defaulting to a billed provider,
+#: entirely outside :mod:`an.live_api`, which only the example consults. an#63
+#: is about exactly that shape, so the template says what `render` does.
 _ANIMA_TOML_TEMPLATE = """# an project config
 [project]
 name = "{name}"
@@ -36,9 +49,11 @@ default_renderer = "cutout"
 fps = {fps}
 resolution = [{width}, {height}]
 
+# Nothing reads this section yet; it mirrors the defaults `an render` uses.
+# A paid provider belongs here only behind an explicit opt-in — see an.live_api.
 [providers]
-tts = "elevenlabs"
-lipsync = "rhubarb"
+tts = "offline"
+lipsync = "offline"
 """
 
 

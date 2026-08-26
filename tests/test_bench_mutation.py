@@ -571,6 +571,88 @@ def test_a_killed_sweep_restores_the_tree(tmp_path, signame):
     )
 
 
+@pytest.mark.parametrize("signame", ["SIGINT", "SIGTERM"])
+def test_the_cli_says_the_tree_survived_however_it_was_interrupted(tmp_path, signame):
+    """MUTATION: narrow the CLI clause back to `except MutantRunInterrupted`.
+
+    `MutantRunInterrupted` IS a `KeyboardInterrupt` — that is how it survives an
+    `except Exception` on the way out — but the relationship does not run the
+    other way, so a plain Ctrl-C raised the base class and escaped the clause
+    entirely. The tree was restored (the `finally` had already run), and the
+    operator got a raw traceback ending in `selectors.py` and rc=-2 with no way
+    to know that. an#67 names Ctrl-C as the normal way this sweep is stopped, so
+    the reassurance was missing on the path people actually take.
+
+    Driven as a real subprocess taking a real signal, because what is asserted
+    is the interpreter's exit path — the exit code and the absence of a
+    traceback are the whole claim, and neither survives being simulated.
+    """
+    import os
+    import signal
+    import subprocess
+    import sys
+    import time
+
+    from an.bench.mutants import INTERRUPTED_EXIT_CODE
+
+    if sys.platform == "win32":
+        pytest.skip("no POSIX signal delivery: see the sibling test's note")
+
+    root = _victim_tree(tmp_path)
+    driver = tmp_path / "_drive_cli.py"
+    # `.format` for the same 3.10 reason as the sibling driver above.
+    driver.write_text(
+        (
+            "import sys\n"
+            "from pathlib import Path\n"
+            "from an.bench import mutants as M\n"
+            "from an.bench import paths as P\n"
+            "import an.tools as T\n"
+            "\n"
+            "root = Path(sys.argv[1])\n"
+            "M.MUTANTS = (M.Mutant(name='victim', file='victim.py', "
+            "old={old!r}, new={new!r}, caught_by='test_victim.py', "
+            "why='a fixture'),)\n"
+            "P.repo_root = lambda: root\n"
+            "T.bench_mutants()\n"
+        ).format(old=_VICTIM_OLD, new=_VICTIM_NEW),
+        encoding="utf-8",
+    )
+    victim = root / "victim.py"
+    child = subprocess.Popen(
+        [sys.executable, str(driver), str(root)],
+        cwd=root,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        deadline = time.monotonic() + _INTERRUPT_TIMEOUT_S
+        while victim.read_text(encoding="utf-8") != _VICTIM_MUTATED:
+            assert child.poll() is None, (
+                f"the child exited before it mutated anything: {child.communicate()}"
+            )
+            assert time.monotonic() < deadline, "the child never wrote the mutation"
+            time.sleep(0.05)
+        os.kill(child.pid, getattr(signal, signame))
+        out, err = child.communicate(timeout=_INTERRUPT_TIMEOUT_S)
+    finally:
+        if child.poll() is None:  # pragma: no cover - only on a failing run
+            child.kill()
+            child.communicate()
+
+    assert victim.read_text(encoding="utf-8") == _VICTIM_ORIGINAL
+    assert "the tree was restored" in out, (
+        f"{signame} left the operator without the one sentence that answers "
+        f"'is a mutated file still on disk?'\nstdout={out!r}\nstderr={err!r}"
+    )
+    assert "Traceback" not in err, err
+    assert child.returncode == INTERRUPTED_EXIT_CODE, (
+        f"expected {INTERRUPTED_EXIT_CODE}, got {child.returncode} — a negative "
+        "code means the interpreter died on the signal rather than exiting"
+    )
+
+
 def test_a_file_left_mutated_is_reported_as_an_interrupted_run(tmp_path, monkeypatch):
     """MUTATION: fold the leftover branch back into the `occurs 0 times` message.
 
@@ -613,6 +695,98 @@ def test_a_moved_site_is_not_reported_as_an_interrupted_run(tmp_path, monkeypatc
 
     assert "occurs 0 times" in problem
     assert "LEFT MUTATED" not in problem
+
+
+def test_every_declared_mutant_is_recoverable_from_a_kill():
+    """MUTATION: re-anchor `mux_argv_...` so its `new` merely prefixes its `old`.
+
+    The leftover branch in `check_sites` recognises "the mutation is present and
+    the original is gone", which quietly assumes every substitution REMOVES its
+    own `old` text. One declared mutant did not: `mux_argv_is_checked_by_subset_
+    not_equality` inserted two flags *before* the argv lines it matched, so the
+    mutated file still contained `old`, neither branch fired, and `check_sites`
+    returned `[]` on a tree whose shipped ffmpeg argv carried `-tune animation`.
+    A subsequent `an bench-mutants` then read that file as its `original` and
+    restored to it — the instrument laundering the damage into the baseline
+    while reporting health.
+
+    Asserted over the WHOLE registry rather than over the one mutant that had
+    the bug, because the property is what matters and a new mutant can rejoin
+    the blind set for free. Run against the real files, in memory: it is the
+    real `old`/`new` pair against the real source that decides this, not the
+    declaration read on its own.
+    """
+    from an.bench.paths import repo_root
+
+    base = repo_root()
+    blind = []
+    for mutant in MUTANTS:
+        source = (base / mutant.file).read_text(encoding="utf-8")
+        mutated = source.replace(mutant.old, mutant.new, 1)
+        if mutated.count(mutant.old) != 0 or mutant.new not in mutated:
+            blind.append(mutant.name)
+
+    assert not blind, (
+        f"{blind} survive their own mutation: applying one leaves its `old` "
+        "text on disk, so a tree left mutated by a SIGKILL is invisible to "
+        "`check_sites` and the next sweep restores to the leftover"
+    )
+
+
+def test_a_mutant_that_hides_its_own_leftover_is_refused(tmp_path, monkeypatch):
+    """MUTATION: delete the `mutant.old in mutated` branch from `check_sites`.
+
+    The registry-wide test above pins today's declarations; this pins the
+    *check* that keeps a future one honest — without it, the property is a fact
+    about the current table rather than an invariant, and the next mutant to
+    extend its `old` instead of replacing it silently goes blind again.
+    """
+    from an.bench.mutants import check_sites
+
+    _victim_tree(tmp_path)
+    monkeypatch.setattr(
+        "an.bench.mutants.MUTANTS",
+        (_victim_mutant(new=f'PREFIX = 1\n{_VICTIM_OLD}'),),
+    )
+
+    problems = check_sites(tmp_path)
+
+    assert len(problems) == 1, problems
+    (problem,) = problems
+    assert "leaves its own `old` text" in problem
+    assert "SIGKILL" in problem, "the message must name what it would cost"
+    assert "LEFT MUTATED" not in problem, "the tree here is pristine, not dirty"
+
+
+def test_an_inherited_ignore_is_left_ignored():
+    """MUTATION: install the raising handler unconditionally.
+
+    `nohup an bench-mutants > sweep.log &` leaves SIGHUP ignored so that closing
+    the terminal does not stop the sweep — the operator has already answered
+    this question, deliberately. Taking the signal there converts a run someone
+    detached to protect into a partial sweep exiting 130. Nothing is risked by
+    standing aside: an ignored signal is never delivered, so it cannot stop the
+    interpreter mid-mutation in the first place.
+    """
+    import signal
+
+    if not hasattr(signal, "SIGHUP"):  # pragma: no cover - Windows
+        pytest.skip("no SIGHUP on this platform")
+
+    from an.bench.mutants import restore_on_termination
+
+    before = signal.getsignal(signal.SIGHUP)
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    try:
+        with restore_on_termination() as took:
+            assert signal.getsignal(signal.SIGHUP) is signal.SIG_IGN, (
+                "an inherited ignore was overridden; a detached sweep now dies "
+                "when the terminal closes"
+            )
+            assert signal.SIGHUP not in took, "`took` must report what it took"
+        assert signal.getsignal(signal.SIGHUP) is signal.SIG_IGN
+    finally:
+        signal.signal(signal.SIGHUP, before)
 
 
 def test_the_signal_boundary_puts_the_previous_handlers_back():

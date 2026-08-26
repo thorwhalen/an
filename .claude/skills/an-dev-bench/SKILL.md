@@ -401,6 +401,26 @@ the next run's message is the only thing standing in the way. If you see
 `LEFT MUTATED` in a `check_sites` report, do not go looking for the refactor
 that moved the code; there was none.
 
+**Declaration rule that makes the recovery work: the mutation must REPLACE its
+`old` text, never extend it.** The leftover branch recognises "the mutation is
+present and the original is gone", so a mutant whose `new` contains its `old` is
+invisible to it. One of the 43 had exactly that shape —
+`mux_argv_is_checked_by_subset_not_equality` inserted `-tune animation` *before*
+the argv lines it matched — and on a tree carrying that leftover `check_sites`
+returned no problems at all, while the next `an bench-mutants` read the mutated
+file as its `original` and restored to it: the instrument laundering the damage
+into the baseline and reporting health. `check_sites` now refuses that shape by
+applying the substitution and checking `old` is really gone (which also catches
+a replacement that re-creates `old` across its own boundary, where comparing the
+two strings would not), and `test_every_declared_mutant_is_recoverable_from_a_kill`
+asserts the property across the whole registry. If it fires on a mutant you are
+adding, re-anchor `old` so the change lands in the middle of it.
+
+**An inherited `SIG_IGN` is left alone.** `nohup an bench-mutants > sweep.log &`
+ignores SIGHUP so the sweep survives the terminal closing; taking that signal
+would turn a deliberately-detached run into a partial one exiting 130. An
+ignored signal is never delivered, so there is nothing to protect against.
+
 ## Two measured facts that change what counts as a witness
 
 Both found while building an#38, both by running the levers rather than by

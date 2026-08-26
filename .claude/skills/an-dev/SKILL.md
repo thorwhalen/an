@@ -115,6 +115,21 @@ predicate, and it must say which providers it picked **and why** before it start
 things that download model weights on first use (whisper) ride the same switch rather than a
 second one: two answers to "may this run do something expensive" drift apart.
 
+The registry guard for this (`tests/test_examples_spend_gate.py`) asks the **call graph**,
+not the text: it scans every hand-authored `.py` under `examples/` and `misc/demos/` and
+requires any script naming a paid provider to *call* `live_api_enabled`. An earlier version
+searched the file for the env-var name, which the gallery's own usage docstring satisfied on
+its own — the declared mutation "delete the gate call" left it green. The sweep and its
+negative test share ONE predicate (`ungated_paid_providers`), because a negative test that
+pins only a private helper does not guard the sweep that is supposed to call it. Prose is not a code
+path in either direction, which is also why a paid provider is detected as a parsed
+constant rather than as a substring.
+
+The same rule reaches **scaffolding**: `an init`'s `an.toml` template says
+`tts = "offline"`. Nothing parses that file today, but it is what a user opens to learn the
+defaults, and it named a paid provider until an#63's follow-up — a default that would start
+spending on the day somebody wires config reading, entirely outside `an.live_api`.
+
 **Never skip at module level. Gate the TEST, with a marker.** This is the rule that #22
 was, and it is not about browsers — it is about the difference between a test that is
 *skipped* and a test that does not *exist*.
