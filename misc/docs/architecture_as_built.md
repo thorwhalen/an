@@ -49,6 +49,20 @@ an/
 ├── iterate.py               free-text → Claude (Opus 4.7) → JSON patches → IR mutation
 ├── check_requirements.py    diagnose ffmpeg/node/playwright/elevenlabs/manim/rhubarb/etc.
 ├── determinism.py           judges the runtime's determinism probe; enforced by default
+├── live_api.py              the ONE "yes, this run may spend money" switch (an#63)
+├── props.py                 PropDescriptor — a prop is NOT a character with a
+│                            different kind: an unresolvable prop RAISES where a
+│                            character falls back to the placeholder rig (an#108)
+├── environments.py          EnvironmentDescriptor + Plane: list order is draw
+│                            order, `depth` is Godot's parallax RATIO and governs
+│                            TRANSLATION only, `characters_after` names the plane
+│                            the characters stand in front of (an#110)
+├── styles.py                StylePack — the styles store's first reader ever;
+│                            REACHABLE_ROLES / UNREACHABLE_ROLES, checked against
+│                            the literals read out of runtime.js (an#112)
+├── preview.py               live-reloading browser preview; compiles WITH the pack
+├── genre.py                 genre descriptors
+├── credits.py               credits rendering
 │
 ├── bench/                   the measurement instrument (an#36) — never imported by __init__
 │   ├── corpus.py            fixtures + pinned render knobs; the render-path assertion
@@ -71,6 +85,9 @@ an/
 ├── ir/                      Scene IR (the SSOT)
 │   ├── schema.py            Pydantic models: SceneIR, Shot, Action, Dialogue, AssetRef, ...
 │   ├── compose.py           sequence/parallel/delay/loop/tween/set_/play + flatten
+│   ├── camera.py            camera_keys: the NINE moves and Camera.keys resolved
+│   │                        by ONE function, which validate calls too — one table,
+│   │                        not two reconciled by a test (an#109)
 │   ├── validate.py          schema + semantic validation, ValidationReport
 │   ├── migrate.py           versioned migration registry (chained); scenes are
 │   │                        migrated on read by sync.scene_from_json_doc (an#105)
@@ -393,10 +410,15 @@ What genuinely remains, in rough priority order:
    left, 6 Hz right); the flip is a one-line PR that only the maintainer
    makes, and it has not been made.
 6. **A real `an validate` for everything the renderer refuses.** The pre-flight
-   now reports the four IR-level refusals (unknown `camera.move`, `prop`
-   entities, `narration`; `play` is resolved against the target's descriptor animations since an#7), but it duplicates the compiler's camera list
-   rather than sharing it, and it cannot see rig-level problems — a speaker
-   whose character has no head is only discovered at compile time.
+   reports the IR-level refusals (unknown `camera.move`, `prop` entities,
+   `narration`; `play` is resolved against the target's descriptor animations
+   since an#7), and since an#109 it no longer duplicates the compiler's camera
+   list — both call `an.ir.camera.camera_keys`, so a move that validates cannot
+   then raise at compile. It still cannot see rig-level problems: a speaker
+   whose character has no head is discovered at compile time. Since an#111 it
+   also **warns** when a camera translates over a stage with no depth — the
+   render is correct, the whole picture slides, and that is also exactly what a
+   flattened parallax looks like.
 
 ---
 
