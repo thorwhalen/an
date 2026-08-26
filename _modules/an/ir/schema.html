@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.66 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.67 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3015fd79"></script>
+      <script src="../../../_static/documentation_options.js?v=946d7960"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -150,6 +150,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/styles.html">an.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
@@ -770,7 +771,39 @@
     <span class="c1">#: likewise lands where it was authored). A shot's own ``step_hz``</span>
     <span class="c1">#: overrides this. Must be positive (schema) and ``&lt;= fps`` (validate +</span>
     <span class="c1">#: compile), an#89.</span>
-    <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+    <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1">#: The `StylePack` in the project's `styles` store this scene is drawn</span>
+    <span class="c1">#: under, by key. ``None`` — the default and what every existing document</span>
+    <span class="c1">#: has — leaves every colour exactly where it is, which is why adding this</span>
+    <span class="c1">#: moved no corpus hash (an#112).</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: A pack changes what the COMPILER decides: the character palette, the</span>
+    <span class="c1">#: leg and pupil colours, the environment presets' sky and ground. It does</span>
+    <span class="c1">#: NOT recolour SVG art — that would need role tagging the descriptor does</span>
+    <span class="c1">#: not have, and inferring a role from a pixel is what produced an#99's</span>
+    <span class="c1">#: wrong-tone lid. A rig whose art a pack cannot reach is WARNED about by</span>
+    <span class="c1">#: name at compile.</span>
+    <span class="n">style_pack</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@model_serializer</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"wrap"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_omit_unset_style_pack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Serialize ``style_pack: null`` out of existence when it is unset.</span>
+
+<span class="sd">        The same rule as `AssetRef._omit_unset_stage`, and the same reason:</span>
+<span class="sd">        every committed `ir/scene.json` in this repo — and whatever a user has</span>
+<span class="sd">        on disk — predates the field, so a defaulted `null` on every scene's</span>
+<span class="sd">        meta rewrites all of them on the next `an sync`. A field nobody set</span>
+<span class="sd">        should leave no trace (an#112).</span>
+<span class="sd">        """</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">handler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># Truthiness, not `is None`: an empty string is not a pack — the</span>
+        <span class="c1"># resolver already treats it as none — and serializing a visible</span>
+        <span class="c1"># `style_pack: ""` that does nothing is the shape this omit exists to</span>
+        <span class="c1"># prevent (an#112 review, L2).</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"style_pack"</span><span class="p">):</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"style_pack"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
 
 
 

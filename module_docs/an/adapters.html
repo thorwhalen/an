@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters &mdash; an 0.1.66 documentation</title>
+  <title>an.adapters &mdash; an 0.1.67 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3015fd79"></script>
+      <script src="../../_static/documentation_options.js?v=946d7960"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -58,6 +58,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.pix_fmt"><code class="docutils literal notranslate"><span class="pre">RenderContext.pix_fmt</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.step_hz"><code class="docutils literal notranslate"><span class="pre">RenderContext.step_hz</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.strict_assets"><code class="docutils literal notranslate"><span class="pre">RenderContext.strict_assets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.style_pack"><code class="docutils literal notranslate"><span class="pre">RenderContext.style_pack</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#an.adapters.RenderContext.supersample"><code class="docutils literal notranslate"><span class="pre">RenderContext.supersample</span></code></a></li>
 </ul>
 </li>
@@ -179,6 +180,7 @@
 <li class="toctree-l1"><a class="reference internal" href="stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="styles.html">an.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tools.html">an.tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="util.html">an.util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="verify.html">an.verify</a></li>
@@ -237,7 +239,7 @@ whose <code class="docutils literal notranslate"><span class="pre">renderer</spa
 
 <dl class="py class">
 <dt class="sig sig-object py" id="an.adapters.RenderContext">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">RenderContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">mall:</span> <span class="pre">~collections.abc.Mapping[str,</span> <span class="pre">~collections.abc.MutableMapping],</span> <span class="pre">work_dir:</span> <span class="pre">~pathlib.Path,</span> <span class="pre">fps:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">30,</span> <span class="pre">resolution:</span> <span class="pre">tuple[int,</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">(1920,</span> <span class="pre">1080),</span> <span class="pre">strict_assets:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">supersample:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">pix_fmt:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">step_hz:</span> <span class="pre">float</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">extra:</span> <span class="pre">dict[str,</span> <span class="pre">~typing.Any]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/adapters/_base.html#RenderContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.RenderContext" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">an.adapters.</span></span><span class="sig-name descname"><span class="pre">RenderContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">mall:</span> <span class="pre">Mapping[str,</span> <span class="pre">MutableMapping],</span> <span class="pre">work_dir:</span> <span class="pre">Path,</span> <span class="pre">fps:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">30,</span> <span class="pre">resolution:</span> <span class="pre">tuple[int,</span> <span class="pre">int]</span> <span class="pre">=</span> <span class="pre">(1920,</span> <span class="pre">1080),</span> <span class="pre">strict_assets:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">supersample:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">pix_fmt:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">step_hz:</span> <span class="pre">float</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">style_pack:</span> <span class="pre">StylePack</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">extra:</span> <span class="pre">dict[str,</span> <span class="pre">Any]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/an/adapters/_base.html#RenderContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.adapters.RenderContext" title="Link to this definition"></a></dt>
 <dd><p>Everything a renderer needs that isn’t on the Shot itself.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mall</span></code> carries the project’s stores so the renderer can resolve assets
 by reference. <code class="docutils literal notranslate"><span class="pre">work_dir</span></code> is a scratch space; the renderer must clean up
@@ -277,6 +279,15 @@ policy is the honest one. Omit-when-unset keeps the unset case free.</p>
 supply. Off by default so an asset-less project still renders; on for
 anything that measures pixels, where a stand-in is a different picture
 that looks like a successful render (an#33).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="an.adapters.RenderContext.style_pack">
+<span class="sig-name descname"><span class="pre">style_pack</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="styles.html#an.styles.StylePack" title="an.styles.StylePack"><span class="pre">StylePack</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.adapters.RenderContext.style_pack" title="Link to this definition"></a></dt>
+<dd><p>The <cite>StylePack</cite> this render is drawn under, already resolved from the
+scene’s <cite>meta.style_pack</cite> (an#112). Resolved ONCE per render rather than
+per shot: a pack is art direction for a project, and a scene whose shots
+disagreed about it would be two scenes.</p>
 </dd></dl>
 
 <dl class="py attribute">

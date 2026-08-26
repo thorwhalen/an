@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.66 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.67 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=3015fd79"></script>
+      <script src="../../../../_static/documentation_options.js?v=946d7960"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -150,6 +150,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/styles.html">an.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/tools.html">an.tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/util.html">an.util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify.html">an.verify</a></li>
@@ -300,6 +301,7 @@
     <span class="n">Plane</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.props</span><span class="w"> </span><span class="kn">import</span> <span class="n">PROP_DOCUMENT_KIND</span><span class="p">,</span> <span class="n">PropDescriptor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">STYLE_DOCUMENT_KIND</span><span class="p">,</span> <span class="n">StylePack</span><span class="p">,</span> <span class="n">resolve_palette</span>
 
 
 <span class="c1"># Default placeholder character: a recognizable stick-figure layout in pixel</span>
@@ -325,6 +327,79 @@
     <span class="p">(</span><span class="s2">"#a87a5d"</span><span class="p">,</span> <span class="s2">"#5b3a8a"</span><span class="p">,</span> <span class="s2">"#2a2a2a"</span><span class="p">),</span>  <span class="c1"># darker skin, purple clothes, black</span>
     <span class="p">(</span><span class="s2">"#e8c39e"</span><span class="p">,</span> <span class="s2">"#d97706"</span><span class="p">,</span> <span class="s2">"#5e3a1f"</span><span class="p">),</span>  <span class="c1"># warm skin, orange clothes, brown</span>
 <span class="p">)</span>
+
+
+<div class="viewcode-block" id="style_pack_for">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/compile.html#an.adapters.cutout.style_pack_for">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">style_pack_for</span><span class="p">(</span><span class="n">scene_meta</span><span class="p">,</span> <span class="n">styles_store</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"StylePack | None"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The `StylePack` a scene declares, or ``None`` (an#112).</span>
+
+<span class="sd">    ``None`` for every document written before an#112 and for every scene that</span>
+<span class="sd">    declares no pack — which is what makes this feature byte-identity-free: the</span>
+<span class="sd">    no-pack path is a lookup with a default, not a rewrite.</span>
+
+<span class="sd">    A declared pack that is missing, or is not a `StylePack`, RAISES. An art</span>
+<span class="sd">    direction the author asked for and did not get is a different picture that</span>
+<span class="sd">    renders happily, which is the an#33 failure this package refuses everywhere</span>
+<span class="sd">    else.</span>
+<span class="sd">    """</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">scene_meta</span><span class="p">,</span> <span class="s2">"style_pack"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">styles_store</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">styles_store</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="n">raw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">STYLE_DOCUMENT_KIND</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the scene declares style_pack=</span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">, which is "</span>
+            <span class="o">+</span> <span class="p">(</span><span class="s2">"not a StylePack"</span> <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"not in the styles store"</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">". A pack the author asked for and did not get is a DIFFERENT "</span>
+            <span class="s2">"picture that renders happily — the failure an#33 exists to stop. "</span>
+            <span class="s2">"Create it, or remove `style_pack` from the scene's meta."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">StylePack</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">migrate</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">raw</span><span class="p">),</span> <span class="n">kind</span><span class="o">=</span><span class="n">STYLE_DOCUMENT_KIND</span><span class="o">.</span><span class="n">name</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_about_art_a_pack_cannot_reach</span><span class="p">(</span>
+    <span class="n">pack</span><span class="p">:</span> <span class="s2">"StylePack | None"</span><span class="p">,</span> <span class="n">reached</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">skipped</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Say which entities the pack did not touch, and why.</span>
+
+<span class="sd">    A pack recolours what the COMPILER decides. An SVG rig's colours are inside</span>
+<span class="sd">    its art, and this package deliberately does not rewrite SVG at compile time</span>
+<span class="sd">    (see `an.styles`) — so a scene of SVG characters under a pack renders</span>
+<span class="sd">    exactly as it did, and the author has to hear that from the compiler rather</span>
+<span class="sd">    than from the frames.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">pack</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">skipped</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"style pack </span><span class="si">{</span><span class="n">pack</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> could not reach </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">skipped</span><span class="p">)</span><span class="si">}</span><span class="s2">: their art "</span>
+        <span class="s2">"is SVG, whose colours live inside the drawings. A pack recolours what "</span>
+        <span class="s2">"the COMPILER decides — procedural rigs, the environment presets — and "</span>
+        <span class="s2">"nothing recolours SVG today: edit the art, or generate the character "</span>
+        <span class="s2">"in the colours you want. (A pack seam in the character factory is the "</span>
+        <span class="s2">"obvious home for that and is NOT built — an#112 says so rather than "</span>
+        <span class="s2">"pointing you at a flag that does not exist.) It did reach "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">reached</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'nothing in this shot'</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+        <span class="n">CutoutCompileWarning</span><span class="p">,</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="c1">#: The procedural rig's leg colour — a literal the palette table never</span>
+<span class="c1">#: carried, which is why it is a named constant rather than two copies of a</span>
+<span class="c1">#: string. A `StylePack`'s `leg` role replaces it.</span>
+<span class="n">DFLT_LEG_COLOUR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"#2c3e50"</span>
+
+<span class="c1">#: The procedural rig's pupil colour. `makeEye` reads it from the document —</span>
+<span class="c1">#: the eye WHITE beside it is a literal and cannot be reached, which is the</span>
+<span class="c1">#: split `REACHABLE_ROLES` / `UNREACHABLE_ROLES` records.</span>
+<span class="n">DFLT_PUPIL_COLOUR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"#1a1a1a"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_palette_for</span><span class="p">(</span><span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
@@ -767,6 +842,7 @@
     <span class="n">strict_assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">expression_provider</span><span class="p">:</span> <span class="n">ExpressionProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">style_pack</span><span class="p">:</span> <span class="s2">"StylePack | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CutoutSceneJSON</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Compile a single cutout-style `Shot` to its JS-runtime JSON form.</span>
 
@@ -815,7 +891,7 @@
     <span class="n">textures</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AssetJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">scene_root</span> <span class="o">=</span> <span class="n">_build_scene_root</span><span class="p">(</span>
-        <span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">,</span> <span class="n">textures</span><span class="o">=</span><span class="n">textures</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span>
+        <span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">,</span> <span class="n">textures</span><span class="o">=</span><span class="n">textures</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span><span class="p">,</span> <span class="n">style_pack</span><span class="o">=</span><span class="n">style_pack</span>
     <span class="p">)</span>
     <span class="n">vocab</span> <span class="o">=</span> <span class="n">_swap_vocabulary</span><span class="p">(</span><span class="n">scene_root</span><span class="p">,</span> <span class="n">shot</span><span class="p">,</span> <span class="n">mall</span><span class="p">)</span>
     <span class="n">animations</span><span class="p">,</span> <span class="n">tracks</span> <span class="o">=</span> <span class="n">_compile_actions</span><span class="p">(</span>
@@ -870,6 +946,7 @@
             <span class="n">blink_phases</span><span class="o">=</span><span class="n">blink_phases</span><span class="p">,</span>
             <span class="n">step_hz</span><span class="o">=</span><span class="n">step_hz</span><span class="p">,</span>
             <span class="n">gaze_seeds</span><span class="o">=</span><span class="n">gaze_seeds</span><span class="p">,</span>
+            <span class="n">style_pack</span><span class="o">=</span><span class="n">style_pack</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">style_pack</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="n">scene</span><span class="o">=</span><span class="n">scene_root</span><span class="p">,</span>
         <span class="n">animations</span><span class="o">=</span><span class="n">animations</span><span class="p">,</span>
@@ -891,6 +968,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">textures</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AssetJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">style_pack</span><span class="p">:</span> <span class="s2">"StylePack | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NodeJSON</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Construct the cutout scene tree under a single root from shot.entities.</span>
 
@@ -920,10 +998,17 @@
     <span class="c1"># FRONT of the characters structurally unreachable: entity order could not</span>
     <span class="c1"># interleave them however the author wrote the scene.</span>
     <span class="n">in_front</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">reached</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">skipped</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">shot</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"environment"</span><span class="p">:</span>
             <span class="n">node</span><span class="p">,</span> <span class="n">front</span> <span class="o">=</span> <span class="n">_build_environment_subtree</span><span class="p">(</span>
-                <span class="n">entity</span><span class="p">,</span> <span class="n">environments_store</span><span class="p">,</span> <span class="n">textures</span><span class="o">=</span><span class="n">textures</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span>
+                <span class="n">entity</span><span class="p">,</span>
+                <span class="n">environments_store</span><span class="p">,</span>
+                <span class="n">textures</span><span class="o">=</span><span class="n">textures</span><span class="p">,</span>
+                <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span><span class="p">,</span>
+                <span class="n">style_pack</span><span class="o">=</span><span class="n">style_pack</span><span class="p">,</span>
+                <span class="n">reached</span><span class="o">=</span><span class="n">reached</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
             <span class="n">in_front</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">front</span><span class="p">)</span>
@@ -932,7 +1017,13 @@
             <span class="n">x</span> <span class="o">=</span> <span class="n">char_positions</span><span class="p">[</span><span class="n">char_idx</span><span class="p">]</span>
             <span class="n">char_idx</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">sub</span> <span class="o">=</span> <span class="n">_build_character_subtree</span><span class="p">(</span>
-                <span class="n">entity</span><span class="p">,</span> <span class="n">characters_store</span><span class="p">,</span> <span class="n">textures</span><span class="o">=</span><span class="n">textures</span><span class="p">,</span> <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span>
+                <span class="n">entity</span><span class="p">,</span>
+                <span class="n">characters_store</span><span class="p">,</span>
+                <span class="n">textures</span><span class="o">=</span><span class="n">textures</span><span class="p">,</span>
+                <span class="n">resolutions</span><span class="o">=</span><span class="n">resolutions</span><span class="p">,</span>
+                <span class="n">style_pack</span><span class="o">=</span><span class="n">style_pack</span><span class="p">,</span>
+                <span class="n">reached</span><span class="o">=</span><span class="n">reached</span><span class="p">,</span>
+                <span class="n">skipped</span><span class="o">=</span><span class="n">skipped</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">sub</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
             <span class="n">_apply_stage_placement</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">entity</span><span class="p">)</span>
@@ -947,6 +1038,7 @@
         <span class="c1"># configure the render rather than appearing in it.</span>
     <span class="c1"># …and last, the foreground planes, over everything.</span>
     <span class="n">children</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">in_front</span><span class="p">)</span>
+    <span class="n">_warn_about_art_a_pack_cannot_reach</span><span class="p">(</span><span class="n">style_pack</span><span class="p">,</span> <span class="n">reached</span><span class="p">,</span> <span class="n">skipped</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">NodeJSON</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"root"</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="n">children</span><span class="p">)</span>
 
 
@@ -967,6 +1059,8 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">textures</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AssetJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">style_pack</span><span class="p">:</span> <span class="s2">"StylePack | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">reached</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""``(the environment node, the planes that go IN FRONT of the characters)``.</span>
 
@@ -1064,8 +1158,15 @@
     <span class="c1"># wide rects will always cover.</span>
     <span class="n">huge</span> <span class="o">=</span> <span class="mf">4000.0</span>
     <span class="n">ground_y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">preset</span><span class="p">[</span><span class="s2">"ground_y"</span><span class="p">])</span>
-    <span class="n">sky_color</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset</span><span class="p">[</span><span class="s2">"sky_color"</span><span class="p">])</span>
-    <span class="n">ground_color</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset</span><span class="p">[</span><span class="s2">"ground_color"</span><span class="p">])</span>
+    <span class="c1"># A lookup with a default, as everywhere else a pack reaches.</span>
+    <span class="n">sky_color</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">style_pack</span><span class="o">.</span><span class="n">colour_for</span><span class="p">(</span><span class="s2">"sky"</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">if</span> <span class="n">style_pack</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset</span><span class="p">[</span><span class="s2">"sky_color"</span><span class="p">])</span>
+    <span class="n">ground_color</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">style_pack</span><span class="o">.</span><span class="n">colour_for</span><span class="p">(</span><span class="s2">"ground"</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">if</span> <span class="n">style_pack</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset</span><span class="p">[</span><span class="s2">"ground_color"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">style_pack</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">reached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">reached</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
     <span class="c1"># The node is built exactly as before an#110; only the RETURN grew a second</span>
     <span class="c1"># element, and it is always empty here — a preset declares no planes, so it</span>
     <span class="c1"># has nothing to put in front of the characters.</span>
@@ -1562,6 +1663,9 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">textures</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AssetJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolutions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AssetResolutionJSON</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">style_pack</span><span class="p">:</span> <span class="s2">"StylePack | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">reached</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">skipped</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NodeJSON</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Build a NodeJSON subtree for one character.</span>
 
@@ -1603,6 +1707,11 @@
 
     <span class="k">if</span> <span class="n">char_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"CharacterDescriptor"</span><span class="p">:</span>
         <span class="n">_record</span><span class="p">(</span><span class="s2">"descriptor"</span><span class="p">)</span>
+        <span class="c1"># An SVG rig's colours live inside its drawings, and a pack does not</span>
+        <span class="c1"># rewrite SVG at compile time (see `an.styles`). Recorded so the</span>
+        <span class="c1"># compiler can say WHICH entities it could not reach, by name.</span>
+        <span class="k">if</span> <span class="n">skipped</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">skipped</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_build_svg_character_subtree</span><span class="p">(</span>
             <span class="n">entity</span><span class="p">,</span>
             <span class="n">char_meta</span><span class="p">,</span>
@@ -1636,16 +1745,26 @@
         <span class="p">)</span>
 
     <span class="n">parts</span> <span class="o">=</span> <span class="n">declared_parts</span> <span class="ow">or</span> <span class="n">_PLACEHOLDER_PARTS</span>
-    <span class="n">skin</span><span class="p">,</span> <span class="n">clothing</span><span class="p">,</span> <span class="n">hair</span> <span class="o">=</span> <span class="n">_palette_for</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="c1"># A LOOKUP WITH A DEFAULT, not a rewrite: with no pack — every document</span>
+    <span class="c1"># before an#112 — the literals below come back unchanged and the compiled</span>
+    <span class="c1"># node is the node this code always produced.</span>
+    <span class="n">skin</span><span class="p">,</span> <span class="n">clothing</span><span class="p">,</span> <span class="n">hair</span> <span class="o">=</span> <span class="n">resolve_palette</span><span class="p">(</span>
+        <span class="n">style_pack</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">_palette_for</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">leg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">style_pack</span><span class="o">.</span><span class="n">colour_for</span><span class="p">(</span><span class="s2">"leg"</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">if</span> <span class="n">style_pack</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="ow">or</span> <span class="n">DFLT_LEG_COLOUR</span>
+    <span class="k">if</span> <span class="n">style_pack</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">reached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">reached</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
     <span class="c1"># Per-part color: head/limbs are skin colour, torso/arm-clothing is the</span>
-    <span class="c1"># clothing colour. Override via a future store.parts.colors mapping.</span>
+    <span class="c1"># clothing colour.</span>
     <span class="n">part_color</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">"head"</span><span class="p">:</span> <span class="n">skin</span><span class="p">,</span>
         <span class="s2">"torso"</span><span class="p">:</span> <span class="n">clothing</span><span class="p">,</span>
         <span class="s2">"left_arm"</span><span class="p">:</span> <span class="n">clothing</span><span class="p">,</span>
         <span class="s2">"right_arm"</span><span class="p">:</span> <span class="n">clothing</span><span class="p">,</span>
-        <span class="s2">"left_leg"</span><span class="p">:</span> <span class="s2">"#2c3e50"</span><span class="p">,</span>
-        <span class="s2">"right_leg"</span><span class="p">:</span> <span class="s2">"#2c3e50"</span><span class="p">,</span>
+        <span class="s2">"left_leg"</span><span class="p">:</span> <span class="n">leg</span><span class="p">,</span>
+        <span class="s2">"right_leg"</span><span class="p">:</span> <span class="n">leg</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NodeJSON</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
@@ -1702,14 +1821,20 @@
                         <span class="p">),</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
-            <span class="c1"># Eyes: white sclera + dark pupil drawn together by makeEye.</span>
+            <span class="c1"># Eyes: white sclera + dark pupil drawn together by makeEye, which</span>
+            <span class="c1"># reads `visualSpec.color` for the PUPIL — so a pack reaches it,</span>
+            <span class="c1"># while the white is a `runtime.js` literal and cannot be reached</span>
+            <span class="c1"># (`an.styles.UNREACHABLE_ROLES`).</span>
+            <span class="n">pupil</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">style_pack</span><span class="o">.</span><span class="n">colour_for</span><span class="p">(</span><span class="s2">"pupil"</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">if</span> <span class="n">style_pack</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span> <span class="ow">or</span> <span class="n">DFLT_PUPIL_COLOUR</span>
             <span class="k">for</span> <span class="n">eye_name</span><span class="p">,</span> <span class="n">ex</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"left_eye"</span><span class="p">,</span> <span class="o">-</span><span class="mf">10.0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"right_eye"</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)):</span>
                 <span class="n">child</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">NodeJSON</span><span class="p">(</span>
                         <span class="n">name</span><span class="o">=</span><span class="n">eye_name</span><span class="p">,</span>
                         <span class="n">transform</span><span class="o">=</span><span class="n">TransformJSON</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">ex</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mf">3.0</span><span class="p">),</span>
                         <span class="n">visual</span><span class="o">=</span><span class="n">VisualJSON</span><span class="p">(</span>
-                            <span class="n">kind</span><span class="o">=</span><span class="s2">"eye"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#1a1a1a"</span>
+                            <span class="n">kind</span><span class="o">=</span><span class="s2">"eye"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">pupil</span>
                         <span class="p">),</span>
                     <span class="p">)</span>
                 <span class="p">)</span>

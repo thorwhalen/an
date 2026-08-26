@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.serialize &mdash; an 0.1.66 documentation</title>
+  <title>an.adapters.cutout.serialize &mdash; an 0.1.67 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=3015fd79"></script>
+      <script src="../../../../_static/documentation_options.js?v=946d7960"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -150,6 +150,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/styles.html">an.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/tools.html">an.tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/util.html">an.util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../module_docs/an/verify.html">an.verify</a></li>
@@ -501,6 +502,13 @@
     <span class="c1">#: `null` here would move every committed row's hash for a knob nobody</span>
     <span class="c1">#: turned. Inert to the runtime; read by the ledger.</span>
     <span class="n">step_hz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#: The name of the `StylePack` this scene was compiled under, or ``None``.</span>
+    <span class="c1">#: Recorded so a rendered document says which art direction produced it —</span>
+    <span class="c1">#: the pack's COLOURS are already resolved into the nodes, so this is</span>
+    <span class="c1">#: provenance rather than an instruction. Omitted from the serialized</span>
+    <span class="c1">#: document when unset (see the wrap serializer below).</span>
+    <span class="n">style_pack</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="c1">#: Per-entity saccade seed (an#99), a pure function of the entity NAME</span>
     <span class="c1">#: like `blink_phases`; stamped for the rigs that have pupils and</span>
     <span class="c1">#: **serialized only when non-empty** — a pre-Wave-6 rig has no pupils and</span>
@@ -514,6 +522,13 @@
             <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"step_hz"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"gaze_seeds"</span><span class="p">):</span>
             <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"gaze_seeds"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># an#112, written in the same commit as the field it omits rather than</span>
+        <span class="c1"># as a follow-up: `to_dict` prunes no `None`s and the contract hashes</span>
+        <span class="c1"># the whole dict, so a defaulted `style_pack` on every scene would move</span>
+        <span class="c1"># every hash in the corpus for a knob nobody turned. `VisualJSON.fit`</span>
+        <span class="c1"># is the counter-example this rule exists because of.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"style_pack"</span><span class="p">):</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"style_pack"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span></div>
 
 

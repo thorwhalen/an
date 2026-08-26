@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.run &mdash; an 0.1.66 documentation</title>
+  <title>an.bench.run &mdash; an 0.1.67 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3015fd79"></script>
+      <script src="../../../_static/documentation_options.js?v=946d7960"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -150,6 +150,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/scenes.html">an.stores.scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/styles.html">an.stores.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/stores/voices.html">an.stores.voices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/styles.html">an.styles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/tools.html">an.tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/util.html">an.util</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/verify.html">an.verify</a></li>
@@ -885,7 +886,9 @@
         <span class="k">return</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">),</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
     <span class="n">refs</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">resolve_frames</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">detail</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"the scene pins </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span><span class="si">}</span><span class="s2"> distinct frame(s); a displacement needs two"</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the scene pins </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span><span class="si">}</span><span class="s2"> distinct frame(s); a displacement needs two"</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">),</span> <span class="n">unavailable</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
     <span class="n">frames</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">read_png</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">frame_png_path</span><span class="p">(</span><span class="n">capture</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
     <span class="k">try</span><span class="p">:</span>
