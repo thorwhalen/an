@@ -504,11 +504,54 @@ def _build_multiplane(work: Path) -> Path:
     return _render(_project(work, scene_md=md, characters=("maya",)))
 
 
+def _declare_placeholder_rig(project: Path, entity_ref: str) -> None:
+    """Declare the built-in procedural rig, so it is a choice not a fallback.
+
+    Lifted from `an.bench.corpus._declare_procedural_rig` rather than imported,
+    because `misc/demos/` must not depend on `an.bench`. The entry lists exactly
+    `_PLACEHOLDER_PARTS`, which is the list the fallback would have used, so
+    every pixel is identical; what changes is that the compiled scene records
+    `resolved: "parts", fallback: false` rather than emitting the an#33
+    stand-in warning.
+    """
+    from an.adapters.cutout.compile import _PLACEHOLDER_PARTS
+    from an.project import load
+
+    load(project).mall["characters"][entity_ref] = {
+        "name": entity_ref,
+        "parts": list(_PLACEHOLDER_PARTS),
+        "note": (
+            "declared by the style-pack demo so the procedural rig is a choice "
+            "rather than a fallback (an#33). Byte-identical render."
+        ),
+    }
+
+
 def _build_style_pack(work: Path) -> Path:
     """The same scene twice, side by side: no pack, then a noir pack.
 
-    Nothing about the scene changes — same characters, same backdrop, same
-    timing. What changes is a single `style_pack:` line in the meta block.
+    Nothing about the scene changes — same rig, same backdrop, same timing.
+    What changes is a single `style_pack:` line in the meta block.
+
+    **The procedural rig is the whole reason this demo shows anything**, so it
+    is DECLARED rather than fallen into. `new_character` writes SVG art, and a
+    pack does not reach inside a drawing (`an.styles`' central limit) — a
+    synthesized character would have left the backdrop as the only thing that
+    changed. The procedural rig is the only rig a pack can repaint.
+
+    Declaring it follows `an.bench.corpus._declare_procedural_rig`, for the
+    same an#33 reason: the store entry lists exactly `_PLACEHOLDER_PARTS`, the
+    list the fallback would have used, so the compiled tree and every pixel are
+    identical — what changes is that the scene records
+    `resolved: "parts", fallback: false` instead of tripping the stand-in
+    warning. A clip whose whole subject is "these two frames differ for exactly
+    one reason" must not carry a second, unstated reason in a warning the
+    gallery reader never sees.
+
+    `_PLACEHOLDER_PARTS` is a head, a torso and two arms — no legs — so `leg`
+    and `pupil` are the two reachable roles this rig cannot show, and the pack
+    declares neither. A worked example a reader copies should not ship an entry
+    that does nothing.
     """
     import json
     import subprocess
@@ -526,7 +569,6 @@ def _build_style_pack(work: Path) -> Path:
                     "skin": "#cfcfcf",
                     "clothing": "#23232b",
                     "hair": "#0d0d0d",
-                    "leg": "#15151b",
                     "sky": "#3c3c47",
                     "ground": "#232329",
                 },
@@ -550,6 +592,7 @@ def _build_style_pack(work: Path) -> Path:
             "```\n"
         )
         (pane / "scene.md").write_text(md, encoding="utf-8")
+        _declare_placeholder_rig(pane, "charlie-v1")
         panes.append(_render(pane))
     out = work / "style-pack.mp4"
     subprocess.run(
@@ -1059,16 +1102,24 @@ DEMOS: tuple[Demo, ...] = (
         title="One line of scene, a different film",
         shows=(
             "The same shot twice: no pack on the left, a noir pack on the right. "
-            "Same characters, same backdrop, same timing — the only difference is "
-            "a `style_pack:` line in the meta block. A pack recolours what the "
-            "COMPILER decides: the character palette, the legs, the environment "
-            "preset's sky and ground."
+            "Same scene, same backdrop, same timing — the only difference is a "
+            "`style_pack:` line in the meta block. FIVE things change and all "
+            "five are visible: sky, ground, skin, clothing and hair. The figure "
+            "is the built-in procedural rig, DECLARED rather than fallen into — "
+            "a character from `an character new` is SVG, and a pack does not "
+            "reach inside a drawing, so a synthesized one would leave the "
+            "backdrop as the only thing that changed. That rig is a head, a "
+            "torso and two arms, so `leg` and `pupil` are the two reachable "
+            "roles this clip cannot show, and the pack declares neither."
         ),
         how=(
             "An `an.styles.StylePack` in the project's `styles` store — which had "
             "no reader at all until an#112 — named by `style_pack:` in `yaml meta`. "
             "`roles` maps a role to a hex colour and `entities` overrides one "
-            "character. A pack may NOT name `lip`, `mouth_fill`, `teeth`, `tongue` "
+            "character. Seven roles are reachable — `skin`, `clothing`, `hair`, "
+            "`leg`, `pupil`, `sky`, `ground` — and this pack declares five of "
+            "them, leaving out the two this rig cannot show. "
+            "A pack may NOT name `lip`, `mouth_fill`, `teeth`, `tongue` "
             "or `eye_sclera`: those are literals inside `runtime.js`, and a role "
             "that silently does nothing is worse than an absent one, so declaring "
             "one is refused. It also does not recolour SVG art — those colours are "

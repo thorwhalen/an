@@ -1,6 +1,6 @@
 # Wave 7 research — "The stage"
 
-**Status: decided.** This is the design of record for Wave 7 of epic #9 (a camera that
+**Status: shipped** (was: decided). Built as an#105 → an#112, released 0.1.59 → 0.1.68. Read it for the *why*; for what the code does now, `misc/docs/architecture_as_built.md` and the `an-dev-stage` skill are the current-state docs, and §5 of that skill is what Wave 7 deliberately left. This is the design of record for Wave 7 of epic #9 (a camera that
 translates, multiplane environments, props, a StylePack). It is the synthesis of five research
 threads run 2026-08-25 (camera/parallax, environments/planes, style/rename, props, measurement),
 each of which read the code and fetched its own sources. Where this document and the epic's
