@@ -105,6 +105,16 @@ the `live_api` marker. A key being present is not consent to spend — that gate
 because a plain `pytest -q` in this repo once made real, billed ElevenLabs calls and
 reported PASSED. A cassette miss is an ERROR, never a fallthrough to a real call.
 
+**The rule binds anything a person RUNS, not just tests.** The switch lives in the package
+(`an.live_api.live_api_enabled`) precisely so a non-test can consult it: an example cannot
+import a conftest, and `examples/character_gallery/build.py` chose ElevenLabs on
+key-presence alone until an#63 — an example is the first thing a new user runs, on a clean
+checkout where the audio cache is cold and every line is a fresh charge. If you write a
+script a user or an agent is invited to run, it may reach a paid provider only through that
+predicate, and it must say which providers it picked **and why** before it starts. Free
+things that download model weights on first use (whisper) ride the same switch rather than a
+second one: two answers to "may this run do something expensive" drift apart.
+
 **Never skip at module level. Gate the TEST, with a marker.** This is the rule that #22
 was, and it is not about browsers — it is about the difference between a test that is
 *skipped* and a test that does not *exist*.
