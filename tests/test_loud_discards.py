@@ -944,38 +944,19 @@ def test_the_render_path_threads_strict_assets_to_the_compiler(monkeypatch):
     compiles anything, so a real import here would make the guard skip in CI,
     which is the same as not having it.
     """
-    import sys
-    import types
-
     from an.adapters._base import RenderContext
     from an.adapters.cutout import render as render_mod
+    from tests._render_seam import stop_at_compile_shot
 
-    seen: dict = {}
-
-    class _Stop(Exception):
-        """Aborts the render at the seam under test; nothing past it is asserted."""
-
-    def _spy(*args, **kwargs):
-        seen.update(kwargs)
-        raise _Stop
-
-    if "playwright.sync_api" not in sys.modules:
-        pkg = types.ModuleType("playwright")
-        api = types.ModuleType("playwright.sync_api")
-        api.sync_playwright = lambda: None
-        pkg.sync_api = api
-        monkeypatch.setitem(sys.modules, "playwright", pkg)
-        monkeypatch.setitem(sys.modules, "playwright.sync_api", api)
-
-    monkeypatch.setattr(render_mod, "compile_shot", _spy)
-    monkeypatch.setattr(render_mod, "_ensure_ffmpeg_available", lambda: None)
+    seam = stop_at_compile_shot(monkeypatch)
 
     shot = Shot(id="s1", renderer="cutout", duration=1.0, entities=[_character()])
     ctx = RenderContext(mall={}, work_dir=Path("."), strict_assets=True)
-    with pytest.raises(_Stop):
+    with pytest.raises(seam.Stop):
         render_mod.CutoutRenderer().render(shot, ctx)
 
-    assert seen.get("strict_assets") is True, (
+    assert seam.reached, "the render aborted before compile_shot; the guard saw nothing"
+    assert seam.kwargs.get("strict_assets") is True, (
         "RenderContext.strict_assets did not reach compile_shot; the flag would "
         "silently protect nothing"
     )

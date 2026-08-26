@@ -39,6 +39,7 @@ from an.styles import (
     StylePack,
     resolve_palette,
 )
+from tests._render_seam import stop_at_compile_shot
 
 RUNTIME_JS = Path(__file__).resolve().parents[1] / "an" / "data" / "cutout_runtime" / "runtime.js"
 W, H = 320, 240
@@ -396,35 +397,37 @@ def test_the_render_path_resolves_the_pack_from_the_scenes_meta():
     assert getattr(seen[0], "name", None) == "noir", seen
 
 
-def test_the_renderer_hands_the_pack_to_the_compiler():
+def test_the_renderer_hands_the_pack_to_the_compiler(monkeypatch):
     """Hop two: `RenderContext.style_pack` → `compile_shot`. Dropping it left
-    the feature inert with a green suite (an#112 review, M17)."""
+    the feature inert with a green suite (an#112 review, M17).
+
+    Asserted at the seam through `stop_at_compile_shot`, so it runs in the
+    default lane. `render` checks for ffmpeg and imports `playwright.sync_api`
+    *before* it compiles, so a guard that lets those run is a guard only on a
+    developer machine — this test's first CI run failed for exactly that
+    reason while passing locally.
+    """
     import tempfile
     from pathlib import Path as _Path
 
     import an.adapters.cutout.render as render_mod
 
-    seen: list[object] = []
-    original = render_mod.compile_shot
+    seam = stop_at_compile_shot(monkeypatch)
 
-    def spy(*args, **kwargs):
-        seen.append(kwargs.get("style_pack"))
-        raise RuntimeError("stop before the browser")
+    with tempfile.TemporaryDirectory() as tmp:
+        ctx = render_mod.RenderContext(
+            mall={},
+            work_dir=_Path(tmp),
+            style_pack=StylePack(name="noir"),
+        )
+        # `seam.Stop`, not `Exception`: a bare Exception also swallows the
+        # missing-ffmpeg error, which would turn "the seam was never reached"
+        # into a passing line.
+        with pytest.raises(seam.Stop):
+            render_mod.CutoutRenderer().render(_shot(), ctx)
 
-    render_mod.compile_shot = spy
-    try:
-        with tempfile.TemporaryDirectory() as tmp:
-            ctx = render_mod.RenderContext(
-                mall={},
-                work_dir=_Path(tmp),
-                style_pack=StylePack(name="noir"),
-            )
-            with pytest.raises(Exception):
-                render_mod.CutoutRenderer().render(_shot(), ctx)
-    finally:
-        render_mod.compile_shot = original
-
-    assert seen and getattr(seen[0], "name", None) == "noir", seen
+    assert seam.reached, "the render aborted before compile_shot; the guard saw nothing"
+    assert getattr(seam.kwargs.get("style_pack"), "name", None) == "noir", seam.kwargs
 
 
 def test_the_preview_path_carries_it_too():
