@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Iterable
 
 from an.adapters._base import RenderContext, RenderResult
+from an.adapters.cutout.compile import style_pack_for
 from an.adapters._base import _DEFAULT_REGISTRY
 from an.base import (
     DEFAULT_FPS,
@@ -235,6 +236,10 @@ def render(
         supersample=supersample,
         pix_fmt=pix_fmt,
         step_hz=step_hz if step_hz is not None else scene.meta.step_hz,
+        # Resolved here, once, so a missing pack fails before the first browser
+        # launch rather than per shot — and so every shot in a scene is drawn
+        # under the same art direction by construction.
+        style_pack=style_pack_for(scene.meta, project.mall.get("styles") or {}),
     )
 
     shots = list(scene.timeline)

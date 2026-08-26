@@ -167,7 +167,15 @@ A pack must not declare a role it cannot change — `lip`, `mouth_fill`, `teeth`
 scene→`Timeline` reader as `timeline_from_scene` **(landed, an#107)** → `3` props — the extraction
 alone, then the path **(landed, an#108: PRs #117 and #118)** → `4` the translating camera
 **(landed, an#109)** → `5` plane environments (store-declared only) →
-`6` the `stage_pan` fixture, goldens, metric, tripwire → `7` StylePack.
+`6` the `stage_pan` fixture, goldens, metric, tripwire **(landed, an#111)** →
+`7` StylePack **(landed, an#112)**.
+
+**Wave 7 is complete.** What it left behind for a later wave, each named with its reason:
+the **dolly** (`dolly_in`/`dolly_out` and the `z`/`focal_z` sugar — depth-aware zoom, which is
+what `depth` does NOT do today); `repeat`/tiling and the `gradient`/`generated` plane arts (each
+needs a runtime that can draw it); a pack reaching SVG art through the factory; attaching a prop
+to a character (`_track_root_of` makes entity identity the first path segment, and the rig has no
+hand bone); and additive folding for the camera/plane collisions that currently raise.
 
 Everything through `4` moves no hash. `5`–`7` move one, deliberately, for a scene that did not
 exist before.

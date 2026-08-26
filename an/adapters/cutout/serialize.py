@@ -275,6 +275,13 @@ class CutoutSceneMetaJSON(_JSONModel):
     #: `null` here would move every committed row's hash for a knob nobody
     #: turned. Inert to the runtime; read by the ledger.
     step_hz: float | None = None
+
+    #: The name of the `StylePack` this scene was compiled under, or ``None``.
+    #: Recorded so a rendered document says which art direction produced it —
+    #: the pack's COLOURS are already resolved into the nodes, so this is
+    #: provenance rather than an instruction. Omitted from the serialized
+    #: document when unset (see the wrap serializer below).
+    style_pack: str | None = None
     #: Per-entity saccade seed (an#99), a pure function of the entity NAME
     #: like `blink_phases`; stamped for the rigs that have pupils and
     #: **serialized only when non-empty** — a pre-Wave-6 rig has no pupils and
@@ -288,6 +295,13 @@ class CutoutSceneMetaJSON(_JSONModel):
             data.pop("step_hz", None)
         if isinstance(data, dict) and not data.get("gaze_seeds"):
             data.pop("gaze_seeds", None)
+        # an#112, written in the same commit as the field it omits rather than
+        # as a follow-up: `to_dict` prunes no `None`s and the contract hashes
+        # the whole dict, so a defaulted `style_pack` on every scene would move
+        # every hash in the corpus for a knob nobody turned. `VisualJSON.fit`
+        # is the counter-example this rule exists because of.
+        if isinstance(data, dict) and not data.get("style_pack"):
+            data.pop("style_pack", None)
         return data
 
 

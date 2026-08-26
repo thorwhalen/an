@@ -500,6 +500,12 @@ def ir_to_markdown(scene: SceneIR) -> str:
     }
     if scene.meta.step_hz is not None:
         meta_dict["step_hz"] = scene.meta.step_hz
+    # Written only when set, like `step_hz`: this writer ENUMERATES the meta
+    # keys, so a field added to `Meta` and not named here silently drops on
+    # write — which is the an#89 trap, and the reason a round-trip test is the
+    # thing that catches it (an#112).
+    if scene.meta.style_pack:
+        meta_dict["style_pack"] = scene.meta.style_pack
     parts.append("```yaml meta")
     parts.append(yaml.safe_dump(meta_dict, sort_keys=False).rstrip())
     parts.append("```\n")

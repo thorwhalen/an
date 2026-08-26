@@ -15,10 +15,14 @@ from __future__ import annotations
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Iterable, Protocol, runtime_checkable
 
 from an.base import DEFAULT_FPS, DEFAULT_RESOLUTION, DEFAULT_SUPERSAMPLE
 from an.ir.schema import Shot
+
+
+if TYPE_CHECKING:  # pragma: no cover - types only
+    from an.styles import StylePack
 
 
 @dataclass(slots=True)
@@ -75,6 +79,12 @@ class RenderContext:
     #: matter where the knob lives, and a document that carries its own timing
     #: policy is the honest one. Omit-when-unset keeps the unset case free.
     step_hz: float | None = None
+
+    #: The `StylePack` this render is drawn under, already resolved from the
+    #: scene's `meta.style_pack` (an#112). Resolved ONCE per render rather than
+    #: per shot: a pack is art direction for a project, and a scene whose shots
+    #: disagreed about it would be two scenes.
+    style_pack: "StylePack | None" = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 

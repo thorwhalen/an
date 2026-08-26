@@ -522,6 +522,38 @@ class Meta(_IRModel):
     #: compile), an#89.
     step_hz: float | None = Field(default=None, gt=0)
 
+    #: The `StylePack` in the project's `styles` store this scene is drawn
+    #: under, by key. ``None`` — the default and what every existing document
+    #: has — leaves every colour exactly where it is, which is why adding this
+    #: moved no corpus hash (an#112).
+    #:
+    #: A pack changes what the COMPILER decides: the character palette, the
+    #: leg and pupil colours, the environment presets' sky and ground. It does
+    #: NOT recolour SVG art — that would need role tagging the descriptor does
+    #: not have, and inferring a role from a pixel is what produced an#99's
+    #: wrong-tone lid. A rig whose art a pack cannot reach is WARNED about by
+    #: name at compile.
+    style_pack: str | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_unset_style_pack(self, handler):
+        """Serialize ``style_pack: null`` out of existence when it is unset.
+
+        The same rule as `AssetRef._omit_unset_stage`, and the same reason:
+        every committed `ir/scene.json` in this repo — and whatever a user has
+        on disk — predates the field, so a defaulted `null` on every scene's
+        meta rewrites all of them on the next `an sync`. A field nobody set
+        should leave no trace (an#112).
+        """
+        data = handler(self)
+        # Truthiness, not `is None`: an empty string is not a pack — the
+        # resolver already treats it as none — and serializing a visible
+        # `style_pack: ""` that does nothing is the shape this omit exists to
+        # prevent (an#112 review, L2).
+        if isinstance(data, dict) and not data.get("style_pack"):
+            data.pop("style_pack", None)
+        return data
+
 
 class SceneIR(_IRModel):
     """Top-level Scene IR document. The SSOT.
