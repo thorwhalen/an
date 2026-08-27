@@ -46,6 +46,7 @@ invisible to the recovery and a later sweep would restore *to* the leftover.
 from __future__ import annotations
 
 import contextlib
+import os
 import signal
 import subprocess
 import sys
@@ -908,32 +909,40 @@ def run_mutants(
     return results
 
 
-@contextlib.contextmanager
-def _signals_deferred(signals: Iterable[int] = RESTORE_ON_SIGNALS) -> Iterator[None]:
-    """Hold off the terminating signals for the length of the restore.
+#: Suffix for the sibling file the restore is staged through. Same directory, so
+#: `os.replace` is a rename within one filesystem and therefore atomic.
+RESTORE_TMP_SUFFIX: str = ".an-restore-tmp"
 
-    The handler :func:`restore_on_termination` installs RAISES, and the restore
-    is a ``write_text`` — mode ``"w"``, which TRUNCATES at open and flushes at
-    close. A signal delivered inside that window raises out of the restore and
-    leaves the source file empty or half-written, which is strictly worse than
-    the leftover the mechanism exists to prevent, and is exactly the "a reversal
-    that itself failed would leave the tree broken" hazard this module's
-    docstring argues against. `timeout`, systemd and an impatient user all send
-    more than one signal, so the window is not theoretical.
 
-    ``pthread_sigmask`` is POSIX-only; on Windows this is a no-op and the
-    ordinary ``finally`` is all there is — the same coverage Windows had before,
-    where SIGTERM terminates without running handlers at all.
+def _restore_atomically(path: Path, original: str) -> None:
+    """Put ``original`` back in a way no kill can interrupt half-way.
+
+    ``Path.write_text`` opens mode ``"w"``, which TRUNCATES at open and flushes
+    at close. Anything that stops the process in that window — SIGTERM, SIGHUP,
+    a plain Ctrl-C, SIGKILL, a crash, the power — leaves the real source file
+    empty or half-written, which is **strictly worse** than the leftover this
+    whole mechanism exists to prevent, and is the "a reversal that itself failed
+    would leave the tree broken" hazard the module docstring argues against.
+
+    A ``pthread_sigmask`` around that write was the first attempt, and it is the
+    wrong tool for a reason this module of all modules should have seen: it
+    cannot cover SIGKILL, and "SIGKILL cannot be handled at all" is the premise
+    the recovery path is built on. It also silently excluded SIGINT — the
+    interruption an#67 itself calls the normal one — because it reused
+    :data:`RESTORE_ON_SIGNALS`, whose exclusion of SIGINT is correct for
+    *handlers* (SIGINT already raises) and exactly wrong for *blocking*. A mask
+    narrows the window; it does not close it, and it invites prose that says the
+    restore is safe when it is only safer.
+
+    Staging through a sibling and calling ``os.replace`` closes it instead. The
+    rename is atomic within a filesystem, so an observer sees the old bytes or
+    the new bytes and never a truncated file, whatever kills the process. A kill
+    before the rename leaves a stray ``*.an-restore-tmp`` and the source file
+    untouched — which is the ordinary leftover case the marker already covers.
     """
-    mask = getattr(signal, "pthread_sigmask", None)
-    if mask is None or not signals:  # pragma: no cover - Windows
-        yield
-        return
-    mask(signal.SIG_BLOCK, set(signals))
-    try:
-        yield
-    finally:
-        mask(signal.SIG_UNBLOCK, set(signals))
+    tmp = path.with_name(path.name + RESTORE_TMP_SUFFIX)
+    tmp.write_text(original, encoding="utf-8")
+    os.replace(tmp, path)
 
 
 def _run_one(base: Path, mutant: Mutant) -> dict:
@@ -949,8 +958,7 @@ def _run_one(base: Path, mutant: Mutant) -> dict:
             text=True,
         )
     finally:
-        with _signals_deferred():
-            path.write_text(original, encoding="utf-8")
+        _restore_atomically(path, original)
     summary = [
         line
         for line in completed.stdout.splitlines()
