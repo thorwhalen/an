@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.mutants &mdash; an 0.1.71 documentation</title>
+  <title>an.bench.mutants &mdash; an 0.1.72 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9f53bdf0"></script>
+      <script src="../../../_static/documentation_options.js?v=a8ab379a"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -237,9 +237,11 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span>
@@ -271,6 +273,55 @@
 <span class="c1">#: 128 + SIGINT. Nonzero, and distinguishable from the 1 a surviving mutant</span>
 <span class="c1">#: gives — "you stopped it" and "a guard is decoration" are different answers.</span>
 <span class="n">INTERRUPTED_EXIT_CODE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">130</span>
+
+
+<span class="c1">#: Left out of a sweep's throwaway tree. Caches and build output only —</span>
+<span class="c1">#: **`.git` IS copied**, because six of the thirteen guard files call</span>
+<span class="c1">#: `dirty_paths` or `repo_root`, and a tree with no history fails them for the</span>
+<span class="c1">#: wrong reason. Measured at 0.26 s for this repository, once per sweep.</span>
+<span class="n">SWEEP_COPY_IGNORE</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"__pycache__"</span><span class="p">,</span>
+    <span class="s2">".pytest_cache"</span><span class="p">,</span>
+    <span class="s2">".ruff_cache"</span><span class="p">,</span>
+    <span class="s2">".venv"</span><span class="p">,</span>
+    <span class="s2">"node_modules"</span><span class="p">,</span>
+    <span class="s2">"out"</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="sweep_tree">
+<a class="viewcode-back" href="../../../module_docs/an/bench/mutants.html#an.bench.mutants.sweep_tree">[docs]</a>
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sweep_tree</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A throwaway copy of `source` for a sweep to do its damage in.</span>
+
+<span class="sd">    **A sweep mutates real source files, and every mutation here is chosen to be</span>
+<span class="sd">    plausible** — it compiles, it renders, and the suite stays green apart from</span>
+<span class="sd">    the one test that names it. So a concurrent reader of the working tree does</span>
+<span class="sd">    not get an error, it gets a believable wrong answer. That reader is not</span>
+<span class="sd">    hypothetical: `test_a_representative_mutant_is_really_caught` runs in the</span>
+<span class="sd">    DEFAULT leg, so a plain ``pytest -q`` mutates `an/bench/compare.py` for a few</span>
+<span class="sd">    seconds, and a second suite, an editor re-indexing, a `git status` from</span>
+<span class="sd">    another shell or a lint job sees it (an#124 — three pytest processes against</span>
+<span class="sd">    one checkout, and which of them owned the file's contents was unanswerable).</span>
+
+<span class="sd">    Copying is what makes that structurally impossible rather than merely</span>
+<span class="sd">    coordinated. A lock would order the *writers*; it cannot reach a reader that</span>
+<span class="sd">    never took it.</span>
+
+<span class="sd">    It also retires an#67's hazard for this path: a sweep killed by SIGKILL can</span>
+<span class="sd">    now only leave a mutated file inside a temp directory that nothing reads.</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"an-mutant-sweep-"</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">/</span> <span class="n">source</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span>
+            <span class="n">source</span><span class="p">,</span>
+            <span class="n">dest</span><span class="p">,</span>
+            <span class="n">ignore</span><span class="o">=</span><span class="n">shutil</span><span class="o">.</span><span class="n">ignore_patterns</span><span class="p">(</span><span class="o">*</span><span class="n">SWEEP_COPY_IGNORE</span><span class="p">),</span>
+            <span class="n">symlinks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">yield</span> <span class="n">dest</span></div>
+
 
 
 <div class="viewcode-block" id="MutantError">
@@ -1087,6 +1138,11 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Apply each mutant, run its whole guard file, restore, and report.</span>
 
+<span class="sd">    **With no `root`, the sweep runs against a COPY of the repository** and the</span>
+<span class="sd">    real working tree is never written (an#124). See :func:`sweep_tree` for why</span>
+<span class="sd">    that is not merely tidiness. An explicit `root` is swept IN PLACE, because a</span>
+<span class="sd">    caller who names a tree has already chosen a throwaway.</span>
+
 <span class="sd">    Restoration is in a ``finally`` and rewrites the ORIGINAL text rather than</span>
 <span class="sd">    reversing the substitution: a reversal that itself failed would leave the</span>
 <span class="sd">    tree broken, which is a worse outcome than any mutant surviving.</span>
@@ -1108,11 +1164,23 @@
         <span class="p">)</span>
     <span class="n">wanted</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">with</span> <span class="n">restore_on_termination</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">mutant</span> <span class="ow">in</span> <span class="n">MUTANTS</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mutant</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wanted</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_run_one</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">mutant</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">sweep</span><span class="p">(</span><span class="n">where</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">restore_on_termination</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">mutant</span> <span class="ow">in</span> <span class="n">MUTANTS</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mutant</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wanted</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_run_one</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">mutant</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># An explicit root is ALREADY the caller's throwaway — the interruption</span>
+        <span class="c1"># tests hand one over precisely so they can watch the tree the sweep</span>
+        <span class="c1"># mutates. Copying it would move the damage somewhere they cannot see</span>
+        <span class="c1"># and turn those guards green for the wrong reason.</span>
+        <span class="n">sweep</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">sweep_tree</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="k">as</span> <span class="n">copied</span><span class="p">:</span>
+            <span class="n">sweep</span><span class="p">(</span><span class="n">copied</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">results</span></div>
 
 
@@ -1153,6 +1221,27 @@
     <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_child_env</span><span class="p">(</span><span class="n">base</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Environment for the guard subprocess, with `base` FIRST on the path.</span>
+
+<span class="sd">    `cwd=base` is not enough and the difference is the whole point of sweeping a</span>
+<span class="sd">    copy. A bare ``import an`` in the child resolves through the **editable</span>
+<span class="sd">    install**, which points at whichever checkout was installed — so without</span>
+<span class="sd">    this the sweep would mutate the copy and then test the real tree, and every</span>
+<span class="sd">    mutant would survive while reporting that the guards are decoration.</span>
+
+<span class="sd">    The same trap, from the other direction, made the an#67 interruption tests</span>
+<span class="sd">    measure a tree the branch had not touched. `PYTHONPATH` beats a `.pth` in</span>
+<span class="sd">    site-packages, so this makes the answer unconditional rather than dependent</span>
+<span class="sd">    on where the process happens to have been started.</span>
+<span class="sd">    """</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PYTHONPATH"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span>
+        <span class="s2">"PYTHONPATH"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span> <span class="o">+</span> <span class="n">existing</span> <span class="k">if</span> <span class="n">existing</span> <span class="k">else</span> <span class="s2">""</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_run_one</span><span class="p">(</span><span class="n">base</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">mutant</span><span class="p">:</span> <span class="n">Mutant</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Apply one mutant, run its guard file, restore, and judge the outcome."""</span>
     <span class="n">path</span> <span class="o">=</span> <span class="n">base</span> <span class="o">/</span> <span class="n">mutant</span><span class="o">.</span><span class="n">file</span>
@@ -1164,6 +1253,7 @@
             <span class="n">cwd</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
             <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">=</span><span class="n">_child_env</span><span class="p">(</span><span class="n">base</span><span class="p">),</span>
         <span class="p">)</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="n">_restore_atomically</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">original</span><span class="p">)</span>

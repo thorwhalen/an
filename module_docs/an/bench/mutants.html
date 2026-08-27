@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.mutants &mdash; an 0.1.71 documentation</title>
+  <title>an.bench.mutants &mdash; an 0.1.72 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9f53bdf0"></script>
+      <script src="../../../_static/documentation_options.js?v=a8ab379a"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -107,10 +107,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.PYTEST_ARGS"><code class="docutils literal notranslate"><span class="pre">PYTEST_ARGS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.RESTORE_ON_SIGNALS"><code class="docutils literal notranslate"><span class="pre">RESTORE_ON_SIGNALS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.RESTORE_TMP_SUFFIX"><code class="docutils literal notranslate"><span class="pre">RESTORE_TMP_SUFFIX</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.SWEEP_COPY_IGNORE"><code class="docutils literal notranslate"><span class="pre">SWEEP_COPY_IGNORE</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.check_sites"><code class="docutils literal notranslate"><span class="pre">check_sites()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.format_results"><code class="docutils literal notranslate"><span class="pre">format_results()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.restore_on_termination"><code class="docutils literal notranslate"><span class="pre">restore_on_termination()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.run_mutants"><code class="docutils literal notranslate"><span class="pre">run_mutants()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.sweep_tree"><code class="docutils literal notranslate"><span class="pre">sweep_tree()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.mutants.verdict_of"><code class="docutils literal notranslate"><span class="pre">verdict_of()</span></code></a></li>
 </ul>
 </li>
@@ -340,6 +342,15 @@ and asking for one is an <code class="docutils literal notranslate"><span class=
 <cite>os.replace</cite> is a rename within one filesystem and therefore atomic.</p>
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.mutants.SWEEP_COPY_IGNORE">
+<span class="sig-prename descclassname"><span class="pre">an.bench.mutants.</span></span><span class="sig-name descname"><span class="pre">SWEEP_COPY_IGNORE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('__pycache__',</span> <span class="pre">'.pytest_cache',</span> <span class="pre">'.ruff_cache',</span> <span class="pre">'.venv',</span> <span class="pre">'node_modules',</span> <span class="pre">'out')</span></span><a class="headerlink" href="#an.bench.mutants.SWEEP_COPY_IGNORE" title="Link to this definition"></a></dt>
+<dd><p>Left out of a sweep’s throwaway tree. Caches and build output only —
+<strong>`.git` IS copied</strong>, because six of the thirteen guard files call
+<cite>dirty_paths</cite> or <cite>repo_root</cite>, and a tree with no history fails them for the
+wrong reason. Measured at 0.26 s for this repository, once per sweep.</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="an.bench.mutants.check_sites">
 <span class="sig-prename descclassname"><span class="pre">an.bench.mutants.</span></span><span class="sig-name descname"><span class="pre">check_sites</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/mutants.html#check_sites"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.mutants.check_sites" title="Link to this definition"></a></dt>
@@ -387,6 +398,10 @@ convenience.</p>
 <dt class="sig sig-object py" id="an.bench.mutants.run_mutants">
 <span class="sig-prename descclassname"><span class="pre">an.bench.mutants.</span></span><span class="sig-name descname"><span class="pre">run_mutants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/mutants.html#run_mutants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.mutants.run_mutants" title="Link to this definition"></a></dt>
 <dd><p>Apply each mutant, run its whole guard file, restore, and report.</p>
+<p><strong>With no `root`, the sweep runs against a COPY of the repository</strong> and the
+real working tree is never written (an#124). See <a class="reference internal" href="#an.bench.mutants.sweep_tree" title="an.bench.mutants.sweep_tree"><code class="xref py py-func docutils literal notranslate"><span class="pre">sweep_tree()</span></code></a> for why
+that is not merely tidiness. An explicit <cite>root</cite> is swept IN PLACE, because a
+caller who names a tree has already chosen a throwaway.</p>
 <p>Restoration is in a <code class="docutils literal notranslate"><span class="pre">finally</span></code> and rewrites the ORIGINAL text rather than
 reversing the substitution: a reversal that itself failed would leave the
 tree broken, which is a worse outcome than any mutant surviving.</p>
@@ -395,6 +410,26 @@ inside <a class="reference internal" href="#an.bench.mutants.restore_on_terminat
 handler can cover is SIGKILL, so <code class="docutils literal notranslate"><span class="pre">check_sites</span></code> — which runs first, here —
 also recognises a file left mutated by a previous kill and says so in those
 words rather than as declaration rot.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="an.bench.mutants.sweep_tree">
+<span class="sig-prename descclassname"><span class="pre">an.bench.mutants.</span></span><span class="sig-name descname"><span class="pre">sweep_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/mutants.html#sweep_tree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.mutants.sweep_tree" title="Link to this definition"></a></dt>
+<dd><p>A throwaway copy of <cite>source</cite> for a sweep to do its damage in.</p>
+<p><strong>A sweep mutates real source files, and every mutation here is chosen to be
+plausible</strong> — it compiles, it renders, and the suite stays green apart from
+the one test that names it. So a concurrent reader of the working tree does
+not get an error, it gets a believable wrong answer. That reader is not
+hypothetical: <cite>test_a_representative_mutant_is_really_caught</cite> runs in the
+DEFAULT leg, so a plain <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-q</span></code> mutates <cite>an/bench/compare.py</cite> for a few
+seconds, and a second suite, an editor re-indexing, a <cite>git status</cite> from
+another shell or a lint job sees it (an#124 — three pytest processes against
+one checkout, and which of them owned the file’s contents was unanswerable).</p>
+<p>Copying is what makes that structurally impossible rather than merely
+coordinated. A lock would order the <em>writers</em>; it cannot reach a reader that
+never took it.</p>
+<p>It also retires an#67’s hazard for this path: a sweep killed by SIGKILL can
+now only leave a mutated file inside a temp directory that nothing reads.</p>
 </dd></dl>
 
 <dl class="py function">
