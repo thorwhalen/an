@@ -393,6 +393,19 @@ mechanisms because they cover different kills:
   whose mutated text is present and whose original is gone, and reports it as an
   interrupted run naming the file, the mutant and the exact restoring edit.
 
+- **The restore runs with the terminating signals blocked** (`pthread_sigmask`)
+  and only then is it a restore: `write_text` truncates at open and flushes at
+  close, so a signal in that window used to raise out of the restore and leave
+  the file EMPTY — worse than the leftover.
+- **`LEFT MUTATED` is a text test and says so.** The false-NEGATIVE direction is
+  refused by declaration (a mutant whose substitution leaves its own `old`
+  behind is invisible to the recovery). The other direction cannot be refused:
+  five declarations have a `new` that occurs in the *unmutated* file, so for
+  those a refactor that moved the site reads identically to a killed sweep. The
+  message tells you to check `git diff` before restoring, and it must keep
+  saying that — an earlier version asserted "this is not declaration rot", which
+  for those five sends the reader to `git checkout` away their own edit.
+
 Why that matters more here than in an ordinary tool: **every mutation in this
 registry is chosen to be plausible.** A leftover compiles, renders, produces
 frames of the declared size and leaves the suite green apart from the one test

@@ -19,6 +19,8 @@ opt-in, because it renders the whole corpus three times.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from an.bench.compare import REQUIRED_FAMILIES, compare
@@ -459,6 +461,10 @@ def test_a_non_python_mutant_is_still_checked_for_everything_but_syntax():
 #: purpose — that is the property that makes a leftover dangerous.
 _VICTIM_OLD = 'VALUE = "original"'
 _VICTIM_NEW = 'VALUE = "mutated"'
+#: The checkout these tests belong to, handed to every child process so a
+#: bare `import an` cannot silently resolve to another one.
+REPO_ROOT = str(Path(__file__).resolve().parents[1])
+
 _VICTIM_ORIGINAL = _VICTIM_OLD + "\n"
 _VICTIM_MUTATED = _VICTIM_NEW + "\n"
 #: How long the parent waits for the child to write the mutation / to die.
@@ -497,7 +503,7 @@ def _victim_tree(tmp_path, *, mutated: bool = False):
     return tmp_path
 
 
-@pytest.mark.parametrize("signame", ["SIGTERM", "SIGINT"])
+@pytest.mark.parametrize("signame", ["SIGTERM", "SIGINT", "SIGHUP"])
 def test_a_killed_sweep_restores_the_tree(tmp_path, signame):
     """MUTATION: drop `restore_on_termination` from `run_mutants` (SIGTERM only).
 
@@ -533,6 +539,20 @@ def test_a_killed_sweep_restores_the_tree(tmp_path, signame):
         (
             "import sys\n"
             "from pathlib import Path\n"
+            # KEEP THIS LINE FIRST. Without it the child, whose `cwd` is a
+            # tmp dir, resolves `import an` through the EDITABLE INSTALL —
+            # so what this test measures is decided by the environment
+            # rather than by the code. The trap is that the editable path
+            # *happens* to be the tree under test for anyone working
+            # directly in it, and for CI, which installs the checkout it
+            # tests; it is wrong for a clone or a worktree, which is what
+            # every parallel-agent setup on this repo uses. Measured:
+            # dropping SIGHUP from `RESTORE_ON_SIGNALS` left all three
+            # cases green from a clone and red from the primary checkout —
+            # the same mutation, two answers. So the person for whom this
+            # line looks redundant is exactly the person it is invisible
+            # to, and they are the one most likely to tidy it away.
+            f"sys.path.insert(0, {REPO_ROOT!r})\n"
             "from an.bench import mutants as M\n"
             "\n"
             "M.MUTANTS = (M.Mutant(name='victim', file='victim.py', "
@@ -605,6 +625,20 @@ def test_the_cli_says_the_tree_survived_however_it_was_interrupted(tmp_path, sig
         (
             "import sys\n"
             "from pathlib import Path\n"
+            # KEEP THIS LINE FIRST. Without it the child, whose `cwd` is a
+            # tmp dir, resolves `import an` through the EDITABLE INSTALL —
+            # so what this test measures is decided by the environment
+            # rather than by the code. The trap is that the editable path
+            # *happens* to be the tree under test for anyone working
+            # directly in it, and for CI, which installs the checkout it
+            # tests; it is wrong for a clone or a worktree, which is what
+            # every parallel-agent setup on this repo uses. Measured:
+            # dropping SIGHUP from `RESTORE_ON_SIGNALS` left all three
+            # cases green from a clone and red from the primary checkout —
+            # the same mutation, two answers. So the person for whom this
+            # line looks redundant is exactly the person it is invisible
+            # to, and they are the one most likely to tidy it away.
+            f"sys.path.insert(0, {REPO_ROOT!r})\n"
             "from an.bench import mutants as M\n"
             "from an.bench import paths as P\n"
             "import an.tools as T\n"
@@ -746,7 +780,7 @@ def test_a_mutant_that_hides_its_own_leftover_is_refused(tmp_path, monkeypatch):
     _victim_tree(tmp_path)
     monkeypatch.setattr(
         "an.bench.mutants.MUTANTS",
-        (_victim_mutant(new=f'PREFIX = 1\n{_VICTIM_OLD}'),),
+        (_victim_mutant(new=f"PREFIX = 1\n{_VICTIM_OLD}"),),
     )
 
     problems = check_sites(tmp_path)
@@ -805,3 +839,78 @@ def test_the_signal_boundary_puts_the_previous_handlers_back():
         for sig in took:
             assert signal.getsignal(sig) not in (before[sig], signal.SIG_DFL)
     assert {sig: signal.getsignal(sig) for sig in RESTORE_ON_SIGNALS} == before
+
+
+def test_the_leftover_message_does_not_claim_more_than_a_text_test_can_prove():
+    """MUTATION: restore "This is not declaration rot" to the message.
+
+    `check_sites` reports a leftover when the mutation is present and the
+    original is gone. The FALSE-NEGATIVE direction is refused by declaration
+    (a mutant whose substitution leaves its own `old` behind). The other
+    direction cannot be: **five of the declarations have a `new` that occurs in
+    the unmutated file** — three because `new` is a substring of `old`, two
+    because the replacement text appears elsewhere — so for those, a refactor
+    that moved the site reads exactly like a killed sweep. Telling that reader
+    "this is not declaration rot" sends them to `git checkout` away an edit they
+    had just made. The message says `git diff` first instead.
+    """
+    from an.bench.mutants import MUTANTS, _left_mutated_message
+    from an.bench.paths import repo_root
+
+    base = repo_root()
+    ambiguous = [
+        m.name for m in MUTANTS if m.new in (base / m.file).read_text(encoding="utf-8")
+    ]
+    assert ambiguous, (
+        "if no declaration has this shape any more the caveat can go — but "
+        "delete it deliberately, with this test"
+    )
+
+    message = _left_mutated_message(MUTANTS[0])
+
+    assert "git diff" in message, "the reader must be told to look before restoring"
+    assert "not declaration rot" not in message, (
+        f"the text test cannot prove that, and is wrong for {ambiguous}"
+    )
+
+
+def test_the_restore_runs_with_the_terminating_signals_blocked(tmp_path, monkeypatch):
+    """MUTATION: drop `_signals_deferred()` from `_run_one`'s finally.
+
+    The handler `restore_on_termination` installs RAISES, and the restore is a
+    `write_text` — mode "w", which truncates at open and flushes at close. A
+    signal delivered in that window raises out of the restore and leaves the
+    source file EMPTY, which is strictly worse than the leftover the whole
+    mechanism exists to prevent. The window cannot be hit deterministically, so
+    the block is asserted at the exact call site instead.
+    """
+    import signal
+    from pathlib import Path as _Path
+
+    from an.bench import mutants as mutants_mod
+
+    if not hasattr(signal, "pthread_sigmask"):  # pragma: no cover - Windows
+        pytest.skip("no pthread_sigmask: the restore has only its `finally` here")
+
+    root = _victim_tree(tmp_path)
+    (root / "test_victim.py").write_text(
+        "def test_x():\n    assert True\n", encoding="utf-8"
+    )
+    mutant = _victim_mutant()
+    monkeypatch.setattr(mutants_mod, "MUTANTS", (mutant,))
+
+    real_write = _Path.write_text
+    blocked = []
+
+    def spy(self, data, *args, **kwargs):
+        if self.name == "victim.py" and data == _VICTIM_ORIGINAL:
+            blocked.append(signal.pthread_sigmask(signal.SIG_BLOCK, set()))
+        return real_write(self, data, *args, **kwargs)
+
+    monkeypatch.setattr(_Path, "write_text", spy)
+    mutants_mod._run_one(root, mutant)
+    monkeypatch.setattr(_Path, "write_text", real_write)
+
+    assert blocked, "the restore never ran"
+    assert set(mutants_mod.RESTORE_ON_SIGNALS) <= blocked[0]
+    assert (root / "victim.py").read_text(encoding="utf-8") == _VICTIM_ORIGINAL

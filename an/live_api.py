@@ -11,7 +11,14 @@ decision D-vg-audio-02): a code path that can reach a paid API needs an
 :data:`LIVE_API_ENV_VAR` is that signal, and this module is its single
 definition. ``tests/conftest.py`` reads it for the ``live_api`` marker, and
 ``examples/character_gallery/build.py`` reads it before choosing a paid TTS
-provider — an example is not a test, but it is the file with the most footfall,
+provider.
+
+**The perimeter this actually draws.** The rule is about provider
+*auto-detection* — code that picks a paid provider because a key happened to be
+in the environment. It is not a ban on paid work, and two shipped paths reach
+paid APIs without consulting this predicate because the caller named them:
+``an iterate`` (Anthropic) and the vision verifier's default judge. If you add a
+path that CHOOSES a provider rather than being told one, it belongs here — an example is not a test, but it is the file with the most footfall,
 and a clean checkout has a cold audio cache, so every line it speaks is a new
 charge.
 
@@ -25,6 +32,7 @@ would be a second answer to "may this run spend?", and the two would drift.
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 
 #: Set this truthy to opt a run in to real, billed API calls.
 LIVE_API_ENV_VAR: str = "AN_LIVE_API_TESTS"
@@ -38,11 +46,16 @@ TRUTHY_VALUES: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 CI_ENV_VAR: str = "CI"
 
 
-def live_api_enabled(env: dict | None = None) -> bool:
+def live_api_enabled(env: Mapping[str, str] | None = None) -> bool:
     """Whether this run has explicitly opted in to paid API calls.
 
     ``env`` defaults to the process environment; pass a mapping to ask the
     question of a hypothetical one without mutating ``os.environ``.
+
+    Typed ``Mapping``, not ``dict``: the default IS ``os.environ``, an
+    ``os._Environ`` that fails ``isinstance(..., dict)``, so a ``dict``
+    annotation was false about the function's own primary argument and pushed
+    callers into copying the whole environment to satisfy it.
 
     >>> live_api_enabled({})
     False

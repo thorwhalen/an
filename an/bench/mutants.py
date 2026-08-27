@@ -716,12 +716,17 @@ def _left_mutated_message(mutant: Mutant) -> str:
     """
     return (
         f"{mutant.name}: {mutant.file} looks LEFT MUTATED by an interrupted run "
-        f"— the mutation is present and the original is gone. This is not "
-        f"declaration rot: the mutation is plausible by design (it compiles, it "
-        f"renders, the suite stays green apart from {mutant.caught_by}), so it "
-        f"can be committed unnoticed. Restore it with "
-        f"`git checkout -- {mutant.file}` if nothing else in that file is yours, "
-        f"or replace\n      {mutant.new!r}\n    with\n      {mutant.old!r}"
+        f"— the mutation is present and the original is gone. That is USUALLY a "
+        f"killed sweep rather than declaration rot, and it matters because the "
+        f"mutation is plausible by design (it compiles, it renders, the suite "
+        f"stays green apart from {mutant.caught_by}), so it can be committed "
+        f"unnoticed.\n    But this is a TEXT test and cannot prove it: a refactor "
+        f"that moved this site while leaving the replacement text somewhere in "
+        f"the file looks identical, and five of the declarations have a `new` "
+        f"that occurs in the unmutated file. CHECK `git diff` FIRST. Then, if it "
+        f"really is a leftover, restore with `git checkout -- {mutant.file}` when "
+        f"nothing else in that file is yours, or replace"
+        f"\n      {mutant.new!r}\n    with\n      {mutant.old!r}"
     )
 
 
@@ -903,6 +908,34 @@ def run_mutants(
     return results
 
 
+@contextlib.contextmanager
+def _signals_deferred(signals: Iterable[int] = RESTORE_ON_SIGNALS) -> Iterator[None]:
+    """Hold off the terminating signals for the length of the restore.
+
+    The handler :func:`restore_on_termination` installs RAISES, and the restore
+    is a ``write_text`` — mode ``"w"``, which TRUNCATES at open and flushes at
+    close. A signal delivered inside that window raises out of the restore and
+    leaves the source file empty or half-written, which is strictly worse than
+    the leftover the mechanism exists to prevent, and is exactly the "a reversal
+    that itself failed would leave the tree broken" hazard this module's
+    docstring argues against. `timeout`, systemd and an impatient user all send
+    more than one signal, so the window is not theoretical.
+
+    ``pthread_sigmask`` is POSIX-only; on Windows this is a no-op and the
+    ordinary ``finally`` is all there is — the same coverage Windows had before,
+    where SIGTERM terminates without running handlers at all.
+    """
+    mask = getattr(signal, "pthread_sigmask", None)
+    if mask is None or not signals:  # pragma: no cover - Windows
+        yield
+        return
+    mask(signal.SIG_BLOCK, set(signals))
+    try:
+        yield
+    finally:
+        mask(signal.SIG_UNBLOCK, set(signals))
+
+
 def _run_one(base: Path, mutant: Mutant) -> dict:
     """Apply one mutant, run its guard file, restore, and judge the outcome."""
     path = base / mutant.file
@@ -916,7 +949,8 @@ def _run_one(base: Path, mutant: Mutant) -> dict:
             text=True,
         )
     finally:
-        path.write_text(original, encoding="utf-8")
+        with _signals_deferred():
+            path.write_text(original, encoding="utf-8")
     summary = [
         line
         for line in completed.stdout.splitlines()

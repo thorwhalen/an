@@ -35,6 +35,7 @@ from __future__ import annotations
 import os
 import shutil
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 from an.characters import (
@@ -83,7 +84,7 @@ def _silhouette_pair(a_dir: Path, b_dir: Path) -> float:
     return compare_silhouettes(a_png, b_png)
 
 
-def _tts_choice(env: dict[str, str]) -> tuple[str, str]:
+def _tts_choice(env: Mapping[str, str]) -> tuple[str, str]:
     """The TTS provider this environment has *asked* for, and why.
 
     ``elevenlabs`` — which bills per character of dialogue — needs BOTH the
@@ -106,7 +107,7 @@ def _tts_choice(env: dict[str, str]) -> tuple[str, str]:
     return "elevenlabs", f"{LIVE_API_ENV_VAR}=1 and ELEVEN_API_KEY are both set"
 
 
-def _lipsync_choice(env: dict[str, str]) -> tuple[str, str]:
+def _lipsync_choice(env: Mapping[str, str]) -> tuple[str, str]:
     """The lip-sync provider this environment has asked for, and why.
 
     ``whisper`` costs no money, so this is not a spend gate — but its first run
@@ -126,8 +127,8 @@ def _lipsync_choice(env: dict[str, str]) -> tuple[str, str]:
 
 def _announce_providers() -> tuple[str, str]:
     """Say what will be used and why, BEFORE anything is synthesized."""
-    tts, tts_why = _tts_choice(dict(os.environ))
-    lipsync, lipsync_why = _lipsync_choice(dict(os.environ))
+    tts, tts_why = _tts_choice(os.environ)
+    lipsync, lipsync_why = _lipsync_choice(os.environ)
     print("\nProviders:")
     print(f"  tts     = {tts:<10} ({tts_why})")
     print(f"  lipsync = {lipsync:<10} ({lipsync_why})")
