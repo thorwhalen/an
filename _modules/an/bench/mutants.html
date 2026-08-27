@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.mutants &mdash; an 0.1.70 documentation</title>
+  <title>an.bench.mutants &mdash; an 0.1.71 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3b2b39e9"></script>
+      <script src="../../../_static/documentation_options.js?v=9f53bdf0"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -236,6 +236,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
@@ -1116,32 +1117,40 @@
 
 
 
-<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_signals_deferred</span><span class="p">(</span><span class="n">signals</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESTORE_ON_SIGNALS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Hold off the terminating signals for the length of the restore.</span>
+<span class="c1">#: Suffix for the sibling file the restore is staged through. Same directory, so</span>
+<span class="c1">#: `os.replace` is a rename within one filesystem and therefore atomic.</span>
+<span class="n">RESTORE_TMP_SUFFIX</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">".an-restore-tmp"</span>
 
-<span class="sd">    The handler :func:`restore_on_termination` installs RAISES, and the restore</span>
-<span class="sd">    is a ``write_text`` — mode ``"w"``, which TRUNCATES at open and flushes at</span>
-<span class="sd">    close. A signal delivered inside that window raises out of the restore and</span>
-<span class="sd">    leaves the source file empty or half-written, which is strictly worse than</span>
-<span class="sd">    the leftover the mechanism exists to prevent, and is exactly the "a reversal</span>
-<span class="sd">    that itself failed would leave the tree broken" hazard this module's</span>
-<span class="sd">    docstring argues against. `timeout`, systemd and an impatient user all send</span>
-<span class="sd">    more than one signal, so the window is not theoretical.</span>
 
-<span class="sd">    ``pthread_sigmask`` is POSIX-only; on Windows this is a no-op and the</span>
-<span class="sd">    ordinary ``finally`` is all there is — the same coverage Windows had before,</span>
-<span class="sd">    where SIGTERM terminates without running handlers at all.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_restore_atomically</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">original</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Put ``original`` back in a way no kill can interrupt half-way.</span>
+
+<span class="sd">    ``Path.write_text`` opens mode ``"w"``, which TRUNCATES at open and flushes</span>
+<span class="sd">    at close. Anything that stops the process in that window — SIGTERM, SIGHUP,</span>
+<span class="sd">    a plain Ctrl-C, SIGKILL, a crash, the power — leaves the real source file</span>
+<span class="sd">    empty or half-written, which is **strictly worse** than the leftover this</span>
+<span class="sd">    whole mechanism exists to prevent, and is the "a reversal that itself failed</span>
+<span class="sd">    would leave the tree broken" hazard the module docstring argues against.</span>
+
+<span class="sd">    A ``pthread_sigmask`` around that write was the first attempt, and it is the</span>
+<span class="sd">    wrong tool for a reason this module of all modules should have seen: it</span>
+<span class="sd">    cannot cover SIGKILL, and "SIGKILL cannot be handled at all" is the premise</span>
+<span class="sd">    the recovery path is built on. It also silently excluded SIGINT — the</span>
+<span class="sd">    interruption an#67 itself calls the normal one — because it reused</span>
+<span class="sd">    :data:`RESTORE_ON_SIGNALS`, whose exclusion of SIGINT is correct for</span>
+<span class="sd">    *handlers* (SIGINT already raises) and exactly wrong for *blocking*. A mask</span>
+<span class="sd">    narrows the window; it does not close it, and it invites prose that says the</span>
+<span class="sd">    restore is safe when it is only safer.</span>
+
+<span class="sd">    Staging through a sibling and calling ``os.replace`` closes it instead. The</span>
+<span class="sd">    rename is atomic within a filesystem, so an observer sees the old bytes or</span>
+<span class="sd">    the new bytes and never a truncated file, whatever kills the process. A kill</span>
+<span class="sd">    before the rename leaves a stray ``*.an-restore-tmp`` and the source file</span>
+<span class="sd">    untouched — which is the ordinary leftover case the marker already covers.</span>
 <span class="sd">    """</span>
-    <span class="n">mask</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="s2">"pthread_sigmask"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">signals</span><span class="p">:</span>  <span class="c1"># pragma: no cover - Windows</span>
-        <span class="k">yield</span>
-        <span class="k">return</span>
-    <span class="n">mask</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">signals</span><span class="p">))</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">yield</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">mask</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIG_UNBLOCK</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">signals</span><span class="p">))</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="n">RESTORE_TMP_SUFFIX</span><span class="p">)</span>
+    <span class="n">tmp</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_run_one</span><span class="p">(</span><span class="n">base</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">mutant</span><span class="p">:</span> <span class="n">Mutant</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -1157,8 +1166,7 @@
             <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">finally</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">_signals_deferred</span><span class="p">():</span>
-            <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+        <span class="n">_restore_atomically</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">original</span><span class="p">)</span>
     <span class="n">summary</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">line</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">completed</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
