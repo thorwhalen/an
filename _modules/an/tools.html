@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.tools &mdash; an 0.1.68 documentation</title>
+  <title>an.tools &mdash; an 0.1.69 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=7c77daa2"></script>
+      <script src="../../_static/documentation_options.js?v=d80f5ebb"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -135,6 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/live_api.html">an.live_api</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/preview.html">an.preview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/project.html">an.project</a></li>
@@ -681,7 +682,13 @@
 <span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_sys</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.mutants</span><span class="w"> </span><span class="kn">import</span> <span class="n">MUTANTS</span><span class="p">,</span> <span class="n">MutantError</span><span class="p">,</span> <span class="n">format_results</span><span class="p">,</span> <span class="n">run_mutants</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.mutants</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">INTERRUPTED_EXIT_CODE</span><span class="p">,</span>
+        <span class="n">MUTANTS</span><span class="p">,</span>
+        <span class="n">MutantError</span><span class="p">,</span>
+        <span class="n">format_results</span><span class="p">,</span>
+        <span class="n">run_mutants</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="n">wanted</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="ow">or</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">wanted</span><span class="p">:</span>
@@ -701,6 +708,21 @@
         <span class="c1"># print the warning and pass (an#41 review).</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
         <span class="n">_sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># A sweep is slow enough that interrupting it is normal (an#67). Say</span>
+        <span class="c1"># that the tree survived, because the alternative — a traceback — leaves</span>
+        <span class="c1"># a reader wondering whether a mutated file is still on disk.</span>
+        <span class="c1">#</span>
+        <span class="c1"># `KeyboardInterrupt`, not `MutantRunInterrupted`: the latter IS one</span>
+        <span class="c1"># (that is how it survives an `except Exception`), but a plain Ctrl-C</span>
+        <span class="c1"># raises the base class and so escaped this clause entirely. The</span>
+        <span class="c1"># restoring `finally` had already run, so the tree was fine — the user</span>
+        <span class="c1"># simply got a raw traceback and no way to know that, and Ctrl-C is the</span>
+        <span class="c1"># interruption an#67 calls the normal one. The reassurance is worth</span>
+        <span class="c1"># exactly as much on the path people actually take.</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"interrupted mid-mutant"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="se">\n</span><span class="s2">the tree was restored; nothing was left mutated"</span><span class="p">)</span>
+        <span class="n">_sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">INTERRUPTED_EXIT_CODE</span><span class="p">)</span>
     <span class="n">survivors</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">[</span><span class="s2">"caught"</span><span class="p">]]</span>
     <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">survivors</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> caught"</span>

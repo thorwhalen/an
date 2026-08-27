@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.mutants &mdash; an 0.1.68 documentation</title>
+  <title>an.bench.mutants &mdash; an 0.1.69 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=7c77daa2"></script>
+      <script src="../../../_static/documentation_options.js?v=d80f5ebb"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -135,6 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/live_api.html">an.live_api</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/preview.html">an.preview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/an/project.html">an.project</a></li>
@@ -215,15 +216,32 @@
 <span class="sd">``tests/test_bench_mutation.py`` asserts every site still exists — cheaply, in</span>
 <span class="sd">the default CI leg, with no pytest subprocesses at all. The full sweep is</span>
 <span class="sd">``an bench-mutants``: it is a deliberate act, and it takes about half a minute.</span>
+
+<span class="sd">**A killed sweep must not leave the tree mutated** (an#67), and that is two</span>
+<span class="sd">mechanisms rather than one, because they cover different kills. SIGTERM is</span>
+<span class="sd">turned into an exception for the duration (:func:`restore_on_termination`) so</span>
+<span class="sd">the restoring ``finally`` runs; SIGKILL cannot be caught by anything, so</span>
+<span class="sd">:func:`check_sites` — which every sweep runs first, and which the default CI leg</span>
+<span class="sd">runs too — recognises a file whose mutated text is present and whose original is</span>
+<span class="sd">gone, and reports it as an interrupted run with the exact repair. The recovery</span>
+<span class="sd">path is the load-bearing half: what makes a leftover dangerous is that every</span>
+<span class="sd">mutation here is chosen to be *plausible*, so the tree compiles, renders and</span>
+<span class="sd">stays green apart from one test, and a developer can commit it without noticing.</span>
+<span class="sd">That recovery reads "the mutation is present and the original is gone", which is</span>
+<span class="sd">an assumption about the DECLARATION — so ``check_sites`` also refuses a mutant</span>
+<span class="sd">whose substitution leaves its own ``old`` text behind, because such a mutant is</span>
+<span class="sd">invisible to the recovery and a later sweep would restore *to* the leftover.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span>
 
 <span class="c1">#: pytest flags for a mutant run. No `-k`: see the module docstring. No</span>
 <span class="c1">#: `--cache-provider` so a failed mutant cannot leave a `--lf` trail behind.</span>
@@ -236,10 +254,41 @@
 <span class="p">)</span>
 
 
+<span class="c1">#: Terminating signals turned into an exception for the duration of a sweep, so</span>
+<span class="c1">#: the restoring ``finally`` runs. SIGINT is deliberately absent: it already</span>
+<span class="c1">#: raises ``KeyboardInterrupt``, and re-handling it would only replace a working</span>
+<span class="c1">#: mechanism. Built from what the platform actually has — Windows has no SIGHUP,</span>
+<span class="c1">#: and asking for one is an ``AttributeError`` at import time.</span>
+<span class="n">RESTORE_ON_SIGNALS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+    <span class="n">sig</span>
+    <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"SIGTERM"</span><span class="p">,</span> <span class="s2">"SIGHUP"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">sig</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="p">)</span>
+
+
+<span class="c1">#: What the CLI exits with after an interrupted sweep: the shell convention of</span>
+<span class="c1">#: 128 + SIGINT. Nonzero, and distinguishable from the 1 a surviving mutant</span>
+<span class="c1">#: gives — "you stopped it" and "a guard is decoration" are different answers.</span>
+<span class="n">INTERRUPTED_EXIT_CODE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">130</span>
+
+
 <div class="viewcode-block" id="MutantError">
 <a class="viewcode-back" href="../../../module_docs/an/bench/mutants.html#an.bench.mutants.MutantError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MutantError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""A declared mutant no longer applies, or the tree was left dirty."""</span></div>
+
+
+
+<div class="viewcode-block" id="MutantRunInterrupted">
+<a class="viewcode-back" href="../../../module_docs/an/bench/mutants.html#an.bench.mutants.MutantRunInterrupted">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MutantRunInterrupted</span><span class="p">(</span><span class="ne">KeyboardInterrupt</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A terminating signal arrived mid-sweep, raised so the restore can run.</span>
+
+<span class="sd">    Derived from ``KeyboardInterrupt`` — a ``BaseException`` — rather than from</span>
+<span class="sd">    ``Exception``, on purpose: an ``except Exception`` anywhere between here and</span>
+<span class="sd">    the top would swallow it and the sweep would carry on with a mutated file on</span>
+<span class="sd">    disk, which is the outcome the whole mechanism exists to prevent.</span>
+<span class="sd">    """</span></div>
 
 
 
@@ -731,8 +780,19 @@
     <span class="n">Mutant</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="s2">"mux_argv_is_checked_by_subset_not_equality"</span><span class="p">,</span>
         <span class="n">file</span><span class="o">=</span><span class="s2">"an/adapters/cutout/render.py"</span><span class="p">,</span>
-        <span class="n">old</span><span class="o">=</span><span class="s1">'        "-c:v",</span><span class="se">\n</span><span class="s1">        "libx264",'</span><span class="p">,</span>
-        <span class="n">new</span><span class="o">=</span><span class="s1">'        "-tune",</span><span class="se">\n</span><span class="s1">        "animation",</span><span class="se">\n</span><span class="s1">        "-c:v",</span><span class="se">\n</span><span class="s1">        "libx264",'</span><span class="p">,</span>
+        <span class="c1"># Anchored ACROSS the insertion point — `"-pix_fmt",` is in the `old`</span>
+        <span class="c1"># text purely so the mutation *splits* it rather than prefixing it. An</span>
+        <span class="c1"># earlier spelling put the two new flags in front of `-c:v`, which made</span>
+        <span class="c1"># `old` a substring of `new`: the mutated file still contained the</span>
+        <span class="c1"># original text, so the SIGKILL recovery path in `check_sites` was blind</span>
+        <span class="c1"># to this one mutant of the 43 and a subsequent sweep laundered the</span>
+        <span class="c1"># leftover into its `original`. `check_sites` now refuses any mutant</span>
+        <span class="c1"># with that shape, so this anchor is load-bearing rather than cosmetic.</span>
+        <span class="n">old</span><span class="o">=</span><span class="s1">'        "-c:v",</span><span class="se">\n</span><span class="s1">        "libx264",</span><span class="se">\n</span><span class="s1">        "-pix_fmt",'</span><span class="p">,</span>
+        <span class="n">new</span><span class="o">=</span><span class="p">(</span>
+            <span class="s1">'        "-c:v",</span><span class="se">\n</span><span class="s1">        "libx264",</span><span class="se">\n</span><span class="s1">'</span>
+            <span class="s1">'        "-tune",</span><span class="se">\n</span><span class="s1">        "animation",</span><span class="se">\n</span><span class="s1">        "-pix_fmt",'</span>
+        <span class="p">),</span>
         <span class="n">caught_by</span><span class="o">=</span><span class="s2">"tests/test_encode_pins.py"</span><span class="p">,</span>
         <span class="n">why</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"`-tune animation` is a measured-and-rejected flag (0.8%) and this "</span>
@@ -841,6 +901,109 @@
     <span class="k">return</span> <span class="n">cache</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_left_mutated_message</span><span class="p">(</span><span class="n">mutant</span><span class="p">:</span> <span class="n">Mutant</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A leftover from a killed sweep, named as such and with its exact repair.</span>
+
+<span class="sd">    ``check_sites`` already refused this state — the ``old`` text occurs zero</span>
+<span class="sd">    times, not once — but "occurs 0 times" reads like ordinary declaration rot,</span>
+<span class="sd">    and the reader goes looking for the refactor that moved the code. There was</span>
+<span class="sd">    no refactor: a previous run was killed between the write and the restore,</span>
+<span class="sd">    and the file on disk is **deliberately plausible**. Every mutant here is</span>
+<span class="sd">    chosen to compile, render, and leave the suite green apart from the one test</span>
+<span class="sd">    that names it — so this is a defect a developer can commit without noticing,</span>
+<span class="sd">    and the only thing standing between it and a commit is this sentence.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s2"> looks LEFT MUTATED by an interrupted run "</span>
+        <span class="sa">f</span><span class="s2">"— the mutation is present and the original is gone. That is USUALLY a "</span>
+        <span class="sa">f</span><span class="s2">"killed sweep rather than declaration rot, and it matters because the "</span>
+        <span class="sa">f</span><span class="s2">"mutation is plausible by design (it compiles, it renders, the suite "</span>
+        <span class="sa">f</span><span class="s2">"stays green apart from </span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">caught_by</span><span class="si">}</span><span class="s2">), so it can be committed "</span>
+        <span class="sa">f</span><span class="s2">"unnoticed.</span><span class="se">\n</span><span class="s2">    But this is a TEXT test and cannot prove it: a refactor "</span>
+        <span class="sa">f</span><span class="s2">"that moved this site while leaving the replacement text somewhere in "</span>
+        <span class="sa">f</span><span class="s2">"the file looks identical, and five of the declarations have a `new` "</span>
+        <span class="sa">f</span><span class="s2">"that occurs in the unmutated file. CHECK `git diff` FIRST. Then, if it "</span>
+        <span class="sa">f</span><span class="s2">"really is a leftover, restore with `git checkout -- </span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s2">` when "</span>
+        <span class="sa">f</span><span class="s2">"nothing else in that file is yours, or replace"</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">      </span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">new</span><span class="si">!r}</span><span class="se">\n</span><span class="s2">    with</span><span class="se">\n</span><span class="s2">      </span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">old</span><span class="si">!r}</span><span class="s2">"</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="restore_on_termination">
+<a class="viewcode-back" href="../../../module_docs/an/bench/mutants.html#an.bench.mutants.restore_on_termination">[docs]</a>
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">restore_on_termination</span><span class="p">(</span>
+    <span class="n">signals</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESTORE_ON_SIGNALS</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Turn a terminating signal into an exception for the duration.</span>
+
+<span class="sd">    ``run_mutants`` restores in a ``finally``, which covers everything that</span>
+<span class="sd">    *raises* — an exploding pytest, Ctrl-C — and covers nothing about SIGTERM,</span>
+<span class="sd">    which stops the interpreter without raising, so no ``finally`` runs and the</span>
+<span class="sd">    mutated file stays on disk. A `kill`, a timeout, an agent harness reaping a</span>
+<span class="sd">    background task and a closing terminal are all SIGTERM, and the sweep is</span>
+<span class="sd">    slow enough that interrupting it is the normal thing to do.</span>
+
+<span class="sd">    The previous handlers are restored on the way out, because this module is</span>
+<span class="sd">    importable and a library that permanently rewires SIGTERM is a worse defect</span>
+<span class="sd">    than the one it fixes. Yields the signals it actually took, which is empty</span>
+<span class="sd">    off the main thread (``signal.signal`` refuses there), on a platform that</span>
+<span class="sd">    will not have them, and for any signal arriving already ``SIG_IGN`` — a</span>
+<span class="sd">    caller that wants to *report* the coverage can, and the restore itself never</span>
+<span class="sd">    depends on it.</span>
+
+<span class="sd">    An inherited ``SIG_IGN`` is left alone. ``nohup`` and most detach wrappers</span>
+<span class="sd">    ignore SIGHUP so a long job survives the terminal closing, and a sweep is</span>
+<span class="sd">    exactly the job someone detaches; taking the signal there would convert a</span>
+<span class="sd">    deliberately-protected run into a partial one exiting 130. There is nothing</span>
+<span class="sd">    to protect against either way — a signal that is ignored is never delivered,</span>
+<span class="sd">    so it cannot leave a mutation on disk.</span>
+
+<span class="sd">    **SIGKILL cannot be handled at all**, which is why the recovery path in</span>
+<span class="sd">    :func:`check_sites` is the load-bearing half of this fix and this is the</span>
+<span class="sd">    convenience.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_raise</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>  <span class="c1"># noqa: ARG001 — the frame is not ours to use</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">Signals</span><span class="p">(</span><span class="n">signum</span><span class="p">),</span> <span class="s2">"name"</span><span class="p">,</span> <span class="n">signum</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">MutantRunInterrupted</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> arrived mid-mutant; restoring the tree before exiting"</span>
+        <span class="p">)</span>
+
+    <span class="n">previous</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">signal</span><span class="o">.</span><span class="n">getsignal</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span> <span class="ow">is</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIG_IGN</span><span class="p">:</span>
+                    <span class="c1"># An INHERITED ignore is a decision somebody already made,</span>
+                    <span class="c1"># and overriding it changes behaviour in the one case where</span>
+                    <span class="c1"># the operator was explicit: `nohup an bench-mutants &amp;`</span>
+                    <span class="c1"># leaves SIGHUP ignored precisely so closing the terminal</span>
+                    <span class="c1"># does not stop the sweep. Taking it would turn that into a</span>
+                    <span class="c1"># partial sweep exiting 130 — a safe tree, but not the run</span>
+                    <span class="c1"># that was asked for. An ignored signal also cannot leave a</span>
+                    <span class="c1"># mutation on disk, because it is never delivered.</span>
+                    <span class="k">continue</span>
+                <span class="n">previous</span><span class="p">[</span><span class="n">sig</span><span class="p">]</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="n">_raise</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+                <span class="c1"># Not the main thread, or the platform refuses this signal.</span>
+                <span class="c1"># Neither is a reason to refuse the sweep; the `finally` still</span>
+                <span class="c1"># covers every raising path.</span>
+                <span class="k">continue</span>
+        <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">previous</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sig</span><span class="p">,</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">previous</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># `TypeError` too: `getsignal` returns None for a handler installed</span>
+            <span class="c1"># from C, and `signal.signal(sig, None)` raises it. Restoring is</span>
+            <span class="c1"># impossible in that case, and letting it out would REPLACE an</span>
+            <span class="c1"># in-flight `MutantRunInterrupted` — turning "the tree was restored"</span>
+            <span class="c1"># into a traceback about the restore of a handler nobody asked</span>
+            <span class="c1"># about, after the tree had already been put back.</span>
+            <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="check_sites">
 <a class="viewcode-back" href="../../../module_docs/an/bench/mutants.html#an.bench.mutants.check_sites">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_sites</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -858,7 +1021,9 @@
     <span class="k">for</span> <span class="n">mutant</span> <span class="ow">in</span> <span class="n">MUTANTS</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">source</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="p">]</span>
         <span class="n">count</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">mutant</span><span class="o">.</span><span class="n">old</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">count</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mutant</span><span class="o">.</span><span class="n">new</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_left_mutated_message</span><span class="p">(</span><span class="n">mutant</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">count</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: its source text occurs </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> times in "</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s2"> (needs exactly 1), so applying it would prove "</span>
@@ -868,6 +1033,26 @@
             <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: the mutation is a no-op"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">base</span> <span class="o">/</span> <span class="n">mutant</span><span class="o">.</span><span class="n">caught_by</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">caught_by</span><span class="si">}</span><span class="s2"> does not exist"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">mutated</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">mutant</span><span class="o">.</span><span class="n">old</span><span class="p">,</span> <span class="n">mutant</span><span class="o">.</span><span class="n">new</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mutant</span><span class="o">.</span><span class="n">old</span> <span class="ow">in</span> <span class="n">mutated</span><span class="p">:</span>
+                <span class="c1"># The recovery path recognises a leftover as "the mutation is</span>
+                <span class="c1"># present and the original is gone". That second half is an</span>
+                <span class="c1"># ASSUMPTION about the declaration, and one mutant broke it: its</span>
+                <span class="c1"># `new` prefixed its `old` rather than replacing it, so the</span>
+                <span class="c1"># mutated file still contained the original text, `check_sites`</span>
+                <span class="c1"># returned no problems at all on a tree carrying it, and the</span>
+                <span class="c1"># next sweep read the mutation as the `original` it restores to</span>
+                <span class="c1"># — laundering the damage into the baseline while reporting</span>
+                <span class="c1"># health. Asserted from the REAL substitution rather than from</span>
+                <span class="c1"># `mutant.old in mutant.new`, which misses the case where the</span>
+                <span class="c1"># replacement re-creates `old` across its own boundary.</span>
+                <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: applying it leaves its own `old` text in "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s2">, so a tree left mutated by a SIGKILL would "</span>
+                    <span class="s2">"be invisible to the recovery path above. Re-anchor `old` "</span>
+                    <span class="s2">"so the mutation replaces it rather than extending it."</span>
+                <span class="p">)</span>
         <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".py"</span><span class="p">):</span>
             <span class="c1"># A mutant that produces unparseable Python breaks COLLECTION, and</span>
             <span class="c1"># a collection error is not a guard catching anything. Checked here,</span>
@@ -883,7 +1068,7 @@
             <span class="c1"># had to be mutation-tested by hand and the proof lived in a</span>
             <span class="c1"># docstring rather than in `an bench-mutants`.</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="nb">compile</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">mutant</span><span class="o">.</span><span class="n">old</span><span class="p">,</span> <span class="n">mutant</span><span class="o">.</span><span class="n">new</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="s2">"exec"</span><span class="p">)</span>
+                <span class="nb">compile</span><span class="p">(</span><span class="n">mutated</span><span class="p">,</span> <span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="s2">"exec"</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: applying it makes </span><span class="si">{</span><span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s2"> unparseable "</span>
@@ -904,6 +1089,12 @@
 <span class="sd">    Restoration is in a ``finally`` and rewrites the ORIGINAL text rather than</span>
 <span class="sd">    reversing the substitution: a reversal that itself failed would leave the</span>
 <span class="sd">    tree broken, which is a worse outcome than any mutant surviving.</span>
+
+<span class="sd">    A ``finally`` covers everything that *raises*, which is why the loop runs</span>
+<span class="sd">    inside :func:`restore_on_termination`: SIGTERM does not raise. What no</span>
+<span class="sd">    handler can cover is SIGKILL, so ``check_sites`` — which runs first, here —</span>
+<span class="sd">    also recognises a file left mutated by a previous kill and says so in those</span>
+<span class="sd">    words rather than as declaration rot.</span>
 <span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">repo_root</span>
 
@@ -916,51 +1107,82 @@
         <span class="p">)</span>
     <span class="n">wanted</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">mutant</span> <span class="ow">in</span> <span class="n">MUTANTS</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mutant</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wanted</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">base</span> <span class="o">/</span> <span class="n">mutant</span><span class="o">.</span><span class="n">file</span>
-        <span class="n">original</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
-                <span class="n">original</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">mutant</span><span class="o">.</span><span class="n">old</span><span class="p">,</span> <span class="n">mutant</span><span class="o">.</span><span class="n">new</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span>
-            <span class="p">)</span>
-            <span class="n">completed</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pytest"</span><span class="p">,</span> <span class="n">mutant</span><span class="o">.</span><span class="n">caught_by</span><span class="p">,</span> <span class="o">*</span><span class="n">PYTEST_ARGS</span><span class="p">],</span>
-                <span class="n">cwd</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
-                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
-        <span class="n">summary</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">line</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">completed</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-            <span class="k">if</span> <span class="s2">"passed"</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="s2">"failed"</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="s2">"error"</span> <span class="ow">in</span> <span class="n">line</span>
-        <span class="p">]</span>
-        <span class="n">last</span> <span class="o">=</span> <span class="n">summary</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">summary</span> <span class="k">else</span> <span class="s2">""</span>
-        <span class="n">failed</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">last</span><span class="p">,</span> <span class="s2">"failed"</span><span class="p">)</span>
-        <span class="n">errored</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">last</span><span class="p">,</span> <span class="s2">"error"</span><span class="p">)</span>
-        <span class="c1"># A mutant that breaks COLLECTION proves nothing. `returncode != 0`</span>
-        <span class="c1"># alone reads a SyntaxError in the mutated module as "the guard caught</span>
-        <span class="c1"># it" — and one declared mutant really did produce unparseable Python</span>
-        <span class="c1"># and really was reported as CAUGHT for nine commits. So the verdict is</span>
-        <span class="c1"># "at least one test FAILED", and a run that only errored is reported as</span>
-        <span class="c1"># `errored` rather than folded into either answer.</span>
-        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="p">{</span>
-                <span class="s2">"name"</span><span class="p">:</span> <span class="n">mutant</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="s2">"file"</span><span class="p">:</span> <span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>
-                <span class="s2">"caught_by"</span><span class="p">:</span> <span class="n">mutant</span><span class="o">.</span><span class="n">caught_by</span><span class="p">,</span>
-                <span class="s2">"caught"</span><span class="p">:</span> <span class="n">failed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="s2">"errored"</span><span class="p">:</span> <span class="n">errored</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">failed</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="s2">"returncode"</span><span class="p">:</span> <span class="n">completed</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span>
-                <span class="s2">"summary"</span><span class="p">:</span> <span class="n">last</span><span class="p">,</span>
-                <span class="s2">"why"</span><span class="p">:</span> <span class="n">mutant</span><span class="o">.</span><span class="n">why</span><span class="p">,</span>
-            <span class="p">}</span>
-        <span class="p">)</span>
+    <span class="k">with</span> <span class="n">restore_on_termination</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">mutant</span> <span class="ow">in</span> <span class="n">MUTANTS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mutant</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wanted</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_run_one</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">mutant</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">results</span></div>
 
+
+
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_signals_deferred</span><span class="p">(</span><span class="n">signals</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESTORE_ON_SIGNALS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Hold off the terminating signals for the length of the restore.</span>
+
+<span class="sd">    The handler :func:`restore_on_termination` installs RAISES, and the restore</span>
+<span class="sd">    is a ``write_text`` — mode ``"w"``, which TRUNCATES at open and flushes at</span>
+<span class="sd">    close. A signal delivered inside that window raises out of the restore and</span>
+<span class="sd">    leaves the source file empty or half-written, which is strictly worse than</span>
+<span class="sd">    the leftover the mechanism exists to prevent, and is exactly the "a reversal</span>
+<span class="sd">    that itself failed would leave the tree broken" hazard this module's</span>
+<span class="sd">    docstring argues against. `timeout`, systemd and an impatient user all send</span>
+<span class="sd">    more than one signal, so the window is not theoretical.</span>
+
+<span class="sd">    ``pthread_sigmask`` is POSIX-only; on Windows this is a no-op and the</span>
+<span class="sd">    ordinary ``finally`` is all there is — the same coverage Windows had before,</span>
+<span class="sd">    where SIGTERM terminates without running handlers at all.</span>
+<span class="sd">    """</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="s2">"pthread_sigmask"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">signals</span><span class="p">:</span>  <span class="c1"># pragma: no cover - Windows</span>
+        <span class="k">yield</span>
+        <span class="k">return</span>
+    <span class="n">mask</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIG_BLOCK</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">signals</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">mask</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIG_UNBLOCK</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">signals</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_run_one</span><span class="p">(</span><span class="n">base</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">mutant</span><span class="p">:</span> <span class="n">Mutant</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Apply one mutant, run its guard file, restore, and judge the outcome."""</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">base</span> <span class="o">/</span> <span class="n">mutant</span><span class="o">.</span><span class="n">file</span>
+    <span class="n">original</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">original</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">mutant</span><span class="o">.</span><span class="n">old</span><span class="p">,</span> <span class="n">mutant</span><span class="o">.</span><span class="n">new</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+        <span class="n">completed</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"pytest"</span><span class="p">,</span> <span class="n">mutant</span><span class="o">.</span><span class="n">caught_by</span><span class="p">,</span> <span class="o">*</span><span class="n">PYTEST_ARGS</span><span class="p">],</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">_signals_deferred</span><span class="p">():</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">line</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">completed</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">"passed"</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="s2">"failed"</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="s2">"error"</span> <span class="ow">in</span> <span class="n">line</span>
+    <span class="p">]</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="n">summary</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">summary</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="n">failed</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">last</span><span class="p">,</span> <span class="s2">"failed"</span><span class="p">)</span>
+    <span class="n">errored</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">last</span><span class="p">,</span> <span class="s2">"error"</span><span class="p">)</span>
+    <span class="c1"># A mutant that breaks COLLECTION proves nothing. `returncode != 0` alone</span>
+    <span class="c1"># reads a SyntaxError in the mutated module as "the guard caught it" — and</span>
+    <span class="c1"># one declared mutant really did produce unparseable Python and really was</span>
+    <span class="c1"># reported as CAUGHT for nine commits. So the verdict is "at least one test</span>
+    <span class="c1"># FAILED", and a run that only errored is reported as `errored` rather than</span>
+    <span class="c1"># folded into either answer.</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">mutant</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"file"</span><span class="p">:</span> <span class="n">mutant</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>
+        <span class="s2">"caught_by"</span><span class="p">:</span> <span class="n">mutant</span><span class="o">.</span><span class="n">caught_by</span><span class="p">,</span>
+        <span class="s2">"caught"</span><span class="p">:</span> <span class="n">failed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"errored"</span><span class="p">:</span> <span class="n">errored</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">failed</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"returncode"</span><span class="p">:</span> <span class="n">completed</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span>
+        <span class="s2">"summary"</span><span class="p">:</span> <span class="n">last</span><span class="p">,</span>
+        <span class="s2">"why"</span><span class="p">:</span> <span class="n">mutant</span><span class="o">.</span><span class="n">why</span><span class="p">,</span>
+    <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_count</span><span class="p">(</span><span class="n">summary</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">word</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>

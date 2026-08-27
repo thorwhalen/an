@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.project &mdash; an 0.1.68 documentation</title>
+  <title>an.project &mdash; an 0.1.69 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=7c77daa2"></script>
+      <script src="../../_static/documentation_options.js?v=d80f5ebb"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -135,6 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/sync.html">an.ir.sync</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/ir/validate.html">an.ir.validate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/iterate.html">an.iterate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/live_api.html">an.live_api</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/orchestrate.html">an.orchestrate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/preview.html">an.preview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/an/project.html">an.project</a></li>
@@ -216,6 +217,19 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_text</span><span class="p">,</span> <span class="n">_write_json</span><span class="p">,</span> <span class="n">_write_text</span>
 
 
+<span class="c1">#: Seeded by :func:`init` and read by nothing — ``load`` never opens it, and</span>
+<span class="c1">#: there is no ``tomllib`` anywhere in the package (see</span>
+<span class="c1">#: ``tests/test_bench_corpus.py::test_no_corpus_fixture_ships_an_an_toml``). It</span>
+<span class="c1">#: is documentation of the project layout that happens to be valid TOML.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The providers therefore have to match the DEFAULTS, not an aspiration. They</span>
+<span class="c1">#: used to say ``tts = "elevenlabs"``: inert today, but the only place in the</span>
+<span class="c1">#: repo stating a paid provider as a project default, in the file a user opens</span>
+<span class="c1">#: to learn what the defaults are. The day somebody wires config reading — the</span>
+<span class="c1">#: natural next step for a file that exists and is documented — every project</span>
+<span class="c1">#: ever created by ``an init`` would begin defaulting to a billed provider,</span>
+<span class="c1">#: entirely outside :mod:`an.live_api`, which only the example consults. an#63</span>
+<span class="c1">#: is about exactly that shape, so the template says what `render` does.</span>
 <span class="n">_ANIMA_TOML_TEMPLATE</span> <span class="o">=</span> <span class="s2">"""# an project config</span>
 <span class="s2">[project]</span>
 <span class="s2">name = "</span><span class="si">{name}</span><span class="s2">"</span>
@@ -225,9 +239,11 @@
 <span class="s2">fps = </span><span class="si">{fps}</span>
 <span class="s2">resolution = [</span><span class="si">{width}</span><span class="s2">, </span><span class="si">{height}</span><span class="s2">]</span>
 
+<span class="s2"># Nothing reads this section yet; it mirrors the defaults `an render` uses.</span>
+<span class="s2"># A paid provider belongs here only behind an explicit opt-in — see an.live_api.</span>
 <span class="s2">[providers]</span>
-<span class="s2">tts = "elevenlabs"</span>
-<span class="s2">lipsync = "rhubarb"</span>
+<span class="s2">tts = "offline"</span>
+<span class="s2">lipsync = "offline"</span>
 <span class="s2">"""</span>
 
 

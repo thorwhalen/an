@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.determinism &mdash; an 0.1.69 documentation</title>
+  <title>an.live_api &mdash; an 0.1.69 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -178,7 +178,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">an.determinism</li>
+      <li class="breadcrumb-item active">an.live_api</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -187,160 +187,82 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for an.determinism</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""The determinism perimeter: what must stay true for a render to be reproducible.</span>
+  <h1>Source code for an.live_api</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The one switch that says "yes, this run may spend money".</span>
 
-<span class="sd">`an` renders by driving a headless Chromium and screenshotting a WebGL canvas.</span>
-<span class="sd">Two classes of thing can make that non-reproducible, and they need different</span>
-<span class="sd">treatment:</span>
+<span class="sd">A key being present is not consent to spend. ``ELEVEN_API_KEY`` (or</span>
+<span class="sd">``ANTHROPIC_API_KEY``) is exported by every developer shell that has ever</span>
+<span class="sd">sourced a profile, and by every unattended agent session started from one — so</span>
+<span class="sd">"has a key" describes the exact population that must *not* be billed silently.</span>
+<span class="sd">The federation adopted a rule about this after a real incident (video_gen</span>
+<span class="sd">decision D-vg-audio-02): a code path that can reach a paid API needs an</span>
+<span class="sd">**explicit positive opt-in env var in addition to the key**.</span>
 
-<span class="sd">**Pinned inputs** — the rasteriser, the browser build, the encoder. Those are</span>
-<span class="sd">*settings*, and they are pinned unconditionally in</span>
-<span class="sd">:mod:`an.adapters.cutout.render` (an#31, an#34). Nothing here.</span>
+<span class="sd">:data:`LIVE_API_ENV_VAR` is that signal, and this module is its single</span>
+<span class="sd">definition. ``tests/conftest.py`` reads it for the ``live_api`` marker, and</span>
+<span class="sd">``examples/character_gallery/build.py`` reads it before choosing a paid TTS</span>
+<span class="sd">provider.</span>
 
-<span class="sd">**Latent randomness** — machinery that is deterministic today by accident.</span>
-<span class="sd">The vendored PixiJS carries `Math.random`, `Date.now`, `performance.now` and</span>
-<span class="sd">`requestAnimationFrame` calls, and `NoiseFilter`'s default seed is</span>
-<span class="sd">`Math.random()`. All of it is dormant because the runtime creates the app with</span>
-<span class="sd">``autoStart: false`` and drives it with explicit ``app.render()`` calls, and</span>
-<span class="sd">because nothing attaches a filter. Neither fact is written down anywhere that</span>
-<span class="sd">would go red if it stopped being true. That is what this module watches.</span>
+<span class="sd">**The perimeter this actually draws.** The rule is about provider</span>
+<span class="sd">*auto-detection* — code that picks a paid provider because a key happened to be</span>
+<span class="sd">in the environment. It is not a ban on paid work, and two shipped paths reach</span>
+<span class="sd">paid APIs without consulting this predicate because the caller named them:</span>
+<span class="sd">``an iterate`` (Anthropic) and the vision verifier's default judge. If you add a</span>
+<span class="sd">path that CHOOSES a provider rather than being told one, it belongs here — an example is not a test, but it is the file with the most footfall,</span>
+<span class="sd">and a clean checkout has a cold audio cache, so every line it speaks is a new</span>
+<span class="sd">charge.</span>
 
-<span class="sd">The division of labour is deliberate: `runtime.js`'s ``anDeterminismReport``</span>
-<span class="sd">**observes** and this module **judges**. So the rule is a pure function of a</span>
-<span class="sd">plain dict — testable with no browser, no ffmpeg and no render — and changing</span>
-<span class="sd">the rule is a Python diff rather than a runtime re-stage.</span>
+<span class="sd">There is deliberately **one** switch, not one per caller: a second variable</span>
+<span class="sd">would be a second answer to "may this run spend?", and the two would drift.</span>
 
-<span class="sd">Enforcement is **on by default**, which is a deliberate deviation from the</span>
-<span class="sd">issue's ``AN_DETERMINISTIC=1`` framing and follows the same reasoning an#31</span>
-<span class="sd">used for the launch flags: a property that only holds when someone remembers to</span>
-<span class="sd">export a variable is not a property of the system. An assertion nobody runs is</span>
-<span class="sd">worse than no assertion, because the perimeter reads as guarded. The escape</span>
-<span class="sd">hatch is the same variable read the other way — ``AN_DETERMINISTIC=0``.</span>
-
-<span class="sd">&gt;&gt;&gt; capture_violations({"page": "/index.html", "stage_filter_count": 0,</span>
-<span class="sd">...                     "filtered_node_paths": [], "shared_ticker_started": False,</span>
-<span class="sd">...                     "auto_start": False})</span>
-<span class="sd">[]</span>
+<span class="sd">&gt;&gt;&gt; LIVE_API_ENV_VAR</span>
+<span class="sd">'AN_LIVE_API_TESTS'</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 
-<span class="c1">#: Read as an OFF switch, not an on switch — see the module docstring.</span>
-<span class="n">AN_DETERMINISTIC_ENV_VAR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"AN_DETERMINISTIC"</span>
+<span class="c1">#: Set this truthy to opt a run in to real, billed API calls.</span>
+<span class="n">LIVE_API_ENV_VAR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"AN_LIVE_API_TESTS"</span>
 
-<span class="c1">#: The page the capture path must be on. `render.py` stages `preview.html`</span>
-<span class="c1">#: into every work dir and it carries seven clock calls, so "which page did the</span>
-<span class="c1">#: browser actually load" is a real question with a wrong answer available.</span>
-<span class="n">CAPTURE_PAGE</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"index.html"</span>
+<span class="c1">#: Accepted spellings of "yes". Anything else — including an empty string, the</span>
+<span class="c1">#: shape an unset-but-exported variable takes — is "no".</span>
+<span class="n">TRUTHY_VALUES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">,</span> <span class="s2">"yes"</span><span class="p">,</span> <span class="s2">"on"</span><span class="p">})</span>
 
-<span class="n">_FALSEY</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"0"</span><span class="p">,</span> <span class="s2">"false"</span><span class="p">,</span> <span class="s2">"no"</span><span class="p">,</span> <span class="s2">"off"</span><span class="p">})</span>
+<span class="c1">#: Set by every CI provider we care about. CI must never spend, whatever else</span>
+<span class="c1">#: is configured, because nobody is watching the bill in a CI run.</span>
+<span class="n">CI_ENV_VAR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"CI"</span>
 
 
-<div class="viewcode-block" id="determinism_enforced">
-<a class="viewcode-back" href="../../module_docs/an/determinism.html#an.determinism.determinism_enforced">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">determinism_enforced</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Whether to refuse a render whose determinism perimeter has been breached.</span>
+<div class="viewcode-block" id="live_api_enabled">
+<a class="viewcode-back" href="../../module_docs/an/live_api.html#an.live_api.live_api_enabled">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">live_api_enabled</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether this run has explicitly opted in to paid API calls.</span>
 
-<span class="sd">    True unless :data:`AN_DETERMINISTIC_ENV_VAR` is explicitly falsey.</span>
+<span class="sd">    ``env`` defaults to the process environment; pass a mapping to ask the</span>
+<span class="sd">    question of a hypothetical one without mutating ``os.environ``.</span>
 
-<span class="sd">    &gt;&gt;&gt; import os</span>
-<span class="sd">    &gt;&gt;&gt; os.environ.pop("AN_DETERMINISTIC", None) and None</span>
-<span class="sd">    &gt;&gt;&gt; determinism_enforced()</span>
-<span class="sd">    True</span>
-<span class="sd">    &gt;&gt;&gt; os.environ["AN_DETERMINISTIC"] = "0"</span>
-<span class="sd">    &gt;&gt;&gt; determinism_enforced()</span>
+<span class="sd">    Typed ``Mapping``, not ``dict``: the default IS ``os.environ``, an</span>
+<span class="sd">    ``os._Environ`` that fails ``isinstance(..., dict)``, so a ``dict``</span>
+<span class="sd">    annotation was false about the function's own primary argument and pushed</span>
+<span class="sd">    callers into copying the whole environment to satisfy it.</span>
+
+<span class="sd">    &gt;&gt;&gt; live_api_enabled({})</span>
 <span class="sd">    False</span>
-<span class="sd">    &gt;&gt;&gt; del os.environ["AN_DETERMINISTIC"]</span>
-<span class="sd">    """</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">AN_DETERMINISTIC_ENV_VAR</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_FALSEY</span></div>
-
-
-
-<div class="viewcode-block" id="capture_violations">
-<a class="viewcode-back" href="../../module_docs/an/determinism.html#an.determinism.capture_violations">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">capture_violations</span><span class="p">(</span>
-    <span class="n">report</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">capture_page</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CAPTURE_PAGE</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return one sentence per breach of the perimeter; empty means clean.</span>
-
-<span class="sd">    Each sentence says what was observed, why it makes frames non-reproducible,</span>
-<span class="sd">    and what to do about it — because the reader of this message is the person</span>
-<span class="sd">    who just added the thing, and "determinism violation" alone tells them</span>
-<span class="sd">    nothing.</span>
-
-<span class="sd">    A missing key is reported rather than defaulted: a report that does not</span>
-<span class="sd">    carry a field cannot testify that the field is fine, and silently reading</span>
-<span class="sd">    ``report.get("shared_ticker_started", False)`` would turn a stale runtime</span>
-<span class="sd">    into a clean bill of health.</span>
-
-<span class="sd">    &gt;&gt;&gt; capture_violations({})[0].startswith("the determinism report is missing")</span>
+<span class="sd">    &gt;&gt;&gt; live_api_enabled({"ELEVEN_API_KEY": "sk-real-key"})  # a key is not consent</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; live_api_enabled({LIVE_API_ENV_VAR: "1"})</span>
 <span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; live_api_enabled({LIVE_API_ENV_VAR: "1", CI_ENV_VAR: "true"})</span>
+<span class="sd">    False</span>
 <span class="sd">    """</span>
-    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">_REQUIRED_FIELDS</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">report</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="sa">f</span><span class="s2">"the determinism report is missing </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2"> — the staged "</span>
-            <span class="s2">"runtime is older than this checker, so it cannot testify about "</span>
-            <span class="s2">"those fields either way. Re-stage the runtime rather than reading "</span>
-            <span class="s2">"the absence as a pass."</span>
-        <span class="p">]</span>
+    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">env</span>
+    <span class="k">if</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CI_ENV_VAR</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># CI never spends, whatever else is set</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">LIVE_API_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">TRUTHY_VALUES</span></div>
 
-    <span class="n">violations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="n">page</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">report</span><span class="p">[</span><span class="s2">"page"</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">page</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">capture_page</span><span class="p">):</span>
-        <span class="n">violations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"the browser captured from </span><span class="si">{</span><span class="n">page</span><span class="si">!r}</span><span class="s2">, not </span><span class="si">{</span><span class="n">capture_page</span><span class="si">!r}</span><span class="s2">. "</span>
-            <span class="s2">"`preview.html` is staged into every work dir and carries seven "</span>
-            <span class="s2">"clock calls (Date.now / performance.now / requestAnimationFrame), "</span>
-            <span class="s2">"so capturing from it makes each frame a function of wall time. "</span>
-            <span class="sa">f</span><span class="s2">"Point the capture at </span><span class="si">{</span><span class="n">capture_page</span><span class="si">!r}</span><span class="s2">."</span>
-        <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">report</span><span class="p">[</span><span class="s2">"shared_ticker_started"</span><span class="p">]</span> <span class="ow">or</span> <span class="n">report</span><span class="p">[</span><span class="s2">"auto_start"</span><span class="p">]:</span>
-        <span class="n">violations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s2">"a PixiJS ticker is running (shared_ticker_started="</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">report</span><span class="p">[</span><span class="s1">'shared_ticker_started'</span><span class="p">]</span><span class="si">}</span><span class="s2">, auto_start=</span><span class="si">{</span><span class="n">report</span><span class="p">[</span><span class="s1">'auto_start'</span><span class="p">]</span><span class="si">}</span><span class="s2">). "</span>
-            <span class="s2">"The capture path steps time explicitly with `anSetTime` + "</span>
-            <span class="s2">"`app.render()`; a running ticker advances the scene between the "</span>
-            <span class="s2">"seek and the screenshot, so a frame becomes a function of how long "</span>
-            <span class="s2">"the screenshot took. Create the app with `autoStart: false` and "</span>
-            <span class="s2">"leave `PIXI.Ticker.shared` stopped."</span>
-        <span class="p">)</span>
-
-    <span class="n">filtered</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">report</span><span class="p">[</span><span class="s2">"filtered_node_paths"</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">report</span><span class="p">[</span><span class="s2">"stage_filter_count"</span><span class="p">]</span> <span class="ow">or</span> <span class="n">filtered</span><span class="p">:</span>
-        <span class="n">where</span> <span class="o">=</span> <span class="n">filtered</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">"the stage"</span><span class="p">]</span>
-        <span class="n">violations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"a PixiJS filter is attached to </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">. This is a tripwire, not a "</span>
-            <span class="s2">"ban: the determinism perimeter just acquired a new input and "</span>
-            <span class="s2">"nothing has verified it. `NoiseFilter` seeds itself from "</span>
-            <span class="s2">"`Math.random()`, so it randomises every frame; a blur is fine. "</span>
-            <span class="s2">"Decide which this is, re-bless any golden frames it moves, and "</span>
-            <span class="sa">f</span><span class="s2">"then relax the check — or set </span><span class="si">{</span><span class="n">AN_DETERMINISTIC_ENV_VAR</span><span class="si">}</span><span class="s2">=0 for a "</span>
-            <span class="s2">"one-off render that does not need to be reproducible."</span>
-        <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">violations</span></div>
-
-
-
-<span class="c1">#: Every field :func:`capture_violations` reads. Absence is a violation, not a</span>
-<span class="c1">#: default — see that function's docstring.</span>
-<span class="n">_REQUIRED_FIELDS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"page"</span><span class="p">,</span>
-    <span class="s2">"shared_ticker_started"</span><span class="p">,</span>
-    <span class="s2">"auto_start"</span><span class="p">,</span>
-    <span class="s2">"stage_filter_count"</span><span class="p">,</span>
-    <span class="s2">"filtered_node_paths"</span><span class="p">,</span>
-<span class="p">)</span>
 </pre></div>
 
            </div>
