@@ -26,15 +26,32 @@ a mutant that silently stops proving anything, so
 ``tests/test_bench_mutation.py`` asserts every site still exists — cheaply, in
 the default CI leg, with no pytest subprocesses at all. The full sweep is
 ``an bench-mutants``: it is a deliberate act, and it takes about half a minute.
+
+**A killed sweep must not leave the tree mutated** (an#67), and that is two
+mechanisms rather than one, because they cover different kills. SIGTERM is
+turned into an exception for the duration (:func:`restore_on_termination`) so
+the restoring ``finally`` runs; SIGKILL cannot be caught by anything, so
+:func:`check_sites` — which every sweep runs first, and which the default CI leg
+runs too — recognises a file whose mutated text is present and whose original is
+gone, and reports it as an interrupted run with the exact repair. The recovery
+path is the load-bearing half: what makes a leftover dangerous is that every
+mutation here is chosen to be *plausible*, so the tree compiles, renders and
+stays green apart from one test, and a developer can commit it without noticing.
+That recovery reads "the mutation is present and the original is gone", which is
+an assumption about the DECLARATION — so ``check_sites`` also refuses a mutant
+whose substitution leaves its own ``old`` text behind, because such a mutant is
+invisible to the recovery and a later sweep would restore *to* the leftover.
 """
 
 from __future__ import annotations
 
+import contextlib
+import signal
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Iterator
 
 #: pytest flags for a mutant run. No `-k`: see the module docstring. No
 #: `--cache-provider` so a failed mutant cannot leave a `--lf` trail behind.
@@ -47,8 +64,36 @@ PYTEST_ARGS: tuple[str, ...] = (
 )
 
 
+#: Terminating signals turned into an exception for the duration of a sweep, so
+#: the restoring ``finally`` runs. SIGINT is deliberately absent: it already
+#: raises ``KeyboardInterrupt``, and re-handling it would only replace a working
+#: mechanism. Built from what the platform actually has — Windows has no SIGHUP,
+#: and asking for one is an ``AttributeError`` at import time.
+RESTORE_ON_SIGNALS: tuple[int, ...] = tuple(
+    sig
+    for sig in (getattr(signal, name, None) for name in ("SIGTERM", "SIGHUP"))
+    if sig is not None
+)
+
+
+#: What the CLI exits with after an interrupted sweep: the shell convention of
+#: 128 + SIGINT. Nonzero, and distinguishable from the 1 a surviving mutant
+#: gives — "you stopped it" and "a guard is decoration" are different answers.
+INTERRUPTED_EXIT_CODE: int = 130
+
+
 class MutantError(RuntimeError):
     """A declared mutant no longer applies, or the tree was left dirty."""
+
+
+class MutantRunInterrupted(KeyboardInterrupt):
+    """A terminating signal arrived mid-sweep, raised so the restore can run.
+
+    Derived from ``KeyboardInterrupt`` — a ``BaseException`` — rather than from
+    ``Exception``, on purpose: an ``except Exception`` anywhere between here and
+    the top would swallow it and the sweep would carry on with a mutated file on
+    disk, which is the outcome the whole mechanism exists to prevent.
+    """
 
 
 @dataclass(frozen=True, slots=True)
@@ -536,8 +581,19 @@ MUTANTS: tuple[Mutant, ...] = (
     Mutant(
         name="mux_argv_is_checked_by_subset_not_equality",
         file="an/adapters/cutout/render.py",
-        old='        "-c:v",\n        "libx264",',
-        new='        "-tune",\n        "animation",\n        "-c:v",\n        "libx264",',
+        # Anchored ACROSS the insertion point — `"-pix_fmt",` is in the `old`
+        # text purely so the mutation *splits* it rather than prefixing it. An
+        # earlier spelling put the two new flags in front of `-c:v`, which made
+        # `old` a substring of `new`: the mutated file still contained the
+        # original text, so the SIGKILL recovery path in `check_sites` was blind
+        # to this one mutant of the 43 and a subsequent sweep laundered the
+        # leftover into its `original`. `check_sites` now refuses any mutant
+        # with that shape, so this anchor is load-bearing rather than cosmetic.
+        old='        "-c:v",\n        "libx264",\n        "-pix_fmt",',
+        new=(
+            '        "-c:v",\n        "libx264",\n'
+            '        "-tune",\n        "animation",\n        "-pix_fmt",'
+        ),
         caught_by="tests/test_encode_pins.py",
         why=(
             "`-tune animation` is a measured-and-rejected flag (0.8%) and this "
@@ -646,6 +702,106 @@ def _sites(root: Path) -> dict[str, tuple[Path, str]]:
     return cache
 
 
+def _left_mutated_message(mutant: Mutant) -> str:
+    """A leftover from a killed sweep, named as such and with its exact repair.
+
+    ``check_sites`` already refused this state — the ``old`` text occurs zero
+    times, not once — but "occurs 0 times" reads like ordinary declaration rot,
+    and the reader goes looking for the refactor that moved the code. There was
+    no refactor: a previous run was killed between the write and the restore,
+    and the file on disk is **deliberately plausible**. Every mutant here is
+    chosen to compile, render, and leave the suite green apart from the one test
+    that names it — so this is a defect a developer can commit without noticing,
+    and the only thing standing between it and a commit is this sentence.
+    """
+    return (
+        f"{mutant.name}: {mutant.file} looks LEFT MUTATED by an interrupted run "
+        f"— the mutation is present and the original is gone. That is USUALLY a "
+        f"killed sweep rather than declaration rot, and it matters because the "
+        f"mutation is plausible by design (it compiles, it renders, the suite "
+        f"stays green apart from {mutant.caught_by}), so it can be committed "
+        f"unnoticed.\n    But this is a TEXT test and cannot prove it: a refactor "
+        f"that moved this site while leaving the replacement text somewhere in "
+        f"the file looks identical, and five of the declarations have a `new` "
+        f"that occurs in the unmutated file. CHECK `git diff` FIRST. Then, if it "
+        f"really is a leftover, restore with `git checkout -- {mutant.file}` when "
+        f"nothing else in that file is yours, or replace"
+        f"\n      {mutant.new!r}\n    with\n      {mutant.old!r}"
+    )
+
+
+@contextlib.contextmanager
+def restore_on_termination(
+    signals: Iterable[int] = RESTORE_ON_SIGNALS,
+) -> Iterator[tuple[int, ...]]:
+    """Turn a terminating signal into an exception for the duration.
+
+    ``run_mutants`` restores in a ``finally``, which covers everything that
+    *raises* — an exploding pytest, Ctrl-C — and covers nothing about SIGTERM,
+    which stops the interpreter without raising, so no ``finally`` runs and the
+    mutated file stays on disk. A `kill`, a timeout, an agent harness reaping a
+    background task and a closing terminal are all SIGTERM, and the sweep is
+    slow enough that interrupting it is the normal thing to do.
+
+    The previous handlers are restored on the way out, because this module is
+    importable and a library that permanently rewires SIGTERM is a worse defect
+    than the one it fixes. Yields the signals it actually took, which is empty
+    off the main thread (``signal.signal`` refuses there), on a platform that
+    will not have them, and for any signal arriving already ``SIG_IGN`` — a
+    caller that wants to *report* the coverage can, and the restore itself never
+    depends on it.
+
+    An inherited ``SIG_IGN`` is left alone. ``nohup`` and most detach wrappers
+    ignore SIGHUP so a long job survives the terminal closing, and a sweep is
+    exactly the job someone detaches; taking the signal there would convert a
+    deliberately-protected run into a partial one exiting 130. There is nothing
+    to protect against either way — a signal that is ignored is never delivered,
+    so it cannot leave a mutation on disk.
+
+    **SIGKILL cannot be handled at all**, which is why the recovery path in
+    :func:`check_sites` is the load-bearing half of this fix and this is the
+    convenience.
+    """
+
+    def _raise(signum, frame):  # noqa: ARG001 — the frame is not ours to use
+        name = getattr(signal.Signals(signum), "name", signum)
+        raise MutantRunInterrupted(
+            f"{name} arrived mid-mutant; restoring the tree before exiting"
+        )
+
+    previous: dict[int, object] = {}
+    try:
+        for sig in signals:
+            try:
+                if signal.getsignal(sig) is signal.SIG_IGN:
+                    # An INHERITED ignore is a decision somebody already made,
+                    # and overriding it changes behaviour in the one case where
+                    # the operator was explicit: `nohup an bench-mutants &`
+                    # leaves SIGHUP ignored precisely so closing the terminal
+                    # does not stop the sweep. Taking it would turn that into a
+                    # partial sweep exiting 130 — a safe tree, but not the run
+                    # that was asked for. An ignored signal also cannot leave a
+                    # mutation on disk, because it is never delivered.
+                    continue
+                previous[sig] = signal.signal(sig, _raise)
+            except (ValueError, OSError):
+                # Not the main thread, or the platform refuses this signal.
+                # Neither is a reason to refuse the sweep; the `finally` still
+                # covers every raising path.
+                continue
+        yield tuple(previous)
+    finally:
+        for sig, handler in previous.items():
+            # `TypeError` too: `getsignal` returns None for a handler installed
+            # from C, and `signal.signal(sig, None)` raises it. Restoring is
+            # impossible in that case, and letting it out would REPLACE an
+            # in-flight `MutantRunInterrupted` — turning "the tree was restored"
+            # into a traceback about the restore of a handler nobody asked
+            # about, after the tree had already been put back.
+            with contextlib.suppress(ValueError, OSError, TypeError):
+                signal.signal(sig, handler)
+
+
 def check_sites(root: Path | None = None) -> list[str]:
     """Problems with the declarations themselves, as a list of sentences.
 
@@ -661,7 +817,9 @@ def check_sites(root: Path | None = None) -> list[str]:
     for mutant in MUTANTS:
         _, source = cache[mutant.file]
         count = source.count(mutant.old)
-        if count != 1:
+        if count == 0 and mutant.new in source:
+            problems.append(_left_mutated_message(mutant))
+        elif count != 1:
             problems.append(
                 f"{mutant.name}: its source text occurs {count} times in "
                 f"{mutant.file} (needs exactly 1), so applying it would prove "
@@ -671,6 +829,26 @@ def check_sites(root: Path | None = None) -> list[str]:
             problems.append(f"{mutant.name}: the mutation is a no-op")
         if not (base / mutant.caught_by).is_file():
             problems.append(f"{mutant.name}: {mutant.caught_by} does not exist")
+        if count == 1:
+            mutated = source.replace(mutant.old, mutant.new, 1)
+            if mutant.old in mutated:
+                # The recovery path recognises a leftover as "the mutation is
+                # present and the original is gone". That second half is an
+                # ASSUMPTION about the declaration, and one mutant broke it: its
+                # `new` prefixed its `old` rather than replacing it, so the
+                # mutated file still contained the original text, `check_sites`
+                # returned no problems at all on a tree carrying it, and the
+                # next sweep read the mutation as the `original` it restores to
+                # — laundering the damage into the baseline while reporting
+                # health. Asserted from the REAL substitution rather than from
+                # `mutant.old in mutant.new`, which misses the case where the
+                # replacement re-creates `old` across its own boundary.
+                problems.append(
+                    f"{mutant.name}: applying it leaves its own `old` text in "
+                    f"{mutant.file}, so a tree left mutated by a SIGKILL would "
+                    "be invisible to the recovery path above. Re-anchor `old` "
+                    "so the mutation replaces it rather than extending it."
+                )
         if count == 1 and mutant.file.endswith(".py"):
             # A mutant that produces unparseable Python breaks COLLECTION, and
             # a collection error is not a guard catching anything. Checked here,
@@ -686,7 +864,7 @@ def check_sites(root: Path | None = None) -> list[str]:
             # had to be mutation-tested by hand and the proof lived in a
             # docstring rather than in `an bench-mutants`.
             try:
-                compile(source.replace(mutant.old, mutant.new, 1), mutant.file, "exec")
+                compile(mutated, mutant.file, "exec")
             except SyntaxError as e:
                 problems.append(
                     f"{mutant.name}: applying it makes {mutant.file} unparseable "
@@ -704,6 +882,12 @@ def run_mutants(
     Restoration is in a ``finally`` and rewrites the ORIGINAL text rather than
     reversing the substitution: a reversal that itself failed would leave the
     tree broken, which is a worse outcome than any mutant surviving.
+
+    A ``finally`` covers everything that *raises*, which is why the loop runs
+    inside :func:`restore_on_termination`: SIGTERM does not raise. What no
+    handler can cover is SIGKILL, so ``check_sites`` — which runs first, here —
+    also recognises a file left mutated by a previous kill and says so in those
+    words rather than as declaration rot.
     """
     from an.bench.paths import repo_root
 
@@ -716,50 +900,81 @@ def run_mutants(
         )
     wanted = set(names) if names is not None else None
     results: list[dict] = []
-    for mutant in MUTANTS:
-        if wanted is not None and mutant.name not in wanted:
-            continue
-        path = base / mutant.file
-        original = path.read_text(encoding="utf-8")
-        try:
-            path.write_text(
-                original.replace(mutant.old, mutant.new, 1), encoding="utf-8"
-            )
-            completed = subprocess.run(
-                [sys.executable, "-m", "pytest", mutant.caught_by, *PYTEST_ARGS],
-                cwd=base,
-                capture_output=True,
-                text=True,
-            )
-        finally:
-            path.write_text(original, encoding="utf-8")
-        summary = [
-            line
-            for line in completed.stdout.splitlines()
-            if "passed" in line or "failed" in line or "error" in line
-        ]
-        last = summary[-1] if summary else ""
-        failed = _count(last, "failed")
-        errored = _count(last, "error")
-        # A mutant that breaks COLLECTION proves nothing. `returncode != 0`
-        # alone reads a SyntaxError in the mutated module as "the guard caught
-        # it" — and one declared mutant really did produce unparseable Python
-        # and really was reported as CAUGHT for nine commits. So the verdict is
-        # "at least one test FAILED", and a run that only errored is reported as
-        # `errored` rather than folded into either answer.
-        results.append(
-            {
-                "name": mutant.name,
-                "file": mutant.file,
-                "caught_by": mutant.caught_by,
-                "caught": failed > 0,
-                "errored": errored > 0 and failed == 0,
-                "returncode": completed.returncode,
-                "summary": last,
-                "why": mutant.why,
-            }
-        )
+    with restore_on_termination():
+        for mutant in MUTANTS:
+            if wanted is not None and mutant.name not in wanted:
+                continue
+            results.append(_run_one(base, mutant))
     return results
+
+
+@contextlib.contextmanager
+def _signals_deferred(signals: Iterable[int] = RESTORE_ON_SIGNALS) -> Iterator[None]:
+    """Hold off the terminating signals for the length of the restore.
+
+    The handler :func:`restore_on_termination` installs RAISES, and the restore
+    is a ``write_text`` — mode ``"w"``, which TRUNCATES at open and flushes at
+    close. A signal delivered inside that window raises out of the restore and
+    leaves the source file empty or half-written, which is strictly worse than
+    the leftover the mechanism exists to prevent, and is exactly the "a reversal
+    that itself failed would leave the tree broken" hazard this module's
+    docstring argues against. `timeout`, systemd and an impatient user all send
+    more than one signal, so the window is not theoretical.
+
+    ``pthread_sigmask`` is POSIX-only; on Windows this is a no-op and the
+    ordinary ``finally`` is all there is — the same coverage Windows had before,
+    where SIGTERM terminates without running handlers at all.
+    """
+    mask = getattr(signal, "pthread_sigmask", None)
+    if mask is None or not signals:  # pragma: no cover - Windows
+        yield
+        return
+    mask(signal.SIG_BLOCK, set(signals))
+    try:
+        yield
+    finally:
+        mask(signal.SIG_UNBLOCK, set(signals))
+
+
+def _run_one(base: Path, mutant: Mutant) -> dict:
+    """Apply one mutant, run its guard file, restore, and judge the outcome."""
+    path = base / mutant.file
+    original = path.read_text(encoding="utf-8")
+    try:
+        path.write_text(original.replace(mutant.old, mutant.new, 1), encoding="utf-8")
+        completed = subprocess.run(
+            [sys.executable, "-m", "pytest", mutant.caught_by, *PYTEST_ARGS],
+            cwd=base,
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        with _signals_deferred():
+            path.write_text(original, encoding="utf-8")
+    summary = [
+        line
+        for line in completed.stdout.splitlines()
+        if "passed" in line or "failed" in line or "error" in line
+    ]
+    last = summary[-1] if summary else ""
+    failed = _count(last, "failed")
+    errored = _count(last, "error")
+    # A mutant that breaks COLLECTION proves nothing. `returncode != 0` alone
+    # reads a SyntaxError in the mutated module as "the guard caught it" — and
+    # one declared mutant really did produce unparseable Python and really was
+    # reported as CAUGHT for nine commits. So the verdict is "at least one test
+    # FAILED", and a run that only errored is reported as `errored` rather than
+    # folded into either answer.
+    return {
+        "name": mutant.name,
+        "file": mutant.file,
+        "caught_by": mutant.caught_by,
+        "caught": failed > 0,
+        "errored": errored > 0 and failed == 0,
+        "returncode": completed.returncode,
+        "summary": last,
+        "why": mutant.why,
+    }
 
 
 def _count(summary: str, word: str) -> int:

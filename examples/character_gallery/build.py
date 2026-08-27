@@ -20,6 +20,14 @@ What it does:
 6. Builds an ``index.html`` that embeds the cartoon at the top.
 
 Idempotent: re-running rebuilds.
+
+**This script spends no money by default, and a key does not change that.**
+Real (billed) ElevenLabs speech needs the explicit opt-in *as well as* the
+key — ``AN_LIVE_API_TESTS=1 ELEVEN_API_KEY=... python examples/character_gallery/build.py``
+— and whisper lip-sync, which is free but downloads model weights, rides the
+same switch. The chosen providers and the reason for each are printed before
+anything is synthesized, so an unwanted run can be stopped with Ctrl-C. See
+:mod:`an.live_api`.
 """
 
 from __future__ import annotations
@@ -27,6 +35,7 @@ from __future__ import annotations
 import os
 import shutil
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 from an.characters import (
@@ -38,10 +47,13 @@ from an.characters.silhouette import (
     compare_silhouettes,
     render_silhouette,
 )
+from an.live_api import LIVE_API_ENV_VAR, live_api_enabled
 from an.render import render_project
 
 
 HERE = Path(__file__).parent.resolve()
+#: How to spell this script on a command line, for the hint it prints.
+SCRIPT_REL = "examples/character_gallery/build.py"
 CARTOON_PROJECT = HERE / "cartoon"
 CARTOON_CHARS_DIR = CARTOON_PROJECT / "assets" / "characters"
 VIDEOS_DIR = HERE / "videos"
@@ -72,36 +84,74 @@ def _silhouette_pair(a_dir: Path, b_dir: Path) -> float:
     return compare_silhouettes(a_png, b_png)
 
 
-def _detect_providers() -> tuple[str, str]:
-    """Pick the best TTS / lip-sync providers available in the environment.
+def _tts_choice(env: Mapping[str, str]) -> tuple[str, str]:
+    """The TTS provider this environment has *asked* for, and why.
 
-    - TTS: ``elevenlabs`` if ``ELEVEN_API_KEY`` is set, else ``offline``
-      (silent placeholder). Source ``~/.keys`` before running for real audio.
-    - LipSync: ``whisper`` if ``faster-whisper`` is importable, else
-      ``offline`` (deterministic char-distributed visemes).
+    ``elevenlabs`` — which bills per character of dialogue — needs BOTH the
+    opt-in and the key. A key alone is not consent: ``ELEVEN_API_KEY`` is
+    exported by every shell that sources a profile, so key-presence is
+    satisfied by exactly the unattended runs that must not be billed. The
+    repo's audio cache makes it easy to miss; the charge lands on a clean
+    checkout, where every line is new.
     """
-    tts = "elevenlabs" if os.environ.get("ELEVEN_API_KEY") else "offline"
+    key = env.get("ELEVEN_API_KEY") or env.get("ELEVENLABS_API_KEY")
+    if not live_api_enabled(env):
+        why = f"{LIVE_API_ENV_VAR} is not set" + (
+            " — a key being present is not consent to spend"
+            if key
+            else " (and no ELEVEN_API_KEY either)"
+        )
+        return "offline", why
+    if not key:
+        return "offline", f"{LIVE_API_ENV_VAR} is set but ELEVEN_API_KEY is not"
+    return "elevenlabs", f"{LIVE_API_ENV_VAR}=1 and ELEVEN_API_KEY are both set"
+
+
+def _lipsync_choice(env: Mapping[str, str]) -> tuple[str, str]:
+    """The lip-sync provider this environment has asked for, and why.
+
+    ``whisper`` costs no money, so this is not a spend gate — but its first run
+    DOWNLOADS model weights (hundreds of MB), which is the same class of thing
+    an unattended run should not do because a package happened to be
+    importable. It rides the one opt-in rather than a second env var, because a
+    second switch is a second answer to "may this run do something expensive".
+    """
+    if not live_api_enabled(env):
+        return "offline", f"{LIVE_API_ENV_VAR} is not set (whisper downloads weights)"
     try:
         import faster_whisper  # noqa: F401
-
-        lipsync = "whisper"
     except ImportError:
-        lipsync = "offline"
+        return "offline", f"{LIVE_API_ENV_VAR}=1 but faster-whisper is not installed"
+    return "whisper", f"{LIVE_API_ENV_VAR}=1 and faster-whisper is importable"
+
+
+def _announce_providers() -> tuple[str, str]:
+    """Say what will be used and why, BEFORE anything is synthesized."""
+    tts, tts_why = _tts_choice(os.environ)
+    lipsync, lipsync_why = _lipsync_choice(os.environ)
+    print("\nProviders:")
+    print(f"  tts     = {tts:<10} ({tts_why})")
+    print(f"  lipsync = {lipsync:<10} ({lipsync_why})")
+    if tts == "elevenlabs":
+        print(
+            "  → this run WILL make real, billed ElevenLabs calls for every "
+            "line of dialogue. Ctrl-C now to stop it."
+        )
+    else:
+        print(
+            f"  → nothing here spends money. For real speech: "
+            f"{LIVE_API_ENV_VAR}=1 ELEVEN_API_KEY=... python {SCRIPT_REL}"
+        )
     return tts, lipsync
 
 
 def _render_cartoon() -> Path:
     """Render cartoon/scene.md to mp4 and copy to videos/cartoon.mp4."""
-    tts, lipsync = _detect_providers()
+    tts, lipsync = _announce_providers()
     print(
         f"\nRendering cartoon at {CARTOON_PROJECT} "
         f"(parallel auto, tts={tts}, lipsync={lipsync}):"
     )
-    if tts == "offline":
-        print(
-            "  note: no ELEVEN_API_KEY set — audio will be silent. "
-            "Run `source ~/.keys` before this script to get real speech."
-        )
     output_path = render_project(
         CARTOON_PROJECT, tts=tts, lipsync=lipsync, parallel="auto"
     )

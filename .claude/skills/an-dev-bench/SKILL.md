@@ -377,6 +377,63 @@ Three properties of the declaration, each earned:
 
 Add one whenever you add a guard. If it survives, the guard is decoration.
 
+**A killed sweep does not leave the mutation on disk** (an#67), and that is two
+mechanisms because they cover different kills:
+
+- **SIGTERM is turned into an exception** for the duration
+  (`restore_on_termination`), so the restoring `finally` runs. Ctrl-C never
+  needed this — SIGINT raises — but `kill`, a timeout, an agent harness reaping
+  a background task and a closing terminal do not raise, and the sweep is slow
+  enough that interrupting it is the normal thing to do. The previous handlers
+  go back on the way out: this module is importable, and a library that
+  permanently rewires SIGTERM is a worse defect than the one it fixes.
+- **SIGKILL cannot be handled at all**, so the load-bearing half is the
+  recovery: `check_sites` — first thing in every sweep, and in the default CI
+  leg through `test_every_declared_mutant_still_applies` — recognises a file
+  whose mutated text is present and whose original is gone, and reports it as an
+  interrupted run naming the file, the mutant and the exact restoring edit.
+
+- **The restore runs with the terminating signals blocked** (`pthread_sigmask`)
+  and only then is it a restore: `write_text` truncates at open and flushes at
+  close, so a signal in that window used to raise out of the restore and leave
+  the file EMPTY — worse than the leftover.
+- **`LEFT MUTATED` is a text test and says so.** The false-NEGATIVE direction is
+  refused by declaration (a mutant whose substitution leaves its own `old`
+  behind is invisible to the recovery). The other direction cannot be refused:
+  five declarations have a `new` that occurs in the *unmutated* file, so for
+  those a refactor that moved the site reads identically to a killed sweep. The
+  message tells you to check `git diff` before restoring, and it must keep
+  saying that — an earlier version asserted "this is not declaration rot", which
+  for those five sends the reader to `git checkout` away their own edit.
+
+Why that matters more here than in an ordinary tool: **every mutation in this
+registry is chosen to be plausible.** A leftover compiles, renders, produces
+frames of the declared size and leaves the suite green apart from the one test
+that names it — so it is a defect a developer can commit without noticing, and
+the next run's message is the only thing standing in the way. If you see
+`LEFT MUTATED` in a `check_sites` report, do not go looking for the refactor
+that moved the code; there was none.
+
+**Declaration rule that makes the recovery work: the mutation must REPLACE its
+`old` text, never extend it.** The leftover branch recognises "the mutation is
+present and the original is gone", so a mutant whose `new` contains its `old` is
+invisible to it. One of the 43 had exactly that shape —
+`mux_argv_is_checked_by_subset_not_equality` inserted `-tune animation` *before*
+the argv lines it matched — and on a tree carrying that leftover `check_sites`
+returned no problems at all, while the next `an bench-mutants` read the mutated
+file as its `original` and restored to it: the instrument laundering the damage
+into the baseline and reporting health. `check_sites` now refuses that shape by
+applying the substitution and checking `old` is really gone (which also catches
+a replacement that re-creates `old` across its own boundary, where comparing the
+two strings would not), and `test_every_declared_mutant_is_recoverable_from_a_kill`
+asserts the property across the whole registry. If it fires on a mutant you are
+adding, re-anchor `old` so the change lands in the middle of it.
+
+**An inherited `SIG_IGN` is left alone.** `nohup an bench-mutants > sweep.log &`
+ignores SIGHUP so the sweep survives the terminal closing; taking that signal
+would turn a deliberately-detached run into a partial one exiting 130. An
+ignored signal is never delivered, so there is nothing to protect against.
+
 ## Two measured facts that change what counts as a witness
 
 Both found while building an#38, both by running the levers rather than by

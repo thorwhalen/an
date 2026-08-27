@@ -460,7 +460,13 @@ def bench_mutants(names: str = "", quiet: bool = False) -> str:
     """
     import sys as _sys
 
-    from an.bench.mutants import MUTANTS, MutantError, format_results, run_mutants
+    from an.bench.mutants import (
+        INTERRUPTED_EXIT_CODE,
+        MUTANTS,
+        MutantError,
+        format_results,
+        run_mutants,
+    )
 
     wanted = [n.strip() for n in names.split(",") if n.strip()] or None
     if wanted:
@@ -480,6 +486,21 @@ def bench_mutants(names: str = "", quiet: bool = False) -> str:
         # print the warning and pass (an#41 review).
         print(e)
         _sys.exit(1)
+    except KeyboardInterrupt as e:
+        # A sweep is slow enough that interrupting it is normal (an#67). Say
+        # that the tree survived, because the alternative — a traceback — leaves
+        # a reader wondering whether a mutated file is still on disk.
+        #
+        # `KeyboardInterrupt`, not `MutantRunInterrupted`: the latter IS one
+        # (that is how it survives an `except Exception`), but a plain Ctrl-C
+        # raises the base class and so escaped this clause entirely. The
+        # restoring `finally` had already run, so the tree was fine — the user
+        # simply got a raw traceback and no way to know that, and Ctrl-C is the
+        # interruption an#67 calls the normal one. The reassurance is worth
+        # exactly as much on the path people actually take.
+        message = str(e) or "interrupted mid-mutant"
+        print(f"{message}\nthe tree was restored; nothing was left mutated")
+        _sys.exit(INTERRUPTED_EXIT_CODE)
     survivors = [r for r in results if not r["caught"]]
     text = (
         f"{len(results) - len(survivors)}/{len(results)} caught"

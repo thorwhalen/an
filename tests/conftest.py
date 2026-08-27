@@ -33,8 +33,14 @@ import os
 
 import pytest
 
-#: Set this truthy to opt a run in to real, billed API calls.
-LIVE_API_ENV_VAR = "AN_LIVE_API_TESTS"
+from an.live_api import TRUTHY_VALUES, live_api_enabled
+from an.live_api import LIVE_API_ENV_VAR as _LIVE_API_ENV_VAR
+
+#: Set this truthy to opt a run in to real, billed API calls. Defined in the
+#: PACKAGE (:mod:`an.live_api`) rather than here, because the test suite is not
+#: the only thing that must refuse to spend without being asked: the example
+#: builders read the same switch, and an example cannot import a conftest.
+LIVE_API_ENV_VAR = _LIVE_API_ENV_VAR
 
 #: Markers that opt a test out of the offline network guard.
 #:
@@ -50,19 +56,6 @@ LIVE_API_ENV_VAR = "AN_LIVE_API_TESTS"
 #: Marking a free test ``live_api`` would be convenient and would quietly erode
 #: what that marker promises.
 _NETWORK_OPT_OUT_MARKERS = ("live_api", "live")
-
-_TRUTHY = frozenset({"1", "true", "yes", "on"})
-
-
-def live_api_enabled() -> bool:
-    """Whether this run has explicitly opted in to paid API calls.
-
-    >>> live_api_enabled() or True  # never asserts on the ambient environment
-    True
-    """
-    if os.environ.get("CI"):
-        return False  # CI never spends, whatever else is set
-    return (os.environ.get(LIVE_API_ENV_VAR) or "").strip().lower() in _TRUTHY
 
 
 #: Apply to any test that makes a real, billed call:
@@ -398,12 +391,12 @@ def _env_flag(env, name):
     if raw is None or not raw.strip():
         return None
     value = raw.strip().lower()
-    if value in _TRUTHY:
+    if value in TRUTHY_VALUES:
         return True
     if value in _FALSY:
         return False
     raise pytest.UsageError(
-        f"{name}={raw!r} is neither truthy ({', '.join(sorted(_TRUTHY))}) nor "
+        f"{name}={raw!r} is neither truthy ({', '.join(sorted(TRUTHY_VALUES))}) nor "
         f"falsy ({', '.join(sorted(_FALSY))}). Refusing to guess: reading an "
         f"unrecognised value as 'off' would silently skip the tests it was "
         f"meant to switch on."
