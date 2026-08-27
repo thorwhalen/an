@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._node import run_node
+
 from an.adapters.cutout.clip import LoopMode, _wrap_time
 
 RUNTIME_JS = Path(__file__).resolve().parents[1] / "an/data/cutout_runtime/runtime.js"
@@ -96,9 +98,7 @@ def test_js_wrap_time_matches_python_exactly():
     const cases = {json.dumps([[m, d, t] for m, d, t, _ in GOLDEN])};
     console.log(JSON.stringify(cases.map(([m, d, t]) => wrapTime(t, d, m))));
     """
-    proc = subprocess.run(
-        ["node", "-e", script], capture_output=True, text=True, timeout=30
-    )
+    proc = run_node(script)
     assert proc.returncode == 0, f"node failed: {proc.stderr}"
     got = json.loads(proc.stdout)
 
@@ -128,8 +128,6 @@ def test_js_treats_an_unknown_mode_as_once():
         wrapTime(5.0, 2.0, 'boomerang'), wrapTime(5.0, 2.0, undefined)
     ]));
     """
-    proc = subprocess.run(
-        ["node", "-e", script], capture_output=True, text=True, timeout=30
-    )
+    proc = run_node(script)
     assert proc.returncode == 0, f"node failed: {proc.stderr}"
     assert json.loads(proc.stdout) == [2.0, 2.0]  # clamped, i.e. `once`

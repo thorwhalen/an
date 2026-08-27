@@ -29,6 +29,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._node import run_node
+
 from an.adapters.cutout.compile import (
     CAMERA_MOVES,
     _build_scene_root,
@@ -417,9 +419,7 @@ def _run_node(script: str) -> str:
 
     if shutil.which("node") is None:
         pytest.skip("node not installed")
-    proc = subprocess.run(
-        ["node", "-e", script], capture_output=True, text=True, timeout=30
-    )
+    proc = run_node(script)
     assert proc.returncode == 0, f"node failed: {proc.stderr}"
     return proc.stdout.strip()
 
