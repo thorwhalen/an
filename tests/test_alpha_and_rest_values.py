@@ -24,6 +24,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._node import run_node
+
 from an.adapters.cutout.compile import (
     _PROPERTY_REST_VALUES,
     CutoutCompileError,
@@ -227,9 +229,7 @@ def test_applypose_applies_shallowest_target_first():
             "console.log(JSON.stringify(seen));",
         ]
     )
-    proc = subprocess.run(
-        ["node", "-e", script], capture_output=True, text=True, timeout=30
-    )
+    proc = run_node(script)
     assert proc.returncode == 0, f"node failed: {proc.stderr}"
     assert json.loads(proc.stdout.strip()) == ["shallow", "mid", "deep"]
 

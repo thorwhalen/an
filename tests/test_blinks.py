@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._node import run_node
+
 from an.adapters.cutout.compile import (
     EYE_NODE_NAMES,
     _BLINK_DEPTH,
@@ -449,9 +451,7 @@ def test_the_compiled_squash_matches_the_deleted_runtime_rule_at_every_frame():
     console.log(JSON.stringify(out));
     """
     cases = [["charlie", 24, 2.5], ["plates", 30, 6.0], ["teacher", 25, 9.0], ["ada", 60, 5.0]]
-    proc = subprocess.run(
-        ["node", "-e", js, json.dumps(cases)], capture_output=True, text=True, timeout=30
-    )
+    proc = run_node(js, json.dumps(cases))
     assert proc.returncode == 0, proc.stderr
     expected = json.loads(proc.stdout)
     for (name, fps, duration), row in zip(cases, expected):

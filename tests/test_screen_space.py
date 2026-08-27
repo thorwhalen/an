@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._node import NODE_BUNDLE_TIMEOUT_S, run_node
+
 from an.adapters.cutout.serialize import (
     CutoutSceneJSON,
     NodeJSON,
@@ -121,7 +123,7 @@ def test_the_compositor_agrees_with_pixi_itself():
     const p = leaf.toGlobal(new PIXI.Point({PROBE[0]}, {PROBE[1]}));
     console.log(JSON.stringify([p.x, p.y]));
     """
-    proc = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    proc = run_node(script, timeout=NODE_BUNDLE_TIMEOUT_S)
     if proc.returncode != 0:
         pytest.skip(f"the vendored bundle would not load under node: {proc.stderr[:200]}")
     engine_x, engine_y = json.loads(proc.stdout.strip().splitlines()[-1])

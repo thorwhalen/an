@@ -36,6 +36,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._node import run_node
+
 from an.adapters.cutout.channel import Channel, Keyframe, evaluate
 from an.adapters.cutout.easing import EASING_FUNCS
 from an.base import EASING_PRESETS
@@ -193,9 +195,7 @@ def _js_results(cases) -> list[list]:
             "console.log(JSON.stringify(out));",
         ]
     )
-    proc = subprocess.run(
-        ["node", "-e", script], capture_output=True, text=True, timeout=30
-    )
+    proc = run_node(script)
     assert proc.returncode == 0, f"node failed: {proc.stderr}"
     return json.loads(proc.stdout)
 
@@ -269,9 +269,7 @@ def test_both_sides_validate_easing_on_non_numeric_segments():
             "catch (e) { console.log('RAISED: ' + e.message); }",
         ]
     )
-    proc = subprocess.run(
-        ["node", "-e", script], capture_output=True, text=True, timeout=30
-    )
+    proc = run_node(script)
     assert proc.returncode == 0, f"node failed: {proc.stderr}"
     out = proc.stdout.strip()
     assert out.startswith("RAISED") and "eaze" in out, (
