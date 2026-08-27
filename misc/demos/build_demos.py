@@ -549,9 +549,13 @@ def _build_style_pack(work: Path) -> Path:
     gallery reader never sees.
 
     `_PLACEHOLDER_PARTS` is a head, a torso and two arms — no legs — so `leg`
-    and `pupil` are the two reachable roles this rig cannot show, and the pack
-    declares neither. A worked example a reader copies should not ship an entry
-    that does nothing.
+    is unreachable ON THIS RIG and the pack does not declare it: a worked
+    example a reader copies should not ship an entry that does nothing.
+    `pupil` is a different case and the caption keeps them apart. It IS
+    reachable here — the compiler stamps the eye's colour (`compile.py`'s
+    `kind="eye"` visual) and the rig has eyes — so leaving it out is a choice
+    about what the clip shows, not a limit. Saying "cannot show" of both was
+    the second overclaim this demo's caption carried.
     """
     import json
     import subprocess
@@ -1108,9 +1112,11 @@ DEMOS: tuple[Demo, ...] = (
             "is the built-in procedural rig, DECLARED rather than fallen into — "
             "a character from `an character new` is SVG, and a pack does not "
             "reach inside a drawing, so a synthesized one would leave the "
-            "backdrop as the only thing that changed. That rig is a head, a "
-            "torso and two arms, so `leg` and `pupil` are the two reachable "
-            "roles this clip cannot show, and the pack declares neither."
+            "backdrop as the only thing that changed. Two reachable roles are "
+            "absent for DIFFERENT reasons, and the difference is the point: "
+            "`leg` cannot show, because that rig is a head, a torso and two "
+            "arms and draws no legs; `pupil` could — the compiler sets the "
+            "eye's colour — and this pack simply does not declare one."
         ),
         how=(
             "An `an.styles.StylePack` in the project's `styles` store — which had "
@@ -1118,7 +1124,8 @@ DEMOS: tuple[Demo, ...] = (
             "`roles` maps a role to a hex colour and `entities` overrides one "
             "character. Seven roles are reachable — `skin`, `clothing`, `hair`, "
             "`leg`, `pupil`, `sky`, `ground` — and this pack declares five of "
-            "them, leaving out the two this rig cannot show. "
+            "them: not `leg`, which this rig cannot draw, and not `pupil`, "
+            "which it could. "
             "A pack may NOT name `lip`, `mouth_fill`, `teeth`, `tongue` "
             "or `eye_sclera`: those are literals inside `runtime.js`, and a role "
             "that silently does nothing is worse than an absent one, so declaring "

@@ -874,23 +874,24 @@ def test_the_leftover_message_does_not_claim_more_than_a_text_test_can_prove():
     )
 
 
-def test_the_restore_runs_with_the_terminating_signals_blocked(tmp_path, monkeypatch):
-    """MUTATION: drop `_signals_deferred()` from `_run_one`'s finally.
+def test_the_restore_never_opens_the_real_file_for_truncating_writes(
+    tmp_path, monkeypatch
+):
+    """MUTATION: restore by writing the real path directly, in `_run_one`.
 
-    The handler `restore_on_termination` installs RAISES, and the restore is a
-    `write_text` — mode "w", which truncates at open and flushes at close. A
-    signal delivered in that window raises out of the restore and leaves the
-    source file EMPTY, which is strictly worse than the leftover the whole
-    mechanism exists to prevent. The window cannot be hit deterministically, so
-    the block is asserted at the exact call site instead.
+    Mode `"w"` truncates at open and flushes at close, so ANY kill in that
+    window leaves the real source file empty — strictly worse than the leftover
+    this module exists to prevent. The window cannot be hit deterministically,
+    so what is asserted is that it does not exist: the restore stages a sibling
+    and renames, and the real path is never opened for writing at all.
+
+    A `pthread_sigmask` was the first attempt and is the wrong tool — it cannot
+    cover SIGKILL, which is the premise the whole recovery path rests on. This
+    guard rejects that shape too: masking still writes the real path directly.
     """
-    import signal
     from pathlib import Path as _Path
 
     from an.bench import mutants as mutants_mod
-
-    if not hasattr(signal, "pthread_sigmask"):  # pragma: no cover - Windows
-        pytest.skip("no pthread_sigmask: the restore has only its `finally` here")
 
     root = _victim_tree(tmp_path)
     (root / "test_victim.py").write_text(
@@ -900,17 +901,47 @@ def test_the_restore_runs_with_the_terminating_signals_blocked(tmp_path, monkeyp
     monkeypatch.setattr(mutants_mod, "MUTANTS", (mutant,))
 
     real_write = _Path.write_text
-    blocked = []
+    written_to = []
 
-    def spy(self, data, *args, **kwargs):
-        if self.name == "victim.py" and data == _VICTIM_ORIGINAL:
-            blocked.append(signal.pthread_sigmask(signal.SIG_BLOCK, set()))
+    def record(self, data, *args, **kwargs):
+        written_to.append(self.name)
         return real_write(self, data, *args, **kwargs)
 
-    monkeypatch.setattr(_Path, "write_text", spy)
+    monkeypatch.setattr(_Path, "write_text", record)
     mutants_mod._run_one(root, mutant)
     monkeypatch.setattr(_Path, "write_text", real_write)
 
-    assert blocked, "the restore never ran"
-    assert set(mutants_mod.RESTORE_ON_SIGNALS) <= blocked[0]
+    assert (root / "victim.py").read_text(encoding="utf-8") == _VICTIM_ORIGINAL
+    restore_writes = [
+        n for n in written_to if n.endswith(mutants_mod.RESTORE_TMP_SUFFIX)
+    ]
+    assert restore_writes, "the restore did not stage through a sibling file"
+    # The mutating write DOES open the real path — that one is allowed to be
+    # interrupted, because an interrupted mutation is the leftover the marker
+    # reports. It is the RESTORE that must never be half-done.
+    assert written_to.count("victim.py") == 1, (
+        f"the real file was written {written_to.count('victim.py')} times; the "
+        f"restore must go through {mutants_mod.RESTORE_TMP_SUFFIX} and os.replace"
+    )
+
+
+def test_the_restore_leaves_no_temp_file_behind(tmp_path, monkeypatch):
+    """MUTATION: copy instead of rename (`shutil.copy` then leave the temp).
+
+    `os.replace` is what makes this atomic AND self-cleaning; a copy would be
+    neither, and would litter the tree the instrument is supposed to protect.
+    """
+    from an.bench import mutants as mutants_mod
+
+    root = _victim_tree(tmp_path)
+    (root / "test_victim.py").write_text(
+        "def test_x():\n    assert True\n", encoding="utf-8"
+    )
+    mutant = _victim_mutant()
+    monkeypatch.setattr(mutants_mod, "MUTANTS", (mutant,))
+
+    mutants_mod._run_one(root, mutant)
+
+    strays = list(root.glob(f"*{mutants_mod.RESTORE_TMP_SUFFIX}"))
+    assert strays == [], strays
     assert (root / "victim.py").read_text(encoding="utf-8") == _VICTIM_ORIGINAL

@@ -393,10 +393,13 @@ mechanisms because they cover different kills:
   whose mutated text is present and whose original is gone, and reports it as an
   interrupted run naming the file, the mutant and the exact restoring edit.
 
-- **The restore runs with the terminating signals blocked** (`pthread_sigmask`)
-  and only then is it a restore: `write_text` truncates at open and flushes at
-  close, so a signal in that window used to raise out of the restore and leave
-  the file EMPTY — worse than the leftover.
+- **The restore is atomic: a sibling file and `os.replace`.** `write_text`
+  truncates at open and flushes at close, so a kill in that window left the real
+  source file EMPTY — worse than the leftover. A `pthread_sigmask` was tried
+  first and is the wrong tool here, for this module's own reason: it cannot
+  cover SIGKILL, and "SIGKILL cannot be handled at all" is the premise the
+  recovery rests on. A rename within one filesystem is atomic, so an observer
+  sees the old bytes or the new bytes and never a truncated file.
 - **`LEFT MUTATED` is a text test and says so.** The false-NEGATIVE direction is
   refused by declaration (a mutant whose substitution leaves its own `old`
   behind is invisible to the recovery). The other direction cannot be refused:
@@ -411,8 +414,10 @@ registry is chosen to be plausible.** A leftover compiles, renders, produces
 frames of the declared size and leaves the suite green apart from the one test
 that names it — so it is a defect a developer can commit without noticing, and
 the next run's message is the only thing standing in the way. If you see
-`LEFT MUTATED` in a `check_sites` report, do not go looking for the refactor
-that moved the code; there was none.
+`LEFT MUTATED` in a `check_sites` report, a killed sweep is the likely cause —
+but check `git diff` before restoring, because five declarations have a `new`
+that occurs in the unmutated file and a refactor of those sites reads the same
+way.
 
 **Declaration rule that makes the recovery work: the mutation must REPLACE its
 `old` text, never extend it.** The leftover branch recognises "the mutation is
