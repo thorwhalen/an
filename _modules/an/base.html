@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.base &mdash; an 0.1.75 documentation</title>
+  <title>an.base &mdash; an 0.1.76 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=6322a757"></script>
+      <script src="../../_static/documentation_options.js?v=54da2d3d"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -292,6 +292,13 @@
 <span class="c1">#: compiler derives its rest-value table from ``TransformJSON`` and a test</span>
 <span class="c1">#: asserts that derivation equals this set. Lives here because ``an.base`` is</span>
 <span class="c1">#: the one module all three layers may import.</span>
+<span class="c1">#: The colour multiply as an AUTHOR spells it. Not in</span>
+<span class="c1">#: :data:`TRANSFORM_PROPERTIES` because nothing downstream of the compiler ever</span>
+<span class="c1">#: sees it — `_expand_tint_actions` rewrites each leaf into the three numeric</span>
+<span class="c1">#: components before the swap-set dispatch, which would otherwise read it as an</span>
+<span class="c1">#: asset-set name (an#62).</span>
+<span class="n">COLOUR_PROPERTY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"tint"</span>
+
 <span class="n">TRANSFORM_PROPERTIES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
     <span class="p">{</span>
         <span class="s2">"x"</span><span class="p">,</span>
@@ -304,6 +311,13 @@
         <span class="s2">"skew_y"</span><span class="p">,</span>
         <span class="s2">"pivot_x"</span><span class="p">,</span>
         <span class="s2">"pivot_y"</span><span class="p">,</span>
+        <span class="c1"># an#62. Three numeric channels rather than one colour value, because</span>
+        <span class="c1"># `channel.evaluate` lerps numbers and SNAPS everything else, and it has</span>
+        <span class="c1"># a `runtime.js` twin held in step by a parity test. Authors write</span>
+        <span class="c1"># `tint: "#rrggbb"` and the compiler expands it into these.</span>
+        <span class="s2">"tint_r"</span><span class="p">,</span>
+        <span class="s2">"tint_g"</span><span class="p">,</span>
+        <span class="s2">"tint_b"</span><span class="p">,</span>
         <span class="s2">"alpha"</span><span class="p">,</span>
     <span class="p">}</span>
 <span class="p">)</span>
@@ -311,6 +325,13 @@
 <span class="c1">#: Characters within which a swap-set name is not addressable: ``/`` would read</span>
 <span class="c1">#: as a path segment and ``::`` is the runtime's pose-key separator.</span>
 <span class="n">SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="s2">"::"</span><span class="p">)</span>
+
+
+<span class="c1">#: What a set/tween may name: a compiled transform channel, or the authored</span>
+<span class="c1">#: colour spelling the compiler expands. Validate checks against this, and the</span>
+<span class="c1">#: compiler's rest table against `TRANSFORM_PROPERTIES` — the difference between</span>
+<span class="c1">#: the two sets is exactly `tint`, and a test pins that rather than trusting it.</span>
+<span class="n">AUTHORABLE_PROPERTIES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">TRANSFORM_PROPERTIES</span> <span class="o">|</span> <span class="p">{</span><span class="n">COLOUR_PROPERTY</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="swap_set_name_problem">

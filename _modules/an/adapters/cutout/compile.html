@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.compile &mdash; an 0.1.75 documentation</title>
+  <title>an.adapters.cutout.compile &mdash; an 0.1.76 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=6322a757"></script>
+      <script src="../../../../_static/documentation_options.js?v=54da2d3d"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -221,7 +221,9 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
@@ -512,6 +514,25 @@
     <span class="k">return</span> <span class="n">out</span>
 
 
+<span class="c1">#: The authored spelling of a per-node colour multiply, and the three channels</span>
+<span class="c1">#: the compiler expands it into (an#62).</span>
+<span class="c1">#:</span>
+<span class="c1">#: One authored property, three channels, and the split is deliberate. Colour</span>
+<span class="c1">#: interpolation could have been a third mode in `channel.evaluate` — it lerps</span>
+<span class="c1">#: numbers and SNAPS everything else (an#86) — but that evaluator has a twin in</span>
+<span class="c1">#: `runtime.js` kept in step by `tests/test_cutout_channel_parity.py`, and the</span>
+<span class="c1">#: parity test exists because the two have drifted before. Expanding here means</span>
+<span class="c1">#: the per-channel lerp IS the existing numeric path and neither evaluator ever</span>
+<span class="c1">#: learns what a colour is.</span>
+<span class="c1">#: `#rrggbb` only — no shorthand, no alpha channel. A three-digit form would</span>
+<span class="c1">#: be a second spelling of the same colour, and `#rrggbbaa` would silently</span>
+<span class="c1">#: drop its alpha, since `tint` is a multiply and opacity is `alpha`.</span>
+<span class="n">_HEX_COLOUR</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"#[0-9a-fA-F]</span><span class="si">{6}</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="n">TINT_PROPERTY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"tint"</span>
+<span class="n">TINT_COMPONENTS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"tint_r"</span><span class="p">,</span> <span class="s2">"tint_g"</span><span class="p">,</span> <span class="s2">"tint_b"</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_property_rest_values</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Rest ("identity") value per animatable property, derived from the schema.</span>
 
@@ -538,6 +559,16 @@
     <span class="c1"># property switch; it is not a schema field, so it has to be added here</span>
     <span class="c1"># rather than derived.</span>
     <span class="n">rest</span><span class="p">[</span><span class="s2">"rotation_rad"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rest</span><span class="p">[</span><span class="s2">"rotation"</span><span class="p">]</span>
+    <span class="c1"># `tint_r/g/b` (an#62) are the same kind of exception, for a reason worth</span>
+    <span class="c1"># stating: they are ANIMATION-channel properties the runtime applies, not</span>
+    <span class="c1"># node rest state. Putting them on `TransformJSON` would add three defaulted</span>
+    <span class="c1"># fields to every serialized node and move all ten corpus contract hashes —</span>
+    <span class="c1"># for a feature almost no scene uses — and a node with no tint channel is</span>
+    <span class="c1"># already untinted, because the runtime's own default is white. They rest at</span>
+    <span class="c1"># 1.0 because tint is a MULTIPLY: 1.0 is the identity, and the 0.0 default</span>
+    <span class="c1"># would render every untweened rig black.</span>
+    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">TINT_COMPONENTS</span><span class="p">:</span>
+        <span class="n">rest</span><span class="p">[</span><span class="n">component</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
     <span class="k">return</span> <span class="n">rest</span>
 
 
@@ -2288,6 +2319,9 @@
     <span class="c1"># `expression` leaves (an#98) are the face solver's input, not clips of</span>
     <span class="c1"># their own: `_add_face_clips` sums them per (node, property).</span>
     <span class="n">flat_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">flat_list</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="n">ExpressionAction</span><span class="p">)]</span>
+    <span class="c1"># BEFORE the swap dispatch: `tint` is not in the transform vocabulary, so a</span>
+    <span class="c1"># leaf still spelling it would be read as an asset-set name (an#62).</span>
+    <span class="n">flat_list</span> <span class="o">=</span> <span class="n">_expand_tint_actions</span><span class="p">(</span><span class="n">flat_list</span><span class="p">)</span>
     <span class="n">swap_props</span> <span class="o">=</span> <span class="n">_swap_property_names</span><span class="p">(</span><span class="n">flat_list</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">vocab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">flat_list</span> <span class="o">=</span> <span class="p">[</span>
@@ -2463,6 +2497,63 @@
             <span class="s2">"the compiler refuses them rather than pick a side silently."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="parse_tint">
+<a class="viewcode-back" href="../../../../module_docs/an/adapters/cutout/compile.html#an.adapters.cutout.parse_tint">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_tint</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">where</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A `#rrggbb` string to three multipliers in 0..1.</span>
+
+<span class="sd">    Per-channel in **sRGB** — on the 8-bit values as written — not linear-light.</span>
+<span class="sd">    `tint` is a multiply the GPU applies in the space the author read the hex</span>
+<span class="sd">    out of, and a fade between two hex values that did not pass through the</span>
+<span class="sd">    values between them would surprise whoever wrote them (an#62).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">_HEX_COLOUR</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">CutoutCompileError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: `tint` takes a `#rrggbb` colour string, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"Hex strings are the house colour representation — the same reason "</span>
+            <span class="sa">f</span><span class="s2">"`an.styles.StylePack` gives — so there is one spelling of a colour "</span>
+            <span class="sa">f</span><span class="s2">"in a compiled document rather than two that can disagree."</span>
+        <span class="p">)</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"#"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_expand_tint_actions</span><span class="p">(</span><span class="n">flat_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Rewrite each authored `tint` leaf into three numeric component leaves.</span>
+
+<span class="sd">    Done HERE, on the flat list, so everything downstream — the swap-set</span>
+<span class="sd">    dispatch, the step resampler, the channel builder — sees only numbers and</span>
+<span class="sd">    needs to know nothing about colour. A `tint` leaf that reached</span>
+<span class="sd">    `_swap_property_names` would be classified as an asset-set name, because</span>
+<span class="sd">    that is what "not in the transform vocabulary" means.</span>
+<span class="sd">    """</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">flat_list</span><span class="p">:</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">action</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"property"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="n">TINT_PROPERTY</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flat</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">action</span><span class="o">.</span><span class="n">target</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">SetAction</span><span class="p">):</span>
+            <span class="n">triples</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="n">parse_tint</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">where</span><span class="p">)}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">triples</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">field</span><span class="p">:</span> <span class="n">parse_tint</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">field</span><span class="p">),</span> <span class="n">where</span><span class="o">=</span><span class="n">where</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"from_value"</span><span class="p">,</span> <span class="s2">"to_value"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">}</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">component</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">TINT_COMPONENTS</span><span class="p">):</span>
+            <span class="n">replacement</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span>
+                <span class="n">update</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">"property"</span><span class="p">:</span> <span class="n">component</span><span class="p">,</span>
+                    <span class="o">**</span><span class="p">{</span><span class="n">field</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">triples</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">replacement</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_swap_property_names</span><span class="p">(</span><span class="n">flat_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlatAction</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
