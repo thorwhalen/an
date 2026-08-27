@@ -393,6 +393,18 @@ mechanisms because they cover different kills:
   whose mutated text is present and whose original is gone, and reports it as an
   interrupted run naming the file, the mutant and the exact restoring edit.
 
+- **A sweep runs against a COPY of the repository, not your working tree**
+  (an#124). `run_mutants` with no `root` copies the repo — `.git` included,
+  because six of the thirteen guard files call `dirty_paths` or `repo_root` —
+  into a temp dir and does its damage there, and the child gets `PYTHONPATH`
+  pointing at that copy so it imports the tree being swept rather than whichever
+  one the editable install names. Before this, `pytest -q` mutated
+  `an/bench/compare.py` in place for a few seconds in the DEFAULT leg, and every
+  mutation here is plausible by design, so a second suite or an editor
+  re-indexing got a believable wrong answer rather than an error. An explicit
+  `root=` is still swept in place: a caller who names a tree has already chosen
+  a throwaway, and the interruption tests need to watch the tree that is
+  mutated.
 - **The restore is atomic: a sibling file and `os.replace`.** `write_text`
   truncates at open and flushes at close, so a kill in that window left the real
   source file EMPTY — worse than the leftover. A `pthread_sigmask` was tried

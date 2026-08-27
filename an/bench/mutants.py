@@ -47,9 +47,11 @@ from __future__ import annotations
 
 import contextlib
 import os
+import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator
@@ -81,6 +83,52 @@ RESTORE_ON_SIGNALS: tuple[int, ...] = tuple(
 #: 128 + SIGINT. Nonzero, and distinguishable from the 1 a surviving mutant
 #: gives — "you stopped it" and "a guard is decoration" are different answers.
 INTERRUPTED_EXIT_CODE: int = 130
+
+
+#: Left out of a sweep's throwaway tree. Caches and build output only —
+#: **`.git` IS copied**, because six of the thirteen guard files call
+#: `dirty_paths` or `repo_root`, and a tree with no history fails them for the
+#: wrong reason. Measured at 0.26 s for this repository, once per sweep.
+SWEEP_COPY_IGNORE: tuple[str, ...] = (
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "node_modules",
+    "out",
+)
+
+
+@contextlib.contextmanager
+def sweep_tree(source: Path) -> Iterator[Path]:
+    """A throwaway copy of `source` for a sweep to do its damage in.
+
+    **A sweep mutates real source files, and every mutation here is chosen to be
+    plausible** — it compiles, it renders, and the suite stays green apart from
+    the one test that names it. So a concurrent reader of the working tree does
+    not get an error, it gets a believable wrong answer. That reader is not
+    hypothetical: `test_a_representative_mutant_is_really_caught` runs in the
+    DEFAULT leg, so a plain ``pytest -q`` mutates `an/bench/compare.py` for a few
+    seconds, and a second suite, an editor re-indexing, a `git status` from
+    another shell or a lint job sees it (an#124 — three pytest processes against
+    one checkout, and which of them owned the file's contents was unanswerable).
+
+    Copying is what makes that structurally impossible rather than merely
+    coordinated. A lock would order the *writers*; it cannot reach a reader that
+    never took it.
+
+    It also retires an#67's hazard for this path: a sweep killed by SIGKILL can
+    now only leave a mutated file inside a temp directory that nothing reads.
+    """
+    with tempfile.TemporaryDirectory(prefix="an-mutant-sweep-") as tmp:
+        dest = Path(tmp) / source.name
+        shutil.copytree(
+            source,
+            dest,
+            ignore=shutil.ignore_patterns(*SWEEP_COPY_IGNORE),
+            symlinks=True,
+        )
+        yield dest
 
 
 class MutantError(RuntimeError):
@@ -880,6 +928,11 @@ def run_mutants(
 ) -> list[dict]:
     """Apply each mutant, run its whole guard file, restore, and report.
 
+    **With no `root`, the sweep runs against a COPY of the repository** and the
+    real working tree is never written (an#124). See :func:`sweep_tree` for why
+    that is not merely tidiness. An explicit `root` is swept IN PLACE, because a
+    caller who names a tree has already chosen a throwaway.
+
     Restoration is in a ``finally`` and rewrites the ORIGINAL text rather than
     reversing the substitution: a reversal that itself failed would leave the
     tree broken, which is a worse outcome than any mutant surviving.
@@ -901,11 +954,23 @@ def run_mutants(
         )
     wanted = set(names) if names is not None else None
     results: list[dict] = []
-    with restore_on_termination():
-        for mutant in MUTANTS:
-            if wanted is not None and mutant.name not in wanted:
-                continue
-            results.append(_run_one(base, mutant))
+
+    def sweep(where: Path) -> None:
+        with restore_on_termination():
+            for mutant in MUTANTS:
+                if wanted is not None and mutant.name not in wanted:
+                    continue
+                results.append(_run_one(where, mutant))
+
+    if root is not None:
+        # An explicit root is ALREADY the caller's throwaway — the interruption
+        # tests hand one over precisely so they can watch the tree the sweep
+        # mutates. Copying it would move the damage somewhere they cannot see
+        # and turn those guards green for the wrong reason.
+        sweep(base)
+    else:
+        with sweep_tree(base) as copied:
+            sweep(copied)
     return results
 
 
@@ -945,6 +1010,27 @@ def _restore_atomically(path: Path, original: str) -> None:
     os.replace(tmp, path)
 
 
+def _child_env(base: Path) -> dict[str, str]:
+    """Environment for the guard subprocess, with `base` FIRST on the path.
+
+    `cwd=base` is not enough and the difference is the whole point of sweeping a
+    copy. A bare ``import an`` in the child resolves through the **editable
+    install**, which points at whichever checkout was installed — so without
+    this the sweep would mutate the copy and then test the real tree, and every
+    mutant would survive while reporting that the guards are decoration.
+
+    The same trap, from the other direction, made the an#67 interruption tests
+    measure a tree the branch had not touched. `PYTHONPATH` beats a `.pth` in
+    site-packages, so this makes the answer unconditional rather than dependent
+    on where the process happens to have been started.
+    """
+    existing = os.environ.get("PYTHONPATH")
+    return {
+        **os.environ,
+        "PYTHONPATH": str(base) + (os.pathsep + existing if existing else ""),
+    }
+
+
 def _run_one(base: Path, mutant: Mutant) -> dict:
     """Apply one mutant, run its guard file, restore, and judge the outcome."""
     path = base / mutant.file
@@ -956,6 +1042,7 @@ def _run_one(base: Path, mutant: Mutant) -> dict:
             cwd=base,
             capture_output=True,
             text=True,
+            env=_child_env(base),
         )
     finally:
         _restore_atomically(path, original)
