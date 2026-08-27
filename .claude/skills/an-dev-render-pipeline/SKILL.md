@@ -74,6 +74,26 @@ an.render.render(project, …)
 Each was tried, measured, and refused. They are recorded here so the next
 session does not spend the afternoon rediscovering them.
 
+**Setting `tint` on the node an entity channel targets** — a silent no-op, and
+the most misleading kind. A PixiJS `Container` has an `alpha` the renderer
+multiplies down the tree; it has **no `tint`**. Only the leaves that actually
+draw (`Graphics`, `Sprite`, `Mesh`, `Text`) have one. An entity channel targets
+the entity ROOT, which is a Container, so `node.tint = packed` there assigns an
+own property nothing reads.
+
+Measured (an#62): a full tween to `#ff0000` moved the drawn pixels from
+`(0.382, 0.260, 0.502)` to `(0.381, 0.260, 0.502)` — a change of **0.0002**.
+That number is the hazard. It is not zero, so a "did anything change?" assertion
+passes; it is nowhere near a tint, so the picture is wrong. Whole-frame means are
+worse still: the subject covers about a seventh of the canvas, so even a WORKING
+tint moves them by a few percent, and a test written on frame means passes either
+way.
+
+So `runtime.js` walks the subtree itself (`applyTintDeep`), and the guard measures
+**drawn pixels only** and asserts the untinted frame *fails* its own bound. If you
+are here because a colour looks wrong, check this before reaching for colour
+space — the symptom reads exactly like a conversion problem and is not one.
+
 **`device_scale_factor` on the browser context** — a blind *upscale*. The scene
 still rasterises at 1x and Chromium stretches it. Refuted in Wave 2.
 
