@@ -643,10 +643,7 @@ def _build_tint(work: Path) -> Path:
     texture going muddy.
     """
     md = (
-        _meta("A tint tween", 3.0)
-        + "\n"
-        + _shot("s1", 3.0)
-        + "\n```yaml entities\n"
+        _meta("A tint tween", 3.0) + "\n" + _shot("s1", 3.0) + "\n```yaml entities\n"
         "- kind: character\n  id: charlie\n  store: characters\n  ref: charlie-v1\n"
         "```\n"
         "\n```yaml actions\n"
