@@ -225,6 +225,39 @@ Two mechanical traps when mutating:
 - **Run the whole test file, not a `-k` filter.** A filter that misses the one test which
   would have caught the mutation reads as "not caught".
 
+## The failure mode this repo keeps producing: the test ran, and measured something else
+
+Not "the test was weak" — the test **ran and passed**, and what it actually measured was
+chosen by something outside the code under test. Three instances landed in two days, none
+was findable by reading, and all three fell to mutation:
+
+| The test | What it actually measured |
+|---|---|
+| `test_the_renderer_hands_the_pack_to_the_compiler` (an#112) | whether **ffmpeg was installed**. `render()` checks ffmpeg and imports `playwright` *before* `compile_shot`, so in CI the render aborted ahead of the seam, the spy recorded nothing, and `pytest.raises(Exception)` swallowed the evidence. Green locally, red in CI, for a reason that had nothing to do with style packs. |
+| The `bench-mutants` interruption tests (an#67) | **whichever tree `an` is installed from**. The generated driver runs with `cwd` in a tmp dir, so a bare `import an` resolves through the editable install. Dropping `SIGHUP` from `RESTORE_ON_SIGNALS` stayed green from a clone and went red from the primary checkout — same mutation, two answers. |
+| `test_no_runnable_script_names_a_paid_provider_without_the_gate` (an#63) | **prose in the file it was scanning**. A substring search was satisfied by the module docstring, so a script could describe the gate instead of calling it. |
+
+Three properties they share, and each is the reason the next one will be missed too:
+
+1. **The failure is invisible to whoever it currently works for.** The person with ffmpeg
+   installed, or working directly in `$PP/t/an`, sees a passing guard and no signal. They
+   are also the person most likely to delete the line that fixes it as redundant — which is
+   why `tests/test_bench_mutation.py`'s `sys.path.insert` carries a KEEP THIS LINE FIRST
+   comment explaining the conditionality rather than just asserting the line matters.
+2. **Reading the test cannot find it.** Each reads correctly. The gap is between what the
+   assertion says and what the environment let the code reach before the assertion ran.
+3. **`pytest.raises(Exception)` and substring searches are the usual accomplices.** A broad
+   `raises` swallows the "never got there" error; a substring search cannot tell a code path
+   from a sentence about one. Type the raise to a sentinel, and ask the parsed AST.
+
+**So: mutation-testing a new guard is not a nicety here, it is the only instrument that
+finds this class.** Break the thing the guard guards and confirm it goes red — and when the
+guard involves a subprocess, an optional dependency, or an import, break it *from a second
+environment* (a clone, a stripped `PATH`) as well, because one environment answering
+correctly is exactly the evidence that misleads. `tests/_render_seam.py` exists because this
+knowledge was hand-copied between two test modules and the second copy was written without
+it.
+
 ## Per-PR housekeeping
 
 - Append a one-line entry under today's date in `misc/CHANGELOG.md`.
