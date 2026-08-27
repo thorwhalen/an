@@ -648,6 +648,15 @@ def test_the_cli_says_the_tree_survived_however_it_was_interrupted(tmp_path, sig
             "old={old!r}, new={new!r}, caught_by='test_victim.py', "
             "why='a fixture'),)\n"
             "P.repo_root = lambda: root\n"
+            # This test's subject is the CLI's EXIT PATH, not where the sweep
+            # happens — and it can only assert "the tree was restored" about a
+            # tree it can watch. an#124 made a rootless sweep copy the repo into
+            # a temp dir, so without this the mutation lands somewhere the
+            # parent never sees and the wait loop below times out. Stubbing the
+            # copy keeps this guard pointed at the signal handling; the copy has
+            # its own guards (`test_a_sweep_with_no_root_never_writes_...`).
+            "import contextlib\n"
+            "M.sweep_tree = lambda src: contextlib.nullcontext(src)\n"
             "T.bench_mutants()\n"
         ).format(old=_VICTIM_OLD, new=_VICTIM_NEW),
         encoding="utf-8",
@@ -945,3 +954,186 @@ def test_the_restore_leaves_no_temp_file_behind(tmp_path, monkeypatch):
     strays = list(root.glob(f"*{mutants_mod.RESTORE_TMP_SUFFIX}"))
     assert strays == [], strays
     assert (root / "victim.py").read_text(encoding="utf-8") == _VICTIM_ORIGINAL
+
+
+# ------------------------------- an#124: a sweep must not mutate the real tree
+
+
+def _completed(stdout: str):
+    """A `subprocess.run` result stand-in — the sweep only reads `stdout`."""
+    import subprocess as _sp
+
+    return _sp.CompletedProcess(args=[], returncode=0, stdout=stdout, stderr="")
+
+
+def test_a_sweep_with_no_root_never_writes_to_the_real_source_tree(monkeypatch):
+    """MUTATION: sweep `base` directly instead of `sweep_tree(base)`.
+
+    A sweep mutates real source files, and every mutation here is chosen to be
+    PLAUSIBLE — so a concurrent reader gets a believable wrong answer rather
+    than an error. `test_a_representative_mutant_is_really_caught` runs in the
+    DEFAULT leg, so before an#124 a plain `pytest -q` mutated
+    `an/bench/compare.py` for a few seconds and any second suite, editor
+    re-index or `git status` in the same checkout saw it.
+
+    No subprocess is run: the guard is about WHERE the write lands, so the
+    pytest call is stubbed out and only the paths are examined.
+    """
+    from pathlib import Path as _Path
+
+    import an.bench.mutants as mutants_mod
+    from an.bench.paths import repo_root
+
+    real = repo_root().resolve()
+    mutant = next(m for m in mutants_mod.MUTANTS if m.file.endswith(".py"))
+    monkeypatch.setattr(mutants_mod, "MUTANTS", (mutant,))
+    monkeypatch.setattr(
+        mutants_mod.subprocess,
+        "run",
+        lambda *a, **k: _completed(""),
+    )
+
+    real_write = _Path.write_text
+    written = []
+
+    def record(self, data, *args, **kwargs):
+        written.append(_Path(self).resolve())
+        return real_write(self, data, *args, **kwargs)
+
+    monkeypatch.setattr(_Path, "write_text", record)
+    mutants_mod.run_mutants([mutant.name])
+    monkeypatch.setattr(_Path, "write_text", real_write)
+
+    assert written, "the sweep wrote nothing at all — the guard proves nothing"
+    inside_real = [w for w in written if real in w.parents]
+    assert inside_real == [], (
+        f"a sweep with no `root` wrote into the real tree: {inside_real}"
+    )
+
+
+def test_an_explicit_root_is_still_swept_in_place(tmp_path, monkeypatch):
+    """MUTATION: copy unconditionally, ignoring `root`.
+
+    The interruption tests hand `run_mutants` a throwaway root precisely so they
+    can watch the tree the sweep mutates. Copying that would move the damage
+    somewhere they cannot see and turn those guards green for the wrong reason —
+    a fix for one hazard silently disabling the guards for another.
+    """
+    import an.bench.mutants as mutants_mod
+
+    root = _victim_tree(tmp_path)
+    (root / "test_victim.py").write_text(
+        "def test_x():\n    assert True\n", encoding="utf-8"
+    )
+    mutant = _victim_mutant()
+    monkeypatch.setattr(mutants_mod, "MUTANTS", (mutant,))
+    seen = []
+    real_run = mutants_mod.subprocess.run
+
+    def spy(argv, **kwargs):
+        seen.append((root / "victim.py").read_text(encoding="utf-8"))
+        return real_run(argv, **kwargs)
+
+    monkeypatch.setattr(mutants_mod.subprocess, "run", spy)
+    mutants_mod.run_mutants(root=root)
+
+    assert seen == [_VICTIM_MUTATED], (
+        "the tree the caller named must be the tree that gets mutated"
+    )
+    assert (root / "victim.py").read_text(encoding="utf-8") == _VICTIM_ORIGINAL
+
+
+def test_run_one_actually_hands_the_child_that_env(tmp_path, monkeypatch):
+    """MUTATION: drop `env=_child_env(base)` from the subprocess call.
+
+    The test below pins `_child_env`; this one pins that `_run_one` USES it.
+    Pinning only the helper is how the first version of this guard let the
+    call-site mutation live — the same shape that let a docstring satisfy the
+    spend gate this morning. Assert at the call site, not next to it.
+    """
+    import os
+
+    import an.bench.mutants as mutants_mod
+
+    root = _victim_tree(tmp_path)
+    (root / "test_victim.py").write_text(
+        "def test_x():\n    assert True\n", encoding="utf-8"
+    )
+    mutant = _victim_mutant()
+    monkeypatch.setattr(mutants_mod, "MUTANTS", (mutant,))
+    seen = {}
+
+    def spy(argv, **kwargs):
+        seen.update(kwargs)
+        return _completed("1 passed")
+
+    monkeypatch.setattr(mutants_mod.subprocess, "run", spy)
+    mutants_mod.run_mutants(root=root)
+
+    assert "env" in seen, "the child inherited the ambient environment"
+    first = seen["env"]["PYTHONPATH"].split(os.pathsep)[0]
+    assert first == str(root), (
+        f"the child would import `an` from {first!r}, not from the tree under "
+        f"test — which is how a sweep tests one checkout while mutating another"
+    )
+
+
+def test_the_guard_subprocess_imports_from_the_swept_tree(tmp_path):
+    """MUTATION: make `_child_env` return the ambient environment unchanged.
+
+    `cwd=base` is not enough, and this is the difference the whole copy rests
+    on: a bare `import an` in the child resolves through the EDITABLE INSTALL,
+    so without `PYTHONPATH` the sweep would mutate the copy and then test the
+    real tree — every mutant surviving, reporting that the guards are
+    decoration. The same trap made the an#67 interruption tests measure a
+    checkout the branch had not touched.
+    """
+    import os
+
+    from an.bench.mutants import _child_env
+
+    env = _child_env(tmp_path)
+
+    assert env["PYTHONPATH"].split(os.pathsep)[0] == str(tmp_path)
+
+
+def test_the_child_env_keeps_an_existing_pythonpath(tmp_path, monkeypatch):
+    """MUTATION: `PYTHONPATH: str(base)`, discarding what was there.
+
+    Clobbering it would silently drop whatever the caller's environment needed.
+    """
+    import os
+
+    from an.bench.mutants import _child_env
+
+    monkeypatch.setenv("PYTHONPATH", "/somewhere/else")
+
+    assert (
+        _child_env(tmp_path)["PYTHONPATH"] == f"{tmp_path}{os.pathsep}/somewhere/else"
+    )
+
+
+def test_the_sweep_copy_carries_git_because_six_guard_files_need_it(tmp_path):
+    """MUTATION: add `.git` to `SWEEP_COPY_IGNORE`.
+
+    Six of the thirteen `caught_by` files call `dirty_paths` or `repo_root`. A
+    copy without history fails them for the wrong reason — the mutant would
+    read as CAUGHT when what actually happened is that the tree had no git.
+    """
+    from an.bench.mutants import SWEEP_COPY_IGNORE, sweep_tree
+
+    assert ".git" not in SWEEP_COPY_IGNORE
+
+    source = tmp_path / "src"
+    (source / ".git").mkdir(parents=True)
+    (source / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+    (source / "__pycache__").mkdir()
+    (source / "__pycache__" / "x.pyc").write_text("junk", encoding="utf-8")
+    (source / "keep.py").write_text("KEEP = 1\n", encoding="utf-8")
+
+    with sweep_tree(source) as copied:
+        assert (copied / ".git" / "HEAD").is_file()
+        assert (copied / "keep.py").is_file()
+        assert not (copied / "__pycache__").exists()
+        leftover = copied
+    assert not leftover.exists(), "the throwaway tree must not outlive the sweep"
