@@ -143,14 +143,18 @@ The IR shape (relevant fields):
         A tween/set action's "property" is EITHER a transform:
           x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, skew_y,
           pivot_x, pivot_y, alpha
+        OR "tint", a per-node colour MULTIPLY whose value is a "#rrggbb"
+        string (an#62) — the compiler expands it into three numeric channels,
+        so a tween between two colours interpolates per channel. Like "alpha"
+        it cascades to the target's parts.
         OR the name of a swap set the target character's descriptor declares
         in asset_sets (e.g. "viseme", "eyelid", "hands"), used with a "set"
         action whose "value" is one of that set's declared KEYS. Any other
-        property (opacity, visible, color, tint, width, ...) is refused at
+        property (opacity, visible, color, width, ...) is refused at
         compile with the declared sets listed. Never invent a set or a key.
         "alpha" is the fade primitive and cascades to a character's parts.
         A tween with no "from" starts at the property's rest value: 1.0 for
-        scale_x / scale_y / alpha, 0.0 for the rest.
+        scale_x / scale_y / alpha, "#ffffff" for tint, 0.0 for the rest.
         A "play" action ({kind: play, target: <entity>, animation: <name>,
         [duration], [speed], [loop]}) plays one of the target character's
         descriptor animations ("idle_breath", "blink", or any it declares);

@@ -19,7 +19,7 @@ from typing import Any, Literal, Mapping
 
 from pydantic import ValidationError
 
-from an.base import TRANSFORM_PROPERTIES
+from an.base import AUTHORABLE_PROPERTIES, TRANSFORM_PROPERTIES
 from an.characters.play import art_exists_for, play_problems
 from an.characters.schema import CharacterDescriptor
 from an.expression.binding import expression_problems
@@ -145,7 +145,12 @@ _CONFIGURING_ENTITY_KINDS: frozenset[str] = frozenset({"voice"})
 #: SET, which must be declared by the target entity's descriptor (an#87). The
 #: vocabulary itself is the shared SSOT in ``an.base`` (importable by every
 #: layer); the compiler's rest-value table is asserted equal to it by test.
-_TRANSFORM_PROPERTIES: frozenset[str] = TRANSFORM_PROPERTIES
+#:
+#: `AUTHORABLE_*`, not `TRANSFORM_*`: `tint` is what an author writes and the
+#: compiler expands into three numeric channels, so it is legal input that
+#: never appears in a compiled document (an#62). Reading the compiled set here
+#: would classify a `tint` tween as a swap-set name and refuse it.
+_TRANSFORM_PROPERTIES: frozenset[str] = AUTHORABLE_PROPERTIES
 
 #: The swap sets a descriptor-less (procedural) rig supports — declared as
 #: data on its drawn mouth by the compiler (`PROCEDURAL_MOUTH_SETS`). This

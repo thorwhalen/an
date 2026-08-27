@@ -453,6 +453,24 @@
         refitToBox(child);
     }
 
+    function applyTintDeep(node, packed) {
+        // `tint` DOES NOT CASCADE the way `alpha` does, and that difference is
+        // the whole reason this function exists. A PixiJS `Container` has an
+        // `alpha` the renderer multiplies down the tree, but no `tint` — only
+        // the leaves that actually draw (`Graphics`, `Sprite`, `Mesh`, `Text`)
+        // have one. An entity channel targets the entity ROOT, which is a
+        // Container, so setting `node.tint` there is a silent no-op: measured,
+        // a tween to `#ff0000` moved the drawn pixels by 0.0002 (an#62).
+        //
+        // Authors reasonably expect it to behave like `alpha` — the docs call
+        // that "the fade primitive that cascades to a character's parts" — so
+        // the cascade is done here instead of being left as a footgun.
+        node.tint = packed;
+        for (const child of (node.children || [])) {
+            applyTintDeep(child, packed);
+        }
+    }
+
     function applyProperty(node, prop, value) {
         switch (prop) {
             case 'x': node.x = value; break;
@@ -466,6 +484,29 @@
             case 'pivot_x': node.pivot.x = value; break;
             case 'pivot_y': node.pivot.y = value; break;
             case 'alpha': node.alpha = value; break;
+            // an#62. Three numeric channels, not one colour: `evaluate` lerps
+            // numbers and SNAPS everything else, and it has a Python twin kept
+            // in step by a parity test — so a colour type here would be a third
+            // interpolation mode in two implementations that have drifted
+            // before. The compiler expands one authored `tint: "#rrggbb"` into
+            // these, so per-channel sRGB interpolation is the ordinary numeric
+            // path and neither evaluator learns what a colour is.
+            case 'tint_r':
+            case 'tint_g':
+            case 'tint_b': {
+                // Rest is WHITE. `tint` is a multiply, so a missing component
+                // must be 1.0 — defaulting to 0 renders the node black the
+                // instant any one of the three is animated.
+                const parts = node._anTint ||
+                    (node._anTint = { tint_r: 1, tint_g: 1, tint_b: 1 });
+                parts[prop] = value;
+                const q = v => Math.max(0, Math.min(255, Math.round(v * 255)));
+                applyTintDeep(
+                    node,
+                    (q(parts.tint_r) << 16) | (q(parts.tint_g) << 8) | q(parts.tint_b)
+                );
+                break;
+            }
             default: {
                 // Not a transform: the property names a swap set (an#87).
                 // Apply it if this node's visual declares the set; otherwise
@@ -486,7 +527,9 @@
                     'unknown animated property ' + JSON.stringify(prop) +
                     ' on ' + JSON.stringify(node.name) + '. The runtime applies: ' +
                     'x, y, rotation, rotation_rad, scale_x, scale_y, skew_x, ' +
-                    'skew_y, pivot_x, pivot_y, alpha — plus this node\'s swap ' +
+                    'skew_y, pivot_x, pivot_y, alpha, tint_r, tint_g, tint_b ' +
+                    '(author `tint` as a #rrggbb string; the compiler expands ' +
+                    'it into the three) — plus this node\'s swap ' +
                     'sets: ' + JSON.stringify(Object.keys(sets).sort()) + '.'
                 );
             }

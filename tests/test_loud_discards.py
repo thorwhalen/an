@@ -433,7 +433,7 @@ def _extract(name: str, pattern: str) -> str:
 
 def test_the_runtime_raises_on_an_unknown_property():
     """Executed, not grepped."""
-    fn = _extract("applyProperty", r"function applyProperty\([^)]*\)\s*\{.*?\n    \}")
+    fn = _apply_property_source()
     script = "\n".join(
         [
             fn,
@@ -449,6 +449,82 @@ def test_the_runtime_raises_on_an_unknown_property():
     )
 
 
+#: Runtime properties whose value is transformed before it lands, so the
+#: write-7-and-look-for-7 loop above cannot check them. Every name here must be
+#: covered by `test_the_runtime_composes_the_three_tint_channels`, which that
+#: test asserts in the other direction.
+COMPOSED_ELSEWHERE: frozenset[str] = frozenset({"tint_r", "tint_g", "tint_b"})
+
+
+def _apply_property_source() -> str:
+    """`applyProperty` plus the helpers it calls, so the snippet is runnable.
+
+    Extracting the switch alone stopped being enough when `tint` arrived: the
+    cascade lives in `applyTintDeep`, and a script missing it fails with a
+    ReferenceError rather than a wrong value — which reads as a broken test
+    rather than as the missing function it is.
+    """
+    return "\n".join(
+        (
+            _extract(
+                "applyTintDeep",
+                r"function applyTintDeep\([^)]*\)\s*\{.*?\n    \}",
+            ),
+            _extract(
+                "applyProperty",
+                r"function applyProperty\([^)]*\)\s*\{.*?\n    \}",
+            ),
+        )
+    )
+
+
+def test_the_runtime_composes_the_three_tint_channels():
+    """MUTATION: `node.tint = value`, or drop a component from the shift.
+
+    an#62. The three channels are one 24-bit field, so this asserts the
+    COMPOSITION with distinct values per channel — the sibling gate writes the
+    same number to every property and could not tell `tint_r` from `tint_b`.
+
+    Also pins the rest value, which is the one that bites: `tint` is a MULTIPLY,
+    so an unwritten component must read 1.0. Defaulting it to 0 renders the node
+    black the instant any single channel is animated, and a 0-default is what
+    every other numeric property here uses.
+    """
+    fn = _apply_property_source()
+    script = "\n".join(
+        [
+            fn,
+            "const out = {};",
+            # All three written: an exact 24-bit value with a distinct byte each.
+            "const a = {scale: {}, skew: {}, pivot: {}};",
+            "applyProperty(a, 'tint_r', 1.0);",
+            "applyProperty(a, 'tint_g', 128/255);",
+            "applyProperty(a, 'tint_b', 0.0);",
+            "out.all_three = a.tint;",
+            # One written: the other two must rest at WHITE, not at zero.
+            "const b = {scale: {}, skew: {}, pivot: {}};",
+            "applyProperty(b, 'tint_g', 0.0);",
+            "out.only_green = b.tint;",
+            # Out of range clamps rather than wrapping into a neighbour's byte.
+            "const c = {scale: {}, skew: {}, pivot: {}};",
+            "applyProperty(c, 'tint_r', 4.0);",
+            "applyProperty(c, 'tint_g', -1.0);",
+            "applyProperty(c, 'tint_b', 0.0);",
+            "out.clamped = c.tint;",
+            "console.log(JSON.stringify(out));",
+        ]
+    )
+    got = json.loads(_run_node(script))
+
+    assert got["all_three"] == 0xFF8000, hex(got["all_three"])
+    assert got["only_green"] == 0xFF00FF, (
+        f"an unwritten tint component rested at 0 instead of white: "
+        f"{hex(got['only_green'])} — every other numeric property rests at 0, "
+        f"which for a multiply is black"
+    )
+    assert got["clamped"] == 0xFF0000, hex(got["clamped"])
+
+
 def test_the_runtime_still_applies_every_known_property():
     """The other half: the loud default must not swallow a legal property.
 
@@ -456,7 +532,7 @@ def test_the_runtime_still_applies_every_known_property():
     version only checked for the absence of an exception, so a mutant writing
     `case 'x': node.y = value` passed it unnoticed.
     """
-    fn = _extract("applyProperty", r"function applyProperty\([^)]*\)\s*\{.*?\n    \}")
+    fn = _apply_property_source()
     props = sorted(_runtime_switch_cases())
     script = "\n".join(
         [
@@ -487,9 +563,20 @@ def test_the_runtime_still_applies_every_known_property():
         "pivot_x": ("pivot", "x"),
         "pivot_y": ("pivot", "y"),
     }
-    unmapped = sorted(set(props) - set(where))
+    # `tint_*` cannot be checked by this loop's shape: the value is clamped and
+    # composed into one 24-bit field, so writing 7 to any of the three lands the
+    # same 0xffffff. It gets a check of its own with distinct per-channel
+    # values, and the exemption is CLOSED below — this test asserts the other
+    # one covers exactly these names, so an exemption cannot outlive its test.
+    unmapped = sorted(set(props) - set(where) - COMPOSED_ELSEWHERE)
     assert not unmapped, f"runtime.js gained properties this test does not check: {unmapped}"
+    assert COMPOSED_ELSEWHERE <= set(props), (
+        f"{sorted(COMPOSED_ELSEWHERE - set(props))} is exempted from this gate "
+        f"but is no longer a runtime property — delete the exemption"
+    )
     for prop, node in landed.items():
+        if prop in COMPOSED_ELSEWHERE:
+            continue
         outer, inner = where[prop]
         got = node.get(outer) if inner is None else (node.get(outer) or {}).get(inner)
         assert got == 7, (

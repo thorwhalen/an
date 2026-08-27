@@ -617,13 +617,28 @@ def test_the_transform_vocabulary_is_one_set_in_three_places():
         RUNTIME_APPLIED_PROPERTIES,
         _PROPERTY_REST_VALUES,
     )
-    from an.base import TRANSFORM_PROPERTIES
+    from an.base import (
+        AUTHORABLE_PROPERTIES,
+        COLOUR_PROPERTY,
+        TRANSFORM_PROPERTIES,
+    )
     from an.ir import validate as ir_validate
 
     assert set(_PROPERTY_REST_VALUES) == TRANSFORM_PROPERTIES
     assert RUNTIME_APPLIED_PROPERTIES == TRANSFORM_PROPERTIES
-    assert ir_validate._TRANSFORM_PROPERTIES == TRANSFORM_PROPERTIES
     assert ir_validate._PROCEDURAL_SWAP_SETS == PROCEDURAL_MOUTH_SETS
+
+    # The IR validator checks what an author may WRITE, which is the compiled
+    # vocabulary plus `tint` — the one property the compiler expands and that
+    # therefore never appears in a compiled document (an#62). Pinned as a
+    # difference of exactly one name rather than left as two sets that happen
+    # to differ, so neither can drift into the other silently.
+    assert ir_validate._TRANSFORM_PROPERTIES == AUTHORABLE_PROPERTIES
+    assert AUTHORABLE_PROPERTIES - TRANSFORM_PROPERTIES == {COLOUR_PROPERTY}
+    assert COLOUR_PROPERTY not in TRANSFORM_PROPERTIES, (
+        "`tint` in the compiled vocabulary would make the runtime's static "
+        "switch shadow it, and the expansion would never run"
+    )
 
 
 def test_a_lowercase_authored_viseme_on_a_procedural_rig_is_refused():
