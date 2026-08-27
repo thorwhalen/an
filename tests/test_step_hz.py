@@ -245,6 +245,76 @@ def test_the_camera_is_exempt_by_construction():
     assert len(_tween_channel(scene).keyframes) > 2
 
 
+def test_plane_compensation_is_exempt_by_construction():
+    """The THIRD emission site, which Wave 7 added and nothing asserted (an#127).
+
+    `wave7_research.md` §10.8 asked for this and it was never written. A stepped
+    plane under a smooth camera would judder — the exact failure the exemption
+    exists to prevent — and the symptom is subtle rather than a crash.
+
+    **The invariant is not the call ordering.** `_add_parallax_clips` happens to
+    run after `_add_camera_clips`, but `_add_parallax_clips`' own docstring
+    calls that "TIDY, not load-bearing" (an#110 review), so asserting it would
+    pin something allowed to change. What makes these channels exempt is that
+    stepping is applied INSIDE `_compile_action`, and plane compensation is not
+    an authored action — it is emitted outside the resampler entirely. So what
+    is asserted is the observable consequence: the compensation keyframes keep
+    their own easing, while the authored tween beside them is resampled onto the
+    step grid.
+    """
+    import json
+
+    from an.environments import EnvironmentDescriptor, Plane, PlaneArt
+
+    env = json.loads(
+        EnvironmentDescriptor(
+            name="depths",
+            planes=[
+                Plane(name="far", art=PlaneArt(color="#334455"), depth=0.25),
+                Plane(name="near", art=PlaneArt(color="#889900"), depth=1.9),
+            ],
+        ).model_dump_json()
+    )
+    shot = Shot(
+        id="s",
+        renderer="cutout",
+        duration=2.0,
+        camera=Camera(move="pan_right"),
+        entities=[
+            AssetRef(kind="environment", id="bg", store="environments", ref="depths"),
+            AssetRef(kind="character", id="c", store="characters", ref="c"),
+        ],
+        actions=[tween("c", "x", to=40.0, duration=2.0)],
+    )
+
+    with _quiet():
+        scene = compile_shot(
+            shot,
+            mall={"environments": {"depths": env}, "characters": {}},
+            step_hz=10.0,
+        )
+
+    parallax = [
+        ch
+        for aid, anim in scene.animations.items()
+        if aid.startswith("__parallax__")
+        for ch in anim.channels
+    ]
+    assert parallax, (
+        "no plane-compensation channel was emitted, so this guard asserts "
+        "nothing — the fixture must keep a stage that the camera pans across"
+    )
+    for ch in parallax:
+        assert not any(k.easing == "step" for k in ch.keyframes), (
+            f"{ch.target} was resampled onto the step grid: a stepped plane "
+            f"under a smooth camera judders the whole frame"
+        )
+    assert any(k.easing == "step" for k in _tween_channel(scene).keyframes), (
+        "step_hz was not in effect for this shot, so the exemption above is "
+        "vacuous"
+    )
+
+
 def test_swap_tweens_blinks_and_plays_are_not_resampled(tmp_path):
     """Swap channels are stepped by format already (their two keyframes stay
     two); blink clips and `play` clips are separate emission sites."""

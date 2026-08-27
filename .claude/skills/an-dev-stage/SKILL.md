@@ -143,8 +143,12 @@ and one extracted rig builder, with different defaults. Not "a character with `k
 `model_post_init` re-seeds a seven-bone humanoid with a face and a blink from an empty list (even
 `animations={}` is re-seeded), the placeholder fallback draws a **person** where a lamp should be,
 and `an character validate` scores exactly 21 blocking findings on a correct prop. Placement is
-one additive `AssetRef.stage` (`at`, `scale`, `depth`, `after`) — hash-free by construction,
-because the contract hashes the *compiled* document and an `AssetRef` never reaches it. Attaching
+one additive `AssetRef.stage` — hash-free by construction, because the contract hashes the
+*compiled* document and an `AssetRef` never reaches it. **Only `at` and `scale` shipped**
+(an#118). `depth` and `after` were deferred because the stage vocabulary they belong to had
+not landed yet — and #109 and #110 landed later the same day, so that reason has expired
+without being revisited. Tracked as an#126; do not read the four-field shape below as
+present tense. Attaching
 a prop to a character is deferred: `_track_root_of` makes entity identity the first path segment,
 and the rig has **no hand bone**.
 
