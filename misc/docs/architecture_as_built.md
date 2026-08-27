@@ -412,8 +412,10 @@ What genuinely remains, in rough priority order:
    left, 6 Hz right); the flip is a one-line PR that only the maintainer
    makes, and it has not been made.
 6. **A real `an validate` for everything the renderer refuses.** The pre-flight
-   reports the IR-level refusals (unknown `camera.move`, `prop` entities,
-   `narration`; `play` is resolved against the target's descriptor animations
+   reports the IR-level refusals (unknown `camera.move`, `narration`; `prop`
+   entities stopped being one in an#108, which made them drawable, and
+   `_DRAWABLE_ENTITY_KINDS` is pinned equal to the compiler's dispatch by test;
+   `play` is resolved against the target's descriptor animations
    since an#7), and since an#109 it no longer duplicates the compiler's camera
    list — both call `an.ir.camera.camera_keys`, so a move that validates cannot
    then raise at compile. It still cannot see rig-level problems: a speaker
