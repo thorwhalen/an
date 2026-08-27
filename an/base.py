@@ -102,6 +102,13 @@ EASING_PRESETS: tuple[str, ...] = (
 #: compiler derives its rest-value table from ``TransformJSON`` and a test
 #: asserts that derivation equals this set. Lives here because ``an.base`` is
 #: the one module all three layers may import.
+#: The colour multiply as an AUTHOR spells it. Not in
+#: :data:`TRANSFORM_PROPERTIES` because nothing downstream of the compiler ever
+#: sees it — `_expand_tint_actions` rewrites each leaf into the three numeric
+#: components before the swap-set dispatch, which would otherwise read it as an
+#: asset-set name (an#62).
+COLOUR_PROPERTY: str = "tint"
+
 TRANSFORM_PROPERTIES: frozenset[str] = frozenset(
     {
         "x",
@@ -114,6 +121,13 @@ TRANSFORM_PROPERTIES: frozenset[str] = frozenset(
         "skew_y",
         "pivot_x",
         "pivot_y",
+        # an#62. Three numeric channels rather than one colour value, because
+        # `channel.evaluate` lerps numbers and SNAPS everything else, and it has
+        # a `runtime.js` twin held in step by a parity test. Authors write
+        # `tint: "#rrggbb"` and the compiler expands it into these.
+        "tint_r",
+        "tint_g",
+        "tint_b",
         "alpha",
     }
 )
@@ -121,6 +135,13 @@ TRANSFORM_PROPERTIES: frozenset[str] = frozenset(
 #: Characters within which a swap-set name is not addressable: ``/`` would read
 #: as a path segment and ``::`` is the runtime's pose-key separator.
 SWAP_SET_NAME_FORBIDDEN_SUBSTRINGS: tuple[str, ...] = ("/", "::")
+
+
+#: What a set/tween may name: a compiled transform channel, or the authored
+#: colour spelling the compiler expands. Validate checks against this, and the
+#: compiler's rest table against `TRANSFORM_PROPERTIES` — the difference between
+#: the two sets is exactly `tint`, and a test pins that rather than trusting it.
+AUTHORABLE_PROPERTIES: frozenset[str] = TRANSFORM_PROPERTIES | {COLOUR_PROPERTY}
 
 
 def swap_set_name_problem(name: str) -> str | None:

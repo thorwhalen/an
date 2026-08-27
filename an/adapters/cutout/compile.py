@@ -31,7 +31,9 @@ mall). It reads only.
 
 from __future__ import annotations
 
+import dataclasses
 import math
+import re
 import warnings
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -316,6 +318,25 @@ def _blink_windows(entity_id: str, duration: float) -> list[tuple[float, float]]
     return out
 
 
+#: The authored spelling of a per-node colour multiply, and the three channels
+#: the compiler expands it into (an#62).
+#:
+#: One authored property, three channels, and the split is deliberate. Colour
+#: interpolation could have been a third mode in `channel.evaluate` — it lerps
+#: numbers and SNAPS everything else (an#86) — but that evaluator has a twin in
+#: `runtime.js` kept in step by `tests/test_cutout_channel_parity.py`, and the
+#: parity test exists because the two have drifted before. Expanding here means
+#: the per-channel lerp IS the existing numeric path and neither evaluator ever
+#: learns what a colour is.
+#: `#rrggbb` only — no shorthand, no alpha channel. A three-digit form would
+#: be a second spelling of the same colour, and `#rrggbbaa` would silently
+#: drop its alpha, since `tint` is a multiply and opacity is `alpha`.
+_HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
+
+TINT_PROPERTY: str = "tint"
+TINT_COMPONENTS: tuple[str, str, str] = ("tint_r", "tint_g", "tint_b")
+
+
 def _property_rest_values() -> dict[str, float]:
     """Rest ("identity") value per animatable property, derived from the schema.
 
@@ -342,6 +363,16 @@ def _property_rest_values() -> dict[str, float]:
     # property switch; it is not a schema field, so it has to be added here
     # rather than derived.
     rest["rotation_rad"] = rest["rotation"]
+    # `tint_r/g/b` (an#62) are the same kind of exception, for a reason worth
+    # stating: they are ANIMATION-channel properties the runtime applies, not
+    # node rest state. Putting them on `TransformJSON` would add three defaulted
+    # fields to every serialized node and move all ten corpus contract hashes —
+    # for a feature almost no scene uses — and a node with no tint channel is
+    # already untinted, because the runtime's own default is white. They rest at
+    # 1.0 because tint is a MULTIPLY: 1.0 is the identity, and the 0.0 default
+    # would render every untweened rig black.
+    for component in TINT_COMPONENTS:
+        rest[component] = 1.0
     return rest
 
 
@@ -2077,6 +2108,9 @@ def _compile_actions(
     # `expression` leaves (an#98) are the face solver's input, not clips of
     # their own: `_add_face_clips` sums them per (node, property).
     flat_list = [f for f in flat_list if not isinstance(f.action, ExpressionAction)]
+    # BEFORE the swap dispatch: `tint` is not in the transform vocabulary, so a
+    # leaf still spelling it would be read as an asset-set name (an#62).
+    flat_list = _expand_tint_actions(flat_list)
     swap_props = _swap_property_names(flat_list)
     if vocab is not None:
         flat_list = [
@@ -2252,6 +2286,60 @@ def _check_keyframe_value(value: Any, *, target: str, prop: str) -> Any:
             "the compiler refuses them rather than pick a side silently."
         )
     return value
+
+
+def parse_tint(value: object, *, where: str) -> tuple[float, float, float]:
+    """A `#rrggbb` string to three multipliers in 0..1.
+
+    Per-channel in **sRGB** — on the 8-bit values as written — not linear-light.
+    `tint` is a multiply the GPU applies in the space the author read the hex
+    out of, and a fade between two hex values that did not pass through the
+    values between them would surprise whoever wrote them (an#62).
+    """
+    if not isinstance(value, str) or not _HEX_COLOUR.fullmatch(value):
+        raise CutoutCompileError(
+            f"{where}: `tint` takes a `#rrggbb` colour string, got {value!r}. "
+            f"Hex strings are the house colour representation — the same reason "
+            f"`an.styles.StylePack` gives — so there is one spelling of a colour "
+            f"in a compiled document rather than two that can disagree."
+        )
+    raw = value.lstrip("#")
+    return tuple(int(raw[i : i + 2], 16) / 255.0 for i in (0, 2, 4))  # type: ignore[return-value]
+
+
+def _expand_tint_actions(flat_list: list[FlatAction]) -> list[FlatAction]:
+    """Rewrite each authored `tint` leaf into three numeric component leaves.
+
+    Done HERE, on the flat list, so everything downstream — the swap-set
+    dispatch, the step resampler, the channel builder — sees only numbers and
+    needs to know nothing about colour. A `tint` leaf that reached
+    `_swap_property_names` would be classified as an asset-set name, because
+    that is what "not in the transform vocabulary" means.
+    """
+    out: list[FlatAction] = []
+    for flat in flat_list:
+        action = flat.action
+        if getattr(action, "property", None) != TINT_PROPERTY:
+            out.append(flat)
+            continue
+        where = f"{type(action).__name__.lower()} on {action.target!r}"
+        if isinstance(action, SetAction):
+            triples = {"value": parse_tint(action.value, where=where)}
+        else:
+            triples = {
+                field: parse_tint(getattr(action, field), where=where)
+                for field in ("from_value", "to_value")
+                if getattr(action, field, None) is not None
+            }
+        for index, component in enumerate(TINT_COMPONENTS):
+            replacement = action.model_copy(
+                update={
+                    "property": component,
+                    **{field: v[index] for field, v in triples.items()},
+                }
+            )
+            out.append(dataclasses.replace(flat, action=replacement))
+    return out
 
 
 def _swap_property_names(flat_list: list[FlatAction]) -> frozenset[str]:

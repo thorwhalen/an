@@ -32,6 +32,17 @@ from pathlib import Path
 from typing import Callable
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# KEEP THIS BEFORE THE FIRST `an` IMPORT. Run as a script, `sys.path[0]` is
+# `misc/demos/`, so a bare `import an` resolves through the EDITABLE INSTALL —
+# whichever checkout was installed, which is only incidentally this one. It is
+# right for anyone working in the primary tree and wrong from a clone or a
+# worktree, so the person for whom this line looks redundant is exactly the
+# person it is invisible to. Measured: building the an#62 `tint` demo from a
+# clone rendered against a tree with no tint support and failed with a
+# swap-set error naming a property the local compiler understands perfectly.
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 OUT_DIR = REPO_ROOT / "misc" / "demos" / "out"
 
 #: GIF recipe for flat cutout art. `dither=none` because dithering a flat fill invents
@@ -623,6 +634,31 @@ def _build_style_pack(work: Path) -> Path:
     return out
 
 
+def _build_tint(work: Path) -> Path:
+    """One character, tinted from white through to a colour over the shot.
+
+    The declared rig is the procedural one, for the same reason the style-pack
+    demo declares it: a tint multiplies whatever art is there, and on a flat
+    procedural rig the multiply is legible as a colour change rather than as a
+    texture going muddy.
+    """
+    md = (
+        _meta("A tint tween", 3.0)
+        + "\n"
+        + _shot("s1", 3.0)
+        + "\n```yaml entities\n"
+        "- kind: character\n  id: charlie\n  store: characters\n  ref: charlie-v1\n"
+        "```\n"
+        "\n```yaml actions\n"
+        "- kind: tween\n  target: charlie\n  property: tint\n"
+        '  to: "#e01b24"\n  duration: 3.0\n  easing: ease_in_out\n'
+        "```\n"
+    )
+    (work / "scene.md").write_text(md, encoding="utf-8")
+    _declare_placeholder_rig(work, "charlie-v1")
+    return _render(work)
+
+
 def _build_alpha(work: Path) -> Path:
     md = (
         _meta("A tween on :alpha", 4.0)
@@ -1134,6 +1170,32 @@ DEMOS: tuple[Demo, ...] = (
             "not reach."
         ),
         build=_build_style_pack,
+    ),
+    Demo(
+        slug="tint",
+        title="A tint tween: one colour multiply over the whole rig",
+        shows=(
+            "One character, tinted from untinted to a red over three seconds. "
+            "`tint` is a per-node MULTIPLY and it cascades to the rig's parts, "
+            "so everything the character draws shifts together — including the "
+            "eyes and the mouth, which is what a multiply does and is why this "
+            "is not art direction. Recolouring a rig's roles independently is "
+            "`style_pack:`, which decides the colours before they are drawn; a "
+            "tint dyes the result afterwards. The backdrop is untouched, "
+            "because the tween targets the character."
+        ),
+        how=(
+            "`property: tint` on a tween or set, with a `#rrggbb` string. It is "
+            "the one animatable property whose value is a colour, and the "
+            "compiler expands it into three numeric channels (`tint_r/g/b`) so "
+            "the tween interpolates per channel in sRGB — `channel.evaluate` "
+            "lerps numbers and step-holds everything else, and it has a "
+            "`runtime.js` twin held in step by a parity test, so a colour type "
+            "there would be a third interpolation mode in two implementations. "
+            "Rest is `#ffffff`, since a multiply's identity is white: a tween "
+            "with no `from` starts untinted rather than from black."
+        ),
+        build=_build_tint,
     ),
     Demo(
         slug="alpha",

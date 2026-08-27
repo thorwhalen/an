@@ -20,6 +20,7 @@ import json
 import re
 import shutil
 import subprocess
+import warnings
 from pathlib import Path
 
 import pytest
@@ -126,19 +127,25 @@ def test_rest_values_are_derived_from_the_schema_not_restated():
 def test_a_tween_on_an_undeclared_property_is_refused_at_compile():
     """A property outside the transform vocabulary names a SWAP SET (an#87).
 
-    The pre-#87 contract was two-stage: a tween on `tint` with no
-    ``from_value`` was refused for its missing rest identity, while one WITH
-    a ``from_value`` compiled and then died in the browser at applyProperty.
-    Both now fail at compile, earlier and with the real diagnosis: `tint` is
-    not a transform, `charlie` has no descriptor, and a procedural rig's only
-    swap is `viseme` on its mouth. (When #62 implements tint it enters the
-    transform vocabulary and both forms simply compile.)
+    The pre-#87 contract was two-stage: a tween on an unknown property with no
+    ``from_value`` was refused for its missing rest identity, while one WITH a
+    ``from_value`` compiled and then died in the browser at applyProperty. Both
+    now fail at compile, earlier and with the real diagnosis: it is not a
+    transform, `charlie` has no descriptor, and a procedural rig's only swap is
+    `viseme` on its mouth.
+
+    **This test used to use `tint`, and its own docstring predicted its
+    retirement**: "when #62 implements tint it enters the transform vocabulary
+    and both forms simply compile." #62 shipped, so the subject moved to
+    `opacity` — a property the model-facing grammar in `an/iterate.py` names as
+    refused, and one nothing plans to implement. The contract under test is
+    unchanged; only the example of a non-property is.
     """
-    for kwargs in ({}, {"from_value": "#000000"}):
+    for kwargs in ({}, {"from_value": 0.0}):
         with pytest.raises(CutoutCompileError) as e:
-            compile_shot(_shot_with_tween("tint", to_value="#ff0000", **kwargs))
+            compile_shot(_shot_with_tween("opacity", to_value=1.0, **kwargs))
         msg = str(e.value)
-        assert "tint" in msg
+        assert "opacity" in msg
         assert "viseme" in msg, "the error should name the one supported swap"
         assert "transform" in msg.lower()
 
@@ -330,3 +337,162 @@ def _ink(png: Path) -> float:
     px = list(im.getdata())
     total = sum((255 - r) + (255 - g) + (255 - b) for r, g, b in px)
     return total / (len(px) * 3 * 255)
+
+
+# ---------------------------------------------------------- an#62: tint
+
+#: A tween to pure red must leave the green and blue channels far below red.
+#: Generous, because the rig is multi-coloured and the backdrop is not tinted —
+#: but a ratio near 1.0 means the multiply never happened.
+MAX_TINTED_CHANNEL_RATIO = 0.6
+
+#: A channel value above this counts as background rather than subject.
+_NEAR_WHITE = 245
+
+
+def test_a_tint_tween_expands_into_three_numeric_channels():
+    """MUTATION: leave `tint` un-expanded and let the swap dispatch see it.
+
+    One authored property, three channels, because `channel.evaluate` lerps
+    numbers and SNAPS everything else — and its `runtime.js` twin is held in
+    step by a parity test, so a colour type would be a third interpolation mode
+    in two implementations that have drifted before (an#62).
+    """
+    from an.adapters.cutout.compile import TINT_COMPONENTS, compile_shot
+
+    shot = Shot(
+        id="s",
+        renderer="cutout",
+        duration=1.0,
+        entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
+        actions=[
+            TweenAction(
+                target="c", property="tint", to_value="#ff8000", duration=1.0
+            )
+        ],
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        scene = compile_shot(shot, mall={"characters": {}})
+
+    by_prop = {
+        ch.property: [k.value for k in ch.keyframes]
+        for anim in scene.animations.values()
+        for ch in anim.channels
+    }
+
+    assert set(TINT_COMPONENTS) <= set(by_prop), sorted(by_prop)
+    assert "tint" not in by_prop, "the authored spelling reached the document"
+    # Rest is WHITE — a multiply's identity. A 0.0 start would fade from black.
+    assert [v[0] for v in (by_prop[c] for c in TINT_COMPONENTS)] == [1.0, 1.0, 1.0]
+    r, g, b = (by_prop[c][-1] for c in TINT_COMPONENTS)
+    assert (round(r, 4), round(g, 4), round(b, 4)) == (1.0, 0.502, 0.0)
+
+
+def test_a_tint_value_that_is_not_a_hex_colour_is_refused():
+    """MUTATION: accept any string, or coerce.
+
+    `tint` is the one authored property whose value is parsed rather than
+    passed through, so a typo has to be loud — silently tinting to black is
+    exactly the failure a compiled document cannot explain later.
+    """
+    from an.adapters.cutout.compile import CutoutCompileError, compile_shot
+
+    shot = Shot(
+        id="s",
+        renderer="cutout",
+        duration=1.0,
+        entities=[AssetRef(kind="character", id="c", store="characters", ref="c")],
+        actions=[
+            TweenAction(target="c", property="tint", to_value="red", duration=1.0)
+        ],
+    )
+    with pytest.raises(CutoutCompileError, match="#rrggbb"):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            compile_shot(shot, mall={"characters": {}})
+
+
+@pytest.mark.browser
+@pytest.mark.ffmpeg
+def test_a_tint_tween_changes_the_rendered_pixels(hermetic_browser, tmp_path):
+    """The an#62 done-when, asserted on frames — the shape `alpha` set."""
+    from an import init
+    from an.orchestrate import render_project
+    from an.project import load
+
+    root = init(tmp_path / "tinted")
+    proj = load(root)
+    proj.scene = SceneIR(
+        meta=Meta(
+            title="tinted",
+            duration=1.0,
+            fps=12,
+            resolution=Resolution(width=320, height=240),
+        ),
+        timeline=[
+            Shot(
+                id="s1",
+                renderer="cutout",
+                duration=1.0,
+                entities=[
+                    AssetRef(
+                        kind="character", id="charlie", store="characters", ref="c-v1"
+                    )
+                ],
+                actions=[
+                    TweenAction(
+                        target="charlie",
+                        property="tint",
+                        to_value="#ff0000",
+                        duration=1.0,
+                        easing="linear",
+                    )
+                ],
+            )
+        ],
+    )
+    proj.mall["scenes"]["main"] = proj.scene
+
+    output = render_project(root, output_name="tinted")
+    assert output.exists()
+    assert hermetic_browser["blocked"] == [], hermetic_browser["blocked"]
+
+    first, last = tmp_path / "t0.png", tmp_path / "t1.png"
+    _extract_frame(output, first, at="0")
+    _extract_frame(output, last, at="0.9")
+
+    before, after = _channel_means(first), _channel_means(last)
+    assert after != before, "the tint tween changed no pixel at all"
+    # The bound must discriminate: the UNtinted frame has to fail it, or a
+    # no-op implementation passes because the rig happened to be reddish.
+    assert not (
+        before[1] < before[0] * MAX_TINTED_CHANNEL_RATIO
+        and before[2] < before[0] * MAX_TINTED_CHANNEL_RATIO
+    ), f"the rig is already red-dominant at t=0, so this bound proves nothing: {before}"
+    # Multiplying toward pure red drives green and blue down relative to red.
+    assert after[1] < after[0] * MAX_TINTED_CHANNEL_RATIO, (
+        f"green did not fall against red under a tint to #ff0000: {after}"
+    )
+    assert after[2] < after[0] * MAX_TINTED_CHANNEL_RATIO, (
+        f"blue did not fall against red under a tint to #ff0000: {after}"
+    )
+
+
+def _channel_means(png: Path) -> tuple[float, float, float]:
+    """Mean (r, g, b) over the DRAWN pixels only, 0..1.
+
+    Not the whole frame, for `_ink`'s reason pointing a different way: the
+    subject covers about a seventh of this canvas and the rest is white, so a
+    whole-frame mean is ~0.9 on every channel and a full tint to red moves it by
+    a few percent. Measured on the real render, the frame means went
+    (0.911, 0.893, 0.928) -> (0.910, 0.870, 0.881) while the drawn pixels went
+    (0.382, 0.260, 0.502) -> (0.408, 0.076, 0.100). The first pair passes a
+    broken implementation; the second cannot.
+    """
+    from PIL import Image as PIL
+
+    im = PIL.open(png).convert("RGB")
+    drawn = [p for p in im.getdata() if not all(c > _NEAR_WHITE for c in p)]
+    n = len(drawn) or 1
+    return tuple(sum(p[i] for p in drawn) / n / 255.0 for i in range(3))  # type: ignore[return-value]
