@@ -152,11 +152,32 @@ class StagePlacement(_IRModel):
     compiler already places characters in — so an author reads it off the same
     ruler as a camera pivot. `scale` multiplies the rig's own uniform scale.
 
-    Deliberately only two fields today. #108 sketches `depth` and `after` as
-    well; both belong to the stage vocabulary that arrives with the translating
-    camera (#109) and plane environments (#110), and shipping either now would
-    put a knob in the schema that nothing reads — which is worse than an absent
-    one, because a scene that sets it renders identically and says nothing.
+    **Deliberately only two fields, and the reason has been re-stated because
+    the first one expired.** #108 sketched `depth` and `after` as well, deferred
+    on the grounds that they belong to a stage vocabulary that had not arrived.
+    It arrived the same day: #109 landed the translating camera and #110 landed
+    plane environments, and nothing revisited this paragraph — a deferral citing
+    a *condition* outlives the condition silently, which is why the reason below
+    cites a state instead (an#126).
+
+    The current reason is simply that **nothing reads them and nothing has asked
+    to.** Shipping either now would put a knob in the schema that a scene can
+    set, that renders identically, and that says nothing — which is worse than
+    an absent one, and is the same defect `an.styles.UNREACHABLE_ROLES` refuses
+    by construction on the other side of the compiler.
+
+    What each would cost, so the next reader does not re-derive it:
+
+    - `depth` would place a prop on a parallax plane, which means parenting the
+      prop into that plane's subtree — and `_track_root_of` makes entity
+      identity the first path segment, so every animation target on that prop
+      changes shape.
+    - `after` would order a prop against planes, which is `characters_after`'s
+      problem a second time; that one needed the environment and character
+      builders interleaved before any ordering could be expressed at all.
+
+    Neither is hard. Both are unmotivated, and an unmotivated knob in a
+    versioned schema is a migration you owe later for a feature nobody used.
     """
 
     #: ``(x, y)`` in scene pixels from the stage centre. ``None`` = default layout.
