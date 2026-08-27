@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.74 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.75 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c75a234e"></script>
+      <script src="../../../_static/documentation_options.js?v=6322a757"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -737,11 +737,30 @@ renderer while the thing that actually styles it went unread.</p>
 <p><cite>at</cite> is in SCENE pixels relative to the stage centre — the same space the
 compiler already places characters in — so an author reads it off the same
 ruler as a camera pivot. <cite>scale</cite> multiplies the rig’s own uniform scale.</p>
-<p>Deliberately only two fields today. #108 sketches <cite>depth</cite> and <cite>after</cite> as
-well; both belong to the stage vocabulary that arrives with the translating
-camera (#109) and plane environments (#110), and shipping either now would
-put a knob in the schema that nothing reads — which is worse than an absent
-one, because a scene that sets it renders identically and says nothing.</p>
+<p><strong>Deliberately only two fields, and the reason has been re-stated because
+the first one expired.</strong> #108 sketched <cite>depth</cite> and <cite>after</cite> as well, deferred
+on the grounds that they belong to a stage vocabulary that had not arrived.
+It arrived the same day: #109 landed the translating camera and #110 landed
+plane environments, and nothing revisited this paragraph — a deferral citing
+a <em>condition</em> outlives the condition silently, which is why the reason below
+cites a state instead (an#126).</p>
+<p>The current reason is simply that <strong>nothing reads them and nothing has asked
+to.</strong> Shipping either now would put a knob in the schema that a scene can
+set, that renders identically, and that says nothing — which is worse than
+an absent one, and is the same defect <cite>an.styles.UNREACHABLE_ROLES</cite> refuses
+by construction on the other side of the compiler.</p>
+<p>What each would cost, so the next reader does not re-derive it:</p>
+<ul class="simple">
+<li><p><cite>depth</cite> would place a prop on a parallax plane, which means parenting the
+prop into that plane’s subtree — and <cite>_track_root_of</cite> makes entity
+identity the first path segment, so every animation target on that prop
+changes shape.</p></li>
+<li><p><cite>after</cite> would order a prop against planes, which is <cite>characters_after</cite>’s
+problem a second time; that one needed the environment and character
+builders interleaved before any ordering could be expressed at all.</p></li>
+</ul>
+<p>Neither is hard. Both are unmotivated, and an unmotivated knob in a
+versioned schema is a migration you owe later for a feature nobody used.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="an.ir.schema.StagePlacement.at">
 <span class="sig-name descname"><span class="pre">at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Field</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">allow_inf_nan</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">False</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Field</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">allow_inf_nan</span></span><span class="o"><span class="pre">=</span></span><span class="k"><span class="pre">False</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#an.ir.schema.StagePlacement.at" title="Link to this definition"></a></dt>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.ir.schema &mdash; an 0.1.74 documentation</title>
+  <title>an.ir.schema &mdash; an 0.1.75 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=c75a234e"></script>
+      <script src="../../../_static/documentation_options.js?v=6322a757"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -353,11 +353,32 @@
 <span class="sd">    compiler already places characters in — so an author reads it off the same</span>
 <span class="sd">    ruler as a camera pivot. `scale` multiplies the rig's own uniform scale.</span>
 
-<span class="sd">    Deliberately only two fields today. #108 sketches `depth` and `after` as</span>
-<span class="sd">    well; both belong to the stage vocabulary that arrives with the translating</span>
-<span class="sd">    camera (#109) and plane environments (#110), and shipping either now would</span>
-<span class="sd">    put a knob in the schema that nothing reads — which is worse than an absent</span>
-<span class="sd">    one, because a scene that sets it renders identically and says nothing.</span>
+<span class="sd">    **Deliberately only two fields, and the reason has been re-stated because</span>
+<span class="sd">    the first one expired.** #108 sketched `depth` and `after` as well, deferred</span>
+<span class="sd">    on the grounds that they belong to a stage vocabulary that had not arrived.</span>
+<span class="sd">    It arrived the same day: #109 landed the translating camera and #110 landed</span>
+<span class="sd">    plane environments, and nothing revisited this paragraph — a deferral citing</span>
+<span class="sd">    a *condition* outlives the condition silently, which is why the reason below</span>
+<span class="sd">    cites a state instead (an#126).</span>
+
+<span class="sd">    The current reason is simply that **nothing reads them and nothing has asked</span>
+<span class="sd">    to.** Shipping either now would put a knob in the schema that a scene can</span>
+<span class="sd">    set, that renders identically, and that says nothing — which is worse than</span>
+<span class="sd">    an absent one, and is the same defect `an.styles.UNREACHABLE_ROLES` refuses</span>
+<span class="sd">    by construction on the other side of the compiler.</span>
+
+<span class="sd">    What each would cost, so the next reader does not re-derive it:</span>
+
+<span class="sd">    - `depth` would place a prop on a parallax plane, which means parenting the</span>
+<span class="sd">      prop into that plane's subtree — and `_track_root_of` makes entity</span>
+<span class="sd">      identity the first path segment, so every animation target on that prop</span>
+<span class="sd">      changes shape.</span>
+<span class="sd">    - `after` would order a prop against planes, which is `characters_after`'s</span>
+<span class="sd">      problem a second time; that one needed the environment and character</span>
+<span class="sd">      builders interleaved before any ordering could be expressed at all.</span>
+
+<span class="sd">    Neither is hard. Both are unmotivated, and an unmotivated knob in a</span>
+<span class="sd">    versioned schema is a migration you owe later for a feature nobody used.</span>
 <span class="sd">    """</span>
 
     <span class="c1">#: ``(x, y)`` in scene pixels from the stage centre. ``None`` = default layout.</span>
