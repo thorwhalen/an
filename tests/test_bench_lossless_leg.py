@@ -11,10 +11,16 @@ globals reach its command and they are reached differently on purpose:
 
 That asymmetry is the correction an#72 turned on, and it is what these tests
 pin. Before it, the leg hardcoded ``-pix_fmt yuv420p`` while the delivered
-encode read the module global — so under ``an render --pix-fmt yuv444p`` the
-two legs differed in *two* dimensions and the leg's own docstring ("identical to
-the delivered encode except for the rate control") was false. Measured on the
+encode resolved its at call time — so against a 4:4:4 delivery the two legs
+differed in *two* dimensions and the leg's own docstring ("identical to the
+delivered encode except for the rate control") was false. Measured on the
 corpus, that mismatch changed the SIGN of family E on three of ten scenes.
+
+The format is taken from the delivered FILE rather than re-derived, because
+**two** seams set it — ``RenderContext.pix_fmt`` and the ``DEFAULT_PIX_FMT``
+module global — and this fix's first version consulted the global, covering the
+bench lever and missing ``an render --pix-fmt`` while all five guards passed.
+The last three tests here are the ones that would have caught that.
 
 Only the last test needs ffmpeg. The rest are argv assertions and run in the
 default CI leg, deliberately: gating a test that needs no binary behind a
@@ -226,3 +232,97 @@ def test_a_tracking_leg_is_closer_to_the_encoders_input_than_a_pinned_one(tmp_pa
         "not reading chroma at all and every chroma number in the panel is "
         "measuring nothing"
     )
+
+
+# ------------------------------------------------------------------ the seam
+# The first version of this fix resolved the leg's format from the module
+# global, which only the BENCH LEVER rebinds. The product selects 4:4:4 through
+# `RenderContext.pix_fmt` (`an render --pix-fmt`), which `render.render` passes
+# to `_check_pix_fmt` directly and which never touches the global. So the leg
+# stayed 4:2:0 for the exact scenario four docstrings said it fixed, and all
+# five guards above passed. These two are the ones that would have caught it.
+
+
+def test_the_reference_is_built_from_what_the_delivered_file_actually_is(
+    monkeypatch, tmp_path
+):
+    """MUTATION: in `run.lossless_reference`, drop the `delivered=` probe and
+    resolve from the module global instead (i.e. restore the first fix).
+
+    The point is not that a format is passed — it is that the format comes from
+    the FILE. A leg that re-derives is correct only for the seams it happens to
+    know about, and there are two.
+    """
+    from an.bench import run as brun
+
+    seen: list[list[str]] = []
+    monkeypatch.setattr(imageio, "run_raw", lambda cmd: seen.append(list(cmd)))
+    monkeypatch.setattr(imageio, "delivered_pix_fmt", lambda mp4: "yuv444p")
+    # The global says 4:2:0 — as it does on the `an render --pix-fmt` path,
+    # where the context carries the choice and the global never learns of it.
+    monkeypatch.setattr(render, "DEFAULT_PIX_FMT", "yuv420p")
+
+    brun.lossless_reference(
+        tmp_path, 24, tmp_path / "qp0.mp4", delivered=tmp_path / "d.mp4"
+    )
+
+    assert seen, "the reference encode never ran"
+    argv = seen[0]
+    assert argv[argv.index("-pix_fmt") + 1] == "yuv444p", (
+        "the lossless leg was built from the module global rather than from the "
+        "delivered file, so `an render --pix-fmt yuv444p` still gets a 4:2:0 "
+        "reference for a 4:4:4 delivery"
+    )
+
+
+def test_the_bench_passes_the_delivered_file_to_the_reference(monkeypatch, tmp_path):
+    """MUTATION: drop `delivered=capture.mp4` at the call site in `an/bench/run.py`.
+
+    The probe is only worth having if the one production caller uses it, and
+    that call site is reachable by no cheap end-to-end test — building a real
+    capture needs a browser. So it is asserted directly.
+    """
+    import inspect
+
+    from an.bench import run as brun
+
+    source = inspect.getsource(brun)
+    assert (
+        "lossless_reference(frames_dir, capture.fps, qp0_mp4, delivered=capture.mp4)"
+        in source
+    ), (
+        "the bench builds its reference without telling it which file it is the "
+        "reference for; the leg then falls back to the module global"
+    )
+
+
+@pytest.mark.ffmpeg
+def test_the_probe_reads_the_file_and_not_the_module_global(
+    tmp_path, delivered_pix_fmt
+):
+    """MUTATION: make `delivered_pix_fmt` return `render.DEFAULT_PIX_FMT`.
+
+    Everything above rests on the probe telling the truth, and a probe that
+    quietly answers from the global is the very defect this seam exists to
+    close — it would pass every other test in this file. So the global is set
+    to the WRONG answer for each case: an implementation that reads it gets
+    both backwards.
+    """
+    from an.bench.png import write_png
+
+    frames = tmp_path / "frames"
+    frames.mkdir()
+    for i in range(2):
+        a = np.full((16, 16, 3), 255, np.uint8)
+        a[4:12, 4:12] = (255, 0, 0)
+        write_png(frames / f"frame_{i:06d}.png", a)
+
+    for fmt, lie in (("yuv444p", "yuv420p"), ("yuv420p", "yuv444p")):
+        out = tmp_path / f"{fmt}.mp4"
+        imageio.run_raw(imageio.lossless_encode_command(frames, 24, out, pix_fmt=fmt))
+        delivered_pix_fmt(lie)
+        assert imageio.delivered_pix_fmt(out) == fmt, (
+            f"the probe reported {imageio.delivered_pix_fmt(out)!r} for a {fmt} "
+            f"file while the module global said {lie!r} — it is answering from "
+            "the global, so the leg matches a guess rather than the delivery"
+        )

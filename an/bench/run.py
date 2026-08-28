@@ -56,13 +56,30 @@ def _ffmpeg_available() -> bool:
     return shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None
 
 
-def lossless_reference(frames_dir: Path, fps: int, out: Path):
+def lossless_reference(
+    frames_dir: Path, fps: int, out: Path, *, delivered: Path | None = None
+):
     """Encode the frames losslessly and return the decode — the encoder's input.
 
     Returned as a path rather than an array so the caller controls its
     lifetime; every encode-side reference comes from here.
+
+    ``delivered`` is the delivered mp4 this leg is the reference FOR, and
+    passing it is what makes the leg's pixel format match — **probed off the
+    file rather than re-derived** (an#72). Re-deriving is not enough: the
+    delivered encode resolves its format from ``RenderContext.pix_fmt`` *or*
+    from ``render.DEFAULT_PIX_FMT``, so a leg that consults the global tracks
+    the bench's lever and silently misses ``an render --pix-fmt yuv444p``,
+    which sets the context instead. Only the file knows which seam won.
+
+    ``None`` means "no delivered file to match" and falls back to the module
+    default. That is right for a caller building a reference for its own sake;
+    it is wrong for the bench, which always has the delivered file in hand.
     """
-    imageio.run_raw(imageio.lossless_encode_command(frames_dir, fps, out))
+    pix_fmt = imageio.delivered_pix_fmt(delivered) if delivered is not None else None
+    imageio.run_raw(
+        imageio.lossless_encode_command(frames_dir, fps, out, pix_fmt=pix_fmt)
+    )
     return out
 
 
@@ -411,7 +428,7 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
     # metrics no longer depend on it.
     with _timeline_frames_dir(capture) as frames_dir:
         qp0_mp4 = frames_dir.parent / "_bench_qp0.mp4"
-        lossless_reference(frames_dir, capture.fps, qp0_mp4)
+        lossless_reference(frames_dir, capture.fps, qp0_mp4, delivered=capture.mp4)
         try:
             ref_yuv = imageio.decoded_yuv(qp0_mp4, height=h, width=w)
             ref_rgb = imageio.decoded_rgb(qp0_mp4, height=h, width=w)

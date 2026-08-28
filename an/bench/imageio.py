@@ -20,16 +20,26 @@ removes the assumption instead of widening it, and it costs nothing extra —
 `encode_ringing_excess` already needed that leg.
 
 **That "IS" is a claim about the leg's INPUT FORMAT as much as its rate
-control**, and the leg pinned `-pix_fmt yuv420p` until an#72 while the delivered
-encode read a rebindable module global. Under `--pix-fmt yuv444p` the reference
-was therefore a *different colour pipeline* from the file it referenced, and
-every metric measured against it carried the whole 4:2:0 conversion this leg
-exists to cancel — as a term that does not cancel and does vary by build. The
-leg tracks the delivered format now; see `lossless_encode_command`. Note which
-metrics that reached: `flat_field_deviation` and `encode_flicker_on_held_pixels`
-reduce over RGB, so chroma reaches them, while the luma-domain metrics never
-moved — swscale's luma is format-independent, measured bit-identical between a
-4:2:0 and a 4:4:4 leg on all ten corpus scenes.
+control**, and the leg pinned `-pix_fmt yuv420p` until an#72. Against a 4:4:4
+delivery the reference was therefore a *different colour pipeline* from the file
+it referenced, and every metric measured against it carried the whole 4:2:0
+conversion this leg exists to cancel — as a term that does not cancel and does
+vary by build.
+
+The leg now takes its format from the **delivered file itself**
+(`delivered_pix_fmt`, threaded in by `run.lossless_reference`). Probing rather
+than re-deriving is the load-bearing part: **two** seams set the delivered
+format — `RenderContext.pix_fmt`, which `an render --pix-fmt` uses, and the
+`DEFAULT_PIX_FMT` module global, which the bench lever rebinds — and a leg that
+consults either one covers only that one. an#72's first fix consulted the global
+and silently re-pinned on the seam a user can actually reach, with every guard
+green.
+
+Note which metrics the mismatch reached: `flat_field_deviation`,
+`flat_field_p99_dev` and `encode_flicker_on_held_pixels` reduce over RGB, so
+chroma reaches them, while the luma-domain metrics never moved —
+`coded_luma_edge_error` and `encode_ringing_excess` are identical to the last
+digit between a 4:2:0 and a 4:4:4 leg on all ten corpus scenes.
 
 Two things this does NOT change:
 
@@ -60,7 +70,7 @@ from pathlib import Path
 from typing import Any
 
 from an.base import MP4_FASTSTART_ARGS
-from an.adapters.cutout.render import DETERMINISTIC_X264_ARGS
+from an.adapters.cutout.render import DETERMINISTIC_X264_ARGS, _check_pix_fmt
 
 #: The pinned conversion applied to the PNG leg. Never remove it: without it
 #: the encode-side metrics measure a colour-space conversion.
@@ -170,6 +180,39 @@ def decoded_yuv_command(mp4: Path) -> list[str]:
     ]
 
 
+def delivered_pix_fmt(mp4: Path) -> str:
+    """The pixel format ``mp4`` is actually encoded in, from the file itself.
+
+    The delivered encode resolves its format from ``RenderContext.pix_fmt``
+    **or** the module global (`render._check_pix_fmt`), and only the file knows
+    which won — so the lossless leg cannot re-derive it and be sure of matching.
+    Re-deriving is what an#72's first fix did, and it covered the bench lever's
+    seam (which rebinds the global) while missing the product's own
+    (``an render --pix-fmt``, which sets the context and never touches it).
+
+    Probed, not remembered: this is the one source of truth that no future seam
+    can route around.
+    """
+    out = run_raw(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=pix_fmt",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            str(mp4),
+        ]
+    )
+    fmt = out.decode("utf-8", "replace").strip()
+    if not fmt:
+        raise BenchDecodeError(f"ffprobe reported no pixel format for {mp4}")
+    return fmt
+
+
 def lossless_encode_command(
     frames_dir: Path, fps: int, out: Path, *, pix_fmt: str | None = None
 ) -> list[str]:
@@ -187,9 +230,11 @@ def lossless_encode_command(
       rebinds it (``high_crf``) cannot move the reference. The reference has to
       stay lossless, or every encode-side metric is measured against a moving
       target and the lever produces beautiful numbers about nothing.
-    - ``DEFAULT_PIX_FMT`` is resolved at CALL time, through the product's own
-      :func:`~an.adapters.cutout.render._check_pix_fmt`, so this leg is encoded
-      in whatever format the delivered encode used.
+    - ``pix_fmt`` is resolved at CALL time through the product's own
+      :func:`~an.adapters.cutout.render._check_pix_fmt`. The bench passes the
+      format **probed off the delivered mp4** (:func:`delivered_pix_fmt`);
+      ``None`` falls back to ``DEFAULT_PIX_FMT``, which is right for a caller
+      with no delivered file to match and wrong for one that has it.
 
     The difference is not a preference. ``-pix_fmt`` is not an encoder setting:
     it names **what libx264 receives**, and being what libx264 received is this
@@ -197,25 +242,27 @@ def lossless_encode_command(
     the reference lossless — it makes the reference a *different colour
     pipeline* from the delivered file, so every metric measured against it
     silently acquires the whole 4:2:0 conversion the reference exists to
-    cancel. Measured on the corpus at ``--pix-fmt yuv444p``: family E
+    cancel. Measured on the corpus at 4:4:4: family E
     (``encode_flicker_on_held_pixels``) changes SIGN on three of ten scenes
-    between a pinned leg and a tracking one, and family D
-    (``flat_field_deviation``) moves by up to 18 percentage points. Both
-    families are computed in RGB, which is why chroma reaches them at all and
-    why the luma-domain metrics were never affected — ``coded_luma_edge_error``
-    is bit-identical between a 4:2:0 and a 4:4:4 leg, so swscale's luma is
-    format-independent and the contamination is exactly the chroma half.
+    between a pinned leg and a tracking one — from as-declared to contrary in
+    every case — and family D (``flat_field_deviation``) moves by up to 24.8
+    percentage points. The affected metrics are exactly the RGB-domain ones,
+    which reduce over three channels so chroma reaches them; the luma-domain
+    metrics were never affected — ``coded_luma_edge_error`` and
+    ``encode_ringing_excess`` are identical to the last digit between a 4:2:0
+    and a 4:4:4 leg on all ten scenes.
 
     A default (4:2:0) render is byte-identical to before this change, so no
     committed ledger row is invalidated.
     """
     # Resolved through the product's own validator rather than a second copy of
-    # the fallback, so a lever that rebinds the module global reaches this leg
-    # and the delivered encode by the SAME code path and the two cannot
-    # disagree. Imported inside the function on purpose: a module-level import
-    # would bind the value and silently restore the pinning this fixes.
-    from an.adapters.cutout.render import _check_pix_fmt
-
+    # the fallback, so this leg cannot be encoded in a format the delivered
+    # encode would have refused. Imported at MODULE scope, unlike
+    # `DETERMINISTIC_X264_ARGS` above and for the opposite reason: that import
+    # binds a VALUE, which is what pins the rate control; this one binds a
+    # FUNCTION, whose body reads `DEFAULT_PIX_FMT` from `render`'s globals when
+    # it is called. Where the import sits makes no difference here, and an
+    # earlier version of this comment claimed it did.
     resolved = _check_pix_fmt(pix_fmt)
     args = [a for a in DETERMINISTIC_X264_ARGS]
     # Swap the CRF pair for `-qp 0`; everything else (threads, preset, colour

@@ -264,8 +264,29 @@ encode BT.601 and be displayed BT.709 — a silent, resolution-dependent colour 
 +faststart` and does **not** use `DETERMINISTIC_X264_ARGS`. Any "one mux call, no
 literals" refactor that only touches `adapters/cutout/render.py` leaves that
 divergent copy behind. `an/bench/imageio.py::lossless_encode_command` is a
-fourth site, but a deliberate one — it derives from the tuple at *import* time
-precisely so the lossless reference cannot be moved by a lever (see §4).
+fourth site, but a deliberate one — and since an#72 it is deliberate in **two
+opposite directions at once**, which is the whole point of it:
+
+- It derives `DETERMINISTIC_X264_ARGS` from the tuple at *import* time,
+  precisely so the lossless reference **cannot** be moved by a lever (see §4).
+  That is what keeps `-crf` out and `-qp 0` in.
+- It takes its `-pix_fmt` from the **delivered mp4 itself**, probed with
+  `imageio.delivered_pix_fmt` and threaded in by
+  `run.lossless_reference(delivered=…)`, so the reference **must** move with
+  the delivery. `-pix_fmt` is not an encoder setting: it names what libx264
+  *receives*, and being what libx264 received is this leg's entire purpose. A
+  leg pinned to `yuv420p` against a 4:4:4 delivery is not a lossless reference,
+  it is a different colour pipeline, and every encode-side metric measured
+  against it silently acquires the 4:2:0 conversion the reference exists to
+  cancel.
+
+**Why a probe and not a re-derivation**: there are *two* seams that set the
+delivered format — `RenderContext.pix_fmt` (what `an render --pix-fmt` uses,
+passed straight to `_check_pix_fmt` by `render.render`) and the
+`DEFAULT_PIX_FMT` module global (what the bench lever rebinds). A leg that
+consults either one covers only that one; an#72's first fix consulted the
+global and silently re-pinned on the path a user can actually reach, with every
+guard green. Only the file knows which seam won.
 
 ---
 
