@@ -19,6 +19,18 @@ received**, on every build, by definition. Referencing the metrics to it
 removes the assumption instead of widening it, and it costs nothing extra —
 `encode_ringing_excess` already needed that leg.
 
+**That "IS" is a claim about the leg's INPUT FORMAT as much as its rate
+control**, and the leg pinned `-pix_fmt yuv420p` until an#72 while the delivered
+encode read a rebindable module global. Under `--pix-fmt yuv444p` the reference
+was therefore a *different colour pipeline* from the file it referenced, and
+every metric measured against it carried the whole 4:2:0 conversion this leg
+exists to cancel — as a term that does not cancel and does vary by build. The
+leg tracks the delivered format now; see `lossless_encode_command`. Note which
+metrics that reached: `flat_field_deviation` and `encode_flicker_on_held_pixels`
+reduce over RGB, so chroma reaches them, while the luma-domain metrics never
+moved — swscale's luma is format-independent, measured bit-identical between a
+4:2:0 and a 4:4:4 leg on all ten corpus scenes.
+
 Two things this does NOT change:
 
 - **The chroma metric still references the direct RGB->444 conversion**, because
@@ -41,6 +53,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from an.base import MP4_FASTSTART_ARGS
 from an.adapters.cutout.render import DETERMINISTIC_X264_ARGS
 
 #: The pinned conversion applied to the PNG leg. Never remove it: without it
@@ -151,13 +164,53 @@ def decoded_yuv_command(mp4: Path) -> list[str]:
     ]
 
 
-def lossless_encode_command(frames_dir: Path, fps: int, out: Path) -> list[str]:
+def lossless_encode_command(
+    frames_dir: Path, fps: int, out: Path, *, pix_fmt: str | None = None
+) -> list[str]:
     """`-qp 0` with otherwise identical flags, for `encode_ringing_excess`.
 
     Identical to the delivered encode except for the rate control, so the
     difference of the two overshoot means cancels the source-hardness term —
     which is the whole reason `encode_ringing_excess` replaced raw overshoot.
+
+    **Pinned in its ENCODER SETTINGS, tracking in its INPUT FORMAT** — and the
+    asymmetry is the correction an#72 turned on. Two module globals reach this
+    command and they must be reached differently:
+
+    - ``DETERMINISTIC_X264_ARGS`` is bound at IMPORT, above, so a lever that
+      rebinds it (``high_crf``) cannot move the reference. The reference has to
+      stay lossless, or every encode-side metric is measured against a moving
+      target and the lever produces beautiful numbers about nothing.
+    - ``DEFAULT_PIX_FMT`` is resolved at CALL time, through the product's own
+      :func:`~an.adapters.cutout.render._check_pix_fmt`, so this leg is encoded
+      in whatever format the delivered encode used.
+
+    The difference is not a preference. ``-pix_fmt`` is not an encoder setting:
+    it names **what libx264 receives**, and being what libx264 received is this
+    leg's entire purpose (see the module docstring). Pinning it does not keep
+    the reference lossless — it makes the reference a *different colour
+    pipeline* from the delivered file, so every metric measured against it
+    silently acquires the whole 4:2:0 conversion the reference exists to
+    cancel. Measured on the corpus at ``--pix-fmt yuv444p``: family E
+    (``encode_flicker_on_held_pixels``) changes SIGN on three of ten scenes
+    between a pinned leg and a tracking one, and family D
+    (``flat_field_deviation``) moves by up to 18 percentage points. Both
+    families are computed in RGB, which is why chroma reaches them at all and
+    why the luma-domain metrics were never affected — ``coded_luma_edge_error``
+    is bit-identical between a 4:2:0 and a 4:4:4 leg, so swscale's luma is
+    format-independent and the contamination is exactly the chroma half.
+
+    A default (4:2:0) render is byte-identical to before this change, so no
+    committed ledger row is invalidated.
     """
+    # Resolved through the product's own validator rather than a second copy of
+    # the fallback, so a lever that rebinds the module global reaches this leg
+    # and the delivered encode by the SAME code path and the two cannot
+    # disagree. Imported inside the function on purpose: a module-level import
+    # would bind the value and silently restore the pinning this fixes.
+    from an.adapters.cutout.render import _check_pix_fmt
+
+    resolved = _check_pix_fmt(pix_fmt)
     args = [a for a in DETERMINISTIC_X264_ARGS]
     # Swap the CRF pair for `-qp 0`; everything else (threads, preset, colour
     # tags) must stay identical or the two legs stop being comparable.
@@ -177,12 +230,11 @@ def lossless_encode_command(frames_dir: Path, fps: int, out: Path) -> list[str]:
         "-c:v",
         "libx264",
         "-pix_fmt",
-        "yuv420p",
+        resolved,
         "-qp",
         "0",
         *args,
-        "-movflags",
-        "+faststart",
+        *MP4_FASTSTART_ARGS,
         str(out),
     ]
 

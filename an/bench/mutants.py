@@ -738,6 +738,25 @@ MUTANTS: tuple[Mutant, ...] = (
             "scenes where the number means nothing at all."
         ),
     ),
+    Mutant(
+        name="lossless_leg_pinned_to_420",
+        file="an/bench/imageio.py",
+        old='        "-pix_fmt",\n        resolved,\n        "-qp",',
+        new='        "-pix_fmt",\n        "yuv420p",\n        "-qp",',
+        caught_by="tests/test_bench_lossless_leg.py",
+        why=(
+            "a reference PINNED in the one dimension it has to track. The leg "
+            "exists to be the plane libx264 received; `-pix_fmt` names what "
+            "libx264 receives, so pinning it does not keep the reference "
+            "lossless — it makes the reference a different colour pipeline "
+            "from the delivered file, and every encode-side metric silently "
+            "acquires the whole 4:2:0 conversion the reference exists to "
+            "cancel. Distinct from every other entry here because the mutated "
+            "code stays correct on the default path and is wrong only under a "
+            "knob: measured on the corpus at 4:4:4, it changes the SIGN of "
+            "family E on three of ten scenes (an#72)."
+        ),
+    ),
 )
 
 
