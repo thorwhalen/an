@@ -29,7 +29,17 @@ import numpy as np
 import pytest
 
 from an.adapters.cutout import render
+from an.adapters.cutout.render import DEFAULT_FRAME_PNG_PATTERN
 from an.bench import imageio
+
+#: The input path, joined the way the OS joins it. The ONLY derived element of
+#: the pin below, and derived on purpose: `lossless_encode_command` builds it
+#: with `Path.__truediv__`, so a POSIX literal here asserts the separator rather
+#: than the flags — which is not what an#72 is about, and is how an#21's
+#: path-separator bug reached `main`. The pattern is imported rather than
+#: restated for `an/bench/imageio.py`'s own stated reason: a rename must not be
+#: able to desynchronise the two.
+FRAMES_ARG: str = str(Path("FRAMES") / DEFAULT_FRAME_PNG_PATTERN)
 
 #: What `main` emitted before an#72, verbatim. A literal rather than a
 #: construction: the point is that a default render is byte-identical, and a
@@ -42,7 +52,7 @@ DEFAULT_LEG_ARGV: tuple[str, ...] = (
     "-framerate",
     "24",
     "-i",
-    "FRAMES/frame_%06d.png",
+    FRAMES_ARG,
     "-c:v",
     "libx264",
     "-pix_fmt",
