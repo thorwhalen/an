@@ -156,8 +156,10 @@ Reference = Literal["lossless", "source_png", "none"]
 #:   counting encode-side metric uses.
 #: - ``source_png`` — an explicit RGB->YUV conversion of the pre-encode PNGs.
 #:   Required by exactly two things. The chroma metric's subject IS the 4:2:0
-#:   subsampling that happens during that conversion, so a lossless-referenced
-#:   version would read ~0 and measure nothing. And `encode_ringing_excess`
+#:   subsampling that happens during that conversion -- the term the lossless
+#:   leg cancels, so a lossless-referenced version is blind to it (it does NOT
+#:   read ~0; measured, it reads 1.7-2.5 against this metric's 2.9-9.3, because
+#:   it measures chroma quantiser damage instead -- an#72). And `encode_ringing_excess`
 #:   cancels a term that only exists when BOTH its legs share this reference —
 #:   against the lossless leg it degenerates to raw overshoot, which is the
 #:   refuted form.

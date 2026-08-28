@@ -34,9 +34,15 @@ moved — swscale's luma is format-independent, measured bit-identical between a
 Two things this does NOT change:
 
 - **The chroma metric still references the direct RGB->444 conversion**, because
-  its subject *is* the 4:2:0 subsampling that happens during the conversion. A
-  qp0 file's chroma is already subsampled, so referencing it there would read
-  ~0 and measure nothing.
+  its subject *is* the 4:2:0 subsampling that happens during the conversion —
+  which is exactly the term this leg cancels, so a lossless-referenced version
+  is blind to it whatever format the leg is encoded in. (With a tracking leg
+  and a 4:4:4 delivery, both legs are 4:4:4 and the subsampling does not exist
+  to be measured; tracking makes the panel honest, not sighted.) It does **not**
+  read ~0, though, and that half of the old wording was wrong: measured
+  2026-08-29 on four scenes, mean |dCr| over the edge mask reads 1.71 / 1.90 /
+  2.24 / 2.50 against the shipped metric's 7.19 / 9.29 / 8.04 / 2.93, because it
+  measures chroma *quantiser* damage instead (an#72).
 - **The PNG conversion is still performed and its distance from the encoder's
   input is still recorded** (`png_to_encoder_input_luma`), because that number
   is exactly the build-dependence that was hiding inside a hard equality. It is

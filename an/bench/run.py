@@ -427,8 +427,11 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
             prov["references_coincide"] = distance.get("luma_residual_max") == 0
             # The direct RGB->444 conversion, kept for ONE metric: the chroma one,
             # whose subject IS the 4:2:0 subsampling that happens during the
-            # conversion. A qp0 file's chroma is already subsampled, so referencing
-            # it there would read ~0 and measure nothing.
+            # conversion -- which is exactly what the lossless leg cancels, so a
+            # lossless-referenced version cannot see it however the leg is
+            # encoded. It does not, however, read ~0: measured, it reads 1.7-2.5
+            # against this metric's 2.9-9.3, because it measures chroma
+            # QUANTISER damage instead. See `chroma_edge_dCr` below (an#72).
             src_yuv = imageio.source_yuv(frames_dir, height=h, width=w, frames=n_source)
             dec_yuv = imageio.decoded_yuv(capture.mp4, height=h, width=w)
             dec_rgb = imageio.decoded_rgb(capture.mp4, height=h, width=w)
@@ -487,8 +490,16 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
     )
 
     # Referenced to the PNG conversion, deliberately and for this metric only:
-    # the 4:2:0 subsampling it exists to see happens DURING that conversion, so
-    # a lossless-referenced version would read ~0 and measure nothing. `dY` on
+    # the 4:2:0 subsampling it exists to see happens DURING that conversion --
+    # which is precisely the term the lossless leg cancels, so a
+    # lossless-referenced version is blind to it no matter what format the leg
+    # is encoded in (an#72's tracking leg included: with both legs at 4:4:4 the
+    # subsampling does not exist to be measured).
+    #
+    # The old wording here said such a version "would read ~0 and measure
+    # nothing", and that half is wrong. MEASURED 2026-08-29, four scenes, ffmpeg 8.1: mean |dCr| over the edge mask reads 1.71 / 1.90 / 2.24 / 2.50 against the shipped metric's 7.19 / 9.29 / 8.04 / 2.93. So it is NOT ~0 -- it is chroma QUANTISER damage, which is a real number about a different subject.
+    # The conclusion stands and the number does not, which matters because "~0"
+    # invites a reader to treat the alternative as costless. `dY` on
     # the same reference and the same mask is therefore NOT a second name for
     # `coded_luma_edge_error` — the two differ by exactly the reference — and it
     # is the only denominator for which the ratio means what it claims.
