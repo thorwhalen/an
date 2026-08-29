@@ -56,13 +56,57 @@ def _ffmpeg_available() -> bool:
     return shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None
 
 
-def lossless_reference(frames_dir: Path, fps: int, out: Path):
+def _one_delivered_format(formats: set[str]) -> str:
+    """The single pixel format every delivery in this run is in.
+
+    A row carries ONE `encode_side.pix_fmt` and `bench-compare` keys on it, so a
+    run whose scenes were delivered in different formats has no honest value to
+    put there — reporting either one would file a row that lies about most of
+    its own scenes. Refused rather than picked, for the reason
+    `frame_count_disagreement` is recorded rather than truncated.
+    """
+    if len(formats) == 1:
+        return formats.pop()
+    if not formats:
+        raise BenchError(
+            "no scene was captured, so the delivered pixel format is unknown "
+            "and the row's comparability key cannot be filled"
+        )
+    raise BenchError(
+        f"the corpus was delivered in more than one pixel format ({sorted(formats)}), "
+        "so no single value belongs in `encode_side.pix_fmt` — the row would be "
+        "comparable to rows it does not match"
+    )
+
+
+def lossless_reference(
+    frames_dir: Path, fps: int, out: Path, *, delivered: Path | None
+):
     """Encode the frames losslessly and return the decode — the encoder's input.
 
     Returned as a path rather than an array so the caller controls its
     lifetime; every encode-side reference comes from here.
+
+    ``delivered`` is the delivered mp4 this leg is the reference FOR, and
+    passing it is what makes the leg's pixel format match — **probed off the
+    file rather than re-derived** (an#72). Re-deriving is not enough: the
+    delivered encode resolves its format from ``RenderContext.pix_fmt`` *or*
+    from ``render.DEFAULT_PIX_FMT``, so a leg that consults the global tracks
+    the bench's lever and silently misses ``an render --pix-fmt yuv444p``,
+    which sets the context instead. Only the file knows which seam won.
+
+    ``delivered`` is keyword-only and has **no default**, deliberately — the
+    same argument `imageio._reshape` makes for its own `frames`: a default here
+    would let a caller opt out of the match by omission, and the failure is
+    invisible (a 4:2:0 reference silently measuring a 4:4:4 delivery). Passing
+    ``None`` explicitly means "no delivered file to match" and falls back to the
+    module default; that is right for a caller building a reference for its own
+    sake and wrong for the bench, which always has the file in hand.
     """
-    imageio.run_raw(imageio.lossless_encode_command(frames_dir, fps, out))
+    pix_fmt = imageio.delivered_pix_fmt(delivered) if delivered is not None else None
+    imageio.run_raw(
+        imageio.lossless_encode_command(frames_dir, fps, out, pix_fmt=pix_fmt)
+    )
     return out
 
 
@@ -411,7 +455,7 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
     # metrics no longer depend on it.
     with _timeline_frames_dir(capture) as frames_dir:
         qp0_mp4 = frames_dir.parent / "_bench_qp0.mp4"
-        lossless_reference(frames_dir, capture.fps, qp0_mp4)
+        lossless_reference(frames_dir, capture.fps, qp0_mp4, delivered=capture.mp4)
         try:
             ref_yuv = imageio.decoded_yuv(qp0_mp4, height=h, width=w)
             ref_rgb = imageio.decoded_rgb(qp0_mp4, height=h, width=w)
@@ -427,8 +471,11 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
             prov["references_coincide"] = distance.get("luma_residual_max") == 0
             # The direct RGB->444 conversion, kept for ONE metric: the chroma one,
             # whose subject IS the 4:2:0 subsampling that happens during the
-            # conversion. A qp0 file's chroma is already subsampled, so referencing
-            # it there would read ~0 and measure nothing.
+            # conversion -- which is exactly what the lossless leg cancels, so a
+            # lossless-referenced version cannot see it however the leg is
+            # encoded. It does not, however, read ~0: measured, it reads 1.7-2.5
+            # against this metric's 2.9-9.3, because it measures chroma
+            # QUANTISER damage instead. See `chroma_edge_dCr` below (an#72).
             src_yuv = imageio.source_yuv(frames_dir, height=h, width=w, frames=n_source)
             dec_yuv = imageio.decoded_yuv(capture.mp4, height=h, width=w)
             dec_rgb = imageio.decoded_rgb(capture.mp4, height=h, width=w)
@@ -487,8 +534,16 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
     )
 
     # Referenced to the PNG conversion, deliberately and for this metric only:
-    # the 4:2:0 subsampling it exists to see happens DURING that conversion, so
-    # a lossless-referenced version would read ~0 and measure nothing. `dY` on
+    # the 4:2:0 subsampling it exists to see happens DURING that conversion --
+    # which is precisely the term the lossless leg cancels, so a
+    # lossless-referenced version is blind to it no matter what format the leg
+    # is encoded in (an#72's tracking leg included: with both legs at 4:4:4 the
+    # subsampling does not exist to be measured).
+    #
+    # The old wording here said such a version "would read ~0 and measure
+    # nothing", and that half is wrong. MEASURED 2026-08-29, four scenes, ffmpeg 8.1: mean |dCr| over the edge mask reads 1.71 / 1.90 / 2.24 / 2.50 against the shipped metric's 7.19 / 9.29 / 8.04 / 2.93. So it is NOT ~0 -- it is chroma QUANTISER damage, which is a real number about a different subject.
+    # The conclusion stands and the number does not, which matters because "~0"
+    # invites a reader to treat the alternative as costless. `dY` on
     # the same reference and the same mask is therefore NOT a second name for
     # `coded_luma_edge_error` — the two differ by exactly the reference — and it
     # is the only denominator for which the ratio means what it claims.
@@ -898,6 +953,11 @@ def run_bench(
     # decides whether two rows may be compared at all, and the tree is deleted
     # before the run-level provenance is assembled.
     sei: str | None = None
+    #: The pixel format the deliveries actually are, measured off the files
+    #: while the throwaway trees still exist — `environment_record` runs after
+    #: the cleanup, and it is a comparability key, so it cannot be re-derived
+    #: from a module global that the `ctx.pix_fmt` seam bypasses (an#72).
+    delivered_formats: set[str] = set()
 
     try:
         for name, fixture in fixtures.items():
@@ -905,6 +965,7 @@ def run_bench(
                 name, fixture, repo_root=root, keep_render=keep_render
             )
             captures.append(capture)
+            delivered_formats.add(imageio.delivered_pix_fmt(capture.mp4))
             if sei is None:
                 sei = environment.x264_sei(capture.mp4)
 
@@ -1042,7 +1103,11 @@ def run_bench(
             "git": git,
             **({"git_after_bless": naming_git} if blessed else {}),
             "render_kwargs": dict(BENCH_RENDER_KWARGS),
-            "environment": environment_record(x264_sei=sei, browser=browser),
+            "environment": environment_record(
+                pix_fmt=_one_delivered_format(delivered_formats),
+                x264_sei=sei,
+                browser=browser,
+            ),
             **({"blessed": blessed} if blessed else {}),
             "encode_command_source": (
                 "an.adapters.cutout.render._ffmpeg_mux + DETERMINISTIC_X264_ARGS"
