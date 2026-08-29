@@ -27,12 +27,13 @@ the_module_global` are the ones that would have caught it — named rather than
 counted, because "the last three" stopped being true the first time a test was
 appended.
 
-Three of these need ffmpeg and carry the marker; the rest are argv and AST
+Some of these need ffmpeg and carry the marker; the rest are argv and AST
 assertions that run in the default CI leg, deliberately — gating a test that
 needs no binary behind a binary is how an#22's thirty-four tests stopped being
-collected. Check the count against the markers rather than trusting this
-sentence: an earlier version said "only the last test" after three had been
-appended.
+collected. **The count is deliberately not written here.** Two successive
+versions of this sentence gave a number, and both were wrong within the hour
+because a test was appended after them; `pytest --collect-only -m ffmpeg` on
+this file is the answer and cannot go stale.
 """
 
 from __future__ import annotations
@@ -397,12 +398,60 @@ def test_a_probe_that_cannot_read_the_file_raises_rather_than_guessing(
     with pytest.raises(BenchDecodeError):
         imageio.delivered_pix_fmt(empty)
 
-    # ...and the caller does not swallow it either.
-    monkeypatch.setattr(
-        imageio, "run_raw", lambda cmd: pytest.fail("encode ran anyway")
-    )
+    # ...and the caller does not swallow it either. The trap goes on the ENCODE
+    # builder, not on `run_raw`: the probe shells out through `run_raw` too, so
+    # trapping there fires on the probe itself and proves nothing about the
+    # caller. (It did, on the first version of this test.)
+    def _no_encode(*args, **kwargs):
+        pytest.fail("the encode was built despite an unreadable delivery")
+
+    monkeypatch.setattr(imageio, "lossless_encode_command", _no_encode)
     with pytest.raises(BenchDecodeError):
         brun.lossless_reference(tmp_path, 24, tmp_path / "qp0.mp4", delivered=missing)
+
+
+@pytest.mark.ffmpeg
+def test_a_delivery_with_no_video_stream_raises_rather_than_falling_back(
+    tmp_path, delivered_pix_fmt
+):
+    """MUTATION: replace `delivered_pix_fmt`'s `if not fmt: raise` with a
+    fallback to `DEFAULT_PIX_FMT`.
+
+    Split out from the test above and marked, because it is the ONE input that
+    reaches that branch. For a missing or corrupt file ffprobe exits nonzero and
+    `run_raw` raises first, so the branch is unreachable — a fallback planted
+    there survived the whole suite until this existed. A valid container with no
+    VIDEO stream makes ffprobe exit 0 and print nothing, which is exactly the
+    "succeeded and told me nothing" case a fallback would paper over.
+    """
+    import subprocess
+
+    from an.bench.imageio import BenchDecodeError
+
+    delivered_pix_fmt("yuv420p")  # what a fallback would wrongly return
+
+    audio_only = tmp_path / "audio.m4a"
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-loglevel",
+            "error",
+            "-f",
+            "lavfi",
+            "-i",
+            "anullsrc=r=8000:cl=mono",
+            "-t",
+            "0.2",
+            "-c:a",
+            "aac",
+            str(audio_only),
+        ],
+        capture_output=True,
+        check=True,
+    )
+    with pytest.raises(BenchDecodeError, match="no pixel format"):
+        imageio.delivered_pix_fmt(audio_only)
 
 
 @pytest.mark.ffmpeg
