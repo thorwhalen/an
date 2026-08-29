@@ -1,26 +1,31 @@
 """The lossless leg's relationship to the delivered encode.
 
 The leg exists to BE what libx264 received (see `an/bench/imageio.py`'s module
-docstring), and every encode-side metric is measured against it. Two module
-globals reach its command and they are reached differently on purpose:
+docstring), and every encode-side metric is measured against it. Two things
+reach its command and they are reached differently on purpose:
 
-- ``DETERMINISTIC_X264_ARGS`` is bound at import, so a lever that rebinds it
-  cannot move the reference.
-- ``DEFAULT_PIX_FMT`` is resolved at call time, so the leg is encoded in the
-  format the delivered file was.
+- ``DETERMINISTIC_X264_ARGS`` is bound at IMPORT, so no lever can move the
+  reference. ``-crf`` is an encoder setting; a reference that moves with the
+  lever measures nothing.
+- ``-pix_fmt`` is passed in per call, from the format the **delivered file
+  actually is**. It is not an encoder setting — it names what libx264 receives,
+  which is this leg's whole purpose.
 
-That asymmetry is the correction an#72 turned on, and it is what these tests
-pin. Before it, the leg hardcoded ``-pix_fmt yuv420p`` while the delivered
-encode resolved its at call time — so against a 4:4:4 delivery the two legs
-differed in *two* dimensions and the leg's own docstring ("identical to the
-delivered encode except for the rate control") was false. Measured on the
-corpus, that mismatch changed the SIGN of family E on three of ten scenes.
+That asymmetry is the correction an#72 turned on. Before it the leg hardcoded
+``-pix_fmt yuv420p``, so against a 4:4:4 delivery the two legs differed in *two*
+dimensions and the leg's own docstring ("identical to the delivered encode
+except for the rate control") was false. Measured on the corpus, that mismatch
+changed the SIGN of family E on three of ten scenes.
 
-The format is taken from the delivered FILE rather than re-derived, because
-**two** seams set it — ``RenderContext.pix_fmt`` and the ``DEFAULT_PIX_FMT``
-module global — and this fix's first version consulted the global, covering the
-bench lever and missing ``an render --pix-fmt`` while all five guards passed.
-The last three tests here are the ones that would have caught that.
+The format is **probed off the file** rather than re-derived, because two seams
+set it — ``RenderContext.pix_fmt``, which the mux resolves first, and the
+``DEFAULT_PIX_FMT`` global, which is only its fallback. This fix's first version
+consulted the global, so it missed ``an render --pix-fmt`` while all five guards
+of the day passed. The tests below named `..._built_from_what_the_delivered_file_
+actually_is`, `..._passes_the_delivered_file_...` and `..._reads_the_file_and_not_
+the_module_global` are the ones that would have caught it — named rather than
+counted, because "the last three" stopped being true the first time a test was
+appended.
 
 Three of these need ffmpeg and carry the marker; the rest are argv and AST
 assertions that run in the default CI leg, deliberately — gating a test that
@@ -393,7 +398,9 @@ def test_a_probe_that_cannot_read_the_file_raises_rather_than_guessing(
         imageio.delivered_pix_fmt(empty)
 
     # ...and the caller does not swallow it either.
-    monkeypatch.setattr(imageio, "run_raw", lambda cmd: pytest.fail("encode ran anyway"))
+    monkeypatch.setattr(
+        imageio, "run_raw", lambda cmd: pytest.fail("encode ran anyway")
+    )
     with pytest.raises(BenchDecodeError):
         brun.lossless_reference(tmp_path, 24, tmp_path / "qp0.mp4", delivered=missing)
 
@@ -417,10 +424,23 @@ def test_a_delivery_in_an_unmeasured_format_is_refused_by_the_bench_not_the_rend
 
     odd = tmp_path / "gray.mp4"
     subprocess.run(
-        ["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i",
-         "testsrc=size=32x32:rate=24:duration=0.2", "-c:v", "libx264",
-         "-pix_fmt", "gray", str(odd)],
-        capture_output=True, check=True,
+        [
+            "ffmpeg",
+            "-y",
+            "-loglevel",
+            "error",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc=size=32x32:rate=24:duration=0.2",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "gray",
+            str(odd),
+        ],
+        capture_output=True,
+        check=True,
     )
     with pytest.raises(BenchDecodeError, match="not one of"):
         imageio.delivered_pix_fmt(odd)
