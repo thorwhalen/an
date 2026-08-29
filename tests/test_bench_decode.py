@@ -80,7 +80,7 @@ def test_a_lossless_encode_reads_back_as_its_own_reference(frames_dir, tmp_path)
     If `-qp 0` were not lossless in luma, the reference would be as wrong as
     the conversion it replaced — and silently so.
     """
-    mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4")
+    mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4", delivered=None)
     a = imageio.decoded_yuv(mp4, height=H, width=W)
     b = imageio.decoded_yuv(mp4, height=H, width=W)
     assert np.array_equal(a[:, 0], b[:, 0])
@@ -107,7 +107,7 @@ def test_the_conversion_distance_is_recorded_and_never_gated(frames_dir, tmp_pat
     record, not a value — asserting a value is what made the first version
     fail for the wrong reason on the wrong machine.
     """
-    mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4")
+    mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4", delivered=None)
     report = conversion_distance(frames_dir, mp4, height=H, width=W, frames=N)
     assert set(report) >= {
         "luma_residual_mean",
@@ -128,7 +128,7 @@ def test_the_unpinned_conversion_is_measurably_further_from_the_encoder(
     frames_dir, tmp_path
 ):
     """The pin still earns its place: without it the distance is much larger."""
-    mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4")
+    mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4", delivered=None)
     enc_in = imageio.decoded_yuv(mp4, height=H, width=W)
 
     pinned = imageio.source_yuv(frames_dir, height=H, width=W, frames=N)

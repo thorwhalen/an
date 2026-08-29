@@ -283,7 +283,8 @@ opposite directions at once**, which is the whole point of it:
 **Why a probe and not a re-derivation**: there are *two* seams that set the
 delivered format — `RenderContext.pix_fmt` (what `an render --pix-fmt` uses,
 passed straight to `_check_pix_fmt` by `render.render`) and the
-`DEFAULT_PIX_FMT` module global (what the bench lever rebinds). A leg that
+`DEFAULT_PIX_FMT` module global, which is only its fallback (and which no
+registered lever rebinds — `MUTATIONS` has three and `pix_fmt` is not one). A leg that
 consults either one covers only that one; an#72's first fix consulted the
 global and silently re-pinned on the path a user can actually reach, with every
 guard green. Only the file knows which seam won.

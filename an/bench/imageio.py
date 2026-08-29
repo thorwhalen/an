@@ -29,11 +29,17 @@ vary by build.
 The leg now takes its format from the **delivered file itself**
 (`delivered_pix_fmt`, threaded in by `run.lossless_reference`). Probing rather
 than re-deriving is the load-bearing part: **two** seams set the delivered
-format — `RenderContext.pix_fmt`, which `an render --pix-fmt` uses, and the
-`DEFAULT_PIX_FMT` module global, which the bench lever rebinds — and a leg that
-consults either one covers only that one. an#72's first fix consulted the global
-and silently re-pinned on the seam a user can actually reach, with every guard
-green.
+format — `RenderContext.pix_fmt`, which `an render --pix-fmt` uses and which the
+mux resolves FIRST, and the `DEFAULT_PIX_FMT` module global, which is only its
+fallback. A leg that consults either one covers only that one, and an#72's first
+fix consulted the global — so it silently re-pinned on the seam a user can
+actually reach, with every guard green.
+
+(No `pix_fmt` lever exists: `MUTATIONS` is `high_crf`/`disabled_aa`/`supersample`
+and `_check_registered` enforces it at import. The global's seam is kept for a
+lever that has never been registered — see `an-dev-bench`'s `pix_fmt` row for why
+— and outside the product it is driven only by tests. So "the lever rebinds it"
+is a statement about a seam's purpose, not about anything that runs.)
 
 Note which metrics the mismatch reached: `flat_field_deviation`,
 `flat_field_p99_dev` and `encode_flicker_on_held_pixels` reduce over RGB, so
@@ -70,7 +76,11 @@ from pathlib import Path
 from typing import Any
 
 from an.base import MP4_FASTSTART_ARGS
-from an.adapters.cutout.render import DETERMINISTIC_X264_ARGS, _check_pix_fmt
+from an.adapters.cutout.render import (
+    DETERMINISTIC_X264_ARGS,
+    SUPPORTED_PIX_FMTS,
+    _check_pix_fmt,
+)
 
 #: The pinned conversion applied to the PNG leg. Never remove it: without it
 #: the encode-side metrics measure a colour-space conversion.
@@ -210,6 +220,18 @@ def delivered_pix_fmt(mp4: Path) -> str:
     fmt = out.decode("utf-8", "replace").strip()
     if not fmt:
         raise BenchDecodeError(f"ffprobe reported no pixel format for {mp4}")
+    if fmt not in SUPPORTED_PIX_FMTS:
+        # Refused HERE rather than downstream: `lossless_encode_command` would
+        # raise `CutoutRenderError` for it, a *render* error from a bench path,
+        # and `lossless_reference` sits outside `_scene_metrics`'s try/finally
+        # so it would abort the run instead of being recorded. Unreachable
+        # through `an`'s own encoder, which pins one of two formats — but the
+        # probe reads a FILE, and a file can be anything.
+        raise BenchDecodeError(
+            f"{mp4} is encoded in {fmt!r}, which is not one of "
+            f"{SUPPORTED_PIX_FMTS}. The lossless leg has to be encodable in the "
+            "delivered format to be the plane libx264 received."
+        )
     return fmt
 
 

@@ -22,9 +22,12 @@ module global — and this fix's first version consulted the global, covering th
 bench lever and missing ``an render --pix-fmt`` while all five guards passed.
 The last three tests here are the ones that would have caught that.
 
-Only the last test needs ffmpeg. The rest are argv assertions and run in the
-default CI leg, deliberately: gating a test that needs no binary behind a
-binary is how an#22's thirty-four tests stopped being collected.
+Three of these need ffmpeg and carry the marker; the rest are argv and AST
+assertions that run in the default CI leg, deliberately — gating a test that
+needs no binary behind a binary is how an#22's thirty-four tests stopped being
+collected. Check the count against the markers rather than trusting this
+sentence: an earlier version said "only the last test" after three had been
+appended.
 """
 
 from __future__ import annotations
@@ -256,8 +259,18 @@ def test_the_reference_is_built_from_what_the_delivered_file_actually_is(
     from an.bench import run as brun
 
     seen: list[list[str]] = []
+    probed: list[Path] = []
     monkeypatch.setattr(imageio, "run_raw", lambda cmd: seen.append(list(cmd)))
-    monkeypatch.setattr(imageio, "delivered_pix_fmt", lambda mp4: "yuv444p")
+
+    def fake_probe(mp4):
+        # Records its ARGUMENT. An argument-ignoring lambda here would prove the
+        # value is threaded and never that the right FILE is consulted — under
+        # which `delivered_pix_fmt(out)`, i.e. probing the leg it is about to
+        # write, passes.
+        probed.append(Path(mp4))
+        return "yuv444p"
+
+    monkeypatch.setattr(imageio, "delivered_pix_fmt", fake_probe)
     # The global says 4:2:0 — as it does on the `an render --pix-fmt` path,
     # where the context carries the choice and the global never learns of it.
     monkeypatch.setattr(render, "DEFAULT_PIX_FMT", "yuv420p")
@@ -266,6 +279,10 @@ def test_the_reference_is_built_from_what_the_delivered_file_actually_is(
         tmp_path, 24, tmp_path / "qp0.mp4", delivered=tmp_path / "d.mp4"
     )
 
+    assert probed == [tmp_path / "d.mp4"], (
+        f"the probe was pointed at {probed} rather than the delivered file; a "
+        "leg that probes its own output measures nothing"
+    )
     assert seen, "the reference encode never ran"
     argv = seen[0]
     assert argv[argv.index("-pix_fmt") + 1] == "yuv444p", (
@@ -280,20 +297,39 @@ def test_the_bench_passes_the_delivered_file_to_the_reference(monkeypatch, tmp_p
 
     The probe is only worth having if the one production caller uses it, and
     that call site is reachable by no cheap end-to-end test — building a real
-    capture needs a browser. So it is asserted directly.
+    capture needs a browser. So the call is asserted structurally.
+
+    **Parsed, not grepped.** The first version matched the call's source TEXT,
+    which a comment defeats — leave the expected line commented above a call
+    that omits the argument and the file still reports all-passed, while the leg
+    silently reverts to 4:2:0 against a 4:4:4 delivery — and which a `black`
+    rewrap breaks. Since `delivered` now has no default, omitting it is a
+    `TypeError` anyway, so this is the second line of defence rather than the
+    only one, which is the arrangement it should always have had.
     """
+    import ast
     import inspect
 
     from an.bench import run as brun
 
-    source = inspect.getsource(brun)
-    assert (
-        "lossless_reference(frames_dir, capture.fps, qp0_mp4, delivered=capture.mp4)"
-        in source
-    ), (
-        "the bench builds its reference without telling it which file it is the "
-        "reference for; the leg then falls back to the module global"
-    )
+    tree = ast.parse(inspect.getsource(brun._scene_metrics))
+    calls = [
+        n
+        for n in ast.walk(tree)
+        if isinstance(n, ast.Call)
+        and isinstance(n.func, ast.Name)
+        and n.func.id == "lossless_reference"
+    ]
+    assert calls, "`_scene_metrics` no longer builds a lossless reference at all"
+    for call in calls:
+        kwargs = {k.arg: k.value for k in call.keywords}
+        assert "delivered" in kwargs, (
+            "the bench builds its reference without telling it which file it is "
+            "the reference for"
+        )
+        assert ast.unparse(kwargs["delivered"]) == "capture.mp4", (
+            "the reference is pointed at something other than the delivered file"
+        )
 
 
 @pytest.mark.ffmpeg
@@ -326,3 +362,65 @@ def test_the_probe_reads_the_file_and_not_the_module_global(
             f"file while the module global said {lie!r} — it is answering from "
             "the global, so the leg matches a guess rather than the delivery"
         )
+
+
+def test_a_probe_that_cannot_read_the_file_raises_rather_than_guessing(
+    monkeypatch, tmp_path, delivered_pix_fmt
+):
+    """MUTATION: give `delivered_pix_fmt` an `except`/empty fallback returning
+    `DEFAULT_PIX_FMT`, or wrap the probe call in `lossless_reference` in a
+    `try` that sets `pix_fmt = None`.
+
+    Both are the *plausible* robustness edit, and both restore the exact defect
+    the probe exists to remove — a leg whose format is a guess — while every
+    other test here passes, because they only ever exercise files that probe
+    successfully. "Unknown" is not "the default": a run that cannot tell what it
+    delivered has no honest reference to measure against, and stopping is the
+    only answer that does not silently file wrong numbers.
+    """
+    from an.bench import run as brun
+    from an.bench.imageio import BenchDecodeError
+
+    delivered_pix_fmt("yuv420p")  # a fallback would return this, and be wrong
+
+    missing = tmp_path / "never-written.mp4"
+    with pytest.raises(BenchDecodeError):
+        imageio.delivered_pix_fmt(missing)
+
+    empty = tmp_path / "empty.mp4"
+    empty.write_bytes(b"")
+    with pytest.raises(BenchDecodeError):
+        imageio.delivered_pix_fmt(empty)
+
+    # ...and the caller does not swallow it either.
+    monkeypatch.setattr(imageio, "run_raw", lambda cmd: pytest.fail("encode ran anyway"))
+    with pytest.raises(BenchDecodeError):
+        brun.lossless_reference(tmp_path, 24, tmp_path / "qp0.mp4", delivered=missing)
+
+
+@pytest.mark.ffmpeg
+def test_a_delivery_in_an_unmeasured_format_is_refused_by_the_bench_not_the_renderer(
+    tmp_path,
+):
+    """MUTATION: drop the `SUPPORTED_PIX_FMTS` check from `delivered_pix_fmt`.
+
+    Without it the refusal still happens, one layer down and as the wrong type:
+    `lossless_encode_command` raises `CutoutRenderError` — a *render* error from
+    a bench path — and `lossless_reference` sits outside `_scene_metrics`'s
+    `try/finally`, so it aborts the run instead of being recorded. Unreachable
+    through `an`'s own encoder, which pins one of two formats; reachable the
+    moment the probe reads a file `an` did not write.
+    """
+    import subprocess
+
+    from an.bench.imageio import BenchDecodeError
+
+    odd = tmp_path / "gray.mp4"
+    subprocess.run(
+        ["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i",
+         "testsrc=size=32x32:rate=24:duration=0.2", "-c:v", "libx264",
+         "-pix_fmt", "gray", str(odd)],
+        capture_output=True, check=True,
+    )
+    with pytest.raises(BenchDecodeError, match="not one of"):
+        imageio.delivered_pix_fmt(odd)

@@ -56,8 +56,31 @@ def _ffmpeg_available() -> bool:
     return shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None
 
 
+def _one_delivered_format(formats: set[str]) -> str:
+    """The single pixel format every delivery in this run is in.
+
+    A row carries ONE `encode_side.pix_fmt` and `bench-compare` keys on it, so a
+    run whose scenes were delivered in different formats has no honest value to
+    put there — reporting either one would file a row that lies about most of
+    its own scenes. Refused rather than picked, for the reason
+    `frame_count_disagreement` is recorded rather than truncated.
+    """
+    if len(formats) == 1:
+        return formats.pop()
+    if not formats:
+        raise BenchError(
+            "no scene was captured, so the delivered pixel format is unknown "
+            "and the row's comparability key cannot be filled"
+        )
+    raise BenchError(
+        f"the corpus was delivered in more than one pixel format ({sorted(formats)}), "
+        "so no single value belongs in `encode_side.pix_fmt` — the row would be "
+        "comparable to rows it does not match"
+    )
+
+
 def lossless_reference(
-    frames_dir: Path, fps: int, out: Path, *, delivered: Path | None = None
+    frames_dir: Path, fps: int, out: Path, *, delivered: Path | None
 ):
     """Encode the frames losslessly and return the decode — the encoder's input.
 
@@ -72,9 +95,13 @@ def lossless_reference(
     the bench's lever and silently misses ``an render --pix-fmt yuv444p``,
     which sets the context instead. Only the file knows which seam won.
 
-    ``None`` means "no delivered file to match" and falls back to the module
-    default. That is right for a caller building a reference for its own sake;
-    it is wrong for the bench, which always has the delivered file in hand.
+    ``delivered`` is keyword-only and has **no default**, deliberately — the
+    same argument `imageio._reshape` makes for its own `frames`: a default here
+    would let a caller opt out of the match by omission, and the failure is
+    invisible (a 4:2:0 reference silently measuring a 4:4:4 delivery). Passing
+    ``None`` explicitly means "no delivered file to match" and falls back to the
+    module default; that is right for a caller building a reference for its own
+    sake and wrong for the bench, which always has the file in hand.
     """
     pix_fmt = imageio.delivered_pix_fmt(delivered) if delivered is not None else None
     imageio.run_raw(
@@ -926,6 +953,11 @@ def run_bench(
     # decides whether two rows may be compared at all, and the tree is deleted
     # before the run-level provenance is assembled.
     sei: str | None = None
+    #: The pixel format the deliveries actually are, measured off the files
+    #: while the throwaway trees still exist — `environment_record` runs after
+    #: the cleanup, and it is a comparability key, so it cannot be re-derived
+    #: from a module global that the `ctx.pix_fmt` seam bypasses (an#72).
+    delivered_formats: set[str] = set()
 
     try:
         for name, fixture in fixtures.items():
@@ -933,6 +965,7 @@ def run_bench(
                 name, fixture, repo_root=root, keep_render=keep_render
             )
             captures.append(capture)
+            delivered_formats.add(imageio.delivered_pix_fmt(capture.mp4))
             if sei is None:
                 sei = environment.x264_sei(capture.mp4)
 
@@ -1070,7 +1103,11 @@ def run_bench(
             "git": git,
             **({"git_after_bless": naming_git} if blessed else {}),
             "render_kwargs": dict(BENCH_RENDER_KWARGS),
-            "environment": environment_record(x264_sei=sei, browser=browser),
+            "environment": environment_record(
+                pix_fmt=_one_delivered_format(delivered_formats),
+                x264_sei=sei,
+                browser=browser,
+            ),
             **({"blessed": blessed} if blessed else {}),
             "encode_command_source": (
                 "an.adapters.cutout.render._ffmpeg_mux + DETERMINISTIC_X264_ARGS"

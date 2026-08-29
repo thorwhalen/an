@@ -164,14 +164,37 @@ def test_the_pixel_format_is_a_knob_that_reaches_the_encode_and_the_row(
         "lever measures a 4:2:0 file and the row calls it 4:4:4"
     )
 
-    # ...and the SAME global is what the row records, so the two cannot
-    # disagree. Read directly rather than through `environment_record`, which
-    # shells out to ffmpeg and would need the fake to impersonate it.
+    # ...and the row records the format MEASURED off the delivered file rather
+    # than re-derived from anything.
+    #
+    # This used to assert the opposite — that `environment_record` reads the
+    # same module global the mux does — on the reasoning that one source of
+    # truth cannot disagree with itself. The reasoning was right and the
+    # premise was wrong (an#72): the mux resolves `ctx.pix_fmt` FIRST, so the
+    # global is only its *fallback*, and an `an render --pix-fmt yuv444p`
+    # delivery was recorded as 4:2:0. Nothing else in the row could catch it —
+    # `x264_argv` deliberately omits `-pix_fmt` and `x264_sei` is
+    # byte-identical across the two formats — and `encode_side.pix_fmt` is an
+    # `ENCODE_ENV_PATHS` comparability key, so the row would be compared
+    # against real 4:2:0 rows.
     from an.bench import environment as env_mod
 
-    assert "DEFAULT_PIX_FMT" in inspect.getsource(env_mod.environment_record), (
-        "the row must read the same module global the mux does; a second "
-        "source of truth for the format is a row that can lie about its file"
+    sig = inspect.signature(env_mod.environment_record)
+    assert sig.parameters["pix_fmt"].default is inspect.Parameter.empty, (
+        "`pix_fmt` must have no default: a default is how a caller opts out of "
+        "measuring it, and the field is a comparability key"
+    )
+
+    # The recorded value is the one passed, whatever the global says.
+    monkeypatch.setattr(
+        env_mod, "ffmpeg_identity", lambda: {"path": None, "banner": None}
+    )
+    monkeypatch.setattr(render_mod, "DEFAULT_PIX_FMT", "yuv420p")
+    record = env_mod.environment_record(pix_fmt="yuv444p", browser={})
+    assert record["encode_side"]["pix_fmt"] == "yuv444p", (
+        "the row re-derived the format instead of recording what was measured; "
+        "a second source of truth for the format is a row that can lie about "
+        "its own file"
     )
 
 

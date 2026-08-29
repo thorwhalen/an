@@ -138,7 +138,10 @@ def runtime_sha256() -> str:
 
 
 def environment_record(
-    *, x264_sei: str | None = None, browser: dict[str, Any] | None = None
+    *,
+    pix_fmt: str,
+    x264_sei: str | None = None,
+    browser: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Everything about this machine that could plausibly move a number.
 
@@ -146,8 +149,17 @@ def environment_record(
     needs the Chromium build *before* the run-level provenance is assembled —
     the path keys on it — and probing twice would launch a second browser and
     could, in principle, report a different build from the one that rendered.
+
+    ``pix_fmt`` is required and has no default, because it is a **comparability
+    key** and the caller is the only one who can measure it. It must be the
+    format the delivered files actually are — `imageio.delivered_pix_fmt` — and
+    not a re-derivation, for the reason an#72 records: the delivered encode
+    resolves its format from ``RenderContext.pix_fmt`` *or* the module global,
+    so reading either one is a second source of truth that can disagree with
+    the file, and this field is what `bench-compare` uses to decide whether two
+    encode-side rows may be compared at all.
     """
-    from an.adapters.cutout.render import DEFAULT_PIX_FMT, DETERMINISTIC_X264_ARGS
+    from an.adapters.cutout.render import DETERMINISTIC_X264_ARGS
 
     return {
         "render_side": {
@@ -174,10 +186,18 @@ def environment_record(
             # neither `-c:v libx264` nor `-pix_fmt` nor `+faststart` — so
             # folding a per-render knob into it would either make a constant
             # non-constant or turn it into a composed command, and either
-            # changes what every already-committed row means. Read at call time
-            # from the module global, so the `pix_fmt` lever's rebinding reaches
-            # the record and the encode together and the two cannot disagree.
-            "pix_fmt": DEFAULT_PIX_FMT,
+            # changes what every already-committed row means.
+            #
+            # MEASURED off the delivered files by the caller, not re-derived
+            # (an#72). This read `DEFAULT_PIX_FMT` under a comment claiming the
+            # record and the encode "cannot disagree" — and they can: the mux
+            # resolves `ctx.pix_fmt` FIRST, so an `an render --pix-fmt yuv444p`
+            # delivery was recorded as 4:2:0. Nothing else in the row could
+            # catch it: `x264_argv` deliberately omits `-pix_fmt`, and
+            # `x264_sei` is byte-identical across the two formats. So a row
+            # would claim 4:2:0, `bench-compare` would accept it against a real
+            # 4:2:0 row, and diff metrics across a format change.
+            "pix_fmt": pix_fmt,
             "comparison_scope": "machine",
             "comparison_note": (
                 "a different x264 build moves the decoded stream by up to 99.2% "

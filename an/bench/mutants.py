@@ -621,10 +621,12 @@ MUTANTS: tuple[Mutant, ...] = (
             "reading the literal instead of the module global severs the seam "
             "any outside caller pulls — the same shape hoisting "
             "`DETERMINISTIC_X264_ARGS` into a default argument would sever for "
-            "`high_crf`. The recorded row would still say 4:4:4 (because "
-            "`environment_record` reads the global) while the file stayed "
-            "4:2:0: a row that lies about its own file. That is why the seam is "
-            "kept even though an#59 ships no lever — see the note there."
+            "`high_crf`. That is why the seam is kept even though an#59 ships "
+            "no lever — see the note there. (Until an#72 the row would ALSO "
+            "have said 4:4:4 while the file stayed 4:2:0, because "
+            "`environment_record` re-derived the format from the same global; "
+            "it is measured off the delivered files now, so the row no longer "
+            "lies about its own file — only the knob is broken.)"
         ),
     ),
     Mutant(
