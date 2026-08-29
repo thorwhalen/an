@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.77 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -352,8 +352,10 @@
 <span class="c1">#:   counting encode-side metric uses.</span>
 <span class="c1">#: - ``source_png`` — an explicit RGB-&gt;YUV conversion of the pre-encode PNGs.</span>
 <span class="c1">#:   Required by exactly two things. The chroma metric's subject IS the 4:2:0</span>
-<span class="c1">#:   subsampling that happens during that conversion, so a lossless-referenced</span>
-<span class="c1">#:   version would read ~0 and measure nothing. And `encode_ringing_excess`</span>
+<span class="c1">#:   subsampling that happens during that conversion -- the term the lossless</span>
+<span class="c1">#:   leg cancels, so a lossless-referenced version is blind to it (it does NOT</span>
+<span class="c1">#:   read ~0; measured, it reads 1.7-2.5 against this metric's 2.9-9.3, because</span>
+<span class="c1">#:   it measures chroma quantiser damage instead -- an#72). And `encode_ringing_excess`</span>
 <span class="c1">#:   cancels a term that only exists when BOTH its legs share this reference —</span>
 <span class="c1">#:   against the lossless leg it degenerates to raw overshoot, which is the</span>
 <span class="c1">#:   refuted form.</span>

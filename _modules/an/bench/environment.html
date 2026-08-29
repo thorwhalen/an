@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.environment &mdash; an 0.1.77 documentation</title>
+  <title>an.bench.environment &mdash; an 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -342,7 +342,10 @@
 <div class="viewcode-block" id="environment_record">
 <a class="viewcode-back" href="../../../module_docs/an/bench/environment.html#an.bench.environment.environment_record">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">environment_record</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span> <span class="n">x264_sei</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">browser</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">pix_fmt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">x264_sei</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">browser</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Everything about this machine that could plausibly move a number.</span>
 
@@ -350,8 +353,17 @@
 <span class="sd">    needs the Chromium build *before* the run-level provenance is assembled —</span>
 <span class="sd">    the path keys on it — and probing twice would launch a second browser and</span>
 <span class="sd">    could, in principle, report a different build from the one that rendered.</span>
+
+<span class="sd">    ``pix_fmt`` is required and has no default, because it is a **comparability</span>
+<span class="sd">    key** and the caller is the only one who can measure it. It must be the</span>
+<span class="sd">    format the delivered files actually are — `imageio.delivered_pix_fmt` — and</span>
+<span class="sd">    not a re-derivation, for the reason an#72 records: the delivered encode</span>
+<span class="sd">    resolves its format from ``RenderContext.pix_fmt`` *or* the module global,</span>
+<span class="sd">    so reading either one is a second source of truth that can disagree with</span>
+<span class="sd">    the file, and this field is what `bench-compare` uses to decide whether two</span>
+<span class="sd">    encode-side rows may be compared at all.</span>
 <span class="sd">    """</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_PIX_FMT</span><span class="p">,</span> <span class="n">DETERMINISTIC_X264_ARGS</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">DETERMINISTIC_X264_ARGS</span>
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"render_side"</span><span class="p">:</span> <span class="p">{</span>
@@ -378,10 +390,18 @@
             <span class="c1"># neither `-c:v libx264` nor `-pix_fmt` nor `+faststart` — so</span>
             <span class="c1"># folding a per-render knob into it would either make a constant</span>
             <span class="c1"># non-constant or turn it into a composed command, and either</span>
-            <span class="c1"># changes what every already-committed row means. Read at call time</span>
-            <span class="c1"># from the module global, so the `pix_fmt` lever's rebinding reaches</span>
-            <span class="c1"># the record and the encode together and the two cannot disagree.</span>
-            <span class="s2">"pix_fmt"</span><span class="p">:</span> <span class="n">DEFAULT_PIX_FMT</span><span class="p">,</span>
+            <span class="c1"># changes what every already-committed row means.</span>
+            <span class="c1">#</span>
+            <span class="c1"># MEASURED off the delivered files by the caller, not re-derived</span>
+            <span class="c1"># (an#72). This read `DEFAULT_PIX_FMT` under a comment claiming the</span>
+            <span class="c1"># record and the encode "cannot disagree" — and they can: the mux</span>
+            <span class="c1"># resolves `ctx.pix_fmt` FIRST, so an `an render --pix-fmt yuv444p`</span>
+            <span class="c1"># delivery was recorded as 4:2:0. Nothing else in the row could</span>
+            <span class="c1"># catch it: `x264_argv` deliberately omits `-pix_fmt`, and</span>
+            <span class="c1"># `x264_sei` is byte-identical across the two formats. So a row</span>
+            <span class="c1"># would claim 4:2:0, `bench-compare` would accept it against a real</span>
+            <span class="c1"># 4:2:0 row, and diff metrics across a format change.</span>
+            <span class="s2">"pix_fmt"</span><span class="p">:</span> <span class="n">pix_fmt</span><span class="p">,</span>
             <span class="s2">"comparison_scope"</span><span class="p">:</span> <span class="s2">"machine"</span><span class="p">,</span>
             <span class="s2">"comparison_note"</span><span class="p">:</span> <span class="p">(</span>
                 <span class="s2">"a different x264 build moves the decoded stream by up to 99.2% "</span>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.imageio &mdash; an 0.1.77 documentation</title>
+  <title>an.bench.imageio &mdash; an 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -97,6 +97,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.decoded_rgb_command"><code class="docutils literal notranslate"><span class="pre">decoded_rgb_command()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.decoded_yuv"><code class="docutils literal notranslate"><span class="pre">decoded_yuv()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.decoded_yuv_command"><code class="docutils literal notranslate"><span class="pre">decoded_yuv_command()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.delivered_pix_fmt"><code class="docutils literal notranslate"><span class="pre">delivered_pix_fmt()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.lossless_encode_command"><code class="docutils literal notranslate"><span class="pre">lossless_encode_command()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.run_raw"><code class="docutils literal notranslate"><span class="pre">run_raw()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.imageio.source_rgb"><code class="docutils literal notranslate"><span class="pre">source_rgb()</span></code></a></li>
@@ -226,12 +227,42 @@ damage.</p>
 received</strong>, on every build, by definition. Referencing the metrics to it
 removes the assumption instead of widening it, and it costs nothing extra —
 <cite>encode_ringing_excess</cite> already needed that leg.</p>
+<p><strong>That “IS” is a claim about the leg’s INPUT FORMAT as much as its rate
+control</strong>, and the leg pinned <cite>-pix_fmt yuv420p</cite> until an#72. Against a 4:4:4
+delivery the reference was therefore a <em>different colour pipeline</em> from the file
+it referenced, and every metric measured against it carried the whole 4:2:0
+conversion this leg exists to cancel — as a term that does not cancel and does
+vary by build.</p>
+<p>The leg now takes its format from the <strong>delivered file itself</strong>
+(<cite>delivered_pix_fmt</cite>, threaded in by <cite>run.lossless_reference</cite>). Probing rather
+than re-deriving is the load-bearing part: <strong>two</strong> seams set the delivered
+format — <cite>RenderContext.pix_fmt</cite>, which <cite>an render –pix-fmt</cite> uses and which the
+mux resolves FIRST, and the <cite>DEFAULT_PIX_FMT</cite> module global, which is only its
+fallback. A leg that consults either one covers only that one, and an#72’s first
+fix consulted the global — so it silently re-pinned on the seam a user can
+actually reach, with every guard green.</p>
+<p>(No <cite>pix_fmt</cite> lever exists: <cite>MUTATIONS</cite> is <cite>high_crf</cite>/<cite>disabled_aa</cite>/<cite>supersample</cite>
+and <cite>_check_registered</cite> enforces it at import. The global’s seam is kept for a
+lever that has never been registered — see <cite>an-dev-bench</cite>’s <cite>pix_fmt</cite> row for why
+— and outside the product it is driven only by tests. So “the lever rebinds it”
+is a statement about a seam’s purpose, not about anything that runs.)</p>
+<p>Note which metrics the mismatch reached: <cite>flat_field_deviation</cite>,
+<cite>flat_field_p99_dev</cite> and <cite>encode_flicker_on_held_pixels</cite> reduce over RGB, so
+chroma reaches them, while the luma-domain metrics never moved —
+<cite>coded_luma_edge_error</cite> and <cite>encode_ringing_excess</cite> are identical to the last
+digit between a 4:2:0 and a 4:4:4 leg on all ten corpus scenes.</p>
 <p>Two things this does NOT change:</p>
 <ul class="simple">
 <li><p><strong>The chroma metric still references the direct RGB-&gt;444 conversion</strong>, because
-its subject <em>is</em> the 4:2:0 subsampling that happens during the conversion. A
-qp0 file’s chroma is already subsampled, so referencing it there would read
-~0 and measure nothing.</p></li>
+its subject <em>is</em> the 4:2:0 subsampling that happens during the conversion —
+which is exactly the term this leg cancels, so a lossless-referenced version
+is blind to it whatever format the leg is encoded in. (With a tracking leg
+and a 4:4:4 delivery, both legs are 4:4:4 and the subsampling does not exist
+to be measured; tracking makes the panel honest, not sighted.) It does <strong>not</strong>
+read ~0, though, and that half of the old wording was wrong: measured
+2026-08-29 on four scenes, mean <a href="#id1"><span class="problematic" id="id2">|dCr|</span></a> over the edge mask reads 1.71 / 1.90 /
+2.24 / 2.50 against the shipped metric’s 7.19 / 9.29 / 8.04 / 2.93, because it
+measures chroma <em>quantiser</em> damage instead (an#72).</p></li>
 <li><p><strong>The PNG conversion is still performed and its distance from the encoder’s
 input is still recorded</strong> (<cite>png_to_encoder_input_luma</cite>), because that number
 is exactly the build-dependence that was hiding inside a hard equality. It is
@@ -306,12 +337,57 @@ to. Adding one would convert twice.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="an.bench.imageio.delivered_pix_fmt">
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">delivered_pix_fmt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp4</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#delivered_pix_fmt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.delivered_pix_fmt" title="Link to this definition"></a></dt>
+<dd><p>The pixel format <code class="docutils literal notranslate"><span class="pre">mp4</span></code> is actually encoded in, from the file itself.</p>
+<p>The delivered encode resolves its format from <code class="docutils literal notranslate"><span class="pre">RenderContext.pix_fmt</span></code>
+<strong>or</strong> the module global (<cite>render._check_pix_fmt</cite>), and only the file knows
+which won — so the lossless leg cannot re-derive it and be sure of matching.
+Re-deriving is what an#72’s first fix did, and it covered the bench lever’s
+seam (which rebinds the global) while missing the product’s own
+(<code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">render</span> <span class="pre">--pix-fmt</span></code>, which sets the context and never touches it).</p>
+<p>Probed, not remembered: this is the one source of truth that no future seam
+can route around.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="an.bench.imageio.lossless_encode_command">
-<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">lossless_encode_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#lossless_encode_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.lossless_encode_command" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.bench.imageio.</span></span><span class="sig-name descname"><span class="pre">lossless_encode_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pix_fmt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/imageio.html#lossless_encode_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.imageio.lossless_encode_command" title="Link to this definition"></a></dt>
 <dd><p><cite>-qp 0</cite> with otherwise identical flags, for <cite>encode_ringing_excess</cite>.</p>
 <p>Identical to the delivered encode except for the rate control, so the
 difference of the two overshoot means cancels the source-hardness term —
 which is the whole reason <cite>encode_ringing_excess</cite> replaced raw overshoot.</p>
+<p><strong>Pinned in its ENCODER SETTINGS, tracking in its INPUT FORMAT</strong> — and the
+asymmetry is the correction an#72 turned on. Two module globals reach this
+command and they must be reached differently:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DETERMINISTIC_X264_ARGS</span></code> is bound at IMPORT, above, so a lever that
+rebinds it (<code class="docutils literal notranslate"><span class="pre">high_crf</span></code>) cannot move the reference. The reference has to
+stay lossless, or every encode-side metric is measured against a moving
+target and the lever produces beautiful numbers about nothing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pix_fmt</span></code> is resolved at CALL time through the product’s own
+<code class="xref py py-func docutils literal notranslate"><span class="pre">_check_pix_fmt()</span></code>. The bench passes the
+format <strong>probed off the delivered mp4</strong> (<a class="reference internal" href="#an.bench.imageio.delivered_pix_fmt" title="an.bench.imageio.delivered_pix_fmt"><code class="xref py py-func docutils literal notranslate"><span class="pre">delivered_pix_fmt()</span></code></a>);
+<code class="docutils literal notranslate"><span class="pre">None</span></code> falls back to <code class="docutils literal notranslate"><span class="pre">DEFAULT_PIX_FMT</span></code>, which is right for a caller
+with no delivered file to match and wrong for one that has it.</p></li>
+</ul>
+<p>The difference is not a preference. <code class="docutils literal notranslate"><span class="pre">-pix_fmt</span></code> is not an encoder setting:
+it names <strong>what libx264 receives</strong>, and being what libx264 received is this
+leg’s entire purpose (see the module docstring). Pinning it does not keep
+the reference lossless — it makes the reference a <em>different colour
+pipeline</em> from the delivered file, so every metric measured against it
+silently acquires the whole 4:2:0 conversion the reference exists to
+cancel. Measured on the corpus at 4:4:4: family E
+(<code class="docutils literal notranslate"><span class="pre">encode_flicker_on_held_pixels</span></code>) changes SIGN on three of ten scenes
+between a pinned leg and a tracking one — from as-declared to contrary in
+every case — and family D (<code class="docutils literal notranslate"><span class="pre">flat_field_deviation</span></code>) moves by up to 24.8
+percentage points. The affected metrics are exactly the RGB-domain ones,
+which reduce over three channels so chroma reaches them; the luma-domain
+metrics were never affected — <code class="docutils literal notranslate"><span class="pre">coded_luma_edge_error</span></code> and
+<code class="docutils literal notranslate"><span class="pre">encode_ringing_excess</span></code> are identical to the last digit between a 4:2:0
+and a 4:4:4 leg on all ten scenes.</p>
+<p>A default (4:2:0) render is byte-identical to before this change, so no
+committed ledger row is invalidated.</p>
 </dd></dl>
 
 <dl class="py function">

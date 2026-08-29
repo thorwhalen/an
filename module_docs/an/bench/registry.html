@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.registry &mdash; an 0.1.77 documentation</title>
+  <title>an.bench.registry &mdash; an 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -322,8 +322,10 @@ damage with no colour-conversion term. The default, and what every
 counting encode-side metric uses.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">source_png</span></code> — an explicit RGB-&gt;YUV conversion of the pre-encode PNGs.
 Required by exactly two things. The chroma metric’s subject IS the 4:2:0
-subsampling that happens during that conversion, so a lossless-referenced
-version would read ~0 and measure nothing. And <cite>encode_ringing_excess</cite>
+subsampling that happens during that conversion – the term the lossless
+leg cancels, so a lossless-referenced version is blind to it (it does NOT
+read ~0; measured, it reads 1.7-2.5 against this metric’s 2.9-9.3, because
+it measures chroma quantiser damage instead – an#72). And <cite>encode_ringing_excess</cite>
 cancels a term that only exists when BOTH its legs share this reference —
 against the lossless leg it degenerates to raw overshoot, which is the
 refuted form.</p></li>

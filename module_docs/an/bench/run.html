@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.run &mdash; an 0.1.77 documentation</title>
+  <title>an.bench.run &mdash; an 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -290,10 +290,24 @@ will explain a future cross-build surprise.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="an.bench.run.lossless_reference">
-<span class="sig-prename descclassname"><span class="pre">an.bench.run.</span></span><span class="sig-name descname"><span class="pre">lossless_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/run.html#lossless_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.run.lossless_reference" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">an.bench.run.</span></span><span class="sig-name descname"><span class="pre">lossless_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">delivered</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/an/bench/run.html#lossless_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.run.lossless_reference" title="Link to this definition"></a></dt>
 <dd><p>Encode the frames losslessly and return the decode — the encoder’s input.</p>
 <p>Returned as a path rather than an array so the caller controls its
 lifetime; every encode-side reference comes from here.</p>
+<p><code class="docutils literal notranslate"><span class="pre">delivered</span></code> is the delivered mp4 this leg is the reference FOR, and
+passing it is what makes the leg’s pixel format match — <strong>probed off the
+file rather than re-derived</strong> (an#72). Re-deriving is not enough: the
+delivered encode resolves its format from <code class="docutils literal notranslate"><span class="pre">RenderContext.pix_fmt</span></code> <em>or</em>
+from <code class="docutils literal notranslate"><span class="pre">render.DEFAULT_PIX_FMT</span></code>, so a leg that consults the global tracks
+the bench’s lever and silently misses <code class="docutils literal notranslate"><span class="pre">an</span> <span class="pre">render</span> <span class="pre">--pix-fmt</span> <span class="pre">yuv444p</span></code>,
+which sets the context instead. Only the file knows which seam won.</p>
+<p><code class="docutils literal notranslate"><span class="pre">delivered</span></code> is keyword-only and has <strong>no default</strong>, deliberately — the
+same argument <cite>imageio._reshape</cite> makes for its own <cite>frames</cite>: a default here
+would let a caller opt out of the match by omission, and the failure is
+invisible (a 4:2:0 reference silently measuring a 4:4:4 delivery). Passing
+<code class="docutils literal notranslate"><span class="pre">None</span></code> explicitly means “no delivered file to match” and falls back to the
+module default; that is right for a caller building a reference for its own
+sake and wrong for the bench, which always has the file in hand.</p>
 </dd></dl>
 
 <dl class="py function">

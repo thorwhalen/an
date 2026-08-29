@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.mutants &mdash; an 0.1.77 documentation</title>
+  <title>an.bench.mutants &mdash; an 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -823,10 +823,12 @@
             <span class="s2">"reading the literal instead of the module global severs the seam "</span>
             <span class="s2">"any outside caller pulls — the same shape hoisting "</span>
             <span class="s2">"`DETERMINISTIC_X264_ARGS` into a default argument would sever for "</span>
-            <span class="s2">"`high_crf`. The recorded row would still say 4:4:4 (because "</span>
-            <span class="s2">"`environment_record` reads the global) while the file stayed "</span>
-            <span class="s2">"4:2:0: a row that lies about its own file. That is why the seam is "</span>
-            <span class="s2">"kept even though an#59 ships no lever — see the note there."</span>
+            <span class="s2">"`high_crf`. That is why the seam is kept even though an#59 ships "</span>
+            <span class="s2">"no lever — see the note there. (Until an#72 the row would ALSO "</span>
+            <span class="s2">"have said 4:4:4 while the file stayed 4:2:0, because "</span>
+            <span class="s2">"`environment_record` re-derived the format from the same global; "</span>
+            <span class="s2">"it is measured off the delivered files now, so the row no longer "</span>
+            <span class="s2">"lies about its own file — only the knob is broken.)"</span>
         <span class="p">),</span>
     <span class="p">),</span>
     <span class="n">Mutant</span><span class="p">(</span>
@@ -938,6 +940,25 @@
             <span class="s2">"a substituted zero is the largest possible DOWNWARD move in the "</span>
             <span class="s2">"one metric that exists to notice a downward move, on exactly the "</span>
             <span class="s2">"scenes where the number means nothing at all."</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">Mutant</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"lossless_leg_pinned_to_420"</span><span class="p">,</span>
+        <span class="n">file</span><span class="o">=</span><span class="s2">"an/bench/imageio.py"</span><span class="p">,</span>
+        <span class="n">old</span><span class="o">=</span><span class="s1">'        "-pix_fmt",</span><span class="se">\n</span><span class="s1">        resolved,</span><span class="se">\n</span><span class="s1">        "-qp",'</span><span class="p">,</span>
+        <span class="n">new</span><span class="o">=</span><span class="s1">'        "-pix_fmt",</span><span class="se">\n</span><span class="s1">        "yuv420p",</span><span class="se">\n</span><span class="s1">        "-qp",'</span><span class="p">,</span>
+        <span class="n">caught_by</span><span class="o">=</span><span class="s2">"tests/test_bench_lossless_leg.py"</span><span class="p">,</span>
+        <span class="n">why</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"a reference PINNED in the one dimension it has to track. The leg "</span>
+            <span class="s2">"exists to be the plane libx264 received; `-pix_fmt` names what "</span>
+            <span class="s2">"libx264 receives, so pinning it does not keep the reference "</span>
+            <span class="s2">"lossless — it makes the reference a different colour pipeline "</span>
+            <span class="s2">"from the delivered file, and every encode-side metric silently "</span>
+            <span class="s2">"acquires the whole 4:2:0 conversion the reference exists to "</span>
+            <span class="s2">"cancel. Distinct from every other entry here because the mutated "</span>
+            <span class="s2">"code stays correct on the default path and is wrong only under a "</span>
+            <span class="s2">"knob: measured on the corpus at 4:4:4, it changes the SIGN of "</span>
+            <span class="s2">"family E on three of ten scenes (an#72)."</span>
         <span class="p">),</span>
     <span class="p">),</span>
 <span class="p">)</span>

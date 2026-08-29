@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.imageio &mdash; an 0.1.77 documentation</title>
+  <title>an.bench.imageio &mdash; an 0.1.78 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f0a2a924"></script>
+      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -209,12 +209,46 @@
 <span class="sd">removes the assumption instead of widening it, and it costs nothing extra —</span>
 <span class="sd">`encode_ringing_excess` already needed that leg.</span>
 
+<span class="sd">**That "IS" is a claim about the leg's INPUT FORMAT as much as its rate</span>
+<span class="sd">control**, and the leg pinned `-pix_fmt yuv420p` until an#72. Against a 4:4:4</span>
+<span class="sd">delivery the reference was therefore a *different colour pipeline* from the file</span>
+<span class="sd">it referenced, and every metric measured against it carried the whole 4:2:0</span>
+<span class="sd">conversion this leg exists to cancel — as a term that does not cancel and does</span>
+<span class="sd">vary by build.</span>
+
+<span class="sd">The leg now takes its format from the **delivered file itself**</span>
+<span class="sd">(`delivered_pix_fmt`, threaded in by `run.lossless_reference`). Probing rather</span>
+<span class="sd">than re-deriving is the load-bearing part: **two** seams set the delivered</span>
+<span class="sd">format — `RenderContext.pix_fmt`, which `an render --pix-fmt` uses and which the</span>
+<span class="sd">mux resolves FIRST, and the `DEFAULT_PIX_FMT` module global, which is only its</span>
+<span class="sd">fallback. A leg that consults either one covers only that one, and an#72's first</span>
+<span class="sd">fix consulted the global — so it silently re-pinned on the seam a user can</span>
+<span class="sd">actually reach, with every guard green.</span>
+
+<span class="sd">(No `pix_fmt` lever exists: `MUTATIONS` is `high_crf`/`disabled_aa`/`supersample`</span>
+<span class="sd">and `_check_registered` enforces it at import. The global's seam is kept for a</span>
+<span class="sd">lever that has never been registered — see `an-dev-bench`'s `pix_fmt` row for why</span>
+<span class="sd">— and outside the product it is driven only by tests. So "the lever rebinds it"</span>
+<span class="sd">is a statement about a seam's purpose, not about anything that runs.)</span>
+
+<span class="sd">Note which metrics the mismatch reached: `flat_field_deviation`,</span>
+<span class="sd">`flat_field_p99_dev` and `encode_flicker_on_held_pixels` reduce over RGB, so</span>
+<span class="sd">chroma reaches them, while the luma-domain metrics never moved —</span>
+<span class="sd">`coded_luma_edge_error` and `encode_ringing_excess` are identical to the last</span>
+<span class="sd">digit between a 4:2:0 and a 4:4:4 leg on all ten corpus scenes.</span>
+
 <span class="sd">Two things this does NOT change:</span>
 
 <span class="sd">- **The chroma metric still references the direct RGB-&gt;444 conversion**, because</span>
-<span class="sd">  its subject *is* the 4:2:0 subsampling that happens during the conversion. A</span>
-<span class="sd">  qp0 file's chroma is already subsampled, so referencing it there would read</span>
-<span class="sd">  ~0 and measure nothing.</span>
+<span class="sd">  its subject *is* the 4:2:0 subsampling that happens during the conversion —</span>
+<span class="sd">  which is exactly the term this leg cancels, so a lossless-referenced version</span>
+<span class="sd">  is blind to it whatever format the leg is encoded in. (With a tracking leg</span>
+<span class="sd">  and a 4:4:4 delivery, both legs are 4:4:4 and the subsampling does not exist</span>
+<span class="sd">  to be measured; tracking makes the panel honest, not sighted.) It does **not**</span>
+<span class="sd">  read ~0, though, and that half of the old wording was wrong: measured</span>
+<span class="sd">  2026-08-29 on four scenes, mean |dCr| over the edge mask reads 1.71 / 1.90 /</span>
+<span class="sd">  2.24 / 2.50 against the shipped metric's 7.19 / 9.29 / 8.04 / 2.93, because it</span>
+<span class="sd">  measures chroma *quantiser* damage instead (an#72).</span>
 <span class="sd">- **The PNG conversion is still performed and its distance from the encoder's</span>
 <span class="sd">  input is still recorded** (`png_to_encoder_input_luma`), because that number</span>
 <span class="sd">  is exactly the build-dependence that was hiding inside a hard equality. It is</span>
@@ -231,7 +265,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">DETERMINISTIC_X264_ARGS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">MP4_FASTSTART_ARGS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.render</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DETERMINISTIC_X264_ARGS</span><span class="p">,</span>
+    <span class="n">SUPPORTED_PIX_FMTS</span><span class="p">,</span>
+    <span class="n">_check_pix_fmt</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="c1">#: The pinned conversion applied to the PNG leg. Never remove it: without it</span>
 <span class="c1">#: the encode-side metrics measure a colour-space conversion.</span>
@@ -356,15 +395,107 @@
 
 
 
+<div class="viewcode-block" id="delivered_pix_fmt">
+<a class="viewcode-back" href="../../../module_docs/an/bench/imageio.html#an.bench.imageio.delivered_pix_fmt">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">delivered_pix_fmt</span><span class="p">(</span><span class="n">mp4</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The pixel format ``mp4`` is actually encoded in, from the file itself.</span>
+
+<span class="sd">    The delivered encode resolves its format from ``RenderContext.pix_fmt``</span>
+<span class="sd">    **or** the module global (`render._check_pix_fmt`), and only the file knows</span>
+<span class="sd">    which won — so the lossless leg cannot re-derive it and be sure of matching.</span>
+<span class="sd">    Re-deriving is what an#72's first fix did, and it covered the bench lever's</span>
+<span class="sd">    seam (which rebinds the global) while missing the product's own</span>
+<span class="sd">    (``an render --pix-fmt``, which sets the context and never touches it).</span>
+
+<span class="sd">    Probed, not remembered: this is the one source of truth that no future seam</span>
+<span class="sd">    can route around.</span>
+<span class="sd">    """</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">run_raw</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">"ffprobe"</span><span class="p">,</span>
+            <span class="s2">"-v"</span><span class="p">,</span>
+            <span class="s2">"error"</span><span class="p">,</span>
+            <span class="s2">"-select_streams"</span><span class="p">,</span>
+            <span class="s2">"v:0"</span><span class="p">,</span>
+            <span class="s2">"-show_entries"</span><span class="p">,</span>
+            <span class="s2">"stream=pix_fmt"</span><span class="p">,</span>
+            <span class="s2">"-of"</span><span class="p">,</span>
+            <span class="s2">"default=noprint_wrappers=1:nokey=1"</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">mp4</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">fmt</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="s2">"replace"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fmt</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">BenchDecodeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ffprobe reported no pixel format for </span><span class="si">{</span><span class="n">mp4</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fmt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_PIX_FMTS</span><span class="p">:</span>
+        <span class="c1"># Refused HERE rather than downstream: `lossless_encode_command` would</span>
+        <span class="c1"># raise `CutoutRenderError` for it, a *render* error from a bench path,</span>
+        <span class="c1"># and `lossless_reference` sits outside `_scene_metrics`'s try/finally</span>
+        <span class="c1"># so it would abort the run instead of being recorded. Unreachable</span>
+        <span class="c1"># through `an`'s own encoder, which pins one of two formats — but the</span>
+        <span class="c1"># probe reads a FILE, and a file can be anything.</span>
+        <span class="k">raise</span> <span class="n">BenchDecodeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mp4</span><span class="si">}</span><span class="s2"> is encoded in </span><span class="si">{</span><span class="n">fmt</span><span class="si">!r}</span><span class="s2">, which is not one of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">SUPPORTED_PIX_FMTS</span><span class="si">}</span><span class="s2">. The lossless leg has to be encodable in the "</span>
+            <span class="s2">"delivered format to be the plane libx264 received."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">fmt</span></div>
+
+
+
 <div class="viewcode-block" id="lossless_encode_command">
 <a class="viewcode-back" href="../../../module_docs/an/bench/imageio.html#an.bench.imageio.lossless_encode_command">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">lossless_encode_command</span><span class="p">(</span><span class="n">frames_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">lossless_encode_command</span><span class="p">(</span>
+    <span class="n">frames_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">pix_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""`-qp 0` with otherwise identical flags, for `encode_ringing_excess`.</span>
 
 <span class="sd">    Identical to the delivered encode except for the rate control, so the</span>
 <span class="sd">    difference of the two overshoot means cancels the source-hardness term —</span>
 <span class="sd">    which is the whole reason `encode_ringing_excess` replaced raw overshoot.</span>
+
+<span class="sd">    **Pinned in its ENCODER SETTINGS, tracking in its INPUT FORMAT** — and the</span>
+<span class="sd">    asymmetry is the correction an#72 turned on. Two module globals reach this</span>
+<span class="sd">    command and they must be reached differently:</span>
+
+<span class="sd">    - ``DETERMINISTIC_X264_ARGS`` is bound at IMPORT, above, so a lever that</span>
+<span class="sd">      rebinds it (``high_crf``) cannot move the reference. The reference has to</span>
+<span class="sd">      stay lossless, or every encode-side metric is measured against a moving</span>
+<span class="sd">      target and the lever produces beautiful numbers about nothing.</span>
+<span class="sd">    - ``pix_fmt`` is resolved at CALL time through the product's own</span>
+<span class="sd">      :func:`~an.adapters.cutout.render._check_pix_fmt`. The bench passes the</span>
+<span class="sd">      format **probed off the delivered mp4** (:func:`delivered_pix_fmt`);</span>
+<span class="sd">      ``None`` falls back to ``DEFAULT_PIX_FMT``, which is right for a caller</span>
+<span class="sd">      with no delivered file to match and wrong for one that has it.</span>
+
+<span class="sd">    The difference is not a preference. ``-pix_fmt`` is not an encoder setting:</span>
+<span class="sd">    it names **what libx264 receives**, and being what libx264 received is this</span>
+<span class="sd">    leg's entire purpose (see the module docstring). Pinning it does not keep</span>
+<span class="sd">    the reference lossless — it makes the reference a *different colour</span>
+<span class="sd">    pipeline* from the delivered file, so every metric measured against it</span>
+<span class="sd">    silently acquires the whole 4:2:0 conversion the reference exists to</span>
+<span class="sd">    cancel. Measured on the corpus at 4:4:4: family E</span>
+<span class="sd">    (``encode_flicker_on_held_pixels``) changes SIGN on three of ten scenes</span>
+<span class="sd">    between a pinned leg and a tracking one — from as-declared to contrary in</span>
+<span class="sd">    every case — and family D (``flat_field_deviation``) moves by up to 24.8</span>
+<span class="sd">    percentage points. The affected metrics are exactly the RGB-domain ones,</span>
+<span class="sd">    which reduce over three channels so chroma reaches them; the luma-domain</span>
+<span class="sd">    metrics were never affected — ``coded_luma_edge_error`` and</span>
+<span class="sd">    ``encode_ringing_excess`` are identical to the last digit between a 4:2:0</span>
+<span class="sd">    and a 4:4:4 leg on all ten scenes.</span>
+
+<span class="sd">    A default (4:2:0) render is byte-identical to before this change, so no</span>
+<span class="sd">    committed ledger row is invalidated.</span>
 <span class="sd">    """</span>
+    <span class="c1"># Resolved through the product's own validator rather than a second copy of</span>
+    <span class="c1"># the fallback, so this leg cannot be encoded in a format the delivered</span>
+    <span class="c1"># encode would have refused. Imported at MODULE scope, unlike</span>
+    <span class="c1"># `DETERMINISTIC_X264_ARGS` above and for the opposite reason: that import</span>
+    <span class="c1"># binds a VALUE, which is what pins the rate control; this one binds a</span>
+    <span class="c1"># FUNCTION, whose body reads `DEFAULT_PIX_FMT` from `render`'s globals when</span>
+    <span class="c1"># it is called. Where the import sits makes no difference here, and an</span>
+    <span class="c1"># earlier version of this comment claimed it did.</span>
+    <span class="n">resolved</span> <span class="o">=</span> <span class="n">_check_pix_fmt</span><span class="p">(</span><span class="n">pix_fmt</span><span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">DETERMINISTIC_X264_ARGS</span><span class="p">]</span>
     <span class="c1"># Swap the CRF pair for `-qp 0`; everything else (threads, preset, colour</span>
     <span class="c1"># tags) must stay identical or the two legs stop being comparable.</span>
@@ -384,12 +515,11 @@
         <span class="s2">"-c:v"</span><span class="p">,</span>
         <span class="s2">"libx264"</span><span class="p">,</span>
         <span class="s2">"-pix_fmt"</span><span class="p">,</span>
-        <span class="s2">"yuv420p"</span><span class="p">,</span>
+        <span class="n">resolved</span><span class="p">,</span>
         <span class="s2">"-qp"</span><span class="p">,</span>
         <span class="s2">"0"</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-        <span class="s2">"-movflags"</span><span class="p">,</span>
-        <span class="s2">"+faststart"</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">MP4_FASTSTART_ARGS</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
     <span class="p">]</span></div>
 
