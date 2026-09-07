@@ -493,3 +493,110 @@ def test_a_delivery_in_an_unmeasured_format_is_refused_by_the_bench_not_the_rend
     )
     with pytest.raises(BenchDecodeError, match="not one of"):
         imageio.delivered_pix_fmt(odd)
+
+
+# --------------------------------------------------------------- an#143: the
+# reference used to be written to a FIXED name (`_bench_qp0.mp4`) inside
+# `frames_dir.parent` — a literal the caller did not control the uniqueness of.
+# Two runs that share that parent (concurrent processes, or a leftover from a
+# killed one) raced to write and unlink the same file; the loser's decode hit
+# ffmpeg exit 254, "no such file or directory". Fixed by writing the reference
+# under `run._lossless_scratch_dir`, a fresh `tempfile.mkdtemp` per call.
+
+
+def test_scene_metrics_no_longer_names_the_fixed_reference_file():
+    """MUTATION: revert `_scene_metrics` to `frames_dir.parent / "_bench_qp0.mp4"`.
+
+    Structural, not behavioural, because reproducing the race itself needs two
+    real bench renders (a browser each) racing on the same parent directory —
+    not affordable here. This pins the two things that make the race
+    impossible instead: the literal name is gone, and the reference is built
+    from the per-call scratch directory.
+    """
+    import inspect
+
+    from an.bench import run as brun
+
+    source = inspect.getsource(brun._scene_metrics)
+    assert "_bench_qp0.mp4" not in source, (
+        "the fixed reference filename is back — two runs sharing a parent "
+        "directory will race to write and unlink it again"
+    )
+    assert "_lossless_scratch_dir" in source, (
+        "the reference is no longer built under a per-call scratch directory"
+    )
+
+
+def test_lossless_scratch_dir_is_unique_per_call_even_under_a_shared_root(tmp_path):
+    """Two calls sharing a `root` must not share a leaf directory.
+
+    `root` is the override a caller uses to force two scratch directories to
+    sit side by side (the shared-parent scenario the issue names); it must not
+    become a second way to reintroduce a shared, fixed leaf.
+    """
+    from an.bench.run import _lossless_scratch_dir
+
+    with _lossless_scratch_dir(root=tmp_path) as a, _lossless_scratch_dir(
+        root=tmp_path
+    ) as b:
+        assert a != b
+        assert a.parent == tmp_path == b.parent
+        (a / "lossless_reference.mp4").write_bytes(b"a")
+        (b / "lossless_reference.mp4").write_bytes(b"b")
+        assert (a / "lossless_reference.mp4").read_bytes() == b"a"
+        assert (b / "lossless_reference.mp4").read_bytes() == b"b"
+    assert not a.exists() and not b.exists(), (
+        "the scratch directory must be cleaned up on exit, not left as a "
+        "landmine for the next run"
+    )
+
+
+@pytest.mark.ffmpeg
+def test_two_concurrent_lossless_leg_encodes_do_not_collide(tmp_path):
+    """Reproduces the reported shape of the collision and proves it is closed.
+
+    Each thread builds its own frames and writes its lossless reference through
+    `_lossless_scratch_dir(root=shared)` — the same shared parent two
+    concurrent bench runs (or two pytest-xdist workers) would use — and a
+    `Barrier` forces both threads to reach the encode at the same moment, which
+    is exactly the window in which the fixed-name design lost the race. Both
+    must succeed.
+    """
+    import threading
+
+    from an.bench.png import write_png
+    from an.bench.run import _lossless_scratch_dir, lossless_reference
+
+    shared_root = tmp_path / "shared"
+    shared_root.mkdir()
+    barrier = threading.Barrier(2)
+    errors: list[BaseException] = []
+
+    def worker(tag: str, colour: tuple[int, int, int]) -> None:
+        try:
+            frames = tmp_path / f"frames-{tag}"
+            frames.mkdir()
+            for i in range(3):
+                a = np.full((16, 16, 3), 255, np.uint8)
+                a[4:12, 4:12] = colour
+                write_png(frames / f"frame_{i:06d}.png", a)
+            barrier.wait(timeout=10)
+            with _lossless_scratch_dir(root=shared_root) as scratch:
+                out = scratch / "lossless_reference.mp4"
+                lossless_reference(frames, 24, out, delivered=None)
+                assert out.exists(), f"{tag}: the encode did not land at its own path"
+                yuv = imageio.decoded_yuv(out, height=16, width=16)
+                assert len(yuv) == 3, f"{tag}: decode came back short"
+        except BaseException as e:  # noqa: BLE001 - reported from the main thread
+            errors.append(e)
+
+    threads = [
+        threading.Thread(target=worker, args=("a", (255, 0, 0))),
+        threading.Thread(target=worker, args=("b", (0, 0, 255))),
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert not errors, f"concurrent lossless-leg encodes collided: {errors}"
