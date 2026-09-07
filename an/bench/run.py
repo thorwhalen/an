@@ -264,6 +264,32 @@ def _timeline_frames_dir(capture: SceneCapture):
         shutil.rmtree(staged, ignore_errors=True)
 
 
+@contextmanager
+def _lossless_scratch_dir(*, root: Path | None = None):
+    """A per-run unique directory to hold the lossless-reference mp4.
+
+    an#143: the reference used to be written to a FIXED name
+    (``_bench_qp0.mp4``) inside ``frames_dir.parent`` — a literal, not a path
+    the caller controls the uniqueness of. Two bench runs sharing that parent
+    (concurrent processes, or a leftover from a killed one) raced to write and
+    unlink the same file, and the loser's decode hit ffmpeg exit 254 (no such
+    file). ``tempfile.mkdtemp`` is the fix rather than a longer literal: it is
+    atomic and collision-free by construction, which a second guessed name
+    (a pid, a uuid pasted in by hand) is not.
+
+    ``root`` is keyword-only and defaults to the platform temp directory
+    (``tempfile.mkdtemp``'s own default); a caller may override it to point
+    every scratch directory at one parent — this is what lets a test put two
+    concurrent runs' scratch directories side by side without reintroducing
+    the fixed name the override exists to rule out.
+    """
+    scratch = Path(tempfile.mkdtemp(prefix="an-bench-lossless-", dir=root))
+    try:
+        yield scratch
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 def _render_edge_mask(src_rgb):
     """Family A's own edge mask: numpy only, no ffmpeg, no decoder.
 
@@ -366,7 +392,9 @@ def _merged_palette(capture: SceneCapture) -> dict:
     }
 
 
-def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, Any]]:
+def _scene_metrics(
+    capture: SceneCapture, *, lossless_scratch_root: Path | None = None
+) -> tuple[dict[str, Value], dict[str, Any]]:
     """The whole panel for one scene, plus the provenance the panel needs recorded.
 
     Computed over the scene's **concatenated** frames, not over its first shot.
@@ -374,6 +402,9 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
     existing corpus are unchanged; a multi-shot scene is the reason this is not
     ``_shot_metrics``, because the delivered mp4 it is compared against covers
     every shot.
+
+    ``lossless_scratch_root`` is keyword-only and forwarded to
+    :func:`_lossless_scratch_dir` unchanged — see an#143.
     """
     import numpy as np
 
@@ -454,9 +485,9 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
     # runner's older build (see the module docstring), which is exactly why the
     # metrics no longer depend on it.
     with _timeline_frames_dir(capture) as frames_dir:
-        qp0_mp4 = frames_dir.parent / "_bench_qp0.mp4"
-        lossless_reference(frames_dir, capture.fps, qp0_mp4, delivered=capture.mp4)
-        try:
+        with _lossless_scratch_dir(root=lossless_scratch_root) as scratch_dir:
+            qp0_mp4 = scratch_dir / "lossless_reference.mp4"
+            lossless_reference(frames_dir, capture.fps, qp0_mp4, delivered=capture.mp4)
             ref_yuv = imageio.decoded_yuv(qp0_mp4, height=h, width=w)
             ref_rgb = imageio.decoded_rgb(qp0_mp4, height=h, width=w)
             distance = conversion_distance(
@@ -479,8 +510,6 @@ def _scene_metrics(capture: SceneCapture) -> tuple[dict[str, Value], dict[str, A
             src_yuv = imageio.source_yuv(frames_dir, height=h, width=w, frames=n_source)
             dec_yuv = imageio.decoded_yuv(capture.mp4, height=h, width=w)
             dec_rgb = imageio.decoded_rgb(capture.mp4, height=h, width=w)
-        finally:
-            qp0_mp4.unlink(missing_ok=True)
 
     n = min(len(src_yuv), len(dec_yuv), len(dec_rgb), len(src_rgb), len(ref_yuv))
     if n != len(src_rgb) or n != len(dec_rgb):
@@ -921,6 +950,7 @@ def run_bench(
     write: bool = True,
     bless: str = "",
     golden_root: Path | None = None,
+    lossless_scratch_root: Path | None = None,
 ) -> dict:
     """Render the corpus, compute the panel, and (by default) write the row.
 
@@ -928,6 +958,11 @@ def run_bench(
     turns the run into a bless. One argument rather than a ``--bless`` flag plus
     a ``--reason`` string, so "blessed with no recorded reason" — the failure
     this rule exists to prevent — is not expressible.
+
+    ``lossless_scratch_root`` is forwarded to :func:`_lossless_scratch_dir` for
+    every scene (an#143) — a caller may point it at a shared parent to prove
+    that two concurrent lossless-leg encodes still get distinct scratch
+    directories under it; production code has no reason to pass it.
 
     ``golden_root`` redirects where goldens are read and written, and it exists
     because without it a test of the bless path has no choice but to overwrite
@@ -969,7 +1004,9 @@ def run_bench(
             if sei is None:
                 sei = environment.x264_sei(capture.mp4)
 
-            values, scene_prov = _scene_metrics(capture)
+            values, scene_prov = _scene_metrics(
+                capture, lossless_scratch_root=lossless_scratch_root
+            )
             scene_contract = contract.scenes_contract_sha256(
                 [s.scene_json for s in capture.shots]
             )
