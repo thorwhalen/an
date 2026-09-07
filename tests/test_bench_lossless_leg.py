@@ -462,10 +462,10 @@ def test_a_delivery_in_an_unmeasured_format_is_refused_by_the_bench_not_the_rend
 
     Without it the refusal still happens, one layer down and as the wrong type:
     `lossless_encode_command` raises `CutoutRenderError` — a *render* error from
-    a bench path — and `lossless_reference` sits outside `_scene_metrics`'s
-    `try/finally`, so it aborts the run instead of being recorded. Unreachable
-    through `an`'s own encoder, which pins one of two formats; reachable the
-    moment the probe reads a file `an` did not write.
+    a bench path — and nothing in `_scene_metrics` catches it, so it aborts the
+    run instead of being recorded. Unreachable through `an`'s own encoder,
+    which pins one of two formats; reachable the moment the probe reads a file
+    `an` did not write.
     """
     import subprocess
 
@@ -553,14 +553,17 @@ def test_lossless_scratch_dir_is_unique_per_call_even_under_a_shared_root(tmp_pa
 
 @pytest.mark.ffmpeg
 def test_two_concurrent_lossless_leg_encodes_do_not_collide(tmp_path):
-    """Reproduces the reported shape of the collision and proves it is closed.
+    """Two lossless-leg encodes racing on a shared parent both succeed.
 
-    Each thread builds its own frames and writes its lossless reference through
-    `_lossless_scratch_dir(root=shared)` — the same shared parent two
-    concurrent bench runs (or two pytest-xdist workers) would use — and a
-    `Barrier` forces both threads to reach the encode at the same moment, which
-    is exactly the window in which the fixed-name design lost the race. Both
-    must succeed.
+    Not a reproduction of the reported failure — each thread gets its own
+    `tempfile.mkdtemp` leaf under `shared_root`, so there is no shared name
+    left to race on, which is the whole point of the fix. What this proves is
+    that the fixed encode really does hold up under concurrent pressure on a
+    shared parent directory (the scenario the issue names: two bench runs, or
+    two pytest-xdist workers), with a `Barrier` forcing both threads to reach
+    the encode at the same instant. The regression claim itself — that the
+    fixed filename is gone — is `test_scene_metrics_no_longer_names_the_fixed_
+    reference_file` above.
     """
     import threading
 

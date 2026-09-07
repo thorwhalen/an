@@ -223,10 +223,10 @@ def delivered_pix_fmt(mp4: Path) -> str:
     if fmt not in SUPPORTED_PIX_FMTS:
         # Refused HERE rather than downstream: `lossless_encode_command` would
         # raise `CutoutRenderError` for it, a *render* error from a bench path,
-        # and `lossless_reference` sits outside `_scene_metrics`'s try/finally
-        # so it would abort the run instead of being recorded. Unreachable
-        # through `an`'s own encoder, which pins one of two formats — but the
-        # probe reads a FILE, and a file can be anything.
+        # and nothing in `_scene_metrics` catches it — the run aborts instead
+        # of being recorded. Unreachable through `an`'s own encoder, which
+        # pins one of two formats — but the probe reads a FILE, and a file can
+        # be anything.
         raise BenchDecodeError(
             f"{mp4} is encoded in {fmt!r}, which is not one of "
             f"{SUPPORTED_PIX_FMTS}. The lossless leg has to be encodable in the "
