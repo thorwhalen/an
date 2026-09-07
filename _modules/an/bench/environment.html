@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.environment &mdash; an 0.1.78 documentation</title>
+  <title>an.bench.environment &mdash; an 0.1.79 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
+      <script src="../../../_static/documentation_options.js?v=bcc08eff"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -228,6 +228,28 @@
 <span class="c1">#: exactly why it is usable as the comparability key.</span>
 <span class="n">_X264_SEI_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">rb</span><span class="s2">"core\s+(\d+)\s+r(\d+)\s+([0-9a-f]+)"</span><span class="p">)</span>
 
+<span class="c1">#: Suffixes `runtime_sha256` hashes. Deliberately narrow: `_stage_job`'s</span>
+<span class="c1">#: `shutil.copytree` is a bare copy that DOES deliver everything under the</span>
+<span class="c1">#: runtime dir into the staged tree, so "what gets staged" cannot be the</span>
+<span class="c1">#: reason to exclude anything — the real reason is "what the page loads":</span>
+<span class="c1">#: `index.html`/`preview.html` pull in `.js` (including `vendor/`), `.css` and</span>
+<span class="c1">#: `.json`, and nothing else under the tree is read by the browser (an#141).</span>
+<span class="c1">#: Package metadata (`__init__.py`), docs (`README.md`), vendor licence text</span>
+<span class="c1">#: can change — a stray `.DS_Store` included — without the page the renderer</span>
+<span class="c1">#: loads changing at all, and hashing them anyway made the digest answer "did</span>
+<span class="c1">#: the runtime change" wrong.</span>
+<span class="n">RUNTIME_DIGEST_SUFFIXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">".js"</span><span class="p">,</span> <span class="s2">".html"</span><span class="p">,</span> <span class="s2">".css"</span><span class="p">,</span> <span class="s2">".json"</span><span class="p">)</span>
+
+<span class="c1">#: Suffixes under the runtime dir that are known to be non-runtime — excluded</span>
+<span class="c1">#: from the digest on purpose, not by omission. ``""`` covers extension-less</span>
+<span class="c1">#: dotfiles (`.DS_Store`, the one this issue was filed over); `.pyc` covers a</span>
+<span class="c1">#: stray `__pycache__/*.pyc` from `__init__.py` (the issue's other named</span>
+<span class="c1">#: example — reproducible on this very tree). `test_bench_environment.py`</span>
+<span class="c1">#: fails on any suffix that lands in neither this set nor</span>
+<span class="c1">#: `RUNTIME_DIGEST_SUFFIXES`, so a future runtime asset (an `.svg`, `.woff`,</span>
+<span class="c1">#: `.wasm`, `.mjs`) cannot silently fall outside what the digest sees (an#141).</span>
+<span class="n">RUNTIME_IGNORED_SUFFIXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">".py"</span><span class="p">,</span> <span class="s2">".pyc"</span><span class="p">,</span> <span class="s2">".md"</span><span class="p">,</span> <span class="s2">".txt"</span><span class="p">)</span>
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">tool_version</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">PackageNotFoundError</span><span class="p">,</span> <span class="n">version</span>
@@ -325,6 +347,10 @@
 <span class="sd">    fingerprint in the row — before this, the `disabled_aa` lever had no way to</span>
 <span class="sd">    prove it applied, and `assert not report["mutation_may_not_have_applied"]`</span>
 <span class="sd">    asserted nothing for it (an#41 review).</span>
+
+<span class="sd">    Only files whose suffix is in `RUNTIME_DIGEST_SUFFIXES` are hashed, so a</span>
+<span class="sd">    file that is not staged as a runtime asset — a stray `.DS_Store`, a</span>
+<span class="sd">    `__pycache__` entry, package metadata — cannot move the digest (an#141).</span>
 <span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 
@@ -332,7 +358,12 @@
 
     <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
     <span class="n">root</span> <span class="o">=</span> <span class="n">runtime_dir</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*"</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()):</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">p</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="n">RUNTIME_DIGEST_SUFFIXES</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
         <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
         <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span>
     <span class="k">return</span> <span class="n">digest</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>

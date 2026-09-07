@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.environment &mdash; an 0.1.78 documentation</title>
+  <title>an.bench.environment &mdash; an 0.1.79 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
+      <script src="../../../_static/documentation_options.js?v=bcc08eff"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -88,6 +88,8 @@
 <li class="toctree-l1"><a class="reference internal" href="contract.html">an.bench.contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="corpus.html">an.bench.corpus</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.bench.environment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.RUNTIME_DIGEST_SUFFIXES"><code class="docutils literal notranslate"><span class="pre">RUNTIME_DIGEST_SUFFIXES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.RUNTIME_IGNORED_SUFFIXES"><code class="docutils literal notranslate"><span class="pre">RUNTIME_IGNORED_SUFFIXES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.environment_record"><code class="docutils literal notranslate"><span class="pre">environment_record()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.ffmpeg_identity"><code class="docutils literal notranslate"><span class="pre">ffmpeg_identity()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.bench.environment.probe_browser"><code class="docutils literal notranslate"><span class="pre">probe_browser()</span></code></a></li>
@@ -219,6 +221,39 @@ of samples); a different x264 build moves it by two orders of magnitude (up to
 must <strong>refuse</strong> rows whose <code class="docutils literal notranslate"><span class="pre">x264_sei</span></code> or <code class="docutils literal notranslate"><span class="pre">isa</span></code> differ, in the same way it
 refuses rows with a different <code class="docutils literal notranslate"><span class="pre">scene_contract_sha256</span></code> — the number is
 uninterpretable, not good or bad.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.environment.RUNTIME_DIGEST_SUFFIXES">
+<span class="sig-prename descclassname"><span class="pre">an.bench.environment.</span></span><span class="sig-name descname"><span class="pre">RUNTIME_DIGEST_SUFFIXES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('.js',</span> <span class="pre">'.html',</span> <span class="pre">'.css',</span> <span class="pre">'.json')</span></span><a class="headerlink" href="#an.bench.environment.RUNTIME_DIGEST_SUFFIXES" title="Link to this definition"></a></dt>
+<dd><p><cite>_stage_job</cite>’s
+<cite>shutil.copytree</cite> is a bare copy that DOES deliver everything under the
+runtime dir into the staged tree, so “what gets staged” cannot be the
+reason to exclude anything — the real reason is “what the page loads”:
+<cite>index.html</cite>/<cite>preview.html</cite> pull in <cite>.js</cite> (including <cite>vendor/</cite>), <cite>.css</cite> and
+<cite>.json</cite>, and nothing else under the tree is read by the browser (an#141).
+Package metadata (<cite>__init__.py</cite>), docs (<cite>README.md</cite>), vendor licence text
+can change — a stray <cite>.DS_Store</cite> included — without the page the renderer
+loads changing at all, and hashing them anyway made the digest answer “did
+the runtime change” wrong.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Suffixes <cite>runtime_sha256</cite> hashes. Deliberately narrow</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.bench.environment.RUNTIME_IGNORED_SUFFIXES">
+<span class="sig-prename descclassname"><span class="pre">an.bench.environment.</span></span><span class="sig-name descname"><span class="pre">RUNTIME_IGNORED_SUFFIXES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('',</span> <span class="pre">'.py',</span> <span class="pre">'.pyc',</span> <span class="pre">'.md',</span> <span class="pre">'.txt')</span></span><a class="headerlink" href="#an.bench.environment.RUNTIME_IGNORED_SUFFIXES" title="Link to this definition"></a></dt>
+<dd><p>Suffixes under the runtime dir that are known to be non-runtime — excluded
+from the digest on purpose, not by omission. <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> covers extension-less
+dotfiles (<cite>.DS_Store</cite>, the one this issue was filed over); <cite>.pyc</cite> covers a
+stray <cite>__pycache__/*.pyc</cite> from <cite>__init__.py</cite> (the issue’s other named
+example — reproducible on this very tree). <cite>test_bench_environment.py</cite>
+fails on any suffix that lands in neither this set nor
+<cite>RUNTIME_DIGEST_SUFFIXES</cite>, so a future runtime asset (an <cite>.svg</cite>, <cite>.woff</cite>,
+<cite>.wasm</cite>, <cite>.mjs</cite>) cannot silently fall outside what the digest sees (an#141).</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="an.bench.environment.environment_record">
 <span class="sig-prename descclassname"><span class="pre">an.bench.environment.</span></span><span class="sig-name descname"><span class="pre">environment_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pix_fmt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x264_sei</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">browser</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/an/bench/environment.html#environment_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#an.bench.environment.environment_record" title="Link to this definition"></a></dt>
@@ -262,6 +297,9 @@ exists to compare. What it buys is that a render-side mutation leaves a
 fingerprint in the row — before this, the <cite>disabled_aa</cite> lever had no way to
 prove it applied, and <cite>assert not report[“mutation_may_not_have_applied”]</cite>
 asserted nothing for it (an#41 review).</p>
+<p>Only files whose suffix is in <cite>RUNTIME_DIGEST_SUFFIXES</cite> are hashed, so a
+file that is not staged as a runtime asset — a stray <cite>.DS_Store</cite>, a
+<cite>__pycache__</cite> entry, package metadata — cannot move the digest (an#141).</p>
 </dd></dl>
 
 <dl class="py function">

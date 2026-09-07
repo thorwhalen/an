@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.mutations &mdash; an 0.1.78 documentation</title>
+  <title>an.bench.mutations &mdash; an 0.1.79 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=18b80ae6"></script>
+      <script src="../../../_static/documentation_options.js?v=bcc08eff"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -404,19 +404,24 @@
 <span class="sd">    reason `_verify_disabled_aa` gives: a legitimate change to `runtime.js` must</span>
 <span class="sd">    not turn this into a re-baselining chore. Mirrors</span>
 <span class="sd">    `an.bench.environment.runtime_sha256` exactly — relative path, then bytes, in</span>
-<span class="sd">    sorted order — with `runtime.js`'s bytes substituted and `STAGING_IGNORE`</span>
-<span class="sd">    excluded on both sides.</span>
+<span class="sd">    sorted order, filtered to `RUNTIME_DIGEST_SUFFIXES` (an#141: hashing</span>
+<span class="sd">    `README.md`/`__init__.py`/vendor licence text made this mirror diverge from</span>
+<span class="sd">    the real digest the moment that filter was added) — with `runtime.js`'s</span>
+<span class="sd">    bytes substituted and `STAGING_IGNORE` excluded on both sides.</span>
 <span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.runtime_files</span><span class="w"> </span><span class="kn">import</span> <span class="n">runtime_dir</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">an.bench.environment</span><span class="w"> </span><span class="kn">import</span> <span class="n">RUNTIME_DIGEST_SUFFIXES</span>
 
     <span class="n">root</span> <span class="o">=</span> <span class="n">runtime_dir</span><span class="p">()</span>
     <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
         <span class="n">p</span>
         <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">STAGING_IGNORE</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+        <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="n">RUNTIME_DIGEST_SUFFIXES</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">STAGING_IGNORE</span><span class="p">)</span>
     <span class="p">):</span>
         <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">root</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
