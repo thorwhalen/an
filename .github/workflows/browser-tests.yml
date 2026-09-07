@@ -17,6 +17,14 @@
 # impossible; see `tests/conftest.py`'s browser-gate section and
 # `tests/test_browser_gate.py`.
 #
+# THIS LANE SELECTS `browser or ffmpeg` (an#145), not just `browser`: tests marked
+# `ffmpeg` but not `browser` need the ffmpeg binary this job installs, and a
+# `-m browser` selection silently deselected them — collected, gated, but never
+# run in any lane, since the default CI leg skips them (no ffmpeg on the runner)
+# and this one never asked for them. `tests/test_browser_gate.py` now guards that
+# every gated marker is selected by some lane, so that class of drift fails loudly
+# instead of quietly again.
+#
 # HOW TO ASK FOR IT ON A PR — put the `run-browser-tests` label on the PR.
 #
 # That is the whole interface, and it is open to agents as well as humans:
@@ -121,11 +129,14 @@ jobs:
       - name: Non-rendering tests (baseline timing)
         run: |
           source .venv/bin/activate
-          python -m pytest -q -p no:cacheprovider -m "not browser"
+          python -m pytest -q -p no:cacheprovider -m "not browser and not ffmpeg"
 
+      # `browser or ffmpeg`, not just `browser` — a test marked `ffmpeg` but not
+      # `browser` needs only the binary this job installs above, and belongs here
+      # for the same reason the browser-marked tests do: no other lane opts in.
       - name: Rendering tests
         env:
           AN_BROWSER_TESTS: "1"
         run: |
           source .venv/bin/activate
-          python -m pytest -q -p no:cacheprovider -m browser --durations=30
+          python -m pytest -q -p no:cacheprovider -m "browser or ffmpeg" --durations=30

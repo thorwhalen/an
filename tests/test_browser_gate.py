@@ -48,12 +48,15 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
+from _pytest.mark.expression import Expression
 
 from . import conftest as _gate
 from .conftest import BROWSER_ENV_VAR, requirement_verdict
 
 TESTS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TESTS_DIR.parent
+WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
 #: Calls that must never run while a test module is being imported, and why.
 #: This mapping is the single statement of the rule — the scanners iterate it
@@ -616,6 +619,92 @@ def test_the_browser_lane_is_not_empty(tmp_path):
     assert len(ids) >= 20, f"only {len(ids)} browser-marked tests: {sorted(ids)}"
     assert len(modules) >= 10, (
         f"only {len(modules)} modules in the lane: {sorted(modules)}"
+    )
+
+
+# ---------------------------------------------------------------- lane selection
+
+
+def _pytest_marker_exprs(run_script: str) -> list[str]:
+    """Every ``-m "<expr>"`` marker selection passed to a real ``pytest`` call.
+
+    ``python -m pytest ...`` has its OWN ``-m`` (the module flag, with argument
+    ``pytest``), so the scan looks only at the text *after* the ``pytest`` token
+    on each line — never at the whole line — or it would report ``pytest``
+    itself as a marker expression.
+    """
+    exprs = []
+    for line in run_script.splitlines():
+        idx = line.find("pytest")
+        if idx == -1:
+            continue
+        rest = line[idx + len("pytest") :]
+        for m in re.finditer(r"-m\s+(\"([^\"]+)\"|'([^']+)'|(\S+))", rest):
+            exprs.append(m.group(2) or m.group(3) or m.group(4))
+    return exprs
+
+
+def _opt_in_marker_exprs() -> list[str]:
+    """Marker expressions from every workflow step that opts in to the gate.
+
+    A step "opts in" when its ``env`` sets :data:`BROWSER_ENV_VAR` (or whatever
+    ``tests/conftest.py`` names the gate's opt-in variable) to a truthy value —
+    that is the ONLY way a gated test can ever execute (see
+    ``requirement_verdict``: CI never runs a gated test without it). So this is
+    where "which gated markers can this CI ever actually run" has to be checked;
+    the unfiltered main CI leg selects everything but opts in to nothing, so it
+    proves nothing about which gated tests run.
+    """
+    exprs = []
+    for path in sorted(WORKFLOWS_DIR.glob("*.yml")):
+        doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+        for job in (doc.get("jobs") or {}).values():
+            for step in job.get("steps") or []:
+                env = step.get("env") or {}
+                raw = env.get(BROWSER_ENV_VAR)
+                if raw is None or not _gate._env_flag(
+                    {BROWSER_ENV_VAR: str(raw)}, BROWSER_ENV_VAR
+                ):
+                    continue
+                exprs.extend(_pytest_marker_exprs(step.get("run") or ""))
+    return exprs
+
+
+def test_every_gated_marker_is_selected_by_some_opted_in_lane():
+    """A gated marker with no lane that ever selects it is this bug, generically.
+
+    an#145: ``tests`` marked ``ffmpeg`` but not ``browser`` were collected,
+    correctly gated, and then never selected by any CI invocation — the default
+    lane never opts in (no ffmpeg on the runner), and the on-demand lane's
+    ``-m browser`` selected only the browser marker. Both halves were individually
+    correct; the drift was in the third place, the ``-m`` string, which nothing
+    checked against the set of markers ``tests/conftest.py`` actually gates.
+
+    This asserts the INVARIANT rather than re-fixing the instance: every marker
+    name in :func:`tests.conftest._gate_verdicts` must be selected by at least
+    one opted-in workflow step's ``-m`` expression, evaluated with pytest's own
+    marker-expression parser rather than a substring check (``"ffmpeg"`` is a
+    substring of an expression like ``"not ffmpeg"``, which selects the opposite
+    set of tests).
+    """
+    gated_markers = sorted(_gate._gate_verdicts({}))
+    exprs = _opt_in_marker_exprs()
+    assert exprs, (
+        "no opted-in workflow step selects anything with `-m` — the check below "
+        "would vacuously pass for every marker"
+    )
+    compiled = [Expression.compile(e) for e in exprs]
+    unselected = [
+        marker
+        for marker in gated_markers
+        if not any(
+            expr.evaluate(lambda n, marker=marker: n == marker) for expr in compiled
+        )
+    ]
+    assert not unselected, (
+        f"marker(s) {unselected} are gated in tests/conftest.py but no opted-in "
+        f"workflow step's `-m` selection would ever run a test carrying only "
+        f"that marker — found expressions: {exprs}"
     )
 
 
