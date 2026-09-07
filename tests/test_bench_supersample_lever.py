@@ -117,6 +117,7 @@ def test_the_supersample_fingerprint_refuses_the_aa_levers_runtime():
     """
     from an.bench.environment import runtime_sha256
     from an.bench.mutations import (
+        LEVERS,
         SUPERSAMPLE_K,
         _disable_aa_patch,
         _expected_runtime_sha256,
@@ -129,6 +130,19 @@ def test_the_supersample_fingerprint_refuses_the_aa_levers_runtime():
     ss = _expected_runtime_sha256(lambda src: _supersample_patch(src, k=SUPERSAMPLE_K))
     assert len({shipped, aa, ss}) == 3, (
         "the three digests must be pairwise distinct, or this test asserts nothing"
+    )
+
+    # `ss` above comes from the mirror, `_expected_runtime_sha256`. Cross-check
+    # it against the REAL digest of a REALLY staged runtime — the lever applied
+    # for real, then hashed by the actual `runtime_sha256` — so a mirror that
+    # silently drifts from the digest it mirrors (an#141: the digest gained a
+    # suffix filter the mirror did not) is caught here rather than only by the
+    # two functions agreeing with themselves.
+    with LEVERS["supersample"].apply():
+        staged_for_real = runtime_sha256()
+    assert staged_for_real == ss, (
+        "`_expected_runtime_sha256` has drifted from `runtime_sha256` — update "
+        "the mirror to match"
     )
 
     def row(digest):

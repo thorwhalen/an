@@ -208,19 +208,24 @@ def _expected_runtime_sha256(patch: Callable[[str], str]) -> str:
     reason `_verify_disabled_aa` gives: a legitimate change to `runtime.js` must
     not turn this into a re-baselining chore. Mirrors
     `an.bench.environment.runtime_sha256` exactly — relative path, then bytes, in
-    sorted order — with `runtime.js`'s bytes substituted and `STAGING_IGNORE`
-    excluded on both sides.
+    sorted order, filtered to `RUNTIME_DIGEST_SUFFIXES` (an#141: hashing
+    `README.md`/`__init__.py`/vendor licence text made this mirror diverge from
+    the real digest the moment that filter was added) — with `runtime.js`'s
+    bytes substituted and `STAGING_IGNORE` excluded on both sides.
     """
     import hashlib
 
     from an.adapters.cutout.runtime_files import runtime_dir
+    from an.bench.environment import RUNTIME_DIGEST_SUFFIXES
 
     root = runtime_dir()
     digest = hashlib.sha256()
     for path in sorted(
         p
         for p in root.rglob("*")
-        if p.is_file() and not set(p.parts) & set(STAGING_IGNORE)
+        if p.is_file()
+        and p.suffix in RUNTIME_DIGEST_SUFFIXES
+        and not set(p.parts) & set(STAGING_IGNORE)
     ):
         digest.update(str(path.relative_to(root)).encode("utf-8"))
         body = path.read_bytes()
