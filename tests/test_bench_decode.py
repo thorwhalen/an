@@ -28,9 +28,7 @@ Needs ffmpeg, not a browser: the frames are synthesised here.
 
 from __future__ import annotations
 
-import functools
 import struct
-import tempfile
 import zlib
 from pathlib import Path
 
@@ -39,8 +37,6 @@ import pytest
 
 from an.bench import imageio
 from an.bench.run import conversion_distance, lossless_reference
-
-from .conftest import ffmpeg_available
 
 pytestmark = [pytest.mark.ffmpeg]
 
@@ -128,86 +124,24 @@ def test_the_conversion_distance_is_recorded_and_never_gated(frames_dir, tmp_pat
     )
 
 
-@functools.lru_cache(maxsize=1)
-def _probe_frames_dir() -> Path:
-    """A tiny synthetic frame set for the collection-time probes below.
+def test_the_pin_measurably_changes_the_source_conversion(frames_dir, tmp_path):
+    """The pin still earns its place: it makes a measurable difference.
 
-    Not the ``frames_dir`` fixture: that needs a live pytest run to hand out
-    ``tmp_path_factory``, and these probes must run at IMPORT time — the two
-    ``xfail`` decorators below evaluate their ``condition`` while this module
-    is being collected. Kept in a bare ``mkdtemp`` rather than a context
-    manager because it must outlive the import statement that reads it.
+    an#147: the first two cuts of this test asserted a *direction* — that the
+    pinned (range- and matrix-explicit) conversion sits closer to what the
+    encoder actually received than the unpinned (ffmpeg-default) one. That
+    direction is not a universal ffmpeg fact: measured on the CI runner's apt
+    ffmpeg 6.1.1 (reproduced locally on Homebrew's keg-only ffmpeg@6, 6.1.6),
+    `-colorspace bt709` on the encode side does **not** reach the auto-inserted
+    RGB->YUV conversion, so the unpinned reading is the one that agrees with
+    the encoder there (pinned=6.8333, unpinned=0.0) — the exact **opposite** of
+    ffmpeg 9.0.1, where the flag does reach that conversion (pinned=0.0,
+    unpinned=6.8333). Both builds agree on the property that survives: the pin
+    is never a no-op, by a wide, identical margin (6.8333) either way. That is
+    also the pin's real justification — see `imageio.SOURCE_SCALE_FILTER`'s
+    comment: without it, the PNG leg's conversion is whatever ffmpeg's
+    build-dependent default happens to be, not a pinned, reproducible one.
     """
-    d = Path(tempfile.mkdtemp(prefix="an-bench-decode-probe-"))
-    for i in range(N):
-        a = np.full((H, W, 3), 255, np.uint8)
-        a[8:40, 8 + i : 40 + i] = (255, 0, 0)
-        a[8:40, 6 + i : 8 + i] = (0, 0, 0)
-        a[16:24, 44:60] = (0, 200, 60)
-        _write_png(d / f"frame_{i:06d}.png", a)
-    return d
-
-
-@functools.lru_cache(maxsize=1)
-def _pin_measurably_matters() -> tuple[bool, str]:
-    """Measure, don't guess, whether THIS ffmpeg makes the range/matrix pin matter.
-
-    an#147: the first cut of this xfail guessed from a version number
-    ("apt ffmpeg 6.1"), which is only the visible symptom on the one runner
-    that surfaced it — Homebrew ffmpeg passed the same assertion outright, so a
-    version-keyed guess would have marked a PASSING test as expected-to-fail
-    everywhere else. This runs the exact comparison
-    ``test_the_unpinned_conversion_is_measurably_further_from_the_encoder``
-    makes, once, at collection time, and reports the property itself.
-
-    Never calls ffmpeg when it is not on PATH — that would abort this
-    module's import under a stripped PATH, exactly what
-    ``test_collection_does_not_depend_on_the_environment`` exists to catch.
-    """
-    if not ffmpeg_available():
-        return True, "ffmpeg not on PATH; probe not run"
-    frames_dir = _probe_frames_dir()
-    with tempfile.TemporaryDirectory(prefix="an-bench-decode-probe-out-") as out:
-        mp4 = lossless_reference(
-            frames_dir, FPS, Path(out) / "lossless.mp4", delivered=None
-        )
-        enc_in = imageio.decoded_yuv(mp4, height=H, width=W)
-        pinned = imageio.source_yuv(frames_dir, height=H, width=W, frames=N)
-        unpinned_cmd = [
-            c
-            for c in imageio.source_yuv_command(frames_dir)
-            if c not in ("-vf", imageio.SOURCE_SCALE_FILTER)
-        ]
-        unpinned = np.frombuffer(imageio.run_raw(unpinned_cmd), np.uint8).reshape(
-            -1, 3, H, W
-        )
-
-    def dist(a):
-        n = min(len(a), len(enc_in))
-        return float(
-            np.abs(enc_in[:n, 0].astype(np.int16) - a[:n, 0].astype(np.int16)).mean()
-        )
-
-    d_pinned, d_unpinned = dist(pinned), dist(unpinned)
-    return (
-        d_unpinned > d_pinned + 1.0,
-        f"pinned={d_pinned:.4f} unpinned={d_unpinned:.4f}",
-    )
-
-
-@pytest.mark.xfail(
-    condition=not _pin_measurably_matters()[0],
-    strict=True,
-    reason=(
-        "an#147: probed pinned-vs-unpinned decode distance "
-        f"({_pin_measurably_matters()[1]}) — the pin does not measurably "
-        "matter on this ffmpeg build"
-    ),
-)
-def test_the_unpinned_conversion_is_measurably_further_from_the_encoder(
-    frames_dir, tmp_path
-):
-    """The pin still earns its place: without it the distance is much larger."""
     mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4", delivered=None)
     enc_in = imageio.decoded_yuv(mp4, height=H, width=W)
 
@@ -227,64 +161,30 @@ def test_the_unpinned_conversion_is_measurably_further_from_the_encoder(
             np.abs(enc_in[:n, 0].astype(np.int16) - a[:n, 0].astype(np.int16)).mean()
         )
 
-    assert dist(unpinned) > dist(pinned) + 1.0, (
-        f"pinned {dist(pinned):.4f} vs unpinned {dist(unpinned):.4f}; if these "
-        "ever converge, ffmpeg's defaults changed and the pin's justification "
-        "needs re-measuring rather than assuming"
+    d_pinned, d_unpinned = dist(pinned), dist(unpinned)
+    assert abs(d_pinned - d_unpinned) > 1.0, (
+        f"pinned {d_pinned:.4f} vs unpinned {d_unpinned:.4f}; if these ever "
+        "converge, the scale filter has stopped doing anything on this build "
+        "and the pin's justification needs re-measuring rather than assuming"
     )
 
 
-@functools.lru_cache(maxsize=1)
-def _gray_pixfmt_ignores_range_matrix() -> tuple[bool, str]:
-    """Measure, don't guess, whether `-pix_fmt gray` ignores the scale filter here.
-
-    Same reasoning as :func:`_pin_measurably_matters`: runs the exact
-    comparison ``test_the_gray_pixel_format_silently_ignores_the_range_and_matrix_options``
-    makes, once, at collection time.
-    """
-    if not ffmpeg_available():
-        return True, "ffmpeg not on PATH; probe not run"
-    frames_dir = _probe_frames_dir()
-    base = [
-        "ffmpeg",
-        "-v",
-        "error",
-        "-start_number",
-        "0",
-        "-i",
-        str(frames_dir / "frame_%06d.png"),
-        "-pix_fmt",
-        "gray",
-        "-f",
-        "rawvideo",
-        "-",
-    ]
-    scaled = base[:9] + ["-vf", imageio.SOURCE_SCALE_FILTER] + base[9:]
-    same = imageio.run_raw(base) == imageio.run_raw(scaled)
-    return (
-        same,
-        f"gray output {'matches' if same else 'differs'} with the scale filter applied",
-    )
-
-
-@pytest.mark.xfail(
-    condition=not _gray_pixfmt_ignores_range_matrix()[0],
-    strict=True,
-    reason=(
-        "an#147: probed gray-pixfmt/scale-filter comparison "
-        f"({_gray_pixfmt_ignores_range_matrix()[1]}) — this ffmpeg build no "
-        "longer ignores the filter for `-pix_fmt gray`"
-    ),
-)
-def test_the_gray_pixel_format_silently_ignores_the_range_and_matrix_options(
+def test_the_gray_pixel_format_range_matrix_interaction_is_build_dependent(
     frames_dir,
 ):
     """Research §1.4's literal pseudocode reads the luma with `-pix_fmt gray`.
 
-    ffmpeg accepts the `scale` filter's `out_color_matrix` / `out_range` there
-    and does nothing with them — so the natural fix is a no-op that looks like
-    a fix. That is why the luma plane is read out of the pinned `yuv444p`
-    decode instead.
+    an#147: whether `-pix_fmt gray` honours the `scale` filter's
+    `out_color_matrix` / `out_range` options turns out to be a property of the
+    ffmpeg *build*, not a universal fact — measured, not assumed. ffmpeg 9.0.1
+    ignores them outright (mean/max luma diff 0.0 / 0); ffmpeg 6.1.6 (matching
+    the CI runner's apt ffmpeg 6.1.1) applies them and differs by mean 17.5 /
+    max 20 on this scene. Either way the natural "fix" of adding `-vf` to a
+    `gray` decode is not something to rely on — sometimes it does nothing,
+    sometimes it changes the output, and neither build tells you which without
+    measuring. That unreliability, not a specific direction, is why the luma
+    plane is read out of the pinned `yuv444p` decode instead, never out of
+    `-pix_fmt gray`.
     """
     base = [
         "ffmpeg",
@@ -301,9 +201,16 @@ def test_the_gray_pixel_format_silently_ignores_the_range_and_matrix_options(
         "-",
     ]
     scaled = base[:9] + ["-vf", imageio.SOURCE_SCALE_FILTER] + base[9:]
-    assert imageio.run_raw(base) == imageio.run_raw(scaled), (
-        "if these ever differ, ffmpeg has started honouring the options for "
-        "gray and the module docstring's reasoning needs revisiting"
+    plain = imageio.run_raw(base)
+    with_filter = imageio.run_raw(scaled)
+    assert len(plain) == len(with_filter) == N * H * W, (
+        "both decodes must produce exactly one gray byte per pixel per frame "
+        "regardless of whether this build honours the scale filter's options"
+    )
+    assert "gray" not in imageio.source_yuv_command(frames_dir), (
+        "the pinned luma path must never use `-pix_fmt gray` — its "
+        "interaction with the range/matrix pin is build-dependent, so nothing "
+        "in this module may rely on it"
     )
 
 
