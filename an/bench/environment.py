@@ -38,6 +38,14 @@ from typing import Any
 #: exactly why it is usable as the comparability key.
 _X264_SEI_RE = re.compile(rb"core\s+(\d+)\s+r(\d+)\s+([0-9a-f]+)")
 
+#: Suffixes `runtime_sha256` hashes. Deliberately narrow: these are the file
+#: types `_stage_job`'s `shutil.copytree` actually delivers to the page the
+#: renderer loads (an#141). Everything else under the runtime dir — package
+#: metadata (`__init__.py`), docs (`README.md`), vendor licence text — can
+#: change (a stray `.DS_Store` included) without moving what gets staged, and
+#: hashing it anyway made the digest answer "did the runtime change" wrong.
+RUNTIME_DIGEST_SUFFIXES = (".js", ".html", ".css", ".json")
+
 
 def tool_version(name: str) -> str | None:
     from importlib.metadata import PackageNotFoundError, version
@@ -124,6 +132,10 @@ def runtime_sha256() -> str:
     fingerprint in the row — before this, the `disabled_aa` lever had no way to
     prove it applied, and `assert not report["mutation_may_not_have_applied"]`
     asserted nothing for it (an#41 review).
+
+    Only files whose suffix is in `RUNTIME_DIGEST_SUFFIXES` are hashed, so a
+    file that is not staged as a runtime asset — a stray `.DS_Store`, a
+    `__pycache__` entry, package metadata — cannot move the digest (an#141).
     """
     import hashlib
 
@@ -131,7 +143,12 @@ def runtime_sha256() -> str:
 
     digest = hashlib.sha256()
     root = runtime_dir()
-    for path in sorted(p for p in root.rglob("*") if p.is_file()):
+    paths = (
+        p
+        for p in root.rglob("*")
+        if p.is_file() and p.suffix in RUNTIME_DIGEST_SUFFIXES
+    )
+    for path in sorted(paths):
         digest.update(str(path.relative_to(root)).encode("utf-8"))
         digest.update(path.read_bytes())
     return digest.hexdigest()
