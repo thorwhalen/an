@@ -38,13 +38,27 @@ from typing import Any
 #: exactly why it is usable as the comparability key.
 _X264_SEI_RE = re.compile(rb"core\s+(\d+)\s+r(\d+)\s+([0-9a-f]+)")
 
-#: Suffixes `runtime_sha256` hashes. Deliberately narrow: these are the file
-#: types `_stage_job`'s `shutil.copytree` actually delivers to the page the
-#: renderer loads (an#141). Everything else under the runtime dir — package
-#: metadata (`__init__.py`), docs (`README.md`), vendor licence text — can
-#: change (a stray `.DS_Store` included) without moving what gets staged, and
-#: hashing it anyway made the digest answer "did the runtime change" wrong.
+#: Suffixes `runtime_sha256` hashes. Deliberately narrow: `_stage_job`'s
+#: `shutil.copytree` is a bare copy that DOES deliver everything under the
+#: runtime dir into the staged tree, so "what gets staged" cannot be the
+#: reason to exclude anything — the real reason is "what the page loads":
+#: `index.html`/`preview.html` pull in `.js` (including `vendor/`), `.css` and
+#: `.json`, and nothing else under the tree is read by the browser (an#141).
+#: Package metadata (`__init__.py`), docs (`README.md`), vendor licence text
+#: can change — a stray `.DS_Store` included — without the page the renderer
+#: loads changing at all, and hashing them anyway made the digest answer "did
+#: the runtime change" wrong.
 RUNTIME_DIGEST_SUFFIXES = (".js", ".html", ".css", ".json")
+
+#: Suffixes under the runtime dir that are known to be non-runtime — excluded
+#: from the digest on purpose, not by omission. ``""`` covers extension-less
+#: dotfiles (`.DS_Store`, the one this issue was filed over); `.pyc` covers a
+#: stray `__pycache__/*.pyc` from `__init__.py` (the issue's other named
+#: example — reproducible on this very tree). `test_bench_environment.py`
+#: fails on any suffix that lands in neither this set nor
+#: `RUNTIME_DIGEST_SUFFIXES`, so a future runtime asset (an `.svg`, `.woff`,
+#: `.wasm`, `.mjs`) cannot silently fall outside what the digest sees (an#141).
+RUNTIME_IGNORED_SUFFIXES = ("", ".py", ".pyc", ".md", ".txt")
 
 
 def tool_version(name: str) -> str | None:
