@@ -551,6 +551,65 @@ def test_lossless_scratch_dir_is_unique_per_call_even_under_a_shared_root(tmp_pa
     )
 
 
+def test_two_concurrent_lossless_leg_encodes_do_not_collide_offline(
+    tmp_path, monkeypatch
+):
+    """The uniqueness property, without spending a real encode on it.
+
+    `.github/workflows/browser-tests.yml`'s "Rendering tests" step runs only
+    `-m browser`, so an `ffmpeg`-only test (this file's own convention, kept
+    below with real ffmpeg for a developer machine) never reaches it — and
+    `ffmpeg` is not on the default CI image either (an#22), so a real-encode
+    version of this test could only ever be "verified on a developer machine".
+    The property this fix rests on is `_lossless_scratch_dir` uniqueness, not
+    anything x264 does, so `imageio.run_raw` is replaced with a stand-in that
+    writes a payload naming which thread wrote it — cheap enough to run on
+    every PR, and a real collision (two threads racing on ONE fixed path, the
+    bug this closes) would still corrupt one thread's payload with the
+    other's, which is exactly what `results["a"] != results["b"]` catches.
+    """
+    import threading
+
+    from an.bench import imageio
+    from an.bench.run import _lossless_scratch_dir, lossless_reference
+
+    def fake_run_raw(cmd: list[str]) -> bytes:
+        out = Path(cmd[-1])
+        out.write_bytes(f"payload from {out.parent.name}".encode())
+        return b""
+
+    monkeypatch.setattr(imageio, "run_raw", fake_run_raw)
+
+    shared_root = tmp_path / "shared"
+    shared_root.mkdir()
+    barrier = threading.Barrier(2)
+    errors: list[BaseException] = []
+    results: dict[str, bytes] = {}
+
+    def worker(tag: str) -> None:
+        try:
+            barrier.wait(timeout=10)
+            with _lossless_scratch_dir(root=shared_root) as scratch:
+                out = scratch / "lossless_reference.mp4"
+                lossless_reference(tmp_path / f"frames-{tag}", 24, out, delivered=None)
+                results[tag] = out.read_bytes()
+        except BaseException as e:  # noqa: BLE001 - reported from the main thread
+            errors.append(e)
+
+    threads = [threading.Thread(target=worker, args=(tag,)) for tag in ("a", "b")]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert not errors, f"concurrent lossless-leg encodes collided: {errors}"
+    assert results.keys() == {"a", "b"}
+    assert results["a"] != results["b"], (
+        "both threads' encodes landed on the same file — the scratch "
+        "directories are not actually unique"
+    )
+
+
 @pytest.mark.ffmpeg
 def test_two_concurrent_lossless_leg_encodes_do_not_collide(tmp_path):
     """Two lossless-leg encodes racing on a shared parent both succeed.
