@@ -28,7 +28,9 @@ Needs ffmpeg, not a browser: the frames are synthesised here.
 
 from __future__ import annotations
 
+import functools
 import struct
+import tempfile
 import zlib
 from pathlib import Path
 
@@ -37,6 +39,8 @@ import pytest
 
 from an.bench import imageio
 from an.bench.run import conversion_distance, lossless_reference
+
+from .conftest import ffmpeg_available
 
 pytestmark = [pytest.mark.ffmpeg]
 
@@ -124,6 +128,82 @@ def test_the_conversion_distance_is_recorded_and_never_gated(frames_dir, tmp_pat
     )
 
 
+@functools.lru_cache(maxsize=1)
+def _probe_frames_dir() -> Path:
+    """A tiny synthetic frame set for the collection-time probes below.
+
+    Not the ``frames_dir`` fixture: that needs a live pytest run to hand out
+    ``tmp_path_factory``, and these probes must run at IMPORT time — the two
+    ``xfail`` decorators below evaluate their ``condition`` while this module
+    is being collected. Kept in a bare ``mkdtemp`` rather than a context
+    manager because it must outlive the import statement that reads it.
+    """
+    d = Path(tempfile.mkdtemp(prefix="an-bench-decode-probe-"))
+    for i in range(N):
+        a = np.full((H, W, 3), 255, np.uint8)
+        a[8:40, 8 + i : 40 + i] = (255, 0, 0)
+        a[8:40, 6 + i : 8 + i] = (0, 0, 0)
+        a[16:24, 44:60] = (0, 200, 60)
+        _write_png(d / f"frame_{i:06d}.png", a)
+    return d
+
+
+@functools.lru_cache(maxsize=1)
+def _pin_measurably_matters() -> tuple[bool, str]:
+    """Measure, don't guess, whether THIS ffmpeg makes the range/matrix pin matter.
+
+    an#147: the first cut of this xfail guessed from a version number
+    ("apt ffmpeg 6.1"), which is only the visible symptom on the one runner
+    that surfaced it — Homebrew ffmpeg passed the same assertion outright, so a
+    version-keyed guess would have marked a PASSING test as expected-to-fail
+    everywhere else. This runs the exact comparison
+    ``test_the_unpinned_conversion_is_measurably_further_from_the_encoder``
+    makes, once, at collection time, and reports the property itself.
+
+    Never calls ffmpeg when it is not on PATH — that would abort this
+    module's import under a stripped PATH, exactly what
+    ``test_collection_does_not_depend_on_the_environment`` exists to catch.
+    """
+    if not ffmpeg_available():
+        return True, "ffmpeg not on PATH; probe not run"
+    frames_dir = _probe_frames_dir()
+    with tempfile.TemporaryDirectory(prefix="an-bench-decode-probe-out-") as out:
+        mp4 = lossless_reference(
+            frames_dir, FPS, Path(out) / "lossless.mp4", delivered=None
+        )
+        enc_in = imageio.decoded_yuv(mp4, height=H, width=W)
+        pinned = imageio.source_yuv(frames_dir, height=H, width=W, frames=N)
+        unpinned_cmd = [
+            c
+            for c in imageio.source_yuv_command(frames_dir)
+            if c not in ("-vf", imageio.SOURCE_SCALE_FILTER)
+        ]
+        unpinned = np.frombuffer(imageio.run_raw(unpinned_cmd), np.uint8).reshape(
+            -1, 3, H, W
+        )
+
+    def dist(a):
+        n = min(len(a), len(enc_in))
+        return float(
+            np.abs(enc_in[:n, 0].astype(np.int16) - a[:n, 0].astype(np.int16)).mean()
+        )
+
+    d_pinned, d_unpinned = dist(pinned), dist(unpinned)
+    return (
+        d_unpinned > d_pinned + 1.0,
+        f"pinned={d_pinned:.4f} unpinned={d_unpinned:.4f}",
+    )
+
+
+@pytest.mark.xfail(
+    condition=not _pin_measurably_matters()[0],
+    strict=True,
+    reason=(
+        "an#147: probed pinned-vs-unpinned decode distance "
+        f"({_pin_measurably_matters()[1]}) — the pin does not measurably "
+        "matter on this ffmpeg build"
+    ),
+)
 def test_the_unpinned_conversion_is_measurably_further_from_the_encoder(
     frames_dir, tmp_path
 ):
@@ -154,6 +234,48 @@ def test_the_unpinned_conversion_is_measurably_further_from_the_encoder(
     )
 
 
+@functools.lru_cache(maxsize=1)
+def _gray_pixfmt_ignores_range_matrix() -> tuple[bool, str]:
+    """Measure, don't guess, whether `-pix_fmt gray` ignores the scale filter here.
+
+    Same reasoning as :func:`_pin_measurably_matters`: runs the exact
+    comparison ``test_the_gray_pixel_format_silently_ignores_the_range_and_matrix_options``
+    makes, once, at collection time.
+    """
+    if not ffmpeg_available():
+        return True, "ffmpeg not on PATH; probe not run"
+    frames_dir = _probe_frames_dir()
+    base = [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-start_number",
+        "0",
+        "-i",
+        str(frames_dir / "frame_%06d.png"),
+        "-pix_fmt",
+        "gray",
+        "-f",
+        "rawvideo",
+        "-",
+    ]
+    scaled = base[:9] + ["-vf", imageio.SOURCE_SCALE_FILTER] + base[9:]
+    same = imageio.run_raw(base) == imageio.run_raw(scaled)
+    return (
+        same,
+        f"gray output {'matches' if same else 'differs'} with the scale filter applied",
+    )
+
+
+@pytest.mark.xfail(
+    condition=not _gray_pixfmt_ignores_range_matrix()[0],
+    strict=True,
+    reason=(
+        "an#147: probed gray-pixfmt/scale-filter comparison "
+        f"({_gray_pixfmt_ignores_range_matrix()[1]}) — this ffmpeg build no "
+        "longer ignores the filter for `-pix_fmt gray`"
+    ),
+)
 def test_the_gray_pixel_format_silently_ignores_the_range_and_matrix_options(
     frames_dir,
 ):

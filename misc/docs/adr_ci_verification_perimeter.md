@@ -33,8 +33,13 @@ and in both cases the red job was sitting in the checks list the whole time.
 
 ### 1. The rendering lane is real, and it is opt-in per PR
 
-`.github/workflows/browser-tests.yml` runs the `browser`-marked tests on Linux with
-Chromium and ffmpeg installed. It triggers on:
+`.github/workflows/browser-tests.yml` runs the tests selected by `-m "browser or
+ffmpeg"` on Linux with Chromium and ffmpeg installed — not `browser` alone, because
+a test gated on ffmpeg but not marked `browser` was, for a while, collected,
+correctly skipped by the default lane and correctly gated here, and then never
+selected by this lane's narrower `-m browser` either (an#145; guarded now by
+`tests/test_browser_gate.py::test_every_gated_marker_is_selected_by_some_opted_in_lane`).
+It triggers on:
 
 - **`workflow_dispatch`** — always; and
 - **`pull_request`**, but only when the PR carries the **`run-browser-tests`** label.
