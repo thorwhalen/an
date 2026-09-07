@@ -49,7 +49,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-from _pytest.mark.expression import Expression
 
 from . import conftest as _gate
 from .conftest import BROWSER_ENV_VAR, requirement_verdict
@@ -670,6 +669,28 @@ def _opt_in_marker_exprs() -> list[str]:
     return exprs
 
 
+def _compile_mark_expr(expr: str):
+    """Compile a ``-m`` string with pytest's own marker-expression parser.
+
+    Imported here, at CALL time, not at module scope: ``_pytest.mark.expression``
+    is private API, and importing it at module scope would mean a rename in a
+    future pytest aborts the import of THIS WHOLE FILE — the exact failure class
+    ``test_collection_does_not_depend_on_the_environment`` exists to catch,
+    self-inflicted this time. A failure here surfaces as one failing test with a
+    clear reason instead of vanishing every guard in the module from collection.
+    """
+    try:
+        from _pytest.mark.expression import Expression
+    except ImportError as e:
+        pytest.fail(
+            "pytest's private marker-expression parser "
+            f"(_pytest.mark.expression.Expression) is unavailable: {e}. This "
+            "guard needs it to evaluate `-m` strings against marker names; if "
+            "pytest renamed or removed it, update this test to match."
+        )
+    return Expression.compile(expr)
+
+
 def test_every_gated_marker_is_selected_by_some_opted_in_lane():
     """A gated marker with no lane that ever selects it is this bug, generically.
 
@@ -693,7 +714,7 @@ def test_every_gated_marker_is_selected_by_some_opted_in_lane():
         "no opted-in workflow step selects anything with `-m` — the check below "
         "would vacuously pass for every marker"
     )
-    compiled = [Expression.compile(e) for e in exprs]
+    compiled = [_compile_mark_expr(e) for e in exprs]
     unselected = [
         marker
         for marker in gated_markers
