@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.imageio &mdash; an 0.1.79 documentation</title>
+  <title>an.bench.imageio &mdash; an 0.1.80 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=bcc08eff"></script>
+      <script src="../../../_static/documentation_options.js?v=4ea980d6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -430,10 +430,10 @@
     <span class="k">if</span> <span class="n">fmt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_PIX_FMTS</span><span class="p">:</span>
         <span class="c1"># Refused HERE rather than downstream: `lossless_encode_command` would</span>
         <span class="c1"># raise `CutoutRenderError` for it, a *render* error from a bench path,</span>
-        <span class="c1"># and `lossless_reference` sits outside `_scene_metrics`'s try/finally</span>
-        <span class="c1"># so it would abort the run instead of being recorded. Unreachable</span>
-        <span class="c1"># through `an`'s own encoder, which pins one of two formats — but the</span>
-        <span class="c1"># probe reads a FILE, and a file can be anything.</span>
+        <span class="c1"># and nothing in `_scene_metrics` catches it — the run aborts instead</span>
+        <span class="c1"># of being recorded. Unreachable through `an`'s own encoder, which</span>
+        <span class="c1"># pins one of two formats — but the probe reads a FILE, and a file can</span>
+        <span class="c1"># be anything.</span>
         <span class="k">raise</span> <span class="n">BenchDecodeError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mp4</span><span class="si">}</span><span class="s2"> is encoded in </span><span class="si">{</span><span class="n">fmt</span><span class="si">!r}</span><span class="s2">, which is not one of "</span>
             <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">SUPPORTED_PIX_FMTS</span><span class="si">}</span><span class="s2">. The lossless leg has to be encodable in the "</span>

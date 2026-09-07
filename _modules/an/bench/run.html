@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.run &mdash; an 0.1.79 documentation</title>
+  <title>an.bench.run &mdash; an 0.1.80 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=bcc08eff"></script>
+      <script src="../../../_static/documentation_options.js?v=4ea980d6"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -463,6 +463,32 @@
         <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">staged</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_lossless_scratch_dir</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A per-run unique directory to hold the lossless-reference mp4.</span>
+
+<span class="sd">    an#143: the reference used to be written to a FIXED name</span>
+<span class="sd">    (``_bench_qp0.mp4``) inside ``frames_dir.parent`` — a literal, not a path</span>
+<span class="sd">    the caller controls the uniqueness of. Two bench runs sharing that parent</span>
+<span class="sd">    (concurrent processes, or a leftover from a killed one) raced to write and</span>
+<span class="sd">    unlink the same file, and the loser's decode hit ffmpeg exit 254 (no such</span>
+<span class="sd">    file). ``tempfile.mkdtemp`` is the fix rather than a longer literal: it is</span>
+<span class="sd">    atomic and collision-free by construction, which a second guessed name</span>
+<span class="sd">    (a pid, a uuid pasted in by hand) is not.</span>
+
+<span class="sd">    ``root`` is keyword-only and defaults to the platform temp directory</span>
+<span class="sd">    (``tempfile.mkdtemp``'s own default); a caller may override it to point</span>
+<span class="sd">    every scratch directory at one parent — this is what lets a test put two</span>
+<span class="sd">    concurrent runs' scratch directories side by side without reintroducing</span>
+<span class="sd">    the fixed name the override exists to rule out.</span>
+<span class="sd">    """</span>
+    <span class="n">scratch</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"an-bench-lossless-"</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">root</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">scratch</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">scratch</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_render_edge_mask</span><span class="p">(</span><span class="n">src_rgb</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Family A's own edge mask: numpy only, no ffmpeg, no decoder.</span>
 
@@ -565,7 +591,9 @@
     <span class="p">}</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_scene_metrics</span><span class="p">(</span><span class="n">capture</span><span class="p">:</span> <span class="n">SceneCapture</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Value</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_scene_metrics</span><span class="p">(</span>
+    <span class="n">capture</span><span class="p">:</span> <span class="n">SceneCapture</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">lossless_scratch_root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Value</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""The whole panel for one scene, plus the provenance the panel needs recorded.</span>
 
 <span class="sd">    Computed over the scene's **concatenated** frames, not over its first shot.</span>
@@ -573,6 +601,9 @@
 <span class="sd">    existing corpus are unchanged; a multi-shot scene is the reason this is not</span>
 <span class="sd">    ``_shot_metrics``, because the delivered mp4 it is compared against covers</span>
 <span class="sd">    every shot.</span>
+
+<span class="sd">    ``lossless_scratch_root`` is keyword-only and forwarded to</span>
+<span class="sd">    :func:`_lossless_scratch_dir` unchanged — see an#143.</span>
 <span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -653,9 +684,9 @@
     <span class="c1"># runner's older build (see the module docstring), which is exactly why the</span>
     <span class="c1"># metrics no longer depend on it.</span>
     <span class="k">with</span> <span class="n">_timeline_frames_dir</span><span class="p">(</span><span class="n">capture</span><span class="p">)</span> <span class="k">as</span> <span class="n">frames_dir</span><span class="p">:</span>
-        <span class="n">qp0_mp4</span> <span class="o">=</span> <span class="n">frames_dir</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"_bench_qp0.mp4"</span>
-        <span class="n">lossless_reference</span><span class="p">(</span><span class="n">frames_dir</span><span class="p">,</span> <span class="n">capture</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span> <span class="n">qp0_mp4</span><span class="p">,</span> <span class="n">delivered</span><span class="o">=</span><span class="n">capture</span><span class="o">.</span><span class="n">mp4</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">_lossless_scratch_dir</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">lossless_scratch_root</span><span class="p">)</span> <span class="k">as</span> <span class="n">scratch_dir</span><span class="p">:</span>
+            <span class="n">qp0_mp4</span> <span class="o">=</span> <span class="n">scratch_dir</span> <span class="o">/</span> <span class="s2">"lossless_reference.mp4"</span>
+            <span class="n">lossless_reference</span><span class="p">(</span><span class="n">frames_dir</span><span class="p">,</span> <span class="n">capture</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span> <span class="n">qp0_mp4</span><span class="p">,</span> <span class="n">delivered</span><span class="o">=</span><span class="n">capture</span><span class="o">.</span><span class="n">mp4</span><span class="p">)</span>
             <span class="n">ref_yuv</span> <span class="o">=</span> <span class="n">imageio</span><span class="o">.</span><span class="n">decoded_yuv</span><span class="p">(</span><span class="n">qp0_mp4</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
             <span class="n">ref_rgb</span> <span class="o">=</span> <span class="n">imageio</span><span class="o">.</span><span class="n">decoded_rgb</span><span class="p">(</span><span class="n">qp0_mp4</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
             <span class="n">distance</span> <span class="o">=</span> <span class="n">conversion_distance</span><span class="p">(</span>
@@ -678,8 +709,6 @@
             <span class="n">src_yuv</span> <span class="o">=</span> <span class="n">imageio</span><span class="o">.</span><span class="n">source_yuv</span><span class="p">(</span><span class="n">frames_dir</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">w</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">n_source</span><span class="p">)</span>
             <span class="n">dec_yuv</span> <span class="o">=</span> <span class="n">imageio</span><span class="o">.</span><span class="n">decoded_yuv</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">mp4</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
             <span class="n">dec_rgb</span> <span class="o">=</span> <span class="n">imageio</span><span class="o">.</span><span class="n">decoded_rgb</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">mp4</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="n">qp0_mp4</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">src_yuv</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">dec_yuv</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">dec_rgb</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">src_rgb</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_yuv</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">src_rgb</span><span class="p">)</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dec_rgb</span><span class="p">):</span>
@@ -1134,6 +1163,7 @@
     <span class="n">write</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">bless</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">golden_root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lossless_scratch_root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Render the corpus, compute the panel, and (by default) write the row.</span>
 
@@ -1141,6 +1171,11 @@
 <span class="sd">    turns the run into a bless. One argument rather than a ``--bless`` flag plus</span>
 <span class="sd">    a ``--reason`` string, so "blessed with no recorded reason" — the failure</span>
 <span class="sd">    this rule exists to prevent — is not expressible.</span>
+
+<span class="sd">    ``lossless_scratch_root`` is forwarded to :func:`_lossless_scratch_dir` for</span>
+<span class="sd">    every scene (an#143) — a caller may point it at a shared parent to prove</span>
+<span class="sd">    that two concurrent lossless-leg encodes still get distinct scratch</span>
+<span class="sd">    directories under it; production code has no reason to pass it.</span>
 
 <span class="sd">    ``golden_root`` redirects where goldens are read and written, and it exists</span>
 <span class="sd">    because without it a test of the bless path has no choice but to overwrite</span>
@@ -1182,7 +1217,9 @@
             <span class="k">if</span> <span class="n">sei</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sei</span> <span class="o">=</span> <span class="n">environment</span><span class="o">.</span><span class="n">x264_sei</span><span class="p">(</span><span class="n">capture</span><span class="o">.</span><span class="n">mp4</span><span class="p">)</span>
 
-            <span class="n">values</span><span class="p">,</span> <span class="n">scene_prov</span> <span class="o">=</span> <span class="n">_scene_metrics</span><span class="p">(</span><span class="n">capture</span><span class="p">)</span>
+            <span class="n">values</span><span class="p">,</span> <span class="n">scene_prov</span> <span class="o">=</span> <span class="n">_scene_metrics</span><span class="p">(</span>
+                <span class="n">capture</span><span class="p">,</span> <span class="n">lossless_scratch_root</span><span class="o">=</span><span class="n">lossless_scratch_root</span>
+            <span class="p">)</span>
             <span class="n">scene_contract</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">scenes_contract_sha256</span><span class="p">(</span>
                 <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">scene_json</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">capture</span><span class="o">.</span><span class="n">shots</span><span class="p">]</span>
             <span class="p">)</span>
