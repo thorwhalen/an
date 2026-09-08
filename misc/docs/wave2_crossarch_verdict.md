@@ -63,6 +63,20 @@ and thereby moving pixels — is refuted at a stronger level than "same backend,
 different CPU". macOS 15 vs 26, glibc, and three different ffmpeg builds also
 varied without effect, the last trivially so since ffmpeg never touches a frame.
 
+> **Correction, an#148 (2026-09-08).** "ffmpeg never touches a frame" is true of
+> **this** experiment and of nothing beyond it: the comparison above is of PNGs,
+> which ffmpeg only reads. It is false of the delivered mp4. Measured on flat
+> known-colour frames through the product's own `_ffmpeg_mux`, ffmpeg 6.1.6
+> encodes **BT.601** planes where ffmpeg 9.0.1 encodes **BT.709** ones — pure red
+> lands at Y=81 instead of Y=63 — while both files are tagged `bt709`, because
+> `-colorspace bt709` reaches the auto-inserted conversion on one build and only
+> the VUI on the other. So the encode-side band across ffmpeg builds was **28
+> luma codes wide, not zero**, for every row and every delivered file written
+> before an#148. The mux now names the conversion with
+> `-vf an.base.BT709_SCALE_FILTER`, which closes the band; the sentence above
+> keeps its scope, and any future reader extending it to the mp4 should re-read
+> this note first.
+
 ---
 
 ## What this settles

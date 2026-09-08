@@ -71,6 +71,19 @@ The fix is not a tolerance. `-qp 0` is lossless, so **the qp0 decode's luma
 plane IS the plane libx264 received**, on every build, by definition.
 Referencing the metrics to it removes the assumption rather than widening it.
 
+**And since an#148 the "build-dependent" in point 2 is the *cause*, named.** What
+varies across builds is not the pinned PNG conversion — it is the *encoder's*:
+`-colorspace bt709` sets the auto-inserted RGB->YUV matrix on ffmpeg 8/9 and
+only the VUI on ffmpeg 6.1, so on 6.1 the delivered planes were BT.601 (pure red
+Y=81 against BT.709's 62.6) while the file said `bt709`. `_ffmpeg_mux` now states
+the conversion with `-vf an.base.BT709_SCALE_FILTER`, **and so does the lossless
+leg** — `lossless_encode_command` carries the identical filter, because a leg
+that converts differently from the file it references is exactly the term this
+whole section exists to cancel. `SOURCE_SCALE_FILTER` is now *bound* to that one
+constant rather than restating it, and `encode_side.scale_filter` is a new
+`ENCODE_ENV_PATHS` comparability key: rows converted differently are not
+comparable, and rows predating the key are merely unknown (a caveat).
+
 Two metrics still reference the PNG conversion, and each row says which:
 
 - **the chroma metric**, because its subject *is* the 4:2:0 subsampling that

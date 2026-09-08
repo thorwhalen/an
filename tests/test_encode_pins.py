@@ -1,6 +1,6 @@
 """The x264 encode knobs are pinned, and the colour tags actually reach the file.
 
-an#34. Two different promises, so two different tests:
+an#34, an#148. Three different promises, so three different tests:
 
 - The **constructed command** carries the pinned knobs. Checked by intercepting
   `subprocess.run`, so it needs no ffmpeg binary and runs on every push — which
@@ -12,6 +12,10 @@ an#34. Two different promises, so two different tests:
   A half-tagged file is worse than an untagged one — the player stops guessing
   the matrix but still guesses the primaries — and nothing in the command-level
   test can see the difference.
+- The **decoded planes** are BT.709-converted, not merely BT.709-labelled. This
+  is an#148's test and it is the one neither of the others could have caught: on
+  ffmpeg 6.1 the file passed the tag test above while its pixels were BT.601.
+  A tag is a promise about the pixels; only a pixel test audits the promise.
 """
 
 from __future__ import annotations
@@ -27,6 +31,7 @@ import pytest
 
 from an.adapters.cutout import render as render_mod
 from an.adapters.cutout.render import DETERMINISTIC_X264_ARGS, _ffmpeg_mux
+from an.base import BT709_SCALE_FILTER
 
 #: knob -> why it is pinned, quoted in the failure so the reason travels with it.
 REQUIRED_KNOBS = {
@@ -96,10 +101,16 @@ def test_the_mux_command_carries_the_pins(tmp_path, monkeypatch):
 
     # **EQUALITY, not subset** (an#59). Subset membership answers "are the pins
     # still there" and says nothing about what else arrived: a `-tune animation`
-    # added by someone who measured it at 0.8%, a stray `-vf scale` that would
-    # retire the cross-arch verdict's "ffmpeg never touches a frame" clause, or
-    # a second `-pix_fmt` later in the list silently overriding the first. Each
-    # of those passes a subset check and moves the encode.
+    # added by someone who measured it at 0.8%, a second `-vf` silently
+    # replacing the colour conversion (ffmpeg takes the LAST `-vf` and drops
+    # the rest without a word), or a second `-pix_fmt` later in the list
+    # overriding the first. Each of those passes a subset check and moves the
+    # encode.
+    #
+    # There is now one deliberate `-vf` (an#148). It is the conversion itself,
+    # not a resampling filter: the cross-arch verdict's "ffmpeg never touches a
+    # frame" clause is retired, and `misc/docs/wave2_crossarch_verdict.md` says
+    # so.
     expected = [
         "ffmpeg",
         "-y",
@@ -109,6 +120,8 @@ def test_the_mux_command_carries_the_pins(tmp_path, monkeypatch):
         "24",
         "-i",
         str(tmp_path / render_mod.DEFAULT_FRAME_PNG_PATTERN),
+        "-vf",
+        BT709_SCALE_FILTER,
         "-c:v",
         "libx264",
         "-pix_fmt",
@@ -447,4 +460,124 @@ def test_the_encoded_file_carries_all_four_colour_fields(tmp_path):
     }, (
         "the mp4 is not fully colour-tagged; `unknown` for primaries or transfer "
         f"means the -x264-params half was dropped. got: {fields}"
+    )
+
+
+#: Known sRGB triples, probed against both matrices. Chosen for spread: `red`
+#: and `green` separate BT.601 from BT.709 by 18.5 and 28.0 luma codes, and
+#: `skin` is here because it is the colour an audience actually looks at — where
+#: the two differ by only 3.2, which is how this shipped unnoticed.
+_COLOUR_PROBES: tuple[tuple[str, tuple[int, int, int]], ...] = (
+    ("red", (255, 0, 0)),
+    ("green", (0, 255, 0)),
+    ("blue", (0, 0, 255)),
+    ("skin", (222, 160, 120)),
+)
+
+#: (Kr, Kb) per matrix; Kg follows. The BT.601 row is not a curiosity — it is
+#: what `an` was actually encoding on ffmpeg 6.1 while tagging BT.709 (an#148).
+_MATRIX_COEFFS: dict[str, tuple[float, float]] = {
+    "bt601": (0.299, 0.114),
+    "bt709": (0.2126, 0.0722),
+}
+
+#: Tolerance in 8-bit codes. The two matrices are 3.2 to 28.0 codes apart on
+#: these probes, so a bound of 2 cannot confuse them; it absorbs libx264's
+#: quantiser on a flat field and nothing else.
+_CODE_TOLERANCE: float = 2.0
+
+
+def _expected_ycbcr(rgb, kr, kb) -> tuple[float, float, float]:
+    """Analytic limited-range ('tv') 8-bit Y'CbCr for an sRGB triple.
+
+    >>> [round(v, 1) for v in _expected_ycbcr((255, 0, 0), 0.299, 0.114)]
+    [81.5, 90.2, 240.0]
+    >>> [round(v, 1) for v in _expected_ycbcr((255, 0, 0), 0.2126, 0.0722)]
+    [62.6, 102.3, 240.0]
+    """
+    r, g, b = (c / 255.0 for c in rgb)
+    y = kr * r + (1.0 - kr - kb) * g + kb * b
+    return (
+        16 + 219 * y,
+        128 + 224 * (b - y) / (2 * (1 - kb)),
+        128 + 224 * (r - y) / (2 * (1 - kr)),
+    )
+
+
+def _decoded_plane_means(mp4: Path, width: int, height: int):
+    """Mean Y, Cb, Cr of the first frame, read as raw ``yuv420p``.
+
+    No conversion happens on this read: the stream already IS ``yuv420p``, so
+    the bytes are the encoded planes verbatim. That is the whole point —
+    decoding to RGB would apply the tag and hide the disagreement under test.
+    """
+    raw = subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-i",
+            str(mp4),
+            "-f",
+            "rawvideo",
+            "-pix_fmt",
+            "yuv420p",
+            "-",
+        ],
+        capture_output=True,
+        check=True,
+    ).stdout
+    luma, chroma = width * height, width * height // 4
+    frame = raw[: luma + 2 * chroma]
+    planes = (frame[:luma], frame[luma : luma + chroma], frame[luma + chroma :])
+    return tuple(sum(p) / len(p) for p in planes)
+
+
+@pytest.mark.ffmpeg
+@pytest.mark.parametrize("name,rgb", _COLOUR_PROBES)
+def test_the_delivered_planes_are_bt709_converted_not_merely_tagged(
+    tmp_path, name, rgb
+):
+    """MUTATION: drop ``-vf BT709_SCALE_FILTER`` from ``_ffmpeg_mux``.
+
+    an#148. The test above reads the VUI, and the VUI was never the problem: on
+    ffmpeg 6.1 — the CI runner's apt build — the file was correctly tagged
+    `bt709` while its planes had been converted with BT.601, because the
+    encoder-side colour flags do not reach the auto-inserted conversion on that
+    build the way they do on ffmpeg 8/9. A tag test is green in both worlds;
+    only a pixel test tells them apart.
+
+    So this asserts the DECODED CODE VALUES against the analytic BT.709 numbers
+    and, in the same breath, against the BT.601 ones — because "close to BT.709"
+    is not the claim. The claim is "closer to BT.709 than to BT.601", and on
+    `skin` those two are 3.2 codes apart, which is the margin that let a whole
+    build ship the wrong conversion without anyone seeing a wrong-looking frame.
+    """
+    frames = tmp_path / "frames"
+    frames.mkdir()
+    width = height = 32
+    for i in range(4):
+        _write_flat_png(
+            frames / (render_mod.DEFAULT_FRAME_PNG_PATTERN % i), width, height, rgb
+        )
+    out = tmp_path / "out.mp4"
+    _ffmpeg_mux(frames, 24, out)
+
+    got = _decoded_plane_means(out, width, height)
+    want = _expected_ycbcr(rgb, *_MATRIX_COEFFS["bt709"])
+    other = _expected_ycbcr(rgb, *_MATRIX_COEFFS["bt601"])
+    d709 = max(abs(a - b) for a, b in zip(got, want))
+    d601 = max(abs(a - b) for a, b in zip(got, other))
+
+    assert d709 <= _CODE_TOLERANCE, (
+        f"{name} {rgb} decodes to Y'CbCr {tuple(round(v, 1) for v in got)}, "
+        f"which is {d709:.2f} codes from BT.709 "
+        f"{tuple(round(v, 1) for v in want)} and {d601:.2f} from BT.601 "
+        f"{tuple(round(v, 1) for v in other)}. The delivered planes are not "
+        f"BT.709-converted on this ffmpeg build — check that `_ffmpeg_mux` "
+        f"still passes `-vf {BT709_SCALE_FILTER}`, which is what STATES the "
+        f"conversion on a build where the colour tags only imply it (an#148)."
+    )
+    assert d709 < d601, (
+        f"{name} sits closer to BT.601 ({d601:.2f}) than to BT.709 ({d709:.2f})"
     )

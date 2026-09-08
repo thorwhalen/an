@@ -37,7 +37,7 @@ from an.adapters.cutout.supersample import (
     check_factor,
     resolve_png_bytes,
 )
-from an.base import MP4_FASTSTART_ARGS
+from an.base import BT709_SCALE_FILTER, MP4_FASTSTART_ARGS
 from an.determinism import capture_violations, determinism_enforced
 from an.adapters.cutout.compile import compile_shot
 from an.adapters.cutout.runtime_files import runtime_dir
@@ -118,6 +118,11 @@ DETERMINISTIC_CHROMIUM_ARGS: tuple[str, ...] = (
 #:   planes themselves change**. Confirmed by construction: forcing
 #:   `scale=out_color_matrix=bt601` reproduces the untagged output's decoded
 #:   stream byte-for-byte, i.e. `an` has been converting with BT.601 all along.
+#:   **On ffmpeg 8/9. It is false on ffmpeg 6.1** — where the same flags reach
+#:   only the VUI and the planes stay BT.601 (an#148, measured; see
+#:   `an.base.BT709_SCALE_FILTER` for the numbers). That is why the mux now
+#:   states the conversion explicitly with `-vf` instead of inferring it from
+#:   these flags, which stay for the tag they land.
 #: - `-color_range tv` is a **no-op today** (limited range is already the
 #:   default for yuv420p here). Pinned anyway, so a build that defaults
 #:   differently cannot change the output silently.
@@ -761,6 +766,12 @@ def _ffmpeg_mux(
         str(fps),
         "-i",
         pattern,
+        # The RGB->YUV conversion, NAMED rather than inferred from the colour
+        # tags below — which reach it on ffmpeg 8/9 and do not on ffmpeg 6.1
+        # (an#148). Byte-identical to the pre-an#148 output on a build where
+        # they did reach it.
+        "-vf",
+        BT709_SCALE_FILTER,
         "-c:v",
         "libx264",
         "-pix_fmt",

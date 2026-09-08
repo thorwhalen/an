@@ -33,6 +33,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from an.base import BT709_SCALE_FILTER
+
 #: The x264 build stamp embedded in every mp4, e.g. ``core 165 r3222 <sha>``.
 #: Nothing strips it (``-x264-params sei=0`` is silently ignored), which is
 #: exactly why it is usable as the comparability key.
@@ -212,6 +214,14 @@ def environment_record(
             "ffmpeg": ffmpeg_identity(),
             "x264_sei": x264_sei,
             "x264_argv": list(DETERMINISTIC_X264_ARGS),
+            # A SEPARATE key for the same reason `pix_fmt` is one: `x264_argv`
+            # is the PINNED TUPLE, and this is a filter, not an encoder knob.
+            # Recorded at all because it moves the encoded planes on a build
+            # where the colour tags alone do not reach the conversion (an#148),
+            # so two rows that disagree about it are not comparable — while a
+            # row predating it is merely unknown, which `_compare_keys` already
+            # reports as a caveat rather than a refusal.
+            "scale_filter": BT709_SCALE_FILTER,
             # A SEPARATE key rather than folded into `x264_argv`, deliberately.
             # That list is the PINNED TUPLE and always has been — it carries
             # neither `-c:v libx264` nor `-pix_fmt` nor `+faststart` — so

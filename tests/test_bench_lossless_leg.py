@@ -45,9 +45,10 @@ import pytest
 
 from an.adapters.cutout import render
 from an.adapters.cutout.render import DEFAULT_FRAME_PNG_PATTERN
+from an.base import BT709_SCALE_FILTER
 from an.bench import imageio
 
-#: The input path, joined the way the OS joins it. The ONLY derived element of
+#: The input path, joined the way the OS joins it. The only derived element of
 #: the pin below, and derived on purpose: `lossless_encode_command` builds it
 #: with `Path.__truediv__`, so a POSIX literal here asserts the separator rather
 #: than the flags — which is not what an#72 is about, and is how an#21's
@@ -56,9 +57,17 @@ from an.bench import imageio
 #: able to desynchronise the two.
 FRAMES_ARG: str = str(Path("FRAMES") / DEFAULT_FRAME_PNG_PATTERN)
 
-#: What `main` emitted before an#72, verbatim. A literal rather than a
-#: construction: the point is that a default render is byte-identical, and a
-#: pin that derives itself from the code it guards cannot see the code change.
+#: What `main` emits, verbatim. A literal rather than a construction: the point
+#: is that the default leg does not drift, and a pin that derives itself from the
+#: code it guards cannot see the code change.
+#:
+#: **an#148 added `-vf`, and it is the one change to this literal that is not a
+#: re-baseline of the committed rows.** Those rows were captured on ffmpeg 8/9,
+#: where `-colorspace bt709` already set the auto-inserted conversion, so the
+#: filter names what that build was doing anyway and the leg's *output* is
+#: byte-identical there — measured on the delivered encode, same mp4 `sha256`
+#: with and without it. The argv is not byte-identical, and this pin is about the
+#: argv, which is why the change has to be visible here rather than absorbed.
 DEFAULT_LEG_ARGV: tuple[str, ...] = (
     "ffmpeg",
     "-y",
@@ -68,6 +77,12 @@ DEFAULT_LEG_ARGV: tuple[str, ...] = (
     "24",
     "-i",
     FRAMES_ARG,
+    # LITERAL, not `an.base.BT709_SCALE_FILTER`, for this pin's whole stated
+    # reason: an import would follow a change to the constant silently, which is
+    # the one thing a pin must not do. `test_the_pinned_filter_is_the_products`
+    # below is what keeps the two from drifting apart unnoticed.
+    "-vf",
+    "scale=out_range=tv:out_color_matrix=bt709",
     "-c:v",
     "libx264",
     "-pix_fmt",
@@ -120,6 +135,29 @@ def test_the_default_leg_is_unchanged_so_no_committed_ledger_row_is_invalidated(
     derivation.
     """
     assert _argv() == DEFAULT_LEG_ARGV
+
+
+def test_the_pinned_filter_is_the_products():
+    """MUTATION: change `an.base.BT709_SCALE_FILTER` and leave the pin alone.
+
+    The pin above spells the filter literally so a change to the constant cannot
+    slip through it — but a literal that nobody compares to the real thing is
+    just a second, stale source of truth. This is the comparison, and it is a
+    separate test on purpose: a *deliberate* change to the conversion should fail
+    here, once, with a name that says what to do, rather than inside an argv diff
+    of twenty-five elements.
+
+    A change to that constant is a change to every delivered pixel on every
+    build. If this fails, re-measure (an#148's method is in the constant's own
+    docstring), re-bless what needs it, and update the literal in the same pass.
+    """
+    i = DEFAULT_LEG_ARGV.index("-vf")
+    assert DEFAULT_LEG_ARGV[i + 1] == BT709_SCALE_FILTER, (
+        f"the pinned filter {DEFAULT_LEG_ARGV[i + 1]!r} is not the product's "
+        f"{BT709_SCALE_FILTER!r} — the lossless leg and the delivered encode "
+        f"must perform the SAME conversion, or every encode-side metric carries "
+        f"the difference between them as encoder damage"
+    )
 
 
 def test_the_leg_is_encoded_in_the_delivered_pixel_format(delivered_pix_fmt):
