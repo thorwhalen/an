@@ -29,6 +29,7 @@ which is the only honest way to keep a test for this.
 
 from __future__ import annotations
 
+import ast
 import os
 import platform
 import subprocess
@@ -48,6 +49,32 @@ from tests._fake_subprocess import (
 #: Content for the file standing in for `sys.executable`. Any non-empty bytes
 #: would do; a recognisable string makes a failure dump readable.
 _STANDIN_BYTES: bytes = b"#!/not/a/real/interpreter\n" * 8
+
+#: The shell-out chain is POSIX-only, so the tests that exercise it are too.
+#: `platform._syscmd_file` opens with ``if sys.platform in ('dos', 'win32',
+#: 'win16'): return default`` — it never spawns anything — and Windows'
+#: `platform.platform()` reads `sys.getwindowsversion()` while `processor()`
+#: reads `PROCESSOR_IDENTIFIER` from the environment. So on Windows there is no
+#: `file -b <sys.executable>` and no `uname -p` to intercept, and the outage
+#: this module guards could not have happened.
+#:
+#: **Applied per test, not to the module.** Three of the six assert things that
+#: are true on every platform — that the shared `subprocess` module is left
+#: alone, that `touch_output` refuses, and that no unscoped spelling has crept
+#: back — and those are worth running on Windows, which since an#22 gates the
+#: release. Skipping the module would have silently retired them there.
+#:
+#: A vacuous pass is the alternative and it is worse: on Windows the chain tests
+#: would pass *because nothing shells out*, which is the "the test ran and
+#: measured something else" shape rather than evidence of the fix.
+posix_chain_only = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason=(
+        "platform._syscmd_file returns early on win32 and never spawns, so "
+        "there is no `file -b <sys.executable>` to intercept; this test would "
+        "pass vacuously rather than exercise the an#152 chain"
+    ),
+)
 
 
 def _cold_platform_caches(monkeypatch) -> None:
@@ -72,6 +99,7 @@ def standin_executable(tmp_path, monkeypatch):
     return exe
 
 
+@posix_chain_only
 def test_platform_platform_really_does_shell_out_with_a_cold_cache():
     """The premise of every other test here, asserted rather than assumed.
 
@@ -122,6 +150,7 @@ def test_platform_platform_really_does_shell_out_with_a_cold_cache():
     )
 
 
+@posix_chain_only
 def test_the_faked_run_does_not_reach_the_interpreter(
     tmp_path, monkeypatch, standin_executable
 ):
@@ -199,6 +228,7 @@ def test_the_output_helper_refuses_a_path_outside_the_test_directory(tmp_path):
     assert not outside.exists(), "the refusal must happen BEFORE the write"
 
 
+@posix_chain_only
 def test_the_uname_probe_no_longer_litters_the_working_directory(
     tmp_path, monkeypatch, standin_executable
 ):
@@ -234,44 +264,171 @@ def test_the_uname_probe_no_longer_litters_the_working_directory(
     )
 
 
+#: The one place in the suite allowed to replace the shared `subprocess.run`,
+#: named as ``(filename, function)`` so the exemption cannot spread by accident.
+#:
+#: `test_platform_platform_really_does_shell_out_with_a_cold_cache` MEASURES the
+#: global behaviour — whether the stdlib still shells out with `sys.executable`
+#: as ``cmd[-1]`` — and there is no scoped way to observe that: `platform`
+#: imports `subprocess` *inside* its functions, so there is no `platform.
+#: subprocess` attribute to rebind. Its recorder writes nothing, runs one
+#: `true`, and restores in a `finally`.
+#:
+#: An allowlist of exactly one, with its reason, rather than no escape hatch at
+#: all: a guard that cannot express a legitimate exception is a guard someone
+#: eventually deletes wholesale.
+_SHARED_PATCH_ALLOWED: frozenset[tuple[str, str]] = frozenset(
+    {
+        (
+            "test_subprocess_blast_radius.py",
+            "test_platform_platform_really_does_shell_out_with_a_cold_cache",
+        )
+    }
+)
+
+
+def _enclosing_function(tree, node):
+    """Name of the function `node` sits in, or ``"<module>"``."""
+    best = "<module>"
+    for candidate in ast.walk(tree):
+        if not isinstance(candidate, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        end = getattr(candidate, "end_lineno", candidate.lineno)
+        if candidate.lineno <= node.lineno <= end:
+            best = candidate.name
+    return best
+
+
+def _names_shared_subprocess_run(target) -> bool:
+    """Is this assignment target the shared `subprocess.run`?
+
+    Two spellings, and the second is the one the first draft of this guard
+    missed: ``<mod>.subprocess.run = fake`` and a bare ``subprocess.run = fake``
+    after ``import subprocess``.
+    """
+    if not (isinstance(target, ast.Attribute) and target.attr == "run"):
+        return False
+    owner = target.value
+    if isinstance(owner, ast.Attribute) and owner.attr == "subprocess":
+        return True  # `_node.subprocess.run = ...`
+    return isinstance(owner, ast.Name) and owner.id == "subprocess"
+
+
+def unscoped_sites(source: str) -> list[tuple[int, str]]:
+    """``[(lineno, enclosing_function), ...]`` for every unscoped spelling.
+
+    A function over SOURCE TEXT rather than a loop inlined in the test, so the
+    detector can be exercised against known-good and known-bad snippets
+    directly. A scanner only ever run over a tree that currently passes is a
+    scanner nobody has checked can fail.
+    """
+    tree = ast.parse(source)
+    hits: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        hit = False
+        if isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Attribute) and func.attr == "setattr" and node.args:
+                target = node.args[0]
+                if isinstance(target, ast.Attribute) and target.attr == "subprocess":
+                    hit = True  # setattr(x.subprocess, "run", ...)
+                elif isinstance(target, ast.Constant) and isinstance(target.value, str):
+                    hit = target.value.endswith("subprocess.run")
+                elif isinstance(target, ast.Name) and target.id == "subprocess":
+                    hit = True  # setattr(subprocess, "run", ...)
+        elif isinstance(node, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            hit = any(_names_shared_subprocess_run(t) for t in targets)
+        if hit:
+            hits.append((node.lineno, _enclosing_function(tree, node)))
+    return hits
+
+
+#: Every spelling that replaces the shared module's ``run``, and every
+#: near-miss that must NOT be flagged. Written as source text because that is
+#: what the scanner reads.
+_UNSCOPED_VARIANTS: tuple[str, ...] = (
+    'monkeypatch.setattr(mod.subprocess, "run", fake)',
+    'monkeypatch.setattr("pkg.mod.subprocess.run", fake)',
+    'monkeypatch.setattr(subprocess, "run", fake)',
+    "mod.subprocess.run = fake",
+    "subprocess.run = fake",
+    "an.bench.mutants.subprocess.run = fake",
+)
+
+_SCOPED_VARIANTS: tuple[str, ...] = (
+    # The shape this guard steers towards: the module's OWN name is rebound.
+    'monkeypatch.setattr(mod, "subprocess", shim)',
+    # `from subprocess import run` in the product module — patching the name it
+    # actually calls is correct and must not be flagged.
+    'monkeypatch.setattr(mod, "run", fake)',
+    "patch_subprocess_run(monkeypatch, mod, fake)",
+    # A local variable that merely happens to be called `run`.
+    "run = fake",
+    # Reading it is not replacing it.
+    "original = mod.subprocess.run",
+)
+
+
+@pytest.mark.parametrize("source", _UNSCOPED_VARIANTS)
+def test_the_scanner_catches_every_unscoped_spelling(source):
+    """MUTATION: drop the `Assign` branch, or the bare-`Name` case.
+
+    The first draft of this scanner caught the two `setattr` forms and missed
+    both assignment forms — and `tests/test_node_runner.py` was using the
+    assignment form in three places at the time, so the guard shipped green
+    against live instances of the defect it exists to catch. Review found it.
+    """
+    assert unscoped_sites(source), f"not flagged: {source}"
+
+
+@pytest.mark.parametrize("source", _SCOPED_VARIANTS)
+def test_the_scanner_does_not_flag_the_scoped_spellings(source):
+    """MUTATION: flag on the attribute name `run` regardless of its owner.
+
+    A guard that also fails the correct spelling teaches people to delete it.
+    `setattr(mod, "run", fake)` after `from subprocess import run` is the case
+    that matters: it patches the name the module actually calls, which is
+    exactly right.
+    """
+    assert not unscoped_sites(source), f"wrongly flagged: {source}"
+
+
 def test_every_destructive_fake_in_the_suite_uses_the_scoped_helper():
-    """MUTATION: reintroduce `setattr(<mod>.subprocess, "run", …)` anywhere.
+    """MUTATION: reintroduce any unscoped spelling anywhere under `tests/`.
 
     The tests above prove the fix for the sites that exist. This is what stops
     the next one being written the old way — the AST scanner is the weaker half
     of the guard, as `tests/test_browser_gate.py` says of its own, but it is the
     half that catches a NEW file nobody thought to check.
 
-    It flags the shape `setattr(<anything>.subprocess, "run", …)`, which is the
-    unscoped spelling. The scoped one patches the module object itself, so it
-    never matches.
-    """
-    import ast
+    **Four spellings, because the first draft of this guard caught two of them
+    and review found the rest.** All four replace the shared module's `run`:
 
+    ===================================== =============================
+    spelling                              caught by
+    ===================================== =============================
+    ``setattr(mod.subprocess, "run", f)``  the `Call` branch
+    ``setattr("pkg.mod.subprocess.run")``  the `Call` branch, string form
+    ``mod.subprocess.run = f``             the `Assign` branch
+    ``subprocess.run = f``                 the `Assign` branch, bare name
+    ===================================== =============================
+
+    What it must NOT flag is ``setattr(mod, "run", f)`` after ``from subprocess
+    import run`` — that already patches the module's own name and is the shape
+    this guard is steering people towards.
+    """
     offenders = []
     for path in sorted(Path(__file__).parent.glob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
+        for lineno, func in unscoped_sites(path.read_text(encoding="utf-8")):
+            if (path.name, func) in _SHARED_PATCH_ALLOWED:
                 continue
-            func = node.func
-            if not (isinstance(func, ast.Attribute) and func.attr == "setattr"):
-                continue
-            if not node.args:
-                continue
-            target = node.args[0]
-            # `monkeypatch.setattr(x.subprocess, "run", ...)`
-            if isinstance(target, ast.Attribute) and target.attr == "subprocess":
-                offenders.append(f"{path.name}:{node.lineno}")
-            # `monkeypatch.setattr("pkg.mod.subprocess.run", ...)`
-            elif isinstance(target, ast.Constant) and isinstance(target.value, str):
-                if target.value.endswith("subprocess.run"):
-                    offenders.append(f"{path.name}:{node.lineno}")
+            offenders.append(f"{path.name}:{lineno} (in {func})")
 
     assert not offenders, (
-        "these patch the SHARED `subprocess` module rather than the name the "
-        "module under test uses, so the fake reaches every library in the "
-        "interpreter — including `platform`, which shells out "
+        "these replace `run` on the SHARED `subprocess` module rather than the "
+        "name the module under test uses, so the fake reaches every library in "
+        "the interpreter — including `platform`, which shells out "
         "`file -b <sys.executable>` (an#152, thorwhalen/priv#127):\n  "
         + "\n  ".join(offenders)
         + "\nUse `tests._fake_subprocess.patch_subprocess_run` instead."

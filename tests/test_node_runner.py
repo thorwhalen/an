@@ -14,12 +14,14 @@ from pathlib import Path
 
 import pytest
 
+from tests._fake_subprocess import patch_subprocess_run
+
 from tests import _node
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_a_non_zero_exit_is_never_retried():
+def test_a_non_zero_exit_is_never_retried(monkeypatch):
     """MUTATION: `except (TimeoutExpired, CalledProcessError)`, or retry on rc != 0.
 
     A failing script is the thing these tests exist to catch. Retrying it would
@@ -32,18 +34,14 @@ def test_a_non_zero_exit_is_never_retried():
         calls.append(argv)
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="boom")
 
-    original = _node.subprocess.run
-    _node.subprocess.run = failing
-    try:
-        proc = _node.run_node("process.exit(1)")
-    finally:
-        _node.subprocess.run = original
+    patch_subprocess_run(monkeypatch, _node, failing)
+    proc = _node.run_node("process.exit(1)")
 
     assert proc.returncode == 1
     assert len(calls) == 1, f"a failing script was run {len(calls)} times"
 
 
-def test_a_timeout_is_retried_exactly_once_then_reported():
+def test_a_timeout_is_retried_exactly_once_then_reported(monkeypatch):
     """MUTATION: retry forever, or do not retry at all.
 
     One retry separates "the runner stalled" from "this never completes". The
@@ -57,13 +55,9 @@ def test_a_timeout_is_retried_exactly_once_then_reported():
         calls.append(argv)
         raise subprocess.TimeoutExpired(argv, kwargs.get("timeout", 0))
 
-    original = _node.subprocess.run
-    _node.subprocess.run = always_timeout
-    try:
-        with pytest.raises(pytest.fail.Exception) as excinfo:
-            _node.run_node("while(true){}")
-    finally:
-        _node.subprocess.run = original
+    patch_subprocess_run(monkeypatch, _node, always_timeout)
+    with pytest.raises(pytest.fail.Exception) as excinfo:
+        _node.run_node("while(true){}")
 
     assert len(calls) == _node.NODE_ATTEMPTS == 2, calls
     message = str(excinfo.value)
@@ -71,7 +65,7 @@ def test_a_timeout_is_retried_exactly_once_then_reported():
     assert "an#128" in message, "the reader needs the reason, not just the fact"
 
 
-def test_a_timeout_that_clears_on_the_retry_succeeds():
+def test_a_timeout_that_clears_on_the_retry_succeeds(monkeypatch):
     """MUTATION: report on the first timeout without retrying.
 
     Otherwise the retry is decoration and the an#123 occurrence would still
@@ -85,12 +79,8 @@ def test_a_timeout_that_clears_on_the_retry_succeeds():
             raise subprocess.TimeoutExpired(argv, kwargs.get("timeout", 0))
         return subprocess.CompletedProcess(argv, 0, stdout="42\n", stderr="")
 
-    original = _node.subprocess.run
-    _node.subprocess.run = stall_once
-    try:
-        assert _node.node_json("console.log(42)") == 42
-    finally:
-        _node.subprocess.run = original
+    patch_subprocess_run(monkeypatch, _node, stall_once)
+    assert _node.node_json("console.log(42)") == 42
 
     assert attempts["n"] == 2
 

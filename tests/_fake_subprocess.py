@@ -79,16 +79,22 @@ def touch_output(
     """
     target = Path(path)
     root = Path(root).resolve()
+    resolved = target
     try:
         resolved = target.resolve()
         inside = resolved == root or root in resolved.parents
     except OSError:  # pragma: no cover - a path that will not even resolve
         inside = False
     if not inside:
+        # Both paths, because the check is on the RESOLVED one and a symlink is
+        # exactly how a write lands somewhere the argv does not appear to name.
+        # Reporting only `target` would describe a refusal the reader cannot
+        # reproduce from what they are shown.
+        resolved_note = "" if resolved == target else f" (resolves to {resolved})"
         raise OutsideSandbox(
-            f"a faked subprocess tried to write {target}, which is outside the "
-            f"test's own directory ({root}). argv was {argv} -- almost "
-            f"certainly a command this fake was never meant to intercept."
+            f"a faked subprocess tried to write {target}{resolved_note}, which "
+            f"is outside the test's own directory ({root}). argv was {argv} -- "
+            f"almost certainly a command this fake was never meant to intercept."
         )
     target.write_bytes(b"")
 

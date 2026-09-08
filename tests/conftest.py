@@ -661,7 +661,17 @@ from pathlib import Path as _Path
 
 
 def _write_allowed_roots(tmp_path):
-    """Where a test may write. Resolved, because `/tmp` is a symlink on macOS."""
+    """Where a test may write. Resolved, because `/tmp` is a symlink on macOS.
+
+    **The whole worktree is allowed, deliberately**, and it is the loosest of
+    the three. `an bench-mutants` edits real source files in place — that is
+    what a mutation sweep is — and `test_bench_mutation.py` drives it, so a
+    guard that refused writes under the repo would fail the suite's own
+    mutation testing. The guard's subject is writes to the DEVELOPER'S MACHINE
+    outside the checkout; a stray file inside the worktree is visible to
+    `git status`, which is a second line of defence the rest of the filesystem
+    does not have.
+    """
     roots = [tmp_path, _Path(_tempfile.gettempdir()), _Path(__file__).parent.parent]
     out = []
     for r in roots:
@@ -724,6 +734,13 @@ def _the_interpreter_survived_the_test():
     `stat` calls per test — and it fails the test that did it rather than the
     next unlucky one, which matters because the damage is otherwise SILENT: a
     0-byte interpreter exits 0 and prints nothing.
+
+    **It surfaces as a teardown ERROR, not a failure**, because the assertion
+    runs after the yield: the test itself is reported `passed` and an `ERROR`
+    line follows it. That is cosmetically odd and functionally correct — pytest
+    exits non-zero, so the run still fails and CI still goes red. Said out loud
+    because "1 passed, 1 error" invites a reader to dismiss it as flakiness,
+    and this is the one message in the suite that must not be dismissed.
     """
     exe = _Path(_sys.executable)
     try:
