@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.imageio &mdash; an 0.1.83 documentation</title>
+  <title>an.bench.imageio &mdash; an 0.1.84 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=79510abc"></script>
+      <script src="../../../_static/documentation_options.js?v=b2d89a71"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -254,6 +254,18 @@
 <span class="sd">  is exactly the build-dependence that was hiding inside a hard equality. It is</span>
 <span class="sd">  provenance now, not a gate.</span>
 
+<span class="sd">**an#148 names what the build-dependence WAS, and both legs now pin it.** The</span>
+<span class="sd">varying term was never this PNG leg — it was the *encoder's* conversion:</span>
+<span class="sd">`-colorspace bt709` sets the auto-inserted RGB-&gt;YUV matrix on ffmpeg 8/9 and</span>
+<span class="sd">reaches only the VUI on ffmpeg 6.1, so on 6.1 libx264 received BT.601 planes</span>
+<span class="sd">while the delivered file was tagged BT.709 (pure red at Y=81, against BT.709's</span>
+<span class="sd">62.6). `lossless_encode_command` therefore carries `-vf BT709_SCALE_FILTER`, the</span>
+<span class="sd">same filter the delivered mux now passes: a lossless leg that converts</span>
+<span class="sd">differently from the file it references is not "the plane libx264 received" on</span>
+<span class="sd">any build where the two disagree, whatever its rate control. Keeping the two</span>
+<span class="sd">spellings identical is why `SOURCE_SCALE_FILTER` is *bound* to</span>
+<span class="sd">`an.base.BT709_SCALE_FILTER` rather than restating it.</span>
+
 <span class="sd">`-map 0:v:0 -fps_mode passthrough` on every mp4 decode: the delivered file</span>
 <span class="sd">carries an AAC track, and implicit frame-rate conversion would silently re-time</span>
 <span class="sd">the sequence that every encode-side metric pairs frame-for-frame.</span>
@@ -265,7 +277,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">MP4_FASTSTART_ARGS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BT709_SCALE_FILTER</span><span class="p">,</span> <span class="n">MP4_FASTSTART_ARGS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">an.adapters.cutout.render</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DETERMINISTIC_X264_ARGS</span><span class="p">,</span>
     <span class="n">SUPPORTED_PIX_FMTS</span><span class="p">,</span>
@@ -274,7 +286,14 @@
 
 <span class="c1">#: The pinned conversion applied to the PNG leg. Never remove it: without it</span>
 <span class="c1">#: the encode-side metrics measure a colour-space conversion.</span>
-<span class="n">SOURCE_SCALE_FILTER</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"scale=out_range=tv:out_color_matrix=bt709"</span>
+<span class="c1">#:</span>
+<span class="c1">#: **Bound to the product's own filter, not restated** (an#148). It used to be a</span>
+<span class="c1">#: second copy of the same string, which was harmless only while the delivered</span>
+<span class="c1">#: encode had no `-vf` of its own to disagree with. Now that it has one, two</span>
+<span class="c1">#: copies is one edit away from the PNG leg and the encoder converting</span>
+<span class="c1">#: differently — which is exactly the term the encode-side metrics cannot see</span>
+<span class="c1">#: and would report as encoder damage.</span>
+<span class="n">SOURCE_SCALE_FILTER</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">BT709_SCALE_FILTER</span>
 
 <span class="c1">#: Planar 4:4:4 for both legs of every encode-side metric — never `rgb24` for</span>
 <span class="c1">#: the edge metrics, whose defect was clipping precisely at the saturated fills</span>
@@ -512,6 +531,15 @@
         <span class="nb">str</span><span class="p">(</span><span class="n">fps</span><span class="p">),</span>
         <span class="s2">"-i"</span><span class="p">,</span>
         <span class="nb">str</span><span class="p">(</span><span class="n">frames_dir</span> <span class="o">/</span> <span class="n">DEFAULT_FRAME_PNG_PATTERN</span><span class="p">),</span>
+        <span class="c1"># The same explicit conversion the delivered mux performs (an#148).</span>
+        <span class="c1"># NOT optional and not cosmetic: this leg's whole contract is "the qp0</span>
+        <span class="c1"># decode's luma plane IS the plane libx264 received". On a build where</span>
+        <span class="c1"># the colour tags do not reach the auto-inserted conversion (ffmpeg</span>
+        <span class="c1"># 6.1), a leg without this would be BT.601 while the delivered file is</span>
+        <span class="c1"># BT.709, and every encode-side metric would carry that difference as</span>
+        <span class="c1"># if it were encoder damage.</span>
+        <span class="s2">"-vf"</span><span class="p">,</span>
+        <span class="n">BT709_SCALE_FILTER</span><span class="p">,</span>
         <span class="s2">"-c:v"</span><span class="p">,</span>
         <span class="s2">"libx264"</span><span class="p">,</span>
         <span class="s2">"-pix_fmt"</span><span class="p">,</span>

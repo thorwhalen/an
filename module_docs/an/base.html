@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.base &mdash; an 0.1.83 documentation</title>
+  <title>an.base &mdash; an 0.1.84 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=79510abc"></script>
+      <script src="../../_static/documentation_options.js?v=b2d89a71"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -83,6 +83,7 @@
 <li class="toctree-l1"><a class="reference internal" href="audio/whisper_lipsync.html">an.audio.whisper_lipsync</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">an.base</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.AUTHORABLE_PROPERTIES"><code class="docutils literal notranslate"><span class="pre">AUTHORABLE_PROPERTIES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#an.base.BT709_SCALE_FILTER"><code class="docutils literal notranslate"><span class="pre">BT709_SCALE_FILTER</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.COLOUR_PROPERTY"><code class="docutils literal notranslate"><span class="pre">COLOUR_PROPERTY</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.COMPATIBLE_VERSION"><code class="docutils literal notranslate"><span class="pre">COMPATIBLE_VERSION</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#an.base.DEFAULT_SUPERSAMPLE"><code class="docutils literal notranslate"><span class="pre">DEFAULT_SUPERSAMPLE</span></code></a></li>
@@ -227,6 +228,53 @@ the two sets is exactly <cite>tint</cite>, and a test pins that rather than trus
 <dd class="field-odd"><p>What a set/tween may name</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="an.base.BT709_SCALE_FILTER">
+<span class="sig-prename descclassname"><span class="pre">an.base.</span></span><span class="sig-name descname"><span class="pre">BT709_SCALE_FILTER</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'scale=out_range=tv:out_color_matrix=bt709'</span></span><a class="headerlink" href="#an.base.BT709_SCALE_FILTER" title="Link to this definition"></a></dt>
+<dd><p>The RGB-&gt;YUV conversion <cite>an</cite> performs, stated EXPLICITLY rather than left to
+the encoder flags to imply.</p>
+<p>an#34 pinned <cite>-colorspace bt709</cite> and measured that it does not merely <em>tag</em>
+the file: it sets the matrix of the auto-inserted conversion, so the encoded
+planes themselves change. That measurement was made on ffmpeg 8/9 and <strong>is
+not a universal ffmpeg fact</strong> (an#148). Measured on the product’s own
+<cite>_ffmpeg_mux</cite> with flat known-colour frames, decoded as raw <cite>yuv420p</cite> (planes
+verbatim, no conversion on read), against the analytic limited-range values:</p>
+<div class="line-block">
+<div class="line">build | pure red decodes to Y | BT.601 says | BT.709 says |</div>
+</div>
+<p><a href="#id1"><span class="problematic" id="id2">|---|</span></a>—<a href="#id3"><span class="problematic" id="id4">|---|</span></a>—|
+| ffmpeg 9.0.1 | 63 | 81.5 | 62.6 |
+| ffmpeg 6.1.6 | 81 | 81.5 | 62.6 |</p>
+<p>Over five colours and all three planes, the worst disagreement is 0.44 from
+BT.709 and 28.45 from BT.601 on ffmpeg 9 – and 0.48 from BT.601 against
+27.63 from BT.709 on ffmpeg 6.1.6, which is the CI runner’s apt build. Both
+files are <em>tagged</em> <cite>color_space=bt709 color_primaries=bt709
+color_transfer=bt709 color_range=tv</cite>. So on 6.1 an#34’s re-baseline was
+metadata only: <cite>an</cite> shipped BT.601 planes wearing a BT.709 label, and a
+conforming player undoes a conversion that was never applied.</p>
+<p>This filter removes the build-dependence by naming the conversion instead of
+inferring it. It is BYTE-IDENTICAL to today’s output on ffmpeg 9.0.1
+(measured: same mp4 sha256 on real corpus frames), so it re-baselines nothing
+where the flags already worked, and it moves ffmpeg 6.1.6’s output onto the
+same conversion (its residual against an analytic BT.709 reference drops from
+luma mean 0.788 to 0.205 – ffmpeg 9’s own number to three decimals).</p>
+<p><strong>The committed ledger rows were captured on ffmpeg 8.1, which is not on this
+machine, so the byte-identity above was not re-measured there.</strong> That those
+rows are equally unaffected rests on an#34’s own measurement — that on 8.x
+<cite>-colorspace bt709</cite> already set the auto-inserted conversion, so this filter
+names what that build was doing anyway. It is a sound inference from a
+recorded measurement, not a second observation; treat it as such if an 8.x
+build ever contradicts a row.</p>
+<p>Here, and not beside one of the ffmpeg calls, for the same reason
+<cite>MP4_FASTSTART_ARGS</cite> is: <strong>three commands must agree on it</strong>, and they are in
+two packages. The delivered mux (<cite>_ffmpeg_mux</cite>), the bench’s lossless
+reference leg and the bench’s PNG decode leg all perform this conversion, and
+the lossless leg’s entire contract is “these ARE the planes libx264
+received”. Pin one and not the others and every encode-side metric silently
+measures a colour-space disagreement instead of encoder damage – the failure
+<cite>an/bench/imageio.py</cite>’s module docstring records CI catching once already.</p>
 </dd></dl>
 
 <dl class="py data">

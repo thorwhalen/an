@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.base &mdash; an 0.1.83 documentation</title>
+  <title>an.base &mdash; an 0.1.84 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=79510abc"></script>
+      <script src="../../_static/documentation_options.js?v=b2d89a71"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -267,6 +267,54 @@
 <span class="c1">#: identical, video/audio packet totals identical, file size identical,</span>
 <span class="c1">#: decoded YUV sha256 identical, wall time unchanged.</span>
 <span class="n">MP4_FASTSTART_ARGS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"-movflags"</span><span class="p">,</span> <span class="s2">"+faststart"</span><span class="p">)</span>
+
+<span class="c1">#: The RGB-&gt;YUV conversion `an` performs, stated EXPLICITLY rather than left to</span>
+<span class="c1">#: the encoder flags to imply.</span>
+<span class="c1">#:</span>
+<span class="c1">#: an#34 pinned `-colorspace bt709` and measured that it does not merely *tag*</span>
+<span class="c1">#: the file: it sets the matrix of the auto-inserted conversion, so the encoded</span>
+<span class="c1">#: planes themselves change. That measurement was made on ffmpeg 8/9 and **is</span>
+<span class="c1">#: not a universal ffmpeg fact** (an#148). Measured on the product's own</span>
+<span class="c1">#: `_ffmpeg_mux` with flat known-colour frames, decoded as raw `yuv420p` (planes</span>
+<span class="c1">#: verbatim, no conversion on read), against the analytic limited-range values:</span>
+<span class="c1">#:</span>
+<span class="c1">#: | build | pure red decodes to Y | BT.601 says | BT.709 says |</span>
+<span class="c1">#: |---|---|---|---|</span>
+<span class="c1">#: | ffmpeg 9.0.1 | 63 | 81.5 | 62.6 |</span>
+<span class="c1">#: | ffmpeg 6.1.6 | 81 | 81.5 | 62.6 |</span>
+<span class="c1">#:</span>
+<span class="c1">#: Over five colours and all three planes, the worst disagreement is 0.44 from</span>
+<span class="c1">#: BT.709 and 28.45 from BT.601 on ffmpeg 9 -- and 0.48 from BT.601 against</span>
+<span class="c1">#: 27.63 from BT.709 on ffmpeg 6.1.6, which is the CI runner's apt build. Both</span>
+<span class="c1">#: files are *tagged* `color_space=bt709 color_primaries=bt709</span>
+<span class="c1">#: color_transfer=bt709 color_range=tv`. So on 6.1 an#34's re-baseline was</span>
+<span class="c1">#: metadata only: `an` shipped BT.601 planes wearing a BT.709 label, and a</span>
+<span class="c1">#: conforming player undoes a conversion that was never applied.</span>
+<span class="c1">#:</span>
+<span class="c1">#: This filter removes the build-dependence by naming the conversion instead of</span>
+<span class="c1">#: inferring it. It is BYTE-IDENTICAL to today's output on ffmpeg 9.0.1</span>
+<span class="c1">#: (measured: same mp4 sha256 on real corpus frames), so it re-baselines nothing</span>
+<span class="c1">#: where the flags already worked, and it moves ffmpeg 6.1.6's output onto the</span>
+<span class="c1">#: same conversion (its residual against an analytic BT.709 reference drops from</span>
+<span class="c1">#: luma mean 0.788 to 0.205 -- ffmpeg 9's own number to three decimals).</span>
+<span class="c1">#:</span>
+<span class="c1">#: **The committed ledger rows were captured on ffmpeg 8.1, which is not on this</span>
+<span class="c1">#: machine, so the byte-identity above was not re-measured there.** That those</span>
+<span class="c1">#: rows are equally unaffected rests on an#34's own measurement — that on 8.x</span>
+<span class="c1">#: `-colorspace bt709` already set the auto-inserted conversion, so this filter</span>
+<span class="c1">#: names what that build was doing anyway. It is a sound inference from a</span>
+<span class="c1">#: recorded measurement, not a second observation; treat it as such if an 8.x</span>
+<span class="c1">#: build ever contradicts a row.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Here, and not beside one of the ffmpeg calls, for the same reason</span>
+<span class="c1">#: `MP4_FASTSTART_ARGS` is: **three commands must agree on it**, and they are in</span>
+<span class="c1">#: two packages. The delivered mux (`_ffmpeg_mux`), the bench's lossless</span>
+<span class="c1">#: reference leg and the bench's PNG decode leg all perform this conversion, and</span>
+<span class="c1">#: the lossless leg's entire contract is "these ARE the planes libx264</span>
+<span class="c1">#: received". Pin one and not the others and every encode-side metric silently</span>
+<span class="c1">#: measures a colour-space disagreement instead of encoder damage -- the failure</span>
+<span class="c1">#: `an/bench/imageio.py`'s module docstring records CI catching once already.</span>
+<span class="n">BT709_SCALE_FILTER</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"scale=out_range=tv:out_color_matrix=bt709"</span>
 
 
 <span class="c1"># -- Easing -------------------------------------------------------------------</span>

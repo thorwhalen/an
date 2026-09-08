@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.adapters.cutout.render &mdash; an 0.1.83 documentation</title>
+  <title>an.adapters.cutout.render &mdash; an 0.1.84 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=79510abc"></script>
+      <script src="../../../../_static/documentation_options.js?v=b2d89a71"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -323,7 +323,12 @@ than the research predicted — measured, not assumed (an#34):</p>
 the auto-inserted RGB-&gt;YUV conversion, so the <strong>encoded luma and chroma
 planes themselves change</strong>. Confirmed by construction: forcing
 <cite>scale=out_color_matrix=bt601</cite> reproduces the untagged output’s decoded
-stream byte-for-byte, i.e. <cite>an</cite> has been converting with BT.601 all along.</p></li>
+stream byte-for-byte, i.e. <cite>an</cite> has been converting with BT.601 all along.
+<strong>On ffmpeg 8/9. It is false on ffmpeg 6.1</strong> — where the same flags reach
+only the VUI and the planes stay BT.601 (an#148, measured; see
+<cite>an.base.BT709_SCALE_FILTER</cite> for the numbers). That is why the mux now
+states the conversion explicitly with <cite>-vf</cite> instead of inferring it from
+these flags, which stay for the tag they land.</p></li>
 <li><p><cite>-color_range tv</cite> is a <strong>no-op today</strong> (limited range is already the
 default for yuv420p here). Pinned anyway, so a build that defaults
 differently cannot change the output silently.</p></li>

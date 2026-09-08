@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>an.bench.environment &mdash; an 0.1.83 documentation</title>
+  <title>an.bench.environment &mdash; an 0.1.84 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=79510abc"></script>
+      <script src="../../../_static/documentation_options.js?v=b2d89a71"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -223,6 +223,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">an.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BT709_SCALE_FILTER</span>
+
 <span class="c1">#: The x264 build stamp embedded in every mp4, e.g. ``core 165 r3222 &lt;sha&gt;``.</span>
 <span class="c1">#: Nothing strips it (``-x264-params sei=0`` is silently ignored), which is</span>
 <span class="c1">#: exactly why it is usable as the comparability key.</span>
@@ -416,6 +418,14 @@
             <span class="s2">"ffmpeg"</span><span class="p">:</span> <span class="n">ffmpeg_identity</span><span class="p">(),</span>
             <span class="s2">"x264_sei"</span><span class="p">:</span> <span class="n">x264_sei</span><span class="p">,</span>
             <span class="s2">"x264_argv"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">DETERMINISTIC_X264_ARGS</span><span class="p">),</span>
+            <span class="c1"># A SEPARATE key for the same reason `pix_fmt` is one: `x264_argv`</span>
+            <span class="c1"># is the PINNED TUPLE, and this is a filter, not an encoder knob.</span>
+            <span class="c1"># Recorded at all because it moves the encoded planes on a build</span>
+            <span class="c1"># where the colour tags alone do not reach the conversion (an#148),</span>
+            <span class="c1"># so two rows that disagree about it are not comparable — while a</span>
+            <span class="c1"># row predating it is merely unknown, which `_compare_keys` already</span>
+            <span class="c1"># reports as a caveat rather than a refusal.</span>
+            <span class="s2">"scale_filter"</span><span class="p">:</span> <span class="n">BT709_SCALE_FILTER</span><span class="p">,</span>
             <span class="c1"># A SEPARATE key rather than folded into `x264_argv`, deliberately.</span>
             <span class="c1"># That list is the PINNED TUPLE and always has been — it carries</span>
             <span class="c1"># neither `-c:v libx264` nor `-pix_fmt` nor `+faststart` — so</span>
