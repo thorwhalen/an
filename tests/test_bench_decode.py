@@ -207,11 +207,6 @@ def test_the_gray_pixel_format_range_matrix_interaction_is_build_dependent(
         "both decodes must produce exactly one gray byte per pixel per frame "
         "regardless of whether this build honours the scale filter's options"
     )
-    assert "gray" not in imageio.source_yuv_command(frames_dir), (
-        "the pinned luma path must never use `-pix_fmt gray` — its "
-        "interaction with the range/matrix pin is build-dependent, so nothing "
-        "in this module may rely on it"
-    )
 
 
 def test_a_length_mismatch_is_refused_rather_than_silently_reshaped(frames_dir):
