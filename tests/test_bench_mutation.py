@@ -858,10 +858,22 @@ def test_the_signal_boundary_puts_the_previous_handlers_back(sighup_ignored):
     if sighup_ignored and not hasattr(signal, "SIGHUP"):
         pytest.skip("no SIGHUP on this platform")
 
-    original_sighup = (
-        signal.getsignal(signal.SIGHUP) if hasattr(signal, "SIGHUP") else None
-    )
+    def _marker(signum, frame):  # pragma: no cover - never actually invoked
+        pass
+
+    # A handler distinctive from both SIG_DFL and SIG_IGN, installed BEFORE
+    # `before` is snapshotted: pytest's ambient handlers are SIG_DFL, which
+    # made "restored the previous handler" and "reset to SIG_DFL" the same
+    # observation — a boundary mutated to hardcode SIG_DFL on the way out
+    # passed the final equality either way. And SIGHUP is set explicitly in
+    # BOTH branches (never left at whatever pytest happened to inherit), so
+    # `sighup_ignored=False` exercises the taken-and-restored path even when
+    # the process this suite runs under already has SIGHUP at SIG_IGN
+    # (nohup, systemd) — the exact environment #139 was filed from.
+    original = {sig: signal.getsignal(sig) for sig in RESTORE_ON_SIGNALS}
     try:
+        for sig in RESTORE_ON_SIGNALS:
+            signal.signal(sig, _marker)
         if sighup_ignored:
             signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
@@ -878,8 +890,8 @@ def test_the_signal_boundary_puts_the_previous_handlers_back(sighup_ignored):
                     assert signal.getsignal(sig) not in (before[sig], signal.SIG_DFL)
         assert {sig: signal.getsignal(sig) for sig in RESTORE_ON_SIGNALS} == before
     finally:
-        if sighup_ignored and hasattr(signal, "SIGHUP"):
-            signal.signal(signal.SIGHUP, original_sighup)
+        for sig, handler in original.items():
+            signal.signal(sig, handler)
 
 
 def test_the_leftover_message_does_not_claim_more_than_a_text_test_can_prove():
