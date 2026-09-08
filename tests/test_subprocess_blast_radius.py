@@ -328,7 +328,14 @@ def unscoped_sites(source: str) -> list[tuple[int, str]]:
         hit = False
         if isinstance(node, ast.Call):
             func = node.func
-            if isinstance(func, ast.Attribute) and func.attr == "setattr" and node.args:
+            # BOTH spellings of the call itself: `monkeypatch.setattr(...)` is
+            # an Attribute, the builtin `setattr(...)` is a Name. The first cut
+            # of this scanner knew only the Attribute form, so a plain
+            # `setattr(subprocess, "run", f)` read as clean.
+            is_setattr = (
+                isinstance(func, ast.Attribute) and func.attr == "setattr"
+            ) or (isinstance(func, ast.Name) and func.id == "setattr")
+            if is_setattr and node.args:
                 target = node.args[0]
                 if isinstance(target, ast.Attribute) and target.attr == "subprocess":
                     hit = True  # setattr(x.subprocess, "run", ...)
@@ -354,6 +361,11 @@ _UNSCOPED_VARIANTS: tuple[str, ...] = (
     "mod.subprocess.run = fake",
     "subprocess.run = fake",
     "an.bench.mutants.subprocess.run = fake",
+    # The BUILTIN setattr, not `monkeypatch.setattr` — a `Name` call func
+    # rather than an `Attribute`. The scanner read both of these as clean until
+    # review caught it.
+    'setattr(subprocess, "run", fake)',
+    'setattr(mod.subprocess, "run", fake)',
 )
 
 _SCOPED_VARIANTS: tuple[str, ...] = (
@@ -368,6 +380,40 @@ _SCOPED_VARIANTS: tuple[str, ...] = (
     # Reading it is not replacing it.
     "original = mod.subprocess.run",
 )
+
+
+def test_the_allowlist_is_pinned_by_literal():
+    """MUTATION: add a second entry to `_SHARED_PATCH_ALLOWED`.
+
+    Without this the allowlist is a hole that widens silently: appending one
+    `(file, function)` pair exempts a whole function from the scanner, and every
+    other test in this module stays green while doing it. Measured — a second
+    entry plus a reintroduced `_node.subprocess.run = failing` passes the rest
+    of the file.
+
+    So the set is pinned by literal equality, the shape this repo already uses
+    for its comparability tables: widening it has to be a deliberate edit HERE,
+    next to the reason, rather than a line appended somewhere else.
+
+    **The bar for a second entry is high.** The one exemption exists because
+    `platform` imports `subprocess` *inside* its functions, so no module
+    attribute exists to rebind and the global patch is the only way to observe
+    the behaviour under test. "It is awkward to scope" is not that reason.
+    """
+    assert _SHARED_PATCH_ALLOWED == frozenset(
+        {
+            (
+                "test_subprocess_blast_radius.py",
+                "test_platform_platform_really_does_shell_out_with_a_cold_cache",
+            )
+        }
+    ), (
+        "the allowlist changed. Each entry exempts an entire function from the "
+        "unscoped-patch scanner, so a new one needs the justification the "
+        "existing one carries: no scoped spelling exists for what it does. If "
+        "you are adding an entry because scoping is inconvenient, scope it "
+        "instead (an#152)."
+    )
 
 
 @pytest.mark.parametrize("source", _UNSCOPED_VARIANTS)
