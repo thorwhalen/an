@@ -100,6 +100,10 @@ ENCODE_ENV_PATHS: tuple[tuple[str, ...], ...] = (
     ("environment", "encode_side", "x264_sei"),
     ("environment", "encode_side", "x264_argv"),
     ("environment", "encode_side", "pix_fmt"),
+    # an#148: the RGB->YUV conversion the mux performs. A comparability key for
+    # the same reason `pix_fmt` is one — it names what libx264 received, and
+    # two rows converted differently are measuring different pixels.
+    ("environment", "encode_side", "scale_filter"),
     ("encode_command_source",),
     ("decode_commands",),
 )

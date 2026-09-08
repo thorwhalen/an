@@ -78,6 +78,46 @@ DEFAULT_SUPERSAMPLE: int = 1
 #: decoded YUV sha256 identical, wall time unchanged.
 MP4_FASTSTART_ARGS: tuple[str, ...] = ("-movflags", "+faststart")
 
+#: The RGB->YUV conversion `an` performs, stated EXPLICITLY rather than left to
+#: the encoder flags to imply.
+#:
+#: an#34 pinned `-colorspace bt709` and measured that it does not merely *tag*
+#: the file: it sets the matrix of the auto-inserted conversion, so the encoded
+#: planes themselves change. That measurement was made on ffmpeg 8/9 and **is
+#: not a universal ffmpeg fact** (an#148). Measured on the product's own
+#: `_ffmpeg_mux` with flat known-colour frames, decoded as raw `yuv420p` (planes
+#: verbatim, no conversion on read), against the analytic limited-range values:
+#:
+#: | build | pure red decodes to Y | BT.601 says | BT.709 says |
+#: |---|---|---|---|
+#: | ffmpeg 9.0.1 | 63 | 81.5 | 62.6 |
+#: | ffmpeg 6.1.6 | 81 | 81.5 | 62.6 |
+#:
+#: Over five colours and all three planes, the worst disagreement is 0.44 from
+#: BT.709 and 28.45 from BT.601 on ffmpeg 9 -- and 0.48 from BT.601 against
+#: 27.63 from BT.709 on ffmpeg 6.1.6, which is the CI runner's apt build. Both
+#: files are *tagged* `color_space=bt709 color_primaries=bt709
+#: color_transfer=bt709 color_range=tv`. So on 6.1 an#34's re-baseline was
+#: metadata only: `an` shipped BT.601 planes wearing a BT.709 label, and a
+#: conforming player undoes a conversion that was never applied.
+#:
+#: This filter removes the build-dependence by naming the conversion instead of
+#: inferring it. It is BYTE-IDENTICAL to today's output on ffmpeg 9.0.1
+#: (measured: same mp4 sha256 on real corpus frames), so it re-baselines nothing
+#: where the flags already worked, and it moves ffmpeg 6.1.6's output onto the
+#: same conversion (its residual against an analytic BT.709 reference drops from
+#: luma mean 0.788 to 0.205 -- ffmpeg 9's own number to three decimals).
+#:
+#: Here, and not beside one of the ffmpeg calls, for the same reason
+#: `MP4_FASTSTART_ARGS` is: **three commands must agree on it**, and they are in
+#: two packages. The delivered mux (`_ffmpeg_mux`), the bench's lossless
+#: reference leg and the bench's PNG decode leg all perform this conversion, and
+#: the lossless leg's entire contract is "these ARE the planes libx264
+#: received". Pin one and not the others and every encode-side metric silently
+#: measures a colour-space disagreement instead of encoder damage -- the failure
+#: `an/bench/imageio.py`'s module docstring records CI catching once already.
+BT709_SCALE_FILTER: str = "scale=out_range=tv:out_color_matrix=bt709"
+
 
 # -- Easing -------------------------------------------------------------------
 

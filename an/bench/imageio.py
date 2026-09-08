@@ -64,6 +64,18 @@ Two things this does NOT change:
   is exactly the build-dependence that was hiding inside a hard equality. It is
   provenance now, not a gate.
 
+**an#148 names what the build-dependence WAS, and both legs now pin it.** The
+varying term was never this PNG leg — it was the *encoder's* conversion:
+`-colorspace bt709` sets the auto-inserted RGB->YUV matrix on ffmpeg 8/9 and
+reaches only the VUI on ffmpeg 6.1, so on 6.1 libx264 received BT.601 planes
+while the delivered file was tagged BT.709 (pure red at Y=81, against BT.709's
+62.6). `lossless_encode_command` therefore carries `-vf BT709_SCALE_FILTER`, the
+same filter the delivered mux now passes: a lossless leg that converts
+differently from the file it references is not "the plane libx264 received" on
+any build where the two disagree, whatever its rate control. Keeping the two
+spellings identical is why `SOURCE_SCALE_FILTER` is *bound* to
+`an.base.BT709_SCALE_FILTER` rather than restating it.
+
 `-map 0:v:0 -fps_mode passthrough` on every mp4 decode: the delivered file
 carries an AAC track, and implicit frame-rate conversion would silently re-time
 the sequence that every encode-side metric pairs frame-for-frame.
@@ -75,7 +87,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from an.base import MP4_FASTSTART_ARGS
+from an.base import BT709_SCALE_FILTER, MP4_FASTSTART_ARGS
 from an.adapters.cutout.render import (
     DETERMINISTIC_X264_ARGS,
     SUPPORTED_PIX_FMTS,
@@ -84,7 +96,14 @@ from an.adapters.cutout.render import (
 
 #: The pinned conversion applied to the PNG leg. Never remove it: without it
 #: the encode-side metrics measure a colour-space conversion.
-SOURCE_SCALE_FILTER: str = "scale=out_range=tv:out_color_matrix=bt709"
+#:
+#: **Bound to the product's own filter, not restated** (an#148). It used to be a
+#: second copy of the same string, which was harmless only while the delivered
+#: encode had no `-vf` of its own to disagree with. Now that it has one, two
+#: copies is one edit away from the PNG leg and the encoder converting
+#: differently — which is exactly the term the encode-side metrics cannot see
+#: and would report as encoder damage.
+SOURCE_SCALE_FILTER: str = BT709_SCALE_FILTER
 
 #: Planar 4:4:4 for both legs of every encode-side metric — never `rgb24` for
 #: the edge metrics, whose defect was clipping precisely at the saturated fills
@@ -302,6 +321,15 @@ def lossless_encode_command(
         str(fps),
         "-i",
         str(frames_dir / DEFAULT_FRAME_PNG_PATTERN),
+        # The same explicit conversion the delivered mux performs (an#148).
+        # NOT optional and not cosmetic: this leg's whole contract is "the qp0
+        # decode's luma plane IS the plane libx264 received". On a build where
+        # the colour tags do not reach the auto-inserted conversion (ffmpeg
+        # 6.1), a leg without this would be BT.601 while the delivered file is
+        # BT.709, and every encode-side metric would carry that difference as
+        # if it were encoder damage.
+        "-vf",
+        BT709_SCALE_FILTER,
         "-c:v",
         "libx264",
         "-pix_fmt",

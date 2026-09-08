@@ -91,6 +91,7 @@ _ROW_PROVENANCE = {
             "x264_sei": "core 165 r3222 abc",
             "x264_argv": ["-crf", "23"],
             "pix_fmt": "yuv420p",
+            "scale_filter": "scale=out_range=tv:out_color_matrix=bt709",
         },
     },
 }
@@ -213,6 +214,12 @@ def test_the_comparability_key_tables_are_pinned_by_literal():
         # constant non-constant or turn it into a composed command — and either
         # changes what every already-committed row means.
         ("environment", "encode_side", "pix_fmt"),
+        # A THIRD, for the same reason and one build further along (an#148). The
+        # RGB->YUV conversion is not an encoder knob either, and it moved the
+        # delivered planes by up to 28 luma codes across ffmpeg builds while
+        # every other key here stayed equal — `x264_argv` cannot witness it, and
+        # `x264_sei` is identical across the two conversions.
+        ("environment", "encode_side", "scale_filter"),
         ("encode_command_source",),
         ("decode_commands",),
     )

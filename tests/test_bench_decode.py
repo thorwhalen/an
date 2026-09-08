@@ -141,6 +141,15 @@ def test_the_pin_measurably_changes_the_source_conversion(frames_dir, tmp_path):
     also the pin's real justification — see `imageio.SOURCE_SCALE_FILTER`'s
     comment: without it, the PNG leg's conversion is whatever ffmpeg's
     build-dependent default happens to be, not a pinned, reproducible one.
+
+    an#148 closed the flip at its source: both the delivered mux and the
+    lossless leg now state the conversion with `-vf BT709_SCALE_FILTER`, so
+    `enc_in` is BT.709 on **every** build and the pinned reading is the agreeing
+    one everywhere (pinned ~0.0, unpinned ~6.8333, on 6.1.6 and 9.0.1 alike).
+    The numbers quoted above are what the two builds did BEFORE that fix, kept
+    because they are the measurement that motivated it. The assertion is
+    unchanged and was already build-independent — which is the point of having
+    written it that way.
     """
     mp4 = lossless_reference(frames_dir, FPS, tmp_path / "lossless.mp4", delivered=None)
     enc_in = imageio.decoded_yuv(mp4, height=H, width=W)
