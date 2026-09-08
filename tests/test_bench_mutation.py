@@ -27,6 +27,7 @@ from an.bench.compare import REQUIRED_FAMILIES, compare
 from an.bench.mutants import MUTANTS, check_sites, format_results, run_mutants
 from an.bench.mutations import LEVERS, MutationError, mutated_row
 from an.bench.registry import METRICS, MUTATIONS, TRIPWIRES
+from tests._fake_subprocess import patch_subprocess_run
 
 
 # ------------------------------------------------------- the declaration table
@@ -217,7 +218,12 @@ def test_the_runner_restores_the_tree_even_when_a_mutant_survives(monkeypatch):
     def explode(*args, **kwargs):
         raise RuntimeError("pytest could not start")
 
-    monkeypatch.setattr("an.bench.mutants.subprocess.run", explode)
+    import an.bench.mutants as mutants_mod
+
+    # Scoped to the module's own name (an#152). The string form patched the
+    # shared `subprocess` module, so for the duration of this test EVERY
+    # library's `subprocess.run` raised RuntimeError.
+    patch_subprocess_run(monkeypatch, mutants_mod, explode)
     with pytest.raises(RuntimeError, match="could not start"):
         run_mutants([victim.name])
     assert path.read_text(encoding="utf-8") == before, "the mutant was left in the tree"
@@ -1031,11 +1037,7 @@ def test_a_sweep_with_no_root_never_writes_to_the_real_source_tree(monkeypatch):
     real = repo_root().resolve()
     mutant = next(m for m in mutants_mod.MUTANTS if m.file.endswith(".py"))
     monkeypatch.setattr(mutants_mod, "MUTANTS", (mutant,))
-    monkeypatch.setattr(
-        mutants_mod.subprocess,
-        "run",
-        lambda *a, **k: _completed(""),
-    )
+    patch_subprocess_run(monkeypatch, mutants_mod, lambda *a, **k: _completed(""))
 
     real_write = _Path.write_text
     written = []
@@ -1078,7 +1080,7 @@ def test_an_explicit_root_is_still_swept_in_place(tmp_path, monkeypatch):
         seen.append((root / "victim.py").read_text(encoding="utf-8"))
         return real_run(argv, **kwargs)
 
-    monkeypatch.setattr(mutants_mod.subprocess, "run", spy)
+    patch_subprocess_run(monkeypatch, mutants_mod, spy)
     mutants_mod.run_mutants(root=root)
 
     assert seen == [_VICTIM_MUTATED], (
@@ -1111,7 +1113,7 @@ def test_run_one_actually_hands_the_child_that_env(tmp_path, monkeypatch):
         seen.update(kwargs)
         return _completed("1 passed")
 
-    monkeypatch.setattr(mutants_mod.subprocess, "run", spy)
+    patch_subprocess_run(monkeypatch, mutants_mod, spy)
     mutants_mod.run_mutants(root=root)
 
     assert "env" in seen, "the child inherited the ambient environment"

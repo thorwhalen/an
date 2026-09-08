@@ -90,6 +90,11 @@ def pytest_configure(config):
         "markers",
         "ffmpeg: needs the ffmpeg binary on PATH; gated by the browser gate below",
     )
+    config.addinivalue_line(
+        "markers",
+        "writes_anywhere: opts out of the blast-radius guard (an#152). No test "
+        "carries it today; adding it needs a stated reason in the test",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -619,3 +624,122 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             if info["reason"]:
                 line += f": {info['reason']}"
         terminalreporter.write_line(line)
+
+
+# ---------------------------------------------------------------------------
+# The blast-radius guard (an#152).
+#
+# A test may write inside its own `tmp_path`, inside the system temp dir, and
+# inside the worktree (the mutation sweep edits real source files on purpose).
+# Anywhere else is a bug, and it has been a serious one: a fake `subprocess.run`
+# that wrote to `cmd[-1]` zero-truncated the machine's Python launcher four
+# times, because `platform.platform()` shells out `file -b <sys.executable>` and
+# the fake had been installed on the SHARED `subprocess` module.
+#
+# Two guards, deliberately, because they fail at different distances from the
+# mistake:
+#
+#   * `_no_writes_outside_the_sandbox` catches the general class, at the moment
+#     of the write, naming the test. It patches `Path.write_bytes` /
+#     `Path.write_text`, which is where this idiom writes — not a complete
+#     filesystem sandbox, and it does not pretend to be one. `os.open`, C
+#     extensions and real subprocesses go around it.
+#   * `_the_interpreter_survived_the_test` is the backstop for exactly the
+#     catastrophe, by SIZE rather than by path, so it holds even when the write
+#     took a route the first guard cannot see.
+#
+# Neither replaces `tests/_fake_subprocess.py`'s refusal, which is closest of
+# all to the mistake and gives the best message. Defence in depth here is
+# proportionate: the failure mode is "the developer's Python is gone", the
+# symptom is silence (a 0-byte interpreter exits 0 printing nothing), and the
+# bug lived for weeks behind a `platform` cache that hid it on most orderings.
+# ---------------------------------------------------------------------------
+
+import sys as _sys
+import tempfile as _tempfile
+from pathlib import Path as _Path
+
+
+def _write_allowed_roots(tmp_path):
+    """Where a test may write. Resolved, because `/tmp` is a symlink on macOS."""
+    roots = [tmp_path, _Path(_tempfile.gettempdir()), _Path(__file__).parent.parent]
+    out = []
+    for r in roots:
+        try:
+            out.append(_Path(r).resolve())
+        except OSError:  # pragma: no cover - unresolvable root
+            continue
+    return out
+
+
+@pytest.fixture(autouse=True)
+def _no_writes_outside_the_sandbox(tmp_path, monkeypatch, request):
+    """Fail a test that writes outside `tmp_path`, the temp dir or the worktree.
+
+    Opt out with `@pytest.mark.writes_anywhere` when a test genuinely must —
+    and say why in the test, because so far none does.
+    """
+    if request.node.get_closest_marker("writes_anywhere"):
+        yield
+        return
+
+    allowed = _write_allowed_roots(tmp_path)
+    real_bytes, real_text = _Path.write_bytes, _Path.write_text
+
+    def _check(self):
+        try:
+            target = _Path(self).resolve()
+        except OSError:  # pragma: no cover - unresolvable target
+            return
+        if any(target == a or a in target.parents for a in allowed):
+            return
+        raise AssertionError(
+            f"{request.node.nodeid} wrote to {target}, which is outside "
+            f"tmp_path, the system temp dir and the worktree.\n"
+            f"If this came from a faked `subprocess.run`, the argv it caught "
+            f"was not the one it was written for — see tests/_fake_subprocess "
+            f"and an#152. Mark the test `writes_anywhere` only if the write is "
+            f"genuinely intended."
+        )
+
+    def guarded_bytes(self, data):
+        _check(self)
+        return real_bytes(self, data)
+
+    def guarded_text(self, data, *a, **kw):
+        _check(self)
+        return real_text(self, data, *a, **kw)
+
+    monkeypatch.setattr(_Path, "write_bytes", guarded_bytes)
+    monkeypatch.setattr(_Path, "write_text", guarded_text)
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _the_interpreter_survived_the_test():
+    """Backstop: `sys.executable` must be the same size after the test.
+
+    By SIZE, not by path allowlist, so it catches a truncation that reached the
+    file by a route `_no_writes_outside_the_sandbox` cannot see. Cheap — two
+    `stat` calls per test — and it fails the test that did it rather than the
+    next unlucky one, which matters because the damage is otherwise SILENT: a
+    0-byte interpreter exits 0 and prints nothing.
+    """
+    exe = _Path(_sys.executable)
+    try:
+        before = exe.stat().st_size
+    except OSError:  # pragma: no cover - no readable interpreter path
+        yield
+        return
+    yield
+    try:
+        after = exe.stat().st_size
+    except OSError:  # pragma: no cover
+        after = None
+    assert after == before, (
+        f"this test changed the size of the running interpreter "
+        f"({_sys.executable}): {before} -> {after} bytes. See an#152; the "
+        f"cause is a faked `subprocess.run` installed on the SHARED "
+        f"`subprocess` module, catching `file -b <sys.executable>` from "
+        f"`platform.platform()`."
+    )
