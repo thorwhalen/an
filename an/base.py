@@ -108,6 +108,14 @@ MP4_FASTSTART_ARGS: tuple[str, ...] = ("-movflags", "+faststart")
 #: same conversion (its residual against an analytic BT.709 reference drops from
 #: luma mean 0.788 to 0.205 -- ffmpeg 9's own number to three decimals).
 #:
+#: **The committed ledger rows were captured on ffmpeg 8.1, which is not on this
+#: machine, so the byte-identity above was not re-measured there.** That those
+#: rows are equally unaffected rests on an#34's own measurement — that on 8.x
+#: `-colorspace bt709` already set the auto-inserted conversion, so this filter
+#: names what that build was doing anyway. It is a sound inference from a
+#: recorded measurement, not a second observation; treat it as such if an 8.x
+#: build ever contradicts a row.
+#:
 #: Here, and not beside one of the ffmpeg calls, for the same reason
 #: `MP4_FASTSTART_ARGS` is: **three commands must agree on it**, and they are in
 #: two packages. The delivered mux (`_ffmpeg_mux`), the bench's lossless
