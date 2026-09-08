@@ -165,3 +165,26 @@ def test_no_decode_leg_can_omit_the_frame_count_by_forgetting_it():
     # disagreement rather than crashing on it.
     for fn in (imageio.decoded_rgb, imageio.decoded_yuv):
         assert "frames" not in inspect.signature(fn).parameters
+
+
+def test_the_pinned_luma_path_never_resolves_to_gray():
+    """an#147: `-pix_fmt gray`'s interaction with the range/matrix pin is
+    measured to be build-dependent (see `tests/test_bench_decode.py`'s gray
+    test) — sometimes a no-op, sometimes not, and neither build says which
+    without measuring. This guards the actual reliance, ungated because it
+    needs no ffmpeg call: `source_yuv_command` builds argv only.
+
+    Matched as a substring of the whole joined command rather than exact
+    list-element membership, so a future rewrite that reaches the same gray
+    conversion through `-vf ...,format=gray` (instead of a bare `-pix_fmt
+    gray`) trips this guard too — an exact-element check would only catch
+    the bare form.
+    """
+    cmd = imageio.source_yuv_command(Path("/does/not/need/to/exist"))
+    assert "gray" not in " ".join(cmd), (
+        "the pinned luma path must never resolve to a gray pixel format, "
+        "however it is spelled (bare `-pix_fmt gray` or embedded as "
+        "`format=gray` inside a `-vf` filter chain) — its interaction with "
+        "the range/matrix pin is build-dependent, so nothing in this module "
+        "may rely on it"
+    )
