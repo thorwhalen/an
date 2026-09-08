@@ -832,22 +832,54 @@ def test_an_inherited_ignore_is_left_ignored():
         signal.signal(signal.SIGHUP, before)
 
 
-def test_the_signal_boundary_puts_the_previous_handlers_back():
+@pytest.mark.parametrize("sighup_ignored", [False, True])
+def test_the_signal_boundary_puts_the_previous_handlers_back(sighup_ignored):
     """MUTATION: drop the `finally` that restores the previous handlers.
 
     `an.bench.mutants` is importable, and a library that permanently rewires
     SIGTERM for its process is a worse defect than the one this fixes.
+
+    The boundary's actual promise is narrower than "every signal in
+    `RESTORE_ON_SIGNALS` gets a new handler": an inherited `SIG_IGN` is
+    deliberately left alone (see `test_an_inherited_ignore_is_left_ignored`),
+    so under `nohup`, systemd, or any other detached job that starts SIGHUP at
+    `SIG_IGN`, SIGHUP never enters `took` at all — asserting
+    `set(took) == set(RESTORE_ON_SIGNALS)` there was asserting an ambient fact
+    about the *caller's* environment, not something this boundary promises.
+    What it promises is: whatever a signal's handler was before, that handler
+    — not a hardcoded set — is back after. Parametrised so both starting
+    states for SIGHUP are exercised in the same run rather than depending on
+    how the test happens to be launched.
     """
     import signal
 
     from an.bench.mutants import RESTORE_ON_SIGNALS, restore_on_termination
 
-    before = {sig: signal.getsignal(sig) for sig in RESTORE_ON_SIGNALS}
-    with restore_on_termination() as took:
-        assert set(took) == set(RESTORE_ON_SIGNALS), "nothing was actually taken"
-        for sig in took:
-            assert signal.getsignal(sig) not in (before[sig], signal.SIG_DFL)
-    assert {sig: signal.getsignal(sig) for sig in RESTORE_ON_SIGNALS} == before
+    if sighup_ignored and not hasattr(signal, "SIGHUP"):
+        pytest.skip("no SIGHUP on this platform")
+
+    original_sighup = (
+        signal.getsignal(signal.SIGHUP) if hasattr(signal, "SIGHUP") else None
+    )
+    try:
+        if sighup_ignored:
+            signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
+        before = {sig: signal.getsignal(sig) for sig in RESTORE_ON_SIGNALS}
+        with restore_on_termination() as took:
+            for sig in RESTORE_ON_SIGNALS:
+                if before[sig] is signal.SIG_IGN:
+                    assert sig not in took, (
+                        "an inherited SIG_IGN must be left alone, not taken"
+                    )
+                    assert signal.getsignal(sig) is signal.SIG_IGN
+                else:
+                    assert sig in took, f"{sig} should have been taken"
+                    assert signal.getsignal(sig) not in (before[sig], signal.SIG_DFL)
+        assert {sig: signal.getsignal(sig) for sig in RESTORE_ON_SIGNALS} == before
+    finally:
+        if sighup_ignored and hasattr(signal, "SIGHUP"):
+            signal.signal(signal.SIGHUP, original_sighup)
 
 
 def test_the_leftover_message_does_not_claim_more_than_a_text_test_can_prove():
