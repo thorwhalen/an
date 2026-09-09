@@ -32,6 +32,7 @@ import pytest
 from an.adapters.cutout import render as render_mod
 from an.adapters.cutout.render import DETERMINISTIC_X264_ARGS, _ffmpeg_mux
 from an.base import BT709_SCALE_FILTER
+from tests._fake_subprocess import patch_subprocess_run, touch_output
 
 #: knob -> why it is pinned, quoted in the failure so the reason travels with it.
 REQUIRED_KNOBS = {
@@ -87,10 +88,13 @@ def test_the_mux_command_carries_the_pins(tmp_path, monkeypatch):
 
     def fake_run(cmd, *a, **kw):
         seen["cmd"] = list(cmd)
-        Path(cmd[-1]).write_bytes(b"")  # the mux checks the output exists
+        # The mux checks its output exists. `touch_output` refuses a path
+        # outside `tmp_path`, so an argv this fake was not meant to see raises
+        # instead of writing — see `tests/_fake_subprocess` (an#152).
+        touch_output(cmd[-1], root=tmp_path, argv=list(cmd))
         return _Result()
 
-    monkeypatch.setattr(render_mod.subprocess, "run", fake_run)
+    patch_subprocess_run(monkeypatch, render_mod, fake_run)
     _ffmpeg_mux(tmp_path, 24, tmp_path / "out.mp4")
 
     cmd = seen["cmd"]
@@ -159,10 +163,10 @@ def test_the_pixel_format_is_a_knob_that_reaches_the_encode_and_the_row(
 
     def fake_run(cmd, *a, **kw):
         seen["cmd"] = list(cmd)
-        Path(cmd[-1]).write_bytes(b"")
+        touch_output(cmd[-1], root=tmp_path, argv=list(cmd))
         return _Result()
 
-    monkeypatch.setattr(render_mod.subprocess, "run", fake_run)
+    patch_subprocess_run(monkeypatch, render_mod, fake_run)
 
     # An explicit argument wins over the module default.
     _ffmpeg_mux(tmp_path, 24, tmp_path / "a.mp4", "yuv444p")
@@ -235,11 +239,14 @@ def test_every_command_that_writes_an_mp4_asks_for_faststart(tmp_path, monkeypat
 
     def fake_run(cmd, *a, **kw):
         seen[cmd[-1]] = list(cmd)
-        Path(cmd[-1]).write_bytes(b"")
+        touch_output(cmd[-1], root=tmp_path, argv=list(cmd))
         return _Result()
 
-    monkeypatch.setattr(render_mod.subprocess, "run", fake_run)
-    monkeypatch.setattr(project_render.subprocess, "run", fake_run)
+    # TWO modules, each patched on its OWN name. Before an#152 both lines
+    # patched the one shared `subprocess` module, so the second was redundant
+    # and the first was global.
+    patch_subprocess_run(monkeypatch, render_mod, fake_run)
+    patch_subprocess_run(monkeypatch, project_render, fake_run)
     monkeypatch.setattr(project_render.shutil, "which", lambda _n: "/usr/bin/ffmpeg")
 
     mux_out = tmp_path / "silent.mp4"

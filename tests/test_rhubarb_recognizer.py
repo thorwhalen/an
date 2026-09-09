@@ -19,6 +19,7 @@ import pytest
 from an.audio import rhubarb_lipsync as rl
 from an.audio.providers import make_lipsync
 from an.audio.tts import AudioClip
+from tests._fake_subprocess import patch_subprocess_run
 
 
 def _stub_run(monkeypatch, *, cues=({"start": 0.0, "end": 0.4, "value": "A"},)):
@@ -36,7 +37,11 @@ def _stub_run(monkeypatch, *, cues=({"start": 0.0, "end": 0.4, "value": "A"},)):
             json.dump({"mouthCues": list(cues)}, f)
         return subprocess.CompletedProcess(cmd, 0, "", "")
 
-    monkeypatch.setattr(rl.subprocess, "run", run)
+    # Scoped to `rhubarb_lipsync`'s own name (an#152). The old spelling patched
+    # the shared `subprocess` module, so every library in the interpreter got
+    # this fake — and this one indexes `cmd` for "-o", which raises `ValueError`
+    # on any command that has none.
+    patch_subprocess_run(monkeypatch, rl, run)
     return seen
 
 
